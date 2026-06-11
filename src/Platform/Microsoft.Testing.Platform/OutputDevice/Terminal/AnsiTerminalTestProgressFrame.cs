@@ -30,6 +30,14 @@ internal sealed class AnsiTerminalTestProgressFrame
         return cache;
     }
 
+    // Reusable working buffers for GenerateLinesToRender, cached across render ticks on the same frame
+    // object to eliminate 4+ per-tick heap allocations (3 arrays + 1 List, plus the sort comparer).
+    private readonly List<object> _linesToRenderBuffer = [];
+    private readonly ProgressCountComparer _progressCountComparer = new();
+    private TestProgressState[] _progressItemsBuffer = [];
+    private int[] _sortedIndicesBuffer = [];
+    private List<TestDetailState>?[] _detailItemsBuffer = [];
+
     public int Width { get; private set; }
 
     public int Height { get; private set; }
@@ -50,6 +58,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         Width = Math.Min(width, MaxColumn);
         Height = height;
         RenderedLines?.Clear();
+        _linesToRenderBuffer.Clear();
     }
 
     public void AppendTestWorkerProgress(TestProgressState progress, RenderedProgressItem currentLine, AnsiTerminal terminal)
@@ -360,8 +369,6 @@ internal sealed class AnsiTerminalTestProgressFrame
 
     private List<object> GenerateLinesToRender(TestProgressState?[] progress)
     {
-        var linesToRender = new List<object>(progress.Length);
-
         // Note: We want to render the list of active tests, but this can easily fill up the full screen.
         // As such, we should balance the number of active tests shown per project.
         // We do this by distributing the remaining lines for each projects.
@@ -376,46 +383,80 @@ internal sealed class AnsiTerminalTestProgressFrame
             }
         }
 
-        var progressItems = new TestProgressState[itemCount];
+        // Grow cached working buffers when more capacity is needed; never shrink to avoid churn.
+        if (_progressItemsBuffer.Length < itemCount)
+        {
+            _progressItemsBuffer = new TestProgressState[itemCount];
+            _sortedIndicesBuffer = new int[itemCount];
+            _detailItemsBuffer = new List<TestDetailState>?[itemCount];
+        }
+
         int idx = 0;
         for (int j = 0; j < progress.Length; j++)
         {
             if (progress[j] is not null)
             {
-                progressItems[idx++] = progress[j]!;
+                _progressItemsBuffer[idx++] = progress[j]!;
             }
         }
 
-        int linesToDistribute = (int)(Height * 0.7) - 1 - progressItems.Length;
-        var detailItems = new List<TestDetailState>[progressItems.Length];
+        int linesToDistribute = (int)(Height * 0.7) - 1 - itemCount;
 
         // Sort indices by detail count ascending to distribute lines fairly,
         // without LINQ Enumerable.Range + OrderBy allocation.
-        int[] sortedItemsIndices = new int[progressItems.Length];
-        for (int j = 0; j < progressItems.Length; j++)
+        for (int j = 0; j < itemCount; j++)
         {
-            sortedItemsIndices[j] = j;
+            _sortedIndicesBuffer[j] = j;
         }
 
-        Array.Sort(sortedItemsIndices, (a, b) => (progressItems[a].TestNodeResultsState?.Count ?? 0).CompareTo(progressItems[b].TestNodeResultsState?.Count ?? 0));
+        // _progressCountComparer is a cached instance — no per-tick allocation.
+        _progressCountComparer.Buffer = _progressItemsBuffer;
+        Array.Sort(_sortedIndicesBuffer, 0, itemCount, _progressCountComparer);
 
-        foreach (int sortedItemIndex in sortedItemsIndices)
+        // Only populate detail buffers when there is a positive line budget per item.
+        // GetRunningTasks(0) would compute itemsToTake = -1 and throw inside RemoveRange,
+        // and there's no point asking for details we cannot display anyway.
+        int linesPerItem = itemCount > 0 ? linesToDistribute / itemCount : 0;
+        if (linesPerItem > 0)
         {
-            detailItems[sortedItemIndex] = progressItems[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(
-                linesToDistribute / progressItems.Length)
-                ?? [];
+            for (int j = 0; j < itemCount; j++)
+            {
+                int sortedItemIndex = _sortedIndicesBuffer[j];
+                _detailItemsBuffer[sortedItemIndex] = _progressItemsBuffer[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(linesPerItem);
+            }
         }
 
-        for (int progressI = 0; progressI < progressItems.Length; progressI++)
+        for (int progressI = 0; progressI < itemCount; progressI++)
         {
-            linesToRender.Add(progressItems[progressI]);
-            linesToRender.AddRange(detailItems[progressI]);
+            _linesToRenderBuffer.Add(_progressItemsBuffer[progressI]);
+            if (_detailItemsBuffer[progressI] is { } details)
+            {
+                _linesToRenderBuffer.AddRange(details);
+                _detailItemsBuffer[progressI] = null; // release to avoid holding stale GC roots
+            }
+
+            // Release the progress item reference too so completed workers can be collected
+            // even when this frame instance is kept alive across ticks.
+            _progressItemsBuffer[progressI] = null!;
         }
 
-        return linesToRender;
+        return _linesToRenderBuffer;
     }
 
     public void Clear() => RenderedLines?.Clear();
+
+    /// <summary>
+    /// Reusable comparer for sorting progress-item indices by running-task count.
+    /// Cached as a field to avoid new allocations on every render tick.
+    /// </summary>
+    private sealed class ProgressCountComparer : IComparer<int>
+    {
+        internal TestProgressState[] Buffer { get; set; } = [];
+
+        public int Compare(int a, int b)
+            => (Buffer[a].TestNodeResultsState?.Count ?? 0)
+                .CompareTo(Buffer[b].TestNodeResultsState?.Count ?? 0);
+    }
 
     internal sealed class RenderedProgressItem
     {

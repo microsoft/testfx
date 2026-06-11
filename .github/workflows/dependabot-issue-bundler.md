@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/dependabot-issue-bundler.md@main"
+source: githubnext/agentics/workflows/dependabot-issue-bundler.md@main
 description: Find all open Dependabot PRs and create bundle issues for each runtime + manifest file.
 
 on: weekly on monday
@@ -24,6 +24,7 @@ safe-outputs:
     max: 10
 
 ---
+
 # Dependabot Issue Bundler
 
 Your goal is to create or maintain a coherent set of "bundle issues" that bundle together different dependabot updates by runtime + manifest file.

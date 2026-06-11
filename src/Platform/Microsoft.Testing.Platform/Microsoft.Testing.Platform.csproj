@@ -24,6 +24,9 @@ This package provides the core platform and the .NET implementation of the proto
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Remove="Configurations/JsonConfigurationFileParser.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/Json.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Serializers.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.TestNodeSerializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonCollectionDeserializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonDeserializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonElementDeserializer.cs" />
@@ -42,6 +45,7 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.OpenTelemetry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CrashDump" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CtrfReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HotReload" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HtmlReport" Key="$(VsPublicKey)" />

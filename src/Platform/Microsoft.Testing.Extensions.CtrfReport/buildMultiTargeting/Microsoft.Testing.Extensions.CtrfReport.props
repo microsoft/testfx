@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <!--
+      !!! IMPORTANT !!!
+      DO NOT CHANGE THE GUID, IT'S A WELL KNOWN EXTENSION POINT.
+    -->
+    <TestingPlatformBuilderHook Include="9B6F3FA2-3E0F-4A1F-9D6E-7E2E8E2A8C4B" >
+      <DisplayName>Microsoft.Testing.Extensions.CtrfReport</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.CtrfReport.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>

@@ -5,7 +5,7 @@
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
         <target state="translated">덤프 파일 '{0}'을(를) 만드는 중</target>
-        <note />
+        <note>{0} is the dump file path.</note>
       </trans-unit>
       <trans-unit id="DumpingProcess">
         <source>Dumping process {0} - {1}</source>
@@ -45,12 +45,12 @@
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">환경 변수 '{0}'이(가) '{2}' 대신 '{1}'로 설정되어 있습니다.</target>
-        <note />
+        <note>{0} is the environment variable name. {1} is the actual value. {2} is the expected value.</note>
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
         <target state="translated">환경 변수 ‘{0}’이(가) 설정되지 않았습니다.</target>
-        <note />
+        <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
         <source>Produce hang dump files when a test execution exceed a given time.</source>
@@ -73,25 +73,24 @@ Disk info:
 
 디스크 정보:
 {1}</target>
-        <note>{0} - the exception that occurred.
-{1} - disk info detailing free space</note>
+        <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
         <target state="new">Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
         <target state="translated">테스트 프로세스가 중단되면 덤프 파일 생성</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
         <target state="translated">'{0}'의 중단 덤프 시간 제한이 만료되었습니다.</target>
-        <note />
+        <note>{0} is the hang dump timeout value.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
@@ -112,27 +111,27 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     단위 생략 시 기본 단위는 밀리초(ms)입니다.
     기본값은 30m입니다.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-timeout"} or time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
         <target state="translated">'--hangdump-timeout'에는 단일 시간 제한 인수가 필요합니다.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-timeout"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
         <target state="translated">'--hangdump-type'과 '--hangdump-type-if-supported'는 함께 사용할 수 없습니다. 요청된 형식을 현재 런타임에서 사용할 수 없을 때 가장 가까운 사용 가능한 형식으로 대체하는 최선의 덤프 형식을 사용하려면 '--hangdump-type-if-supported'를 사용하고, 지원되지 않는 런타임에서 빠르게 실패하려면 '--hangdump-type'을 사용하세요.</target>
-        <note />
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
         <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
         <target state="translated">'--hangdump-type-if-supported {0}'은(는) 현재 런타임에서 지원되지 않습니다. '{1}'(으)로 대체하는 중입니다.</target>
-        <note />
+        <note>0 is the requested dump type. 1 is the fallback dump type. Do not localize option name {Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
         <target state="translated">'--hangdump-type'과(와) 동일하지만 요청된 형식을 현재 런타임에서 사용할 수 없는 경우 가장 가까운 지원 덤프 형식으로 자동으로 대체됩니다(정보 메시지와 함께)(예: 'Triage'는 .NET Core에서만 지원되며 .NET Framework에서는 'Mini'로 대체됨). .NET Framework와 .NET이 혼합된 CI 매트릭스에서 동일한 명령줄을 유지하려면 이 옵션을 사용하세요. 유효한 값은 'Mini', 'Heap', 'Full', 'Triage', 'None'입니다. '--hangdump-type'과 함께 사용할 수 없습니다.</target>
-        <note />
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Full"}{Locked="Triage"}{Locked="None"}, or runtime names {Locked=".NET Core"}{Locked=".NET Framework"}{Locked=".NET"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
@@ -141,19 +140,19 @@ Default type is 'Full'</source>
         <target state="translated">덤프의 유형을 지정합니다.
 유효한 값은 {0}입니다.
 기본 유형은 'Full'입니다.</target>
-        <note />
+        <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
         <target state="translated">'{0}'은(는) 올바른 덤프 유형이 아닙니다.
 유효한 옵션은 {1}입니다.</target>
-        <note />
+        <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
         <target state="translated">'{0}' 유형의 요청은 지원되지 않습니다.</target>
-        <note />
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
         <source>The list of tests that were running at the time of the hang</source>
@@ -168,12 +167,12 @@ Valid options are {1}</source>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
         <target state="translated">하나 이상의 중단 덤프 매개 변수를 지정했지만 사용하도록 설정하지 않았습니다. 명령줄에 --hangdump를 추가하세요.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">덤프를 수행할 때 다음 테스트가 계속 실행되고 있었습니다(형식: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;).</target>
-        <note />
+        <note>Do not localize format tokens {Locked="[&lt;time-elapsed-since-start&gt;]"} and {Locked="&lt;name&gt;"}.</note>
       </trans-unit>
     </body>
   </file>

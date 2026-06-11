@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -45,14 +42,27 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
             .Where(static model => model is not null)
             .Select(static (model, _) => model!);
 
-        IncrementalValueProvider<(string? AssemblyName, ImmutableArray<TestClassModel> Classes)> combined =
+        // Pull assembly-level attributes from the compilation (one value per run) and
+        // wrap them in an equatable model so this branch of the pipeline can stay cached
+        // when only test-class code changes.
+        IncrementalValueProvider<AssemblyMetadataModel> assemblyMetadata =
+            context.CompilationProvider.Select(static (c, ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                return new AssemblyMetadataModel(
+                    TestClassModelBuilder.BuildAttributes(c.Assembly.GetAttributes()));
+            });
+
+        IncrementalValueProvider<(string? AssemblyName, AssemblyMetadataModel Metadata, ImmutableArray<TestClassModel> Classes)> combined =
             context.CompilationProvider.Select(static (c, _) => c.AssemblyName)
-                .Combine(testClasses.Collect());
+                .Combine(assemblyMetadata)
+                .Combine(testClasses.Collect())
+                .Select(static (tuple, _) => (tuple.Left.Left, tuple.Left.Right, tuple.Right));
 
         context.RegisterImplementationSourceOutput(combined, static (ctx, payload) =>
         {
             string assemblyName = payload.AssemblyName ?? "Unknown";
-            string source = MetadataRegistryEmitter.EmitRegistry(assemblyName, payload.Classes);
+            string source = MetadataRegistryEmitter.EmitRegistry(assemblyName, payload.Metadata, payload.Classes);
             ctx.AddSource("MSTestReflectionMetadata.Registry.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }
@@ -67,11 +77,8 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
         }
 
         // Skip abstract / static / generic classes for this PoC — they need extra wiring.
-        if (typeSymbol.IsAbstract || typeSymbol.IsStatic || typeSymbol.IsGenericType)
-        {
-            return null;
-        }
-
-        return TestClassModelBuilder.Build(typeSymbol);
+        return typeSymbol.IsAbstract || typeSymbol.IsStatic || typeSymbol.IsGenericType
+            ? null
+            : TestClassModelBuilder.Build(typeSymbol);
     }
 }

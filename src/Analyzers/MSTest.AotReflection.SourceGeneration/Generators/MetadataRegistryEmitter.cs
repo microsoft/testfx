@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
-using MSTest.AotReflection.SourceGeneration.Helpers;
 using MSTest.AotReflection.SourceGeneration.Model;
 
 namespace MSTest.AotReflection.SourceGeneration.Generators;
@@ -57,6 +54,8 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
                 sb.AppendLine("public string[] ParameterNames { get; init; } = Array.Empty<string>();");
                 sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
+                sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
+                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; init; } = Array.Empty<object?[]>();");
                 sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />.</summary>");
                 sb.AppendLine("public Func<object?, object?[]?, object?> Invoke { get; init; } = static (_, _) => null;");
             }
@@ -83,7 +82,7 @@ internal static class MetadataRegistryEmitter
         return sb.ToString();
     }
 
-    public static string EmitRegistry(string assemblyName, IReadOnlyList<TestClassModel> testClasses)
+    public static string EmitRegistry(string assemblyName, AssemblyMetadataModel assemblyMetadata, IReadOnlyList<TestClassModel> testClasses)
     {
         var sb = new IndentedStringBuilder();
         AppendHeader(sb);
@@ -99,6 +98,12 @@ internal static class MetadataRegistryEmitter
             {
                 sb.AppendLine($"public const string AssemblyName = \"{Escape(assemblyName)}\";");
                 sb.AppendLine();
+
+                // Emit assembly-level [assembly: ...] attributes so the consumer never has to call
+                // Assembly.GetCustomAttributes for attributes declared in the same compilation.
+                EmitAssemblyAttributesProperty(sb, assemblyMetadata.Attributes);
+                sb.AppendLine();
+
                 sb.AppendLine("public static IReadOnlyList<TestClassReflectionInfo> TestClasses { get; } = new TestClassReflectionInfo[]");
                 using (sb.Block(null))
                 {
@@ -117,6 +122,35 @@ internal static class MetadataRegistryEmitter
         }
 
         return sb.ToString();
+    }
+
+    private static void EmitAssemblyAttributesProperty(IndentedStringBuilder sb, EquatableArray<AttributeApplicationModel> attributes)
+    {
+        if (attributes.Length == 0)
+        {
+            sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = Array.Empty<Attribute>();");
+            return;
+        }
+
+        sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                AttributeApplicationModel attr = attributes[i];
+                sb.Append(BuildAttributeExpression(attr));
+                if (i < attributes.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
+
+        sb.AppendLine(";");
     }
 
     private static void EmitTestClass(IndentedStringBuilder sb, TestClassModel model)
@@ -190,6 +224,8 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);
                     sb.AppendLine(",");
+                    EmitDataRows(sb, method.DataRows);
+                    sb.AppendLine(",");
                     EmitMethodInvoker(sb, fqn, method);
                 }
 
@@ -243,6 +279,43 @@ internal static class MetadataRegistryEmitter
             : $"{{ return {call}; }}";
 
         sb.AppendLine($"Invoke = static (instance, args) => {body},");
+    }
+
+    private static void EmitDataRows(IndentedStringBuilder sb, EquatableArray<DataRowModel> dataRows)
+    {
+        if (dataRows.Length == 0)
+        {
+            sb.Append("DataRows = Array.Empty<object?[]>()");
+            sb.AppendLine();
+            return;
+        }
+
+        sb.AppendLine("DataRows = new object?[][]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < dataRows.Length; i++)
+            {
+                EquatableArray<TypedConstantModel> args = dataRows[i].Arguments;
+                if (args.Length == 0)
+                {
+                    sb.Append("Array.Empty<object?>()");
+                }
+                else
+                {
+                    string literals = string.Join(", ", args.AsImmutableArray().Select(BuildConstantExpression));
+                    sb.Append($"new object?[] {{ {literals} }}");
+                }
+
+                if (i < dataRows.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
     }
 
     private static void EmitParameterTypes(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)
@@ -378,15 +451,10 @@ internal static class MetadataRegistryEmitter
         };
 
     private static string BuildArgumentsFromObjectArray(EquatableArray<TestParameterModel> parameters)
-    {
-        if (parameters.Length == 0)
-        {
-            return string.Empty;
-        }
-
-        return string.Join(", ", parameters.AsImmutableArray()
-            .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
-    }
+        => parameters.Length == 0
+            ? string.Empty
+            : string.Join(", ", parameters.AsImmutableArray()
+                .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
 
     private static string Bool(bool value) => value ? "true" : "false";
 

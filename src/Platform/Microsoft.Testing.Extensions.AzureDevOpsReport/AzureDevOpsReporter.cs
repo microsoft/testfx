@@ -104,7 +104,7 @@ internal sealed class AzureDevOpsReporter :
             return Task.FromResult(false);
         }
 
-        bool isEnabledByEnvVariable = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase);
+        bool isEnabledByEnvVariable = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
         if (isEnabledByEnvVariable)
         {
             EnsureEnabledConfigurationLoaded();
@@ -112,7 +112,7 @@ internal sealed class AzureDevOpsReporter :
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"TF_BUILD environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}");
+            _logger.LogTrace($"{AzureDevOpsConstants.TfBuildEnvironmentVariableName} environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}");
             _logger.LogTrace($"Severity is set to '{_severity ?? "error"}', you can override it by using --report-azdo-severity parameter.");
         }
 
