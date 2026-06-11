@@ -14,6 +14,7 @@ network:
 imports:
 - shared/formatting.md
 - shared/reporting.md
+max-ai-credits: 2000
 safe-outputs:
   create-pull-request:
     expires: 1d
