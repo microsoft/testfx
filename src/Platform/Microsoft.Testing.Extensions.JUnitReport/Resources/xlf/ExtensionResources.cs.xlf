@@ -4,32 +4,32 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="needs-review-translation">Neplatný typ tvůrce testovací aplikace Očekával se typ TestApplicationBuilder.</target>
+        <target state="translated">Neplatný typ tvůrce testovací aplikace Očekával se typ TestApplicationBuilder.</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDescription">
         <source>JUnit XML report file</source>
-        <target state="needs-review-translation">Soubor sestavy JUnit XML</target>
+        <target state="translated">Soubor sestavy JUnit XML</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDisplayName">
         <source>JUnit XML report</source>
-        <target state="needs-review-translation">Sestava JUnit XML</target>
+        <target state="translated">Sestava JUnit XML</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileExistsAndWillBeOverwritten">
         <source>The JUnit report file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">Soubor sestavy JUnit {0} již existuje a bude přepsán.</target>
+        <target state="translated">Soubor sestavy JUnit {0} již existuje a bude přepsán.</target>
         <note>{0} is the {Locked="JUnit"} report file path.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameExtensionIsNotXml">
         <source>'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="needs-review-translation">Argument názvu souboru --report-junit-filename musí končit příponou .xml (například --report-junit-filename myreport.xml)</target>
+        <target state="translated">Argument názvu souboru --report-junit-filename musí končit příponou .xml (například --report-junit-filename myreport.xml)</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameMustNotBeEmpty">
         <source>'--report-junit-filename' file name part must not be empty (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="needs-review-translation">Část pro název souboru --report-junit-filename nesmí být prázdná (např. --report-junit-filename myreport.xml).</target>
+        <target state="translated">Část pro název souboru --report-junit-filename nesmí být prázdná (např. --report-junit-filename myreport.xml).</target>
         <note>Do not localize option name {Locked="--report-junit-filename"} or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameOptionDescription">
@@ -43,32 +43,32 @@ Example: MyReport_{tfm}.xml</target>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>
-        <target state="needs-review-translation">Relativní cesty --report-junit-filename musí zůstat v adresáři výsledků testů (např. --report-junit-filename nested/myreport.xml).</target>
+        <target state="translated">Relativní cesty --report-junit-filename musí zůstat v adresáři výsledků testů (např. --report-junit-filename nested/myreport.xml).</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example path {Locked="nested/myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRequiresJUnitReport">
         <source>'--report-junit-filename' requires '--report-junit' to be enabled</source>
-        <target state="needs-review-translation">Parametr --report-junit-filename vyžaduje, aby byl povolen parametr --report-junit.</target>
+        <target state="translated">Parametr --report-junit-filename vyžaduje, aby byl povolen parametr --report-junit.</target>
         <note>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDescription">
         <source>Produce a JUnit XML report for the current test session</source>
-        <target state="needs-review-translation">Vytvoří sestavu JUnit XML pro aktuální testovací relaci.</target>
+        <target state="translated">Vytvoří sestavu JUnit XML pro aktuální testovací relaci.</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">
         <source>JUnit XML report generator</source>
-        <target state="needs-review-translation">Generátor sestav JUnit XML</target>
+        <target state="translated">Generátor sestav JUnit XML</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportIsNotValidForDiscovery">
         <source>'--report-junit' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">Parametr --report-junit nelze povolit při použití parametru --list-tests.</target>
+        <target state="translated">Parametr --report-junit nelze povolit při použití parametru --list-tests.</target>
         <note>Do not localize option names {Locked="--report-junit"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report</source>
-        <target state="needs-review-translation">Povolit generování sestavy JUnit XML</target>
+        <target state="translated">Povolit generování sestavy JUnit XML</target>
         <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
     </body>

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="HotReloadHandlerUnsupportedFrameworkErrorMessage">
         <source>Hot reload is only supported on .NET 6.0 or greater</source>
-        <target state="needs-review-translation">Ponowne ładowanie na gorąco jest obsługiwane tylko na platformie .NET 6.0 lub nowszej</target>
+        <target state="translated">Ponowne ładowanie na gorąco jest obsługiwane tylko na platformie .NET 6.0 lub nowszej</target>
         <note>Do not localize {Locked=".NET 6.0"}.</note>
       </trans-unit>
       <trans-unit id="HotReloadSessionCompleted">

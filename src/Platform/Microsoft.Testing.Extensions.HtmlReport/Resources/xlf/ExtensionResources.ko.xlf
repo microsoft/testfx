@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="needs-review-translation">자체 포함 HTML 테스트 보고서</target>
+        <target state="translated">자체 포함 HTML 테스트 보고서</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="needs-review-translation">HTML 보고서</target>
+        <target state="translated">HTML 보고서</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">경고: HTML 보고서 파일 '{0}'이(가) 이미 있으므로 덮어씁니다.</target>
+        <target state="translated">경고: HTML 보고서 파일 '{0}'이(가) 이미 있으므로 덮어씁니다.</target>
         <note>{0} is the {Locked="HTML"} report file path.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">'--report-html-filename' 파일 이름 인수는 '.html'로 끝나야 합니다. 예: --report-html-filename myreport.html</target>
+        <target state="translated">'--report-html-filename' 파일 이름 인수는 '.html'로 끝나야 합니다. 예: --report-html-filename myreport.html</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">'--report-html-filename' 파일 이름 부분은 비워 둘 수 없습니다(예: --report-html-filename myreport.html).</target>
+        <target state="translated">'--report-html-filename' 파일 이름 부분은 비워 둘 수 없습니다(예: --report-html-filename myreport.html).</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
@@ -38,37 +38,37 @@ Example: MyReport_{tfm}.html</target>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="needs-review-translation">'--report-html-filename' 상대 경로는 테스트 결과 디렉터리 아래에 있어야 합니다(예: --report-html-filename nested/myreport.html).</target>
+        <target state="translated">'--report-html-filename' 상대 경로는 테스트 결과 디렉터리 아래에 있어야 합니다(예: --report-html-filename nested/myreport.html).</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example path {Locked="nested/myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="needs-review-translation">'--report-html-filename'을 사용하려면 '--report-html'을 사용하도록 설정해야 합니다.</target>
+        <target state="translated">'--report-html-filename'을 사용하려면 '--report-html'을 사용하도록 설정해야 합니다.</target>
         <note>Do not localize option names {Locked="--report-html-filename"}{Locked="--report-html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="needs-review-translation">현재 테스트 세션에 대한 독립 실행형 HTML 보고서 생성</target>
+        <target state="translated">현재 테스트 세션에 대한 독립 실행형 HTML 보고서 생성</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="needs-review-translation">HTML 보고서 생성기</target>
+        <target state="translated">HTML 보고서 생성기</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">'--list-tests'를 사용하는 경우 '--report-html'을 사용하도록 설정할 수 없습니다.</target>
+        <target state="translated">'--list-tests'를 사용하는 경우 '--report-html'을 사용하도록 설정할 수 없습니다.</target>
         <note>Do not localize option names {Locked="--report-html"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="needs-review-translation">HTML 보고서 생성 사용</target>
+        <target state="translated">HTML 보고서 생성 사용</target>
         <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="needs-review-translation">HTML 보고서 생성기는 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
+        <target state="translated">HTML 보고서 생성기는 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 유형의 작성기에서만 작동합니다.</target>
         <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>

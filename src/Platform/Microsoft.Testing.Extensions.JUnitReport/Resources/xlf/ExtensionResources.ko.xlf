@@ -4,32 +4,32 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="needs-review-translation">잘못된 테스트 애플리케이션 빌더 형식입니다. 'TestApplicationBuilder'가 필요합니다.</target>
+        <target state="translated">잘못된 테스트 애플리케이션 빌더 형식입니다. 'TestApplicationBuilder'가 필요합니다.</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDescription">
         <source>JUnit XML report file</source>
-        <target state="needs-review-translation">JUnit XML 보고서 파일</target>
+        <target state="translated">JUnit XML 보고서 파일</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDisplayName">
         <source>JUnit XML report</source>
-        <target state="needs-review-translation">JUnit XML 보고서</target>
+        <target state="translated">JUnit XML 보고서</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileExistsAndWillBeOverwritten">
         <source>The JUnit report file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">JUnit 보고서 파일 '{0}'이(가) 이미 있으므로 덮어씁니다.</target>
+        <target state="translated">JUnit 보고서 파일 '{0}'이(가) 이미 있으므로 덮어씁니다.</target>
         <note>{0} is the {Locked="JUnit"} report file path.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameExtensionIsNotXml">
         <source>'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="needs-review-translation">'--report-junit-filename' 파일 이름 부분은 비워 둘 수 없습니다. 예: --report-junit-filename myreport.xml</target>
+        <target state="new">'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameMustNotBeEmpty">
         <source>'--report-junit-filename' file name part must not be empty (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="needs-review-translation">'--report-junit-filename' 파일 이름 부분은 비워 둘 수 없습니다. 예: --report-junit-filename myreport.xml</target>
+        <target state="translated">'--report-junit-filename' 파일 이름 부분은 비워 둘 수 없습니다. 예: --report-junit-filename myreport.xml</target>
         <note>Do not localize option name {Locked="--report-junit-filename"} or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameOptionDescription">
@@ -43,32 +43,32 @@ Example: MyReport_{tfm}.xml</target>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>
-        <target state="needs-review-translation">'--report-junit-filename' 상대 경로는 테스트 결과 디렉터리 아래에 있어야 합니다(예: --report-junit-filename nested/myreport.xml).</target>
+        <target state="translated">'--report-junit-filename' 상대 경로는 테스트 결과 디렉터리 아래에 있어야 합니다(예: --report-junit-filename nested/myreport.xml).</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example path {Locked="nested/myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRequiresJUnitReport">
         <source>'--report-junit-filename' requires '--report-junit' to be enabled</source>
-        <target state="needs-review-translation">'--report-junit-filename'을 사용하려면 '--report-junit'을 사용하도록 설정해야 합니다.</target>
+        <target state="translated">'--report-junit-filename'을 사용하려면 '--report-junit'을 사용하도록 설정해야 합니다.</target>
         <note>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDescription">
         <source>Produce a JUnit XML report for the current test session</source>
-        <target state="needs-review-translation">현재 테스트 세션에 대한 JUnit XML 보고서를 생성합니다.</target>
+        <target state="translated">현재 테스트 세션에 대한 JUnit XML 보고서를 생성합니다.</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">
         <source>JUnit XML report generator</source>
-        <target state="needs-review-translation">JUnit XML 보고서 생성기</target>
+        <target state="translated">JUnit XML 보고서 생성기</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportIsNotValidForDiscovery">
         <source>'--report-junit' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">'--list-tests'를 사용하는 경우 '--report-junit'을 사용하도록 설정할 수 없습니다.</target>
+        <target state="translated">'--list-tests'를 사용하는 경우 '--report-junit'을 사용하도록 설정할 수 없습니다.</target>
         <note>Do not localize option names {Locked="--report-junit"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report</source>
-        <target state="needs-review-translation">JUnit XML 보고서 생성 사용</target>
+        <target state="translated">JUnit XML 보고서 생성 사용</target>
         <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
     </body>

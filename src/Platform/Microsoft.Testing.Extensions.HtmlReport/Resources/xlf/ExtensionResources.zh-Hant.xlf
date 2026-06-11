@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="needs-review-translation">獨立式 HTML 測試報告</target>
+        <target state="translated">獨立式 HTML 測試報告</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="needs-review-translation">HTML 報告</target>
+        <target state="translated">HTML 報告</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">警告: HTML 報告檔案 '{0}' 已經存在，將會被覆寫。</target>
+        <target state="translated">警告: HTML 報告檔案 '{0}' 已經存在，將會被覆寫。</target>
         <note>{0} is the {Locked="HTML"} report file path.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">'--report-html-filename' 檔名引數的結尾必須是 '.html' (例如 --report-html-filename myreport.html)</target>
+        <target state="translated">'--report-html-filename' 檔名引數的結尾必須是 '.html' (例如 --report-html-filename myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">'--report-html-filename' 檔名部分不得空白 (例如 --report-html-filename myreport.html)</target>
+        <target state="translated">'--report-html-filename' 檔名部分不得空白 (例如 --report-html-filename myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
@@ -38,37 +38,37 @@ Example: MyReport_{tfm}.html</target>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="needs-review-translation">'--report-html-filename' 相對路徑必須留在測試結果目錄之下 (例如 --report-html-filename nested/myreport.html)</target>
+        <target state="translated">'--report-html-filename' 相對路徑必須留在測試結果目錄之下 (例如 --report-html-filename nested/myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example path {Locked="nested/myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="needs-review-translation">'--report-html-filename' 需要啟用 '--report-html'</target>
+        <target state="translated">'--report-html-filename' 需要啟用 '--report-html'</target>
         <note>Do not localize option names {Locked="--report-html-filename"}{Locked="--report-html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="needs-review-translation">為目前的測試工作階段產生獨立式 HTML 報告</target>
+        <target state="translated">為目前的測試工作階段產生獨立式 HTML 報告</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="needs-review-translation">TRX 報告產生器</target>
+        <target state="new">HTML report generator</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">使用 '--list-tests' 時，無法啟用 '--report-html'</target>
+        <target state="translated">使用 '--list-tests' 時，無法啟用 '--report-html'</target>
         <note>Do not localize option names {Locked="--report-html"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="needs-review-translation">啟用產生 HTML 報告</target>
+        <target state="translated">啟用產生 HTML 報告</target>
         <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="needs-review-translation">HTML 報表產生器只能與類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器一起運作</target>
+        <target state="translated">HTML 報表產生器只能與類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器一起運作</target>
         <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>

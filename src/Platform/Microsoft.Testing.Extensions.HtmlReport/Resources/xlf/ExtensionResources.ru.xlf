@@ -4,27 +4,27 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="needs-review-translation">Автономный тестовый отчет в формате HTML</target>
+        <target state="translated">Автономный тестовый отчет в формате HTML</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="needs-review-translation">Отчет в формате HTML</target>
+        <target state="translated">Отчет в формате HTML</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">Предупреждение: HTML-файл отчета "{0}" уже существует и будет перезаписан.</target>
+        <target state="translated">Предупреждение: HTML-файл отчета "{0}" уже существует и будет перезаписан.</target>
         <note>{0} is the {Locked="HTML"} report file path.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">Аргумент имени файла "--report-html-filename" должен оканчиваться на ".html" (например: --report-html-filename myreport.html)</target>
+        <target state="translated">Аргумент имени файла "--report-html-filename" должен оканчиваться на ".html" (например: --report-html-filename myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">Параметр "--report-html-filename" для имени файла не должен быть пустым (например, "--report-html-filename myreport.html")</target>
+        <target state="translated">Параметр "--report-html-filename" для имени файла не должен быть пустым (например, "--report-html-filename myreport.html")</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
@@ -38,37 +38,37 @@ Example: MyReport_{tfm}.html</target>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="needs-review-translation">Относительные пути, указанные с помощью параметра "--report-html-filename", должны оставаться в каталоге с результатами тестирования (например, "--report-html-filename" nested/myreport.html)</target>
+        <target state="translated">Относительные пути, указанные с помощью параметра "--report-html-filename", должны оставаться в каталоге с результатами тестирования (например, "--report-html-filename" nested/myreport.html)</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example path {Locked="nested/myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="needs-review-translation">Для "--report-html-filename" требуется включить "--report-html"</target>
+        <target state="translated">Для "--report-html-filename" требуется включить "--report-html"</target>
         <note>Do not localize option names {Locked="--report-html-filename"}{Locked="--report-html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="needs-review-translation">Создать автономный отчет в формате HTML для текущего тестового сеанса</target>
+        <target state="translated">Создать автономный отчет в формате HTML для текущего тестового сеанса</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="needs-review-translation">Генератор отчетов в формате HTML</target>
+        <target state="translated">Генератор отчетов в формате HTML</target>
         <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">Параметр "--report-html" нельзя включить при использовании "--list-tests"</target>
+        <target state="translated">Параметр "--report-html" нельзя включить при использовании "--list-tests"</target>
         <note>Do not localize option names {Locked="--report-html"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="needs-review-translation">Включить создание отчета в формате HTML</target>
+        <target state="translated">Включить создание отчета в формате HTML</target>
         <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="needs-review-translation">Генератор отчетов в формате HTML работает только со сборщиками типа "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
+        <target state="translated">Генератор отчетов в формате HTML работает только со сборщиками типа "Microsoft.Testing.Platform.Builder.TestApplicationBuilder"</target>
         <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>
