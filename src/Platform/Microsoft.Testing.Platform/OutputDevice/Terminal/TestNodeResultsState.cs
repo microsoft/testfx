@@ -65,10 +65,32 @@ internal sealed class TestNodeResultsState
         return _summaryDetail;
     }
 
+    /// <summary>
+    /// Returns a snapshot of currently running tasks, sorted by elapsed time descending and
+    /// truncated to <paramref name="maxCount"/> entries (the last entry becomes a "... N more
+    /// running" summary detail when truncation occurs).
+    /// </summary>
+    /// <remarks>
+    /// The returned <see cref="List{T}"/> is a cached buffer reused across calls to avoid
+    /// per-render-tick allocation. Callers MUST consume it immediately and MUST NOT store
+    /// the reference, mutate it, or hand it to other code that might cache it — the next
+    /// call to <see cref="GetRunningTasks"/> will <see cref="List{T}.Clear"/> and rebuild
+    /// the same instance, silently invalidating prior callers' views.
+    /// </remarks>
     public List<TestDetailState> GetRunningTasks(int maxCount)
     {
         // Reuse the cached buffer to avoid allocating a new List on every render tick.
         _runningTasksBuffer.Clear();
+
+        // Pre-size the buffer to the current snapshot size so the first calls (and any
+        // call that grows past the previous high-water mark) don't trigger multiple
+        // internal array reallocations as items are added. Capacity only grows.
+        int snapshotCount = _testNodeProgressStates.Count;
+        if (_runningTasksBuffer.Capacity < snapshotCount)
+        {
+            _runningTasksBuffer.Capacity = snapshotCount;
+        }
+
         foreach (KeyValuePair<string, TestDetailState> kvp in _testNodeProgressStates)
         {
             _runningTasksBuffer.Add(kvp.Value);
