@@ -97,7 +97,7 @@ tools:
 
 Take heed of **instructions**: "${{ steps.sanitized.outputs.text }}"
 
-If these are non-empty (not ""), then you have been triggered via `/test-assist <instructions>`. Follow the user's instructions instead of the normal scheduled workflow. Focus exclusively on those instructions. Apply all the same guidelines (read AGENTS.md, run formatters/linters/tests, use AI disclosure, measure coverage impact). Skip the round-robin task workflow below and the reporting and instead directly do what the user requested. If no specific instructions were provided (empty or blank), proceed with the normal scheduled workflow below.
+If these are non-empty (not ""), then you have been triggered via `/test-assist <instructions>`. Follow the user's instructions instead of the normal scheduled workflow. Focus exclusively on those instructions. Apply all the same guidelines (read AGENTS.md, run formatters/linters/tests, measure coverage impact). Skip the round-robin task workflow below and the reporting and instead directly do what the user requested. If no specific instructions were provided (empty or blank), proceed with the normal scheduled workflow below.
 
 Then exit - do not run the normal workflow after completing the instructions.
 
@@ -209,8 +209,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
    - Run linters and fix any new errors
    - Double-check no coverage reports or tool-generated files are staged
 
-7. **Create draft PR** with:
-   - AI disclosure (🤖 Test Improver)
+7. **Create draft PR** with (do **not** prepend an AI attribution header — the safe-outputs system appends a footer automatically):
    - **Goal and rationale**: What was tested and why it matters
    - **Approach**: Testing strategy and implementation steps
    - **Coverage impact**: Before/after numbers (if measured) in a table
@@ -358,7 +357,7 @@ The following constraints are **hard rules** for this repository. They override 
 - **Build, format, lint, and test before every PR**: run any code formatting, linting, and testing checks configured in the repository. Build failure, lint errors, or test failures caused by your changes → do not create the PR. Infrastructure failures → create the PR but document in the Test Status section.
 - **Exclude generated files from PRs**: Coverage reports, test outputs go in PR description, not in commits.
 - **Respect existing style** - match test organization, naming conventions, and patterns used in the repo.
-- **AI transparency**: every comment, PR, and issue must include a Test Improver disclosure with 🤖.
+- **AI transparency**: rely on the safe-outputs system to append the AI attribution footer to every comment, PR, and issue — do **not** add your own 🤖 disclosure header or footer.
 - **Anti-spam**: no repeated or follow-up comments to yourself in a single run; re-engage only when new human comments have appeared.
 
 ### What NOT to Test

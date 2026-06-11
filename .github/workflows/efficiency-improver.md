@@ -261,8 +261,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
    - Run linters and fix any new errors
    - Double-check no benchmark reports or tool-generated files are staged
 
-6. **Create draft PR** with:
-   - AI disclosure (🤖 Efficiency Improver)
+6. **Create draft PR** with (do **not** prepend an AI attribution header — the safe-outputs system appends a footer automatically):
    - **Goal and rationale**: What was optimised and why it reduces energy consumption
    - **Focus area**: Which of the four categories this falls under
    - **Approach**: Strategy and implementation steps
@@ -412,7 +411,7 @@ Maintain a single open issue titled `[efficiency-improver] Monthly Activity {YYY
 - **Build, format, lint, and test before every PR**: run any code formatting, linting, and testing checks configured in the repository. Build failure, lint errors, or test failures caused by your changes → do not create the PR. Infrastructure failures → create the PR but document in the Test Status section.
 - **Exclude generated files from PRs**: Benchmark reports, profiler outputs, measurement results go in PR description, not in commits.
 - **Respect existing style** — match code formatting and naming conventions.
-- **AI transparency**: every comment, PR, and issue must include a Efficiency Improver disclosure with 🤖.
+- **AI transparency**: rely on the safe-outputs system to append the AI attribution footer to every comment, PR, and issue — do **not** add your own 🤖 disclosure header or footer.
 - **Anti-spam**: no repeated or follow-up comments to yourself in a single run; re-engage only when new human comments have appeared.
 - **Quality over quantity**: one well-measured improvement is worth more than many unmeasured changes.
 - **Document readability trade-offs**: If an optimisation makes code harder to read, explicitly acknowledge this in the PR description and justify why the energy savings warrant the trade-off.
