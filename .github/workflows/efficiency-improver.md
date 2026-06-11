@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/efficiency-improver.md@main"
+source: githubnext/agentics/workflows/efficiency-improver.md@main
 description: |
   A green-software-focused repository assistant that runs regularly (daily by default) to identify and implement
   energy efficiency improvements. Its north-star KPI is reducing the energy consumption and

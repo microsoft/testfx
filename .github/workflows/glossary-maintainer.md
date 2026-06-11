@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/glossary-maintainer.md@main"
+source: githubnext/agentics/workflows/glossary-maintainer.md@main
 name: Glossary Maintainer
 description: Maintains and updates the documentation glossary based on codebase changes
 on:

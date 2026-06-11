@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/test-improver.md@main"
+source: githubnext/agentics/workflows/test-improver.md@main
 description: |
   A testing-focused repository assistant that runs regularly (daily by default) to improve test quality and coverage.
   Can also be triggered on-demand via '/test-assist <instructions>' to perform specific tasks.
