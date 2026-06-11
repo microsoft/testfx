@@ -174,8 +174,8 @@
     <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</comment>
   </data>
   <data name="JsonCommandLineOptionIsBootstrapOnlyErrorMessage" xml:space="preserve">
-    <value>The option '{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</value>
-    <comment>{0} is the bootstrap-only option name (e.g. config-file, diagnostic, diagnostic-verbosity). {Locked="commandLineOptions"}{Locked="testconfig.json"}</comment>
+    <value>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</value>
+    <comment>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</comment>
   </data>
   <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
     <value>testconfig.json environment variables provider</value>
