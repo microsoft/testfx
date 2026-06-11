@@ -39,13 +39,6 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
             FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
                 context,
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute,
-                static (symbolContext, symbols) => FixtureMethodAnalyzerHelper.AnalyzeInstanceFixtureMethod(
-                    symbolContext,
-                    symbols.FixtureAttributeSymbol,
-                    symbols.TaskSymbol,
-                    symbols.ValueTaskSymbol,
-                    symbols.TestClassAttributeSymbol,
-                    symbols.CanDiscoverInternals,
-                    Rule)));
+                static (symbolContext, symbols) => FixtureMethodAnalyzerHelper.AnalyzeInstanceFixtureMethod(symbolContext, symbols, Rule)));
     }
 }

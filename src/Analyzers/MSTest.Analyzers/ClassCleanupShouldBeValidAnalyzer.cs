@@ -40,7 +40,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
             FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
                 context,
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute,
-                static (symbolContext, symbols) => AnalyzeSymbol(symbolContext, symbols)));
+                AnalyzeSymbol));
     }
 
     private static void AnalyzeSymbol(

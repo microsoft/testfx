@@ -53,18 +53,14 @@ internal static class FixtureMethodAnalyzerHelper
 
     internal static void AnalyzeInstanceFixtureMethod(
         SymbolAnalysisContext context,
-        INamedTypeSymbol fixtureAttributeSymbol,
-        INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol,
-        INamedTypeSymbol testClassAttributeSymbol,
-        bool canDiscoverInternals,
+        FixtureMethodSymbols symbols,
         DiagnosticDescriptor rule)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (methodSymbol.HasAttribute(fixtureAttributeSymbol)
-            && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
+        if (methodSymbol.HasAttribute(symbols.FixtureAttributeSymbol)
+            && !methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: false,
                 allowGenericType: true, FixtureParameterMode.MustNotHaveTestContext, testContextSymbol: null,
-                testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
+                symbols.TestClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(rule, methodSymbol.Name)

@@ -40,7 +40,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
                 context,
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute,
-                static (symbolContext, symbols) => AnalyzeSymbol(symbolContext, symbols),
+                AnalyzeSymbol,
                 requireTestContextSymbol: true));
     }
 
