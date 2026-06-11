@@ -2,9 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -80,11 +77,8 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
         }
 
         // Skip abstract / static / generic classes for this PoC — they need extra wiring.
-        if (typeSymbol.IsAbstract || typeSymbol.IsStatic || typeSymbol.IsGenericType)
-        {
-            return null;
-        }
-
-        return TestClassModelBuilder.Build(typeSymbol);
+        return typeSymbol.IsAbstract || typeSymbol.IsStatic || typeSymbol.IsGenericType
+            ? null
+            : TestClassModelBuilder.Build(typeSymbol);
     }
 }

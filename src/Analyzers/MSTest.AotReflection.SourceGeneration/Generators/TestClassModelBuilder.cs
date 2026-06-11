@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
 
 using Microsoft.CodeAnalysis;
 
@@ -358,7 +354,7 @@ internal static class TestClassModelBuilder
             return EquatableArray<TestParameterModel>.Empty;
         }
 
-        TestParameterModel[] parameters = new TestParameterModel[method.Parameters.Length];
+        var parameters = new TestParameterModel[method.Parameters.Length];
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol p = method.Parameters[i];
@@ -370,17 +366,12 @@ internal static class TestClassModelBuilder
 
     public static EquatableArray<AttributeApplicationModel> BuildAttributes(
         ImmutableArray<AttributeData> attributes)
-    {
-        if (attributes.IsDefaultOrEmpty)
-        {
-            return EquatableArray<AttributeApplicationModel>.Empty;
-        }
-
-        return attributes
-            .Select(BuildAttribute)
-            .WhereNotNull()
-            .ToEquatableArray();
-    }
+        => attributes.IsDefaultOrEmpty
+            ? EquatableArray<AttributeApplicationModel>.Empty
+            : attributes
+                .Select(BuildAttribute)
+                .WhereNotNull()
+                .ToEquatableArray();
 
     private static AttributeApplicationModel? BuildAttribute(AttributeData attribute)
     {
@@ -399,25 +390,24 @@ internal static class TestClassModelBuilder
     }
 
     private static TypedConstantModel ToModel(TypedConstant constant)
-    {
-        if (constant.IsNull)
+        => constant switch
         {
-            return new TypedConstantModel(ConstantValueKind.Null, constant.Type?.ToDisplayString(FullyQualifiedFormat), null, EquatableArray<TypedConstantModel>.Empty);
-        }
-
-        return constant.Kind switch
-        {
-            TypedConstantKind.Array => new TypedConstantModel(
+            { IsNull: true } => new TypedConstantModel(
+                ConstantValueKind.Null,
+                constant.Type?.ToDisplayString(FullyQualifiedFormat),
+                null,
+                EquatableArray<TypedConstantModel>.Empty),
+            { Kind: TypedConstantKind.Array } => new TypedConstantModel(
                 ConstantValueKind.Array,
                 constant.Type?.ToDisplayString(FullyQualifiedFormat),
                 null,
                 constant.Values.Select(ToModel).ToEquatableArray()),
-            TypedConstantKind.Enum => new TypedConstantModel(
+            { Kind: TypedConstantKind.Enum } => new TypedConstantModel(
                 ConstantValueKind.Enum,
                 constant.Type?.ToDisplayString(FullyQualifiedFormat),
                 constant.Value,
                 EquatableArray<TypedConstantModel>.Empty),
-            TypedConstantKind.Type => new TypedConstantModel(
+            { Kind: TypedConstantKind.Type } => new TypedConstantModel(
                 ConstantValueKind.Type,
                 (constant.Value as ITypeSymbol)?.ToDisplayString(FullyQualifiedFormat),
                 null,
@@ -428,5 +418,4 @@ internal static class TestClassModelBuilder
                 constant.Value,
                 EquatableArray<TypedConstantModel>.Empty),
         };
-    }
 }
