@@ -103,7 +103,7 @@ jobs:
       binlog-found: ${{ steps.find-binlog.outputs.found }}
       binlog-relative-path: ${{ steps.find-binlog.outputs.relative-path }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.3
 
       - name: Build with binary log
         id: build
@@ -173,7 +173,7 @@ steps:
       path: /tmp/
 
   - name: Setup .NET (for NuGet MCP Server)
-    uses: actions/setup-dotnet@v5
+    uses: actions/setup-dotnet@v5.3.0
     with:
       dotnet-version: '9.0.x'
 
