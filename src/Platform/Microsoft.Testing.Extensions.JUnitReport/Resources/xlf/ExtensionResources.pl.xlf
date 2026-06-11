@@ -4,33 +4,33 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="translated">Nieprawidłowy typ konstruktora aplikacji testowej. Oczekiwano „TestApplicationBuilder”.</target>
-        <note />
+        <target state="needs-review-translation">Nieprawidłowy typ konstruktora aplikacji testowej. Oczekiwano „TestApplicationBuilder”.</target>
+        <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDescription">
         <source>JUnit XML report file</source>
-        <target state="translated">Plik raportu XML JUnit</target>
-        <note />
+        <target state="needs-review-translation">Plik raportu XML JUnit</target>
+        <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDisplayName">
         <source>JUnit XML report</source>
-        <target state="translated">Raport XML JUnit</target>
-        <note />
+        <target state="needs-review-translation">Raport XML JUnit</target>
+        <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileExistsAndWillBeOverwritten">
         <source>The JUnit report file '{0}' already exists and will be overwritten.</source>
-        <target state="translated">Ostrzeżenie: plik raportu JUnit „{0}” już istnieje i zostanie zastąpiony.</target>
-        <note />
+        <target state="needs-review-translation">Ostrzeżenie: plik raportu JUnit „{0}” już istnieje i zostanie zastąpiony.</target>
+        <note>{0} is the {Locked="JUnit"} report file path.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameExtensionIsNotXml">
         <source>'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="translated">Argument nazwy pliku „--report-junit-filename” musi kończyć się ciągiem „.xml” (np. --report-junit-filename myreport.xml)</target>
-        <note />
+        <target state="needs-review-translation">Argument nazwy pliku „--report-junit-filename” musi kończyć się ciągiem „.xml” (np. --report-junit-filename myreport.xml)</target>
+        <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameMustNotBeEmpty">
         <source>'--report-junit-filename' file name part must not be empty (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="translated">Część nazwy pliku „--report-junit-filename” nie może być pusta (np. --report-junit-filename myreport.xml)</target>
-        <note />
+        <target state="needs-review-translation">Część nazwy pliku „--report-junit-filename” nie może być pusta (np. --report-junit-filename myreport.xml)</target>
+        <note>Do not localize option name {Locked="--report-junit-filename"} or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameOptionDescription">
         <source>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
@@ -39,37 +39,37 @@ Example: MyReport_{tfm}.xml</source>
         <target state="new">The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.xml</target>
-        <note />
+        <note>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>
-        <target state="translated">Ścieżki względne „--report-junit-filename” muszą znajdować się w katalogu wyników testów (np. --report-junit-filename nested/myreport.xml)</target>
-        <note />
+        <target state="needs-review-translation">Ścieżki względne „--report-junit-filename” muszą znajdować się w katalogu wyników testów (np. --report-junit-filename nested/myreport.xml)</target>
+        <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example path {Locked="nested/myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRequiresJUnitReport">
         <source>'--report-junit-filename' requires '--report-junit' to be enabled</source>
-        <target state="translated">Element „--report-junit-filename” wymaga włączenia parametru „--report-junit”</target>
-        <note />
+        <target state="needs-review-translation">Element „--report-junit-filename” wymaga włączenia parametru „--report-junit”</target>
+        <note>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDescription">
         <source>Produce a JUnit XML report for the current test session</source>
-        <target state="translated">Tworzenie raportu XML JUnit dla bieżącej sesji testowej</target>
-        <note />
+        <target state="needs-review-translation">Tworzenie raportu XML JUnit dla bieżącej sesji testowej</target>
+        <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">
         <source>JUnit XML report generator</source>
-        <target state="translated">Generator raportów XML JUnit</target>
-        <note />
+        <target state="needs-review-translation">Generator raportów XML JUnit</target>
+        <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportIsNotValidForDiscovery">
         <source>'--report-junit' cannot be enabled when using '--list-tests'</source>
-        <target state="translated">Nie można włączyć opcji „--report-junit” w przypadku używania polecenia „--list-tests”</target>
-        <note />
+        <target state="needs-review-translation">Nie można włączyć opcji „--report-junit” w przypadku używania polecenia „--list-tests”</target>
+        <note>Do not localize option names {Locked="--report-junit"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report</source>
-        <target state="translated">Włącz generowanie raportu XML JUnit</target>
-        <note />
+        <target state="needs-review-translation">Włącz generowanie raportu XML JUnit</target>
+        <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
     </body>
   </file>
