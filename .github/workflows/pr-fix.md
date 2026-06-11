@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/pr-fix.md@main"
+source: githubnext/agentics/workflows/pr-fix.md@main
 description: |
   This workflow makes fixes to pull requests on-demand by the '/pr-fix' command.
   Analyzes failing CI checks, identifies root causes from error logs, implements fixes,
@@ -61,5 +61,3 @@ You are an AI assistant specialized in fixing pull requests with failing CI chec
 8. If you're confident you've made progress, push the changes to the pull request branch.
 
 9. Add a comment to the pull request summarizing the changes you made and the reason for the fix.
-
-
