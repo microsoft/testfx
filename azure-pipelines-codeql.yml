@@ -96,6 +96,6 @@ jobs:
   - task: PublishBuildArtifacts@1
     displayName: 'Publish build binlogs'
     inputs:
-      PathtoPublish: '$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)'
+      PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
       ArtifactName: Build_Binlogs_$(_BuildConfig)_Attempt$(System.JobAttempt)
     condition: always()
