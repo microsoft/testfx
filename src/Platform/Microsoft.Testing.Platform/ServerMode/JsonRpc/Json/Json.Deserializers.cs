@@ -106,8 +106,8 @@ internal sealed partial class Json
                 //       The best option we've got is to return a generic property bag.
                 int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
 
-                IDictionary<string, object>? result = element.ValueKind == JsonValueKind.Null ? null :
-                    json.Bind<IDictionary<string, object>>(jsonElement, JsonRpcStrings.Result);
+                IDictionary<string, object?>? result = element.ValueKind == JsonValueKind.Null ? null :
+                    json.Bind<IDictionary<string, object?>>(jsonElement, JsonRpcStrings.Result);
 
                 return new ResponseMessage(id, result);
             }

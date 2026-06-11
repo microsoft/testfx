@@ -166,7 +166,7 @@ internal sealed partial class Json
         serializers[typeof(DateTime)] = new JsonValueSerializer<DateTime>((w, v) => w.WriteRawValue($"\"{v:o}\"", skipInputValidation: true));
         serializers[typeof(DateTimeOffset)] = new JsonValueSerializer<DateTimeOffset>((w, v) => w.WriteRawValue($"\"{v:o}\"", skipInputValidation: true));
 
-        // _serializers[typeof(TimeSpan)] = new JsonValueSerializer<TimeSpan>((w, v) => w.WriteStringValue(v.ToString())); // Remove for now
+        // serializers[typeof(TimeSpan)] = new JsonValueSerializer<TimeSpan>((w, v) => w.WriteStringValue(v.ToString())); // Remove for now
         serializers[typeof((string, object?)[])] = new JsonObjectSerializer<(string, object?)[]>(n => n);
         serializers[typeof(Dictionary<string, object>)] = new JsonObjectSerializer<Dictionary<string, object>>(d => [.. d.Select(kvp => (kvp.Key, (object?)kvp.Value))]);
     }
