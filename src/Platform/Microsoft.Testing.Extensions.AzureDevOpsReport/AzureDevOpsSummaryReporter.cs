@@ -19,7 +19,6 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
-    private const string AzureDevOpsTfBuildVariableName = "TF_BUILD";
     private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}.md";
     private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MaxSlowestTests = 10;
@@ -96,7 +95,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
                 return;
             }
 
-            _emitAzureDevOpsCommands = string.Equals(_environment.GetEnvironmentVariable(AzureDevOpsTfBuildVariableName), "true", StringComparison.OrdinalIgnoreCase);
+            _emitAzureDevOpsCommands = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
             if (_emitAzureDevOpsCommands)
             {
                 return;
