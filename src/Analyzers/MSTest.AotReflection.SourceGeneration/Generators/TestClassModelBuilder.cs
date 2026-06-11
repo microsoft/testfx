@@ -98,9 +98,7 @@ internal static class TestClassModelBuilder
         => symbol.DeclaredAccessibility is
             Accessibility.Public
             or Accessibility.Internal
-            or Accessibility.Protected
-            or Accessibility.ProtectedOrInternal
-            or Accessibility.ProtectedAndInternal;
+            or Accessibility.ProtectedOrInternal;
 
     private static string BuildMethodSignatureKey(IMethodSymbol method)
     {

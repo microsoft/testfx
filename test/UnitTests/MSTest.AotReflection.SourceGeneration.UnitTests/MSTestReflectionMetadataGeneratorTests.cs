@@ -683,6 +683,52 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_ExcludesProtectedBaseMembers()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class BaseTests
+                {
+                    [TestInitialize]
+                    protected void ProtectedSetup() { }
+
+                    [TestCleanup]
+                    private protected void PrivateProtectedCleanup() { }
+
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void PublicTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("PublicTest");
+        registry.Should().NotContain("ProtectedSetup");
+        registry.Should().NotContain("PrivateProtectedCleanup");
+        registry.Should().NotContain("ProtectedTest");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("generated invokers are emitted from a non-derived type and cannot call protected base members");
+    }
+
+    [TestMethod]
     public void Generator_DoesNotInheritConstructors()
     {
         const string userCode = """
@@ -1122,7 +1168,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_InvokerForValueTaskMethod_UnwrapsViaAsTask()
+    public void Generator_InvokerForValueTaskMethod_ConsumesCompletedValueTask()
     {
         const string userCode = """
             using System.Threading.Tasks;
@@ -1142,12 +1188,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         // ValueTask unwrap uses IsCompletedSuccessfully so the synchronous-completion fast path
-        // skips the Task allocation; only when the operation actually went async do we pay AsTask().
-        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTask(); return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); },");
+        // skips the Task allocation while still consuming the ValueTask source.
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTask(); if (__vt.IsCompletedSuccessfully) { __vt.GetAwaiter().GetResult(); return Task.CompletedTask; } return __vt.AsTask(); },");
     }
 
     [TestMethod]
-    public void Generator_InvokerForValueTaskOfTMethod_UnwrapsViaAsTask()
+    public void Generator_InvokerForValueTaskOfTMethod_ConsumesCompletedValueTask()
     {
         const string userCode = """
             using System.Threading.Tasks;
@@ -1166,7 +1212,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
-        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTaskOfString(); return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); },");
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTaskOfString(); if (__vt.IsCompletedSuccessfully) { __vt.GetAwaiter().GetResult(); return Task.CompletedTask; } return __vt.AsTask(); },");
     }
 
     [TestMethod]
