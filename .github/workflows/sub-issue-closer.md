@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/sub-issue-closer.md@main"
+source: githubnext/agentics/workflows/sub-issue-closer.md@main
 description: Scheduled workflow that recursively closes parent issues when all sub-issues are 100% complete
 name: Sub-Issue Closer
 on:

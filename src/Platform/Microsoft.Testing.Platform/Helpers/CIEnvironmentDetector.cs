@@ -1,14 +1,27 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// NOTE: This file is the single source of truth for CI environment detection. It is the canonical
+// copy for Microsoft.Testing.Platform and is also linked into Microsoft.Testing.Extensions.Telemetry
+// (via Microsoft.Testing.Extensions.Telemetry.csproj) and MSTest.TestFramework (via
+// src/TestFramework/TestFramework/TestFramework.csproj). The TESTFRAMEWORK_CI_DETECTOR define
+// is set only in the MSTest.TestFramework project; the #if blocks below toggle namespace,
+// attributes, constructor accessibility, the static Instance helper, and the IsNullOrEmpty
+// implementation so the file fits both the Platform/Telemetry layer and the TestFramework layer.
+#if TESTFRAMEWORK_CI_DETECTOR
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+#else
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.Helpers;
+#endif
 
 // Detection of CI: https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection
 // Based on: https://github.com/dotnet/sdk/blob/main/src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry/CIEnvironmentDetectorForTelemetry.cs
+#if !TESTFRAMEWORK_CI_DETECTOR
 [Embedded]
 [ExcludeFromCodeCoverage]
+#endif
 internal sealed class CIEnvironmentDetector
 {
     // Systems that provide boolean values only, so we can simply parse and check for true
@@ -58,12 +71,23 @@ internal sealed class CIEnvironmentDetector
 
     private readonly IEnvironment _environment;
 
+#if TESTFRAMEWORK_CI_DETECTOR
+    /// <summary>
+    /// Gets the default instance that uses the real environment.
+    /// </summary>
+    public static CIEnvironmentDetector Instance { get; } = new(EnvironmentWrapper.Instance);
+#endif
+
     /// <summary>
     /// Initializes a new instance of the <see cref="CIEnvironmentDetector"/> class.
     /// </summary>
     /// <param name="environment">The environment abstraction to use for reading environment variables.</param>
+#if TESTFRAMEWORK_CI_DETECTOR
+    internal /* for testing purposes */ CIEnvironmentDetector(IEnvironment environment) => _environment = environment;
+#else
     public CIEnvironmentDetector(IEnvironment environment)
         => _environment = environment;
+#endif
 
     /// <summary>
     /// Detects if the current environment is a CI environment.
@@ -84,7 +108,7 @@ internal sealed class CIEnvironmentDetector
             bool allVariablesPresent = true;
             foreach (string variable in variables)
             {
-                if (global::Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
+                if (IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
                 {
                     allVariablesPresent = false;
                     break;
@@ -99,7 +123,7 @@ internal sealed class CIEnvironmentDetector
 
         foreach (string variable in IfNonNullVariables)
         {
-            if (!global::Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
+            if (!IsNullOrEmpty(_environment.GetEnvironmentVariable(variable)))
             {
                 return true;
             }
@@ -107,4 +131,12 @@ internal sealed class CIEnvironmentDetector
 
         return false;
     }
+
+#if TESTFRAMEWORK_CI_DETECTOR
+    private static bool IsNullOrEmpty(string? value)
+        => string.IsNullOrEmpty(value);
+#else
+    private static bool IsNullOrEmpty(string? value)
+        => global::Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(value);
+#endif
 }

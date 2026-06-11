@@ -79,7 +79,7 @@ jobs:
       # the maintainer ran `/analyze-build-failure` on. Check out the PR's
       # merge ref explicitly so we analyse the same code that the auto
       # `pull_request` workflow would build.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.3
         with:
           ref: refs/pull/${{ github.event.issue.number }}/merge
 
@@ -146,7 +146,7 @@ steps:
       path: /tmp/
 
   - name: Setup .NET (for NuGet MCP Server)
-    uses: actions/setup-dotnet@v5
+    uses: actions/setup-dotnet@v5.3.0
     with:
       dotnet-version: '9.0.x'
 

@@ -5,12 +5,12 @@
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
         <target state="translated">找不到预期的故障转储文件“{0}”，与“*.dmp”模式匹配的所有文件都将复制到结果文件夹</target>
-        <note />
+        <note>0 is the expected crash dump file path. Do not localize file pattern {Locked="*.dmp"}.</note>
       </trans-unit>
       <trans-unit id="CannotFindExpectedCrashReportFile">
         <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
         <target state="translated">找不到预期的故障报表文件“{0}”，所有匹配“{1}”模式的文件都将复制到结果文件夹</target>
-        <note />
+        <note>{0} is the expected crash report file path. {1} is the crash report file search pattern.</note>
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
@@ -25,7 +25,7 @@
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
         <target state="translated">[仅限 net6.0+]在测试执行进程意外崩溃时生成故障转储文件</target>
-        <note />
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
@@ -35,42 +35,42 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
         <target state="translated">指定转储文件的名称</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
         <target state="translated">环境变量“{0}”应设置为“{1}”，但值为“{2}”</target>
-        <note />
+        <note>{0} is the environment variable name. {1} is the expected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
         <target state="translated">故障转储功能仅在 .NET (Core) 中可用</target>
-        <note />
+        <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
         <target state="translated">[仅限 net6.0+]如果测试进程崩溃，则生成转储文件</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
         <target state="translated">PID 为“{0}”的测试主机进程故障，但未生成预期的诊断项目</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
         <target state="translated">PID 为“{0}”的测试主机进程故障，已生成转储文件和故障报表</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">PID 为“{0}”的测试主机进程崩溃，生成了转储文件</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
         <target state="translated">PID 为“{0}”的测试主机进程故障，已生成故障报表</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
@@ -85,7 +85,7 @@
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">未能读取故障序列文件“{0}”: {1}</target>
-        <note />
+        <note>{0} is the crash sequence file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -99,22 +99,22 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">指定转储的类型。
 有效值为 "Mini"、"Heap"、"Triage" 或 "Full"。默认类型为 "Full"。
 有关详细信息，请访问 https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
         <target state="translated">“{0}”不是有效的转储类型。有效选项为“Mini”、“Heap”、“Triage”和“Full”</target>
-        <note />
+        <note>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
         <target state="translated">“--crashdump-type”需要将单一转储类型作为参数(例如“--crashdump-type Heap”)</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"} or example command {Locked="--crashdump-type Heap"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
         <target state="translated">"--crash-report" 与 "--crash-report-if-supported" 互斥。使用 "--crash-report-if-supported" 可选择一种尽力而为的故障报表，它会在不支持的平台上静默跳过；或使用 "--crash-report" 在无法使用该选项时快速失败。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
@@ -129,51 +129,51 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
         <target state="translated">已指定 "--crash-report-if-supported"，但在此运行时中会被忽略: .NET Framework 测试主机不支持基于运行时的故障转储/故障报告机制。将不会生成故障报告文件。</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"} or runtime name {Locked=".NET Framework"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
         <target state="translated">已指定 "--crash-report-if-supported"，但在此平台上被忽略: .NET 运行时在 Windows 上忽略底层 "DOTNET_EnableCrashReport" 和 "DOTNET_EnableCrashReportOnly" 环境变量(请参阅 https://github.com/dotnet/runtime/issues/80191)。将不会生成故障报告文件。</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
         <target state="translated">与 "--crash-report" 作用相同，但在不支持生成故障报告的平台上会被静默忽略(并显示一条信息性消息)。使用此选项可在包含 Windows 的 CI 矩阵中保持相同的命令行。与 "--crash-report" 互斥。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
         <target state="translated">Windows 不支持 "--crash-report"，因为 .NET 运行时在此平台上忽略底层 "DOTNET_EnableCrashReport" 和 "DOTNET_EnableCrashReportOnly" 环境变量。请参阅 https://github.com/dotnet/runtime/issues/80191。使用 "--crash-report-if-supported" 可在 Windows 上静默跳过此选项，或改用 "--crashdump" 生成故障转储文件。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
         <target state="translated">[仅 Linux/macOS] 测试进程故障时生成 JSON 故障报表。与 "--crashdump" 结合使用时，还会生成转储文件。单独使用时需要 .NET 7+；与 "--crashdump" 结合使用时需要 .NET 6+。此工具不强制执行此运行时要求: 在不受支持的运行时上，不会生成故障报表。由于 .NET 运行时限制(dotnet/runtime#80191)，在 Windows 上不受支持；使用 "--crash-report-if-supported" 可在此处静默跳过该选项。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, platforms {Locked="Linux"}{Locked="macOS"}{Locked="Windows"}, format name {Locked="JSON"}, runtime name {Locked=".NET"}, target framework versions {Locked=".NET 7+"}{Locked=".NET 6+"}, or issue reference {Locked="dotnet/runtime#80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="translated">控制是否在生成故障转储或故障报告的同时，生成列出测试会话期间启动和结束测试的序列文件。
-该文件可在无需检查转储的情况下识别故障时正在运行的测试。
-有效值为 "on" (默认；也接受 "true"、"enable"、"1")或 "off" (也接受 "false"、"disable"、"0")。</target>
-        <note />
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--crash-sequence 需要单个参数，值为 "on" (或 "true"、"enable"、"1")或 "off" (或 "false"、"disable"、"0")。</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
         <target state="translated">你指定了一个或多个故障转储参数，但未启用故障转储。将 --crashdump 或 --crash-report 添加到命令行。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crashdump"}{Locked="--crash-report"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">不支持类型为“{0}”的请求</target>
-        <note />
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
     </body>
   </file>

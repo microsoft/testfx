@@ -119,43 +119,56 @@
   </resheader>
   <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
     <value>Invalid test application builder type. Expected 'TestApplicationBuilder'.</value>
+    <comment>Do not localize {Locked="TestApplicationBuilder"}.</comment>
   </data>
   <data name="JUnitReportArtifactDescription" xml:space="preserve">
     <value>JUnit XML report file</value>
+    <comment>Do not localize {Locked="JUnit"} or {Locked="XML"}.</comment>
   </data>
   <data name="JUnitReportArtifactDisplayName" xml:space="preserve">
     <value>JUnit XML report</value>
+    <comment>Do not localize {Locked="JUnit"} or {Locked="XML"}.</comment>
   </data>
   <data name="JUnitReportFileExistsAndWillBeOverwritten" xml:space="preserve">
     <value>The JUnit report file '{0}' already exists and will be overwritten.</value>
+    <comment>{0} is the {Locked="JUnit"} report file path.</comment>
   </data>
   <data name="JUnitReportFileNameExtensionIsNotXml" xml:space="preserve">
     <value>'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</value>
+    <comment>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example command {Locked="--report-junit-filename myreport.xml"}.</comment>
   </data>
   <data name="JUnitReportFileNameMustNotBeEmpty" xml:space="preserve">
     <value>'--report-junit-filename' file name part must not be empty (e.g. --report-junit-filename myreport.xml)</value>
+    <comment>Do not localize option name {Locked="--report-junit-filename"} or example command {Locked="--report-junit-filename myreport.xml"}.</comment>
   </data>
   <data name="JUnitReportFileNameOptionDescription" xml:space="preserve">
     <value>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.xml</value>
+    <comment>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</comment>
   </data>
   <data name="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory" xml:space="preserve">
     <value>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</value>
+    <comment>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example path {Locked="nested/myreport.xml"}.</comment>
   </data>
   <data name="JUnitReportFileNameRequiresJUnitReport" xml:space="preserve">
     <value>'--report-junit-filename' requires '--report-junit' to be enabled</value>
+    <comment>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</comment>
   </data>
   <data name="JUnitReportGeneratorDescription" xml:space="preserve">
     <value>Produce a JUnit XML report for the current test session</value>
+    <comment>Do not localize {Locked="JUnit"} or {Locked="XML"}.</comment>
   </data>
   <data name="JUnitReportGeneratorDisplayName" xml:space="preserve">
     <value>JUnit XML report generator</value>
+    <comment>Do not localize {Locked="JUnit"} or {Locked="XML"}.</comment>
   </data>
   <data name="JUnitReportIsNotValidForDiscovery" xml:space="preserve">
     <value>'--report-junit' cannot be enabled when using '--list-tests'</value>
+    <comment>Do not localize option names {Locked="--report-junit"}{Locked="--list-tests"}.</comment>
   </data>
   <data name="JUnitReportOptionDescription" xml:space="preserve">
     <value>Enable generating a JUnit XML report</value>
+    <comment>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</comment>
   </data>
 </root>

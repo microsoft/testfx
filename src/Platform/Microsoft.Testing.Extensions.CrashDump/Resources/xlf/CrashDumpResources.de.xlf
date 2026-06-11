@@ -5,12 +5,12 @@
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
         <target state="translated">Die erwartete Absturzabbilddatei "{0}" wurde nicht gefunden. Alle Dateien, die dem Muster "*.dmp" entsprechen, werden in den Ergebnisordner kopiert</target>
-        <note />
+        <note>0 is the expected crash dump file path. Do not localize file pattern {Locked="*.dmp"}.</note>
       </trans-unit>
       <trans-unit id="CannotFindExpectedCrashReportFile">
         <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
         <target state="translated">Die erwartete Absturzabbilddatei „{0}“ wurde nicht gefunden. Alle Dateien, die dem Muster „{1}“ entsprechen, werden in den Ergebnisordner kopiert</target>
-        <note />
+        <note>{0} is the expected crash report file path. {1} is the crash report file search pattern.</note>
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
@@ -25,7 +25,7 @@
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
         <target state="translated">[nur net6.0+] Erstellen von Absturzabbilddateien, wenn der Testausführungsprozess unerwartet abstürzt</target>
-        <note />
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
@@ -35,42 +35,42 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file</source>
         <target state="translated">Namen der Speicherabbilddatei angeben</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
         <target state="translated">Die Umgebungsvariable "{0}" hätte auf "{1}" festgelegt werden sollen, aber der Wert ist "{2}"</target>
-        <note />
+        <note>{0} is the environment variable name. {1} is the expected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
         <target state="translated">Das Absturzabbildfeature ist nur in .NET (Core) verfügbar</target>
-        <note />
+        <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
         <target state="translated">[nur net6.0+] Speicherabbilddatei generieren, wenn der Testprozess abstürzt</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
         <target state="translated">Der Testhostprozess mit PID „{0}“ ist abgestürzt, aber die erwarteten Diagnoseartefakte wurden nicht erstellt.</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
         <target state="translated">Der Testhostprozess mit PID „{0}“ ist abgestürzt, eine Absturzabbilddatei und ein Absturzbericht wurden generiert.</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">Der Testhostprozess mit PID "{0}" ist abgestürzt. Es wurde eine Abbilddatei generiert</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
         <target state="translated">Der Testhostprozess mit PID „{0}“ ist abgestürzt, ein Absturzbericht wurde generiert.</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
@@ -85,7 +85,7 @@
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">Fehler beim Lesen der Absturzsequenzdatei „{0}“: {1}</target>
-        <note />
+        <note>{0} is the crash sequence file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -99,22 +99,22 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">Geben Sie den Typ des Speicherabbilds an.
 Gültige Werte sind „Mini“, „Heap“, „Triage“ oder „Full“. Der Standardtyp ist "Full".
 Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
         <target state="translated">"{0}" ist kein gültiger Speicherabbildtyp. Gültige Optionen sind "Mini", "Heap", "Triage" und "Full"</target>
-        <note />
+        <note>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
         <target state="translated">"--crashdump-type" erwartet einen einzelnen Speicherabbildtyp als Argument (z. B. "--crashdump-type Heap")</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"} or example command {Locked="--crashdump-type Heap"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
         <target state="translated">„--crash-report“ und „--crash-report-if-supported“ schließen sich gegenseitig aus. Verwenden Sie „--crash-report-if-supported“, um einen Absturzbericht nach dem Prinzip bestmöglicher Aufwandserbringung zu aktivieren, der auf Plattformen, auf denen er nicht unterstützt wird, stillschweigend übersprungen wird, oder „--crash-report“, um schnell fehlzuschlagen, wenn die Option nicht berücksichtigt werden kann.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
@@ -129,51 +129,51 @@ Weitere Informationen finden Sie unter https://learn.microsoft.com/dotnet/core/d
       <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
         <target state="translated">„--crash-report-if-supported“ wurde angegeben, wird aber zur Laufzeit ignoriert: Der .NET Framework-Testhost unterstützt den auf der Laufzeit basierenden Mechanismus für Absturzabbilder und Absturzberichte nicht. Es wird keine Absturzberichtdatei erstellt.</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"} or runtime name {Locked=".NET Framework"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
         <target state="translated">„--crash-report-if-supported“ wurde angegeben, wird auf dieser Plattform aber ignoriert: Die .NET-Runtime ignoriert die zugrunde liegenden Umgebungsvariablen „DOTNET_EnableCrashReport“ und „DOTNET_EnableCrashReportOnly“ unter Windows (siehe https://github.com/dotnet/runtime/issues/80191). Es wird keine Absturzberichtdatei erstellt.</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
         <target state="translated">Entspricht „--crash-report“, wird aber auf Plattformen, auf denen das Erstellen von Absturzberichten nicht unterstützt wird, stillschweigend ignoriert (mit einer Informationsmeldung). Verwenden Sie diese Option, um dieselbe Befehlszeile für CI-Matrizen beizubehalten, die Windows enthalten. Schließt sich gegenseitig mit „--crash-report“ aus.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
         <target state="translated">„--crash-report“ wird unter Windows nicht unterstützt, da die .NET-Runtime die zugrunde liegenden Umgebungsvariablen „DOTNET_EnableCrashReport“ und „DOTNET_EnableCrashReportOnly“ auf dieser Plattform ignoriert. Siehe https://github.com/dotnet/runtime/issues/80191. Verwenden Sie „--crash-report-if-supported“, um die Option unter Windows still zu überspringen, oder „--crashdump“, um stattdessen eine Absturzabbilddatei zu generieren.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
-        <target state="translated">[Nur Linux/macOS] Generieren Sie einen JSON-Absturzbericht, wenn der Testprozess abstürzt. Kombinieren Sie dies mit „--crashdump“, um auch eine Absturzabbilddatei zu generieren. Erfordert .NET 7 und höher, wenn es allein verwendet wird; .NET 6+ in Kombination mit „--crashdump“. Diese Runtimeanforderung wird vom Tool nicht erzwungen: Bei nicht unterstützten Runtimes wird kein Absturzbericht ausgegeben. Wird unter Windows aufgrund einer .NET-Runtimeeinschränkung nicht unterstützt (dotnet/runtime#80191); verwenden Sie „--crash-report-if-supported“, um die Option dort still zu überspringen.</target>
-        <note />
+        <target state="new">[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</target>
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, platforms {Locked="Linux"}{Locked="macOS"}{Locked="Windows"}, format name {Locked="JSON"}, runtime name {Locked=".NET"}, target framework versions {Locked=".NET 7+"}{Locked=".NET 6+"}, or issue reference {Locked="dotnet/runtime#80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="translated">Steuern Sie, ob eine Sequenzdatei, die die während der Testsitzung gestarteten und beendeten Tests auflistet, zusammen mit dem Absturzabbild oder Absturzbericht generiert wird.
-Die Datei ermöglicht es, die Tests zu identifizieren, die zum Zeitpunkt des Absturzes ausgeführt wurden, ohne das Abbild untersuchen zu müssen.
-Gültige Werte sind „on“ (Standard; akzeptiert auch „true“, „enable“, „1“) oder „off“ (akzeptiert auch „false“, „disable“, „0“).</target>
-        <note />
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--crash-sequence erwartet einen einzelnen Parameter mit dem Wert „on“ (oder „true“, „enable“,„1“) oder „off“ (oder „false“, „disable“, „0“).</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
         <target state="translated">Sie haben mindestens einen Parameter für ein Absturzabbild angegeben, aber keine Absturzabbilder aktiviert. Fügen Sie der Befehlszeile --crashdump oder --crash-report hinzu.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crashdump"}{Locked="--crash-report"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Anforderungen vom Typ "{0}" werden nicht unterstützt</target>
-        <note />
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
     </body>
   </file>

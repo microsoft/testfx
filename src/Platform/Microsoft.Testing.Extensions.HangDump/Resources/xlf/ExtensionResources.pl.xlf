@@ -5,7 +5,7 @@
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
         <target state="translated">Tworzenie pliku zrzutu „{0}”</target>
-        <note />
+        <note>{0} is the dump file path.</note>
       </trans-unit>
       <trans-unit id="DumpingProcess">
         <source>Dumping process {0} - {1}</source>
@@ -45,12 +45,12 @@
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">Zmienna środowiskowa „{0}” jest ustawiona na wartość „{1}” zamiast „{2}”</target>
-        <note />
+        <note>{0} is the environment variable name. {1} is the actual value. {2} is the expected value.</note>
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
         <target state="translated">Zmienna środowiskowa „{0}” nie jest ustawiona</target>
-        <note />
+        <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
         <source>Produce hang dump files when a test execution exceed a given time.</source>
@@ -73,25 +73,24 @@ Disk info:
 
 Informacje o dysku:
 {1}</target>
-        <note>{0} - the exception that occurred.
-{1} - disk info detailing free space</note>
+        <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
         <target state="new">Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
         <target state="translated">Wygeneruj plik zrzutu, jeśli proces testowy zawiesza się</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
         <target state="translated">Upłynął limit czasu zrzutu zawieszenia „{0}”</target>
-        <note />
+        <note>{0} is the hang dump timeout value.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
@@ -103,57 +102,57 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="translated">Określ limit czasu, po którym zostanie wygenerowany zrzut.
-Wartość limitu czasu jest określana w jednym z następujących formatów:
-    500 ms, 500 mil, 500 milisekund, 500 milisekund,
-    5400 s, 5400 sek., 5400 sekund, 5400 sekund,
-    90 m, 90 min, 90 minut, 90 minut,
-    1.5 h, 1.5 godz. 1.5 godziny,
-    1 d, 1 dzień, 1 dzień.
-    Liczba bez sufiksu jest interpretowana jako milisekunda.
-    Wartość domyślna to 30m.</target>
-        <note />
+        <target state="new">Specify the timeout after which the dump will be generated.
+The timeout value is specified in one of the following formats:
+    500ms, 500mil, 500millisecond, 500milliseconds,
+    5400s, 5400sec, 5400second, 5400seconds,
+    90m, 90min, 90minute, 90minutes,
+    1.5h, 1.5hour, 1.5hours,
+    1d, 1day, 1days.
+    A bare number (with no suffix) is interpreted as milliseconds.
+    Default is 30m.</target>
+        <note>Do not localize option name {Locked="--hangdump-timeout"} or time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
         <target state="translated">Element „--hangdump-timeout” oczekuje pojedynczego argumentu limitu czasu</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-timeout"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
         <target state="translated">„--hangdump-type” i „--hangdump-type-if-supported” wykluczają się wzajemnie. Użyj polecenia „--hangdump-type-if-supported”, aby wybrać typ zrzutu najlepszego nakładu pracy, który wraca do najbliższego dostępnego typu (z komunikatem informacyjnym), gdy żądany typ jest niedostępny w bieżącym środowisku uruchomieniowym, lub „--hangdump-type”, aby szybko zakończyć się niepowodzeniem w nieobsługiwanych środowiskach uruchomieniowych.</target>
-        <note />
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
         <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
         <target state="translated">Element „--hangdump-type-if-supported {0}„ nie jest obsługiwany w bieżącym środowisku uruchomieniowym. Powrót do „{1}”.</target>
-        <note />
+        <note>0 is the requested dump type. 1 is the fallback dump type. Do not localize option name {Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
         <target state="translated">Taki sam jak „--hangdump-type”, ale dyskretnie powraca (z komunikatem informacyjnym) do najbliższego obsługiwanego typu zrzutu, gdy żądany typ nie jest dostępny w bieżącym środowisku uruchomieniowym (np. „Triage” jest obsługiwany tylko na platformie .NET Core i powraca do wartości „Mini” w programie .NET Framework). Użyj tej opcji, aby zachować ten sam wiersz polecenia w macierzach ciągłej integracji, które mieszają program .NET Framework i środowisko .NET. Prawidłowe wartości to „Mini”, „Heap”, „Full”, „Triage”, „None”. Wykluczają się wzajemnie z elementem „--hangdump-type”.</target>
-        <note />
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Full"}{Locked="Triage"}{Locked="None"}, or runtime names {Locked=".NET Core"}{Locked=".NET Framework"}{Locked=".NET"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="translated">Określ typ zrzutu.
-Prawidłowe wartości to: {0}.
-Domyślny typ to „Pełne”</target>
-        <note />
+        <target state="new">Specify the type of the dump.
+Valid values are {0}.
+Default type is 'Full'</target>
+        <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
         <target state="translated">„{0}” nie jest prawidłowym typem zrzutu.
 Prawidłowe opcje to: {1}</target>
-        <note />
+        <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
         <target state="translated">Żądanie typu „{0}” nie jest obsługiwane</target>
-        <note />
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
         <source>The list of tests that were running at the time of the hang</source>
@@ -168,12 +167,12 @@ Prawidłowe opcje to: {1}</target>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
         <target state="translated">Określono co najmniej jeden parametr zrzutu zawieszenia, ale go nie włączono. Dodaj parametr --hangdump do wiersza polecenia</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
         <target state="translated">Następujące testy były nadal uruchomione podczas wykonywania zrzutu (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
-        <note />
+        <note>Do not localize format tokens {Locked="[&lt;time-elapsed-since-start&gt;]"} and {Locked="&lt;name&gt;"}.</note>
       </trans-unit>
     </body>
   </file>
