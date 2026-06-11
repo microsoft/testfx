@@ -186,6 +186,18 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
+    public void TestResultCapture_DoesNotWalkTerminalProperties_ForNonTerminalStates()
+    {
+        var bag = new PropertyBag(
+            DiscoveredTestNodeStateProperty.CachedInstance,
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)));
+        TestNode node = new() { Uid = "a", DisplayName = "x", Properties = bag };
+
+        Assert.IsNull(TestResultCapture.TryCapture(node));
+    }
+
+    [TestMethod]
     [DataRow("passed", typeof(PassedTestNodeStateProperty))]
     [DataRow("skipped", typeof(SkippedTestNodeStateProperty))]
     [DataRow("failed", typeof(FailedTestNodeStateProperty))]

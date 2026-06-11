@@ -38,14 +38,18 @@ internal static class TestResultCapture
     public static CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
     {
         TestNode node = update.TestNode;
+        TestNodeStateProperty? state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+        {
+            return null;
+        }
 
-        // Single-pass collection of all required properties — replaces 5 × SingleOrDefault<T>()
-        // + 1 × foreach/GetEnumerator() with one zero-allocation GetStructEnumerator() pass,
-        // saving 5 linked-list traversals and 1 IEnumerator<IProperty> heap allocation per
-        // terminal test result.  Singleton-typed properties use the local GetSingleOrDefaultValue
+        // Keep the O(1) state lookup above as a fast path for non-terminal messages. Terminal
+        // results collect all remaining required properties in one pass — replacing
+        // 4 × SingleOrDefault<T>() + 1 × foreach/GetEnumerator() with one zero-allocation
+        // GetStructEnumerator() pass. Singleton-typed properties use the local GetSingleOrDefaultValue
         // helper to preserve the throw-on-duplicate invariant that SingleOrDefault<T>() provided;
         // TestMetadataProperty is intentionally multi-valued and accumulates into a list.
-        TestNodeStateProperty? state = null;
         TimingProperty? timing = null;
         TestMethodIdentifierProperty? identifier = null;
         StandardOutputProperty? standardOutput = null;
@@ -57,7 +61,6 @@ internal static class TestResultCapture
         {
             switch (enumerator.Current)
             {
-                case TestNodeStateProperty s: state = GetSingleOrDefaultValue(state, s); break;
                 case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
                 case TestMethodIdentifierProperty m: identifier = GetSingleOrDefaultValue(identifier, m); break;
                 case StandardOutputProperty so: standardOutput = GetSingleOrDefaultValue(standardOutput, so); break;
@@ -78,11 +81,6 @@ internal static class TestResultCapture
             => existingProperty is not null
                 ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
                 : property;
-
-        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
-        {
-            return null;
-        }
 
         string outcome = ClassifyOutcome(state);
         TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
