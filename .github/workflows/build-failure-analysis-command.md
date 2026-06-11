@@ -4,7 +4,8 @@ description: >-
   Rerun the build-failure analysis on a pull request when a maintainer
   comments `/analyze-build-failure`. Same body as `build-failure-analysis.md`
   — re-runs `./build.sh --binaryLog`, captures the binlog, and delegates to
-  the `build-failure-analyst` agent. Useful when a previous run was
+  the `build-failure-analyst` agent (which queries the binlog live via the
+  containerized `binlog-mcp` MCP server). Useful when a previous run was
   cancelled, the analysis comment was dismissed, or the agent needs another
   pass after a force-push.
 
@@ -35,7 +36,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BINLOG_MCP_VERSION: '1.0.0-preview.26272.1'
   NUGET_MCP_VERSION: '1.4.3'
 
 timeout-minutes: 30
@@ -47,6 +47,17 @@ network:
 
 imports:
   - shared/build-failure-analysis-shared.md
+
+# Live binlog access for the agent — see build-failure-analysis.md for the
+# rationale. The build job uploads the binlog as an artifact; the agent job
+# downloads it to `/tmp/build.binlog` and the gh-aw MCP gateway mounts it
+# read-only at `/data/build.binlog`.
+mcp-servers:
+  binlog-mcp:
+    container: "mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-binlog-mcp-amd64"
+    mounts:
+      - "/tmp/build.binlog:/data/build.binlog:ro"
+    allowed: ["*"]
 
 # Custom build job that runs on every slash-command invocation. Mirrors the
 # `build` job in build-failure-analysis.md so the slash-command variant
@@ -62,8 +73,6 @@ jobs:
       outcome: ${{ steps.build.outcome }}
       binlog-found: ${{ steps.find-binlog.outputs.found }}
       binlog-relative-path: ${{ steps.find-binlog.outputs.relative-path }}
-    env:
-      BINLOG_MCP_VERSION: '1.0.0-preview.26272.1'
     steps:
       # `pull_request_comment` events have the `issues` event payload, so
       # the default checkout would build the default branch — NOT the PR
@@ -86,10 +95,6 @@ jobs:
           # re-expose us to the Copilot-flake red-X bug).
           exit "${PIPESTATUS[0]}"
 
-      - name: Put dotnet on the path
-        if: always()
-        run: echo "$PWD/.dotnet" >> $GITHUB_PATH
-
       - name: Locate binlog
         id: find-binlog
         if: always()
@@ -104,45 +109,27 @@ jobs:
             echo "found=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Install binlog-mcp
-        if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
-        continue-on-error: true
-        run: |
-          mkdir -p /tmp/binlog-tool
-          cat > /tmp/binlog-tool/nuget.config <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <packageSources>
-              <clear />
-              <add key="dotnet-tools"
-                   value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
-            </packageSources>
-          </configuration>
-          EOF
-          dotnet tool install --global Microsoft.AITools.BinlogMcp \
-            --configfile /tmp/binlog-tool/nuget.config \
-            --version "$BINLOG_MCP_VERSION"
-          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-
-      - name: Dump binlog as JSON
+      # Copy the (timestamped) binlog to a fixed name so the agent job can
+      # download it deterministically and the gh-aw MCP gateway can mount it
+      # at a stable in-container path (`/data/build.binlog`).
+      # `continue-on-error: true` keeps the artifact upload step reachable
+      # even if `cp` fails — the agent can then emit a "build failed, no
+      # binlog" comment from the raw build output log.
+      - name: Stage binlog for upload
         if: steps.build.outcome == 'failure' && steps.find-binlog.outputs.found == 'true'
         continue-on-error: true
         env:
           BINLOG_REL_PATH: ${{ steps.find-binlog.outputs.relative-path }}
-        run: |
-          mkdir -p /tmp/binlog-data
-          timeout 180 dotnet run --project .github/workflows/scripts/DumpBinlog -- \
-            "$BINLOG_REL_PATH" \
-            /tmp/binlog-data
+        run: cp "$BINLOG_REL_PATH" /tmp/build.binlog
 
       - name: Upload analysis artifact
         if: always() && steps.build.outcome == 'failure'
         continue-on-error: true
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: build-failure-analysis-data
           path: |
-            /tmp/binlog-data/
+            /tmp/build.binlog
             /tmp/build-output.log
           if-no-files-found: warn
           retention-days: 1
@@ -153,7 +140,7 @@ jobs:
 # Copilot AI flake).
 steps:
   - name: Download analysis artifact
-    uses: actions/download-artifact@v8
+    uses: actions/download-artifact@v8.0.1
     with:
       name: build-failure-analysis-data
       path: /tmp/
@@ -191,18 +178,28 @@ steps:
   - name: Export agent context
     env:
       GH_AW_BUILD_OUTCOME_VALUE: ${{ needs.build.outputs.outcome }}
+      GH_AW_BINLOG_FOUND_VALUE: ${{ needs.build.outputs.binlog-found }}
       GH_AW_BINLOG_REL_VALUE: ${{ needs.build.outputs.binlog-relative-path }}
       GH_AW_GITHUB_EVENT_ISSUE_NUMBER: ${{ github.event.issue.number }}
       GH_AW_PR_HEAD_SHA_VALUE: ${{ steps.resolve-pr-sha.outputs.sha || github.sha }}
       GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
-      BINLOG_PATH=""
+      # See build-failure-analysis.md for the binlog path conventions.
+      # The agent reads the binlog through the binlog-mcp MCP server,
+      # which has it mounted at `/data/build.binlog`. The host-side path
+      # is kept only for permalinks.
+      BINLOG_HOST_PATH=""
       if [ -n "${GH_AW_BINLOG_REL_VALUE:-}" ]; then
-        BINLOG_PATH="${GH_AW_GITHUB_WORKSPACE}/${GH_AW_BINLOG_REL_VALUE}"
+        BINLOG_HOST_PATH="${GH_AW_GITHUB_WORKSPACE}/${GH_AW_BINLOG_REL_VALUE}"
+      fi
+      BINLOG_MCP_PATH=""
+      if [ "${GH_AW_BINLOG_FOUND_VALUE:-false}" = "true" ] && [ -f /tmp/build.binlog ]; then
+        BINLOG_MCP_PATH="/data/build.binlog"
       fi
       {
         echo "GH_AW_BUILD_OUTCOME=${GH_AW_BUILD_OUTCOME_VALUE}"
-        echo "GH_AW_BINLOG_PATH=${BINLOG_PATH}"
+        echo "GH_AW_BINLOG_PATH=${BINLOG_MCP_PATH}"
+        echo "GH_AW_BINLOG_HOST_PATH=${BINLOG_HOST_PATH}"
         echo "GH_AW_PR_NUMBER=${GH_AW_GITHUB_EVENT_ISSUE_NUMBER}"
         echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
         echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"

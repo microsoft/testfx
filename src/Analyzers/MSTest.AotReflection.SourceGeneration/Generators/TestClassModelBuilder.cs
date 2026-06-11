@@ -9,6 +9,7 @@ using System.Text;
 
 using Microsoft.CodeAnalysis;
 
+using MSTest.AotReflection.SourceGeneration.Helpers;
 using MSTest.AotReflection.SourceGeneration.Model;
 
 namespace MSTest.AotReflection.SourceGeneration.Generators;
@@ -109,6 +110,12 @@ internal static class TestClassModelBuilder
         var sb = new StringBuilder();
         sb.Append(method.IsStatic ? "S:" : "I:");
         sb.Append(method.Name);
+        if (method.Arity > 0)
+        {
+            sb.Append('`');
+            sb.Append(method.Arity);
+        }
+
         sb.Append('(');
         bool first = true;
         foreach (IParameterSymbol p in method.Parameters)
@@ -152,6 +159,8 @@ internal static class TestClassModelBuilder
             || returnTypeFqn.StartsWith("global::System.Threading.Tasks.ValueTask<", System.StringComparison.Ordinal);
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
+        ImmutableArray<AttributeData> inheritedAttributes = CollectInheritedAttributes(method);
+
         return new TestMethodModel(
             Name: method.Name,
             IsStatic: method.IsStatic,
@@ -160,7 +169,63 @@ internal static class TestClassModelBuilder
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
             Parameters: BuildParameters(method),
-            Attributes: BuildAttributes(CollectInheritedAttributes(method)));
+            Attributes: BuildAttributes(inheritedAttributes),
+            DataRows: BuildDataRows(inheritedAttributes));
+    }
+
+    // Walks the attribute list and reifies each [DataRow(...)] application into a flat
+    // object?[] row. Mirrors DataRowAttribute's runtime behavior: when the constructor uses
+    // the variadic overload (object? data1, params object?[] moreData), Roslyn surfaces the
+    // tail as a single Array TypedConstant, which we flatten back so the consumer sees the
+    // same shape as DataRowAttribute.Data.
+    private static EquatableArray<DataRowModel> BuildDataRows(ImmutableArray<AttributeData> attributes)
+    {
+        if (attributes.IsDefaultOrEmpty)
+        {
+            return EquatableArray<DataRowModel>.Empty;
+        }
+
+        ImmutableArray<DataRowModel>.Builder builder = ImmutableArray.CreateBuilder<DataRowModel>();
+        foreach (AttributeData attribute in attributes)
+        {
+            if (attribute.AttributeClass is not { } attributeClass)
+            {
+                continue;
+            }
+
+            if (attributeClass.ToDisplayString(FullyQualifiedFormat) != "global::" + MSTestAttributeNames.DataRow)
+            {
+                continue;
+            }
+
+            ImmutableArray<TypedConstant> ctorArgs = attribute.ConstructorArguments;
+            ImmutableArray<TypedConstantModel>.Builder rowBuilder = ImmutableArray.CreateBuilder<TypedConstantModel>();
+
+            bool lastIsParamsArray =
+                attribute.AttributeConstructor is { Parameters: { IsDefaultOrEmpty: false } parameters }
+                && parameters[parameters.Length - 1].IsParams
+                && !ctorArgs.IsDefaultOrEmpty
+                && ctorArgs[ctorArgs.Length - 1].Kind == TypedConstantKind.Array;
+
+            for (int i = 0; i < ctorArgs.Length; i++)
+            {
+                if (i == ctorArgs.Length - 1 && lastIsParamsArray)
+                {
+                    foreach (TypedConstant element in ctorArgs[i].Values)
+                    {
+                        rowBuilder.Add(ToModel(element));
+                    }
+                }
+                else
+                {
+                    rowBuilder.Add(ToModel(ctorArgs[i]));
+                }
+            }
+
+            builder.Add(new DataRowModel(new EquatableArray<TypedConstantModel>(rowBuilder.ToImmutable())));
+        }
+
+        return new EquatableArray<DataRowModel>(builder.ToImmutable());
     }
 
     private static TestPropertyModel BuildProperty(IPropertySymbol property)
@@ -172,7 +237,9 @@ internal static class TestClassModelBuilder
 
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
     // overridden-method chain and union attributes, keeping the most-derived application when
-    // the same attribute type appears on multiple levels.
+    // the same attribute type appears on multiple levels — but respect
+    // [AttributeUsage(Inherited = false)] (the attribute is NOT visible past the level it was
+    // declared on) and [AttributeUsage(AllowMultiple = true)] (every occurrence is kept).
     private static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
     {
         ImmutableArray<AttributeData> own = method.GetAttributes();
@@ -183,10 +250,10 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own);
+        AppendUnique(builder, seen, own, isInheritedLevel: false);
         for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
         {
-            AppendUnique(builder, seen, baseMethod.GetAttributes());
+            AppendUnique(builder, seen, baseMethod.GetAttributes(), isInheritedLevel: true);
         }
 
         return builder.ToImmutable();
@@ -202,10 +269,10 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own);
+        AppendUnique(builder, seen, own, isInheritedLevel: false);
         for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
         {
-            AppendUnique(builder, seen, baseProperty.GetAttributes());
+            AppendUnique(builder, seen, baseProperty.GetAttributes(), isInheritedLevel: true);
         }
 
         return builder.ToImmutable();
@@ -214,7 +281,8 @@ internal static class TestClassModelBuilder
     private static void AppendUnique(
         ImmutableArray<AttributeData>.Builder builder,
         HashSet<string> seen,
-        ImmutableArray<AttributeData> attributes)
+        ImmutableArray<AttributeData> attributes,
+        bool isInheritedLevel)
     {
         foreach (AttributeData attribute in attributes)
         {
@@ -223,10 +291,19 @@ internal static class TestClassModelBuilder
                 continue;
             }
 
+            (bool allowMultiple, bool inherited) = GetAttributeUsage(attributeClass);
+
+            // A base-level attribute declared with AttributeUsage(Inherited = false) must
+            // not leak onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
+            if (isInheritedLevel && !inherited)
+            {
+                continue;
+            }
+
             // Attributes declared with AttributeUsage(AllowMultiple = true) may legitimately
-            // appear several times across the override chain (e.g. [TestCategory]) — keep every
-            // instance instead of collapsing them to one.
-            if (AllowsMultiple(attributeClass))
+            // appear several times across the override chain (e.g. [TestCategory], [DataRow])
+            // — keep every instance instead of collapsing them to one.
+            if (allowMultiple)
             {
                 builder.Add(attribute);
                 continue;
@@ -240,7 +317,7 @@ internal static class TestClassModelBuilder
         }
     }
 
-    private static bool AllowsMultiple(INamedTypeSymbol attributeClass)
+    private static (bool AllowMultiple, bool Inherited) GetAttributeUsage(INamedTypeSymbol attributeClass)
     {
         for (INamedTypeSymbol? current = attributeClass; current is not null; current = current.BaseType)
         {
@@ -251,21 +328,27 @@ internal static class TestClassModelBuilder
                     continue;
                 }
 
+                bool allowMultiple = false;
+                bool inherited = true;
                 foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
                 {
-                    if (named.Key == "AllowMultiple" && named.Value.Value is bool allowMultiple)
+                    if (named.Key == "AllowMultiple" && named.Value.Value is bool am)
                     {
-                        return allowMultiple;
+                        allowMultiple = am;
+                    }
+                    else if (named.Key == "Inherited" && named.Value.Value is bool inh)
+                    {
+                        inherited = inh;
                     }
                 }
 
-                // AttributeUsage was found on this level but did not set AllowMultiple — default is false
-                // and base-level [AttributeUsage] is shadowed by the derived application per CLI rules.
-                return false;
+                // [AttributeUsage] on a derived attribute class shadows the base per CLI rules;
+                // stop at the first level where it is found.
+                return (allowMultiple, inherited);
             }
         }
 
-        return false;
+        return (AllowMultiple: false, Inherited: true);
     }
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
