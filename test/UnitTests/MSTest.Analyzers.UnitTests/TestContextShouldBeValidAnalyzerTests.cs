@@ -119,6 +119,33 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
+    public async Task WhenTestContextPrimaryConstructorParameterAssignedToField_NoDiagnostic()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/8984:
+        // capturing a TestContext primary-constructor parameter in a readonly field
+        // must not trigger MSTEST0005. Fields of type TestContext are not validated
+        // by MSTEST0005 (see WhenTestContextCaseInsensitiveIsField_NoDiagnostic), so
+        // this pattern is allowed regardless of whether the constructor is primary or not.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTest(TestContext testContext)
+            {
+                private readonly TestContext _testContext = testContext;
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    _testContext.CancellationTokenSource.Cancel();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     [DataRow("TestContext", "private")]
     [DataRow("TestContext", "internal")]
     [DataRow("testcontext", "private")]

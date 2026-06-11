@@ -180,30 +180,50 @@ public class MSBuildTests_Test : AcceptanceTestBase<NopAssetFixture>
             failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        // On Windows, we run the exe directly.
-        // On other OSes, we run with dotnet exec.
-        // This yields two different outputs, pointing to the same issue.
-        string executableName = OperatingSystem.IsWindows() ? "MSBuild Tests.exe" : "MSBuild Tests";
+        // The build should fail and the failure should mention the incompatible target architecture
+        // so we know the build/launch reached the apphost rather than failing for an unrelated reason.
+        result.AssertExitCodeIsNot(0);
+        result.AssertOutputContains($"[{TargetFrameworks.NetCurrent}|{incompatibleArchitecture}]");
 
-        result.AssertOutputContains($"error MSB6003: The specified task executable \"{executableName}\" could not be run. System.ComponentModel.Win32Exception");
-        result.AssertOutputContains("An error occurred trying to start process");
-
-        if (OperatingSystem.IsWindows())
+        if (OperatingSystem.IsLinux())
         {
-            result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
-        }
-        else if (OperatingSystem.IsMacOS())
-        {
-            result.AssertOutputContains("Bad CPU type in executable");
-        }
-        else if (OperatingSystem.IsLinux())
-        {
-            result.AssertOutputContains("Exec format error");
+            // On Linux, the apphost launch failure can surface in two different ways depending on
+            // whether the kernel/runtime path rejects the binary up-front or falls back to a shell:
+            //   1) ToolTask catches a Win32Exception ("Exec format error") and emits MSB6003.
+            //   2) The apphost falls back to /bin/sh which then fails to parse the binary, and
+            //      InvokeTestingPlatformTask.HandleTaskExecutionErrors reports the captured tool
+            //      output via "error run failed: Tests failed:" (often a shell-parse error like
+            //      "Syntax error: word unexpected").
+            // Either shape is acceptable — both prove we attempted to launch the incompatible-arch
+            // apphost and failed.
+            bool hasMsb6003 = result.StandardOutput.Contains("error MSB6003:", StringComparison.Ordinal)
+                && result.StandardOutput.Contains("Exec format error", StringComparison.Ordinal);
+            bool hasRunFailed = result.StandardOutput.Contains("error run failed: Tests failed:", StringComparison.Ordinal);
+            Assert.IsTrue(
+                hasMsb6003 || hasRunFailed,
+                $"Expected output to contain either MSB6003+\"Exec format error\" or \"error run failed: Tests failed:\". Actual output: {result.StandardOutput}");
         }
         else
         {
-            // Unexpected OS.
-            throw ApplicationStateGuard.Unreachable();
+            // On Windows we run the exe directly; on macOS we run the apphost.
+            string executableName = OperatingSystem.IsWindows() ? "MSBuild Tests.exe" : "MSBuild Tests";
+
+            result.AssertOutputContains($"error MSB6003: The specified task executable \"{executableName}\" could not be run. System.ComponentModel.Win32Exception");
+            result.AssertOutputContains("An error occurred trying to start process");
+
+            if (OperatingSystem.IsWindows())
+            {
+                result.AssertOutputContains("The specified executable is not a valid application for this OS platform.");
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                result.AssertOutputContains("Bad CPU type in executable");
+            }
+            else
+            {
+                // Unexpected OS.
+                throw ApplicationStateGuard.Unreachable();
+            }
         }
     }
 

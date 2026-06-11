@@ -44,12 +44,47 @@ internal static class TestResultCapture
             return null;
         }
 
+        // Keep the O(1) state lookup above as a fast path for non-terminal messages. Terminal
+        // results collect all remaining required properties in one pass — replacing
+        // 4 × SingleOrDefault<T>() + 1 × foreach/GetEnumerator() with one zero-allocation
+        // GetStructEnumerator() pass. Singleton-typed properties use the local GetSingleOrDefaultValue
+        // helper to preserve the throw-on-duplicate invariant that SingleOrDefault<T>() provided;
+        // TestMetadataProperty is intentionally multi-valued and accumulates into a list.
+        TimingProperty? timing = null;
+        TestMethodIdentifierProperty? identifier = null;
+        StandardOutputProperty? standardOutput = null;
+        StandardErrorProperty? standardError = null;
+        List<KeyValuePair<string, string>>? traits = null;
+
+        PropertyBag.PropertyBagEnumerator enumerator = node.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
+                case TestMethodIdentifierProperty m: identifier = GetSingleOrDefaultValue(identifier, m); break;
+                case StandardOutputProperty so: standardOutput = GetSingleOrDefaultValue(standardOutput, so); break;
+                case StandardErrorProperty se: standardError = GetSingleOrDefaultValue(standardError, se); break;
+                case TestMetadataProperty meta:
+                    // Trait keys and values are test-controlled so we truncate them to
+                    // bound the size of the in-memory result list and generated XML.
+                    traits ??= [];
+                    traits.Add(new KeyValuePair<string, string>(
+                        Truncate(meta.Key, MaxTraitFieldLength)!,
+                        Truncate(meta.Value, MaxTraitFieldLength)!));
+                    break;
+            }
+        }
+
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : class, IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
+
         string outcome = ClassifyOutcome(state);
-
-        TimingProperty? timing = node.Properties.SingleOrDefault<TimingProperty>();
         TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
-
-        (string? className, string? methodName) = GetClassAndMethodName(node);
+        (string? className, string? methodName) = GetClassAndMethodName(identifier);
 
         string? errorMessage = state.Explanation;
         string? stackTrace = null;
@@ -70,24 +105,6 @@ internal static class TestResultCapture
             errorMessage ??= exception.Message;
             stackTrace = exception.StackTrace;
             exceptionType = exception.GetType().FullName;
-        }
-
-        string? stdout = node.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-        string? stderr = node.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
-
-        // Collect traits without using LINQ to avoid an enumerator allocation per node.
-        // Trait keys and values are also test-controlled so we truncate them as well to
-        // bound the size of the in-memory result list and generated XML.
-        List<KeyValuePair<string, string>>? traits = null;
-        foreach (IProperty p in node.Properties)
-        {
-            if (p is TestMetadataProperty meta)
-            {
-                traits ??= [];
-                traits.Add(new KeyValuePair<string, string>(
-                    Truncate(meta.Key, MaxTraitFieldLength)!,
-                    Truncate(meta.Value, MaxTraitFieldLength)!));
-            }
         }
 
         return new CapturedTestResult
@@ -111,8 +128,8 @@ internal static class TestResultCapture
             ErrorMessage = Truncate(errorMessage, MaxMessageLength),
             ExceptionType = exceptionType,
             StackTrace = Truncate(stackTrace, MaxStackTraceLength),
-            StandardOutput = Truncate(stdout, MaxStandardStreamLength),
-            StandardError = Truncate(stderr, MaxStandardStreamLength),
+            StandardOutput = Truncate(standardOutput?.StandardOutput, MaxStandardStreamLength),
+            StandardError = Truncate(standardError?.StandardError, MaxStandardStreamLength),
             Traits = traits,
         };
     }
@@ -137,9 +154,8 @@ internal static class TestResultCapture
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
-    private static (string? ClassName, string? MethodName) GetClassAndMethodName(TestNode node)
+    private static (string? ClassName, string? MethodName) GetClassAndMethodName(TestMethodIdentifierProperty? identifier)
     {
-        TestMethodIdentifierProperty? identifier = node.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
         if (identifier is null)
         {
             return (null, null);

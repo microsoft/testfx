@@ -45,14 +45,27 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
             .Where(static model => model is not null)
             .Select(static (model, _) => model!);
 
-        IncrementalValueProvider<(string? AssemblyName, ImmutableArray<TestClassModel> Classes)> combined =
+        // Pull assembly-level attributes from the compilation (one value per run) and
+        // wrap them in an equatable model so this branch of the pipeline can stay cached
+        // when only test-class code changes.
+        IncrementalValueProvider<AssemblyMetadataModel> assemblyMetadata =
+            context.CompilationProvider.Select(static (c, ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                return new AssemblyMetadataModel(
+                    TestClassModelBuilder.BuildAttributes(c.Assembly.GetAttributes()));
+            });
+
+        IncrementalValueProvider<(string? AssemblyName, AssemblyMetadataModel Metadata, ImmutableArray<TestClassModel> Classes)> combined =
             context.CompilationProvider.Select(static (c, _) => c.AssemblyName)
-                .Combine(testClasses.Collect());
+                .Combine(assemblyMetadata)
+                .Combine(testClasses.Collect())
+                .Select(static (tuple, _) => (tuple.Left.Left, tuple.Left.Right, tuple.Right));
 
         context.RegisterImplementationSourceOutput(combined, static (ctx, payload) =>
         {
             string assemblyName = payload.AssemblyName ?? "Unknown";
-            string source = MetadataRegistryEmitter.EmitRegistry(assemblyName, payload.Classes);
+            string source = MetadataRegistryEmitter.EmitRegistry(assemblyName, payload.Metadata, payload.Classes);
             ctx.AddSource("MSTestReflectionMetadata.Registry.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }
