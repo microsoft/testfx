@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
-        <target state="translated">Döküm dosyası '{0}' oluşturuluyor</target>
-        <note />
+        <target state="needs-review-translation">Döküm dosyası '{0}' oluşturuluyor</target>
+        <note>{0} is the dump file path.</note>
       </trans-unit>
       <trans-unit id="DumpingProcess">
         <source>Dumping process {0} - {1}</source>
@@ -44,13 +44,13 @@
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
-        <target state="translated">'{0}' ortam değişkeni '{1}' yerine '{2}' olarak ayarlandı</target>
-        <note />
+        <target state="needs-review-translation">'{0}' ortam değişkeni '{1}' yerine '{2}' olarak ayarlandı</target>
+        <note>{0} is the environment variable name. {1} is the actual value. {2} is the expected value.</note>
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
-        <target state="translated">'{0}' ortam değişkeni ayarlı değil</target>
-        <note />
+        <target state="needs-review-translation">'{0}' ortam değişkeni ayarlı değil</target>
+        <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
         <source>Produce hang dump files when a test execution exceed a given time.</source>
@@ -68,30 +68,29 @@
 
 Disk info:
 {1}</source>
-        <target state="translated">Askı dökümü alınırken aşağıdaki özel durum oluştu: 
+        <target state="needs-review-translation">Askı dökümü alınırken aşağıdaki özel durum oluştu: 
 {0}
 
 Disk bilgileri: 
 {1}</target>
-        <note>{0} - the exception that occurred.
-{1} - disk info detailing free space</note>
+        <note>{0} is the exception that occurred. {1} is disk information detailing free space.</note>
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
         <target state="new">Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
-        <target state="translated">Test işlemi kilitlenirse bir döküm dosyası oluşturun</target>
-        <note />
+        <target state="needs-review-translation">Test işlemi kilitlenirse bir döküm dosyası oluşturun</target>
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
-        <target state="translated">'{0}' dökümünün askıda kalma zaman aşımı süresi doldu</target>
-        <note />
+        <target state="needs-review-translation">'{0}' dökümünün askıda kalma zaman aşımı süresi doldu</target>
+        <note>{0} is the hang dump timeout value.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
         <source>Specify the timeout after which the dump will be generated.
@@ -103,7 +102,7 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="translated">Dökümün oluşturulacağı zaman aşımını belirtin.
+        <target state="needs-review-translation">Dökümün oluşturulacağı zaman aşımını belirtin.
 Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
     500ms, 500mil, 500millisecond, 500milliseconds,
     5400s, 5400sec, 5400second, 5400seconds,
@@ -112,48 +111,48 @@ Zaman aşımı değeri, aşağıdaki biçimlerden biri ile belirtilir:
     1d, 1day, 1days.
     Soneki olmayan düz sayı milisaniye olarak yorumlanır.
     Varsayılan değer 30m.</target>
-        <note />
+        <note>Do not localize option name {Locked="--hangdump-timeout"} or time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
-        <target state="translated">'--hangdump-timeout' tek bir zaman aşımı bağımsız değişkeni bekliyor</target>
-        <note />
+        <target state="needs-review-translation">'--hangdump-timeout' tek bir zaman aşımı bağımsız değişkeni bekliyor</target>
+        <note>Do not localize option name {Locked="--hangdump-timeout"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
-        <target state="translated">'--hangdump-type' ve '--hangdump-type-if-supported' birlikte kullanılamaz. İstenen tür geçerli çalışma zamanında kullanılamadığında kullanılabilen en yakın türe bir bilgi iletisiyle geri dönen en iyi çabalı döküm türünü seçmek için '--hangdump-type-if-supported' seçeneğini belirtin ya da desteklenmeyen çalışma zamanlarında hızlıca başarısız olmak için '--hangdump-type' seçeneğini belirtin.</target>
-        <note />
+        <target state="needs-review-translation">'--hangdump-type' ve '--hangdump-type-if-supported' birlikte kullanılamaz. İstenen tür geçerli çalışma zamanında kullanılamadığında kullanılabilen en yakın türe bir bilgi iletisiyle geri dönen en iyi çabalı döküm türünü seçmek için '--hangdump-type-if-supported' seçeneğini belirtin ya da desteklenmeyen çalışma zamanlarında hızlıca başarısız olmak için '--hangdump-type' seçeneğini belirtin.</target>
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
         <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
-        <target state="translated">'--hangdump-type-if-supported {0}' geçerli çalışma zamanında desteklenmiyor. Geri dönülüyor: '{1}'.</target>
-        <note />
+        <target state="needs-review-translation">'--hangdump-type-if-supported {0}' geçerli çalışma zamanında desteklenmiyor. Geri dönülüyor: '{1}'.</target>
+        <note>0 is the requested dump type. 1 is the fallback dump type. Do not localize option name {Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
-        <target state="translated">'--hangdump-type' ile aynıdır, ancak istenen tür geçerli çalışma zamanında kullanılamıyorsa sessizce bir bilgi iletisiyle desteklenen en yakın döküm türüne geri döner. (Örneğin, 'Triage' yalnızca .NET Core'da desteklenir ve .NET Framework'te 'Mini' değerine geri döner). Bu seçeneği, .NET Framework ve .NET'i birlikte kullanan CI matrislerinde aynı komut satırını korumak için kullanın. Geçerli değerler 'Mini', 'Heap', 'Full', 'Triage' ve 'None' olur. '--hangdump-type' ile birlikte kullanılamaz.</target>
-        <note />
+        <target state="needs-review-translation">'--hangdump-type' ile aynıdır, ancak istenen tür geçerli çalışma zamanında kullanılamıyorsa sessizce bir bilgi iletisiyle desteklenen en yakın döküm türüne geri döner. (Örneğin, 'Triage' yalnızca .NET Core'da desteklenir ve .NET Framework'te 'Mini' değerine geri döner). Bu seçeneği, .NET Framework ve .NET'i birlikte kullanan CI matrislerinde aynı komut satırını korumak için kullanın. Geçerli değerler 'Mini', 'Heap', 'Full', 'Triage' ve 'None' olur. '--hangdump-type' ile birlikte kullanılamaz.</target>
+        <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Full"}{Locked="Triage"}{Locked="None"}, or runtime names {Locked=".NET Core"}{Locked=".NET Framework"}{Locked=".NET"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="translated">Dökümün türünü belirtin.
+        <target state="needs-review-translation">Dökümün türünü belirtin.
 Geçerli değerler: {0}.
 Varsayılan tür: 'Full'</target>
-        <note />
+        <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="translated">'{0}' geçerli bir döküm türü değil.
+        <target state="needs-review-translation">'{0}' geçerli bir döküm türü değil.
 Geçerli seçenekler: {1}</target>
-        <note />
+        <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
-        <target state="translated">'{0}' türündeki istek desteklenmiyor</target>
-        <note />
+        <target state="needs-review-translation">'{0}' türündeki istek desteklenmiyor</target>
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
         <source>The list of tests that were running at the time of the hang</source>
@@ -167,13 +166,13 @@ Geçerli seçenekler: {1}</target>
       </trans-unit>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
-        <target state="translated">Bir veya daha fazla askıda kalma dökümü parametresi belirtmenize rağmen bunu etkinleştirmediyseniz komut satırına --hangdump ekleyin</target>
-        <note />
+        <target state="needs-review-translation">Bir veya daha fazla askıda kalma dökümü parametresi belirtmenize rağmen bunu etkinleştirmediyseniz komut satırına --hangdump ekleyin</target>
+        <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="translated">Döküm alındığında aşağıdaki testler hâlâ çalışıyordu (biçim: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
-        <note />
+        <target state="needs-review-translation">Döküm alındığında aşağıdaki testler hâlâ çalışıyordu (biçim: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <note>Do not localize format tokens {Locked="[&lt;time-elapsed-since-start&gt;]"} and {Locked="&lt;name&gt;"}.</note>
       </trans-unit>
     </body>
   </file>

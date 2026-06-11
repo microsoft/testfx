@@ -119,5 +119,6 @@
   </resheader>
   <data name="MSBuildExtensionsDescription" xml:space="preserve">
     <value>Extension used to pass parameters from MSBuild node and the hosts</value>
+    <comment>Do not localize {Locked="MSBuild"}.</comment>
   </data>
 </root>

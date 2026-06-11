@@ -4,8 +4,8 @@
     <body>
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts</source>
-        <target state="translated">MSBuild 노드 및 호스트에서 매개 변수를 전달하는 데 사용되는 확장</target>
-        <note />
+        <target state="needs-review-translation">MSBuild 노드 및 호스트에서 매개 변수를 전달하는 데 사용되는 확장</target>
+        <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>
   </file>

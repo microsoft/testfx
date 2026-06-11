@@ -4,23 +4,23 @@
     <body>
       <trans-unit id="ActualValue">
         <source>Actual value: {0}</source>
-        <target state="translated">实际值: {0}</target>
-        <note />
+        <target state="needs-review-translation">实际值: {0}</target>
+        <note>{0} is the actual value.</note>
       </trans-unit>
       <trans-unit id="DidNotReceiveModuleInfo">
         <source>MSBuild extension failed to receive test application information from '{0}'</source>
-        <target state="translated">MSBuild 扩展未能从 "{0}" 接收测试应用信息</target>
-        <note />
+        <target state="needs-review-translation">MSBuild 扩展未能从 "{0}" 接收测试应用信息</target>
+        <note>{0} is the test application path. Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="DidNotReceiveRunSummaryInfo">
         <source>MSBuild extension failed to receive test run summary from '{0}'</source>
-        <target state="translated">MSBuild 扩展未能从 "{0}" 接收测试运行摘要</target>
-        <note />
+        <target state="needs-review-translation">MSBuild 扩展未能从 "{0}" 接收测试运行摘要</target>
+        <note>{0} is the test application path. Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
-        <target state="translated">预期的值: {0}</target>
-        <note />
+        <target state="needs-review-translation">预期的值: {0}</target>
+        <note>{0} is the expected value.</note>
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
@@ -29,13 +29,13 @@
       </trans-unit>
       <trans-unit id="FailedTestDetail">
         <source>Failed test '{0}', reason '{1}'</source>
-        <target state="translated">测试“{0}”失败，原因为“{1}”</target>
-        <note />
+        <target state="needs-review-translation">测试“{0}”失败，原因为“{1}”</target>
+        <note>{0} is the failed test name. {1} is the failure reason.</note>
       </trans-unit>
       <trans-unit id="FullPathToolCalculationFailed">
         <source>Full path tool calculation failed. Runner '{0}'</source>
-        <target state="translated">完整路径工具计算失败。运行器“{0}”</target>
-        <note />
+        <target state="needs-review-translation">完整路径工具计算失败。运行器“{0}”</target>
+        <note>{0} is the runner tool name.</note>
       </trans-unit>
       <trans-unit id="IncompatibleArchitecture">
         <source>Could not find '{0}' host for the '{1}' architecture.
@@ -44,18 +44,18 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="translated">找不到“{1}”体系结构的“{0}”主机。
+        <target state="needs-review-translation">找不到“{1}”体系结构的“{0}”主机。
 
 可以通过安装 “{1}” .NET 来解决此问题。
 
 可在以下位置找到指定的框架：
   - https://aka.ms/dotnet-download</target>
-        <note />
+        <note>0 is the host name. 1 is the architecture. Do not localize {Locked=".NET"} or {Locked="https://aka.ms/dotnet-download"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
-        <target state="translated">TargetPath {0} 无效</target>
-        <note />
+        <target state="needs-review-translation">TargetPath {0} 无效</target>
+        <note>0 is the invalid {Locked="TargetPath"} value.</note>
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
@@ -64,8 +64,8 @@ The specified framework can be found at:
       </trans-unit>
       <trans-unit id="RunTests">
         <source>Run tests: '{0}' [{1}|{2}]</source>
-        <target state="translated">运行测试:“{0}”[{1}|{2}]</target>
-        <note />
+        <target state="needs-review-translation">运行测试:“{0}”[{1}|{2}]</target>
+        <note>{0} is the test application path. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace:</source>
@@ -74,23 +74,23 @@ The specified framework can be found at:
       </trans-unit>
       <trans-unit id="Summary">
         <source>{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</source>
-        <target state="translated">{0}! - 失败: {1}，通过: {2}，已跳过: {3}，总计: {4}，持续时间: {5}</target>
-        <note />
+        <target state="needs-review-translation">{0}! - 失败: {1}，通过: {2}，已跳过: {3}，总计: {4}，持续时间: {5}</target>
+        <note>{0} is the overall test outcome. {1} is the failed test count. {2} is the passed test count. {3} is the skipped test count. {4} is the total test count. {5} is the test run duration.</note>
       </trans-unit>
       <trans-unit id="TestFailed">
         <source>Tests failed: '{0}' [{1}|{2}]</source>
-        <target state="translated">测试失败:“{0}”[{1}|{2}]</target>
-        <note />
+        <target state="needs-review-translation">测试失败:“{0}”[{1}|{2}]</target>
+        <note>{0} is the test output file name. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
       <trans-unit id="TestFailedNoDetail">
         <source>Tests failed: {0}</source>
-        <target state="translated">测试失败: {0}</target>
-        <note />
+        <target state="needs-review-translation">测试失败: {0}</target>
+        <note>{0} is the test output.</note>
       </trans-unit>
       <trans-unit id="TestsSucceeded">
         <source>Tests succeeded: '{0}' [{1}|{2}]</source>
-        <target state="translated">成功的测试:“{0}”[{1}|{2}]</target>
-        <note />
+        <target state="needs-review-translation">成功的测试:“{0}”[{1}|{2}]</target>
+        <note>{0} is the test application path. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
     </body>
   </file>

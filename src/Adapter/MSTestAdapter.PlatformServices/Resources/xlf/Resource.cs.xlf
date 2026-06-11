@@ -4,102 +4,97 @@
     <body>
       <trans-unit id="AssemblyCleanupTimedOut">
         <source>Assembly cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="translated">Po {2} ms vypršel časový limit metody čištění sestavení {0}.{1}.</target>
-        <note />
+        <target state="needs-review-translation">Po {2} ms vypršel časový limit metody čištění sestavení {0}.{1}.</target>
+        <note>{0} is the type name. {1} is the assembly cleanup method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
         <source>Assembly cleanup method '{0}.{1}' was canceled</source>
-        <target state="translated">Metoda čištění sestavení {0}.{1} byla zrušena.</target>
-        <note />
+        <target state="needs-review-translation">Metoda čištění sestavení {0}.{1} byla zrušena.</target>
+        <note>{0} is the type name. {1} is the assembly cleanup method name.</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="translated">Po {2} ms vypršel časový limit metody inicializace sestavení {0}.{1}.</target>
-        <note />
+        <target state="needs-review-translation">Po {2} ms vypršel časový limit metody inicializace sestavení {0}.{1}.</target>
+        <note>{0} is the type name. {1} is the assembly initialize method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was canceled</source>
-        <target state="translated">Metoda inicializace sestavení {0}.{1} byla zrušena.</target>
-        <note />
+        <target state="needs-review-translation">Metoda inicializace sestavení {0}.{1} byla zrušena.</target>
+        <note>{0} is the type name. {1} is the assembly initialize method name.</note>
       </trans-unit>
       <trans-unit id="AttachmentSetDisplayName">
         <source>MSTestAdapterV2</source>
-        <target state="translated">MSTestAdapterV2</target>
-        <note />
+        <target state="needs-review-translation">MSTestAdapterV2</target>
+        <note>{Locked="MSTestAdapterV2"}</note>
       </trans-unit>
       <trans-unit id="CannotEnumerateIDataSourceAttribute">
         <source>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</source>
-        <target state="translated">Při vytváření výčtu atributu IDataSource došlo k výjimce. „{0}.{1}“: {2}</target>
-        <note>{0}: TypeName with namespace,
-{1}: Method name,
-{2}: Exception details</note>
+        <target state="needs-review-translation">Při vytváření výčtu atributu IDataSource došlo k výjimce. „{0}.{1}“: {2}</target>
+        <note>{0} is the type name with namespace. {1} is the method name. {2} is the exception details. {Locked="IDataSource"}</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute">
         <source>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</source>
-        <target state="translated">Došlo k výjimce při rozbalování řádků IDataSource z atributu na „{0}.{1}“: {2}</target>
-        <note>{0}: TypeName with namespace, 
-{1}: Method name,
-{2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</note>
+        <target state="needs-review-translation">Došlo k výjimce při rozbalování řádků IDataSource z atributu na „{0}.{1}“: {2}</target>
+        <note>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}{Locked="CannotExpandIDataSourceAttribute_DuplicateDisplayName"}{Locked="CannotExpandIDataSourceAttribute_CannotSerialize"}</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute_CannotSerialize">
         <source>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</source>
-        <target state="translated">Data v {0} indexu pro „{1}“ nelze serializovat. Všechna data poskytnutá prostřednictvím „IDataSource“ by měla být serializovatelná. Pokud potřebujete testovat neserializovatelné zdroje dat, nezapomeňte do testovacího sestavení přidat atribut TestDataSourceDiscovery a nastavit možnost zjišťování na „DuringExecution“.</target>
-        <note>{0}: Zero based index if an element inside of an array,
-{1}: Test name</note>
+        <target state="needs-review-translation">Data v {0} indexu pro „{1}“ nelze serializovat. Všechna data poskytnutá prostřednictvím „IDataSource“ by měla být serializovatelná. Pokud potřebujete testovat neserializovatelné zdroje dat, nezapomeňte do testovacího sestavení přidat atribut TestDataSourceDiscovery a nastavit možnost zjišťování na „DuringExecution“.</target>
+        <note>{0} is the zero-based data row index. {1} is the test name. {Locked="IDataSource"}{Locked="TestDataSourceDiscovery"}{Locked="DuringExecution"}</note>
       </trans-unit>
       <trans-unit id="CannotFindFile">
         <source>Could not find file '{0}'.</source>
-        <target state="translated">Soubor {0} se nenašel.</target>
-        <note></note>
+        <target state="needs-review-translation">Soubor {0} se nenašel.</target>
+        <note>{0} is the file path.</note>
       </trans-unit>
       <trans-unit id="CannotRunTestArgumentsMismatchError">
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="translated">Testovací metodu {0}.{1} nejde spustit: Testovací data neodpovídají parametrům metody. Liší se počet nebo typy.
+        <target state="needs-review-translation">Testovací metodu {0}.{1} nejde spustit: Testovací data neodpovídají parametrům metody. Liší se počet nebo typy.
 Pro test se očekával tento počet parametrů: {2} s typy {3},
 byl však přijat tento počet argumentů: {4} s typy {5}.</target>
-        <note />
+        <note>{0} is the declaring type full name. {1} is the method name. {2} is the expected parameter count. {3} is the expected parameter type list. {4} is the received argument count. {5} is the received argument type list.</note>
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
         <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
-        <target state="translated">Nelze spustit testovací metodu {0}.{1}: Metoda má parametry, ale nedefinuje žádný zdroj testu. K poskytování testovacích dat použijte zdroj dat [DataRow] nebo [DynamicData], případně vlastní zdroj dat ITestDataSource.</target>
-        <note />
+        <target state="needs-review-translation">Nelze spustit testovací metodu {0}.{1}: Metoda má parametry, ale nedefinuje žádný zdroj testu. K poskytování testovacích dat použijte zdroj dat [DataRow] nebo [DynamicData], případně vlastní zdroj dat ITestDataSource.</target>
+        <note>{0} is the declaring type full name. {1} is the method name. {Locked="[DataRow]"}{Locked="[DynamicData]"}{Locked="ITestDataSource"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
         <source>Class cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="translated">Po {2} ms vypršel časový limit metody čištění třídy {0}.{1}.</target>
-        <note />
+        <target state="needs-review-translation">Po {2} ms vypršel časový limit metody čištění třídy {0}.{1}.</target>
+        <note>{0} is the type name. {1} is the class cleanup method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
         <source>Class cleanup method '{0}.{1}' was canceled</source>
-        <target state="translated">Metoda čištění třídy {0}.{1} byla zrušena.</target>
-        <note />
+        <target state="needs-review-translation">Metoda čištění třídy {0}.{1} byla zrušena.</target>
+        <note>{0} is the type name. {1} is the class cleanup method name.</note>
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="translated">Po {2} ms vypršel časový limit metody inicializace třídy {0}.{1}.</target>
-        <note />
+        <target state="needs-review-translation">Po {2} ms vypršel časový limit metody inicializace třídy {0}.{1}.</target>
+        <note>{0} is the type name. {1} is the class initialize method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
         <source>Class initialize method '{0}.{1}' was canceled</source>
-        <target state="translated">Metoda inicializace třídy {0}.{1} byla zrušena.</target>
-        <note />
+        <target state="needs-review-translation">Metoda inicializace třídy {0}.{1} byla zrušena.</target>
+        <note>{0} is the type name. {1} is the class initialize method name.</note>
       </trans-unit>
       <trans-unit id="Common_CannotBeNullOrEmpty">
         <source>The parameter should not be null or empty.</source>
-        <target state="translated">Parametr nemůže být null nebo prázdný.</target>
-        <note></note>
+        <target state="needs-review-translation">Parametr nemůže být null nebo prázdný.</target>
+        <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="CouldNotInspectTypeDuringDiscovery">
         <source>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}' because {2}.</source>
-        <target state="translated">MSTestAdapter nezjistil v třídě {0} sestavení {1} žádný test, protože: {2}.</target>
-        <note />
+        <target state="needs-review-translation">MSTestAdapter nezjistil v třídě {0} sestavení {1} žádný test, protože: {2}.</target>
+        <note>{0} is the class name. {1} is the assembly path. {2} is the failure reason. {Locked="MSTestAdapter"}</note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} (Data Row {1})</source>
-        <target state="translated">{0} (datový řádek {1})</target>
-        <note />
+        <target state="needs-review-translation">{0} (datový řádek {1})</target>
+        <note>{0} is the test display name. {1} is the data row index.</note>
       </trans-unit>
       <trans-unit id="DebugTraceBanner">
         <source>Debug Trace:</source>
@@ -108,58 +103,58 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
-        <target state="translated">Problém nasazení testovacího běhu: Chybná položka nasazení: {0}: výstupní adresář {1} určuje položku, která se má nasadit mimo kořenový adresář nasazení, což není povolené.</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Chybná položka nasazení: {0}: výstupní adresář {1} určuje položku, která se má nasadit mimo kořenový adresář nasazení, což není povolené.</target>
+        <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccesOutputDirectory">
         <source>Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k výstupnímu adresáři {1} zadanému položkou nasazení {0}, položka se nenasadí: {2}: {3}</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k výstupnímu adresáři {1} zadanému položkou nasazení {0}, položka se nenasadí: {2}: {3}</target>
+        <note>{0} is the deployment item path. {1} is the output directory. {2} is the exception type. {3} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToAccessFile">
         <source>Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k souboru {0}: {1}: {2}</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Nepodařilo se získat přístup k souboru {0}: {1}: {2}</target>
+        <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se zkopírovat soubor {0} do {1}: {2}: {3}</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Nepodařilo se zkopírovat soubor {0} do {1}: {2}: {3}</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se nasadit závislosti úložiště testů {0}: {1}</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Nepodařilo se nasadit závislosti úložiště testů {0}: {1}</target>
+        <note>{0} is the test storage or source path. {1} is the exception details.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToGetFileForDeploymentItem">
         <source>Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se získat soubor pro {0}: {1}: {2}</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Nepodařilo se získat soubor pro {0}: {1}: {2}</target>
+        <note>{0} is the deployment item description. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorGettingSatellite">
         <source>Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Během získávání satelitních sestavení pro {0}: {1}: {2} došlo k chybě</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Během získávání satelitních sestavení pro {0}: {1}: {2} došlo k chybě</target>
+        <note>{0} is the deployment item. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentItem">
         <source>deployment item '{0}'</source>
-        <target state="translated">položka nasazení {0}</target>
-        <note></note>
+        <target state="needs-review-translation">položka nasazení {0}</target>
+        <note>{0} is the deployment item path.</note>
       </trans-unit>
       <trans-unit id="DeploymentItemContainsInvalidCharacters">
         <source>Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</source>
-        <target state="translated">Neplatná položka nasazení: Zadaná cesta {0} nebo adresář výstupu {1} obsahuje neplatné znaky.</target>
-        <note></note>
+        <target state="needs-review-translation">Neplatná položka nasazení: Zadaná cesta {0} nebo adresář výstupu {1} obsahuje neplatné znaky.</target>
+        <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryCannotBeNull">
         <source>Invalid deployment item: the output directory cannot be null.</source>
-        <target state="translated">Neplatná položka nasazení: Adresář výstupu nemůže být null.</target>
-        <note></note>
+        <target state="needs-review-translation">Neplatná položka nasazení: Adresář výstupu nemůže být null.</target>
+        <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="DeploymentItemOutputDirectoryMustBeRelative">
         <source>Invalid deployment item: the specified output directory '{0}' is not relative.</source>
-        <target state="translated">Neplatná položka nasazení: Zadaný adresář výstupu {0} nemá relativní adresu.</target>
-        <note></note>
+        <target state="needs-review-translation">Neplatná položka nasazení: Zadaný adresář výstupu {0} nemá relativní adresu.</target>
+        <note>{0} is the output directory.</note>
       </trans-unit>
       <trans-unit id="DeploymentItemPathCannotBeNullOrEmpty">
         <source>Invalid deployment item: the path must contain at least one character.</source>
@@ -168,107 +163,105 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="DeploymentItemWithOutputDirectory">
         <source>deployment item '{0}' (output directory '{1}')</source>
-        <target state="translated">položka nasazení {0} (adresář výstupu {1})</target>
-        <note></note>
+        <target state="needs-review-translation">položka nasazení {0} (adresář výstupu {1})</target>
+        <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
-        <target state="translated">Zjišťování zdroje {0} se nezdařilo s chybami (celkem {1}):
+        <target state="needs-review-translation">Zjišťování zdroje {0} se nezdařilo s chybami (celkem {1}):
 {2}</target>
-        <note />
+        <note>{0} is the source path. {1} is the error count. {2} is the error details.</note>
       </trans-unit>
       <trans-unit id="DiscoveryWarning">
         <source>[MSTest][Discovery][{0}] {1}</source>
-        <target state="translated">[MSTest][Discovery][{0}] {1}</target>
-        <note />
+        <target state="needs-review-translation">[MSTest][Discovery][{0}] {1}</target>
+        <note>{0} is the source path. {1} is the discovery warning message. {Locked="[MSTest][Discovery]"}</note>
       </trans-unit>
       <trans-unit id="DuplicateAttributeError">
         <source>Only one attribute of type '{0}' is allowed, but multiple were found.</source>
-        <target state="translated">Je povolen pouze jeden atribut typu {0}, ale bylo nalezeno více atributů.</target>
-        <note />
+        <target state="needs-review-translation">Je povolen pouze jeden atribut typu {0}, ale bylo nalezeno více atributů.</target>
+        <note>{0} is the attribute type name.</note>
       </trans-unit>
       <trans-unit id="DuplicateConfigurationError">
         <source>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</source>
-        <target state="translated">Byly zjištěny soubory .runsettings i .testconfig.json. Vyberte prosím jenom jeden z těchto souborů konfigurace testu.</target>
-        <note />
+        <target state="needs-review-translation">Byly zjištěny soubory .runsettings i .testconfig.json. Vyberte prosím jenom jeden z těchto souborů konfigurace testu.</target>
+        <note>{Locked=".runsettings"}{Locked=".testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="ExceptionOccuredWhileGettingTheExceptionDescription">
         <source>"{0}": (Failed to get exception description due to an exception of type "{1}".</source>
-        <target state="translated">„{0}“: (Nepodařilo se získat popis výjimky z důvodu výjimky typu „{1}“.</target>
-        <note>{0}: Type of the original exception that we're trying to get the description of.
-{1}: Thrown exception</note>
+        <target state="needs-review-translation">„{0}“: (Nepodařilo se získat popis výjimky z důvodu výjimky typu „{1}“.</target>
+        <note>{0} is the type of the original exception. {1} is the thrown exception type.</note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' was canceled</source>
-        <target state="translated">Test {0} byl zrušen.</target>
-        <note />
+        <target state="needs-review-translation">Test {0} byl zrušen.</target>
+        <note>{0} is the test name.</note>
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' timed out after {1}ms</source>
-        <target state="translated">Časový limit testu {0} vypršel po {1} ms.</target>
-        <note />
+        <target state="needs-review-translation">Časový limit testu {0} vypršel po {1} ms.</target>
+        <note>{0} is the test name. {1} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="FailedToGetCustomAttribute">
         <source>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</source>
-        <target state="translated">Získání vlastních atributů pro typ {0} vyvolalo výjimku (bude ignorovat a používat způsob reflexe): {1}</target>
-        <note>{0}: Attribute full type name.
-{1}: Exception description</note>
+        <target state="needs-review-translation">Získání vlastních atributů pro typ {0} vyvolalo výjimku (bude ignorovat a používat způsob reflexe): {1}</target>
+        <note>{0} is the attribute full type name. {1} is the exception description.</note>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferred">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="translated">Typ obecného parametru {0} nelze odvodit.</target>
-        <note />
+        <target state="needs-review-translation">Typ obecného parametru {0} nelze odvodit.</target>
+        <note>{0} is the generic parameter name.</note>
       </trans-unit>
       <trans-unit id="GenericParameterCantBeInferredBecauseNoArguments">
         <source>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</source>
-        <target state="translated">Obecná testovací metoda {0}'nemá argumenty, takže nelze odvodit obecný parametr.</target>
-        <note />
+        <target state="needs-review-translation">Obecná testovací metoda {0}'nemá argumenty, takže nelze odvodit obecný parametr.</target>
+        <note>{0} is the generic test method name.</note>
       </trans-unit>
       <trans-unit id="GenericParameterConflict">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="translated">Byly nalezeny dva konfliktní typy pro obecný parametr {0}. Konfliktní typy jsou {1} a {2}.</target>
-        <note />
+        <target state="needs-review-translation">Byly nalezeny dva konfliktní typy pro obecný parametr {0}. Konfliktní typy jsou {1} a {2}.</target>
+        <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
-        <target state="translated">Pro procesy 'Scope' je zadaná neplatná hodnota {0}. Podporované obory jsou {1}.</target>
-        <note>{Locked="Scope"}</note>
+        <target state="needs-review-translation">Pro procesy 'Scope' je zadaná neplatná hodnota {0}. Podporované obory jsou {1}.</target>
+        <note>{0} is the invalid scope value. {1} is the supported scope list. {Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="InvalidParallelWorkersValue">
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
-        <target state="translated">Pro procesy 'Workers' je zadaná neplatná hodnota {0}. Hodnota by měla být nezáporné celé číslo.</target>
-        <note>{Locked="Workers"}</note>
+        <target state="needs-review-translation">Pro procesy 'Workers' je zadaná neplatná hodnota {0}. Hodnota by měla být nezáporné celé číslo.</target>
+        <note>{0} is the invalid worker count. {Locked="Workers"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
-        <target state="translated">Neplatné nastavení {0}. Neočekávaný XmlAttribute: {1}.</target>
-        <note />
+        <target state="needs-review-translation">Neplatné nastavení {0}. Neočekávaný XmlAttribute: {1}.</target>
+        <note>{0} is the settings element name. {1} is the unexpected XML attribute name. {Locked="XmlAttribute"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlElement">
         <source>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</source>
-        <target state="translated">Nástroj MSTestAdapter zjistil neočekávaný prvek {0} v nastavení {1}. Odeberte tento prvek a zkuste to znovu.</target>
-        <note></note>
+        <target state="needs-review-translation">Nástroj MSTestAdapter zjistil neočekávaný prvek {0} v nastavení {1}. Odeberte tento prvek a zkuste to znovu.</target>
+        <note>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</note>
       </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
-        <target state="translated">Neplatná hodnota {0} pro položku runsettings {1}. Nastavení bude ignorováno.</target>
-        <note />
+        <target state="needs-review-translation">Neplatná hodnota {0} pro položku runsettings {1}. Nastavení bude ignorováno.</target>
+        <note>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependency">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly. Důvod: {1}</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly. Důvod: {1}</target>
+        <note>{0} is the assembly or module name. {1} is the reason the dependency was not found.</note>
       </trans-unit>
       <trans-unit id="MissingDeploymentDependencyWithoutReason">
         <source>Test Run deployment issue: The assembly or module '{0}' was not found.</source>
-        <target state="translated">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly.</target>
-        <note></note>
+        <target state="needs-review-translation">Problém nasazení testovacího běhu: Sestavení nebo modul {0} se nenašly.</target>
+        <note>{0} is the assembly or module name.</note>
       </trans-unit>
       <trans-unit id="OlderTFMVersionFound">
         <source>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</source>
-        <target state="translated">V sestavení je načtena starší verze balíčku MSTestV2. Zjišťování testů může selhat při zjišťování všech testů dat, pokud jsou závislé na souboru .runsettings.</target>
-        <note />
+        <target state="needs-review-translation">V sestavení je načtena starší verze balíčku MSTestV2. Zjišťování testů může selhat při zjišťování všech testů dat, pokud jsou závislé na souboru .runsettings.</target>
+        <note>{Locked="MSTestV2"}{Locked=".runsettings"}</note>
       </trans-unit>
       <trans-unit id="RandomTestOrderAndOrderTestsByNameInClassConflict">
         <source>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</source>
@@ -277,13 +270,13 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="RandomTestOrderBanner">
         <source>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</source>
-        <target state="translated">Náhodné pořadí testů je povoleno (Seed: {0}). Pokud chcete toto pořadí reprodukovat, nastavte RandomTestOrderSeed.</target>
-        <note>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
+        <target state="needs-review-translation">Náhodné pořadí testů je povoleno (Seed: {0}). Pokud chcete toto pořadí reprodukovat, nastavte RandomTestOrderSeed.</target>
+        <note>{0} is the random test order seed. {Locked="Seed"}{Locked="RandomTestOrderSeed"}</note>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
-        <target state="translated">Položka runsettings &lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt; se v operačních systémech jiných než Windows nepodporuje.</target>
-        <note />
+        <target state="needs-review-translation">Položka runsettings &lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt; se v operačních systémech jiných než Windows nepodporuje.</target>
+        <note>{Locked="Runsettings"}{Locked="&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;"}{Locked="STA"}</note>
       </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
@@ -292,108 +285,108 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
-        <target state="translated">Neexistující soubor: {0}</target>
-        <note />
+        <target state="needs-review-translation">Neexistující soubor: {0}</target>
+        <note>{0} is the file path.</note>
       </trans-unit>
       <trans-unit id="TestCleanupTimedOut">
         <source>Test cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="translated">Po {2} ms vypršel časový limit metody čištění testu {0}.{1}.</target>
-        <note />
+        <target state="needs-review-translation">Po {2} ms vypršel časový limit metody čištění testu {0}.{1}.</target>
+        <note>{0} is the type name. {1} is the test cleanup method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
         <source>Test cleanup method '{0}.{1}' was canceled</source>
-        <target state="translated">Metoda čištění testu {0}.{1} byla zrušena.</target>
-        <note />
+        <target state="needs-review-translation">Metoda čištění testu {0}.{1} byla zrušena.</target>
+        <note>{0} is the type name. {1} is the test cleanup method name.</note>
       </trans-unit>
       <trans-unit id="TestContextMessageBanner">
         <source>TestContext Messages:</source>
-        <target state="translated">Zprávy pro TestContext:</target>
-        <note />
+        <target state="needs-review-translation">Zprávy pro TestContext:</target>
+        <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
         <source>Test initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="translated">Po {2} ms vypršel časový limit metody inicializace testu {0}.{1}.</target>
-        <note />
+        <target state="needs-review-translation">Po {2} ms vypršel časový limit metody inicializace testu {0}.{1}.</target>
+        <note>{0} is the type name. {1} is the test initialize method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
         <source>Test initialize method '{0}.{1}' was canceled</source>
-        <target state="translated">Metoda inicializace testu {0}.{1} byla zrušena.</target>
-        <note />
+        <target state="needs-review-translation">Metoda inicializace testu {0}.{1} byla zrušena.</target>
+        <note>{0} is the type name. {1} is the test initialize method name.</note>
       </trans-unit>
       <trans-unit id="TestNotFound">
         <source>Test method {0} was not found.</source>
-        <target state="translated">Testovací metoda {0} se nenašla.</target>
-        <note />
+        <target state="needs-review-translation">Testovací metoda {0} se nenašla.</target>
+        <note>{0} is the test method name.</note>
       </trans-unit>
       <trans-unit id="TestParallelizationBanner">
         <source>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</source>
-        <target state="translated">Je povolená paralelizace testu pro {0} (Workers: {1}, Scope: {2})</target>
-        <note>{Locked="Workers"}{Locked="Scope"}</note>
+        <target state="needs-review-translation">Je povolená paralelizace testu pro {0} (Workers: {1}, Scope: {2})</target>
+        <note>{0} is the test source path. {1} is the worker count. {2} is the parallelization scope. {Locked="Workers"}{Locked="Scope"}</note>
       </trans-unit>
       <trans-unit id="TestRunName">
         <source>{0}_{1} {2}</source>
-        <target state="translated">{0}_{1} {2}</target>
-        <note></note>
+        <target state="needs-review-translation">{0}_{1} {2}</target>
+        <note>{0} is the deployment folder prefix. {1} is the user name. {2} is the date/time and process id suffix.</note>
       </trans-unit>
       <trans-unit id="UTA_AssemblyCleanupMethodWasUnsuccesful">
         <source>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</source>
-        <target state="translated">Čisticí metoda sestavení {0}.{1} selhala. Chybová zpráva: {2}. Trasování zásobníku: {3}</target>
-        <note />
+        <target state="needs-review-translation">Čisticí metoda sestavení {0}.{1} selhala. Chybová zpráva: {2}. Trasování zásobníku: {3}</target>
+        <note>{0} is the declaring type name. {1} is the assembly cleanup method name. {2} is the error message. {3} is the stack trace.</note>
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderTypeIsGeneric">
         <source>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</source>
-        <target state="translated">UTA070: Typ {0}, na který odkazuje [AssemblyFixtureProvider], nesmí být obecný.</target>
-        <note />
+        <target state="needs-review-translation">UTA070: Typ {0}, na který odkazuje [AssemblyFixtureProvider], nesmí být obecný.</target>
+        <note>{0} is the fixture provider type name. {Locked="UTA070"}{Locked="[AssemblyFixtureProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderTypeReflectionFailed">
         <source>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</source>
-        <target state="translated">UTA071: Nepodařilo se vytvořit výčet metod pro typ {0}, na který odkazuje [AssemblyFixtureProvider]. {1}</target>
-        <note />
+        <target state="needs-review-translation">UTA071: Nepodařilo se vytvořit výčet metod pro typ {0}, na který odkazuje [AssemblyFixtureProvider]. {1}</target>
+        <note>{0} is the fixture provider type name. {1} is the exception details. {Locked="UTA071"}{Locked="[AssemblyFixtureProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_AssemblyFixtureProviderLoadFailed">
         <source>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</source>
-        <target state="translated">UTA072: Nepodařilo se načíst značku [AssemblyFixtureProvider] ze sestavení {0}. {1}</target>
-        <note />
+        <target state="needs-review-translation">UTA072: Nepodařilo se načíst značku [AssemblyFixtureProvider] ze sestavení {0}. {1}</target>
+        <note>{0} is the assembly path. {1} is the exception details. {Locked="UTA072"}{Locked="[AssemblyFixtureProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_AssemblyInitMethodThrows">
         <source>Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</source>
-        <target state="translated">Inicializační metoda sestavení {0}.{1} vyvolala výjimku. {2}: {3}. Přerušuje se provádění testu.</target>
-        <note />
+        <target state="needs-review-translation">Inicializační metoda sestavení {0}.{1} vyvolala výjimku. {2}: {3}. Přerušuje se provádění testu.</target>
+        <note>{0} is the declaring type name. {1} is the assembly initialization method name. {2} is the exception type. {3} is the exception message.</note>
       </trans-unit>
       <trans-unit id="UTA_ClassCleanupMethodWasUnsuccesful">
         <source>Class Cleanup method {0}.{1} failed. Error Message: {2}. Stack Trace: {3}</source>
-        <target state="translated">Čisticí metoda třídy {0}.{1} selhala. Chybová zpráva: {2}. Trasování zásobníku: {3}</target>
-        <note />
+        <target state="needs-review-translation">Čisticí metoda třídy {0}.{1} selhala. Chybová zpráva: {2}. Trasování zásobníku: {3}</target>
+        <note>{0} is the declaring type name. {1} is the class cleanup method name. {2} is the error message. {3} is the stack trace.</note>
       </trans-unit>
       <trans-unit id="UTA_ClassInitMethodThrows">
         <source>Class Initialization method {0}.{1} threw exception. {2}: {3}.</source>
-        <target state="translated">Inicializační metoda třídy {0}.{1} vyvolala výjimku. {2}: {3}.</target>
-        <note />
+        <target state="needs-review-translation">Inicializační metoda třídy {0}.{1} vyvolala výjimku. {2}: {3}.</target>
+        <note>{0} is the declaring type name. {1} is the class initialization method name. {2} is the exception type. {3} is the exception message.</note>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="translated">Metoda {0}.{1} má špatný podpis. Metoda musí být static nebo public, nevrací hodnotu a nesmí přijímat žádný parametr. Pokud navíc v metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask.</target>
-        <note />
+        <target state="needs-review-translation">Metoda {0}.{1} má špatný podpis. Metoda musí být static nebo public, nevrací hodnotu a nesmí přijímat žádný parametr. Pokud navíc v metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask.</target>
+        <note>{0} is the declaring type name. {1} is the method name. {Locked="static"}{Locked="public"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</note>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="translated">Metoda {0}.{1} má špatný podpis. Metoda musí být static nebo public, nevrací hodnotu a musí přijímat jeden parametr typu TestContext. Pokud navíc v metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask.</target>
-        <note />
+        <target state="needs-review-translation">Metoda {0}.{1} má špatný podpis. Metoda musí být static nebo public, nevrací hodnotu a musí přijímat jeden parametr typu TestContext. Pokud navíc v metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask.</target>
+        <note>{0} is the declaring type name. {1} is the method name. {Locked="static"}{Locked="public"}{Locked="TestContext"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</note>
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
-        <target state="translated">Metoda TestCleanup {0}.{1} vyvolala výjimku. {2}.</target>
-        <note />
+        <target state="needs-review-translation">Metoda TestCleanup {0}.{1} vyvolala výjimku. {2}.</target>
+        <note>{0} is the declaring type name. {1} is the test cleanup method name. {2} is the exception details. {Locked="TestCleanup"}</note>
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrowsGeneralError">
         <source>Error calling Test Cleanup method for test class {0}: {1}</source>
-        <target state="translated">Při volání čisticí metody testu pro třídu {0} došlo k chybě: {1}</target>
-        <note />
+        <target state="needs-review-translation">Při volání čisticí metody testu pro třídu {0} došlo k chybě: {1}</target>
+        <note>{0} is the test class name. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="UTA_DataSourceConfigurationSectionMissing">
         <source>Data source '{0}' cannot be found in the test configuration settings</source>
-        <target state="translated">Zdroj dat {0} se v nastavení konfigurace testu nenašel.</target>
-        <note></note>
+        <target state="needs-review-translation">Zdroj dat {0} se v nastavení konfigurace testu nenašel.</target>
+        <note>{0} is the data source name.</note>
       </trans-unit>
       <trans-unit id="UTA_EndOfInnerExceptionTrace">
         <source>--- End of inner exception stack trace ---</source>
@@ -402,162 +395,162 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorDataConnectionFailed">
         <source>The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</source>
-        <target state="translated">Adaptéru testování částí se buď nepodařilo připojit ke zdroji dat, nebo přečíst data. Další informace o odstraňování této chyby najdete v knihovně MSDN v tématu Troubleshooting Data-Driven Unit Tests (http://go.microsoft.com/fwlink/?LinkId=62412). Podrobnosti o chybě: {0}</target>
-        <note></note>
+        <target state="needs-review-translation">Adaptéru testování částí se buď nepodařilo připojit ke zdroji dat, nebo přečíst data. Další informace o odstraňování této chyby najdete v knihovně MSDN v tématu Troubleshooting Data-Driven Unit Tests (http://go.microsoft.com/fwlink/?LinkId=62412). Podrobnosti o chybě: {0}</target>
+        <note>{0} is the error details. {Locked="http://go.microsoft.com/fwlink/?LinkId=62412"}{Locked="MSDN"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
-        <target state="translated">UTA031: Třída {0} nemá platnou vlastnost TestContext. Vlastnost TestContext musí být typu TestContext, musí být nestatická a musí být veřejná. Například: public TestContext TestContext</target>
-        <note />
+        <target state="needs-review-translation">UTA031: Třída {0} nemá platnou vlastnost TestContext. Vlastnost TestContext musí být typu TestContext, musí být nestatická a musí být veřejná. Například: public TestContext TestContext</target>
+        <note>{0} is the test class name. {Locked="UTA031"}{Locked="TestContext"}{Locked="non-static"}{Locked="public"}{Locked="public TestContext TestContext"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
-        <target state="translated">UTA007: Metoda {1} definovaná ve třídě {0} nemá správný podpis. Testovací metoda označená atributem [TestMethod] nesmí být static ani public, musí mít návratový typ void a nesmí přijímat žádný parametr. Například: public void Test.Class1.Test(). Pokud navíc v testovací metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask. Například: public async Task Test.Class1.Test2()</target>
-        <note />
+        <target state="needs-review-translation">UTA007: Metoda {1} definovaná ve třídě {0} nemá správný podpis. Testovací metoda označená atributem [TestMethod] nesmí být static ani public, musí mít návratový typ void a nesmí přijímat žádný parametr. Například: public void Test.Class1.Test(). Pokud navíc v testovací metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask. Například: public async Task Test.Class1.Test2()</target>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</source>
-        <target state="translated">UTA054: {0}.{1} má neplatný atribut Timeout. Hodnota timeline musí být celé číslo větší než 0.</target>
-        <note />
+        <target state="needs-review-translation">UTA054: {0}.{1} má neplatný atribut Timeout. Hodnota timeline musí být celé číslo větší než 0.</target>
+        <note>{0} is the declaring type name. {1} is the method name. {Locked="UTA054"}{Locked="Timeout"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiAssemblyClean">
         <source>UTA014: {0}: Cannot define more than one method with the AssemblyCleanup attribute inside an assembly.</source>
-        <target state="translated">UTA014: {0}: V jednom sestavení nejde definovat více jak jednu metodu s atributem AssemblyCleanup.</target>
-        <note />
+        <target state="needs-review-translation">UTA014: {0}: V jednom sestavení nejde definovat více jak jednu metodu s atributem AssemblyCleanup.</target>
+        <note>{0} is the declaring type full name. {Locked="UTA014"}{Locked="AssemblyCleanup"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiAssemblyInit">
         <source>UTA013: {0}: Cannot define more than one method with the AssemblyInitialize attribute inside an assembly.</source>
-        <target state="translated">UTA013: {0}: V jednom sestavení nejde definovat více jak jednu metodu s atributem AssemblyInitialize.</target>
-        <note />
+        <target state="needs-review-translation">UTA013: {0}: V jednom sestavení nejde definovat více jak jednu metodu s atributem AssemblyInitialize.</target>
+        <note>{0} is the declaring type full name. {Locked="UTA013"}{Locked="AssemblyInitialize"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClassClean">
         <source>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</source>
-        <target state="translated">UTA026: {0}: Uvnitř třídy nejde definovat více jak jednu metodu s atributem ClassCleanup.</target>
-        <note />
+        <target state="needs-review-translation">UTA026: {0}: Uvnitř třídy nejde definovat více jak jednu metodu s atributem ClassCleanup.</target>
+        <note>{0} is the test class full name. {Locked="UTA026"}{Locked="ClassCleanup"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClassInit">
         <source>UTA025: {0}: Cannot define more than one method with the ClassInitialize attribute inside a class.</source>
-        <target state="translated">UTA025: {0}: Uvnitř třídy nejde definovat více jak jednu metodu s atributem ClassInitialize.</target>
-        <note />
+        <target state="needs-review-translation">UTA025: {0}: Uvnitř třídy nejde definovat více jak jednu metodu s atributem ClassInitialize.</target>
+        <note>{0} is the test class full name. {Locked="UTA025"}{Locked="ClassInitialize"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiClean">
         <source>UTA024: {0}: Cannot define more than one method with the TestCleanup attribute.</source>
-        <target state="translated">UTA024: {0}: Nejde definovat více jak jednu metodu s atributem TestCleanup.</target>
-        <note />
+        <target state="needs-review-translation">UTA024: {0}: Nejde definovat více jak jednu metodu s atributem TestCleanup.</target>
+        <note>{0} is the test class full name. {Locked="UTA024"}{Locked="TestCleanup"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorMultiInit">
         <source>UTA018: {0}: Cannot define more than one method with the TestInitialize attribute.</source>
-        <target state="translated">UTA018: {0}: Nejde definovat více jak jednu metodu s atributem TestInitialize.</target>
-        <note />
+        <target state="needs-review-translation">UTA018: {0}: Nejde definovat více jak jednu metodu s atributem TestInitialize.</target>
+        <note>{0} is the test class full name. {Locked="UTA018"}{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorNonPublicTestClass">
         <source>UTA001: TestClass attribute defined on non-public class {0}</source>
-        <target state="translated">UTA001: Atribut TestClass se definoval v neveřejné třídě {0}.</target>
-        <note />
+        <target state="needs-review-translation">UTA001: Atribut TestClass se definoval v neveřejné třídě {0}.</target>
+        <note>{0} is the test class full name. {Locked="UTA001"}{Locked="TestClass"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
         <source>TestClass attribute defined on generic non-abstract class {0}</source>
-        <target state="translated">Atribut TestClass definovaný u obecné neabstraktní třídy {0}</target>
-        <note />
+        <target state="needs-review-translation">Atribut TestClass definovaný u obecné neabstraktní třídy {0}</target>
+        <note>{0} is the test class full name. {Locked="TestClass"}</note>
       </trans-unit>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</source>
-        <target state="translated">Metoda Execute vyvolala neošetřenou výjimku. Nahlaste prosím tuto chybu autorovi atributu {0}.
+        <target state="needs-review-translation">Metoda Execute vyvolala neošetřenou výjimku. Nahlaste prosím tuto chybu autorovi atributu {0}.
 {1}</target>
-        <note />
+        <note>{0} is the attribute type name. {1} is the exception details. {Locked="Execute"}</note>
       </trans-unit>
       <trans-unit id="UTA_FailedToGetTestMethodException">
         <source>Failed to obtain the exception thrown by test method {0}.{1}.</source>
-        <target state="translated">Nepovedlo se získat výjimku vyvolanou testovací metodou {0}.{1}.</target>
-        <note />
+        <target state="needs-review-translation">Nepovedlo se získat výjimku vyvolanou testovací metodou {0}.{1}.</target>
+        <note>{0} is the declaring type name. {1} is the test method name.</note>
       </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
-        <target state="translated">Inicializační metoda {0}.{1} způsobila výjimku. {2}.</target>
-        <note />
+        <target state="needs-review-translation">Inicializační metoda {0}.{1} způsobila výjimku. {2}.</target>
+        <note>{0} is the declaring type name. {1} is the initialization method name. {2} is the exception details.</note>
       </trans-unit>
       <trans-unit id="UTA_InstanceCreationError">
         <source>Unable to create instance of class {0}. Error: {1}.</source>
-        <target state="translated">Nepodařilo se vytvořit instanci třídy {0}. Chyba: {1}.</target>
-        <note />
+        <target state="needs-review-translation">Nepodařilo se vytvořit instanci třídy {0}. Chyba: {1}.</target>
+        <note>{0} is the test class name. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="UTA_MethodDoesNotExists">
         <source>Method {0}.{1} does not exist.</source>
-        <target state="translated">Metoda {0}.{1} neexistuje.</target>
-        <note />
+        <target state="needs-review-translation">Metoda {0}.{1} neexistuje.</target>
+        <note>{0} is the declaring type name. {1} is the method name.</note>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestClass">
         <source>The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</source>
-        <target state="translated">Testovací třída {0} má definovaných více atributů odvozených od {1}. Povolený je jenom jeden takový atribut.</target>
-        <note />
+        <target state="needs-review-translation">Testovací třída {0} má definovaných více atributů odvozených od {1}. Povolený je jenom jeden takový atribut.</target>
+        <note>{0} is the test class name. {1} is the attribute base type name.</note>
       </trans-unit>
       <trans-unit id="UTA_MultipleAttributesOnTestMethod">
         <source>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</source>
-        <target state="translated">Testovací metoda {0}.{1} má definovaných více atributů odvozených od atributu {2}. Povolený je jenom jeden takový atribut.</target>
-        <note />
+        <target state="needs-review-translation">Testovací metoda {0}.{1} má definovaných více atributů odvozených od atributu {2}. Povolený je jenom jeden takový atribut.</target>
+        <note>{0} is the declaring type name. {1} is the test method name. {2} is the attribute base type name.</note>
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
         <source>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</source>
-        <target state="translated">Při provádění testu došlo k chybě. Rozšíření nevrátilo žádný výsledek. Pokud používáte rozšíření třídy TestMethodAttribute, obraťte se na dodavatele.</target>
-        <note />
+        <target state="needs-review-translation">Při provádění testu došlo k chybě. Rozšíření nevrátilo žádný výsledek. Pokud používáte rozšíření třídy TestMethodAttribute, obraťte se na dodavatele.</target>
+        <note>{Locked="TestMethodAttribute"}</note>
       </trans-unit>
       <trans-unit id="UTA_NoValidConstructor">
         <source>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="translated">Nelze najít platný konstruktor pro testovací třídu {0}. Platné konstruktory jsou public a buď bez parametrů, nebo s jedním parametrem typu TestContext.</target>
-        <note />
+        <target state="needs-review-translation">Nelze najít platný konstruktor pro testovací třídu {0}. Platné konstruktory jsou public a buď bez parametrů, nebo s jedním parametrem typu TestContext.</target>
+        <note>{0} is the test class name. {Locked="public"}{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestContextLoadError">
         <source>Unable to find property {0}.TestContext. Error:{1}.</source>
-        <target state="translated">Nepodařilo se najít vlastnost {0}.TestContext. Chyba:{1}.</target>
-        <note />
+        <target state="needs-review-translation">Nepodařilo se najít vlastnost {0}.TestContext. Chyba:{1}.</target>
+        <note>{0} is the test class name. {1} is the error message. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestContextSetError">
         <source>Unable to set TestContext property for the class {0}. Error: {1}.</source>
-        <target state="translated">Pro třídu {0} se nepodařilo nastavit vlastnost TestContext. Chyba: {1}.</target>
-        <note />
+        <target state="needs-review-translation">Pro třídu {0} se nepodařilo nastavit vlastnost TestContext. Chyba: {1}.</target>
+        <note>{0} is the test class name. {1} is the error message. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestContextTypeMismatchLoadError">
         <source>The {0}.TestContext has incorrect type.</source>
-        <target state="translated">{0}.TestContext má nesprávný typ.</target>
-        <note />
+        <target state="needs-review-translation">{0}.TestContext má nesprávný typ.</target>
+        <note>{0} is the test class name. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="translated">Metoda {0}.{1} má špatný podpis. Metoda nesmí být static nebo public, nevrací hodnotu a nesmí přijímat žádný parametr. Pokud navíc v metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask.</target>
-        <note />
+        <target state="needs-review-translation">Metoda {0}.{1} má špatný podpis. Metoda nesmí být static nebo public, nevrací hodnotu a nesmí přijímat žádný parametr. Pokud navíc v metodě používáte operátor async-await, musí být návratový typ Task nebo ValueTask.</target>
+        <note>{0} is the declaring type name. {1} is the method name. {Locked="non-static"}{Locked="public"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestMethodThrows">
         <source>Test method {0}.{1} threw exception:
 {2}</source>
-        <target state="translated">V testovací metodě {0}.{1} došlo k výjimce:
+        <target state="needs-review-translation">V testovací metodě {0}.{1} došlo k výjimce:
 {2}</target>
-        <note />
+        <note>{0} is the declaring type name. {1} is the test method name. {2} is the exception details.</note>
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
         <source>Unable to get type {0}. Error: {1}.</source>
-        <target state="translated">Nepodařilo se získat typ {0}. Chyba: {1}.</target>
-        <note />
+        <target state="needs-review-translation">Nepodařilo se získat typ {0}. Chyba: {1}.</target>
+        <note>{0} is the type name. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="UTA_UserCodeThrewNullValueException">
         <source>The called code threw an exception that was caught, but the exception value was null</source>
-        <target state="translated">Volaný kód vyvolal výjimku, která byla zachycena, ale její hodnota byla null.</target>
-        <note />
+        <target state="needs-review-translation">Volaný kód vyvolal výjimku, která byla zachycena, ale její hodnota byla null.</target>
+        <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="UTA_WrongThread">
         <source>{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</source>
-        <target state="translated">{0}. Pokud v testu používáte objekty uživatelského rozhraní, zvažte u projektů pro platformu UPW použití atributu [UITestMethod] místo atributu [TestMethod], aby se test provedl ve vlákně uživatelského rozhraní.</target>
-        <note />
+        <target state="needs-review-translation">{0}. Pokud v testu používáte objekty uživatelského rozhraní, zvažte u projektů pro platformu UPW použití atributu [UITestMethod] místo atributu [TestMethod], aby se test provedl ve vlákně uživatelského rozhraní.</target>
+        <note>{0} is the original error message. {Locked="UWP"}{Locked="[UITestMethod]"}{Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
-        <target state="translated">(Z důvodu výjimky se nepodařilo získat zprávu o výjimce typu {0}.)</target>
-        <note />
+        <target state="needs-review-translation">(Z důvodu výjimky se nepodařilo získat zprávu o výjimce typu {0}.)</target>
+        <note>{0} is the exception type name.</note>
       </trans-unit>
       <trans-unit id="VersionMismatchBetweenAdapterAndFramework">
         <source>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</source>
-        <target state="translated">MSTest.TestAdapter a MSTest.TestFramework musí mít stejnou verzi. Byla nalezena verze MSTest.TestAdapter {0} a verze MSTest.TestFramework {1}. Ujistěte se prosím, že verze balíčků NuGet MSTest.TestAdapter a MSTest.TestFramework jsou shodné.</target>
-        <note />
+        <target state="needs-review-translation">MSTest.TestAdapter a MSTest.TestFramework musí mít stejnou verzi. Byla nalezena verze MSTest.TestAdapter {0} a verze MSTest.TestFramework {1}. Ujistěte se prosím, že verze balíčků NuGet MSTest.TestAdapter a MSTest.TestFramework jsou shodné.</target>
+        <note>{0} is the MSTest.TestAdapter version. {1} is the MSTest.TestFramework version. {Locked="MSTest.TestAdapter"}{Locked="MSTest.TestFramework"}{Locked="NuGet"}</note>
       </trans-unit>
       <trans-unit id="WrongNumberOfObjects">
         <source>Wrong number of objects for permutation. Should be greater than zero.</source>
@@ -566,8 +559,8 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="UTA_OutRefParametersNotSupported">
         <source>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</source>
-        <target state="translated">Upozornění: Testovací metoda {0}.{1} má parametry out nebo ref, které nejsou podporovány a mohou být v budoucí verzi nástroje MSTest zakázány.</target>
-        <note />
+        <target state="needs-review-translation">Upozornění: Testovací metoda {0}.{1} má parametry out nebo ref, které nejsou podporovány a mohou být v budoucí verzi nástroje MSTest zakázány.</target>
+        <note>{0} is the declaring type name. {1} is the test method name. {Locked="out"}{Locked="ref"}{Locked="MSTest"}</note>
       </trans-unit>
     </body>
   </file>
