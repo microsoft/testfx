@@ -79,7 +79,7 @@ jobs:
   # Disable Pack/Sign/Publish because cibuild.cmd implies all three, and they cascade-fail
   # when UAP is skipped (.nuspec files reference absent uap10.0.16299 outputs; Sign then
   # errors with "List of files to sign is empty"). CodeQL only needs source compilation.
-  - script: eng\common\cibuild.cmd
+  - script: eng\common\CIBuild.cmd
       -configuration $(_BuildConfig)
       -prepareMachine
       -msbuildEngine dotnet
