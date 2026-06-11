@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 
 using Microsoft.CodeAnalysis;
 
+using MSTest.AotReflection.SourceGeneration.Helpers;
 using MSTest.AotReflection.SourceGeneration.Model;
 
 namespace MSTest.AotReflection.SourceGeneration.Generators;
@@ -23,26 +26,57 @@ internal static class TestClassModelBuilder
 
     public static TestClassModel Build(INamedTypeSymbol typeSymbol)
     {
+        // Methods / properties are walked across the full inheritance chain (excluding
+        // System.Object) so that MSTest members declared on a base class —
+        // [ClassInitialize], [ClassCleanup], [TestInitialize], [TestCleanup],
+        // [TestMethod], the [TestContext] setter, … — are visible to the consumer
+        // without runtime reflection.
+        //
+        // Iteration order is derived-first so that an override or `new`-shadowed member
+        // on the derived type wins over the base declaration with the same signature.
+        // Constructors are NEVER inherited and are taken only from the leaf type.
+        var methodsByKey = new Dictionary<string, TestMethodModel>(StringComparer.Ordinal);
+        var propertiesByName = new Dictionary<string, TestPropertyModel>(StringComparer.Ordinal);
         ImmutableArray<TestMethodModel>.Builder methods = ImmutableArray.CreateBuilder<TestMethodModel>();
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
 
-        foreach (ISymbol member in typeSymbol.GetMembers())
+        for (INamedTypeSymbol? current = typeSymbol;
+             current is not null && current.SpecialType != SpecialType.System_Object;
+             current = current.BaseType)
         {
-            switch (member)
+            bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
+
+            foreach (ISymbol member in current.GetMembers())
             {
-                case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                    when method.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
-                    methods.Add(BuildMethod(method));
-                    break;
-                case IPropertySymbol property
-                    when property.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
-                    properties.Add(BuildProperty(property));
-                    break;
-                case IMethodSymbol { MethodKind: MethodKind.Constructor, IsStatic: false } ctor
-                    when ctor.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
-                    ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
-                    break;
+                switch (member)
+                {
+                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
+                        when IsAccessibleFromConsumer(method):
+                        string key = BuildMethodSignatureKey(method);
+                        if (!methodsByKey.ContainsKey(key))
+                        {
+                            TestMethodModel model = BuildMethod(method);
+                            methodsByKey[key] = model;
+                            methods.Add(model);
+                        }
+
+                        break;
+                    case IPropertySymbol property
+                        when IsAccessibleFromConsumer(property):
+                        if (!propertiesByName.ContainsKey(property.Name))
+                        {
+                            TestPropertyModel model = BuildProperty(property);
+                            propertiesByName[property.Name] = model;
+                            properties.Add(model);
+                        }
+
+                        break;
+                    case IMethodSymbol { MethodKind: MethodKind.Constructor, IsStatic: false } ctor
+                        when isLeaf && ctor.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
+                        ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
+                        break;
+                }
             }
         }
 
@@ -60,6 +94,58 @@ internal static class TestClassModelBuilder
             Attributes: BuildAttributes(typeSymbol.GetAttributes()));
     }
 
+    // Restricted to accessibilities the emitted helper class (a separate static type
+    // declared in MSTest.SourceGenerated, not a derived type) can legally call.
+    // 'protected' and 'private protected' members require the caller to be a derived
+    // type, so they are excluded; 'protected internal' is included because the internal
+    // half is satisfied (the generated helper lives in the same assembly).
+    private static bool IsAccessibleFromConsumer(ISymbol symbol)
+        => symbol.DeclaredAccessibility is
+            Accessibility.Public
+            or Accessibility.Internal
+            or Accessibility.ProtectedOrInternal;
+
+    private static string BuildMethodSignatureKey(IMethodSymbol method)
+    {
+        var sb = new StringBuilder();
+        sb.Append(method.IsStatic ? "S:" : "I:");
+        sb.Append(method.Name);
+        if (method.Arity > 0)
+        {
+            sb.Append('`');
+            sb.Append(method.Arity);
+        }
+
+        sb.Append('(');
+        bool first = true;
+        foreach (IParameterSymbol p in method.Parameters)
+        {
+            if (!first)
+            {
+                sb.Append(',');
+            }
+
+            first = false;
+            switch (p.RefKind)
+            {
+                case RefKind.Ref:
+                    sb.Append("ref ");
+                    break;
+                case RefKind.Out:
+                    sb.Append("out ");
+                    break;
+                case RefKind.In:
+                    sb.Append("in ");
+                    break;
+            }
+
+            sb.Append(p.Type.ToDisplayString(FullyQualifiedFormat));
+        }
+
+        sb.Append(')');
+        return sb.ToString();
+    }
+
     private static TestMethodModel BuildMethod(IMethodSymbol method)
     {
         ITypeSymbol returnType = method.ReturnType;
@@ -73,6 +159,8 @@ internal static class TestClassModelBuilder
             || returnTypeFqn.StartsWith("global::System.Threading.Tasks.ValueTask<", System.StringComparison.Ordinal);
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
+        ImmutableArray<AttributeData> inheritedAttributes = CollectInheritedAttributes(method);
+
         return new TestMethodModel(
             Name: method.Name,
             IsStatic: method.IsStatic,
@@ -81,7 +169,63 @@ internal static class TestClassModelBuilder
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
             Parameters: BuildParameters(method),
-            Attributes: BuildAttributes(method.GetAttributes()));
+            Attributes: BuildAttributes(inheritedAttributes),
+            DataRows: BuildDataRows(inheritedAttributes));
+    }
+
+    // Walks the attribute list and reifies each [DataRow(...)] application into a flat
+    // object?[] row. Mirrors DataRowAttribute's runtime behavior: when the constructor uses
+    // the variadic overload (object? data1, params object?[] moreData), Roslyn surfaces the
+    // tail as a single Array TypedConstant, which we flatten back so the consumer sees the
+    // same shape as DataRowAttribute.Data.
+    private static EquatableArray<DataRowModel> BuildDataRows(ImmutableArray<AttributeData> attributes)
+    {
+        if (attributes.IsDefaultOrEmpty)
+        {
+            return EquatableArray<DataRowModel>.Empty;
+        }
+
+        ImmutableArray<DataRowModel>.Builder builder = ImmutableArray.CreateBuilder<DataRowModel>();
+        foreach (AttributeData attribute in attributes)
+        {
+            if (attribute.AttributeClass is not { } attributeClass)
+            {
+                continue;
+            }
+
+            if (attributeClass.ToDisplayString(FullyQualifiedFormat) != "global::" + MSTestAttributeNames.DataRow)
+            {
+                continue;
+            }
+
+            ImmutableArray<TypedConstant> ctorArgs = attribute.ConstructorArguments;
+            ImmutableArray<TypedConstantModel>.Builder rowBuilder = ImmutableArray.CreateBuilder<TypedConstantModel>();
+
+            bool lastIsParamsArray =
+                attribute.AttributeConstructor is { Parameters: { IsDefaultOrEmpty: false } parameters }
+                && parameters[parameters.Length - 1].IsParams
+                && !ctorArgs.IsDefaultOrEmpty
+                && ctorArgs[ctorArgs.Length - 1].Kind == TypedConstantKind.Array;
+
+            for (int i = 0; i < ctorArgs.Length; i++)
+            {
+                if (i == ctorArgs.Length - 1 && lastIsParamsArray)
+                {
+                    foreach (TypedConstant element in ctorArgs[i].Values)
+                    {
+                        rowBuilder.Add(ToModel(element));
+                    }
+                }
+                else
+                {
+                    rowBuilder.Add(ToModel(ctorArgs[i]));
+                }
+            }
+
+            builder.Add(new DataRowModel(new EquatableArray<TypedConstantModel>(rowBuilder.ToImmutable())));
+        }
+
+        return new EquatableArray<DataRowModel>(builder.ToImmutable());
     }
 
     private static TestPropertyModel BuildProperty(IPropertySymbol property)
@@ -89,7 +233,123 @@ internal static class TestClassModelBuilder
             Name: property.Name,
             FullyQualifiedType: property.Type.ToDisplayString(FullyQualifiedFormat),
             HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public },
-            Attributes: BuildAttributes(property.GetAttributes()));
+            Attributes: BuildAttributes(CollectInheritedAttributes(property)));
+
+    // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
+    // overridden-method chain and union attributes, keeping the most-derived application when
+    // the same attribute type appears on multiple levels — but respect
+    // [AttributeUsage(Inherited = false)] (the attribute is NOT visible past the level it was
+    // declared on) and [AttributeUsage(AllowMultiple = true)] (every occurrence is kept).
+    private static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
+    {
+        ImmutableArray<AttributeData> own = method.GetAttributes();
+        if (method.OverriddenMethod is null)
+        {
+            return own;
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
+        AppendUnique(builder, seen, own, isInheritedLevel: false);
+        for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
+        {
+            AppendUnique(builder, seen, baseMethod.GetAttributes(), isInheritedLevel: true);
+        }
+
+        return builder.ToImmutable();
+    }
+
+    private static ImmutableArray<AttributeData> CollectInheritedAttributes(IPropertySymbol property)
+    {
+        ImmutableArray<AttributeData> own = property.GetAttributes();
+        if (property.OverriddenProperty is null)
+        {
+            return own;
+        }
+
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
+        AppendUnique(builder, seen, own, isInheritedLevel: false);
+        for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
+        {
+            AppendUnique(builder, seen, baseProperty.GetAttributes(), isInheritedLevel: true);
+        }
+
+        return builder.ToImmutable();
+    }
+
+    private static void AppendUnique(
+        ImmutableArray<AttributeData>.Builder builder,
+        HashSet<string> seen,
+        ImmutableArray<AttributeData> attributes,
+        bool isInheritedLevel)
+    {
+        foreach (AttributeData attribute in attributes)
+        {
+            if (attribute.AttributeClass is not { } attributeClass)
+            {
+                continue;
+            }
+
+            (bool allowMultiple, bool inherited) = GetAttributeUsage(attributeClass);
+
+            // A base-level attribute declared with AttributeUsage(Inherited = false) must
+            // not leak onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
+            if (isInheritedLevel && !inherited)
+            {
+                continue;
+            }
+
+            // Attributes declared with AttributeUsage(AllowMultiple = true) may legitimately
+            // appear several times across the override chain (e.g. [TestCategory], [DataRow])
+            // — keep every instance instead of collapsing them to one.
+            if (allowMultiple)
+            {
+                builder.Add(attribute);
+                continue;
+            }
+
+            string key = attributeClass.ToDisplayString(FullyQualifiedFormat);
+            if (seen.Add(key))
+            {
+                builder.Add(attribute);
+            }
+        }
+    }
+
+    private static (bool AllowMultiple, bool Inherited) GetAttributeUsage(INamedTypeSymbol attributeClass)
+    {
+        for (INamedTypeSymbol? current = attributeClass; current is not null; current = current.BaseType)
+        {
+            foreach (AttributeData attribute in current.GetAttributes())
+            {
+                if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
+                {
+                    continue;
+                }
+
+                bool allowMultiple = false;
+                bool inherited = true;
+                foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
+                {
+                    if (named.Key == "AllowMultiple" && named.Value.Value is bool am)
+                    {
+                        allowMultiple = am;
+                    }
+                    else if (named.Key == "Inherited" && named.Value.Value is bool inh)
+                    {
+                        inherited = inh;
+                    }
+                }
+
+                // [AttributeUsage] on a derived attribute class shadows the base per CLI rules;
+                // stop at the first level where it is found.
+                return (allowMultiple, inherited);
+            }
+        }
+
+        return (AllowMultiple: false, Inherited: true);
+    }
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {
