@@ -1,4 +1,4 @@
-<Project>
+<Project InitialTargets="NormalizeNetCoreSdkRootCasing">
   <PropertyGroup Label="Version settings">
     <!-- MSTest version -->
     <VersionPrefix>4.3.0</VersionPrefix>
@@ -7,10 +7,154 @@
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>11.0.0-beta.26309.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>18.9.0-preview.26309.4</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>11.0.0-beta.26310.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>18.9.0-preview.26310.1</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- empty line to avoid merge conflicts for darc PRs to update CC and MSTest+MTP -->
-    <MSTestVersion>4.3.0-preview.26309.6</MSTestVersion>
-    <MicrosoftTestingPlatformVersion>2.3.0-preview.26309.6</MicrosoftTestingPlatformVersion>
+    <MSTestVersion>4.3.0-preview.26310.6</MSTestVersion>
+    <MicrosoftTestingPlatformVersion>2.3.0-preview.26310.6</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
+
+  <!--
+    TEMPORARY WORKAROUND for https://github.com/dotnet/msbuild/issues/14026
+    Mirrors https://github.com/dotnet/arcade/pull/17002.
+
+    Placed in eng/Versions.props (not Directory.Build.targets) because the Arcade
+    orchestrator/toolset project — which is where the cross-runtime task-host
+    handshake first fires (InstallDotNetCore etc.) — imports Versions.props via
+    the Arcade SDK chain but does NOT import the repo's Directory.Build.targets.
+
+    Problem: the .NET task host handshake "salt" is a case-sensitive hash of the
+    SDK tools directory. The host (.NET Framework MSBuild, e.g. VS) hashes the
+    $(NetCoreSdkRoot) property verbatim (drive casing comes from the calling
+    environment); the child (.NET task host / SDK apphost) resolves its own
+    path via Environment.ProcessPath, which reports the volume's canonical
+    on-disk drive-letter casing. When casings differ (observed: host "D:" vs
+    child "d:") the salts differ and the handshake fails with MSB4216.
+
+    Fix: rewrite ONLY the drive letter of $(NetCoreSdkRoot) to the same
+    canonical casing Environment.ProcessPath will report, so the host computes
+    the same salt as the child.
+
+    InitialTargets on this Project aggregates into the importing project's
+    InitialTargets so the target runs early, before the first .NET task host
+    is launched. Remove once arcade#17002 ships in the Arcade SDK we consume.
+  -->
+
+  <UsingTask TaskName="NormalizeSdkRootDriveCasing"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll"
+             Condition="'$(MSBuildRuntimeType)' == 'Full' and '$(NetCoreSdkRoot)' != ''">
+    <ParameterGroup>
+      <SdkRoot ParameterType="System.String" Required="true" />
+      <Result ParameterType="System.String" Output="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Class" Language="cs"><![CDATA[
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+
+public class NormalizeSdkRootDriveCasing : Task
+{
+    [Required]
+    public string SdkRoot { get; set; }
+
+    [Output]
+    public string Result { get; set; }
+
+    private const uint LOAD_LIBRARY_AS_DATAFILE = 0x2;
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern IntPtr LoadLibraryExW(string lpFileName, IntPtr hFile, uint dwFlags);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetModuleFileNameW(IntPtr hModule, StringBuilder lpFilename, uint nSize);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool FreeLibrary(IntPtr hModule);
+
+    public override bool Execute()
+    {
+        Result = SdkRoot;
+
+        try
+        {
+            if (string.IsNullOrEmpty(SdkRoot) || SdkRoot.Length < 2 || SdkRoot[1] != ':')
+            {
+                return true;
+            }
+
+            string image = null;
+            foreach (string candidate in new[] { "MSBuild.exe", "MSBuild.dll" })
+            {
+                string p = Path.Combine(SdkRoot, candidate);
+                if (File.Exists(p))
+                {
+                    image = p;
+                    break;
+                }
+            }
+
+            if (image == null)
+            {
+                return true;
+            }
+
+            IntPtr module = LoadLibraryExW(image, IntPtr.Zero, LOAD_LIBRARY_AS_DATAFILE);
+            if (module == IntPtr.Zero)
+            {
+                return true;
+            }
+
+            try
+            {
+                var sb = new StringBuilder(1024);
+                uint len = GetModuleFileNameW(module, sb, (uint)sb.Capacity);
+                if (len == 0)
+                {
+                    return true;
+                }
+
+                string canonical = sb.ToString();
+                if (canonical.Length >= 2 && canonical[1] == ':')
+                {
+                    char canonicalDrive = canonical[0];
+                    if (canonicalDrive != SdkRoot[0])
+                    {
+                        Result = canonicalDrive + SdkRoot.Substring(1);
+                        Log.LogMessage(
+                            MessageImportance.High,
+                            "Normalized NetCoreSdkRoot drive casing '{0}' -> '{1}' to match Environment.ProcessPath (#14026 workaround).",
+                            SdkRoot[0],
+                            canonicalDrive);
+                    }
+                }
+            }
+            finally
+            {
+                FreeLibrary(module);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.LogMessage(MessageImportance.Low, "NormalizeSdkRootDriveCasing skipped: {0}", ex.Message);
+        }
+
+        return true;
+    }
+}
+]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="NormalizeNetCoreSdkRootCasing"
+          Condition="'$(MSBuildRuntimeType)' == 'Full' and '$(NetCoreSdkRoot)' != ''">
+    <NormalizeSdkRootDriveCasing SdkRoot="$(NetCoreSdkRoot)">
+      <Output TaskParameter="Result" PropertyName="NetCoreSdkRoot" />
+    </NormalizeSdkRootDriveCasing>
+  </Target>
 </Project>
