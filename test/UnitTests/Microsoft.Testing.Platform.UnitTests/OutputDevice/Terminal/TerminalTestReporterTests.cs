@@ -1067,7 +1067,10 @@ public sealed class TerminalTestReporterTests
         Assert.AreEqual("Test0", tasks[0].Text);
         Assert.AreEqual("Test1", tasks[1].Text);
         // The trailing summary mentions how many tasks are NOT shown (5 - 2 = 3).
-        Assert.Contains("3", tasks[2].Text);
+        // Assert exact text (matching the maxCount=1 test's pattern) so this can't accidentally
+        // pass for unrelated reasons (any '3' anywhere in a localized/format-changed string).
+        string expectedSummary = $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}";
+        Assert.AreEqual(expectedSummary, tasks[2].Text);
     }
 
     [TestMethod]
