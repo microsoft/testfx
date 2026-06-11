@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace MSTest.AotReflection.SourceGeneration.Model;
 
@@ -41,6 +38,12 @@ internal enum ConstantValueKind
 
 internal sealed record TestParameterModel(string FullyQualifiedType, string Name);
 
+/// <summary>
+/// One row of arguments from a <c>[DataRow]</c> attribute, materialized at compile time so
+/// the consumer can iterate without re-reading <c>DataRowAttribute.Data</c> via reflection.
+/// </summary>
+internal sealed record DataRowModel(EquatableArray<TypedConstantModel> Arguments);
+
 internal sealed record TestMethodModel(
     string Name,
     bool IsStatic,
@@ -49,7 +52,8 @@ internal sealed record TestMethodModel(
     bool ReturnsValueTask,
     bool ReturnsVoid,
     EquatableArray<TestParameterModel> Parameters,
-    EquatableArray<AttributeApplicationModel> Attributes);
+    EquatableArray<AttributeApplicationModel> Attributes,
+    EquatableArray<DataRowModel> DataRows);
 
 internal sealed record TestPropertyModel(
     string Name,
@@ -59,6 +63,14 @@ internal sealed record TestPropertyModel(
 
 internal sealed record TestConstructorModel(
     EquatableArray<TestParameterModel> Parameters);
+
+/// <summary>
+/// Assembly-scoped metadata captured at compile time so the consumer never has to call
+/// <see cref="System.Reflection.Assembly.GetCustomAttributes(System.Type, bool)"/> for
+/// attributes declared with <c>[assembly: ...]</c> in the same compilation.
+/// </summary>
+internal sealed record AssemblyMetadataModel(
+    EquatableArray<AttributeApplicationModel> Attributes);
 
 internal sealed record TestClassModel(
     string FullyQualifiedTypeName,
@@ -75,6 +87,7 @@ internal sealed record TestClassModel(
 /// Value-equatable wrapper around <see cref="ImmutableArray{T}"/> so incremental generation
 /// can cache results between runs. Kept minimal — we don't need indexing in this PoC.
 /// </summary>
+/// <typeparam name="T">Element type stored in the underlying <see cref="ImmutableArray{T}"/>.</typeparam>
 internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
     where T : IEquatable<T>
 {

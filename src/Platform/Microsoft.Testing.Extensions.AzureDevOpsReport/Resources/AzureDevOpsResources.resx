@@ -127,12 +127,15 @@
   </data>
   <data name="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory" xml:space="preserve">
     <value>'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</value>
+    <comment>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo-flaky-history"}</comment>
   </data>
   <data name="AzureDevOpsFlakyHistoryRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked="--report-azdo-flaky-history"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingCompleteRunFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to complete the test run.</value>
@@ -145,16 +148,19 @@
   </data>
   <data name="AzureDevOpsLivePublishingFinalizeWaitTimedOut" xml:space="preserve">
     <value>Azure DevOps live publishing timed out after {0} waiting for {1} participant file(s); finalizing the run anyway.</value>
+    <comment>{0} is the finalize wait timeout. {1} is the number of participant files still pending.</comment>
   </data>
   <data name="AzureDevOpsLivePublishingHttpError" xml:space="preserve">
     <value>Azure DevOps REST API request failed with status code {0}. Response: {1}</value>
+    <comment>{0} is the HTTP status code. {1} is the response body. {Locked="REST API"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingInvalidResponse" xml:space="preserve">
     <value>Azure DevOps REST API returned an unexpected response payload.</value>
+    <comment>{Locked="REST API"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingMissingConfiguration" xml:space="preserve">
     <value>'--publish-azdo-test-results' was set, but Azure DevOps live publishing is disabled because the following environment variables are missing or invalid: {0}.</value>
-    <comment>{Locked='--publish-azdo-test-results'}</comment>
+    <comment>{0} is the comma-separated list of missing or invalid environment variables. {Locked="--publish-azdo-test-results"}{Locked="TF_BUILD=true"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}{Locked="BUILD_BUILDID"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingMissingRunIdFile" xml:space="preserve">
     <value>Azure DevOps live publishing could not locate azdo-runid.&lt;buildId&gt;.json for the shared run.</value>
@@ -165,6 +171,7 @@
   </data>
   <data name="AzureDevOpsLivePublishingRequestFailed" xml:space="preserve">
     <value>Azure DevOps REST API request failed after all retries.</value>
+    <comment>{Locked="REST API"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingResultAttachmentFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to upload a test result attachment.</value>
@@ -184,25 +191,27 @@
   </data>
   <data name="AzureDevOpsLivePublishingTimeoutErrorMessageWithReason" xml:space="preserve">
     <value>Timeout: {0}</value>
+    <comment>{0} is the timeout reason.</comment>
   </data>
   <data name="AzureDevOpsProgressRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-progress' requires '--report-azdo' to be enabled</value>
-    <comment>{Locked='--report-azdo-progress'}{Locked='--report-azdo'}</comment>
+    <comment>{Locked="--report-azdo-progress"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsQuarantineFileRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked="--report-azdo-quarantine-file"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsReportSeverityRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-severity' requires '--report-azdo' to be enabled</value>
-    <comment>{Locked='--report-azdo-severity'}{Locked='--report-azdo'}</comment>
+    <comment>{Locked="--report-azdo-severity"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsStackFrameFilterRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</value>
-    <comment>{Locked='--report-azdo-stackframe-filter'}{Locked='--report-azdo'}</comment>
+    <comment>{Locked="--report-azdo-stackframe-filter"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsSummaryRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-summary' requires '--report-azdo' to be enabled</value>
-    <comment>{Locked='--report-azdo-summary'}{Locked='--report-azdo'}</comment>
+    <comment>{Locked="--report-azdo-summary"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="DemoteKnownFlakyOptionDescription" xml:space="preserve">
     <value>Demote failures with an Azure DevOps flaky history of at least {0}% in the selected window to warnings.</value>
@@ -216,18 +225,19 @@
   </data>
   <data name="FlakyHistoryFailureAnnotation" xml:space="preserve">
     <value>[flaky: failed {0}/{1} in last {2}d]</value>
-    <comment>{Locked="[flaky: failed {0}/{1} in last {2}d]"}</comment>
+    <comment>{0} is the failure count. {1} is the total run count. {2} is the history window in days. {Locked="[flaky: failed {0}/{1} in last {2}d]"}</comment>
   </data>
   <data name="FlakyHistoryLoadFailedWarning" xml:space="preserve">
     <value>Unable to load Azure DevOps flaky history. Continuing without history annotations. {0}</value>
-    <comment>{Locked='--report-azdo-flaky-history'}</comment>
+    <comment>{0} is the exception message. {Locked="--report-azdo-flaky-history"}</comment>
   </data>
   <data name="FlakyHistoryLoadTimedOutInfo" xml:space="preserve">
     <value>Azure DevOps flaky history did not finish loading within {0} seconds. Continuing without history annotations.</value>
+    <comment>{0} is the timeout in seconds.</comment>
   </data>
   <data name="FlakyHistoryMissingEnvironmentWarning" xml:space="preserve">
     <value>Azure DevOps flaky history was requested but the required Azure DevOps environment variables are missing. Continuing without history annotations.</value>
-    <comment>{Locked='--report-azdo-flaky-history'}</comment>
+    <comment>{Locked="--report-azdo-flaky-history"}{Locked="TF_BUILD"}{Locked="SYSTEM_TEAMPROJECT"}{Locked="SYSTEM_ACCESSTOKEN"}</comment>
   </data>
   <data name="FlakyHistoryOptionDescription" xml:space="preserve">
     <value>Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.</value>
@@ -238,25 +248,31 @@
   </data>
   <data name="FlakyHistoryRunsCappedInfo" xml:space="preserve">
     <value>Azure DevOps flaky history returned {0} runs. Only the first {1} runs will be inspected.</value>
+    <comment>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</comment>
   </data>
   <data name="FlakyHistoryResultsPagingStoppedWarning" xml:space="preserve">
     <value>Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</value>
+    <comment>{0} is the Azure DevOps run URL. {1} is the maximum number of pages.</comment>
   </data>
   <data name="InvalidArtifactUploadGlob" xml:space="preserve">
     <value>Invalid glob pattern {0}.</value>
+    <comment>{0} is the invalid glob pattern.</comment>
   </data>
   <data name="InvalidArtifactUploadMode" xml:space="preserve">
     <value>Invalid artifact upload mode {0}.</value>
+    <comment>{0} is the invalid artifact upload mode.</comment>
   </data>
   <data name="InvalidFlakyHistoryDays" xml:space="preserve">
     <value>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</value>
+    <comment>{0} is the invalid value. {Locked="--report-azdo-flaky-history"}</comment>
   </data>
   <data name="InvalidSeverity" xml:space="preserve">
     <value>Invalid option {0}.</value>
+    <comment>{0} is the invalid option value.</comment>
   </data>
   <data name="InvalidStackFrameFilterRegex" xml:space="preserve">
     <value>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</value>
-    <comment>{Locked="--report-azdo-stackframe-filter"}</comment>
+    <comment>{0} is the regex pattern. {1} is the validation error message. {Locked="--report-azdo-stackframe-filter"}</comment>
   </data>
   <data name="NoFailureMessageFallback" xml:space="preserve">
     <value>Test failed without an additional message.</value>
@@ -277,7 +293,7 @@
   </data>
   <data name="PublishAzdoRunNameRequiresPublishAzdoTestResults" xml:space="preserve">
     <value>'--publish-azdo-run-name' requires '--publish-azdo-test-results' to be enabled</value>
-    <comment>{Locked='--publish-azdo-run-name'}{Locked='--publish-azdo-test-results'}</comment>
+    <comment>{Locked="--publish-azdo-run-name"}{Locked="--publish-azdo-test-results"}</comment>
   </data>
   <data name="PublishAzdoTestResultsOptionDescription" xml:space="preserve">
     <value>Publish test results live to the Azure DevOps Tests tab.</value>
@@ -288,19 +304,22 @@
   </data>
   <data name="QuarantineFileLoadFailedWarning" xml:space="preserve">
     <value>Unable to load Azure DevOps quarantine file '{0}'. Continuing without quarantine awareness. {1}</value>
-    <comment>{Locked='--report-azdo-quarantine-file'}</comment>
+    <comment>{0} is the quarantine file path. {1} is the exception message. {Locked="--report-azdo-quarantine-file"}</comment>
   </data>
   <data name="QuarantineFileMissingWarning" xml:space="preserve">
     <value>Azure DevOps quarantine file '{0}' does not exist. Continuing without quarantine awareness.</value>
+    <comment>{0} is the quarantine file path.</comment>
   </data>
   <data name="QuarantineFileOptionDescription" xml:space="preserve">
     <value>Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.</value>
   </data>
   <data name="QuarantinePatternTooLongWarning" xml:space="preserve">
     <value>Azure DevOps quarantine pattern exceeds the {0} character limit and will be ignored.</value>
+    <comment>{0} is the maximum character limit.</comment>
   </data>
   <data name="QuarantinePatternsCappedWarning" xml:space="preserve">
     <value>Azure DevOps quarantine file contains more than {0} patterns. Remaining patterns will be ignored.</value>
+    <comment>{0} is the maximum pattern count.</comment>
   </data>
   <data name="SeverityOptionDescription" xml:space="preserve">
     <value>Severity to use for the reported event. Options are: error (default) and warning.</value>
@@ -308,15 +327,15 @@
   </data>
   <data name="StackFrameFilterOptionDescription" xml:space="preserve">
     <value>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</value>
-    <comment>{0} is the maximum allowed pattern count, {1} is the per-match timeout in ms.</comment>
+    <comment>{0} is the maximum allowed pattern count. {1} is the per-match timeout in milliseconds. {Locked="MSTest"}</comment>
   </data>
   <data name="StackFrameFilterTooManyRegexes" xml:space="preserve">
     <value>'--report-azdo-stackframe-filter' accepts at most {0} patterns.</value>
-    <comment>{Locked="--report-azdo-stackframe-filter"}</comment>
+    <comment>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</comment>
   </data>
   <data name="SummaryOptionDescription" xml:space="preserve">
     <value>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</value>
-    <comment>{Locked="--report-azdo"}{Locked="##vso[task.uploadsummary]"}{Locked="azdo-summary-{tfm}.md"}</comment>
+    <comment>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{tfm}.md"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="SummaryRequiresTfBuildWarning" xml:space="preserve">
     <value>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</value>
@@ -324,6 +343,7 @@
   </data>
   <data name="SummaryWriteFailedWarning" xml:space="preserve">
     <value>Failed to write Azure DevOps summary file '{0}': {1}</value>
+    <comment>{0} is the summary file path. {1} is the error message.</comment>
   </data>
   <data name="UploadArtifactExcludeOptionDescription" xml:space="preserve">
     <value>Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.</value>

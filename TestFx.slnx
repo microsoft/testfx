@@ -1,5 +1,7 @@
 <Solution>
   <Folder Name="/samples/">
+    <Project Path="samples/CtrfPlayground/Mtp/Mtp.csproj" />
+    <Project Path="samples/CtrfPlayground/XunitMtp/XunitMtp.csproj" />
     <Project Path="samples/FSharpPlayground/FSharpPlayground.fsproj" />
     <Project Path="samples/FxExtensibility/FxExtensibility.csproj" />
     <Project Path="samples/NUnitPlayground/NUnitPlayground.csproj" />
@@ -39,6 +41,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureFoundry/Microsoft.Testing.Extensions.AzureFoundry.csproj" Id="60c660b9-6d0c-4967-b21c-e1c34257cc75" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.AzureDevOpsReport/Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.CrashDump/Microsoft.Testing.Extensions.CrashDump.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.CtrfReport/Microsoft.Testing.Extensions.CtrfReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HangDump/Microsoft.Testing.Extensions.HangDump.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HotReload/Microsoft.Testing.Extensions.HotReload.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.HtmlReport/Microsoft.Testing.Extensions.HtmlReport.csproj" />
@@ -69,6 +72,7 @@
       <BuildDependency Project="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
     </Project>
     <Project Path="src/Analyzers/MSTest.Analyzers/MSTest.Analyzers.csproj" />
+    <Project Path="src/Analyzers/MSTest.AotReflection.SourceGeneration/MSTest.AotReflection.SourceGeneration.csproj" />
     <Project Path="src/Analyzers/MSTest.GlobalConfigsGenerator/MSTest.GlobalConfigsGenerator.csproj" />
     <Project Path="src/Analyzers/MSTest.SourceGeneration/MSTest.SourceGeneration.csproj" />
   </Folder>
@@ -133,6 +137,7 @@
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
+    <Project Path="test/UnitTests/MSTest.AotReflection.SourceGeneration.UnitTests/MSTest.AotReflection.SourceGeneration.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.SourceGeneration.UnitTests/MSTest.SourceGeneration.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTestAdapter.PlatformServices.UnitTests/MSTestAdapter.PlatformServices.UnitTests.csproj" />

@@ -122,27 +122,33 @@
   </data>
   <data name="ActualHasMismatchedElements" xml:space="preserve">
     <value>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected occurrence count. {2} is the mismatched element. {3} is the actual occurrence count.</comment>
   </data>
   <data name="AllItemsAreUniqueFailMsg" xml:space="preserve">
     <value>Duplicate item found:&lt;{1}&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the duplicate item.</comment>
   </data>
   <data name="AreEqualFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected value. {2} is the actual value.</comment>
   </data>
   <data name="AreEqualDeltaFailedSummary" xml:space="preserve">
     <value>Expected values to be equal within tolerance.</value>
   </data>
   <data name="AreEqualCaseFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected value. {2} is the actual value with different casing.</comment>
   </data>
   <data name="AreEqualDifferentTypesFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected value. {2} is the expected value type. {3} is the actual value. {4} is the actual value type.</comment>
   </data>
   <data name="AreEqualStringDiffFailMsg" xml:space="preserve">
     <value>{0}{1}
 {2}
 {3}
 {4}</value>
+    <comment>{0} is the expected-value prefix. {1} is the expected string. {2} is the actual-value prefix. {3} is the actual string. {4} is the user-provided assertion message.</comment>
   </data>
   <data name="AreEqualStringDiffExpectedPrefix" xml:space="preserve">
     <value>Expected: </value>
@@ -152,9 +158,11 @@
   </data>
   <data name="AreEqualStringDiffLengthBothMsg" xml:space="preserve">
     <value>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</value>
+    <comment>{0} is the common string length. {1} is the index of the first difference.</comment>
   </data>
   <data name="AreEqualStringDiffLengthDifferentMsg" xml:space="preserve">
     <value>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</value>
+    <comment>{0} is the expected string length. {1} is the actual string length. {2} is the index of the first difference.</comment>
   </data>
   <data name="AreEquivalentFailedSummary" xml:space="preserve">
     <value>Expected values to be structurally equivalent.</value>
@@ -164,55 +172,70 @@
   </data>
   <data name="AreEquivalentMismatchActualDictionaryThrew" xml:space="preserve">
     <value>reading the actual dictionary threw {0}: {1}.</value>
+    <comment>{0} is the exception type thrown while reading the actual dictionary. {1} is the exception message.</comment>
   </data>
   <data name="AreEquivalentMismatchActualEnumerationThrew" xml:space="preserve">
     <value>enumerating the actual collection threw {0}: {1}.</value>
+    <comment>{0} is the exception type thrown while enumerating the actual collection. {1} is the exception message.</comment>
   </data>
   <data name="AreEquivalentMismatchActualMemberThrew" xml:space="preserve">
     <value>reading the actual member threw {0}: {1}.</value>
+    <comment>{0} is the exception type thrown while reading the actual member. {1} is the exception message.</comment>
   </data>
   <data name="AreEquivalentMismatchAt" xml:space="preserve">
     <value>Mismatch at '{0}': {1}</value>
-    <comment>{0} is a member path (e.g., 'Order.Items[2].Price'), {1} is a localized reason describing the kind of mismatch.</comment>
+    <comment>{0} is a member path (e.g., {Locked="Order.Items[2].Price"}). {1} is a localized reason describing the kind of mismatch.</comment>
   </data>
   <data name="AreEquivalentMismatchExpectedDictionaryThrew" xml:space="preserve">
     <value>reading the expected dictionary threw {0}: {1}.</value>
+    <comment>{0} is the exception type thrown while reading the expected dictionary. {1} is the exception message.</comment>
   </data>
   <data name="AreEquivalentMismatchExpectedEnumerationThrew" xml:space="preserve">
     <value>enumerating the expected collection threw {0}: {1}.</value>
+    <comment>{0} is the exception type thrown while enumerating the expected collection. {1} is the exception message.</comment>
   </data>
   <data name="AreEquivalentMismatchExpectedMemberThrew" xml:space="preserve">
     <value>reading the expected member threw {0}: {1}.</value>
+    <comment>{0} is the exception type thrown while reading the expected member. {1} is the exception message.</comment>
   </data>
   <data name="AreEquivalentMismatchExtraMembers" xml:space="preserve">
     <value>actual has unexpected members not present on expected: {0}.</value>
+    <comment>{0} is a comma-separated list of unexpected actual member names.</comment>
   </data>
   <data name="AreEquivalentMismatchIEquatableThrew" xml:space="preserve">
     <value>IEquatable.Equals threw {0}: {1}.</value>
+    <comment>{0} is the exception type thrown by {Locked="IEquatable.Equals"}. {1} is the exception message.</comment>
   </data>
   <data name="AreEquivalentMismatchLength" xml:space="preserve">
     <value>collections differ in length (expected {0} elements, actual {1}).</value>
+    <comment>{0} is the expected collection length. {1} is the actual collection length.</comment>
   </data>
   <data name="AreEquivalentMismatchMaxDepth" xml:space="preserve">
     <value>comparison exceeded the maximum supported depth of {0}.</value>
+    <comment>{0} is the maximum supported comparison depth.</comment>
   </data>
   <data name="AreEquivalentMismatchMissingKey" xml:space="preserve">
     <value>key {0} present on expected is missing from actual.</value>
+    <comment>{0} is the key present on the expected dictionary but missing from the actual dictionary.</comment>
   </data>
   <data name="AreEquivalentMismatchMissingMember" xml:space="preserve">
     <value>member '{0}' present on expected is missing from actual.</value>
+    <comment>{0} is the member name present on the expected object but missing from the actual object.</comment>
   </data>
   <data name="AreEquivalentMismatchNull" xml:space="preserve">
     <value>one side is null, the other is not.</value>
+    <comment>Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="AreEquivalentMismatchTopology" xml:space="preserve">
     <value>graph topology differs (the same reference on one side appears paired with different references on the other side).</value>
   </data>
   <data name="AreEquivalentMismatchType" xml:space="preserve">
     <value>incompatible types (expected '{0}', actual '{1}').</value>
+    <comment>{0} is the expected type name. {1} is the actual type name.</comment>
   </data>
   <data name="AreEquivalentMismatchUnexpectedKey" xml:space="preserve">
     <value>key {0} present on actual is not on expected.</value>
+    <comment>{0} is the key present on the actual dictionary but missing from the expected dictionary.</comment>
   </data>
   <data name="AreEquivalentMismatchValue" xml:space="preserve">
     <value>values are not equal.</value>
@@ -226,6 +249,7 @@
   </data>
   <data name="AreNotEqualFailMsg" xml:space="preserve">
     <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the unexpected value. {2} is the actual value.</comment>
   </data>
   <data name="AreNotEquivalentComparisonFailedSummary" xml:space="preserve">
     <value>Could not complete structural comparison.</value>
@@ -247,12 +271,15 @@
   </data>
   <data name="AreSameExpectedIsNull" xml:space="preserve">
     <value>Expected is &lt;null&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="AreSameActualIsNull" xml:space="preserve">
     <value>Actual is &lt;null&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="AreSameGivenValues" xml:space="preserve">
     <value>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</value>
+    <comment>{0} is the user-provided assertion message. Do not localize assertion method names {Locked="AreSame"}{Locked="AreEqual"} or the type name {Locked="Object"}.</comment>
   </data>
   <data name="AreSequenceEqualInAnyOrderFailedSummary" xml:space="preserve">
     <value>Expected sequences to be equal (in any order).</value>
@@ -262,74 +289,96 @@
   </data>
   <data name="AreSequenceEqualLengthDiffMsg" xml:space="preserve">
     <value>Sequences have different lengths (expected: {0}, actual: {1}).</value>
+    <comment>{0} is the expected sequence length. {1} is the actual sequence length.</comment>
   </data>
   <data name="AreSequenceEqualMissingUnexpectedMsg" xml:space="preserve">
     <value>Missing {0} element(s) from actual. Found {1} unexpected element(s).</value>
+    <comment>{0} is the number of missing elements in the actual sequence. {1} is the number of unexpected elements in the actual sequence.</comment>
   </data>
   <data name="AreSequenceEqualSameLengthDiffMsg" xml:space="preserve">
     <value>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</value>
+    <comment>{0} is the sequence length. {1} is the number of differing elements. {2} is the index of the first difference.</comment>
   </data>
   <data name="AreNotSameBothNull" xml:space="preserve">
     <value>Both values are &lt;null&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="BothCollectionsEmpty" xml:space="preserve">
     <value>Both collections are empty. {0}</value>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="BothCollectionsSameElements" xml:space="preserve">
     <value>Both collection contain same elements.</value>
   </data>
   <data name="BothCollectionsSameReference" xml:space="preserve">
     <value>Both collection references point to the same collection object. {0}</value>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="BothSameElements" xml:space="preserve">
     <value>Both collections contain the same elements. {0}</value>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="CollectionEqualReason" xml:space="preserve">
     <value>{0}. {1}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the collection comparison failure reason.</comment>
   </data>
   <data name="ContainsFail" xml:space="preserve">
     <value>String '{0}' does not contain string '{1}'. {2}.</value>
+    <comment>{0} is the string being searched. {1} is the expected substring. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="IsInRangeFail" xml:space="preserve">
     <value>Value '{0}' is not within the expected range [{1}..{2}]. {3}</value>
+    <comment>{0} is the actual value. {1} is the minimum expected value. {2} is the maximum expected value. {3} is the user-provided assertion message.</comment>
   </data>
   <data name="ElementNumbersDontMatch" xml:space="preserve">
     <value>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected element count. {2} is the actual element count.</comment>
   </data>
   <data name="ElementsAtIndexDontMatch" xml:space="preserve">
     <value>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</value>
+    <comment>{0} is the index of the mismatched element. {1} is the expected element. {2} is the actual element.</comment>
   </data>
   <data name="ElementTypesAtIndexDontMatch" xml:space="preserve">
     <value>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the element index. {2} is the expected type. {3} is the actual type.</comment>
   </data>
   <data name="EndsWithFail" xml:space="preserve">
     <value>String '{0}' does not end with string '{1}'. {2}</value>
+    <comment>{0} is the string being checked. {1} is the expected suffix. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="AssertionFailed" xml:space="preserve">
     <value>{0} failed.</value>
+    <comment>{0} is the assertion name.</comment>
   </data>
   <data name="InconclusivePrefix" xml:space="preserve">
     <value>Assert.Inconclusive.</value>
+    <comment>Do not localize the assertion API name {Locked="Assert.Inconclusive"}.</comment>
   </data>
   <data name="IsInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected type. {2} is the actual type.</comment>
   </data>
   <data name="IsMatchFail" xml:space="preserve">
     <value>String '{0}' does not match pattern '{1}'. {2}</value>
+    <comment>{0} is the string being checked. {1} is the regular expression pattern. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="IsNotInstanceOfFailMsg" xml:space="preserve">
     <value>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the unexpected type. {2} is the actual type.</comment>
   </data>
   <data name="IsExactInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected exact type. {2} is the actual type.</comment>
   </data>
   <data name="IsNotExactInstanceOfFailMsg" xml:space="preserve">
     <value>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the unexpected exact type. {2} is the actual type.</comment>
   </data>
   <data name="IsNotMatchFail" xml:space="preserve">
     <value>String '{0}' matches pattern '{1}'. {2}</value>
+    <comment>{0} is the string being checked. {1} is the regular expression pattern. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="PrivateAccessorMemberNotFound" xml:space="preserve">
     <value>
@@ -337,6 +386,7 @@ Actual: {2}</value>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </value>
+    <comment>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</comment>
   </data>
   <data name="PrivateAccessorConstructorNotFound" xml:space="preserve">
     <value>
@@ -344,133 +394,167 @@ Actual: {2}</value>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </value>
+    <comment>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</comment>
   </data>
   <data name="NullParameterToAssert" xml:space="preserve">
     <value>The parameter '{0}' is invalid. The value cannot be null.</value>
+    <comment>{0} is the parameter name. Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="NumberOfElementsDiff" xml:space="preserve">
     <value>Different number of elements.</value>
   </data>
   <data name="StartsWithFail" xml:space="preserve">
     <value>String '{0}' does not start with string '{1}'. {2}</value>
+    <comment>{0} is the string being checked. {1} is the expected prefix. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="InvalidPropertyType" xml:space="preserve">
     <value>The property {0} has type {1}; expected type {2}.</value>
+    <comment>{0} is the property name. {1} is the actual property type. {2} is the expected property type.</comment>
   </data>
   <data name="Common_NullInMessages" xml:space="preserve">
     <value>(null)</value>
+    <comment>Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="Common_ObjectString" xml:space="preserve">
     <value>(object)</value>
   </data>
   <data name="UTF_FailedToGetExceptionMessage" xml:space="preserve">
     <value>(Failed to get the message for an exception of type {0} due to an exception.)</value>
+    <comment>{0} is the exception type.</comment>
   </data>
   <data name="NoExceptionThrown" xml:space="preserve">
     <value>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected exception type.</comment>
   </data>
   <data name="WrongExceptionThrown" xml:space="preserve">
     <value>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the expected exception type. {2} is the actual exception type.</comment>
   </data>
   <data name="DataDrivenResultDisplayName" xml:space="preserve">
     <value>{0} ({1})</value>
+    <comment>{0} is the test method display name. {1} is the comma-separated list of test data arguments.</comment>
   </data>
   <data name="DynamicDataIEnumerableNull" xml:space="preserve">
     <value>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</value>
+    <comment>{0} is the dynamic data property or method name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable"}.</comment>
   </data>
   <data name="DynamicDataValueNull" xml:space="preserve">
     <value>Value returned by property or method {0} shouldn't be null.</value>
+    <comment>{0} is the dynamic data property or method name. Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="DynamicDataDisplayName" xml:space="preserve">
     <value>Method {0} must match the expected signature: public static {1} {0}({2}).</value>
+    <comment>{0} is the dynamic display-name method name. {1} is the expected return type. {2} is the expected parameter list. Do not localize the C# signature tokens {Locked="public static"}.</comment>
   </data>
   <data name="DynamicDataIEnumerableEmpty" xml:space="preserve">
     <value>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</value>
+    <comment>{0} is the dynamic data property or method name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;object[]&gt;"}.</comment>
   </data>
   <data name="DynamicDataInvalidMethodLayout" xml:space="preserve">
     <value>Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</value>
+    <comment>{0} is the dynamic data method name. Do not localize C# keywords {Locked="static"}{Locked="params"}.</comment>
   </data>
   <data name="DynamicDataInvalidPropertyLayout" xml:space="preserve">
     <value>Dynamic data property '{0}' should be static and have a getter.</value>
+    <comment>{0} is the dynamic data property name. Do not localize the C# keyword {Locked="static"}.</comment>
   </data>
   <data name="DynamicDataInvalidFieldLayout" xml:space="preserve">
     <value>Dynamic data field '{0}' should be static.</value>
+    <comment>{0} is the dynamic data field name. Do not localize the C# keyword {Locked="static"}.</comment>
   </data>
   <data name="DynamicDataSourceShouldExistAndBeValid" xml:space="preserve">
     <value>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</value>
+    <comment>{0} is the dynamic data source member name. {1} is the declaring type name.</comment>
   </data>
   <data name="ContainsSingleMatchFailMsg" xml:space="preserve">
     <value>Expected exactly one item to match the predicate but found {1} item(s). {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the number of items matching the predicate.</comment>
   </data>
   <data name="ContainsSingleFailMsg" xml:space="preserve">
     <value>Expected collection to contain exactly one element but found {1} element(s). {0}</value>
+    <comment>{0} is the user-provided assertion message. {1} is the collection element count.</comment>
   </data>
   <data name="ContainsItemFailMsg" xml:space="preserve">
     <value>Expected collection to contain the specified item. {0}</value>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="ContainsPredicateFailMsg" xml:space="preserve">
     <value>Expected at least one item to match the predicate. {0}</value>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="DoesNotContainItemFailMsg" xml:space="preserve">
     <value>Expected collection to not contain the specified item. {0}</value>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="DoesNotContainPredicateFailMsg" xml:space="preserve">
     <value>Expected no items to match the predicate. {0}</value>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="InvalidGitHubUrl" xml:space="preserve">
     <value>Invalid GitHub ticket URL</value>
   </data>
   <data name="DoesNotContainFail" xml:space="preserve">
     <value>String '{0}' does contain string '{1}'. {2}.</value>
+    <comment>{0} is the string being checked. {1} is the substring that should not be present. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="DoesNotEndWithFail" xml:space="preserve">
     <value>String '{0}' ends with string '{1}'. {2}</value>
+    <comment>{0} is the string being checked. {1} is the suffix that should not be present. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="DoesNotStartWithFail" xml:space="preserve">
     <value>String '{0}' starts with string '{1}'. {2}</value>
+    <comment>{0} is the string being checked. {1} is the prefix that should not be present. {2} is the user-provided assertion message.</comment>
   </data>
   <data name="DoNotUseAssertEquals" xml:space="preserve">
     <value>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</value>
+    <comment>Do not localize assertion API names {Locked="Assert.Equals"}{Locked="Assert.AreEqual"}.</comment>
   </data>
   <data name="DoNotUseAssertReferenceEquals" xml:space="preserve">
     <value>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</value>
+    <comment>Do not localize assertion API names {Locked="Assert.ReferenceEquals"}{Locked="Assert.AreSame"}.</comment>
   </data>
   <data name="DoNotUseStringAssertEquals" xml:space="preserve">
     <value>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</value>
+    <comment>Do not localize assertion API names {Locked="StringAssert.Equals"}{Locked="StringAssert"}{Locked="Assert.AreEqual"}.</comment>
   </data>
   <data name="DoNotUseStringAssertReferenceEquals" xml:space="preserve">
     <value>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</value>
+    <comment>Do not localize assertion API names {Locked="StringAssert.ReferenceEquals"}{Locked="StringAssert"}{Locked="Assert.AreSame"}.</comment>
   </data>
   <data name="DoNotUseCollectionAssertEquals" xml:space="preserve">
     <value>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</value>
+    <comment>Do not localize assertion API names {Locked="CollectionAssert.Equals"}{Locked="CollectionAssert.AreEqual"}.</comment>
   </data>
   <data name="DoNotUseCollectionAssertReferenceEquals" xml:space="preserve">
     <value>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</value>
+    <comment>Do not localize assertion API names {Locked="CollectionAssert.ReferenceEquals"}{Locked="CollectionAssert"}{Locked="Assert.AreSame"}.</comment>
   </data>
   <data name="InvalidAccessToTestContextProperty" xml:space="preserve">
     <value>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</value>
+    <comment>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</comment>
   </data>
   <data name="CallerArgumentExpressionSingleParameterMessage" xml:space="preserve">
     <value>'{0}' expression: '{1}'.</value>
-    <comment>Example: "'value' expression: 'new object()'", where 'value' is the parameter name of an assertion method, and 'new object()' is the expression the user passed to the assert method.</comment>
+    <comment>{0} is the assertion parameter name. {1} is the expression the user passed for that parameter.</comment>
   </data>
   <data name="AssertThatMessageFormat" xml:space="preserve">
     <value>Message: {0}</value>
-    <comment>{0} user provided message</comment>
+    <comment>{0} is the user-provided assertion message.</comment>
   </data>
   <data name="AssertThatDetailsPrefix" xml:space="preserve">
     <value>Details:</value>
   </data>
   <data name="CallerArgumentExpressionTwoParametersMessage" xml:space="preserve">
     <value>'{0}' expression: '{1}', '{2}' expression: '{3}'.</value>
-    <comment>Example: "'minValue' expression: 'userCode1', 'maxValue' expression: 'userCode2', 'value' expression: 'userCode3'", where 'minValue', 'maxValue', and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</comment>
+    <comment>{0} is the first assertion parameter name. {1} is the expression the user passed for the first parameter. {2} is the second assertion parameter name. {3} is the expression the user passed for the second parameter.</comment>
   </data>
   <data name="CallerArgumentExpressionThreeParametersMessage" xml:space="preserve">
     <value>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</value>
-    <comment>Example: "'substring' expression: 'userCode1', 'value' expression: 'userCode2'", where 'substring' and 'value' are the parameter names of an assertion method, and 'userCode's are the expressions the user passed to the assert method.</comment>
+    <comment>{0} is the first assertion parameter name. {1} is the expression the user passed for the first parameter. {2} is the second assertion parameter name. {3} is the expression the user passed for the second parameter. {4} is the third assertion parameter name. {5} is the expression the user passed for the third parameter.</comment>
   </data>
   <data name="ReturnedSubsetValueMessage" xml:space="preserve">
     <value>Element(s) &lt;{0}&gt; is/are not present in the collection.</value>
+    <comment>{0} is a comma-separated list of missing elements.</comment>
   </data>
   <data name="IsInRangeMaxValueMustBeGreaterThanOrEqualMinValue" xml:space="preserve">
     <value>The maximum value must be greater than or equal to the minimum value.</value>
@@ -487,18 +571,23 @@ Actual: {2}</value>
   </data>
   <data name="STATestMethodNonWindowsNotSupported" xml:space="preserve">
     <value>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</value>
+    <comment>Do not localize MSTest attribute names {Locked="[STATestMethod]"}{Locked="[OSCondition(OperatingSystems.Windows)]"} or COM threading acronym {Locked="STA"}.</comment>
   </data>
   <data name="IsTrueFailedSummary" xml:space="preserve">
     <value>Expected condition to be true.</value>
+    <comment>Do not localize the C# keyword {Locked="true"}.</comment>
   </data>
   <data name="IsFalseFailedSummary" xml:space="preserve">
     <value>Expected condition to be false.</value>
+    <comment>Do not localize the C# keyword {Locked="false"}.</comment>
   </data>
   <data name="IsNullFailedSummary" xml:space="preserve">
     <value>Expected value to be null.</value>
+    <comment>Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="IsNotNullFailedSummary" xml:space="preserve">
     <value>Expected value to not be null.</value>
+    <comment>Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="HasCountFailedSummary" xml:space="preserve">
     <value>Expected collection to contain a specific number of elements.</value>
@@ -532,6 +621,7 @@ Actual: {2}</value>
   </data>
   <data name="AreAllNotNullFailedSummary" xml:space="preserve">
     <value>Expected all items in collection to be non-null.</value>
+    <comment>Do not localize the C# keyword {Locked="null"}.</comment>
   </data>
   <data name="AreAllDistinctFailedSummary" xml:space="preserve">
     <value>Expected all items in collection to be distinct.</value>

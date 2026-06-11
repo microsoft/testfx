@@ -18,6 +18,7 @@ builder.AddTrxReportProvider();
 builder.AddJUnitReportProvider();
 builder.AddAppInsightsTelemetryProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
 
 // Dogfood the OpenTelemetry extension: subscribe to the Microsoft.Testing.Platform activity source
 // and meter so the OpenTelemetryResultHandler pipeline is exercised end-to-end in CI. No exporter

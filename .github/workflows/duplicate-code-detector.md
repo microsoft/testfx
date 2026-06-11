@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/duplicate-code-detector.md@main"
+source: githubnext/agentics/workflows/duplicate-code-detector.md@main
 name: Duplicate Code Detector
 description: Identifies duplicate code patterns across the codebase and suggests refactoring opportunities
 

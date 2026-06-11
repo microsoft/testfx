@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/weekly-issue-activity.md@main"
+source: githubnext/agentics/workflows/weekly-issue-activity.md@main
 description: Creates weekly summary of issue activity including trends, charts, and insights every Monday
 
 timeout-minutes: 20

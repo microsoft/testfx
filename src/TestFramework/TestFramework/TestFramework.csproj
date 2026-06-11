@@ -26,7 +26,15 @@
 
   <ItemGroup>
     <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="Internal\RoslynHashCode.cs" />
+    <!-- Single source of truth for CI environment detection lives in Microsoft.Testing.Platform. The
+         TESTFRAMEWORK_CI_DETECTOR define selects the TestFramework variant of the class (different
+         namespace, internal ctor, static Instance helper, string.IsNullOrEmpty). -->
+    <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\CIEnvironmentDetector.cs" Link="Internal\CIEnvironmentDetector.cs" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);TESTFRAMEWORK_CI_DETECTOR</DefineConstants>
+  </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />

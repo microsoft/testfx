@@ -66,12 +66,26 @@
     -->
     <MSTestSourceGenerationVersionPrefix>2.0.0</MSTestSourceGenerationVersionPrefix>
 
+    <MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
+
+    <!--
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsCtrfReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsCtrfReportVersionPrefix>
+
     <MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
 
     <!--
-      This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
+
+    <MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
+
+    <!--
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>1.0.0</MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->

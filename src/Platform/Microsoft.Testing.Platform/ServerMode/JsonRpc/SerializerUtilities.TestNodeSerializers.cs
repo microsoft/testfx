@@ -30,27 +30,17 @@ internal static partial class SerializerUtilities
             [JsonRpcStrings.Attachments] = res.Artifacts.Select(f => Serialize(f)).ToList<object>(),
         });
 
-        Serializers[typeof(TestNodeUpdateMessage)] = new ObjectSerializer<TestNodeUpdateMessage>(ev =>
+        Serializers[typeof(TestNodeUpdateMessage)] = new ObjectSerializer<TestNodeUpdateMessage>(ev => new Dictionary<string, object?>
         {
-            Dictionary<string, object?> values = new()
-            {
-                [JsonRpcStrings.Node] = Serialize(ev.TestNode),
-                [JsonRpcStrings.Parent] = ev.ParentTestNodeUid?.Value,
-            };
-
-            return values;
+            [JsonRpcStrings.Node] = Serialize(ev.TestNode),
+            [JsonRpcStrings.Parent] = ev.ParentTestNodeUid?.Value,
         });
 
         // Serialize event types.
-        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev =>
+        Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev => new Dictionary<string, object?>
         {
-            Dictionary<string, object?> values = new()
-            {
-                [JsonRpcStrings.RunId] = ev.RunId,
-                [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
-            };
-
-            return values;
+            [JsonRpcStrings.RunId] = ev.RunId,
+            [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch)).ToList<object>(),
         });
 
         Serializers[typeof(TestNode)] = new ObjectSerializer<TestNode>(
