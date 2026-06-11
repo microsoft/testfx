@@ -4,28 +4,28 @@
     <body>
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
-        <target state="needs-review-translation">Relatório de teste html autossuficiente</target>
-        <note>Do not localize {Locked="HTML"}.</note>
+        <target state="translated">Relatório de teste html autossuficiente</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
-        <target state="needs-review-translation">Relatório HTML</target>
-        <note>Do not localize {Locked="HTML"}.</note>
+        <target state="translated">Relatório HTML</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">Aviso: o arquivo de relatório HTML "{0}" já existe e será substituído.</target>
-        <note>{0} is the {Locked="HTML"} report file path.</note>
+        <target state="translated">Aviso: o arquivo de relatório HTML "{0}" já existe e será substituído.</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">O argumento de nome de arquivo "--report-html-filename" deve terminar com ".html" (por exemplo, --report-html-filename myreport.html)</target>
-        <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
+        <target state="translated">O argumento de nome de arquivo "--report-html-filename" deve terminar com ".html" (por exemplo, --report-html-filename myreport.html)</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="needs-review-translation">A parte do nome do arquivo “--report-html-filename” não deve estar vazia (por exemplo, --report-html-filename myreport.html)</target>
-        <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
+        <target state="translated">A parte do nome do arquivo “--report-html-filename” não deve estar vazia (por exemplo, --report-html-filename myreport.html)</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
@@ -35,45 +35,41 @@ Example: MyReport_{tfm}.html</source>
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.html</target>
         <note />
-        <target state="needs-review-translation">O nome do relatório HTML gerado. Pode incluir um caminho relativo ou absoluto; os caminhos relativos são resolvidos no diretório de resultados dos testes, e os diretórios que faltarem serão criados.
-Oferece suporte aos seguintes espaços reservados: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome do assembly de entrada), {tfm} (moniker da estrutura de destino), {time} (carimbo de data/hora).
-Exemplo: MyReport_{tfm}.html</target>
-        <note>Do not localize option name {Locked="--report-html-filename"}, format name {Locked="HTML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".html"}, or example file name {Locked="MyReport_{tfm}.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="needs-review-translation">Os caminhos relativos “--report-html-filename” devem permanecer no diretório de resultados do teste (por exemplo, --report-html-filename nested/myreport.html)</target>
-        <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example path {Locked="nested/myreport.html"}.</note>
+        <target state="translated">Os caminhos relativos “--report-html-filename” devem permanecer no diretório de resultados do teste (por exemplo, --report-html-filename nested/myreport.html)</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
-        <target state="needs-review-translation">"--report-html-filename" requer que "--report-html" esteja habilitado</target>
-        <note>Do not localize option names {Locked="--report-html-filename"}{Locked="--report-html"}.</note>
+        <target state="translated">"--report-html-filename" requer que "--report-html" esteja habilitado</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
-        <target state="needs-review-translation">Produzir um relatório HTML autossuficiente para a sessão de teste atual</target>
-        <note>Do not localize {Locked="HTML"}.</note>
+        <target state="translated">Produzir um relatório HTML autossuficiente para a sessão de teste atual</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
-        <target state="needs-review-translation">Gerador de relatório HTML</target>
-        <note>Do not localize {Locked="HTML"}.</note>
+        <target state="translated">Gerador de relatório HTML</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">Não é possível habilitar "--report-html" ao usar "--list-tests"</target>
-        <note>Do not localize option names {Locked="--report-html"}{Locked="--list-tests"}.</note>
+        <target state="translated">Não é possível habilitar "--report-html" ao usar "--list-tests"</target>
+        <note />
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
-        <target state="needs-review-translation">Habilitar a geração de um relatório HTML</target>
-        <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
+        <target state="translated">Habilitar a geração de um relatório HTML</target>
+        <note />
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="needs-review-translation">O gerador de relatório HTML só funciona com construtores do tipo "Microsoft.Testing.Platform.Builder.TestApplicationBuildert"</target>
-        <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
+        <target state="translated">O gerador de relatório HTML só funciona com construtores do tipo "Microsoft.Testing.Platform.Builder.TestApplicationBuildert"</target>
+        <note />
       </trans-unit>
     </body>
   </file>

@@ -171,8 +171,7 @@ Disk info:
   <data name="HangDumpFileNameOptionDescription" xml:space="preserve">
     <value>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</value>
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</value>
-    <comment>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</comment>
+    <comment>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</comment>
   </data>
   <data name="HangDumpOptionDescription" xml:space="preserve">
     <value>Generate a dump file if the test process hangs</value>

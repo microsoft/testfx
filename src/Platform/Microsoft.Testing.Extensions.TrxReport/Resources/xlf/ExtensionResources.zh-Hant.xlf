@@ -4,43 +4,43 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
-        <target state="needs-review-translation">TRX 報表產生器只能與類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器一起運作</target>
-        <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
+        <target state="translated">TRX 報表產生器只能與類型為 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder' 的建立器一起運作</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolBaselineFileOptionDescription">
         <source>The baseline TRX file</source>
-        <target state="needs-review-translation">比較基準 TRX 檔案</target>
-        <note>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</note>
+        <target state="translated">比較基準 TRX 檔案</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolBothFilesMustBeSpecified">
         <source>'--{0}' and '--{1}' must both be specified</source>
-        <target state="needs-review-translation">必須同時指定 '--{0}' 和 '--{1}'</target>
-        <note>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</note>
+        <target state="translated">必須同時指定 '--{0}' 和 '--{1}'</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDescription">
         <source>This tool allows to compare and highlights differences between 2 TRX reports</source>
-        <target state="needs-review-translation">這項工具可比較並強調 2 份 TRX 報告之間的差異</target>
-        <note>Do not localize format name {Locked="TRX"}.</note>
+        <target state="translated">這項工具可比較並強調 2 份 TRX 報告之間的差異</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolDisplayName">
         <source>TRX comparer tool</source>
-        <target state="needs-review-translation">TRX 比較工具</target>
-        <note>Do not localize format name {Locked="TRX"}.</note>
+        <target state="translated">TRX 比較工具</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolOptionExpectsSingleArgument">
         <source>'--{0}' expects a single trx file path as argument</source>
-        <target state="needs-review-translation">'--{0}' 需要單一 TRX 檔案路徑做為引數</target>
-        <note>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</note>
+        <target state="translated">'--{0}' 需要單一 TRX 檔案路徑做為引數</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxComparerToolOtherFileOptionDescription">
         <source>The TRX file to compare with the baseline</source>
-        <target state="needs-review-translation">要與基準比較的 TRX 檔案</target>
-        <note>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</note>
+        <target state="translated">要與基準比較的 TRX 檔案</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxFileExistsAndWillBeOverwritten">
         <source>Warning: Trx file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">警告： Trx 檔案 '{0}' 已經存在，而且將會被覆寫。</target>
-        <note>{0} is the {Locked="TRX"} report file path.</note>
+        <target state="translated">警告： Trx 檔案 '{0}' 已經存在，而且將會被覆寫。</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportArtifactDescription">
         <source>Test session</source>
@@ -49,18 +49,18 @@
       </trans-unit>
       <trans-unit id="TrxReportArtifactDisplayName">
         <source>TRX Report</source>
-        <target state="needs-review-translation">TRX 報表</target>
-        <note>Do not localize format name {Locked="TRX"}.</note>
+        <target state="translated">TRX 報表</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameExtensionIsNotTrx">
         <source>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="needs-review-translation">'--report-trx-filename' 檔案名稱引數的結尾必須是 '.trx' (例如 --report-trx-filename myreport.trx)</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
+        <target state="translated">'--report-trx-filename' 檔案名稱引數的結尾必須是 '.trx' (例如 --report-trx-filename myreport.trx)</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameMustNotBeEmpty">
         <source>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="needs-review-translation">'--report-trx-filename' 檔名部分不得空白 (例如 --report-trx-filename myreport.trx)</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
+        <target state="translated">'--report-trx-filename' 檔名部分不得空白 (例如 --report-trx-filename myreport.trx)</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameOptionDescription">
         <source>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
@@ -70,65 +70,61 @@ Example: MyReport_{tfm}.trx</source>
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.trx</target>
         <note />
-        <target state="needs-review-translation">產生的 TRX 報告名稱。可以包含相對或絕對路徑; 系統會針對測試結果目錄解析相對路徑，並建立遺漏的目錄。
-支援下列預留位置: {pname}(測試應用程式名稱)、{pid}(處理序識別碼)、{asm}(進入組件名稱)、{tfm}(目標 Framework Moniker)、{time}(時間戳記)。
-範例: MyReport_{tfm}.trx</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</note>
       </trans-unit>
       <trans-unit id="TrxReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</source>
-        <target state="needs-review-translation">'--report-trx-filename' 相對路徑必須留在測試結果目錄之下 (例如 --report-trx-filename nested/myreport.trx)</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example path {Locked="nested/myreport.trx"}.</note>
+        <target state="translated">'--report-trx-filename' 相對路徑必須留在測試結果目錄之下 (例如 --report-trx-filename nested/myreport.trx)</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameRequiresTrxReport">
         <source>'--report-trx-filename' requires '--report-trx' to be enabled</source>
-        <target state="needs-review-translation">'--report-trx-filename' 需要啟用 '--report-trx'</target>
-        <note>Do not localize option names {Locked="--report-trx-filename"}{Locked="--report-trx"}.</note>
+        <target state="translated">'--report-trx-filename' 需要啟用 '--report-trx'</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportFileNameShouldNotContainPath">
         <source>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</source>
-        <target state="needs-review-translation">檔案名稱引數不能包含路徑 (例如 --report-trx-filename myreport.trx)</target>
-        <note>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</note>
+        <target state="translated">檔案名稱引數不能包含路徑 (例如 --report-trx-filename myreport.trx)</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportFrameworkDoesNotSupportTrxReportCapability">
         <source>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</source>
-        <target state="needs-review-translation">具有 UID '{1}' 的測試架構 '{0}' 不支援導致 TRX 報告遺漏或不完整的 'ITrxReportCapability'</target>
-        <note>0 is the test framework display name. 1 is the test framework {Locked="UID"}. Do not localize {Locked="ITrxReportCapability"} or format name {Locked="TRX"}.</note>
+        <target state="translated">具有 UID '{1}' 的測試架構 '{0}' 不支援導致 TRX 報告遺漏或不完整的 'ITrxReportCapability'</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled">
         <source>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</source>
-        <target state="needs-review-translation">'BeforeTestHostProcessStartAsync' 方法必須在 'OnTestHostProcessStartedAsync' 之前呼叫</target>
-        <note>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</note>
+        <target state="translated">'BeforeTestHostProcessStartAsync' 方法必須在 'OnTestHostProcessStartedAsync' 之前呼叫</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDescription">
         <source>Produce a TRX report for the current test session</source>
-        <target state="needs-review-translation">產生目前測試工作階段的 TRX 報告</target>
-        <note>Do not localize format name {Locked="TRX"}.</note>
+        <target state="translated">產生目前測試工作階段的 TRX 報告</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorDisplayName">
         <source>TRX report generator</source>
-        <target state="needs-review-translation">TRX 報表產生器</target>
-        <note>Do not localize format name {Locked="TRX"}.</note>
+        <target state="translated">TRX 報表產生器</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable">
         <source>Required environment variable '{0}' is missing for TRX report generator</source>
-        <target state="needs-review-translation">TRX 報表產生器遺漏必要的環境變數 '{0}'</target>
-        <note>{0} is the environment variable name.</note>
+        <target state="translated">TRX 報表產生器遺漏必要的環境變數 '{0}'</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportIsNotValidForDiscovery">
         <source>'--report-trx' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">使用 '--list-tests' 時，無法啟用 '--report-trx'</target>
-        <note>Do not localize option names {Locked="--report-trx"}{Locked="--list-tests"}.</note>
+        <target state="translated">使用 '--list-tests' 時，無法啟用 '--report-trx'</target>
+        <note />
       </trans-unit>
       <trans-unit id="TrxReportOptionDescription">
         <source>Enable generating TRX report</source>
-        <target state="needs-review-translation">啟用產生 TRX 報表</target>
-        <note>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</note>
+        <target state="translated">啟用產生 TRX 報表</target>
+        <note />
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
-        <target state="needs-review-translation">不支援類型 '{0}' 的要求</target>
-        <note>{0} is the unsupported request type name.</note>
+        <target state="translated">不支援類型 '{0}' 的要求</target>
+        <note />
       </trans-unit>
     </body>
   </file>
