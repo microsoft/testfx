@@ -286,10 +286,8 @@ internal static class TestClassModelBuilder
             Attributes: BuildAttributes(CollectInheritedAttributes(property)));
 
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
-    // overridden-method chain and union attributes, keeping the most-derived application when
-    // the same attribute type appears on multiple levels — but respect
-    // [AttributeUsage(Inherited = false)] (the attribute is NOT visible past the level it was
-    // declared on) and [AttributeUsage(AllowMultiple = true)] (every occurrence is kept).
+    // overridden-member chain, honor AttributeUsageAttribute.Inherited, and keep only the
+    // most-derived application for attributes that do not allow multiple instances.
     private static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
     {
         ImmutableArray<AttributeData> own = method.GetAttributes();
@@ -300,10 +298,10 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own, isInheritedLevel: false);
+        AppendAttributes(builder, seen, own, inheritedOnly: false);
         for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
         {
-            AppendUnique(builder, seen, baseMethod.GetAttributes(), isInheritedLevel: true);
+            AppendAttributes(builder, seen, baseMethod.GetAttributes(), inheritedOnly: true);
         }
 
         return builder.ToImmutable();
@@ -319,20 +317,20 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own, isInheritedLevel: false);
+        AppendAttributes(builder, seen, own, inheritedOnly: false);
         for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
         {
-            AppendUnique(builder, seen, baseProperty.GetAttributes(), isInheritedLevel: true);
+            AppendAttributes(builder, seen, baseProperty.GetAttributes(), inheritedOnly: true);
         }
 
         return builder.ToImmutable();
     }
 
-    private static void AppendUnique(
+    private static void AppendAttributes(
         ImmutableArray<AttributeData>.Builder builder,
         HashSet<string> seen,
         ImmutableArray<AttributeData> attributes,
-        bool isInheritedLevel)
+        bool inheritedOnly)
     {
         foreach (AttributeData attribute in attributes)
         {
@@ -341,65 +339,57 @@ internal static class TestClassModelBuilder
                 continue;
             }
 
-            (bool allowMultiple, bool inherited) = GetAttributeUsage(attributeClass);
-
-            // A base-level attribute declared with AttributeUsage(Inherited = false) must
-            // not leak onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
-            if (isInheritedLevel && !inherited)
+            AttributeUsageMetadata usage = GetAttributeUsage(attributeClass);
+            if (inheritedOnly && !usage.Inherited)
             {
-                continue;
-            }
-
-            // Attributes declared with AttributeUsage(AllowMultiple = true) may legitimately
-            // appear several times across the override chain (e.g. [TestCategory], [DataRow])
-            // — keep every instance instead of collapsing them to one.
-            if (allowMultiple)
-            {
-                builder.Add(attribute);
                 continue;
             }
 
             string key = attributeClass.ToDisplayString(FullyQualifiedFormat);
-            if (seen.Add(key))
+            if (usage.AllowMultiple || seen.Add(key))
             {
                 builder.Add(attribute);
             }
         }
     }
 
-    private static (bool AllowMultiple, bool Inherited) GetAttributeUsage(INamedTypeSymbol attributeClass)
+    private static AttributeUsageMetadata GetAttributeUsage(INamedTypeSymbol attributeClass)
     {
-        for (INamedTypeSymbol? current = attributeClass; current is not null; current = current.BaseType)
+        bool inherited = true;
+        bool allowMultiple = false;
+
+        foreach (AttributeData attribute in attributeClass.GetAttributes())
         {
-            foreach (AttributeData attribute in current.GetAttributes())
+            if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
             {
-                if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
+                continue;
+            }
+
+            foreach (KeyValuePair<string, TypedConstant> namedArgument in attribute.NamedArguments)
+            {
+                if (namedArgument.Value.Value is not bool value)
                 {
                     continue;
                 }
 
-                bool allowMultiple = false;
-                bool inherited = true;
-                foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
+                switch (namedArgument.Key)
                 {
-                    if (named.Key == "AllowMultiple" && named.Value.Value is bool am)
-                    {
-                        allowMultiple = am;
-                    }
-                    else if (named.Key == "Inherited" && named.Value.Value is bool inh)
-                    {
-                        inherited = inh;
-                    }
+                    case nameof(AttributeUsageAttribute.Inherited):
+                        inherited = value;
+                        break;
+                    case nameof(AttributeUsageAttribute.AllowMultiple):
+                        allowMultiple = value;
+                        break;
                 }
-
-                // [AttributeUsage] on a derived attribute class shadows the base per CLI rules;
-                // stop at the first level where it is found.
-                return (allowMultiple, inherited);
             }
+
+            break;
         }
 
-        return (AllowMultiple: false, Inherited: true);
+        return new AttributeUsageMetadata(inherited, allowMultiple);
     }
+
+    private readonly record struct AttributeUsageMetadata(bool Inherited, bool AllowMultiple);
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {

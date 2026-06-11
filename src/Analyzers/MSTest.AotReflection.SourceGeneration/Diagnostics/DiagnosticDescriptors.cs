@@ -38,11 +38,11 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor InaccessibleTestClass = new(
         id: "AOTSG0003",
         title: "Test class is not accessible from generated code",
-        messageFormat: "[TestClass] type '{0}' is not reachable from generated code in the same assembly (file-local, or nested in a private/private-protected outer type)",
+        messageFormat: "[TestClass] type '{0}' is not reachable from generated code in the same assembly (file-local, or nested in a non-public/non-internal outer type)",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Generated registry code lives in the same assembly but in a different file/type and therefore cannot reference file-local types or types nested in a private (or private-protected) outer type. Make the test class — and every enclosing type — at least internal.");
+        description: "Generated registry code lives in the same assembly but in a different file/type and therefore cannot reference file-local types or types nested in a private, protected, or private-protected outer type. Make the test class — and every enclosing type — at least internal.");
 
     public static readonly DiagnosticDescriptor GenericTestMethod = new(
         id: "AOTSG0004",
