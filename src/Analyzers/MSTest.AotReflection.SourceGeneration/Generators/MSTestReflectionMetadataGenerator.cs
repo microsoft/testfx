@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -93,7 +89,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
         }
 
         var diagnostics = new List<DiagnosticInfo>();
-        LocationInfo? classLocation = LocationInfo.CreateFrom(context.TargetNode);
+        var classLocation = LocationInfo.CreateFrom(context.TargetNode);
 
         // Diagnostics that imply we cannot emit ANY model for this class. Reported in
         // priority order — only the first matching reason is recorded so users aren't

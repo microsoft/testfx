@@ -1,10 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-
 using MSTest.AotReflection.SourceGeneration.Helpers;
 using MSTest.AotReflection.SourceGeneration.Model;
 
@@ -482,15 +478,10 @@ internal static class MetadataRegistryEmitter
         };
 
     private static string BuildArgumentsFromObjectArray(EquatableArray<TestParameterModel> parameters)
-    {
-        if (parameters.Length == 0)
-        {
-            return string.Empty;
-        }
-
-        return string.Join(", ", parameters.AsImmutableArray()
-            .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
-    }
+        => parameters.Length == 0
+            ? string.Empty
+            : string.Join(", ", parameters.AsImmutableArray()
+                .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
 
     private static string Bool(bool value) => value ? "true" : "false";
 

@@ -90,7 +90,6 @@ internal sealed partial class TrxReportEngine
 
             // If the user added the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
-            bool isFileNameExplicitlyProvided;
             string trxFileName;
             if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
             {
@@ -103,12 +102,17 @@ internal sealed partial class TrxReportEngine
                 string processName = Path.GetFileNameWithoutExtension(testAppModule);
                 string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
                 trxFileName = ReportFileNameHelper.ResolveAndSanitize(fileName[0], processName, processId, _clock.UtcNow);
-                isFileNameExplicitlyProvided = true;
             }
             else
             {
-                trxFileName = $"{runDeploymentRoot}.trx";
-                isFileNameExplicitlyProvided = false;
+                // Default file name uses the deterministic <asm>_<tfm>_<arch>.trx shape so reruns are
+                // discoverable and multi-target/multi-arch matrices don't collide on disk. A second
+                // run into the same TestResults folder overwrites the previous file (with a warning),
+                // matching the behavior of an explicitly-provided file name.
+                string asm = Path.GetFileNameWithoutExtension(testAppModule);
+                string tfm = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+                string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+                trxFileName = ReportFileNameSanitizer.ReplaceInvalidFileNameChars($"{asm}_{tfm}_{arch}.trx");
             }
 
             var testDefinitions = new XElement("TestDefinitions");
@@ -155,17 +159,23 @@ internal sealed partial class TrxReportEngine
                 _fileSystem.CreateDirectory(finalDirectory);
             }
 
-            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
+            bool fileAlreadyExisted = _fileSystem.ExistFile(finalFileName);
 
+            // Always overwrite (FileMode.Create), regardless of whether the file name was explicitly
+            // provided or generated from the default <asm>_<tfm>_<arch>.trx shape. Emit a warning when
+            // overwriting so users have a single, predictable rule to reason about.
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
-            using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
+            using (IFileStream stream = _fileSystem.NewFileStream(finalFileName, FileMode.Create))
+            {
 #if NETCOREAPP
-            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+                await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
 #else
-            document.Save(stream.Stream, SaveOptions.None);
+                document.Save(stream.Stream, SaveOptions.None);
 #endif
-            return isFileNameExplicitlyProvidedAndFileExists
+            }
+
+            return fileAlreadyExisted
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
         }).ConfigureAwait(false);

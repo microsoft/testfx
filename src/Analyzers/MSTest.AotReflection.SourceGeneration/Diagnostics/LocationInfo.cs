@@ -32,15 +32,10 @@ internal sealed record LocationInfo(string FilePath, TextSpan SourceSpan, LinePo
     }
 
     public static LocationInfo? CreateFrom(Location location)
-    {
-        if (location.SourceTree is null)
-        {
-            return null;
-        }
-
-        return new LocationInfo(
-            location.SourceTree.FilePath,
-            location.SourceSpan,
-            location.GetLineSpan().Span);
-    }
+        => location.SourceTree is null
+            ? null
+            : new LocationInfo(
+                location.SourceTree.FilePath,
+                location.SourceSpan,
+                location.GetLineSpan().Span);
 }

@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 
 namespace MSTest.AotReflection.SourceGeneration.Model;
 
@@ -90,6 +87,7 @@ internal sealed record TestClassModel(
 /// Value-equatable wrapper around <see cref="ImmutableArray{T}"/> so incremental generation
 /// can cache results between runs. Kept minimal — we don't need indexing in this PoC.
 /// </summary>
+/// <typeparam name="T">The element type.</typeparam>
 internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
     where T : IEquatable<T>
 {

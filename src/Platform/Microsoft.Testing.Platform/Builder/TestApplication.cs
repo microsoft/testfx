@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -346,7 +347,16 @@ public sealed class TestApplication : ITestApplication
         // Finally create the directory
         Directory.CreateDirectory(directory);
 
-        string prefixName = "log";
+        // Default prefix uses the deterministic <asm>_<tfm>_<arch> shape so multi-target /
+        // multi-arch runs land in distinct files. The retry loop in FileLogger still appends a
+        // timestamp suffix, which preserves uniqueness across reruns. Users can override via
+        // --diagnostic-file-prefix or the TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX env var.
+        string defaultAsm = testApplicationModuleInfo.TryGetAssemblyName() ?? "log";
+        string defaultTfm = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
+            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
+            ?? "unknown";
+        string defaultArch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        string prefixName = $"{defaultAsm}_{defaultTfm}_{defaultArch}";
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticOutputFilePrefixOptionKey, out string[]? prefixNameArg))
         {
             prefixName = prefixNameArg[0];
