@@ -119,76 +119,99 @@
   </resheader>
   <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
     <value>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+    <comment>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</comment>
   </data>
   <data name="TrxComparerToolBaselineFileOptionDescription" xml:space="preserve">
     <value>The baseline TRX file</value>
+    <comment>Do not localize option name {Locked="--baseline-trx"} or format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolBothFilesMustBeSpecified" xml:space="preserve">
     <value>'--{0}' and '--{1}' must both be specified</value>
+    <comment>0 is the first option name without the leading {Locked="--"}. 1 is the second option name without the leading {Locked="--"}.</comment>
   </data>
   <data name="TrxComparerToolDescription" xml:space="preserve">
     <value>This tool allows to compare and highlights differences between 2 TRX reports</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolDisplayName" xml:space="preserve">
     <value>TRX comparer tool</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolOptionExpectsSingleArgument" xml:space="preserve">
     <value>'--{0}' expects a single trx file path as argument</value>
+    <comment>0 is the option name without the leading {Locked="--"}. Do not localize file extension {Locked=".trx"}.</comment>
   </data>
   <data name="TrxComparerToolOtherFileOptionDescription" xml:space="preserve">
     <value>The TRX file to compare with the baseline</value>
+    <comment>Do not localize option name {Locked="--trx-to-compare"} or format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxFileExistsAndWillBeOverwritten" xml:space="preserve">
     <value>Warning: Trx file '{0}' already exists and will be overwritten.</value>
+    <comment>{0} is the {Locked="TRX"} report file path.</comment>
   </data>
   <data name="TrxReportArtifactDescription" xml:space="preserve">
     <value>Test session</value>
   </data>
   <data name="TrxReportArtifactDisplayName" xml:space="preserve">
     <value>TRX Report</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportFileNameExtensionIsNotTrx" xml:space="preserve">
     <value>'--report-trx-filename' file name argument must end with '.trx' (e.g. --report-trx-filename myreport.trx)</value>
+    <comment>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</comment>
   </data>
   <data name="TrxReportFileNameOptionDescription" xml:space="preserve">
     <value>The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.trx</value>
+    <comment>Do not localize option name {Locked="--report-trx-filename"}, format name {Locked="TRX"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".trx"}, or example file name {Locked="MyReport_{tfm}.trx"}.</comment>
   </data>
   <data name="TrxReportFileNameRequiresTrxReport" xml:space="preserve">
     <value>'--report-trx-filename' requires '--report-trx' to be enabled</value>
+    <comment>Do not localize option names {Locked="--report-trx-filename"}{Locked="--report-trx"}.</comment>
   </data>
   <data name="TrxReportFileNameShouldNotContainPath" xml:space="preserve">
     <value>file name argument must not contain path (e.g. --report-trx-filename myreport.trx)</value>
+    <comment>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</comment>
   </data>
   <data name="TrxReportFileNameMustNotBeEmpty" xml:space="preserve">
     <value>'--report-trx-filename' file name part must not be empty (e.g. --report-trx-filename myreport.trx)</value>
+    <comment>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example command {Locked="--report-trx-filename myreport.trx"}.</comment>
   </data>
   <data name="TrxReportFileNameRelativePathMustStayUnderResultsDirectory" xml:space="preserve">
     <value>'--report-trx-filename' relative paths must stay under the test results directory (e.g. --report-trx-filename nested/myreport.trx)</value>
+    <comment>Do not localize option name {Locked="--report-trx-filename"}, file extension {Locked=".trx"}, or example path {Locked="nested/myreport.trx"}.</comment>
   </data>
   <data name="TrxReportFrameworkDoesNotSupportTrxReportCapability" xml:space="preserve">
     <value>The test framework '{0}' with UID '{1}' does not support the 'ITrxReportCapability' leading to missing or incomplete TRX reports</value>
+    <comment>0 is the test framework display name. 1 is the test framework {Locked="UID"}. Do not localize {Locked="ITrxReportCapability"} or format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled" xml:space="preserve">
     <value>Method 'BeforeTestHostProcessStartAsync' must be called before 'OnTestHostProcessStartedAsync'</value>
+    <comment>Do not localize method names {Locked="BeforeTestHostProcessStartAsync"}{Locked="OnTestHostProcessStartedAsync"}.</comment>
   </data>
   <data name="TrxReportGeneratorDescription" xml:space="preserve">
     <value>Produce a TRX report for the current test session</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportGeneratorDisplayName" xml:space="preserve">
     <value>TRX report generator</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable" xml:space="preserve">
     <value>Required environment variable '{0}' is missing for TRX report generator</value>
+    <comment>{0} is the environment variable name.</comment>
   </data>
   <data name="TrxReportIsNotValidForDiscovery" xml:space="preserve">
     <value>'--report-trx' cannot be enabled when using '--list-tests'</value>
+    <comment>Do not localize option names {Locked="--report-trx"}{Locked="--list-tests"}.</comment>
   </data>
   <data name="TrxReportOptionDescription" xml:space="preserve">
     <value>Enable generating TRX report</value>
+    <comment>Do not localize option name {Locked="--report-trx"} or format name {Locked="TRX"}.</comment>
   </data>
   <data name="UnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Requests of type '{0}' is not supported</value>
+    <comment>{0} is the unsupported request type name.</comment>
   </data>
 </root>

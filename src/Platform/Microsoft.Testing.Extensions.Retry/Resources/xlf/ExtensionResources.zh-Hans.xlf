@@ -14,13 +14,13 @@
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxCount">
         <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
-        <target state="translated">最大失败测试阈值为 {0}，有 {1} 测试失败</target>
-        <note />
+        <target state="needs-review-translation">最大失败测试阈值为 {0}，有 {1} 测试失败</target>
+        <note>{0} is the maximum failed tests threshold. {1} is the failed tests count.</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxPercentage">
         <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
-        <target state="translated">失败的阈值百分比为 {0}%，有 {1}% 测试失败({2}/{3})</target>
-        <note />
+        <target state="needs-review-translation">失败的阈值百分比为 {0}%，有 {1}% 测试失败({2}/{3})</target>
+        <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
       <trans-unit id="MoveFiles">
         <source>
@@ -37,8 +37,8 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="MovingFileToLocation">
         <source>Moving file '{0}' to '{1}'</source>
-        <target state="translated">正在将文件“{0}”移动到“{1}”</target>
-        <note />
+        <target state="needs-review-translation">正在将文件“{0}”移动到“{1}”</target>
+        <note>{0} is the source file path. {1} is the destination file path.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
@@ -47,18 +47,18 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
-        <target state="translated">无法启动进程“{0}”</target>
-        <note />
+        <target state="needs-review-translation">无法启动进程“{0}”</target>
+        <note>{0} is the process file path.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="translated">在重试之间添加延迟。延迟以时间值表示，例如 200、500ms、1s、2.5m、1h、1d。默认单位为毫秒。</target>
-        <note />
+        <target state="needs-review-translation">在重试之间添加延迟。延迟以时间值表示，例如 200、500ms、1s、2.5m、1h、1d。默认单位为毫秒。</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
-        <target state="translated">选项 "--retry-failed-tests-delay" 需要有效的非负时间范围值，且不大于 2147483647ms (约 24.20:31:23.647)，例如 200、500ms、1s、2.5m、1h、1d</target>
-        <note />
+        <target state="needs-review-translation">选项 "--retry-failed-tests-delay" 需要有效的非负时间范围值，且不大于 2147483647ms (约 24.20:31:23.647)，例如 200、500ms、1s、2.5m、1h、1d</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
         <source>Retry failed tests feature allows to restart test execution upon failure.</source>
@@ -72,18 +72,18 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="translated">如果失败的测试百分比大于指定值，则禁用重试机制</target>
-        <note />
+        <target state="needs-review-translation">如果失败的测试百分比大于指定值，则禁用重试机制</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="translated">选项“{0}”需要介于 0 和 100 之间的整数参数</target>
-        <note />
+        <target state="needs-review-translation">选项“{0}”需要介于 0 和 100 之间的整数参数</target>
+        <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="translated">如果失败的测试数大于指定值，则禁用重试机制</target>
-        <note />
+        <target state="needs-review-translation">如果失败的测试数大于指定值，则禁用重试机制</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
         <source>Retry failed tests feature is not supported in hot reload mode</source>
@@ -97,39 +97,39 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times</source>
-        <target state="translated">将失败的测试重试指定次数</target>
-        <note />
+        <target state="needs-review-translation">将失败的测试重试指定次数</target>
+        <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>
-        <target state="translated">选项“{0}”需要指定选项“{1}”</target>
-        <note />
+        <target state="needs-review-translation">选项“{0}”需要指定选项“{1}”</target>
+        <note>{0} is the option name that was specified. {1} is the required option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="translated">选项“{0}”需要非负整数参数</target>
-        <note />
+        <target state="needs-review-translation">选项“{0}”需要非负整数参数</target>
+        <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
-        <target state="translated">选项“{0}”和“{1}”不能一起使用</target>
-        <note />
+        <target state="needs-review-translation">选项“{0}”和“{1}”不能一起使用</target>
+        <note>{0} is the first option name. {1} is the second option name.</note>
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
-        <target state="translated">测试主机进程已在重试服务可以连接到它之前退出。退出代码: {0}</target>
-        <note />
+        <target state="needs-review-translation">测试主机进程已在重试服务可以连接到它之前退出。退出代码: {0}</target>
+        <note>{0} is the test host process exit code.</note>
       </trans-unit>
       <trans-unit id="TestSuiteCompletedSuccessfully">
         <source>
 =====================
 Tests suite completed successfully in {0} attempts
 =====================</source>
-        <target state="translated">
+        <target state="needs-review-translation">
 =====================
 测试套件已成功完成 {0} 次尝试
 =====================</target>
-        <note />
+        <note>{0} is the total attempt count.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailed">
         <source>
@@ -137,28 +137,28 @@ Tests suite completed successfully in {0} attempts
 Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 </source>
-        <target state="translated">
+        <target state="needs-review-translation">
 =====================
 测试套件失败，失败的测试总数: {0}，退出代码: {1}，尝试次数: {2}/{3}
 =====================
 </target>
-        <note />
+        <note>{0} is the failed tests count. {1} is the exit code. {2} is the current attempt number. {3} is the total attempt count.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailedInAllAttempts">
         <source>
 =====================
 Tests suite failed in all {0} attempts
 =====================</source>
-        <target state="translated">
+        <target state="needs-review-translation">
 =====================
 测试套件在所有 {0} 尝试中均失败
 =====================</target>
-        <note />
+        <note>{0} is the total attempt count.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
-        <target state="translated">测试套件失败，且退出代码不是 2 (测试失败)。与意外情况相关的失败。退出代码“{0}”</target>
-        <note />
+        <target state="needs-review-translation">测试套件失败，且退出代码不是 2 (测试失败)。与意外情况相关的失败。退出代码“{0}”</target>
+        <note>{0} is the exit code.</note>
       </trans-unit>
     </body>
   </file>

@@ -451,6 +451,64 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_IsIncremental_ProducesStableOutputAndCachesSteps_WhenInputUnchanged()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class IncTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: null,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
+
+        GeneratorDriver firstDriver = driver.RunGenerators(compilation);
+        GeneratorDriverRunResult firstResult = firstDriver.GetRunResult();
+
+        GeneratorDriver secondDriver = firstDriver.RunGenerators(compilation);
+        GeneratorDriverRunResult secondResult = secondDriver.GetRunResult();
+
+        firstResult.Diagnostics.Should().BeEmpty();
+        secondResult.Diagnostics.Should().BeEmpty();
+        firstResult.Results.Should().ContainSingle();
+        secondResult.Results.Should().ContainSingle();
+
+        // Two passes against the same compilation MUST produce identical sources (deterministic output).
+        secondResult.Results[0].GeneratedSources
+            .Select(s => (s.HintName, Text: s.SourceText.ToString()))
+            .Should()
+            .BeEquivalentTo(firstResult.Results[0].GeneratedSources
+                .Select(s => (s.HintName, Text: s.SourceText.ToString())));
+
+        // The implementation-source-output pipeline MUST report cached steps on the second run
+        // (proves the generator's incremental graph actually short-circuits when inputs are unchanged).
+        secondResult.Results[0].TrackedOutputSteps
+            .Should()
+            .NotBeEmpty("the generator registers RegisterImplementationSourceOutput which produces a tracked output step");
+
+        secondResult.Results[0].TrackedOutputSteps
+            .SelectMany(static kv => kv.Value)
+            .SelectMany(static step => step.Outputs)
+            .Should()
+            .OnlyContain(
+                static o => o.Reason == IncrementalStepRunReason.Cached || o.Reason == IncrementalStepRunReason.Unchanged,
+                "output steps for unchanged inputs MUST be Cached or Unchanged on subsequent runs");
+    }
+
+    [TestMethod]
     public void Generator_IsIncremental_SupportTypesAreCached_WhenInputUnchanged()
     {
         const string userCode = """
@@ -1163,6 +1221,59 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_DistinguishesGenericArity_BetweenSameNamedMethods()
+    {
+        // Methods that differ only in generic arity (e.g. M() vs M<T>()) MUST be treated as
+        // distinct in the per-class dedup key, otherwise the generator might drop the
+        // non-generic overload alongside the generic ones.
+        //
+        // Generic test methods themselves are unsupported (AOTSG0004), so they are excluded
+        // from the registry — but the non-generic overload must still be emitted independently.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class GenericArityTests
+                {
+                    [TestMethod]
+                    public void Run() { }
+
+                    [TestMethod]
+                    public void Run<T>() { }
+
+                    [TestMethod]
+                    public void Run<T, U>() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        // The two generic overloads each emit AOTSG0004; the non-generic Run is supported.
+        result.Diagnostics.Where(d => d.Id == "AOTSG0004").Should().HaveCount(2);
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty();
+
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        // Only the non-generic Run must be emitted. The generic overloads are excluded by AOTSG0004
+        // but must not cause the non-generic sibling to be dropped through key collision.
+        int occurrences = System.Text.RegularExpressions.Regex
+            .Matches(registry, "Name = \"Run\"")
+            .Count;
+        occurrences.Should().Be(1);
+    }
+
+    [TestMethod]
     public void Generator_DoesNotInherit_TestMethodOrDataRow_OntoOverride()
     {
         // [TestMethod] and [DataRow] are declared with AttributeUsage(Inherited = false) in
@@ -1216,6 +1327,39 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // Invoke must be Task-returning so consumers can await without type-testing the result.
         // Uses `set` (not `init`) per the repo guideline that new public-shaped API must not use init accessors.
         support.Should().Contain("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInheritAttribute_WhenAttributeUsageInheritedFalse()
+    {
+        // Custom attribute declared with [AttributeUsage(Inherited = false)] must not leak
+        // from the base method onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+                public class NonInheritedMarkerAttribute : System.Attribute { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [NonInheritedMarker]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("NonInheritedMarker");
     }
 
     [TestMethod]
