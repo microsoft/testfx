@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 using Microsoft.CodeAnalysis;
 
 namespace MSTest.AotReflection.SourceGeneration.Diagnostics;
@@ -46,12 +43,12 @@ internal static class DiagnosticDescriptors
 
     public static readonly DiagnosticDescriptor GenericTestMethod = new(
         id: "AOTSG0004",
-        title: "Test method is generic",
+        title: "Method is generic",
         messageFormat: "Method '{0}.{1}' has type parameters which are not knowable at compile time; the source-generated invoker will skip it",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Generic test methods would need a concrete type-argument list at the invocation site. Replace the method with one or more non-generic specializations.");
+        description: "Generic methods would need a concrete type-argument list at the invocation site. Replace the method with one or more non-generic specializations.");
 
     public static readonly DiagnosticDescriptor ByRefParameter = new(
         id: "AOTSG0005",
@@ -60,7 +57,7 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "By-ref parameters cannot flow through the 'Func<object?, object?[]?, Task>' invoker shape. Drop the ref/in/out modifier or move the dependency out of the test signature.");
+        description: "By-ref parameters cannot flow through the 'Func<object?, object?[]?, Task>' invoker shape. Drop the ref/in/out modifier or move the dependency out of the member signature.");
 
     private static readonly Dictionary<string, DiagnosticDescriptor> ById = new(StringComparer.Ordinal)
     {

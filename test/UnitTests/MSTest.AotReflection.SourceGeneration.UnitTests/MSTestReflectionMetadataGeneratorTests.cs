@@ -1650,6 +1650,50 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_HonorsAttributeUsage_DeclaredOnBaseAttributeType()
+    {
+        // GetAttributeUsage MUST walk the attribute type's base-type chain. AllowMultiple is
+        // inherited from a base attribute that declares [AttributeUsage(AllowMultiple = true)]
+        // even when the derived attribute does not redeclare its own [AttributeUsage]. If the
+        // walk were skipped, the fallback default AllowMultiple=false would silently drop the
+        // second occurrence below.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+                public class BaseTagAttribute : Attribute
+                {
+                    public BaseTagAttribute(string value) { Value = value; }
+                    public string Value { get; }
+                }
+
+                // No [AttributeUsage] here on purpose — must inherit AllowMultiple=true from BaseTagAttribute.
+                public class DerivedTagAttribute : BaseTagAttribute
+                {
+                    public DerivedTagAttribute(string value) : base(value) { }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DerivedTag("first")]
+                    [DerivedTag("second")]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"first\"");
+        registry.Should().Contain("\"second\"");
+    }
+
+    [TestMethod]
     public void Generator_ReportsAndSkipsGenericMethods_WithSameName()
     {
         // Generic methods are diagnosed and skipped because the source-generated invoker has

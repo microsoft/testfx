@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
 
 using Microsoft.CodeAnalysis;
 
@@ -358,6 +354,31 @@ internal static class TestClassModelBuilder
         bool inherited = true;
         bool allowMultiple = false;
 
+        // [AttributeUsage] is itself inherited (its own AttributeUsage declares Inherited=true).
+        // Roslyn's GetAttributes() does NOT walk the base-type chain, so we have to walk it
+        // ourselves to honor an [AttributeUsage] declared on a base attribute type (e.g. when
+        // a user-defined attribute derives from one of MSTest's attributes without re-declaring
+        // its own [AttributeUsage]).
+        for (INamedTypeSymbol? current = attributeClass;
+             current is not null && current.SpecialType != SpecialType.System_Object;
+             current = current.BaseType)
+        {
+            if (TryReadAttributeUsage(current, out bool currentInherited, out bool currentAllowMultiple))
+            {
+                inherited = currentInherited;
+                allowMultiple = currentAllowMultiple;
+                break;
+            }
+        }
+
+        return new AttributeUsageMetadata(inherited, allowMultiple);
+    }
+
+    private static bool TryReadAttributeUsage(INamedTypeSymbol attributeClass, out bool inherited, out bool allowMultiple)
+    {
+        inherited = true;
+        allowMultiple = false;
+
         foreach (AttributeData attribute in attributeClass.GetAttributes())
         {
             if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
@@ -383,10 +404,10 @@ internal static class TestClassModelBuilder
                 }
             }
 
-            break;
+            return true;
         }
 
-        return new AttributeUsageMetadata(inherited, allowMultiple);
+        return false;
     }
 
     private readonly record struct AttributeUsageMetadata(bool Inherited, bool AllowMultiple);
@@ -398,7 +419,7 @@ internal static class TestClassModelBuilder
             return EquatableArray<TestParameterModel>.Empty;
         }
 
-        TestParameterModel[] parameters = new TestParameterModel[method.Parameters.Length];
+        var parameters = new TestParameterModel[method.Parameters.Length];
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol p = method.Parameters[i];
@@ -410,17 +431,12 @@ internal static class TestClassModelBuilder
 
     public static EquatableArray<AttributeApplicationModel> BuildAttributes(
         ImmutableArray<AttributeData> attributes)
-    {
-        if (attributes.IsDefaultOrEmpty)
-        {
-            return EquatableArray<AttributeApplicationModel>.Empty;
-        }
-
-        return attributes
-            .Select(BuildAttribute)
-            .WhereNotNull()
-            .ToEquatableArray();
-    }
+        => attributes.IsDefaultOrEmpty
+            ? EquatableArray<AttributeApplicationModel>.Empty
+            : attributes
+                .Select(BuildAttribute)
+                .WhereNotNull()
+                .ToEquatableArray();
 
     private static AttributeApplicationModel? BuildAttribute(AttributeData attribute)
     {
@@ -439,25 +455,24 @@ internal static class TestClassModelBuilder
     }
 
     private static TypedConstantModel ToModel(TypedConstant constant)
-    {
-        if (constant.IsNull)
+        => constant switch
         {
-            return new TypedConstantModel(ConstantValueKind.Null, constant.Type?.ToDisplayString(FullyQualifiedFormat), null, EquatableArray<TypedConstantModel>.Empty);
-        }
-
-        return constant.Kind switch
-        {
-            TypedConstantKind.Array => new TypedConstantModel(
+            { IsNull: true } => new TypedConstantModel(
+                ConstantValueKind.Null,
+                constant.Type?.ToDisplayString(FullyQualifiedFormat),
+                null,
+                EquatableArray<TypedConstantModel>.Empty),
+            { Kind: TypedConstantKind.Array } => new TypedConstantModel(
                 ConstantValueKind.Array,
                 constant.Type?.ToDisplayString(FullyQualifiedFormat),
                 null,
                 constant.Values.Select(ToModel).ToEquatableArray()),
-            TypedConstantKind.Enum => new TypedConstantModel(
+            { Kind: TypedConstantKind.Enum } => new TypedConstantModel(
                 ConstantValueKind.Enum,
                 constant.Type?.ToDisplayString(FullyQualifiedFormat),
                 constant.Value,
                 EquatableArray<TypedConstantModel>.Empty),
-            TypedConstantKind.Type => new TypedConstantModel(
+            { Kind: TypedConstantKind.Type } => new TypedConstantModel(
                 ConstantValueKind.Type,
                 (constant.Value as ITypeSymbol)?.ToDisplayString(FullyQualifiedFormat),
                 null,
@@ -468,5 +483,4 @@ internal static class TestClassModelBuilder
                 constant.Value,
                 EquatableArray<TypedConstantModel>.Empty),
         };
-    }
 }
