@@ -131,7 +131,7 @@ internal static class TestClassModelBuilder
                     DiagnosticDescriptors.ByRefParameter,
                     LocationInfo.CreateFrom(parameter),
                     owningClassFqn,
-                    method.MethodKind == MethodKind.Constructor ? ".ctor" : method.Name,
+                    method.MethodKind == MethodKind.Constructor ? "ctor" : method.Name,
                     parameter.Name));
                 unsupported = true;
             }

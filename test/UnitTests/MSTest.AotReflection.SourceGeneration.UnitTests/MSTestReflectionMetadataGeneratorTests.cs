@@ -1774,6 +1774,11 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
 
         result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0005");
+        // Constructor display name in the diagnostic must not produce a double-dot ("Tests..ctor"); we emit "Tests.ctor".
+        Diagnostic ctorDiagnostic = result.Diagnostics.Single(d => d.Id == "AOTSG0005");
+        string message = ctorDiagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture);
+        message.Should().NotContain("..ctor");
+        message.Should().Contain("Sample.Tests.ctor");
         string registry = GetRegistry(result);
         // The valid parameterless constructor is still emitted.
         registry.Should().Contain("typeof(global::Sample.Tests)");
