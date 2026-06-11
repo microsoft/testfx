@@ -46,7 +46,6 @@ internal sealed partial class Json
             return
             [
                 (JsonRpcStrings.JsonRpc, "2.0"),
-                 (JsonRpcStrings.Code, error.ErrorCode),
                  (JsonRpcStrings.Id, error.Id),
                  (JsonRpcStrings.Error, errorMsg)
             ];
