@@ -440,29 +440,32 @@ internal static class TestClassModelBuilder
     }
 
     private static TypedConstantModel ToModel(TypedConstant constant)
-        => constant.IsNull
-            ? new TypedConstantModel(ConstantValueKind.Null, constant.Type?.ToDisplayString(FullyQualifiedFormat), null, EquatableArray<TypedConstantModel>.Empty)
-            : constant.Kind switch
-            {
-                TypedConstantKind.Array => new TypedConstantModel(
-                    ConstantValueKind.Array,
-                    constant.Type?.ToDisplayString(FullyQualifiedFormat),
-                    null,
-                    constant.Values.Select(ToModel).ToEquatableArray()),
-                TypedConstantKind.Enum => new TypedConstantModel(
-                    ConstantValueKind.Enum,
-                    constant.Type?.ToDisplayString(FullyQualifiedFormat),
-                    constant.Value,
-                    EquatableArray<TypedConstantModel>.Empty),
-                TypedConstantKind.Type => new TypedConstantModel(
-                    ConstantValueKind.Type,
-                    (constant.Value as ITypeSymbol)?.ToDisplayString(FullyQualifiedFormat),
-                    null,
-                    EquatableArray<TypedConstantModel>.Empty),
-                _ => new TypedConstantModel(
-                    ConstantValueKind.Primitive,
-                    constant.Type?.ToDisplayString(FullyQualifiedFormat),
-                    constant.Value,
-                    EquatableArray<TypedConstantModel>.Empty),
-            };
+        => constant switch
+        {
+            { IsNull: true } => new TypedConstantModel(
+                ConstantValueKind.Null,
+                constant.Type?.ToDisplayString(FullyQualifiedFormat),
+                null,
+                EquatableArray<TypedConstantModel>.Empty),
+            { Kind: TypedConstantKind.Array } => new TypedConstantModel(
+                ConstantValueKind.Array,
+                constant.Type?.ToDisplayString(FullyQualifiedFormat),
+                null,
+                constant.Values.Select(ToModel).ToEquatableArray()),
+            { Kind: TypedConstantKind.Enum } => new TypedConstantModel(
+                ConstantValueKind.Enum,
+                constant.Type?.ToDisplayString(FullyQualifiedFormat),
+                constant.Value,
+                EquatableArray<TypedConstantModel>.Empty),
+            { Kind: TypedConstantKind.Type } => new TypedConstantModel(
+                ConstantValueKind.Type,
+                (constant.Value as ITypeSymbol)?.ToDisplayString(FullyQualifiedFormat),
+                null,
+                EquatableArray<TypedConstantModel>.Empty),
+            _ => new TypedConstantModel(
+                ConstantValueKind.Primitive,
+                constant.Type?.ToDisplayString(FullyQualifiedFormat),
+                constant.Value,
+                EquatableArray<TypedConstantModel>.Empty),
+        };
 }

@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="ActualValue">
         <source>Actual value: {0}</source>
-        <target state="needs-review-translation">실제 값: {0}</target>
+        <target state="translated">실제 값: {0}</target>
         <note>{0} is the actual value.</note>
       </trans-unit>
       <trans-unit id="DidNotReceiveModuleInfo">
         <source>MSBuild extension failed to receive test application information from '{0}'</source>
-        <target state="needs-review-translation">MSBuild 확장이 '{0}'에서 테스트 애플리케이션 정보를 받지 못 했습니다.</target>
+        <target state="translated">MSBuild 확장이 '{0}'에서 테스트 애플리케이션 정보를 받지 못 했습니다.</target>
         <note>{0} is the test application path. Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="DidNotReceiveRunSummaryInfo">
         <source>MSBuild extension failed to receive test run summary from '{0}'</source>
-        <target state="needs-review-translation">MSBuild 확장이 '{0}'에서 테스트 실행 요약을 받지 못 했습니다.</target>
+        <target state="translated">MSBuild 확장이 '{0}'에서 테스트 실행 요약을 받지 못 했습니다.</target>
         <note>{0} is the test application path. Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
-        <target state="needs-review-translation">예상 값: {0}</target>
+        <target state="translated">예상 값: {0}</target>
         <note>{0} is the expected value.</note>
       </trans-unit>
       <trans-unit id="Failed">
@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="FailedTestDetail">
         <source>Failed test '{0}', reason '{1}'</source>
-        <target state="needs-review-translation">테스트 '{0}' 실패, 이유 '{1}'</target>
+        <target state="translated">테스트 '{0}' 실패, 이유 '{1}'</target>
         <note>{0} is the failed test name. {1} is the failure reason.</note>
       </trans-unit>
       <trans-unit id="FullPathToolCalculationFailed">
         <source>Full path tool calculation failed. Runner '{0}'</source>
-        <target state="needs-review-translation">전체 경로 도구를 계산하지 못했습니다. 러너 '{0}'</target>
+        <target state="translated">전체 경로 도구를 계산하지 못했습니다. 러너 '{0}'</target>
         <note>{0} is the runner tool name.</note>
       </trans-unit>
       <trans-unit id="IncompatibleArchitecture">
@@ -44,7 +44,7 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="needs-review-translation">'{1}' 아키텍처에 대한 '{0}' 호스트를 찾을 수 없습니다.
+        <target state="translated">'{1}' 아키텍처에 대한 '{0}' 호스트를 찾을 수 없습니다.
 
 '{1}' .NET을 설치하여 문제를 해결할 수 있습니다.
 
@@ -54,7 +54,7 @@ The specified framework can be found at:
       </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
-        <target state="needs-review-translation">잘못된 TargetPath, {0}</target>
+        <target state="translated">잘못된 TargetPath, {0}</target>
         <note>0 is the invalid {Locked="TargetPath"} value.</note>
       </trans-unit>
       <trans-unit id="Passed">
@@ -64,7 +64,7 @@ The specified framework can be found at:
       </trans-unit>
       <trans-unit id="RunTests">
         <source>Run tests: '{0}' [{1}|{2}]</source>
-        <target state="needs-review-translation">테스트 실행: '{0}' [{1}|{2}]</target>
+        <target state="translated">테스트 실행: '{0}' [{1}|{2}]</target>
         <note>{0} is the test application path. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
       <trans-unit id="StackTrace">
@@ -74,22 +74,22 @@ The specified framework can be found at:
       </trans-unit>
       <trans-unit id="Summary">
         <source>{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</source>
-        <target state="needs-review-translation">{0}! - 실패: {1}, 통과: {2}, 건너뜀: {3}, 합계: {4}, 기간: {5}</target>
+        <target state="translated">{0}! - 실패: {1}, 통과: {2}, 건너뜀: {3}, 합계: {4}, 기간: {5}</target>
         <note>{0} is the overall test outcome. {1} is the failed test count. {2} is the passed test count. {3} is the skipped test count. {4} is the total test count. {5} is the test run duration.</note>
       </trans-unit>
       <trans-unit id="TestFailed">
         <source>Tests failed: '{0}' [{1}|{2}]</source>
-        <target state="needs-review-translation">테스트 실패: '{0}' [{1}|{2}]</target>
+        <target state="translated">테스트 실패: '{0}' [{1}|{2}]</target>
         <note>{0} is the test output file name. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
       <trans-unit id="TestFailedNoDetail">
         <source>Tests failed: {0}</source>
-        <target state="needs-review-translation">테스트 실패: {0}</target>
+        <target state="translated">테스트 실패: {0}</target>
         <note>{0} is the test output.</note>
       </trans-unit>
       <trans-unit id="TestsSucceeded">
         <source>Tests succeeded: '{0}' [{1}|{2}]</source>
-        <target state="needs-review-translation">테스트 성공: '{0}' [{1}|{2}]</target>
+        <target state="translated">테스트 성공: '{0}' [{1}|{2}]</target>
         <note>{0} is the test application path. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
     </body>

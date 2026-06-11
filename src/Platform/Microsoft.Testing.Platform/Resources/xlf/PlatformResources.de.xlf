@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="AbortForMaxFailedTestsCapabilityNotAvailable">
         <source>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</source>
-        <target state="needs-review-translation">Das aktuelle Testframework implementiert nicht "IGracefulStopTestExecutionCapability", das für das Feature "--maximum-failed-tests" erforderlich ist.</target>
+        <target state="translated">Das aktuelle Testframework implementiert nicht "IGracefulStopTestExecutionCapability", das für das Feature "--maximum-failed-tests" erforderlich ist.</target>
         <note>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="AbortForMaxFailedTestsDescription">
         <source>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</source>
-        <target state="needs-review-translation">Erweiterung zur Unterstützung von "--maximum-failed-tests". Wenn ein angegebener Schwellenwert für Fehler erreicht ist, wird der Testlauf abgebrochen.</target>
+        <target state="translated">Erweiterung zur Unterstützung von "--maximum-failed-tests". Wenn ein angegebener Schwellenwert für Fehler erreicht ist, wird der Testlauf abgebrochen.</target>
         <note>{Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="Aborted">
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="BrowserPlatformNotSupportedOnOlderFrameworks">
         <source>Browser platform is only supported on .NET 7.0 or greater.</source>
-        <target state="needs-review-translation">Die Browserplattform wird nur unter .NET 7.0 oder höher unterstützt.</target>
+        <target state="translated">Die Browserplattform wird nur unter .NET 7.0 oder höher unterstützt.</target>
         <note>{Locked=".NET 7.0"}</note>
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="needs-review-translation">Fehler beim Erstellen einer eindeutigen Protokolldatei nach 3 Sekunden. Der zuletzt ausprobierte Dateiname ist "{0}".</target>
+        <target state="translated">Fehler beim Erstellen einer eindeutigen Protokolldatei nach 3 Sekunden. Der zuletzt ausprobierte Dateiname ist "{0}".</target>
         <note>{0} is the last log file name that was tried.</note>
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
@@ -54,7 +54,7 @@
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="needs-review-translation">Die Erweiterung "{0}" hat versucht, die Umgebungsvariable "{1}" zu entfernen, wurde jedoch durch die Erweiterung "{2}" gesperrt</target>
+        <target state="translated">Die Erweiterung "{0}" hat versucht, die Umgebungsvariable "{1}" zu entfernen, wurde jedoch durch die Erweiterung "{2}" gesperrt</target>
         <note>{0} is the extension display name. {1} is the environment variable name. {2} is the display name of the extension that locked the environment variable.</note>
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
@@ -64,17 +64,17 @@
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="needs-review-translation">Die Erweiterung "{0}" hat versucht, die Umgebungsvariable "{1}" festzulegen, wurde jedoch durch die Erweiterung "{2}" gesperrt</target>
+        <target state="translated">Die Erweiterung "{0}" hat versucht, die Umgebungsvariable "{1}" festzulegen, wurde jedoch durch die Erweiterung "{2}" gesperrt</target>
         <note>{0} is the extension display name. {1} is the environment variable name. {2} is the display name of the extension that locked the environment variable.</note>
       </trans-unit>
       <trans-unit id="CannotStartProcessErrorMessage">
         <source>Cannot start process '{0}'</source>
-        <target state="needs-review-translation">Der Prozess "{0}" kann nicht gestartet werden</target>
+        <target state="translated">Der Prozess "{0}" kann nicht gestartet werden</target>
         <note>{0} is the process file name.</note>
       </trans-unit>
       <trans-unit id="CommandLineInvalidArgumentsForOption">
         <source>Option '--{0}' has invalid arguments: {1}</source>
-        <target state="needs-review-translation">Die Option "--{0}" weist ungültige Argumente auf: {1}</target>
+        <target state="translated">Die Option "--{0}" weist ungültige Argumente auf: {1}</target>
         <note>{0} is the option name without the leading dashes. {1} is the invalid argument value or validation error.</note>
       </trans-unit>
       <trans-unit id="CommandLineInvalidArityErrorMessage">
@@ -84,32 +84,32 @@
       </trans-unit>
       <trans-unit id="CommandLineInvalidConfiguration">
         <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
-        <target state="needs-review-translation">Ungültige Konfiguration für den Anbieter "{0}" (UID: {1}). Fehler: {2}</target>
+        <target state="translated">Ungültige Konfiguration für den Anbieter "{0}" (UID: {1}). Fehler: {2}</target>
         <note>{0} is the provider display name. {1} is the provider UID. {2} is the configuration error message.</note>
       </trans-unit>
       <trans-unit id="CommandLineInvalidOptionName">
         <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="needs-review-translation">Ungültiger Optionsname "{0}", er darf nur Buchstaben und "-" enthalten (z. B. "my-option").</target>
+        <target state="translated">Ungültiger Optionsname "{0}", er darf nur Buchstaben und "-" enthalten (z. B. "my-option").</target>
         <note>{0} is the invalid option name. {Locked="-"}{Locked="my-option"}</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
-        <target state="needs-review-translation">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) erwartet mindestens {3} Argumente.</target>
+        <target state="translated">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) erwartet mindestens {3} Argumente.</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {3} is the minimum number of expected arguments.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
-        <target state="needs-review-translation">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) erwartet höchstens {3} Argumente.</target>
+        <target state="translated">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) erwartet höchstens {3} Argumente.</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {3} is the maximum number of expected arguments.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
-        <target state="needs-review-translation">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) erwartet keine Argumente.</target>
+        <target state="translated">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) erwartet keine Argumente.</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple providers: '{1}'</source>
-        <target state="needs-review-translation">Die Option „--{0}“ wird von mehreren Anbietern deklariert: „{1}“</target>
+        <target state="translated">Die Option „--{0}“ wird von mehreren Anbietern deklariert: „{1}“</target>
         <note>{0} is the option name without the leading dashes. {1} is the list of provider display names.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
@@ -119,27 +119,27 @@
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
         <source>Option '--{0}' is reserved and cannot be used by providers: '{1}'</source>
-        <target state="needs-review-translation">Die Option „--{0}“ ist reserviert und kann nicht von Anbietern verwendet werden: „{1}“</target>
+        <target state="translated">Die Option „--{0}“ ist reserviert und kann nicht von Anbietern verwendet werden: „{1}“</target>
         <note>{0} is the option name without the leading dashes. {1} is the list of provider display names.</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
-        <target state="needs-review-translation">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) verwendet das reservierte Präfix "--internal".</target>
+        <target state="translated">Die Option "--{0}" vom Anbieter "{1}" (UID: {2}) verwendet das reservierte Präfix "--internal".</target>
         <note>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionsNotReady">
         <source>The ICommandLineOptions has not been built yet.</source>
-        <target state="needs-review-translation">ICommandLineOptions wurde noch nicht erstellt.</target>
+        <target state="translated">ICommandLineOptions wurde noch nicht erstellt.</target>
         <note>{Locked="ICommandLineOptions"}</note>
       </trans-unit>
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
-        <target state="needs-review-translation">Fehler beim Lesen der Antwortdatei "{0}". {1}.</target>
+        <target state="translated">Fehler beim Lesen der Antwortdatei "{0}". {1}.</target>
         <note>{0} is the response file path. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
-        <target state="needs-review-translation">Die Antwortdatei "{0}" wurde nicht gefunden.</target>
+        <target state="translated">Die Antwortdatei "{0}" wurde nicht gefunden.</target>
         <note>{0} is the response file path.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInCommandLine">
@@ -149,27 +149,27 @@
       </trans-unit>
       <trans-unit id="CommandLineParserUnclosedQuoteInResponseFile">
         <source>Unclosed quote in response file at line {0}</source>
-        <target state="needs-review-translation">Nicht egeschlossenes Anführungszeichen in Antwortdatei in Zeile {0}</target>
+        <target state="translated">Nicht egeschlossenes Anführungszeichen in Antwortdatei in Zeile {0}</target>
         <note>{0} is the line number in the response file.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
-        <target state="needs-review-translation">Unerwartetes Argument {0}</target>
+        <target state="translated">Unerwartetes Argument {0}</target>
         <note>{0} is the unexpected command-line argument.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
-        <target state="needs-review-translation">Unerwartetes einfaches Anführungszeichen im Argument: {0}</target>
+        <target state="translated">Unerwartetes einfaches Anführungszeichen im Argument: {0}</target>
         <note>{0} is the command-line argument containing the unexpected single quote.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
         <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
-        <target state="needs-review-translation">Unerwartetes einfaches Anführungszeichen im Argument: {0} für Option "--{1}"</target>
+        <target state="translated">Unerwartetes einfaches Anführungszeichen im Argument: {0} für Option "--{1}"</target>
         <note>{0} is the command-line argument containing the unexpected single quote. {1} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineUnknownOption">
         <source>Unknown option '--{0}'</source>
-        <target state="needs-review-translation">Unbekannte Option "--{0}"</target>
+        <target state="translated">Unbekannte Option "--{0}"</target>
         <note>{0} is the unknown option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="CommandLineValidationCommandLine">
@@ -179,12 +179,12 @@
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
-        <target state="needs-review-translation">Die gleiche Instanz von „CompositeExtensionFactory“ ist bereits registriert</target>
+        <target state="translated">Die gleiche Instanz von „CompositeExtensionFactory“ ist bereits registriert</target>
         <note>{Locked="CompositeExtensionFactory"}</note>
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
         <source>The configuration file '{0}' specified with '--config-file' could not be found.</source>
-        <target state="needs-review-translation">Die mit „--config-file“ angegebene Konfigurationsdatei „{0}“ wurde nicht gefunden.</target>
+        <target state="translated">Die mit „--config-file“ angegebene Konfigurationsdatei „{0}“ wurde nicht gefunden.</target>
         <note>{0} is the configuration file path. {Locked="--config-file"}</note>
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -194,7 +194,7 @@
       </trans-unit>
       <trans-unit id="ConnectingToClientHost">
         <source>Connecting to client host '{0}' port '{1}'</source>
-        <target state="needs-review-translation">Verbindung mit Clienthost "{0}" Port "{1}" wird hergestellt</target>
+        <target state="translated">Verbindung mit Clienthost "{0}" Port "{1}" wird hergestellt</target>
         <note>{0} is the client host name. {1} is the client port.</note>
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
@@ -214,27 +214,27 @@
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
-        <target state="needs-review-translation">Das Verzeichnis "{0}" konnte nicht gefunden werden</target>
+        <target state="translated">Das Verzeichnis "{0}" konnte nicht gefunden werden</target>
         <note>{0} is the directory path.</note>
       </trans-unit>
       <trans-unit id="DeprecatedEnvironmentVariableWarning">
         <source>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</source>
-        <target state="needs-review-translation">Warnung: Die Umgebungsvariable „{0}“ ist veraltet und wird in einer zukünftigen Hauptversion entfernt. Verwenden Sie stattdessen „{1}“.</target>
+        <target state="translated">Warnung: Die Umgebungsvariable „{0}“ ist veraltet und wird in einer zukünftigen Hauptversion entfernt. Verwenden Sie stattdessen „{1}“.</target>
         <note>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}</source>
-        <target state="needs-review-translation">Diagnosedatei (Ebene „{0}“ mit asynchroner Leerung): {1}</target>
+        <target state="translated">Diagnosedatei (Ebene „{0}“ mit asynchroner Leerung): {1}</target>
         <note>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}</source>
-        <target state="needs-review-translation">Diagnosedatei (Ebene „{0}“ mit synchroner Leerung): {1}</target>
+        <target state="translated">Diagnosedatei (Ebene „{0}“ mit synchroner Leerung): {1}</target>
         <note>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} test(s) in assembly</source>
-        <target state="needs-review-translation">{0} Test(s) in Assembly ermittelt</target>
+        <target state="translated">{0} Test(s) in Assembly ermittelt</target>
         <note>{0} is the number of discovered tests. The sentence is followed by the assembly path.</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
@@ -249,12 +249,12 @@
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
-        <target state="needs-review-translation">Anbieter "{0}" (UID: {1}) ist mit folgendem Fehler fehlgeschlagen: {2}</target>
+        <target state="translated">Anbieter "{0}" (UID: {1}) ist mit folgendem Fehler fehlgeschlagen: {2}</target>
         <note>{0} is the provider display name. {1} is the provider UID. {2} is the error message.</note>
       </trans-unit>
       <trans-unit id="ExceptionDuringCancellationWarningMessage">
         <source>Exception during the cancellation of request id '{0}'</source>
-        <target state="needs-review-translation">Ausnahme beim Abbrechen der Anforderungs-ID '{0}'</target>
+        <target state="translated">Ausnahme beim Abbrechen der Anforderungs-ID '{0}'</target>
         <note>{0} is the request id.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -269,12 +269,12 @@
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
-        <target state="needs-review-translation">Die Erweiterung vom Typ "{0}" implementiert nicht die erforderliche Schnittstelle "{1}"</target>
+        <target state="translated">Die Erweiterung vom Typ "{0}" implementiert nicht die erforderliche Schnittstelle "{1}"</target>
         <note>{0} is the extension type name. {1} is the required interface type name.</note>
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</source>
-        <target state="needs-review-translation">Erweiterungen mit derselben UID „{0}“ wurden bereits registriert. Registrierte Erweiterungen haben die Typen: {1}</target>
+        <target state="translated">Erweiterungen mit derselben UID „{0}“ wurden bereits registriert. Registrierte Erweiterungen haben die Typen: {1}</target>
         <note>{0} is the duplicate extension UID. {1} is the list of registered extension type names.</note>
       </trans-unit>
       <trans-unit id="Failed">
@@ -290,23 +290,23 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="needs-review-translation">Fehler beim Schreiben des Protokolls in den Kanal. Inhalt des verpassten Protokolls:
+        <target state="translated">Fehler beim Schreiben des Protokolls in den Kanal. Inhalt des verpassten Protokolls:
 {0}</target>
         <note>{0} is the log content that could not be written.</note>
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
-        <target state="needs-review-translation">fehlerhaft mit {0} Fehler(n)</target>
+        <target state="translated">fehlerhaft mit {0} Fehler(n)</target>
         <note>{0} is the number of errors.</note>
       </trans-unit>
       <trans-unit id="FailedWithErrorsAndWarnings">
         <source>failed with {0} error(s) and {1} warning(s)</source>
-        <target state="needs-review-translation">fehlerhaft mit {0} Fehler(n) und {1} Warnung(en)</target>
+        <target state="translated">fehlerhaft mit {0} Fehler(n) und {1} Warnung(en)</target>
         <note>{0} is the number of errors. {1} is the number of warnings.</note>
       </trans-unit>
       <trans-unit id="FailedWithWarnings">
         <source>failed with {0} warning(s)</source>
-        <target state="needs-review-translation">fehlerhaft mit {0} Warnung(en)</target>
+        <target state="translated">fehlerhaft mit {0} Warnung(en)</target>
         <note>{0} is the number of warnings.</note>
       </trans-unit>
       <trans-unit id="FinishedTestSession">
@@ -326,17 +326,17 @@
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
-        <target state="needs-review-translation">Die folgenden Anbieter von "ITestHostEnvironmentVariableProvider" haben das endgültige Setup der Umgebungsvariablen abgelehnt:</target>
+        <target state="translated">Die folgenden Anbieter von "ITestHostEnvironmentVariableProvider" haben das endgültige Setup der Umgebungsvariablen abgelehnt:</target>
         <note>{Locked="ITestHostEnvironmentVariableProvider"}</note>
       </trans-unit>
       <trans-unit id="HelpApplicationUsage">
         <source>Usage {0} [option providers] [extension option providers]</source>
-        <target state="needs-review-translation">Nutzung {0} [option providers] [extension option providers]</target>
+        <target state="translated">Nutzung {0} [option providers] [extension option providers]</target>
         <note>{0} is the application name used in the usage line.</note>
       </trans-unit>
       <trans-unit id="HelpExecuteTestApplication">
         <source>Execute a .NET Test Application.</source>
-        <target state="needs-review-translation">Führen Sie eine .NET-Anwendung aus.</target>
+        <target state="translated">Führen Sie eine .NET-Anwendung aus.</target>
         <note>{Locked=".NET"}</note>
       </trans-unit>
       <trans-unit id="HelpExtensionOptions">
@@ -356,7 +356,7 @@
       </trans-unit>
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
-        <target state="needs-review-translation">&lt;test application runner&gt;</target>
+        <target state="translated">&lt;test application runner&gt;</target>
         <note>{Locked="&lt;test application runner&gt;"}</note>
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
@@ -366,7 +366,7 @@
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
-        <target state="needs-review-translation">Die Methode "{0}" wurde nicht erfolgreich beendet</target>
+        <target state="translated">Die Methode "{0}" wurde nicht erfolgreich beendet</target>
         <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
@@ -376,57 +376,57 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
-        <target state="needs-review-translation">Der Eintrag „{0}“ unter Abschnitt „{1}“ in der testconfig.json-Datei („{2}“) muss entweder ein Skalarwert (Zeichenfolge, Zahl, boolescher Wert) oder ein Array von Skalarwerten sein. Geschachtelte Objekte werden nicht unterstützt.</target>
+        <target state="translated">Der Eintrag „{0}“ unter Abschnitt „{1}“ in der testconfig.json-Datei („{2}“) muss entweder ein Skalarwert (Zeichenfolge, Zahl, boolescher Wert) oder ein Array von Skalarwerten sein. Geschachtelte Objekte werden nicht unterstützt.</target>
         <note>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptions"}{Locked="timeout"}{Locked="timeout:0"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsValidationErrorPrefix">
         <source>In testconfig.json under 'commandLineOptions': {0}</source>
-        <target state="needs-review-translation">In testconfig.json unter „commandLineOptions“: {0}</target>
+        <target state="translated">In testconfig.json unter „commandLineOptions“: {0}</target>
         <note>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
-        <target state="needs-review-translation">Es wurde ein doppelter Schlüssel "{0}" gefunden.</target>
+        <target state="translated">Es wurde ein doppelter Schlüssel "{0}" gefunden.</target>
         <note>{0} is the duplicate JSON key.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="needs-review-translation">Das JSON-Element der obersten Ebene muss ein Objekt sein. Stattdessen wurde "{0}" gefunden.</target>
+        <target state="translated">Das JSON-Element der obersten Ebene muss ein Objekt sein. Stattdessen wurde "{0}" gefunden.</target>
         <note>{0} is the JSON value kind that was found.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="needs-review-translation">Es wurde ein nicht unterstütztes JSON-Token "{0}" gefunden.</target>
+        <target state="translated">Es wurde ein nicht unterstütztes JSON-Token "{0}" gefunden.</target>
         <note>{0} is the unsupported JSON token type.</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionEntryMustBeScalarErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</source>
-        <target state="needs-review-translation">Der Eintrag „{0}“ im Abschnitt „{1}“ in der Datei testconfig.json („{2}“) muss ein skalaren Zeichenfolgenwert sein. Geschachtelte Objekte und Arrays werden nicht unterstützt.</target>
+        <target state="translated">Der Eintrag „{0}“ im Abschnitt „{1}“ in der Datei testconfig.json („{2}“) muss ein skalaren Zeichenfolgenwert sein. Geschachtelte Objekte und Arrays werden nicht unterstützt.</target>
         <note>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonConfigurationSectionMustBeAnObjectErrorMessage">
         <source>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</source>
-        <target state="needs-review-translation">Der Abschnitt „{0}“ in der Datei testconfig.json („{1}“) muss ein JSON-Objekt sein.</target>
+        <target state="translated">Der Abschnitt „{0}“ in der Datei testconfig.json („{1}“) muss ein JSON-Objekt sein.</target>
         <note>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="environmentVariables"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
-        <target state="needs-review-translation">JsonRpc-Serverimplementierungen basierend auf der Protokollspezifikation der Testplattform.</target>
+        <target state="translated">JsonRpc-Serverimplementierungen basierend auf der Protokollspezifikation der Testplattform.</target>
         <note>{Locked="JsonRpc"}</note>
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
-        <target state="needs-review-translation">JsonRpc-Server-zu-Client-Handshake, Implementierungen basierend auf der Protokollspezifikation der Testplattform.</target>
+        <target state="translated">JsonRpc-Server-zu-Client-Handshake, Implementierungen basierend auf der Protokollspezifikation der Testplattform.</target>
         <note>{Locked="JsonRpc"}</note>
       </trans-unit>
       <trans-unit id="LoggerFactoryNotReady">
         <source>The ILoggerFactory has not been built yet.</source>
-        <target state="needs-review-translation">Die ILoggerFactory wurde noch nicht erstellt.</target>
+        <target state="translated">Die ILoggerFactory wurde noch nicht erstellt.</target>
         <note>{Locked="ILoggerFactory"}</note>
       </trans-unit>
       <trans-unit id="MaxFailedTestsMustBePositive">
         <source>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</source>
-        <target state="needs-review-translation">Die Option "--maximum-failed-tests" muss eine positive ganze Zahl sein. Der Wert '{0}' ist ungültig.</target>
+        <target state="translated">Die Option "--maximum-failed-tests" muss eine positive ganze Zahl sein. Der Wert '{0}' ist ungültig.</target>
         <note>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="MessageBusNotReady">
@@ -436,22 +436,22 @@
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="needs-review-translation">Mindestens erwartete Testrichtlinienverletzung, {0} Tests wurden ausgeführt, mindestens erwartet: {1}</target>
+        <target state="translated">Mindestens erwartete Testrichtlinienverletzung, {0} Tests wurden ausgeführt, mindestens erwartet: {1}</target>
         <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
       </trans-unit>
       <trans-unit id="MissingClientPortFoJsonRpc">
         <source>Expected --client-port when jsonRpc protocol is used.</source>
-        <target state="needs-review-translation">"--client-port" wird erwartet, wenn das jsonRpc-Protokoll verwendet wird.</target>
+        <target state="translated">"--client-port" wird erwartet, wenn das jsonRpc-Protokoll verwendet wird.</target>
         <note>{Locked="--client-port"}{Locked="jsonRpc"}</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="needs-review-translation">und {0} weitere</target>
+        <target state="translated">und {0} weitere</target>
         <note>{0} is the number of additional active tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="needs-review-translation">{0} ausgeführten Tests</target>
+        <target state="translated">{0} ausgeführten Tests</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -466,7 +466,7 @@
       </trans-unit>
       <trans-unit id="OnlyOneFilterSupported">
         <source>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</source>
-        <target state="needs-review-translation">Das gleichzeitige Übergeben von „--treenode-filter“ und „--filter-uid“ wird nicht unterstützt.</target>
+        <target state="translated">Das gleichzeitige Übergeben von „--treenode-filter“ und „--filter-uid“ wird nicht unterstützt.</target>
         <note>{Locked="--treenode-filter"}{Locked="--filter-uid"}</note>
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
@@ -496,7 +496,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineConfigFileOptionDescription">
         <source>Specifies a testconfig.json file.</source>
-        <target state="needs-review-translation">Gibt eine testconfig.json-Datei an.</target>
+        <target state="translated">Gibt eine testconfig.json-Datei an.</target>
         <note>{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDebugAttachOptionDescription">
@@ -516,71 +516,71 @@ Beachten Sie, dass die Testausführung dadurch verlangsamt wird.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="needs-review-translation">Aktivieren Sie die Diagnoseprotokollierung. Die Standardprotokollebene ist „Ablaufverfolgung“.
-Die Datei wird im Ausgabeverzeichnis mit dem Namen „log_[yyMMddHHmmssfff].diag“ geschrieben.</target>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
+The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
         <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
-        <target state="needs-review-translation">"--diagnostic-verbosity" erwartet ein Argument auf einer einzelnen Ebene ("Trace", "Debug", "Information", "Warning", "Error" oder "Critical").</target>
+        <target state="translated">"--diagnostic-verbosity" erwartet ein Argument auf einer einzelnen Ebene ("Trace", "Debug", "Information", "Warning", "Error" oder "Critical").</target>
         <note>{Locked="--diagnostic-verbosity"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
         <source>'--{0}' requires '--diagnostic' to be provided</source>
-        <target state="needs-review-translation">Für "--{0}" muss "--diagnostic" angegeben werden.</target>
+        <target state="translated">Für "--{0}" muss "--diagnostic" angegeben werden.</target>
         <note>{0} is the option name without the leading dashes. {Locked="--diagnostic"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="needs-review-translation">Das Ausgabeverzeichnis der Diagnoseprotokollierung.
+        <target state="translated">Das Ausgabeverzeichnis der Diagnoseprotokollierung.
 Sofern nicht angegeben, wird die Datei im Standardverzeichnis "TestResults" generiert.</target>
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="needs-review-translation">Präfix für den Protokolldateinamen, durch den "[log]_" ersetzt wird.</target>
+        <target state="new">Prefix for the log file name that will replace '[log]_.'</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</source>
-        <target state="needs-review-translation">Definieren Sie die Ausführlichkeitsstufe für --diagnostic.
+        <target state="translated">Definieren Sie die Ausführlichkeitsstufe für --diagnostic.
 Die verfügbaren Werte sind "Trace", "Debug", "Information", "Warning", "Error" und "Critical".</target>
         <note>{Locked="--diagnostic"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsInvalidArgument">
         <source>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="needs-review-translation">„--list-tests“ hat den unerwarteten Wert „{0}“ empfangen. Folgende Werte werden unterstützt: {1}.</target>
+        <target state="translated">„--list-tests“ hat den unerwarteten Wert „{0}“ empfangen. Folgende Werte werden unterstützt: {1}.</target>
         <note>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}{Locked="text"}{Locked="json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</source>
-        <target state="needs-review-translation">Listen Sie verfügbare Tests auf.
+        <target state="translated">Listen Sie verfügbare Tests auf.
 Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „json“, um die ermittelten Tests als JSON-Dokument in der Standardausgabe auszugeben.</target>
         <note>{Locked="text"}{Locked="json"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestCliRequiresPipe">
         <source>'--server {0}' requires '--{1}' to be specified.</source>
-        <target state="needs-review-translation">„--server {0}' reqiueres'--{1}“ muss angegeben werden.</target>
+        <target state="translated">„--server {0}' reqiueres'--{1}“ muss angegeben werden.</target>
         <note>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
-        <target state="needs-review-translation">dotnet-Testpipe.</target>
+        <target state="new">dotnet test pipe.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="needs-review-translation">Ungültige PID "{0}"
+        <target state="translated">Ungültige PID "{0}"
 {1}</target>
         <note>{0} is the invalid process ID. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser">
         <source>The '--exit-on-process-exit' option is not supported in browser environments.</source>
-        <target state="needs-review-translation">Die Option „--exit-on-process-exit“ wird in Browserumgebungen nicht unterstützt.</target>
+        <target state="translated">Die Option „--exit-on-process-exit“ wird in Browserumgebungen nicht unterstützt.</target>
         <note>{Locked="--exit-on-process-exit"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
@@ -590,7 +590,7 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
-        <target state="needs-review-translation">"--{0}" erwartet ein einzelnes int-PID-Argument.</target>
+        <target state="translated">"--{0}" erwartet ein einzelnes int-PID-Argument.</target>
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineFilterUidOptionDescription">
@@ -606,13 +606,13 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
         <source>Do not report non successful exit value for specific exit codes
 (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="needs-review-translation">Nicht erfolgreichen Beendigungswert für bestimmte Exitcodes nicht melden
-(Beispiel: "--ignore-exit-code 8; 9' ignoriert Exitcode 8 und 9 und gibt in diesem Fall 0 zurück)</target>
+        <target state="new">Do not report non successful exit value for specific exit codes
+(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
         <note>{Locked="--ignore-exit-code 8;9"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
-        <target state="needs-review-translation">Zeigen Sie .NET-Testanwendungsinformationen an.</target>
+        <target state="translated">Zeigen Sie .NET-Testanwendungsinformationen an.</target>
         <note>{Locked=".NET"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineMaxFailedTestsOptionDescription">
@@ -622,7 +622,7 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
-        <target state="needs-review-translation">"--list-tests" und "--minimum-expected-tests" sind inkompatible Optionen.</target>
+        <target state="translated">"--list-tests" und "--minimum-expected-tests" sind inkompatible Optionen.</target>
         <note>{Locked="--list-tests"}{Locked="--minimum-expected-tests"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionDescription">
@@ -633,7 +633,7 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="needs-review-translation">"--minimum-expected-tests" erwartet einen einzelnen positiven ganzzahligen Wert ungleich Null
+        <target state="translated">"--minimum-expected-tests" erwartet einen einzelnen positiven ganzzahligen Wert ungleich Null
 (Beispiel: "--minimum-expected-tests 10")</target>
         <note>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</note>
       </trans-unit>
@@ -649,7 +649,7 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
         <source>'--{0}' expects a single valid port as argument</source>
-        <target state="needs-review-translation">"--{0}" erwartet einen einzelnen gültigen Port als Argument.</target>
+        <target state="translated">"--{0}" erwartet einen einzelnen gültigen Port als Argument.</target>
         <note>{0} is the option name without the leading dashes.</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
@@ -666,14 +666,14 @@ Akzeptiert optional „text“ (die standardmäsige lesbare Ausgabe) oder „jso
         <source>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
 The default is TestResults in the directory that contains the test application.</source>
-        <target state="needs-review-translation">Das Verzeichnis, in dem die Testergebnisse abgelegt werden.
+        <target state="translated">Das Verzeichnis, in dem die Testergebnisse abgelegt werden.
 Wenn das angegebene Verzeichnis nicht vorhanden ist, wird es erstellt.
 Der Standardwert ist "TestResults" im Verzeichnis, das die Testanwendung enthält.</target>
         <note>{Locked="TestResults"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerInvalidArgument">
         <source>'--server' received unexpected value '{0}'. Supported values are: {1}.</source>
-        <target state="needs-review-translation">„--server“ hat den unerwarteten Wert „{0}“ empfangen. Folgende Werte werden unterstützt: {1}.</target>
+        <target state="translated">„--server“ hat den unerwarteten Wert „{0}“ empfangen. Folgende Werte werden unterstützt: {1}.</target>
         <note>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}{Locked="jsonrpc"}{Locked="dotnettestcli"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
@@ -693,19 +693,19 @@ Der Standardwert ist "TestResults" im Verzeichnis, das die Testanwendung enthäl
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="needs-review-translation">Die Option „Zeitüberschreitung“ sollte ein Argument als Zeitwert mit einem expliziten Einheitensuffix und einem positiven numerischen Wert innerhalb des unterstützten Bereichs aufweisen (bis zu ~49,7 Tage). Akzeptierte Suffixe sind „ms“/„mil(s)“/„millisecond(s)“, „s“/„sec(s)“/„second(s)“, „m“/„min(s)“/„minute(s)“, „h“/„hour(s)“ und „d“/„day(s)“, z. B. „500 ms“, „5400 s“, „90 m“, „1,5 h“, „1 d“.</target>
+        <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="timeout"}{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
-        <target state="needs-review-translation">Eine globale Testausführungszeitüberschreitung.
-Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzeptierte Suffixe sind „ms“/„mil(s)“/„millisecond(s)“, „s“/„sec(s)“/„second(s)“, „m“/„min(s)“/„minute(s)“, „h“/„hour(s)“ und „d“/„day(s)“, z. B. „500 ms“, „5400 s“, „90 m“, „1,5 h“, „1 d“.</target>
+        <target state="new">A global test execution timeout.
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="needs-review-translation">Drücken Sie erneut STRG+C, um das Beenden zu erzwingen.</target>
+        <target state="new">Press Ctrl+C again to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -715,12 +715,12 @@ Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzept
       </trans-unit>
       <trans-unit id="ReachedMaxFailedTestsMessage">
         <source>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</source>
-        <target state="needs-review-translation">Die Testsitzung wird aufgrund von Erreichensfehlern ('{0}') abgebrochen, die durch die Option "--maximum-failed-tests" angegeben wurden.</target>
+        <target state="translated">Die Testsitzung wird aufgrund von Erreichensfehlern ('{0}') abgebrochen, die durch die Option "--maximum-failed-tests" angegeben wurden.</target>
         <note>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</note>
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
-        <target state="needs-review-translation">Wiederholungsfehler nach {0} Mal</target>
+        <target state="translated">Wiederholungsfehler nach {0} Mal</target>
         <note>{0} is the retry count.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
@@ -750,7 +750,7 @@ Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzept
       </trans-unit>
       <trans-unit id="ServerTestHostDescription">
         <source>The 'ITestHost' implementation used when running server mode.</source>
-        <target state="needs-review-translation">Die implementierung "ITestHost", die beim Ausführen des Servermodus verwendet wird.</target>
+        <target state="translated">Die implementierung "ITestHost", die beim Ausführen des Servermodus verwendet wird.</target>
         <note>{Locked="ITestHost"}</note>
       </trans-unit>
       <trans-unit id="ServerTestHostDisplayName">
@@ -760,22 +760,22 @@ Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzept
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
-        <target state="needs-review-translation">Der Dienst vom Typ "{0}" wurde nicht gefunden.</target>
+        <target state="translated">Der Dienst vom Typ "{0}" wurde nicht gefunden.</target>
         <note>{0} is the requested service type name.</note>
       </trans-unit>
       <trans-unit id="ServiceProviderServiceAlreadyRegistered">
         <source>Instance of type '{0}' is already registered</source>
-        <target state="needs-review-translation">Die Instanz vom Typ "{0}" ist bereits registriert.</target>
+        <target state="translated">Die Instanz vom Typ "{0}" ist bereits registriert.</target>
         <note>{0} is the already registered service type name.</note>
       </trans-unit>
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
-        <target state="needs-review-translation">Instanzen vom Typ "ITestFramework" sollten nicht über den Dienstanbieter, sondern über "ITestApplicationBuilder.RegisterTestFramework" registriert werden.</target>
+        <target state="translated">Instanzen vom Typ "ITestFramework" sollten nicht über den Dienstanbieter, sondern über "ITestApplicationBuilder.RegisterTestFramework" registriert werden.</target>
         <note>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
       <trans-unit id="ShutdownProgressStillWaitingPrefix">
         <source>Still waiting for: </source>
-        <target state="needs-review-translation">Es wird noch gewartet auf: </target>
+        <target state="translated">Es wird noch gewartet auf: </target>
         <note>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ". {Locked="{DisplayName} ({Phase}, {Seconds}s)"}{Locked="; "}</note>
       </trans-unit>
       <trans-unit id="Skipped">
@@ -820,7 +820,7 @@ Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzept
       </trans-unit>
       <trans-unit id="StartingTestSessionWithLogFilePath">
         <source>Starting test session. The log file path is '{0}'.</source>
-        <target state="needs-review-translation">Die Testsitzung wird gestartet. Der Protokolldateipfad ist '{0}'.</target>
+        <target state="translated">Die Testsitzung wird gestartet. Der Protokolldateipfad ist '{0}'.</target>
         <note>{0} is the log file path.</note>
       </trans-unit>
       <trans-unit id="SucceededLowercase">
@@ -835,7 +835,7 @@ Verwendet ein Argument als Zeitwert mit einem expliziten Einheitensuffix. Akzept
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
-        <target state="needs-review-translation">Eine "ITestExecutionFilterFactory"-Factory ist bereits festgelegt</target>
+        <target state="translated">Eine "ITestExecutionFilterFactory"-Factory ist bereits festgelegt</target>
         <note>{Locked="ITestExecutionFilterFactory"}</note>
       </trans-unit>
       <trans-unit id="TelemetryNotice">
@@ -845,12 +845,12 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
-        <target state="needs-review-translation">Telemetrie
+        <target state="new">Telemetry
 ---------
-Die Microsoft Testing Platform erfasst Nutzungsdaten, damit wir die Plattform stetig verbessern können. Die Daten werden von Microsoft gesammelt und nicht mit anderen geteilt.
-Sie können das Erfassen von Telemetriedaten deaktivieren, indem Sie die Umgebungsvariable TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT in Ihrer bevorzugten Shell auf „1“ oder TRUE festlegen.
+Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka.ms/testingplatform/telemetry</target>
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</target>
         <note>{Locked="TESTINGPLATFORM_TELEMETRY_OPTOUT"}{Locked="DOTNET_CLI_TELEMETRY_OPTOUT"}{Locked="1"}{Locked="true"}{Locked="https://aka.ms/testingplatform/telemetry"}</note>
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
@@ -863,15 +863,15 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="needs-review-translation">Steuern Sie, ob ANSI-Escapezeichen ausgegeben werden.
-Gültige Werte sind „auto“ (Standard), „on“ (akzeptiert auch „true“, „enable“, „1“) oder „off“ (akzeptiert auch „false“, „disable“, „0“).
-„on“ erzwingt ANSI-Escape-Codes (einschließlich Cursorbewegungen), auch wenn stdout umgeleitet wird; verwenden Sie es zusammen mit --no-progress, wenn nur Farben gewünscht sind.
-Wenn sowohl --ansi als auch --no-ansi angegeben werden, hat --ansi Vorrang.</target>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</target>
         <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-progress"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="needs-review-translation">--ansi erwartet einen einzelnen Parameter mit dem Wert „auto“, „on“ (oder „true“, „enable“,„1“) oder „off“ (oder „false“, „disable“, „0“).</target>
+        <target state="translated">--ansi erwartet einen einzelnen Parameter mit dem Wert „auto“, „on“ (oder „true“, „enable“,„1“) oder „off“ (oder „false“, „disable“, „0“).</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
@@ -887,32 +887,32 @@ Wenn sowohl --ansi als auch --no-ansi angegeben werden, hat --ansi Vorrang.</tar
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="needs-review-translation">Ausgabeausführlichkeit beim Melden von Tests.
+        <target state="translated">Ausgabeausführlichkeit beim Melden von Tests.
 Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal“.</target>
         <note>{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="needs-review-translation">„--output“ erwartet einen einzelnen Parameter mit dem Wert „Normal“ oder „Detailed“.</target>
+        <target state="translated">„--output“ erwartet einen einzelnen Parameter mit dem Wert „Normal“ oder „Detailed“.</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="needs-review-translation">Die Optionen --show-stdout und --show-stderr erwarten einen einzelnen Parameter mit dem Wert „Alle“, „Fehlgeschlagen“ oder „Keine“.</target>
+        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="needs-review-translation">Legt fest, wann die erfasste Fehlerausgabe eines Tests angezeigt werden soll.
-Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standardwert ist „Alle“ (oder „Fehler“, wenn eine LLM-/KI-Agent-Umgebung erkannt wird).</target>
+        <target state="new">Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="needs-review-translation">Legt fest, wann die erfasste Standardausgabe eines Tests angezeigt werden soll.
-Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standardwert ist „Alle“ (oder „Fehler“, wenn eine LLM-/KI-Agent-Umgebung erkannt wird).</target>
+        <target state="new">Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -927,7 +927,7 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
-        <target state="needs-review-translation">Eine "ITestFrameworkInvoker"-Factory ist bereits festgelegt</target>
+        <target state="translated">Eine "ITestFrameworkInvoker"-Factory ist bereits festgelegt</target>
         <note>{Locked="ITestFrameworkInvoker"}</note>
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
@@ -947,7 +947,7 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="needs-review-translation">Der Testframework-Adapter wurde nicht registriert. Verwenden Sie „ITestApplicationBuilder.RegisterTestFramework“, um es zu registrieren.</target>
+        <target state="translated">Der Testframework-Adapter wurde nicht registriert. Verwenden Sie „ITestApplicationBuilder.RegisterTestFramework“, um es zu registrieren.</target>
         <note>{Locked="ITestApplicationBuilder.RegisterTestFramework"}</note>
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
@@ -962,42 +962,42 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
-        <target state="needs-review-translation">Der VSTest-Modus unterstützt nur einen einzelnen TestApplicationBuilder pro Prozess.</target>
+        <target state="translated">Der VSTest-Modus unterstützt nur einen einzelnen TestApplicationBuilder pro Prozess.</target>
         <note>{Locked="VSTest"}{Locked="TestApplicationBuilder"}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableInvalidNameErrorMessage">
         <source>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</source>
-        <target state="needs-review-translation">Der Umgebungsvariablenname „{0}“, der im Abschnitt „environmentVariables“ der testconfig.json-Datei deklariert ist, ist ungültig. Namen dürfen weder "=" noch Nullzeichen enthalten.</target>
+        <target state="translated">Der Umgebungsvariablenname „{0}“, der im Abschnitt „environmentVariables“ der testconfig.json-Datei deklariert ist, ist ungültig. Namen dürfen weder "=" noch Nullzeichen enthalten.</target>
         <note>{0} is the invalid environment variable name. {Locked="environmentVariables"}{Locked="testconfig.json"}{Locked="="}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage">
         <source>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</source>
-        <target state="needs-review-translation">Umgebungsvariablennamen, die im Abschnitt „environmentVariables“ der testconfig.json-Datei deklariert sind, dürfen nicht leer sein.</target>
+        <target state="translated">Umgebungsvariablennamen, die im Abschnitt „environmentVariables“ der testconfig.json-Datei deklariert sind, dürfen nicht leer sein.</target>
         <note>{Locked="environmentVariables"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDescription">
         <source>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</source>
-        <target state="needs-review-translation">Wendet die in der testconfig.json-Datei im Abschnitt „environmentVariables“ deklarierten Umgebungsvariablen auf den untergeordneten Prozess des Testhostprozesses an.</target>
+        <target state="translated">Wendet die in der testconfig.json-Datei im Abschnitt „environmentVariables“ deklarierten Umgebungsvariablen auf den untergeordneten Prozess des Testhostprozesses an.</target>
         <note>{Locked="environmentVariables"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="TestConfigurationEnvironmentVariableProviderDisplayName">
         <source>testconfig.json environment variables provider</source>
-        <target state="needs-review-translation">Umgebungsvariablenanbieter für testconfig.json</target>
+        <target state="translated">Umgebungsvariablenanbieter für testconfig.json</target>
         <note>{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummary">
         <source>Test discovery summary: found {0} test(s) in {1} assemblies.</source>
-        <target state="needs-review-translation">Zusammenfassung der Testermittlung: {0} Test(s) in {1} Assemblys gefunden.</target>
+        <target state="translated">Zusammenfassung der Testermittlung: {0} Test(s) in {1} Assemblys gefunden.</target>
         <note>{0} is the number of discovered tests. {1} is the count of assemblies.</note>
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="needs-review-translation">Zusammenfassung der Testermittlung: {0} Test(s) gefunden</target>
+        <target state="translated">Zusammenfassung der Testermittlung: {0} Test(s) gefunden</target>
         <note>{0} is the number of discovered tests.</note>
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
-        <target state="needs-review-translation">Die Methode "{0}" hätte für dieses Proxyobjekt nicht aufgerufen werden dürfen</target>
+        <target state="translated">Die Methode "{0}" hätte für dieses Proxyobjekt nicht aufgerufen werden dürfen</target>
         <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
@@ -1007,12 +1007,12 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="TestHostControllerProcessRestartNotSupportedOnWebAssembly">
         <source>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</source>
-        <target state="needs-review-translation">Testhostcontrollererweiterungen, die einen Prozessneustart erfordern, werden auf Browser- und WebAssembly-Plattformen nicht unterstützt.</target>
+        <target state="translated">Testhostcontrollererweiterungen, die einen Prozessneustart erfordern, werden auf Browser- und WebAssembly-Plattformen nicht unterstützt.</target>
         <note>{Locked="WebAssembly"}</note>
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
-        <target state="needs-review-translation">Der Testanwendungsprozess wurde nicht ordnungsgemäß beendet. Exitcode: "{0}"</target>
+        <target state="translated">Der Testanwendungsprozess wurde nicht ordnungsgemäß beendet. Exitcode: "{0}"</target>
         <note>{0} is the process exit code.</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
@@ -1022,12 +1022,12 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
-        <target state="needs-review-translation">Fehler beim Abrufen des Semaphors vor einem Timeout von "{0}" Sekunden.</target>
+        <target state="translated">Fehler beim Abrufen des Semaphors vor einem Timeout von "{0}" Sekunden.</target>
         <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="needs-review-translation">Fehler beim Leeren von Protokollen vor dem Timeout von "{0}" Sekunden</target>
+        <target state="translated">Fehler beim Leeren von Protokollen vor dem Timeout von "{0}" Sekunden</target>
         <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -1037,7 +1037,7 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
-        <target state="needs-review-translation">Ein Filter "{0}" darf kein "/"-Zeichen enthalten</target>
+        <target state="translated">Ein Filter "{0}" darf kein "/"-Zeichen enthalten</target>
         <note>{0} is the filter expression string. {Locked="/"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterDescription">
@@ -1047,37 +1047,37 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
-        <target state="needs-review-translation">Ein Escapezeichen darf die Filterzeichenfolge "{0}" nicht beenden</target>
+        <target state="translated">Ein Escapezeichen darf die Filterzeichenfolge "{0}" nicht beenden</target>
         <note>{0} is the filter expression string.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
         <source>Only the final filter path can contain '**' wildcard</source>
-        <target state="needs-review-translation">Nur der endgültige Filterpfad darf den Platzhalter "**" enthalten</target>
+        <target state="translated">Nur der endgültige Filterpfad darf den Platzhalter "**" enthalten</target>
         <note>{Locked="**"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
         <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
-        <target state="needs-review-translation">Unerwarteter Operator "&amp;" oder "|" innerhalb des Filterausdrucks "{0}"</target>
+        <target state="translated">Unerwarteter Operator "&amp;" oder "|" innerhalb des Filterausdrucks "{0}"</target>
         <note>{0} is the filter expression string. {Locked="&amp;"}{Locked="|"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
         <source>Invalid node path, expected root as first character '{0}'</source>
-        <target state="needs-review-translation">Ungültiger Knotenpfad. Der Stamm wurde als erstes Zeichen "{0}" erwartet</target>
+        <target state="translated">Ungültiger Knotenpfad. Der Stamm wurde als erstes Zeichen "{0}" erwartet</target>
         <note>{0} is the first character found in the invalid node path.</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
-        <target state="needs-review-translation">Der Filterausdruck "{0}" enthält eine unausgewogene Anzahl von Operatoren "{1}" "{2}"</target>
+        <target state="translated">Der Filterausdruck "{0}" enthält eine unausgewogene Anzahl von Operatoren "{1}" "{2}"</target>
         <note>{0} is the filter expression string. {1} and {2} are () or [] operator pairs. {Locked="()"}{Locked="[]"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
-        <target state="needs-review-translation">Der Filter enthält einen unerwarteten "/"-Operator in einem in Klammern gesetzten Ausdruck</target>
+        <target state="translated">Der Filter enthält einen unerwarteten "/"-Operator in einem in Klammern gesetzten Ausdruck</target>
         <note>{Locked="/"}</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</source>
-        <target state="needs-review-translation">Der Filter enthält einen unerwarteten „/“-Operator in einem in Klammern gesetzten Ausdruck. Filtern: „{0}“. Um Alternativen für ein Pfadsegment zu kombinieren, verwenden Sie Syntax wie „/A/B/C/(X|Y)“.</target>
+        <target state="translated">Der Filter enthält einen unerwarteten „/“-Operator in einem in Klammern gesetzten Ausdruck. Filtern: „{0}“. Um Alternativen für ein Pfadsegment zu kombinieren, verwenden Sie Syntax wie „/A/B/C/(X|Y)“.</target>
         <note>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}{Locked="/A/(B/C)"}</note>
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
@@ -1088,33 +1088,33 @@ Gültige Werte sind „Alle“, „Fehlgeschlagen“ und „Keine“. Der Standa
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="needs-review-translation">Unerwartete Ausnahme in "FileLogger.WriteLogToFileAsync".
+        <target state="translated">Unerwartete Ausnahme in "FileLogger.WriteLogToFileAsync".
 {0}</target>
         <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
       </trans-unit>
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
-        <target state="needs-review-translation">Unerwarteter Status in Datei "{0}" in Zeile "{1}"</target>
+        <target state="translated">Unerwarteter Status in Datei "{0}" in Zeile "{1}"</target>
         <note>{0} is the source file path. {1} is the source line number.</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
-        <target state="needs-review-translation">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Ausnahmefehler: {0}</target>
+        <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Ausnahmefehler: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
-        <target state="needs-review-translation">Dieser Programmspeicherort wird als nicht erreichbar betrachtet. File='{0}' Line={1}</target>
+        <target state="translated">Dieser Programmspeicherort wird als nicht erreichbar betrachtet. File='{0}' Line={1}</target>
         <note>{0} is the source file path. {1} is the source line number.</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
-        <target state="needs-review-translation">Das Warten auf das Anfügen des Debuggers (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) wird in Browserumgebungen nicht unterstützt.</target>
+        <target state="translated">Das Warten auf das Anfügen des Debuggers (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) wird in Browserumgebungen nicht unterstützt.</target>
         <note>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="needs-review-translation">Das Warten auf das Anfügen des Debuggers (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) wird in wasi nicht unterstützt.</target>
+        <target state="translated">Das Warten auf das Anfügen des Debuggers (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) wird in wasi nicht unterstützt.</target>
         <note>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

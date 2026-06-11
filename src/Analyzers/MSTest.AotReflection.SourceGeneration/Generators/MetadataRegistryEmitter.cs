@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using MSTest.AotReflection.SourceGeneration.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
+
 using MSTest.AotReflection.SourceGeneration.Model;
 
 namespace MSTest.AotReflection.SourceGeneration.Generators;

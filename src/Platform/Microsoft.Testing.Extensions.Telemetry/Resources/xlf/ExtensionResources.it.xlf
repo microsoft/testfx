@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AddAppInsightsTelemetryProviderInvalidBuilder">
         <source>AppInsights telemetry provider can only be registered onto Microsoft.Testing.Platform.Builder.TestApplicationBuilder builders</source>
-        <target state="needs-review-translation">Il provider di telemetria AppInsights può essere registrato solo nei generatori Microsoft.Testing.Platform.Builder.TestApplicationBuilder</target>
+        <target state="translated">Il provider di telemetria AppInsights può essere registrato solo nei generatori Microsoft.Testing.Platform.Builder.TestApplicationBuilder</target>
         <note>Do not localize {Locked="AppInsights"} or {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>
