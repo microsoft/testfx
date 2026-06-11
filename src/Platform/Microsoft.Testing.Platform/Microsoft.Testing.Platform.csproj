@@ -24,6 +24,9 @@ This package provides the core platform and the .NET implementation of the proto
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Remove="Configurations/JsonConfigurationFileParser.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/Json.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Serializers.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.TestNodeSerializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonCollectionDeserializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonDeserializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonElementDeserializer.cs" />
