@@ -15,7 +15,7 @@ public sealed class TelemetryDisabledTests : AcceptanceTestBase<TelemetryDisable
     public async Task Telemetry_WhenEnableTelemetryIsFalse_WithTestApplicationOptions_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false, cancellationToken: TestContext.CancellationToken);
@@ -53,6 +53,17 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         using var reader = new StreamReader(path);
         string content = await reader.ReadToEndAsync();
         return (Regex.IsMatch(content, pattern), content);
+    }
+
+    // Build a regex matching the deterministic default diagnostic file name shape:
+    // "<asset-name>_<tfm>_<arch>_<yyMMddHHmmssfff>.diag". The arch token is taken from the
+    // current process (the testhost runs on the same machine, so its ProcessArchitecture matches).
+    private static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string tfm)
+    {
+        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        const string FileNamePlaceholder = "__DIAG_FILENAME__";
+        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
+        return combinedPath.Replace(FileNamePlaceholder, $@"{AssetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

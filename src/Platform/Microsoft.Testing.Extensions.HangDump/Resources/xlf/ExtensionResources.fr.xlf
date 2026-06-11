@@ -78,9 +78,9 @@ Informations sur le risque :
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="translated">Spécifiez le nom du fichier de vidage.
-Prend en charge les espaces réservés suivants : {pname} (nom de l'application de test), {pid} (ID du processus), {asm} (nom de l'assembly d'entrée), {tfm} (moniker du framework cible), {time} (horodatage). Le jeton %p hérité (ID de processus) est également pris en charge pour assurer la compatibilité ascendante.</target>
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
+        <target state="new">Specify the name of the dump file.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">

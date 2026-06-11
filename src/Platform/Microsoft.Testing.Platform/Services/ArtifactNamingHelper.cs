@@ -20,7 +20,7 @@ internal static partial class ArtifactNamingHelper
 
     /// <summary>
     /// Builds the standard set of placeholder replacements for artifact naming.
-    /// Consumers pass process-specific values; the helper resolves the rest (asm, tfm).
+    /// Consumers pass process-specific values; the helper resolves the rest (asm, tfm, arch).
     /// </summary>
     /// <param name="processName">The name of the process (resolves <c>{pname}</c>).</param>
     /// <param name="processId">The process ID (resolves <c>{pid}</c>).</param>
@@ -32,6 +32,7 @@ internal static partial class ArtifactNamingHelper
             ["pname"] = processName,
             ["pid"] = processId,
             ["time"] = timestamp.ToString("yyyy-MM-dd_HH-mm-ss.fffffff", CultureInfo.InvariantCulture),
+            ["arch"] = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant(),
         };
 
         string? asmName = Assembly.GetEntryAssembly()?.GetName().Name;
