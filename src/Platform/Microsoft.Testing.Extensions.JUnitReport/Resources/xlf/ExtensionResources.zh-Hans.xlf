@@ -4,32 +4,32 @@
     <body>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="needs-review-translation">测试应用程序生成器类型无效。应为 "TestApplicationBuilder"。</target>
+        <target state="translated">测试应用程序生成器类型无效。应为 "TestApplicationBuilder"。</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDescription">
         <source>JUnit XML report file</source>
-        <target state="needs-review-translation">JUnit XML 报表文件</target>
+        <target state="translated">JUnit XML 报表文件</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportArtifactDisplayName">
         <source>JUnit XML report</source>
-        <target state="needs-review-translation">JUnit XML 报表</target>
+        <target state="translated">JUnit XML 报表</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileExistsAndWillBeOverwritten">
         <source>The JUnit report file '{0}' already exists and will be overwritten.</source>
-        <target state="needs-review-translation">JUnit 报表文件“{0}”已存在，将被覆盖。</target>
+        <target state="translated">JUnit 报表文件“{0}”已存在，将被覆盖。</target>
         <note>{0} is the {Locked="JUnit"} report file path.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameExtensionIsNotXml">
         <source>'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="needs-review-translation">"--report-junit-filename" 的文件名参数必须以 ".xml" 结尾(例如 --report-junit-filename myreport.xml)</target>
+        <target state="translated">"--report-junit-filename" 的文件名参数必须以 ".xml" 结尾(例如 --report-junit-filename myreport.xml)</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameMustNotBeEmpty">
         <source>'--report-junit-filename' file name part must not be empty (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="needs-review-translation">"--report-junit-filename" 的文件名部分不能为空(例如 --report-junit-filename myreport.xml)</target>
+        <target state="translated">"--report-junit-filename" 的文件名部分不能为空(例如 --report-junit-filename myreport.xml)</target>
         <note>Do not localize option name {Locked="--report-junit-filename"} or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameOptionDescription">
@@ -43,32 +43,32 @@ Example: MyReport_{tfm}.xml</target>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>
-        <target state="needs-review-translation">"--report-junit-filename" 的相对路径必须位于测试结果目录下(例如 --report-junit-filename nested/myreport.xml)</target>
+        <target state="translated">"--report-junit-filename" 的相对路径必须位于测试结果目录下(例如 --report-junit-filename nested/myreport.xml)</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example path {Locked="nested/myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRequiresJUnitReport">
         <source>'--report-junit-filename' requires '--report-junit' to be enabled</source>
-        <target state="needs-review-translation">"--report-junit-filename" 要求启用 "--report-junit"</target>
+        <target state="translated">"--report-junit-filename" 要求启用 "--report-junit"</target>
         <note>Do not localize option names {Locked="--report-junit-filename"}{Locked="--report-junit"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDescription">
         <source>Produce a JUnit XML report for the current test session</source>
-        <target state="needs-review-translation">为当前测试会话生成 JUnit XML 报表</target>
+        <target state="translated">为当前测试会话生成 JUnit XML 报表</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">
         <source>JUnit XML report generator</source>
-        <target state="needs-review-translation">JUnit XML 报表生成器</target>
+        <target state="translated">JUnit XML 报表生成器</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportIsNotValidForDiscovery">
         <source>'--report-junit' cannot be enabled when using '--list-tests'</source>
-        <target state="needs-review-translation">使用 "--list-tests" 时无法启用 "--report-junit"</target>
+        <target state="translated">使用 "--list-tests" 时无法启用 "--report-junit"</target>
         <note>Do not localize option names {Locked="--report-junit"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">
         <source>Enable generating a JUnit XML report</source>
-        <target state="needs-review-translation">启用 JUnit XML 报表生成</target>
+        <target state="translated">启用 JUnit XML 报表生成</target>
         <note>Do not localize option name {Locked="--report-junit"} or format names {Locked="JUnit"}{Locked="XML"}.</note>
       </trans-unit>
     </body>

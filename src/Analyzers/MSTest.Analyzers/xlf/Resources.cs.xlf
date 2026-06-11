@@ -19,32 +19,32 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
-– Nesmí být deklarované pro obecnou třídu.
-– Musí být public.
-– Musí být static.
-– Nesmí být async void.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Nesmí přijímat žádný parametr, nebo musí přijímat jediný parametr typu TestContext.
-– Návratový typ musí být void, Task nebo ValueTask.
+        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Třída by měla být označena atributem [TestClass] (nebo odvozeným atributem).
-– Třída by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[AssemblyCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
         <source>AssemblyCleanup method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura „{0}“ metody AssemblyCleanup je neplatná</target>
+        <target state="translated">Signatura „{0}“ metody AssemblyCleanup je neplatná</target>
         <note>{0} is the method name. {Locked="AssemblyCleanup"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
         <source>AssemblyCleanup methods should have valid layout</source>
-        <target state="needs-review-translation">Metody AssemblyCleanup musí mít platné rozložení</target>
+        <target state="translated">Metody AssemblyCleanup musí mít platné rozložení</target>
         <note>{Locked="AssemblyCleanup"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
@@ -64,37 +64,37 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
-– Nesmí být deklarované pro obecnou třídu.
-– Musí být public.
-– Musí být static.
-– Nesmí být async void.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Musí mít jeden parametr typu TestContext.
-– Návratový typ musí být void, Task nebo ValueTask.
+        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Třída by měla být označena atributem [TestClass] (nebo odvozeným atributem).
-– Třída by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[DiscoverInternals]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
         <source>AssemblyInitialize method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura „{0}“ metody AssemblyInitialize je neplatná</target>
+        <target state="translated">Signatura „{0}“ metody AssemblyInitialize je neplatná</target>
         <note>{0} is the method name. {Locked="AssemblyInitialize"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
         <source>AssemblyInitialize methods should have valid layout</source>
-        <target state="needs-review-translation">Metody AssemblyInitialize musí mít platné rozložení</target>
+        <target state="translated">Metody AssemblyInitialize musí mít platné rozložení</target>
         <note>{Locked="AssemblyInitialize"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
-        <target state="needs-review-translation">Preferovat přidání dalšího kontrolního výrazu, který kontroluje hodnotu null</target>
+        <target state="translated">Preferovat přidání dalšího kontrolního výrazu, který kontroluje hodnotu null</target>
         <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
@@ -104,12 +104,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
         <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="needs-review-translation">Assert.AreEqual, Assert.AreNotEqual, Assert.AreSame a Assert.AreNotSame očekává, že se jako první argument předá očekávaná hodnota a jako druhý argument skutečná hodnota.</target>
+        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
         <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
-        <target state="needs-review-translation">Argumenty kontrolního výrazu musí být předány ve správném pořadí. Argumenty actual a expected/notExpected byly prohozeny.</target>
+        <target state="translated">Argumenty kontrolního výrazu musí být předány ve správném pořadí. Argumenty actual a expected/notExpected byly prohozeny.</target>
         <note>{Locked="actual"}{Locked="expected"}{Locked="notExpected"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
@@ -119,72 +119,72 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
         <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
-        <target state="needs-review-translation">`Assert.AreEqual` a `Assert.AreNotEqual` používají `EqualityComparer&lt;T&gt;.Default`. U typů podobných kolekcím se používá vlastní sémantika rovnosti daného typu místo porovnávání elementů sekvence, takže vhodnější volbou obvykle bývá `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` nebo `Assert.AreEquivalent`/`Assert.AreNotEquivalent`.</target>
+        <target state="translated">`Assert.AreEqual` a `Assert.AreNotEqual` používají `EqualityComparer&lt;T&gt;.Default`. U typů podobných kolekcím se používá vlastní sémantika rovnosti daného typu místo porovnávání elementů sekvence, takže vhodnější volbou obvykle bývá `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` nebo `Assert.AreEquivalent`/`Assert.AreNotEquivalent`.</target>
         <note>{Locked="EqualityComparer&lt;T&gt;.Default"}{Locked="Assert.AreNotSequenceEqual"}{Locked="Assert.AreSequenceEqual"}{Locked="Assert.AreNotEquivalent"}{Locked="Assert.AreEquivalent"}{Locked="Assert.AreNotEqual"}{Locked="Assert.AreEqual"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
         <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
-        <target state="needs-review-translation">`{0}` na {1} (implementující rozhraní IEnumerable&lt;T&gt;) neprovádí porovnání sekvencí po elementech. Pro uspořádané porovnání elementů použijte `Assert.AreSequenceEqual`, pro neuspořádané `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` nebo pro hloubkové strukturální porovnání `Assert.AreEquivalent`.</target>
+        <target state="translated">`{0}` na {1} (implementující rozhraní IEnumerable&lt;T&gt;) neprovádí porovnání sekvencí po elementech. Pro uspořádané porovnání elementů použijte `Assert.AreSequenceEqual`, pro neuspořádané `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` nebo pro hloubkové strukturální porovnání `Assert.AreEquivalent`.</target>
         <note>{0} is the current assert method call. {1} is the collection type name. {Locked="Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)"}{Locked="Assert.AreSequenceEqual"}{Locked="Assert.AreEquivalent"}{Locked="IEnumerable&lt;T&gt;"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
         <source>Avoid Assert.AreEqual on collection types</source>
-        <target state="needs-review-translation">Nepoužívat Assert.AreEqual u typů kolekcí</target>
+        <target state="translated">Nepoužívat Assert.AreEqual u typů kolekcí</target>
         <note>{Locked="Assert.AreEqual"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
-        <target state="needs-review-translation">Při porovnávání typů hodnot použijte Assert.AreEqual/Assert.AreNotEqual místo Assert.AreSame/Assert.AreNotSame. Předání typu hodnoty do assert.AreSame/Assert.AreNotSame bude zabaleno (vytváření nového objektu). Protože Assert.AreSame/Assert.AreNotSame provádí porovnání podle odkazu, Assert.AreSame selže, když dojde k zabalení, a Assert.AreNotSame vždy proběhne.</target>
+        <target state="new">Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use '{0}' instead of '{1}' when comparing value types</source>
-        <target state="needs-review-translation">Při porovnávání typů hodnot použít '{0}' místo '{1}'</target>
+        <target state="translated">Při porovnávání typů hodnot použít '{0}' místo '{1}'</target>
         <note>{0} is the preferred assertion method name. {1} is the current assertion method name.</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
-        <target state="needs-review-translation">Nepoužívejte Assert.AreSame ani Assert.AreNotSame s typy hodnot.</target>
+        <target state="translated">Nepoužívejte Assert.AreSame ani Assert.AreNotSame s typy hodnot.</target>
         <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
-        <target state="needs-review-translation">Pokud chcete použít výchozí chování automatického zjišťování, odeberte argument DynamicDataSourceType.</target>
+        <target state="translated">Pokud chcete použít výchozí chování automatického zjišťování, odeberte argument DynamicDataSourceType.</target>
         <note>{Locked="DynamicDataSourceType"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
         <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
-        <target state="needs-review-translation">Vyhněte se předávání explicitního typu DynamicDataSourceType a použijte výchozí chování automatického zjišťování.</target>
+        <target state="translated">Vyhněte se předávání explicitního typu DynamicDataSourceType a použijte výchozí chování automatického zjišťování.</target>
         <note>{Locked="DynamicDataSourceType"}</note>
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
         <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
-        <target state="needs-review-translation">Synchronní blokování aktuálního vlákna pomocí „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ nebo „Task&lt;TResult&gt;.Result“ uvnitř testovacích metod nebo testovacích přípravků je běžným zdrojem nestability a může také způsobit zablokování, když testovací rámec spouští testy na SynchronizationContextu, který vyžaduje kooperativní plánování. Pokud chcete sledovat příslušný výsledek, upřednostňujte „await Task.Delay“ pro čekání na základě času a „await“.</target>
+        <target state="translated">Synchronní blokování aktuálního vlákna pomocí „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ nebo „Task&lt;TResult&gt;.Result“ uvnitř testovacích metod nebo testovacích přípravků je běžným zdrojem nestability a může také způsobit zablokování, když testovací rámec spouští testy na SynchronizationContextu, který vyžaduje kooperativní plánování. Pokud chcete sledovat příslušný výsledek, upřednostňujte „await Task.Delay“ pro čekání na základě času a „await“.</target>
         <note>{Locked="Task&lt;TResult&gt;.Result"}{Locked="Thread.Sleep"}{Locked="Task.WaitAll"}{Locked="Task.WaitAny"}{Locked="Task.Delay"}{Locked="Task.Wait"}{Locked="await"}{Locked="await Task.Delay"}</note>
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
         <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
-        <target state="needs-review-translation">Vyhněte se v testovacím kódu „{0}“, protože to může způsobit nestabilitu testů; zvažte asynchronní alternativu, například „await Task.Delay“ nebo „await“ pro danou úlohu</target>
+        <target state="translated">Vyhněte se v testovacím kódu „{0}“, protože to může způsobit nestabilitu testů; zvažte asynchronní alternativu, například „await Task.Delay“ nebo „await“ pro danou úlohu</target>
         <note>{0} is the synchronous blocking call. {Locked="Task.Delay"}{Locked="await"}{Locked="await Task.Delay"}</note>
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
         <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
-        <target state="needs-review-translation">Vyhněte se synchronnímu blokování volání, jako jsou „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ nebo „Task&lt;TResult&gt;.Result“ v testovacím kódu</target>
+        <target state="translated">Vyhněte se synchronnímu blokování volání, jako jsou „Thread.Sleep“, „Task.Wait“, „Task.WaitAll“, „Task.WaitAny“ nebo „Task&lt;TResult&gt;.Result“ v testovacím kódu</target>
         <note>{Locked="Task&lt;TResult&gt;.Result"}{Locked="Thread.Sleep"}{Locked="Task.WaitAll"}{Locked="Task.WaitAny"}{Locked="Task.Wait"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
-        <target state="needs-review-translation">Nepoužívejte výraz uvnitř metod async void, místních funkcí nebo výrazů lambda. Výjimky vyvolané v tomto kontextu budou neošetřené výjimky. Když používáte VSTest v .NET Framework, budou se bezobslužně používat. Když používáte Microsoft.Testing.Platform nebo VSTest v moderním rozhraní .NET, může dojít k chybovému ukončení procesu.</target>
+        <target state="translated">Nepoužívejte výraz uvnitř metod async void, místních funkcí nebo výrazů lambda. Výjimky vyvolané v tomto kontextu budou neošetřené výjimky. Když používáte VSTest v .NET Framework, budou se bezobslužně používat. Když používáte Microsoft.Testing.Platform nebo VSTest v moderním rozhraní .NET, může dojít k chybovému ukončení procesu.</target>
         <note>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
-        <target state="needs-review-translation">Neprosazovat uvnitř metod async void, místních funkcí nebo výrazů lambda, protože test nemusí selhat</target>
+        <target state="translated">Neprosazovat uvnitř metod async void, místních funkcí nebo výrazů lambda, protože test nemusí selhat</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
         <source>Do not assert inside 'async void' contexts</source>
-        <target state="needs-review-translation">Neprosazovat uvnitř kontextů async void</target>
+        <target state="translated">Neprosazovat uvnitř kontextů async void</target>
         <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
@@ -206,34 +206,34 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
-– Nesmí být deklarované pro obecnou třídu bez nastavení režimu InheritanceBehavior.
-– Musí být public.
-– Musí být static.
-– Nesmí být async void.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Nesmí přijímat žádný parametr, nebo musí přijímat jediný parametr typu TestContext.
-– Návratový typ musí být void, Task nebo ValueTask.
-– V případě třídy abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
-– V případě třídy sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should either not take any parameter, or take a single parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).
-– Třída by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
         <source>ClassCleanup method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura „{0}“ metody ClassCleanup je neplatná</target>
+        <target state="translated">Signatura „{0}“ metody ClassCleanup je neplatná</target>
         <note>{0} is the method name. {Locked="ClassCleanup"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidTitle">
         <source>ClassCleanup methods should have valid layout</source>
-        <target state="needs-review-translation">Metody ClassCleanup musí mít platné rozložení</target>
+        <target state="translated">Metody ClassCleanup musí mít platné rozložení</target>
         <note>{Locked="ClassCleanup"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
@@ -255,44 +255,44 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
-– Nesmí být deklarované pro obecnou třídu bez nastavení režimu InheritanceBehavior.
-– Musí být public.
-– Musí být static.
-– Nesmí být async void.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Musí mít jeden parametr typu TestContext.
-– Návratový typ musí být void, Task nebo ValueTask.
-– V případě třídy abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
-– V případě třídy sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
+-it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
+-'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).
-– Třída by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
         <source>ClassInitialize method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura „{0}“ metody ClassInitialize je neplatná</target>
+        <target state="translated">Signatura „{0}“ metody ClassInitialize je neplatná</target>
         <note>{0} is the method name. {Locked="ClassInitialize"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidTitle">
         <source>ClassInitialize methods should have valid layout</source>
-        <target state="needs-review-translation">Metody ClassInitialize musí mít platné rozložení</target>
+        <target state="translated">Metody ClassInitialize musí mít platné rozložení</target>
         <note>{Locked="ClassInitialize"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
-        <target state="needs-review-translation">Použijte Assert.{0} namísto CollectionAssert.{1}</target>
+        <target state="translated">Použijte Assert.{0} namísto CollectionAssert.{1}</target>
         <note>{0} is the preferred Assert method name. {1} is the current CollectionAssert method name. {Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="CollectionAssertToAssertTitle">
         <source>Use 'Assert' instead of 'CollectionAssert'</source>
-        <target state="needs-review-translation">Použijte Assert namísto CollectionAssert</target>
+        <target state="translated">Použijte Assert namísto CollectionAssert</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
@@ -300,7 +300,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
-        <target state="needs-review-translation">Položka DataRow by měla mít platné následující rozložení:
+        <target state="translated">Položka DataRow by měla mít platné následující rozložení:
 - by se mělo nastavovat jenom pro testovací metodu;
 - počet argumentů by měl odpovídat počtu argumentů metody;
 - typ argumentu by měl odpovídat typu argumentu metody.</target>
@@ -308,47 +308,47 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
         <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
-        <target state="needs-review-translation">Počet argumentů dataRow by měl odpovídat počtu parametrů metody (argumenty konstruktoru: {0}, parametry metody: {1})</target>
+        <target state="new">DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</target>
         <note>{0} is the number of constructor arguments. {1} is the number of method parameters. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument types do not match method parameter types. {0}</source>
-        <target state="needs-review-translation">Typy argumentů DataRow neodpovídají typům parametrů metody. {0}</target>
+        <target state="translated">Typy argumentů DataRow neodpovídají typům parametrů metody. {0}</target>
         <note>{0} is the argument type mismatch details. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
         <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
-        <target state="needs-review-translation">Parametr '{0}' očekává typ '{1}', ale zadaná hodnota má typ '{2}'</target>
+        <target state="translated">Parametr '{0}' očekává typ '{1}', ale zadaná hodnota má typ '{2}'</target>
         <note>{0} is the parameter name. {1} is the expected parameter type. {2} is the provided value type.</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
-        <target state="needs-review-translation">Byly nalezeny dva konfliktní typy pro obecný parametr '{0}'. Konfliktní typy jsou '{1}' a '{2}'.</target>
+        <target state="translated">Byly nalezeny dva konfliktní typy pro obecný parametr '{0}'. Konfliktní typy jsou '{1}' a '{2}'.</target>
         <note>{0} is the generic type parameter name. {1} and {2} are the conflicting type names.</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
-        <target state="needs-review-translation">Typ obecného parametru '{0}' nelze odvodit.</target>
+        <target state="translated">Typ obecného parametru '{0}' nelze odvodit.</target>
         <note>{0} is the generic type parameter name.</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
         <source>DataRow should only be set on a test method</source>
-        <target state="needs-review-translation">Objekt DataRow by měl být nastaven pouze pro testovací metodu</target>
+        <target state="translated">Objekt DataRow by měl být nastaven pouze pro testovací metodu</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
-        <target state="needs-review-translation">Argument DataRow by měl být platný</target>
+        <target state="translated">Argument DataRow by měl být platný</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFix">
         <source>Use 'Assert.{0}' instead</source>
-        <target state="needs-review-translation">Použijte místo toho Assert.{0}.</target>
+        <target state="translated">Použijte místo toho Assert.{0}.</target>
         <note>{0} is the assert method name. {Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
         <source>Use proper Assert methods for all negated assertions</source>
-        <target state="needs-review-translation">Použijte správné metody Assert pro všechny negované kontrolní výrazy</target>
+        <target state="translated">Použijte správné metody Assert pro všechny negované kontrolní výrazy</target>
         <note>{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
@@ -363,12 +363,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
         <source>Do not store TestContext in a static member</source>
-        <target state="needs-review-translation">Neukládejte TestContext ve statickém členu</target>
+        <target state="translated">Neukládejte TestContext ve statickém členu</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
         <source>Do not store TestContext in a static member</source>
-        <target state="needs-review-translation">Neukládejte TestContext ve statickém členu</target>
+        <target state="translated">Neukládejte TestContext ve statickém členu</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
@@ -378,7 +378,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="needs-review-translation">Člen {0} už v základní (kořenové) třídě existuje.</target>
+        <target state="new">Member '{0}' already exists in the base class</target>
         <note>{0} is the member name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
@@ -388,27 +388,27 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
-        <target state="needs-review-translation">System.ComponentModel.DescriptionAttribute nemá v kontextu testů žádný účinek a pravděpodobně jste místo toho chtěli použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.</target>
+        <target state="translated">System.ComponentModel.DescriptionAttribute nemá v kontextu testů žádný účinek a pravděpodobně jste místo toho chtěli použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.</target>
         <note>{Locked="Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute"}{Locked="System.ComponentModel.DescriptionAttribute"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
         <source>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</source>
-        <target state="needs-review-translation">Nechtěli jste použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute?</target>
+        <target state="translated">Nechtěli jste použít Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute?</target>
         <note>{Locked="Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
-        <target state="needs-review-translation">System.ComponentModel.DescriptionAttribute nemá žádný vliv na testovací metody</target>
+        <target state="translated">System.ComponentModel.DescriptionAttribute nemá žádný vliv na testovací metody</target>
         <note>{Locked="System.ComponentModel.DescriptionAttribute"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowMessageFormat">
         <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
-        <target state="needs-review-translation">Neduplikujte atributy DataRow. Obvykle se jedná o chybu kopírování a vložení. Indexy atributů jsou {0} a {1}.</target>
+        <target state="translated">Neduplikujte atributy DataRow. Obvykle se jedná o chybu kopírování a vložení. Indexy atributů jsou {0} a {1}.</target>
         <note>{0} is the first duplicate attribute index. {1} is the second duplicate attribute index. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowTitle">
         <source>Avoid duplicated 'DataRow' entries</source>
-        <target state="needs-review-translation">Vyhněte se duplicitním položkám DataRow</target>
+        <target state="translated">Vyhněte se duplicitním položkám DataRow</target>
         <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
@@ -416,7 +416,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</source>
-        <target state="needs-review-translation">Aby byla položka DynamicData platná, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byla položka DynamicData platná, musí se řídit následujícím rozložením:
 – měla by být nastavena jenom pro testovací metodu;
 – člen by měl být definovaný pro zadaný typ;
 – pokud je zadáno DynamicDataSourceType.Method, měl by být člen metoda, jinak vlastnost.</target>
@@ -424,82 +424,82 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
         <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura datového členu [DynamicData] {0}.{1} je neplatná.</target>
+        <target state="translated">Signatura datového členu [DynamicData] {0}.{1} je neplatná.</target>
         <note>{0} is the containing type name. {1} is the data member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
         <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura metody zobrazovaného názvu [DynamicData] {0}.{1} je neplatná.</target>
+        <target state="translated">Signatura metody zobrazovaného názvu [DynamicData] {0}.{1} je neplatná.</target>
         <note>{0} is the containing type name. {1} is the display name method name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
         <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
-        <target state="needs-review-translation">Člen [DynamicData] {0}.{1} by měla být metoda.</target>
+        <target state="translated">Člen [DynamicData] {0}.{1} by měla být metoda.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
         <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
-        <target state="needs-review-translation">Člen [DynamicData] {0}.{1} nelze najít.</target>
+        <target state="translated">Člen [DynamicData] {0}.{1} nelze najít.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
-        <target state="needs-review-translation">Odkazovaný člen [DynamicData] {0}.{1} by měl vracet IEnumerable&lt;object[]&gt;, IEnumerable&lt;Tuple&gt; nebo IEnumerable&lt;ValueTuple&gt;.</target>
+        <target state="translated">Odkazovaný člen [DynamicData] {0}.{1} by měl vracet IEnumerable&lt;object[]&gt;, IEnumerable&lt;Tuple&gt; nebo IEnumerable&lt;ValueTuple&gt;.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="IEnumerable&lt;ValueTuple&gt;"}{Locked="IEnumerable&lt;object[]&gt;"}{Locked="IEnumerable&lt;Tuple&gt;"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
         <source>'[DynamicData]' should only be set on a test method</source>
-        <target state="needs-review-translation">Položka [DynamicData] by měla být nastavená jenom u testovací metody.</target>
+        <target state="translated">Položka [DynamicData] by měla být nastavená jenom u testovací metody.</target>
         <note>{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
         <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="needs-review-translation">Člen [DynamicData] {0}.{1} je pole, měli byste použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Field (výchozí nastavení je automatické rozpoznávání, pokud není zadané explicitně, a je doporučeno).</target>
+        <target state="translated">Člen [DynamicData] {0}.{1} je pole, měli byste použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Field (výchozí nastavení je automatické rozpoznávání, pokud není zadané explicitně, a je doporučeno).</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Field"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="needs-review-translation">'[DynamicData]' člen {0}.{1} je metoda, takže byste měli použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Method (automatické zjišťování je výchozí, pokud není explicitně zadáno, a doporučuje se)</target>
+        <target state="translated">'[DynamicData]' člen {0}.{1} je metoda, takže byste měli použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Method (automatické zjišťování je výchozí, pokud není explicitně zadáno, a doporučuje se)</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Method"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
         <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
-        <target state="needs-review-translation">Člen [DynamicData] {0}.{1} není vlastnost, metoda ani pole. Podporují se jen vlastnosti, metody a pole.</target>
+        <target state="translated">Člen [DynamicData] {0}.{1} není vlastnost, metoda ani pole. Podporují se jen vlastnosti, metody a pole.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
         <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
-        <target state="needs-review-translation">'[DynamicData]' člen {0}.{1} není vlastnost ani metoda. Jsou podporovány pouze vlastnosti a metody.</target>
+        <target state="translated">'[DynamicData]' člen {0}.{1} není vlastnost ani metoda. Jsou podporovány pouze vlastnosti a metody.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
-        <target state="needs-review-translation">'[DynamicData]' člen {0}.{1} je vlastnost, takže byste měli použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Property (automatické zjišťování je výchozí, pokud není explicitně zadáno, a doporučuje se)</target>
+        <target state="translated">'[DynamicData]' člen {0}.{1} je vlastnost, takže byste měli použít DynamicDataSourceType.AutoDetect nebo DynamicDataSourceType.Property (automatické zjišťování je výchozí, pokud není explicitně zadáno, a doporučuje se)</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Property"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
-        <target state="needs-review-translation">Člen [DynamicData] {0}.{1} byl nalezen více než jednou.</target>
+        <target state="translated">Člen [DynamicData] {0}.{1} byl nalezen více než jednou.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
         <source>DynamicData should be valid</source>
-        <target state="needs-review-translation">Položka DynamicData by měla být platná.</target>
+        <target state="translated">Položka DynamicData by měla být platná.</target>
         <note>{Locked="DynamicData"}</note>
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="needs-review-translation">Při volání asynchronních metod, které mají přetížení akceptující parametr CancellationToken, upřednostňujte použití přetížení s TestContext.CancellationToken, aby se umožnilo kooperativní rušení a dodržování časových limitů testů.</target>
+        <target state="translated">Při volání asynchronních metod, které mají přetížení akceptující parametr CancellationToken, upřednostňujte použití přetížení s TestContext.CancellationToken, aby se umožnilo kooperativní rušení a dodržování časových limitů testů.</target>
         <note>{Locked="TestContext.CancellationToken"}{Locked="CancellationToken"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
-        <target state="needs-review-translation">Zvažte použití přetížení, které přijímá CancellationToken a předejte TestContext.CancellationToken.</target>
+        <target state="translated">Zvažte použití přetížení, které přijímá CancellationToken a předejte TestContext.CancellationToken.</target>
         <note>{Locked="TestContext.CancellationToken"}{Locked="CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
         <source>Flow TestContext.CancellationToken to async operations</source>
-        <target state="needs-review-translation">Přenesení TestContext.CancellationToken do asynchronních operací</target>
+        <target state="translated">Přenesení TestContext.CancellationToken do asynchronních operací</target>
         <note>{Locked="TestContext.CancellationToken"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
@@ -519,57 +519,57 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
-– Nesmí být deklarované pro obecnou třídu.
-– Musí být „public“.
-– Musí být „static“.
-– Nesmí být „async void“.
-– Nesmí být speciální metodou („finalizer“, „operator“...).
-– Nesmí být obecné.
-– Musí mít jeden parametr typu TestContext.
-– Návratový typ musí být „void“, „Task“ nebo „ValueTask“.
+        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být „public“.
-– Třída by neměla být „static“.
-– Třída by měla být označena atributem [TestClass] (nebo odvozeným atributem).
-– Třída by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class shouldn't be 'static'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
         <source>Global test fixture method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Podpis metody globálního testovacího přípravku {0} je neplatný.</target>
+        <target state="translated">Podpis metody globálního testovacího přípravku {0} je neplatný.</target>
         <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
-        <target state="needs-review-translation">Metody GlobalTestInitialize a GlobalTestCleanup by měly mít platné rozložení.</target>
+        <target state="translated">Metody GlobalTestInitialize a GlobalTestCleanup by měly mít platné rozložení.</target>
         <note>{Locked="GlobalTestInitialize"}{Locked="GlobalTestCleanup"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="needs-review-translation">Atribut „[Ignore]“ použitý u testovací metody nebo testovací třídy by měl obsahovat neprázdnou zprávu vysvětlující, proč jsou test nebo třída ignorovány. Zpráva o odůvodnění usnadňuje třídění přeskočených testů, pomáhá revidujícím porozumět záměru a zabránit tomu, aby se testy navždy bezobslužně zakázaly.</target>
+        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
         <note>{Locked="[Ignore]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
         <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
-        <target state="needs-review-translation">[Ignore] by měl určovat zprávu vysvětlující, proč se {0} ignoruje</target>
+        <target state="translated">[Ignore] by měl určovat zprávu vysvětlující, proč se {0} ignoruje</target>
         <note>{0} is the ignored target name. {Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationTitle">
         <source>'[Ignore]' should specify a justification</source>
-        <target state="needs-review-translation">„[Ignore]“ by mělo určovat odůvodnění</target>
+        <target state="translated">„[Ignore]“ by mělo určovat odůvodnění</target>
         <note>{Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
         <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
-        <target state="needs-review-translation">Metody jako Contains, StartsWith a EndsWith vracejí logické hodnoty, které označují, jestli byla podmínka splněna. Ignorování těchto vrácených hodnot je pravděpodobně chyba.</target>
+        <target state="translated">Metody jako Contains, StartsWith a EndsWith vracejí logické hodnoty, které označují, jestli byla podmínka splněna. Ignorování těchto vrácených hodnot je pravděpodobně chyba.</target>
         <note>{Locked="StartsWith"}{Locked="Contains"}{Locked="EndsWith"}</note>
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
         <source>The return value of '{0}' should not be ignored</source>
-        <target state="needs-review-translation">Návratová hodnota {0} by neměla být ignorována</target>
+        <target state="translated">Návratová hodnota {0} by neměla být ignorována</target>
         <note>{0} is the string method name.</note>
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueTitle">
@@ -579,102 +579,102 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
-        <target state="needs-review-translation">Místo trvalého neúspěšného vyhodnocovacího výrazu „Assert.{0}“ použijte „Assert.Fail“.</target>
+        <target state="translated">Místo trvalého neúspěšného vyhodnocovacího výrazu „Assert.{0}“ použijte „Assert.Fail“.</target>
         <note>{0} is the assert method name. {Locked="Assert.Fail"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
-        <target state="needs-review-translation">Místo trvalého neúspěšného vyhodnocovacího výrazu použijte „Assert.Fail“.</target>
+        <target state="translated">Místo trvalého neúspěšného vyhodnocovacího výrazu použijte „Assert.Fail“.</target>
         <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="needs-review-translation">Při ověřování výjimek z asynchronního kódu používejte asynchronní metody kontrolních výrazů místo blokování asynchronní operace pomocí GetAwaiter().GetResult().</target>
+        <target state="translated">Při ověřování výjimek z asynchronního kódu používejte asynchronní metody kontrolních výrazů místo blokování asynchronní operace pomocí GetAwaiter().GetResult().</target>
         <note>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="needs-review-translation">Místo blokování asynchronního volání v Assert.{1} použijte Assert.{0}.</target>
+        <target state="translated">Místo blokování asynchronního volání v Assert.{1} použijte Assert.{0}.</target>
         <note>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
-        <target state="needs-review-translation">Upřednostňovat asynchronní metody kontrolních výrazů</target>
+        <target state="translated">Upřednostňovat asynchronní metody kontrolních výrazů</target>
         <note>{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
-        <target state="needs-review-translation">Možnost DataTestMethodAttribute je zastaralá a neposkytuje žádné funkce navíc oproti možnosti TestMethodAttribute. Pro všechny testovací metody, včetně parametrizovaných testů, použijte možnost TestMethodAttribute.</target>
+        <target state="translated">Možnost DataTestMethodAttribute je zastaralá a neposkytuje žádné funkce navíc oproti možnosti TestMethodAttribute. Pro všechny testovací metody, včetně parametrizovaných testů, použijte možnost TestMethodAttribute.</target>
         <note>{Locked="DataTestMethodAttribute"}{Locked="TestMethodAttribute"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat">
         <source>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</source>
-        <target state="needs-review-translation">Možnost DataTestMethod je zastaralá. Místo ní použijte možnost TestMethod.</target>
+        <target state="translated">Možnost DataTestMethod je zastaralá. Místo ní použijte možnost TestMethod.</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerTitle">
         <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
-        <target state="needs-review-translation">Preferovat TestMethod před DataTestMethod</target>
+        <target state="translated">Preferovat TestMethod před DataTestMethod</target>
         <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
         <source>Review or remove the assertion as its condition is known to be always true</source>
-        <target state="needs-review-translation">Zkontrolujte nebo odeberte kontrolní výraz, protože jeho podmínka je vždy true.</target>
+        <target state="translated">Zkontrolujte nebo odeberte kontrolní výraz, protože jeho podmínka je vždy true.</target>
         <note>{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
         <source>Assertion condition is always true</source>
-        <target state="needs-review-translation">Podmínka kontrolního výrazu je vždy true.</target>
+        <target state="translated">Podmínka kontrolního výrazu je vždy true.</target>
         <note>{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
-        <target state="needs-review-translation">Upřednostňovat konstruktory před metodami TestInitialize</target>
+        <target state="translated">Upřednostňovat konstruktory před metodami TestInitialize</target>
         <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeTitle">
         <source>Prefer constructors over TestInitialize methods</source>
-        <target state="needs-review-translation">Upřednostňovat konstruktory před metodami TestInitialize</target>
+        <target state="translated">Upřednostňovat konstruktory před metodami TestInitialize</target>
         <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
         <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="needs-review-translation">Upřednostňovat metody Dispose před metodami TestCleanup</target>
+        <target state="translated">Upřednostňovat metody Dispose před metodami TestCleanup</target>
         <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupTitle">
         <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="needs-review-translation">Upřednostňovat metody Dispose před metodami TestCleanup</target>
+        <target state="translated">Upřednostňovat metody Dispose před metodami TestCleanup</target>
         <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
         <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="needs-review-translation">Upřednostňovat metody TestCleanup před metodami Dispose</target>
+        <target state="translated">Upřednostňovat metody TestCleanup před metodami Dispose</target>
         <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeTitle">
         <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="needs-review-translation">Upřednostňovat metody TestCleanup před metodami Dispose</target>
+        <target state="translated">Upřednostňovat metody TestCleanup před metodami Dispose</target>
         <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
         <source>Prefer TestInitialize methods over constructors</source>
-        <target state="needs-review-translation">Upřednostňovat metody TestInitialize před konstruktory</target>
+        <target state="translated">Upřednostňovat metody TestInitialize před konstruktory</target>
         <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorTitle">
         <source>Prefer TestInitialize methods over constructors</source>
-        <target state="needs-review-translation">Upřednostňovat metody TestInitialize před konstruktory</target>
+        <target state="translated">Upřednostňovat metody TestInitialize před konstruktory</target>
         <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerDescription">
         <source>Public methods should be test methods (marked with `[TestMethod]`).</source>
-        <target state="needs-review-translation">Veřejné metody by měly být testovací metody (označené jako [TestMethod]).</target>
+        <target state="translated">Veřejné metody by měly být testovací metody (označené jako [TestMethod]).</target>
         <note>{Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerFormat">
         <source>Public method '{0}' should be a test method</source>
-        <target state="needs-review-translation">Veřejná metoda {0} by měla být testovací metoda.</target>
+        <target state="translated">Veřejná metoda {0} by měla být testovací metoda.</target>
         <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerTitle">
@@ -684,12 +684,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
-        <target state="needs-review-translation">Osvědčeným postupem je označit jako veřejné v testovacím projektu jen testovací třídy.</target>
+        <target state="new">It's considered a good practice to have only test classes marked public in a test project.</target>
         <note>{Locked="public"}</note>
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassMessageFormat">
         <source>Public type '{0}' should be marked with '[TestClass]' or changed to 'internal'</source>
-        <target state="needs-review-translation">Veřejný typ {0} by měl být označen jako [TestClass] nebo změněn na internal.</target>
+        <target state="translated">Veřejný typ {0} by měl být označen jako [TestClass] nebo změněn na internal.</target>
         <note>{0} is the type name. {Locked="[TestClass]"}{Locked="internal"}</note>
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassTitle">
@@ -699,62 +699,62 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
-        <target state="needs-review-translation">Použijte Assert.{0}' místo StringAssert.{1}'</target>
+        <target state="translated">Použijte Assert.{0}' místo StringAssert.{1}'</target>
         <note>{0} is the preferred Assert method name. {1} is the current StringAssert method name. {Locked="StringAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert' instead of 'StringAssert'</source>
-        <target state="needs-review-translation">Použijte Assert místo StringAssert</target>
+        <target state="translated">Použijte Assert místo StringAssert</target>
         <note>{Locked="StringAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="needs-review-translation">Testovací třída {0} by měla být platná.</target>
+        <target state="new">Test class '{0}' should be valid</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
-        <target state="needs-review-translation">Vlastnost TestContext by měla být platná.</target>
+        <target state="translated">Vlastnost TestContext by měla být platná.</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="needs-review-translation">Odvozená třída TestMethodAttribute {0} by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
+        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="needs-review-translation">Odvozená třída TestMethodAttribute by měla šířit informace o zdroji</target>
+        <target state="new">TestMethodAttribute derived class should propagate source information</target>
         <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
-        <target state="needs-review-translation">Místo předání řetězcového argumentu atributu TestMethodAttribute použijte vlastnost DisplayName</target>
+        <target state="translated">Místo předání řetězcového argumentu atributu TestMethodAttribute použijte vlastnost DisplayName</target>
         <note>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
         <source>TestMethodAttribute should set DisplayName correctly</source>
-        <target state="needs-review-translation">TestMethodAttribute by měl správně nastavit DisplayName</target>
+        <target state="translated">TestMethodAttribute by měl správně nastavit DisplayName</target>
         <note>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura {0} metody Test je neplatná.</target>
+        <target state="translated">Signatura {0} metody Test je neplatná.</target>
         <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">
         <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
-        <target state="needs-review-translation">TestContext.CancellationToken poskytuje přímější způsob přístupu k tokenu zrušení v porovnání s TestContext.CancellationTokenSource.Token.</target>
+        <target state="translated">TestContext.CancellationToken poskytuje přímější způsob přístupu k tokenu zrušení v porovnání s TestContext.CancellationTokenSource.Token.</target>
         <note>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyMessageFormat">
         <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="needs-review-translation">Místo TestContext.CancellationTokenSource.Token použijte TestContext.CancellationToken.</target>
+        <target state="translated">Místo TestContext.CancellationTokenSource.Token použijte TestContext.CancellationToken.</target>
         <note>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="needs-review-translation">Místo TestContext.CancellationTokenSource.Token použijte TestContext.CancellationToken.</target>
+        <target state="translated">Místo TestContext.CancellationTokenSource.Token použijte TestContext.CancellationToken.</target>
         <note>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
@@ -762,7 +762,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="needs-review-translation">Testovací třídy (třídy označené atributem [TestClass]) by měly respektovat následující rozložení, které MSTest považuje za platné:
+        <target state="translated">Testovací třídy (třídy označené atributem [TestClass]) by měly respektovat následující rozložení, které MSTest považuje za platné:
 – musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
 – nesmí být static (s výjimkou případů, kdy obsahuje pouze metody AssemblyInitialize nebo AssemblyCleanup),
 – nesmí být obecné.</target>
@@ -775,17 +775,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="needs-review-translation">Testovací třída by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
+        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="needs-review-translation">Testovací třída {0} by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
+        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="needs-review-translation">Testovací třída by měla mít testovací metodu</target>
+        <target state="new">Test class should have test method</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -804,31 +804,31 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
-– Musí být public.
-– Nesmí být abstract.
-– Nesmí být async void.
-– Nesmí být static.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Nesmí přijímat žádný parametr.
-– Návratový typ musí být void, Task nebo ValueTask.
+        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
         <source>TestCleanup method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura „{0}“ metody TestCleanup je neplatná</target>
+        <target state="translated">Signatura „{0}“ metody TestCleanup je neplatná</target>
         <note>{0} is the method name. {Locked="TestCleanup"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
         <source>TestCleanup method should have valid layout</source>
-        <target state="needs-review-translation">Metoda TestCleanup by měla mít platné rozložení</target>
+        <target state="translated">Metoda TestCleanup by měla mít platné rozložení</target>
         <note>{Locked="TestCleanup"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
@@ -836,7 +836,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="needs-review-translation">TestContext musí být nestatická vlastnost přiřazená v konstruktoru nebo nastavená přes MSTest. Pokud se má nastavit přes MSTest, musí splňovat následující rozložení:
+        <target state="translated">TestContext musí být nestatická vlastnost přiřazená v konstruktoru nebo nastavená přes MSTest. Pokud se má nastavit přes MSTest, musí splňovat následující rozložení:
 – Musí být public bez ohledu na to, jestli je nastavený atribut [assembly: DiscoverInternals].
 – Nesmí být static.
 – Musí mít metodu setter.</target>
@@ -863,31 +863,31 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
-– Musí být public.
-– Nesmí být abstract.
-– Nesmí být async void.
-– Nesmí být static.
-– Nesmí být speciální metodou (finalizační metoda, operátor...).
-– Nesmí být obecné.
-– Nesmí přijímat žádný parametr.
-– Návratový typ musí být void, Task nebo ValueTask.
+        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
+-it should be 'public'
+-it should not be 'abstract'
+-it should not be 'async void'
+-it should not be 'static'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should not take any parameter
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být třída.
-– Třída by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
-– Třída by neměla být static.
-– Pokud je třída sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
+-The class shouldn't be 'static'
+-If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
         <source>TestInitialize method '{0}' signature is invalid</source>
-        <target state="needs-review-translation">Signatura „{0}“ metody TestInitialize je neplatná</target>
+        <target state="translated">Signatura „{0}“ metody TestInitialize je neplatná</target>
         <note>{0} is the method name. {Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
         <source>TestInitialize method should have valid layout</source>
-        <target state="needs-review-translation">Metoda TestInitialize by měla mít platné rozložení</target>
+        <target state="translated">Metoda TestInitialize by měla mít platné rozložení</target>
         <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
@@ -899,7 +899,7 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Testovací metody (metody označené atributem [TestMethod]) by měly respektovat následující rozložení, které MSTest považuje za platné:
+        <target state="translated">Testovací metody (metody označené atributem [TestMethod]) by měly respektovat následující rozložení, které MSTest považuje za platné:
 – musí být public (nebo internal, pokud je nastaven atribut [assembly: DiscoverInternals]),
 – musí být static,
 – můžou být obecné, pokud lze odvodit parametry typu a typy argumentů jsou kompatibilní
@@ -916,12 +916,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
         <source>Test methods should not be ignored (marked with '[Ignore]').</source>
-        <target state="needs-review-translation">Testovací metody by se neměly ignorovat (označené jako „[Ignorovat]“.</target>
+        <target state="new">Test methods should not be ignored (marked with '[Ignore]').</target>
         <note>{Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
         <source>Test method '{0}' should not be ignored</source>
-        <target state="needs-review-translation">Testovací metoda „{0}“ by se neměla ignorovat</target>
+        <target state="translated">Testovací metoda „{0}“ by se neměla ignorovat</target>
         <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
@@ -931,82 +931,82 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
-        <target state="needs-review-translation">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak se bude testovací metoda bez upozornění ignorovat.</target>
+        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass], jinak se bude testovací metoda bez upozornění ignorovat.</target>
         <note>{Locked="[TestMethod]"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
-        <target state="needs-review-translation">Třída {0} obsahuje testovací metody a měla by mít označení [TestClass].</target>
+        <target state="translated">Třída {0} obsahuje testovací metody a měla by mít označení [TestClass].</target>
         <note>{0} is the type name. {Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
-        <target state="needs-review-translation">Typ obsahující [TestMethod] by měl mít označení [TestClass]</target>
+        <target state="translated">Typ obsahující [TestMethod] by měl mít označení [TestClass]</target>
         <note>{Locked="[TestMethod]"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="needs-review-translation">Asynchronní metody testovacích přípravků nevyžadují příponu Async.</target>
+        <target state="translated">Asynchronní metody testovacích přípravků nevyžadují příponu Async.</target>
         <note>{Locked="Async"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="needs-review-translation">Asynchronní testovací metody nevyžadují příponu Async.</target>
+        <target state="translated">Asynchronní testovací metody nevyžadují příponu Async.</target>
         <note>{Locked="Async"}</note>
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">
         <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
-        <target state="needs-review-translation">Parametr TestContext vyžaduje MSTest pro metody AssemblyInitialize a ClassInitialize.</target>
+        <target state="translated">Parametr TestContext vyžaduje MSTest pro metody AssemblyInitialize a ClassInitialize.</target>
         <note>{Locked="AssemblyInitialize"}{Locked="ClassInitialize"}{Locked="TestContext"}{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="needs-review-translation">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
+        <target state="translated">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
         <note>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="needs-review-translation">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
+        <target state="translated">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
         <note>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
-        <target state="needs-review-translation">Atribut '{0}' odvozený od atributu ConditionBaseAttribute by měl být použit pouze u tříd označených atributem TestClassAttribute.</target>
+        <target state="translated">Atribut '{0}' odvozený od atributu ConditionBaseAttribute by měl být použit pouze u tříd označených atributem TestClassAttribute.</target>
         <note>{0} is the attribute name. {Locked="ConditionBaseAttribute"}{Locked="TestClassAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">
         <source>Use 'ConditionBaseAttribute' on test classes</source>
-        <target state="needs-review-translation">Použít ConditionBaseAttribute u testovacích tříd</target>
+        <target state="translated">Použít ConditionBaseAttribute u testovacích tříd</target>
         <note>{Locked="ConditionBaseAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
         <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
-        <target state="needs-review-translation">Použití „[Timeout]“ bez explicitního nastavení „CooperativeCancellation = true“ se nedoporučuje. V budoucí verzi se kooperativní zrušení stane výchozím chováním. Nastavte „CooperativeCancellation = true“, abyste zapnuli doporučené chování a vyhnuli se změnám, které by mohly způsobit problémy.</target>
+        <target state="translated">Použití „[Timeout]“ bez explicitního nastavení „CooperativeCancellation = true“ se nedoporučuje. V budoucí verzi se kooperativní zrušení stane výchozím chováním. Nastavte „CooperativeCancellation = true“, abyste zapnuli doporučené chování a vyhnuli se změnám, které by mohly způsobit problémy.</target>
         <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
-        <target state="needs-review-translation">Použijte „CooperativeCancellation = true“ s „[Timeout]“, abyste povolili chování kooperativního zrušení</target>
+        <target state="translated">Použijte „CooperativeCancellation = true“ s „[Timeout]“, abyste povolili chování kooperativního zrušení</target>
         <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
-        <target state="needs-review-translation">Použijte „CooperativeCancellation = true“ s „[Timeout]“</target>
+        <target state="translated">Použijte „CooperativeCancellation = true“ s „[Timeout]“</target>
         <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="needs-review-translation">[DeploymentItem] se dá zadat jenom pro testovací třídu nebo testovací metodu.</target>
+        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
         <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="needs-review-translation">[DeploymentItem] se dá zadat jenom pro testovací třídu nebo testovací metodu.</target>
+        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
         <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
         <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
-        <target state="needs-review-translation">Ve výchozím nastavení spouští MSTest testy v rámci stejného sestavení sekvenčně, což může vést k závažným omezením výkonu. Doporučuje se povolit atribut sestavení [Parallelize] k paralelnímu spouštění testů nebo explicitně použít atribut [DoNotParallelize] na úrovni sestavení, pokud je známo, že sestavení není paralelizovatelné.</target>
+        <target state="translated">Ve výchozím nastavení spouští MSTest testy v rámci stejného sestavení sekvenčně, což může vést k závažným omezením výkonu. Doporučuje se povolit atribut sestavení [Parallelize] k paralelnímu spouštění testů nebo explicitně použít atribut [DoNotParallelize] na úrovni sestavení, pokud je známo, že sestavení není paralelizovatelné.</target>
         <note>{Locked="[DoNotParallelize]"}{Locked="[Parallelize]"}{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerMessageFormat">
@@ -1021,67 +1021,67 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsMessageFormat">
         <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
-        <target state="needs-review-translation">Místo Assert.{1} použijte Assert.{0}.</target>
+        <target state="translated">Místo Assert.{1} použijte Assert.{0}.</target>
         <note>{0} is the preferred assert method name. {1} is the current assert method name. {Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
-        <target state="needs-review-translation">Použít správné metody Assert</target>
+        <target state="translated">Použít správné metody Assert</target>
         <note>{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="needs-review-translation">Atribut, který je odvozen od retryBaseAttribute, lze zadat pouze v testovací metodě nebo testovací třídě</target>
+        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
         <note>{Locked="RetryBaseAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="needs-review-translation">Použití atributu retry u testovací metody nebo testovací třídy</target>
+        <target state="new">Use retry attribute on test method or test class</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
-        <target state="needs-review-translation">Vlastnost TestContext není v tomto kontextu přístupná</target>
+        <target state="translated">Vlastnost TestContext není v tomto kontextu přístupná</target>
         <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
-        <target state="needs-review-translation">Vlastnost TestContext {0} není přístupná v metodě {1}</target>
+        <target state="translated">Vlastnost TestContext {0} není přístupná v metodě {1}</target>
         <note>{0} is the TestContext property name. {1} is the lifecycle method name. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="needs-review-translation">Některé vlastnosti TestContext jsou k dispozici pouze během provádění testu a nelze k nim přistupovat v metodách inicializace sestavení, inicializace třídy, vyčištění třídy nebo vyčištění sestavení.</target>
+        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
         <note>{Locked="TestContext"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
-        <target state="needs-review-translation">Metody Assert.Throws by měly obsahovat pouze jeden příkaz nebo výraz. Více příkazů může být zavádějící – pokud se vyvolá první příkaz, následující příkazy se nikdy neprovedou. Pokud se nevyvolá, měl by se přesunout mimo Assert.Throws.</target>
+        <target state="translated">Metody Assert.Throws by měly obsahovat pouze jeden příkaz nebo výraz. Více příkazů může být zavádějící – pokud se vyvolá první příkaz, následující příkazy se nikdy neprovedou. Pokud se nevyvolá, měl by se přesunout mimo Assert.Throws.</target>
         <note>{Locked="Assert.Throws"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="needs-review-translation">Parametr Assert.Throws by měl obsahovat jenom jeden příkaz nebo výraz</target>
+        <target state="translated">Parametr Assert.Throws by měl obsahovat jenom jeden příkaz nebo výraz</target>
         <note>{Locked="Assert.Throws"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
-        <target state="needs-review-translation">Parametr Assert.Throws by měl obsahovat jenom jeden příkaz nebo výraz</target>
+        <target state="translated">Parametr Assert.Throws by měl obsahovat jenom jeden příkaz nebo výraz</target>
         <note>{Locked="Assert.Throws"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksTitle">
         <source>Do not use asserts in catch blocks</source>
-        <target state="needs-review-translation">Nepoužívat kontrolní výrazy v blocích catch</target>
+        <target state="translated">Nepoužívat kontrolní výrazy v blocích catch</target>
         <note>{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
         <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
-        <target state="needs-review-translation">Nepoužívejte kontrolní výrazy v blocích catch, protože test nemusí selhat, pokud není vyvolána žádná výjimka.</target>
+        <target state="translated">Nepoužívejte kontrolní výrazy v blocích catch, protože test nemusí selhat, pokud není vyvolána žádná výjimka.</target>
         <note>{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
-        <target state="needs-review-translation">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody Assert.Throws, Assert.ThrowsExactly, Assert.ThrowsAsync nebo Assert.ThrowsExactlyAsync a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch. Pravidlo také označí výjimku throw new AssertFailedException(...) a throw new AssertInconclusiveException(...). (asynchronní tvary Assert.Fail a Assert.Inconclusive). Assert.Inconclusive (a throw new AssertInconclusiveException(...)) se vyloučí při použití uvnitř filtrovaného catch ('catch (...) when (...)'), protože snížení úrovně zachyceného selhání na neprůkazný výsledek je jediný případ použití, který se nedá vyjádřit bez bloku catch. U jiných záměrných obejití (například při připojení zprávy sestavené za běhu k selhání) potlačte diagnostiku pomocí „#pragma warning disable MSTEST0058“.</target>
+        <target state="translated">Používání kontrolních výrazů v blocích catch je problematické, protože test projde, i když se nevyvolá žádná výjimka a blok catch se nikdy nespustí. K ověření, že je vyvolána výjimka, použijte metody Assert.Throws, Assert.ThrowsExactly, Assert.ThrowsAsync nebo Assert.ThrowsExactlyAsync a poté proveďte další kontrolní výrazy nad zachycenou výjimkou bez použití bloku try-catch. Pravidlo také označí výjimku throw new AssertFailedException(...) a throw new AssertInconclusiveException(...). (asynchronní tvary Assert.Fail a Assert.Inconclusive). Assert.Inconclusive (a throw new AssertInconclusiveException(...)) se vyloučí při použití uvnitř filtrovaného catch ('catch (...) when (...)'), protože snížení úrovně zachyceného selhání na neprůkazný výsledek je jediný případ použití, který se nedá vyjádřit bez bloku catch. U jiných záměrných obejití (například při připojení zprávy sestavené za běhu k selhání) potlačte diagnostiku pomocí „#pragma warning disable MSTEST0058“.</target>
         <note>{Locked="#pragma warning disable MSTEST0058"}{Locked="AssertInconclusiveException"}{Locked="Assert.ThrowsExactlyAsync"}{Locked="AssertFailedException"}{Locked="Assert.ThrowsExactly"}{Locked="Assert.Inconclusive"}{Locked="Assert.ThrowsAsync"}{Locked="Assert.Throws"}{Locked="Assert.Fail"}{Locked="throw new AssertFailedException(...)"}{Locked="throw new AssertInconclusiveException(...)"}{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
@@ -1101,17 +1101,17 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="needs-review-translation">Místo volání „RuntimeInformation.IsOSPlatform“ použijte atribut „[OSCondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
+        <target state="translated">Místo volání „RuntimeInformation.IsOSPlatform“ použijte atribut „[OSCondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
         <note>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
-        <target state="needs-review-translation">Místo volání „RuntimeInformation.IsOSPlatform“ použijte atribut „[OSCondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
+        <target state="translated">Místo volání „RuntimeInformation.IsOSPlatform“ použijte atribut „[OSCondition]“ s časným vrácením nebo „Assert.Inconclusive“</target>
         <note>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
-        <target state="needs-review-translation">Testovací metody, které používají „RuntimeInformation.IsOSPlatform“ s časným vrácením nebo „Assert.Inconclusive“, by místo toho měly používat atribut „[OSCondition]“. Tento atribut poskytuje deklarativní a zjistitelný způsob určení požadavků na testy specifické pro operační systém.</target>
+        <target state="translated">Testovací metody, které používají „RuntimeInformation.IsOSPlatform“ s časným vrácením nebo „Assert.Inconclusive“, by místo toho měly používat atribut „[OSCondition]“. Tento atribut poskytuje deklarativní a zjistitelný způsob určení požadavků na testy specifické pro operační systém.</target>
         <note>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">
@@ -1121,27 +1121,27 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
         <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
-        <target state="needs-review-translation">Testovací metoda {0} má několik atributů, které dědí z atributu TestMethodAttribute. Měl by být použit pouze jeden atribut testovací metody.</target>
+        <target state="translated">Testovací metoda {0} má několik atributů, které dědí z atributu TestMethodAttribute. Měl by být použit pouze jeden atribut testovací metody.</target>
         <note>{0} is the test method name. {Locked="TestMethodAttribute"}</note>
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeDescription">
         <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
-        <target state="needs-review-translation">Testovací metoda by měla být označena přesně jedním atributem, který je nebo dědí z atributu TestMethodAttribute. Pokud je přítomno více takových atributů, použije se pouze první vrácený odezvou.</target>
+        <target state="translated">Testovací metoda by měla být označena přesně jedním atributem, který je nebo dědí z atributu TestMethodAttribute. Pokud je přítomno více takových atributů, použije se pouze první vrácený odezvou.</target>
         <note>{Locked="TestMethodAttribute"}</note>
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">
         <source>Avoid using 'out' or 'ref' parameters in test methods</source>
-        <target state="needs-review-translation">Vyhněte se použití parametrů out nebo ref v testovacích metodách</target>
+        <target state="translated">Vyhněte se použití parametrů out nebo ref v testovacích metodách</target>
         <note>{Locked="out"}{Locked="ref"}</note>
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
         <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
-        <target state="needs-review-translation">Testovací metoda {0} má parametry out nebo ref, pro které se v budoucí hlavní verzi zruší podpora</target>
+        <target state="translated">Testovací metoda {0} má parametry out nebo ref, pro které se v budoucí hlavní verzi zruší podpora</target>
         <note>{0} is the test method name. {Locked="out"}{Locked="ref"}</note>
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersDescription">
         <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
-        <target state="needs-review-translation">Parametry out a ref nepřidávají v testovacích metodách žádnou hodnotu a je možné je bezpečně nahradit normálními parametry.</target>
+        <target state="translated">Parametry out a ref nepřidávají v testovacích metodách žádnou hodnotu a je možné je bezpečně nahradit normálními parametry.</target>
         <note>{Locked="out"}{Locked="ref"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidTitle">
@@ -1151,12 +1151,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="needs-review-translation">Testovací třída {0} nemá platný konstruktor. Platné konstruktory jsou public a buď bez parametrů, nebo s jedním parametrem typu TestContext.</target>
+        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="needs-review-translation">Testovací třídy musí mít veřejný konstruktor, který je buď bez parametrů, nebo přijímá jeden parametr typu TestContext. To umožňuje testovací architektuře správně vytvořit instanci testovací třídy.</target>
+        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
         <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
     </body>
