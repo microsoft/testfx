@@ -131,6 +131,8 @@ public class TestAsset : IDisposable
         <add key="local-shipping" value="{Constants.ArtifactsPackagesShipping}" />
         <add key="local-tmp-packages" value="{Constants.ArtifactsTmpPackages}" />
         <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+        <!-- Required to restore preview-versioned Microsoft.Testing.* transitive dependencies (e.g. Microsoft.Testing.Extensions.CodeCoverage prereleases pinned by MSTest meta-package, which in turn demand a matching Microsoft.Testing.Platform preview). See https://github.com/microsoft/testfx/issues/9030. -->
+        <add key="dotnet-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
         <!-- This feed is required for FSharp.Core until preview 1 or 2 is released -->
         <add key="dotnet10" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json" />
         <add key="dotnet11" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json" />
@@ -147,6 +149,9 @@ public class TestAsset : IDisposable
             <package pattern="*" />
         </packageSource>
         <packageSource key="dotnet-public">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="dotnet-tools">
             <package pattern="*" />
         </packageSource>
         <packageSource key="dotnet10">
