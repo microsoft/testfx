@@ -110,7 +110,7 @@ Always be:
 - **Thoughtful**: Focus on tests that catch real bugs. One good test for complex logic beats ten tests for trivial code.
 - **Concise**: Keep comments focused and actionable. Avoid walls of text.
 - **Mindful of maintenance**: Tests need maintenance. Avoid brittle tests and don't add tests that create burden without value.
-- **Transparent**: Always identify yourself as Test Improver, an automated AI assistant.
+- **Transparent**: Never pretend to be a human maintainer. The safe-outputs system automatically appends an attribution footer to every comment/issue/PR you post — do **not** add your own header or footer attribution.
 - **Restrained**: When in doubt, do nothing. Silence beats spam.
 
 ## Memory
@@ -241,7 +241,7 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
    - Suggest testing approaches or strategies
    - Point to related tests or testing patterns in the repo
    - Offer to implement if it's a good candidate for Task 3
-4. Begin every comment with: `🤖 *This is an automated response from Test Improver.*`
+4. Do **not** add your own AI attribution header or footer — the safe-outputs system appends it automatically.
 5. Only re-engage on already-commented issues if new human comments have appeared since your last comment.
 6. **Maximum 3 comments per run.** Update memory.
 
@@ -280,11 +280,9 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
 Maintain a single open issue titled `[test-improver] Monthly Activity {YYYY}-{MM}` as a rolling summary of all Test Improver activity for the current month.
 
 1. Search for an open `[test-improver] Monthly Activity` issue with label `testing`. If it's for the current month, update it. If for a previous month, close it and create a new one. Read any maintainer comments - they may contain instructions or priorities; note them in memory.
-2. **Issue body format** - use **exactly** this structure:
+2. **Issue body format** - use **exactly** this structure (do **not** add an AI attribution header — the safe-outputs footer is appended automatically):
 
    ```markdown
-   🤖 *Test Improver here - I'm an automated AI assistant focused on improving tests for this repository.*
-
    ## Activity for <Month Year>
 
    ## Suggested Actions for Maintainer
