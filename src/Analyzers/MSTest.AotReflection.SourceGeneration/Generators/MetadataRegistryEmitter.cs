@@ -303,7 +303,11 @@ internal static class MetadataRegistryEmitter
         {
             // Non-void, non-Task return (e.g. `int Test()`). The test runner discards the value; we still
             // execute the call for its side effects and report success.
-            body = $"{{ _ = {call}; return Task.CompletedTask; }}";
+            //
+            // Note: using a plain invocation statement (instead of `_ = {call}`) discards the value while
+            // also handling `ref`-returning methods (e.g. `ref int M()`), where assigning the byref return
+            // to a discard would not compile.
+            body = $"{{ {call}; return Task.CompletedTask; }}";
         }
 
         sb.AppendLine($"Invoke = static (instance, args) => {body},");

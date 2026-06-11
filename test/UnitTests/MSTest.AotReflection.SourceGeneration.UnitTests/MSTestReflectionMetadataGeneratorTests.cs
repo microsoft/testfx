@@ -1451,8 +1451,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         // For a sync non-void test the returned value is discarded but the call must still execute
-        // (its side-effects ARE the test). We surface that with a `_ = call;` pattern.
-        registry.Should().Contain("Invoke = static (instance, args) => { _ = ((global::Sample.Tests)instance!).SyncInt(); return Task.CompletedTask; },");
+        // (its side-effects ARE the test). A plain invocation statement discards the value while also
+        // supporting `ref`-returning methods, where assigning a byref return to `_` would not compile.
+        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.Tests)instance!).SyncInt(); return Task.CompletedTask; },");
     }
 
     [TestMethod]
