@@ -46,12 +46,13 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     private readonly object _escalationLock = new();
 #endif
 
+    // Mutable phase state updated through Interlocked APIs.
+    private readonly StrongBox<int> _phase = new(PhaseRunning);
+
     // Fire-and-forget escalation timers, retained so we can dispose them in
     // Dispose() and prevent callbacks from firing after the host has shut down.
     private List<CancellationTokenSource>? _escalations;
 
-    // Mutable phase state updated through Interlocked APIs; do not mark readonly.
-    private int _phase = PhaseRunning;
     private int _ctrlCCount;
     private int _disposed;
 
@@ -101,9 +102,23 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     /// <inheritdoc />
     public CancellationToken AbortingToken => _abortingCts.Token;
 
-    internal int CurrentPhase => Volatile.Read(ref _phase);
+    internal int CurrentPhase => Volatile.Read(ref _phase.Value);
 
-    public void CancelAfter(TimeSpan timeout) => _drainingCts.CancelAfter(timeout);
+    public void CancelAfter(TimeSpan timeout)
+    {
+        if (timeout == Timeout.InfiniteTimeSpan)
+        {
+            return;
+        }
+
+        if (timeout == TimeSpan.Zero)
+        {
+            EnterDraining();
+            return;
+        }
+
+        ScheduleEscalation(timeout, EnterDraining);
+    }
 
     /// <inheritdoc />
     public void Cancel() => EnterDraining();
@@ -187,7 +202,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
 
     private void EnterDraining()
     {
-        if (Interlocked.CompareExchange(ref _phase, PhaseDraining, PhaseRunning) != PhaseRunning)
+        if (Interlocked.CompareExchange(ref _phase.Value, PhaseDraining, PhaseRunning) != PhaseRunning)
         {
             return;
         }
@@ -220,7 +235,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
         // future direct trigger). EnterDraining is idempotent.
         EnterDraining();
 
-        if (Interlocked.CompareExchange(ref _phase, PhaseAborting, PhaseDraining) != PhaseDraining)
+        if (Interlocked.CompareExchange(ref _phase.Value, PhaseAborting, PhaseDraining) != PhaseDraining)
         {
             return;
         }
@@ -267,7 +282,7 @@ internal sealed class CTRLPlusCCancellationTokenSource : ITestApplicationCancell
     private void ForceTerminate()
     {
         _logger?.LogWarning(
-            $"Shutdown grace exhausted ({_gracePeriod} + {_abortTimeout}); terminating host.");
-        _environment.FailFast("Test platform shutdown grace period exhausted.");
+            $"Shutdown abort timeout exhausted ({_abortTimeout}); terminating host.");
+        _environment.FailFast("Test platform shutdown abort timeout exhausted.");
     }
 }
