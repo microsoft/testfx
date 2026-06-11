@@ -63,7 +63,8 @@ internal static class FixtureMethodAnalyzerHelper
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (methodSymbol.HasAttribute(fixtureAttributeSymbol)
             && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
-                allowGenericType: true, FixtureParameterMode.MustNotHaveTestContext, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
+                allowGenericType: true, FixtureParameterMode.MustNotHaveTestContext, testContextSymbol: null,
+                testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(rule, methodSymbol.Name)
