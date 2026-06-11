@@ -356,6 +356,146 @@ public sealed class JsonCommandLineOptionsTests
         Assert.IsTrue(result.IsValid, result.ErrorMessage);
     }
 
+    // ---------------------------------------------------------------------
+    // Bootstrap-only options must not appear under testconfig.json's
+    // "commandLineOptions". They are read off CommandLineParseResult before
+    // IConfiguration is built (see TestApplication.cs and
+    // JsonConfigurationProvider.cs), so a JSON entry is silently ignored.
+    // The validator surfaces this with a clear error instead.
+    // ---------------------------------------------------------------------
+    [TestMethod]
+    [DataRow(PlatformCommandLineProvider.ConfigFileOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticOutputDirectoryOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticOutputFilePrefixOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey)]
+    [DataRow(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey)]
+    public async Task Validator_JsonBootstrapOnlyOption_Fails(string optionName)
+    {
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption(optionName, "desc", ArgumentArity.ZeroOrOne, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptions: [new JsonCommandLineOptionEntry(optionName, ["value"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(optionName, result.ErrorMessage);
+        Assert.Contains("testconfig.json", result.ErrorMessage);
+        Assert.Contains("bootstrap", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [TestMethod]
+    public async Task Validator_JsonBootstrapOnlyOption_CaseInsensitive_Fails()
+    {
+        // testconfig.json keys are case-insensitive everywhere else; the bootstrap-only check
+        // must match regardless of casing so "Config-File" is flagged the same as "config-file".
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption(PlatformCommandLineProvider.ConfigFileOptionKey, "desc", ArgumentArity.ExactlyOne, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptions: [new JsonCommandLineOptionEntry("Config-File", ["other.json"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Config-File", result.ErrorMessage);
+        Assert.Contains("testconfig.json", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_JsonBootstrapOnlyOption_DisabledEntry_StillFails()
+    {
+        // "config-file": false in testconfig.json is just as misleading as setting it to a value:
+        // either way the option is read pre-config and the JSON entry has no effect. Flag both.
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption(PlatformCommandLineProvider.ConfigFileOptionKey, "desc", ArgumentArity.ExactlyOne, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptions: [new JsonCommandLineOptionEntry(PlatformCommandLineProvider.ConfigFileOptionKey, [], isDisabled: true)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(PlatformCommandLineProvider.ConfigFileOptionKey, result.ErrorMessage);
+        Assert.Contains("testconfig.json", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_CliBootstrapOnlyOption_Allowed()
+    {
+        // Setting bootstrap-only options on the CLI is the supported path and must remain valid.
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption(PlatformCommandLineProvider.ConfigFileOptionKey, "desc", ArgumentArity.ExactlyOne, isHidden: false));
+
+        CommandLineParseResult cliParseResult = new(
+            toolName: null,
+            options: [new CommandLineParseOption(PlatformCommandLineProvider.ConfigFileOptionKey, ["other.json"])],
+            errors: []);
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            cliParseResult,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptions: null);
+
+        Assert.IsTrue(result.IsValid, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_JsonNonBootstrapOption_Allowed()
+    {
+        // Sanity check: non-bootstrap-only options (e.g. timeout) continue to be honored from
+        // testconfig.json. The bootstrap-only check must not regress general JSON support.
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption("timeout", "desc", ArgumentArity.ExactlyOne, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptions: [new JsonCommandLineOptionEntry("timeout", ["30s"], isDisabled: false)]);
+
+        Assert.IsTrue(result.IsValid, result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task Validator_JsonMultipleBootstrapOnlyOptions_AllReported()
+    {
+        // The validator aggregates bootstrap-only violations so users see every offending entry
+        // in one pass rather than fixing them one by one across multiple runs.
+        ICommandLineOptionsProvider provider = new TestProvider(
+            new CommandLineOption(PlatformCommandLineProvider.ConfigFileOptionKey, "desc", ArgumentArity.ExactlyOne, isHidden: false),
+            new CommandLineOption(PlatformCommandLineProvider.DiagnosticOptionKey, "desc", ArgumentArity.Zero, isHidden: false),
+            new CommandLineOption(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, "desc", ArgumentArity.ExactlyOne, isHidden: false));
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            CommandLineParseResult.Empty,
+            [provider],
+            [],
+            new Mock<ICommandLineOptions>().Object,
+            jsonCommandLineOptions:
+            [
+                new JsonCommandLineOptionEntry(PlatformCommandLineProvider.ConfigFileOptionKey, ["other.json"], isDisabled: false),
+                new JsonCommandLineOptionEntry(PlatformCommandLineProvider.DiagnosticOptionKey, [], isDisabled: false),
+                new JsonCommandLineOptionEntry(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, ["trace"], isDisabled: false),
+            ]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains(PlatformCommandLineProvider.ConfigFileOptionKey, result.ErrorMessage);
+        Assert.Contains(PlatformCommandLineProvider.DiagnosticOptionKey, result.ErrorMessage);
+        Assert.Contains(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, result.ErrorMessage);
+    }
+
     [TestMethod]
     public async Task Validator_JsonUnknownOptionCaseInsensitive_Accepted()
     {
