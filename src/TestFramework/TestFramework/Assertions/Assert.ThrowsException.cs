@@ -534,6 +534,7 @@ public sealed partial class Assert
         return null!;
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private static async Task<ThrowsExceptionState> IsThrowsAsyncFailingAsync<TException>(Func<Task> action, bool isStrictType)
         where TException : Exception
     {
@@ -555,6 +556,7 @@ public sealed partial class Assert
         return ThrowsExceptionState.CreateNoExceptionState();
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private static ThrowsExceptionState IsThrowsFailing<TException>(Action action, bool isStrictType)
         where TException : Exception
     {
