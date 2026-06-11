@@ -51,7 +51,7 @@ jobs:
   # NOTE: Do not add an explicit `UseDotNet@2` with `useGlobalJson: true` here.
   # global.json pins a preview SDK (11.0.x-preview.*) and the `UseDotNet@2` task
   # does not search preview channels by default, so it fails with
-  # "sdk version matching: 11.0.x could not be found". `eng\common\cibuild.cmd`
+  # "sdk version matching: 11.0.x could not be found". `eng\common\CIBuild.cmd`
   # (invoked below) restores the correct SDK from global.json via `dotnet-install.ps1`,
   # which handles preview versions correctly.
 
@@ -76,7 +76,7 @@ jobs:
   # UAP-specific code paths are still scanned via the other TFMs the affected projects
   # multi-target (net462, net8.0, net9.0).
   #
-  # Disable Pack/Sign/Publish because cibuild.cmd implies all three, and they cascade-fail
+  # Disable Pack/Sign/Publish because CIBuild.cmd implies all three, and they cascade-fail
   # when UAP is skipped (.nuspec files reference absent uap10.0.16299 outputs; Sign then
   # errors with "List of files to sign is empty"). CodeQL only needs source compilation.
   - script: eng\common\CIBuild.cmd
