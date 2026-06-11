@@ -281,7 +281,8 @@ internal static class MetadataRegistryEmitter
         //   - void / non-Task sync: invoke, return Task.CompletedTask.
         //   - Task / Task<T>: forward the returned Task (treat a `null` return as success).
         //   - ValueTask / ValueTask<T>: avoid Task allocation for the synchronously-completed fast path
-        //     via IsCompletedSuccessfully, otherwise call AsTask().
+        //     via IsCompletedSuccessfully, consuming the result before returning Task.CompletedTask;
+        //     otherwise call AsTask().
         string body;
         if (method.ReturnsTask)
         {
@@ -292,7 +293,7 @@ internal static class MetadataRegistryEmitter
         }
         else if (method.ReturnsValueTask)
         {
-            body = $"{{ var __vt = {call}; return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); }}";
+            body = $"{{ var __vt = {call}; if (__vt.IsCompletedSuccessfully) {{ __vt.GetAwaiter().GetResult(); return Task.CompletedTask; }} return __vt.AsTask(); }}";
         }
         else if (method.ReturnsVoid)
         {
