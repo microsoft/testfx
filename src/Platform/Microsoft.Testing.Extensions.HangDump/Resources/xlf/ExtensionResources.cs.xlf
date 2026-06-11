@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="CreatingDumpFile">
         <source>Creating dump file '{0}'</source>
-        <target state="needs-review-translation">Vytváří se soubor výpisu paměti {0}.</target>
+        <target state="translated">Vytváří se soubor výpisu paměti {0}.</target>
         <note>{0} is the dump file path.</note>
       </trans-unit>
       <trans-unit id="DumpingProcess">
@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
-        <target state="needs-review-translation">Proměnná prostředí {0} je nastavená na {1} místo na {2}.</target>
+        <target state="translated">Proměnná prostředí {0} je nastavená na {1} místo na {2}.</target>
         <note>{0} is the environment variable name. {1} is the actual value. {2} is the expected value.</note>
       </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableIsMissingErrorMessage">
         <source>Environment variable '{0}' is not set</source>
-        <target state="needs-review-translation">Není nastavená proměnná prostředí {0}.</target>
+        <target state="translated">Není nastavená proměnná prostředí {0}.</target>
         <note>{0} is the environment variable name.</note>
       </trans-unit>
       <trans-unit id="HangDumpExtensionDescription">
@@ -68,7 +68,7 @@
 
 Disk info:
 {1}</source>
-        <target state="needs-review-translation">Při vytváření výpisu stavu systému při zablokování došlo k následující výjimce:
+        <target state="translated">Při vytváření výpisu stavu systému při zablokování došlo k následující výjimce:
 {0}
 
 Informace o disku:
@@ -84,12 +84,12 @@ Supports the following placeholders: {pname} (test application name), {pid} (pro
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
         <source>Generate a dump file if the test process hangs</source>
-        <target state="needs-review-translation">Vygeneruje soubor výpisu paměti, pokud testovací proces přestane reagovat.</target>
+        <target state="translated">Vygeneruje soubor výpisu paměti, pokud testovací proces přestane reagovat.</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutExpired">
         <source>Hang dump timeout of '{0}' expired</source>
-        <target state="needs-review-translation">Vypršel časový limit {0} pro výpis paměti při zablokování.</target>
+        <target state="translated">Vypršel časový limit {0} pro výpis paměti při zablokování.</target>
         <note>{0} is the hang dump timeout value.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionDescription">
@@ -102,7 +102,7 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="needs-review-translation">Zadejte časový limit, po kterém bude vygenerován výpis paměti.
+        <target state="translated">Zadejte časový limit, po kterém bude vygenerován výpis paměti.
 Hodnota časového limitu se zadává v jednom z následujících formátů:
     500ms, 500mil, 500millisecond, 500milliseconds,
     5400s, 5400sec, 5400second, 5400seconds,
@@ -115,29 +115,29 @@ Hodnota časového limitu se zadává v jednom z následujících formátů:
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
         <source>'--hangdump-timeout' expects a single timeout argument</source>
-        <target state="needs-review-translation">--hangdump-timeout očekává jeden argument časového limitu.</target>
+        <target state="translated">--hangdump-timeout očekává jeden argument časového limitu.</target>
         <note>Do not localize option name {Locked="--hangdump-timeout"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--hangdump-type' and '--hangdump-type-if-supported' are mutually exclusive. Use '--hangdump-type-if-supported' to opt into a best-effort dump type that falls back to the closest available type (with an informational message) when the requested type is unavailable on the current runtime, or '--hangdump-type' to fail fast on unsupported runtimes.</source>
-        <target state="needs-review-translation">--hangdump-type a --hangdump-type-if-supported se vzájemně vylučují. Pomocí --hangdump-type-if-supported zvolíte typ výpisu paměti s nejlepším úsilím, který se při nedostupnosti požadovaného typu v aktuálním modulu runtime vrátí k nejbližšímu dostupnému typu se zobrazením informační zprávy, nebo pomocí --hangdump-type způsobíte okamžité ukončení při selhání v nepodporovaných modulech runtime.</target>
+        <target state="translated">--hangdump-type a --hangdump-type-if-supported se vzájemně vylučují. Pomocí --hangdump-type-if-supported zvolíte typ výpisu paměti s nejlepším úsilím, který se při nedostupnosti požadovaného typu v aktuálním modulu runtime vrátí k nejbližšímu dostupnému typu se zobrazením informační zprávy, nebo pomocí --hangdump-type způsobíte okamžité ukončení při selhání v nepodporovaných modulech runtime.</target>
         <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedFallbackInfoMessage">
         <source>'--hangdump-type-if-supported {0}' is not supported on the current runtime. Falling back to '{1}'.</source>
-        <target state="needs-review-translation">--hangdump-type-if-supported {0} se v aktuálním modulu runtime nepodporuje. Místo toho se použije {1}.</target>
+        <target state="translated">--hangdump-type-if-supported {0} se v aktuálním modulu runtime nepodporuje. Místo toho se použije {1}.</target>
         <note>0 is the requested dump type. 1 is the fallback dump type. Do not localize option name {Locked="--hangdump-type-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
-        <target state="needs-review-translation">Stejné jako --hangdump-type, ale se zadaným typem výpisu paměti se tiše vrátí k nejbližšímu podporovanému typu výpisu paměti se zobrazením informační zprávy, pokud požadovaný typ není v aktuálním modulu runtime k dispozici (např. Triage se podporuje jen v .NET Core a v .NET Framework se vrátí k Mini). Pomocí této možnosti můžete zachovat stejný příkazový řádek napříč maticemi CI, které kombinují .NET Framework a .NET. Platné hodnoty jsou Mini, Heap, Full, Triage, None. Vzájemně se vylučují s --hangdump-type.</target>
+        <target state="translated">Stejné jako --hangdump-type, ale se zadaným typem výpisu paměti se tiše vrátí k nejbližšímu podporovanému typu výpisu paměti se zobrazením informační zprávy, pokud požadovaný typ není v aktuálním modulu runtime k dispozici (např. Triage se podporuje jen v .NET Core a v .NET Framework se vrátí k Mini). Pomocí této možnosti můžete zachovat stejný příkazový řádek napříč maticemi CI, které kombinují .NET Framework a .NET. Platné hodnoty jsou Mini, Heap, Full, Triage, None. Vzájemně se vylučují s --hangdump-type.</target>
         <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Full"}{Locked="Triage"}{Locked="None"}, or runtime names {Locked=".NET Core"}{Locked=".NET Framework"}{Locked=".NET"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="needs-review-translation">Určete typ výpisu paměti.
+        <target state="translated">Určete typ výpisu paměti.
 Platné hodnoty jsou: {0}.
 Výchozí typ je Full</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
@@ -145,13 +145,13 @@ Výchozí typ je Full</target>
       <trans-unit id="HangDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type.
 Valid options are {1}</source>
-        <target state="needs-review-translation">{0} není platný typ výpisu paměti.
+        <target state="translated">{0} není platný typ výpisu paměti.
 Platné možnosti jsou {1}</target>
         <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="HangDumpUnsupportedRequestTypeErrorMessage">
         <source>Request of type '{0}' is not supported</source>
-        <target state="needs-review-translation">Žádost typu {0} není podporována.</target>
+        <target state="translated">Žádost typu {0} není podporována.</target>
         <note>{0} is the unsupported request type name.</note>
       </trans-unit>
       <trans-unit id="HangTestListArtifactDescription">
@@ -166,12 +166,12 @@ Platné možnosti jsou {1}</target>
       </trans-unit>
       <trans-unit id="MissingHangDumpMainOption">
         <source>You specified one or more hang dump parameters but did not enable it, add --hangdump to the command line</source>
-        <target state="needs-review-translation">Zadali jste jeden nebo více parametrů výpisu stavu systému, ale nepovolili jste ho. Přidejte do příkazového řádku parametr --hangdump</target>
+        <target state="translated">Zadali jste jeden nebo více parametrů výpisu stavu systému, ale nepovolili jste ho. Přidejte do příkazového řádku parametr --hangdump</target>
         <note>Do not localize option name {Locked="--hangdump"}.</note>
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="needs-review-translation">Při pořízení výpisu paměti stále běžely následující testy (formát: [&lt;čas-uplynulý-od-spuštění&gt;] &lt;název&gt;):</target>
+        <target state="new">The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note>Do not localize format tokens {Locked="[&lt;time-elapsed-since-start&gt;]"} and {Locked="&lt;name&gt;"}.</note>
       </trans-unit>
     </body>
