@@ -14,12 +14,12 @@
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxCount">
         <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
-        <target state="needs-review-translation">Le seuil maximal des tests ayant échoué est {0} et {1} tests ont échoué</target>
+        <target state="translated">Le seuil maximal des tests ayant échoué est {0} et {1} tests ont échoué</target>
         <note>{0} is the maximum failed tests threshold. {1} is the failed tests count.</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxPercentage">
         <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
-        <target state="needs-review-translation">Le seuil de pourcentage d’échec est {0}% et {1}% de tests ont échoué ({2}/{3})</target>
+        <target state="translated">Le seuil de pourcentage d’échec est {0}% et {1}% de tests ont échoué ({2}/{3})</target>
         <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
       <trans-unit id="MoveFiles">
@@ -37,7 +37,7 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
       </trans-unit>
       <trans-unit id="MovingFileToLocation">
         <source>Moving file '{0}' to '{1}'</source>
-        <target state="needs-review-translation">Déplacement du fichier '{0}' vers '{1}'</target>
+        <target state="translated">Déplacement du fichier '{0}' vers '{1}'</target>
         <note>{0} is the source file path. {1} is the destination file path.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
@@ -47,17 +47,17 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
-        <target state="needs-review-translation">Échec de démarrage du processus « {0} »</target>
+        <target state="translated">Échec de démarrage du processus « {0} »</target>
         <note>{0} is the process file path.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="needs-review-translation">Ajoutez un délai entre les nouvelles tentatives. Le délai s’exprime sous forme de durée, par exemple 200, 500 ms, 1 s, 2,5 m, 1 h, 1 j. L’unité par défaut est la milliseconde.</target>
+        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
-        <target state="needs-review-translation">L’option « --retry-failed-tests-delay » requiert une valeur d’intervalle de temps valide, non négative et inférieure ou égale à 2147483647 ms (~24.20:31:23.647) (par exemple 200, 500 ms, 1 s, 2,5 m, 1 h, 1 j)</target>
+        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
@@ -72,17 +72,17 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="needs-review-translation">Désactiver le mécanisme de nouvelle tentative si le pourcentage de tests ayant échoué est supérieur à la valeur spécifiée</target>
+        <target state="translated">Désactiver le mécanisme de nouvelle tentative si le pourcentage de tests ayant échoué est supérieur à la valeur spécifiée</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="needs-review-translation">L’option « {0} » attend un argument entier compris entre 0 et 100</target>
+        <target state="translated">L’option « {0} » attend un argument entier compris entre 0 et 100</target>
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="needs-review-translation">Désactiver le mécanisme de nouvelle tentative si le nombre de tests ayant échoué est supérieur à la valeur spécifiée</target>
+        <target state="translated">Désactiver le mécanisme de nouvelle tentative si le nombre de tests ayant échoué est supérieur à la valeur spécifiée</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
@@ -97,27 +97,27 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times</source>
-        <target state="needs-review-translation">Réessayez les tests ayant échoué le nombre de fois indiqué</target>
+        <target state="translated">Réessayez les tests ayant échoué le nombre de fois indiqué</target>
         <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>
-        <target state="needs-review-translation">L’option '{0}' nécessite la spécification de l’option '{1}'</target>
+        <target state="translated">L’option '{0}' nécessite la spécification de l’option '{1}'</target>
         <note>{0} is the option name that was specified. {1} is the required option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="needs-review-translation">L’option « {0} » attend un argument entier non négatif</target>
+        <target state="translated">L’option « {0} » attend un argument entier non négatif</target>
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
-        <target state="needs-review-translation">Les options «{0}» et «{1}» ne peuvent pas être utilisées ensemble</target>
+        <target state="translated">Les options «{0}» et «{1}» ne peuvent pas être utilisées ensemble</target>
         <note>{0} is the first option name. {1} is the second option name.</note>
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
-        <target state="needs-review-translation">Le processus hôte de test s’est arrêté avant que le service de nouvelle tentative puisse s’y connecter. Code de sortie : {0}</target>
+        <target state="translated">Le processus hôte de test s’est arrêté avant que le service de nouvelle tentative puisse s’y connecter. Code de sortie : {0}</target>
         <note>{0} is the test host process exit code.</note>
       </trans-unit>
       <trans-unit id="TestSuiteCompletedSuccessfully">
@@ -125,7 +125,7 @@ Déplacement des fichiers de ressources de la dernière tentative vers le réper
 =====================
 Tests suite completed successfully in {0} attempts
 =====================</source>
-        <target state="needs-review-translation">
+        <target state="translated">
 =====================
 La suite de tests s’est correctement terminée dans les {0} tentatives
 =====================</target>
@@ -137,7 +137,7 @@ La suite de tests s’est correctement terminée dans les {0} tentatives
 Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 </source>
-        <target state="needs-review-translation">
+        <target state="translated">
 =====================
 Échec de la suite de tests, nombre total de tests ayant échoué : {0}, code de sortie : {1}, tentative : {2}/{3}
 =====================
@@ -149,7 +149,7 @@ Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 Tests suite failed in all {0} attempts
 =====================</source>
-        <target state="needs-review-translation">
+        <target state="translated">
 =====================
 Échec de la suite de tests dans toutes les {0} tentatives
 =====================</target>
@@ -157,7 +157,7 @@ Tests suite failed in all {0} attempts
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
-        <target state="needs-review-translation">La suite de tests a échoué avec un code de sortie différent de 2 (tests échoués). Défaillance liée à une condition inattendue. Code de sortie « {0} »</target>
+        <target state="translated">La suite de tests a échoué avec un code de sortie différent de 2 (tests échoués). Défaillance liée à une condition inattendue. Code de sortie « {0} »</target>
         <note>{0} is the exit code.</note>
       </trans-unit>
     </body>

@@ -12,8 +12,10 @@ builder.AddCodeCoverageProvider();
 builder.AddHangDumpProvider();
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddTrxReportProvider();
+builder.AddJUnitReportProvider();
 builder.AddAppInsightsTelemetryProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
 
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

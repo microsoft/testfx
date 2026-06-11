@@ -14,12 +14,12 @@
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxCount">
         <source>Maximum failed tests threshold is {0} and {1} tests failed</source>
-        <target state="needs-review-translation">실패한 최대 테스트 임계값이 {0}이고 {1} 테스트가 실패했습니다.</target>
+        <target state="translated">실패한 최대 테스트 임계값이 {0}이고 {1} 테스트가 실패했습니다.</target>
         <note>{0} is the maximum failed tests threshold. {1} is the failed tests count.</note>
       </trans-unit>
       <trans-unit id="FailureThresholdPolicyMaxPercentage">
         <source>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</source>
-        <target state="needs-review-translation">실패한 임계값 백분율은 {0}%이며 {1}% 테스트에 실패했습니다({2}/{3}).</target>
+        <target state="translated">실패한 임계값 백분율은 {0}%이며 {1}% 테스트에 실패했습니다({2}/{3}).</target>
         <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
       <trans-unit id="MoveFiles">
@@ -37,7 +37,7 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="MovingFileToLocation">
         <source>Moving file '{0}' to '{1}'</source>
-        <target state="needs-review-translation">파일 {0}을(를) {1}(으)로 이동</target>
+        <target state="translated">파일 {0}을(를) {1}(으)로 이동</target>
         <note>{0} is the source file path. {1} is the destination file path.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
@@ -47,17 +47,17 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsCannotStartProcessErrorMessage">
         <source>Failed to start process '{0}'</source>
-        <target state="needs-review-translation">프로세스 '{0}'을(를) 시작하지 못했습니다.</target>
+        <target state="translated">프로세스 '{0}'을(를) 시작하지 못했습니다.</target>
         <note>{0} is the process file path.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="needs-review-translation">재시도 간 지연을 추가합니다. 지연은 시간 값으로 표현됩니다(예: 200, 500ms, 1s, 2.5m, 1h, 1d). 기본 단위는 밀리초입니다.</target>
+        <target state="translated">재시도 간 지연을 추가합니다. 지연은 시간 값으로 표현됩니다(예: 200, 500ms, 1s, 2.5m, 1h, 1d). 기본 단위는 밀리초입니다.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
-        <target state="needs-review-translation">'--retry-failed-tests-delay' 옵션에는 음수가 아니고 2147483647ms(~24.20:31:23.647) 이하인 유효한 시간 범위 값이 필요합니다(예: 200, 500ms, 1s, 2.5m, 1h, 1d).</target>
+        <target state="translated">'--retry-failed-tests-delay' 옵션에는 음수가 아니고 2147483647ms(~24.20:31:23.647) 이하인 유효한 시간 범위 값이 필요합니다(예: 200, 500ms, 1s, 2.5m, 1h, 1d).</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">
@@ -72,17 +72,17 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionDescription">
         <source>Disable retry mechanism if the percentage of failed tests is greater than the specified value</source>
-        <target state="needs-review-translation">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
+        <target state="translated">실패한 테스트의 비율이 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-percentage"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage">
         <source>Option '{0}' expects an integer argument between 0 and 100</source>
-        <target state="needs-review-translation">옵션 '{0}'에는 0에서 100 사이의 정수 인수가 필요합니다.</target>
+        <target state="translated">옵션 '{0}'에는 0에서 100 사이의 정수 인수가 필요합니다.</target>
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsMaxTestsOptionDescription">
         <source>Disable retry mechanism if the number of failed tests is greater than the specified value</source>
-        <target state="needs-review-translation">실패한 테스트 수가 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
+        <target state="translated">실패한 테스트 수가 지정된 값보다 큰 경우 다시 시도 메커니즘을 사용하지 않도록 설정</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-max-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsNotSupportedInHotReloadErrorMessage">
@@ -97,27 +97,27 @@ Moving last attempt asset files to the default result directory
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionDescription">
         <source>Retry failed tests the given number of times</source>
-        <target state="needs-review-translation">지정된 횟수만큼 테스트 다시 시도 실패</target>
+        <target state="translated">지정된 횟수만큼 테스트 다시 시도 실패</target>
         <note>Do not localize option name {Locked="--retry-failed-tests"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionIsMissingErrorMessage">
         <source>Option '{0}' requires option '{1}' to be specified</source>
-        <target state="needs-review-translation">'{0}' 옵션을(를) 사용하려면 '{1}' 옵션을 지정해야 합니다.</target>
+        <target state="translated">'{0}' 옵션을(를) 사용하려면 '{1}' 옵션을 지정해야 합니다.</target>
         <note>{0} is the option name that was specified. {1} is the required option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage">
         <source>Option '{0}' expects a non-negative integer argument</source>
-        <target state="needs-review-translation">옵션 '{0}'에는 음수가 아닌 정수 인수가 필요합니다.</target>
+        <target state="translated">옵션 '{0}'에는 음수가 아닌 정수 인수가 필요합니다.</target>
         <note>{0} is the option name.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage">
         <source>Options '{0}' and '{1}' cannot be used together</source>
-        <target state="needs-review-translation">'{0}' 및 '{1}' 옵션은 함께 사용할 수 없습니다.</target>
+        <target state="translated">'{0}' 및 '{1}' 옵션은 함께 사용할 수 없습니다.</target>
         <note>{0} is the first option name. {1} is the second option name.</note>
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
-        <target state="needs-review-translation">다시 시도 서비스가 연결되기 전에 테스트 호스트 프로세스가 종료되었습니다. 종료 코드: {0}</target>
+        <target state="translated">다시 시도 서비스가 연결되기 전에 테스트 호스트 프로세스가 종료되었습니다. 종료 코드: {0}</target>
         <note>{0} is the test host process exit code.</note>
       </trans-unit>
       <trans-unit id="TestSuiteCompletedSuccessfully">
@@ -125,7 +125,7 @@ Moving last attempt asset files to the default result directory
 =====================
 Tests suite completed successfully in {0} attempts
 =====================</source>
-        <target state="needs-review-translation">
+        <target state="translated">
 =====================
 테스트 도구 모음이 {0} 시도에서 완료되었습니다.
 =====================</target>
@@ -137,7 +137,7 @@ Tests suite completed successfully in {0} attempts
 Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 </source>
-        <target state="needs-review-translation">
+        <target state="translated">
 =====================
 테스트 도구 모음이 실패했습니다. 실패한 총 테스트: {0}, 종료 코드: {1}, 시도: {2}/{3}
 =====================
@@ -149,7 +149,7 @@ Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
 =====================
 Tests suite failed in all {0} attempts
 =====================</source>
-        <target state="needs-review-translation">
+        <target state="translated">
 =====================
 테스트 도구 모음이 모든 {0} 시도에 실패했습니다
 =====================</target>
@@ -157,7 +157,7 @@ Tests suite failed in all {0} attempts
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>
-        <target state="needs-review-translation">테스트 도구 모음이 2와 다른 종료 코드를 사용하여 실패했습니다(테스트 실패). 예기치 않은 조건과 관련된 오류입니다. 종료 코드 '{0}'</target>
+        <target state="translated">테스트 도구 모음이 2와 다른 종료 코드를 사용하여 실패했습니다(테스트 실패). 예기치 않은 조건과 관련된 오류입니다. 종료 코드 '{0}'</target>
         <note>{0} is the exit code.</note>
       </trans-unit>
     </body>
