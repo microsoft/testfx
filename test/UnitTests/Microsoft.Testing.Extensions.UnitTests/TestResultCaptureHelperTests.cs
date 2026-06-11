@@ -63,12 +63,11 @@ public sealed class TestResultCaptureHelperTests
     {
         // U+1F600 (😀) is encoded as the surrogate pair D83D DE00.
         // Truncating at length 3 would otherwise leave a dangling high surrogate at index 2.
+        // With the guard, the high surrogate at index 2 is dropped and the truncation suffix
+        // starts immediately after "ab" — so the result must equal "ab" + suffix exactly.
         string value = "ab\uD83D\uDE00cd";
         string? result = InvokeTruncate(value, 3);
-        Assert.IsNotNull(result);
-        Assert.IsTrue(result.StartsWith("ab", StringComparison.Ordinal));
-        Assert.IsFalse(char.IsHighSurrogate(result[1]), "Truncated value must not end with a dangling high surrogate.");
-        Assert.Contains($"[truncated, original length: {value.Length}]", result);
+        Assert.AreEqual($"ab\n…[truncated, original length: {value.Length}]", result);
     }
 
     [TestMethod]
