@@ -13,7 +13,7 @@
     <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
 
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-file-prefix $(ModuleName) --diagnostic-verbosity trace</TestingPlatformCommandLineArguments>
-    <TestingPlatformCommandLineArguments Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)'))' == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
