@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="ActualValue">
         <source>Actual value: {0}</source>
-        <target state="needs-review-translation">Gerçek değer: {0}</target>
+        <target state="translated">Gerçek değer: {0}</target>
         <note>{0} is the actual value.</note>
       </trans-unit>
       <trans-unit id="DidNotReceiveModuleInfo">
         <source>MSBuild extension failed to receive test application information from '{0}'</source>
-        <target state="needs-review-translation">MSBuild uzantısı '{0}' kaynağından test uygulaması bilgilerini alamadı</target>
+        <target state="translated">MSBuild uzantısı '{0}' kaynağından test uygulaması bilgilerini alamadı</target>
         <note>{0} is the test application path. Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="DidNotReceiveRunSummaryInfo">
         <source>MSBuild extension failed to receive test run summary from '{0}'</source>
-        <target state="needs-review-translation">MSBuild uzantısı '{0}' kaynağından test çalıştırması özetini alamadı</target>
+        <target state="translated">MSBuild uzantısı '{0}' kaynağından test çalıştırması özetini alamadı</target>
         <note>{0} is the test application path. Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="ExpectedValue">
         <source>Expected value: {0}</source>
-        <target state="needs-review-translation">Beklenen değer: {0}</target>
+        <target state="translated">Beklenen değer: {0}</target>
         <note>{0} is the expected value.</note>
       </trans-unit>
       <trans-unit id="Failed">
@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="FailedTestDetail">
         <source>Failed test '{0}', reason '{1}'</source>
-        <target state="needs-review-translation">Başarısız test '{0}', neden '{1}'</target>
+        <target state="translated">Başarısız test '{0}', neden '{1}'</target>
         <note>{0} is the failed test name. {1} is the failure reason.</note>
       </trans-unit>
       <trans-unit id="FullPathToolCalculationFailed">
         <source>Full path tool calculation failed. Runner '{0}'</source>
-        <target state="needs-review-translation">Tam yol aracı hesaplaması başarısız. Çalıştırıcı '{0}'</target>
+        <target state="translated">Tam yol aracı hesaplaması başarısız. Çalıştırıcı '{0}'</target>
         <note>{0} is the runner tool name.</note>
       </trans-unit>
       <trans-unit id="IncompatibleArchitecture">
@@ -44,7 +44,7 @@ You can resolve the problem by installing the '{1}' .NET.
 
 The specified framework can be found at:
   - https://aka.ms/dotnet-download</source>
-        <target state="needs-review-translation">'{1}' mimarisi için '{0}' ana bilgisayarı bulunamadı.
+        <target state="translated">'{1}' mimarisi için '{0}' ana bilgisayarı bulunamadı.
 
 '{1}' .NET’i yükleyerek sorunu çözebilirsiniz.
 
@@ -54,7 +54,7 @@ Belirtilen çerçeve şu konumda bulunabilir:
       </trans-unit>
       <trans-unit id="InvalidTargetPath">
         <source>Invalid TargetPath, {0}</source>
-        <target state="needs-review-translation">Geçersiz TargetPath, {0}</target>
+        <target state="translated">Geçersiz TargetPath, {0}</target>
         <note>0 is the invalid {Locked="TargetPath"} value.</note>
       </trans-unit>
       <trans-unit id="Passed">
@@ -64,7 +64,7 @@ Belirtilen çerçeve şu konumda bulunabilir:
       </trans-unit>
       <trans-unit id="RunTests">
         <source>Run tests: '{0}' [{1}|{2}]</source>
-        <target state="needs-review-translation">Testleri çalıştırın: '{0}' [{1}|{2}]</target>
+        <target state="translated">Testleri çalıştırın: '{0}' [{1}|{2}]</target>
         <note>{0} is the test application path. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
       <trans-unit id="StackTrace">
@@ -74,22 +74,22 @@ Belirtilen çerçeve şu konumda bulunabilir:
       </trans-unit>
       <trans-unit id="Summary">
         <source>{0}! - Failed: {1}, Passed: {2}, Skipped: {3}, Total: {4}, Duration: {5}</source>
-        <target state="needs-review-translation">{0}! - Başarısız: {1}, Başarılı: {2}, Atlandı: {3}, Toplam: {4}, Süre: {5}</target>
+        <target state="translated">{0}! - Başarısız: {1}, Başarılı: {2}, Atlandı: {3}, Toplam: {4}, Süre: {5}</target>
         <note>{0} is the overall test outcome. {1} is the failed test count. {2} is the passed test count. {3} is the skipped test count. {4} is the total test count. {5} is the test run duration.</note>
       </trans-unit>
       <trans-unit id="TestFailed">
         <source>Tests failed: '{0}' [{1}|{2}]</source>
-        <target state="needs-review-translation">Testler başarısız oldu: '{0}' [{1}|{2}]</target>
+        <target state="translated">Testler başarısız oldu: '{0}' [{1}|{2}]</target>
         <note>{0} is the test output file name. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
       <trans-unit id="TestFailedNoDetail">
         <source>Tests failed: {0}</source>
-        <target state="needs-review-translation">Testler başarısız oldu: {0}</target>
+        <target state="translated">Testler başarısız oldu: {0}</target>
         <note>{0} is the test output.</note>
       </trans-unit>
       <trans-unit id="TestsSucceeded">
         <source>Tests succeeded: '{0}' [{1}|{2}]</source>
-        <target state="needs-review-translation">Başarılı testler: '{0}' [{1}|{2}]</target>
+        <target state="translated">Başarılı testler: '{0}' [{1}|{2}]</target>
         <note>{0} is the test application path. {1} is the target framework. {2} is the test architecture.</note>
       </trans-unit>
     </body>
