@@ -12,6 +12,15 @@ public abstract class AcceptanceTestBase
         var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
 
+        // The preview MTP version pinned in eng/Versions.props — this is the version that the
+        // currently-pinned preview CodeCoverage package transitively demands. Test assets that
+        // consume the MSTest meta package need to reference this preview MTP explicitly,
+        // because the locally-built MTP carries a "-ci"/"-dev" suffix that sorts BELOW
+        // "-preview.<date>" per SemVer 2.0 and therefore can never satisfy the transitive
+        // ">= 2.3.0-preview.<date>" lower bound coming from CodeCoverage. See issue #9030.
+        var versionsPropsDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        MicrosoftTestingPlatformPreviewVersion = versionsPropsDoc.Descendants("MicrosoftTestingPlatformVersion").Single().Value;
+
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
         MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
@@ -36,6 +45,14 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
+
+    /// <summary>
+    /// The preview MTP version pinned in <c>eng/Versions.props</c>. Use this on test assets that
+    /// reference the MSTest meta package (which transitively pulls in a preview
+    /// <c>Microsoft.Testing.Extensions.CodeCoverage</c> demanding a matching preview MTP) so the
+    /// explicit reference satisfies the lower bound that the locally-built "-ci"/"-dev" MTP cannot.
+    /// </summary>
+    public static string MicrosoftTestingPlatformPreviewVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
 

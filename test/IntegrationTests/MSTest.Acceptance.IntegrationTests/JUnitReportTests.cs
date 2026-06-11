@@ -85,6 +85,7 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
             SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformPreviewVersion$", MicrosoftTestingPlatformPreviewVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
@@ -100,6 +101,13 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      MSTest meta transitively pulls in a preview Microsoft.Testing.Extensions.CodeCoverage that
+      demands a preview Microsoft.Testing.Platform (>= 2.3.0-preview.<date>). The locally-built MTP
+      carries a "-ci"/"-dev" suffix that sorts BELOW "-preview.<date>" per SemVer 2.0, so we add
+      an explicit reference to the preview MTP to satisfy the transitive lower bound. See #9030.
+    -->
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformPreviewVersion$" />
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
   </ItemGroup>
@@ -215,6 +223,7 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
             SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformPreviewVersion$", MicrosoftTestingPlatformPreviewVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 
@@ -233,6 +242,13 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
   </PropertyGroup>
 
   <ItemGroup>
+    <!--
+      MSTest meta transitively pulls in a preview Microsoft.Testing.Extensions.CodeCoverage that
+      demands a preview Microsoft.Testing.Platform (>= 2.3.0-preview.<date>). The locally-built MTP
+      carries a "-ci"/"-dev" suffix that sorts BELOW "-preview.<date>" per SemVer 2.0, so we add
+      an explicit reference to the preview MTP to satisfy the transitive lower bound. See #9030.
+    -->
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformPreviewVersion$" />
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
