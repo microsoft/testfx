@@ -148,9 +148,7 @@ internal static class TestClassModelBuilder
         => symbol.DeclaredAccessibility is
             Accessibility.Public
             or Accessibility.Internal
-            or Accessibility.Protected
-            or Accessibility.ProtectedOrInternal
-            or Accessibility.ProtectedAndInternal;
+            or Accessibility.ProtectedOrInternal;
 
     private static string BuildMethodSignatureKey(IMethodSymbol method)
     {
@@ -277,8 +275,8 @@ internal static class TestClassModelBuilder
             Attributes: BuildAttributes(CollectInheritedAttributes(property)));
 
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
-    // overridden-method chain and union attributes, keeping the most-derived application when
-    // the same attribute type appears on multiple levels.
+    // overridden-member chain, honor AttributeUsageAttribute.Inherited, and keep only the
+    // most-derived application for attributes that do not allow multiple instances.
     private static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
     {
         ImmutableArray<AttributeData> own = method.GetAttributes();
@@ -289,10 +287,10 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own);
+        AppendAttributes(builder, seen, own, inheritedOnly: false);
         for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
         {
-            AppendUnique(builder, seen, baseMethod.GetAttributes());
+            AppendAttributes(builder, seen, baseMethod.GetAttributes(), inheritedOnly: true);
         }
 
         return builder.ToImmutable();
@@ -308,19 +306,20 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own);
+        AppendAttributes(builder, seen, own, inheritedOnly: false);
         for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
         {
-            AppendUnique(builder, seen, baseProperty.GetAttributes());
+            AppendAttributes(builder, seen, baseProperty.GetAttributes(), inheritedOnly: true);
         }
 
         return builder.ToImmutable();
     }
 
-    private static void AppendUnique(
+    private static void AppendAttributes(
         ImmutableArray<AttributeData>.Builder builder,
         HashSet<string> seen,
-        ImmutableArray<AttributeData> attributes)
+        ImmutableArray<AttributeData> attributes,
+        bool inheritedOnly)
     {
         foreach (AttributeData attribute in attributes)
         {
@@ -329,13 +328,57 @@ internal static class TestClassModelBuilder
                 continue;
             }
 
+            AttributeUsageMetadata usage = GetAttributeUsage(attributeClass);
+            if (inheritedOnly && !usage.Inherited)
+            {
+                continue;
+            }
+
             string key = attributeClass.ToDisplayString(FullyQualifiedFormat);
-            if (seen.Add(key))
+            if (usage.AllowMultiple || seen.Add(key))
             {
                 builder.Add(attribute);
             }
         }
     }
+
+    private static AttributeUsageMetadata GetAttributeUsage(INamedTypeSymbol attributeClass)
+    {
+        bool inherited = true;
+        bool allowMultiple = false;
+
+        foreach (AttributeData attribute in attributeClass.GetAttributes())
+        {
+            if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
+            {
+                continue;
+            }
+
+            foreach (KeyValuePair<string, TypedConstant> namedArgument in attribute.NamedArguments)
+            {
+                if (namedArgument.Value.Value is not bool value)
+                {
+                    continue;
+                }
+
+                switch (namedArgument.Key)
+                {
+                    case nameof(AttributeUsageAttribute.Inherited):
+                        inherited = value;
+                        break;
+                    case nameof(AttributeUsageAttribute.AllowMultiple):
+                        allowMultiple = value;
+                        break;
+                }
+            }
+
+            break;
+        }
+
+        return new AttributeUsageMetadata(inherited, allowMultiple);
+    }
+
+    private readonly record struct AttributeUsageMetadata(bool Inherited, bool AllowMultiple);
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {
