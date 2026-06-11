@@ -8,8 +8,11 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 using Moq;
+
+using JUnitTestResultCapture = Microsoft.Testing.Extensions.JUnitReport.TestResultCapture;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -186,7 +189,7 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public void TestResultCapture_DoesNotWalkTerminalProperties_ForNonTerminalStates()
+    public void JUnitTestResultCapture_DoesNotWalkTerminalProperties_ForNonTerminalStates()
     {
         var bag = new PropertyBag(
             DiscoveredTestNodeStateProperty.CachedInstance,
@@ -194,7 +197,22 @@ public class HtmlReportEngineTests
             new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)));
         TestNode node = new() { Uid = "a", DisplayName = "x", Properties = bag };
 
-        Assert.IsNull(TestResultCapture.TryCapture(node));
+        Assert.IsNull(JUnitTestResultCapture.TryCapture(new TestNodeUpdateMessage(new SessionUid("1"), node)));
+    }
+
+    [TestMethod]
+    public void JUnitTestResultCapture_DuplicateSingletonProperty_Throws()
+    {
+        var bag = new PropertyBag(
+            PassedTestNodeStateProperty.CachedInstance,
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)));
+        TestNode node = new() { Uid = "a", DisplayName = "x", Properties = bag };
+
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(() =>
+            JUnitTestResultCapture.TryCapture(new TestNodeUpdateMessage(new SessionUid("1"), node)));
+
+        Assert.Contains(nameof(TimingProperty), ex.Message);
     }
 
     [TestMethod]
