@@ -38,7 +38,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
                 MSTestAttributeNames.TestClass,
                 // Predicate stays cheap and shape-only. Diagnostics for unsupported shapes
                 // (static, generic, inaccessible, generic method, by-ref parameter) are
-                // computed in BuildModel where we have the full ISymbol.
+                // computed in BuildResult where we have the full ISymbol.
                 predicate: static (node, _) => node is TypeDeclarationSyntax,
                 transform: static (ctx, ct) => BuildResult(ctx, ct));
 
