@@ -192,7 +192,7 @@
     {
       "id": "platform-ci-environment-detector",
       "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/CIEnvironmentDetector.cs",
-      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection. This file is the single source of truth: it is linked into MSTest.TestFramework via src/TestFramework/TestFramework/TestFramework.csproj and toggled via the IS_CORE_MTP define.",
+      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection. This file is the single source of truth: it is linked into MSTest.TestFramework via src/TestFramework/TestFramework/TestFramework.csproj and toggled via the TESTFRAMEWORK_CI_DETECTOR define.",
       "sources": [
         {
           "repo": "dotnet/sdk",
