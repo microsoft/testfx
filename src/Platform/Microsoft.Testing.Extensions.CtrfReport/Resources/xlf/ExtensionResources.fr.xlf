@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="fr" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="CtrfReportArtifactDescription">
+        <source>CTRF (Common Test Report Format) JSON test report</source>
+        <target state="new">CTRF (Common Test Report Format) JSON test report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportArtifactDisplayName">
+        <source>CTRF Report</source>
+        <target state="new">CTRF Report</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportFileExistsAndWillBeOverwritten">
+        <source>Warning: CTRF report file '{0}' already exists and will be overwritten.</source>
+        <target state="new">Warning: CTRF report file '{0}' already exists and will be overwritten.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameExtensionIsNotJson">
+        <source>'--report-ctrf-filename' file name argument must end with '.json' (e.g. --report-ctrf-filename myreport.ctrf.json)</source>
+        <target state="new">'--report-ctrf-filename' file name argument must end with '.json' (e.g. --report-ctrf-filename myreport.ctrf.json)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameMustNotBeEmpty">
+        <source>'--report-ctrf-filename' file name part must not be empty (e.g. --report-ctrf-filename myreport.ctrf.json)</source>
+        <target state="new">'--report-ctrf-filename' file name part must not be empty (e.g. --report-ctrf-filename myreport.ctrf.json)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameOptionDescription">
+        <source>The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.ctrf.json</source>
+        <target state="new">The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.ctrf.json</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
+        <source>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</source>
+        <target state="new">'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameRequiresCtrfReport">
+        <source>'--report-ctrf-filename' requires '--report-ctrf' to be enabled</source>
+        <target state="new">'--report-ctrf-filename' requires '--report-ctrf' to be enabled</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportGeneratorDescription">
+        <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</source>
+        <target state="new">Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportGeneratorDisplayName">
+        <source>CTRF report generator</source>
+        <target state="new">CTRF report generator</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportIsNotValidForDiscovery">
+        <source>'--report-ctrf' cannot be enabled when using '--list-tests'</source>
+        <target state="new">'--report-ctrf' cannot be enabled when using '--list-tests'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CtrfReportOptionDescription">
+        <source>Enable generating a CTRF (Common Test Report Format) JSON report</source>
+        <target state="new">Enable generating a CTRF (Common Test Report Format) JSON report</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
