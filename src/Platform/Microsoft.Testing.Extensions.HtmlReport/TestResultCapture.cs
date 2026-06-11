@@ -94,18 +94,10 @@ internal static class TestResultCapture
     }
 
     private static string ClassifyOutcome(TestNodeStateProperty state)
-    {
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
         // Cancellation is intentionally handled in report-specific wrappers. HTML has
-        // historically let cancellation fall through to the failed outcome category.
-        if (state is CancelledTestNodeStateProperty)
-        {
-            return TestResultCaptureHelper.ClassifyOutcome(state);
-        }
-#pragma warning restore CS0618, MTP0001
-
-        return TestResultCaptureHelper.ClassifyOutcome(state);
-    }
+        // historically let cancellation fall through to the failed outcome category, so
+        // this wrapper simply delegates to the shared helper with no special-casing.
+        => TestResultCaptureHelper.ClassifyOutcome(state);
 
     internal static string? Truncate(string? value, int maxLength)
         => TestResultCaptureHelper.Truncate(value, maxLength);
