@@ -77,7 +77,7 @@ internal static class TestResultCapture
         }
 
         static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
-            where TProperty : IProperty
+            where TProperty : class, IProperty
             => existingProperty is not null
                 ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
                 : property;
