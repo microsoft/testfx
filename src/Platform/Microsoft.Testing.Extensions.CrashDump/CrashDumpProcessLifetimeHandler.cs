@@ -282,7 +282,8 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // same testhost-dump-name regex to the prefix of each "*.crashreport.json" file in the dump
         // directory: this preserves the literal-`%p`-baked PID match while expanding any remaining
         // placeholders as wildcards, mirroring the dump-publication logic above.
-        string? matchedCrashReportFile = null;
+        List<string>? crashReportFiles = null;
+        bool matchedCrashReportFile = false;
         if (generateCrashReport && Directory.Exists(dumpDirectory))
         {
             foreach (string crashReportFile in Directory.EnumerateFiles(dumpDirectory, CrashReportFileSearchPattern))
@@ -293,16 +294,19 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
                     continue;
                 }
 
+                crashReportFiles ??= [];
+                crashReportFiles.Add(crashReportFile);
+
                 string dumpFileNamePart = crashReportFileName.Substring(0, crashReportFileName.Length - CrashReportFileExtension.Length);
                 if (testhostDumpRegex.IsMatch(dumpFileNamePart))
                 {
-                    matchedCrashReportFile = crashReportFile;
-                    break;
+                    matchedCrashReportFile = true;
                 }
             }
         }
 
-        bool crashReportArtifactProduced = matchedCrashReportFile is not null;
+        bool expectedCrashReportFileExists = File.Exists(expectedCrashReportFile);
+        bool crashReportArtifactProduced = expectedCrashReportFileExists || matchedCrashReportFile;
 
         // Inspect the disk before emitting the crash banner so the message reflects
         // what was actually produced, not what was requested. The runtime may fail
@@ -342,9 +346,16 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         if (generateCrashReport)
         {
-            if (matchedCrashReportFile is not null)
+            if (expectedCrashReportFileExists)
             {
-                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(matchedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+                await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+            }
+            else if (matchedCrashReportFile)
+            {
+                foreach (string crashReportFile in crashReportFiles!)
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+                }
             }
             else
             {
