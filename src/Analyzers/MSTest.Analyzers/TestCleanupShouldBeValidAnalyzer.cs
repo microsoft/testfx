@@ -3,8 +3,6 @@
 
 using System.Collections.Immutable;
 
-using Analyzer.Utilities.Extensions;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -41,26 +39,13 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
             FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
                 context,
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute,
-                static (symbolContext, symbols) => AnalyzeSymbol(
+                static (symbolContext, symbols) => FixtureMethodAnalyzerHelper.AnalyzeInstanceFixtureMethod(
                     symbolContext,
                     symbols.FixtureAttributeSymbol,
                     symbols.TaskSymbol,
                     symbols.ValueTaskSymbol,
                     symbols.TestClassAttributeSymbol,
-                    symbols.CanDiscoverInternals)));
-    }
-
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testCleanupAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
-    {
-        var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (methodSymbol.HasAttribute(testCleanupAttributeSymbol)
-            && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
-                allowGenericType: true, FixtureParameterMode.MustNotHaveTestContext, testContextSymbol: null, testClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
-        {
-            context.ReportDiagnostic(isFixable
-                ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
-                : methodSymbol.CreateDiagnostic(Rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
-        }
+                    symbols.CanDiscoverInternals,
+                    Rule)));
     }
 }
