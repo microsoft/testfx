@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="ArgumentXMustDeriveFromClassY">
         <source>Type '{0}' is not assignable to '{1}'.</source>
-        <target state="needs-review-translation">Тип "{0}" не может быть назначен "{1}".</target>
+        <target state="translated">Тип "{0}" не может быть назначен "{1}".</target>
         <note>{0} is the argument name, for example {Locked="applicationType"}. {1} is the fully qualified class name, for example {Locked="Microsoft.UI.Xaml.Application"}.</note>
       </trans-unit>
       <trans-unit id="AsyncUITestMethodWithNoDispatcherQueue">
         <source>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</source>
-        <target state="needs-review-translation">Параметр UITestMethodAttribute.DispatcherQueue не должен иметь значение NULL. Чтобы использовать параметр UITestMethodAttribute в классических приложениях WinUI, не забудьте задать статический параметр UITestMethodAttribute.DispatcherQueue во время инициализации теста.</target>
+        <target state="new">UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</target>
         <note>Do not localize API names {Locked="UITestMethodAttribute.DispatcherQueue"}{Locked="UITestMethodAttribute"}, the product name {Locked="WinUI"}, or the C# keyword {Locked="null"}.</note>
       </trans-unit>
     </body>

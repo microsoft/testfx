@@ -9,12 +9,12 @@
       </trans-unit>
       <trans-unit id="ActualHasMismatchedElements">
         <source>The expected collection contains {1} occurrence(s) of &lt;{2}&gt;. The actual collection contains {3} occurrence(s). {0}</source>
-        <target state="needs-review-translation">所需集合包含 &lt;{2}&gt; 的 {1} 个匹配项。实际集合包含 {3} 个匹配项。{0}</target>
+        <target state="translated">所需集合包含 &lt;{2}&gt; 的 {1} 个匹配项。实际集合包含 {3} 个匹配项。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected occurrence count. {2} is the mismatched element. {3} is the actual occurrence count.</note>
       </trans-unit>
       <trans-unit id="AllItemsAreUniqueFailMsg">
         <source>Duplicate item found:&lt;{1}&gt;. {0}</source>
-        <target state="needs-review-translation">找到了重复项: &lt;{1}&gt;。{0}</target>
+        <target state="translated">找到了重复项: &lt;{1}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the duplicate item.</note>
       </trans-unit>
       <trans-unit id="AreAllDistinctFailedSummary">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="AreAllNotNullFailedSummary">
         <source>Expected all items in collection to be non-null.</source>
-        <target state="needs-review-translation">预期集合中所有项均不为 null。</target>
+        <target state="translated">预期集合中所有项均不为 null。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreAllOfTypeFailedSummary">
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
-        <target state="needs-review-translation">应为: &lt;{1}&gt;。实际值的大小写有所不同: &lt;{2}&gt;。{0}</target>
+        <target state="translated">应为: &lt;{1}&gt;。实际值的大小写有所不同: &lt;{2}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected value. {2} is the actual value with different casing.</note>
       </trans-unit>
       <trans-unit id="AreEqualDeltaFailedSummary">
@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="AreEqualDifferentTypesFailMsg">
         <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="needs-review-translation">应为: &lt;{1} ({2})&gt;，实际为: &lt;{3} ({4})&gt;。{0}</target>
+        <target state="translated">应为: &lt;{1} ({2})&gt;，实际为: &lt;{3} ({4})&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected value. {2} is the expected value type. {3} is the actual value. {4} is the actual value type.</note>
       </trans-unit>
       <trans-unit id="AreEqualFailMsg">
         <source>Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="needs-review-translation">应为: &lt;{1}&gt;，实际为: &lt;{2}&gt;。{0}</target>
+        <target state="translated">应为: &lt;{1}&gt;，实际为: &lt;{2}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffActualPrefix">
@@ -67,7 +67,7 @@
 {2}
 {3}
 {4}</source>
-        <target state="needs-review-translation">{0}{1}
+        <target state="translated">{0}{1}
 {2}
 {3}
 {4}</target>
@@ -75,12 +75,12 @@
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthBothMsg">
         <source>Strings have same length ({0}) and differ at 1 location(s). First difference at index {1}.</source>
-        <target state="needs-review-translation">字符串长度相同({0})，且有 1 处不同。首次差异位于索引 {1}。</target>
+        <target state="translated">字符串长度相同({0})，且有 1 处不同。首次差异位于索引 {1}。</target>
         <note>{0} is the common string length. {1} is the index of the first difference.</note>
       </trans-unit>
       <trans-unit id="AreEqualStringDiffLengthDifferentMsg">
         <source>Strings have different lengths (expected: {0}, actual: {1}) and differ at 1 location(s). First difference at index {2}.</source>
-        <target state="needs-review-translation">字符串长度不同(预期: {0}，实际: {1})，且有 1 处不同。首次差异位于索引 {2}。</target>
+        <target state="translated">字符串长度不同(预期: {0}，实际: {1})，且有 1 处不同。首次差异位于索引 {2}。</target>
         <note>{0} is the expected string length. {1} is the actual string length. {2} is the index of the first difference.</note>
       </trans-unit>
       <trans-unit id="AreEqualStringsCaseOnlyDifferenceMsg">
@@ -100,72 +100,72 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchActualDictionaryThrew">
         <source>reading the actual dictionary threw {0}: {1}.</source>
-        <target state="needs-review-translation">读取实际字典时引发 {0}: {1}。</target>
+        <target state="translated">读取实际字典时引发 {0}: {1}。</target>
         <note>{0} is the exception type thrown while reading the actual dictionary. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchActualEnumerationThrew">
         <source>enumerating the actual collection threw {0}: {1}.</source>
-        <target state="needs-review-translation">枚举实际集合时引发 {0}: {1}。</target>
+        <target state="translated">枚举实际集合时引发 {0}: {1}。</target>
         <note>{0} is the exception type thrown while enumerating the actual collection. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchActualMemberThrew">
         <source>reading the actual member threw {0}: {1}.</source>
-        <target state="needs-review-translation">读取实际成员时引发 {0}: {1}。</target>
+        <target state="translated">读取实际成员时引发 {0}: {1}。</target>
         <note>{0} is the exception type thrown while reading the actual member. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchAt">
         <source>Mismatch at '{0}': {1}</source>
-        <target state="needs-review-translation">在“{0}”处不匹配: {1}</target>
+        <target state="translated">在“{0}”处不匹配: {1}</target>
         <note>{0} is a member path (e.g., {Locked="Order.Items[2].Price"}). {1} is a localized reason describing the kind of mismatch.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedDictionaryThrew">
         <source>reading the expected dictionary threw {0}: {1}.</source>
-        <target state="needs-review-translation">读取预期字典时引发 {0}: {1}。</target>
+        <target state="translated">读取预期字典时引发 {0}: {1}。</target>
         <note>{0} is the exception type thrown while reading the expected dictionary. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedEnumerationThrew">
         <source>enumerating the expected collection threw {0}: {1}.</source>
-        <target state="needs-review-translation">枚举预期集合时引发 {0}: {1}。</target>
+        <target state="translated">枚举预期集合时引发 {0}: {1}。</target>
         <note>{0} is the exception type thrown while enumerating the expected collection. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExpectedMemberThrew">
         <source>reading the expected member threw {0}: {1}.</source>
-        <target state="needs-review-translation">读取预期成员时引发 {0}: {1}。</target>
+        <target state="translated">读取预期成员时引发 {0}: {1}。</target>
         <note>{0} is the exception type thrown while reading the expected member. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchExtraMembers">
         <source>actual has unexpected members not present on expected: {0}.</source>
-        <target state="needs-review-translation">实际值包含预期值中不存在的意外成员: {0}。</target>
+        <target state="translated">实际值包含预期值中不存在的意外成员: {0}。</target>
         <note>{0} is a comma-separated list of unexpected actual member names.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchIEquatableThrew">
         <source>IEquatable.Equals threw {0}: {1}.</source>
-        <target state="needs-review-translation">IEquatable.Equals 引发 {0}: {1}。</target>
+        <target state="translated">IEquatable.Equals 引发 {0}: {1}。</target>
         <note>{0} is the exception type thrown by {Locked="IEquatable.Equals"}. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchLength">
         <source>collections differ in length (expected {0} elements, actual {1}).</source>
-        <target state="needs-review-translation">集合长度不同(预期 {0} 个元素，实际 {1} 个)。</target>
+        <target state="translated">集合长度不同(预期 {0} 个元素，实际 {1} 个)。</target>
         <note>{0} is the expected collection length. {1} is the actual collection length.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchMaxDepth">
         <source>comparison exceeded the maximum supported depth of {0}.</source>
-        <target state="needs-review-translation">比较超出支持的最大深度 {0}。</target>
+        <target state="translated">比较超出支持的最大深度 {0}。</target>
         <note>{0} is the maximum supported comparison depth.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchMissingKey">
         <source>key {0} present on expected is missing from actual.</source>
-        <target state="needs-review-translation">预期值中存在的键 {0} 在实际值中缺失。</target>
+        <target state="translated">预期值中存在的键 {0} 在实际值中缺失。</target>
         <note>{0} is the key present on the expected dictionary but missing from the actual dictionary.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchMissingMember">
         <source>member '{0}' present on expected is missing from actual.</source>
-        <target state="needs-review-translation">预期值中存在的成员“{0}”在实际值中缺失。</target>
+        <target state="translated">预期值中存在的成员“{0}”在实际值中缺失。</target>
         <note>{0} is the member name present on the expected object but missing from the actual object.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchNull">
         <source>one side is null, the other is not.</source>
-        <target state="needs-review-translation">一侧为 null，另一侧不为 null。</target>
+        <target state="translated">一侧为 null，另一侧不为 null。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchTopology">
@@ -175,12 +175,12 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchType">
         <source>incompatible types (expected '{0}', actual '{1}').</source>
-        <target state="needs-review-translation">类型不兼容(预期:“{0}”，实际:“{1}”)。</target>
+        <target state="translated">类型不兼容(预期:“{0}”，实际:“{1}”)。</target>
         <note>{0} is the expected type name. {1} is the actual type name.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchUnexpectedKey">
         <source>key {0} present on actual is not on expected.</source>
-        <target state="needs-review-translation">实际值中存在的键 {0} 不在预期值中。</target>
+        <target state="translated">实际值中存在的键 {0} 不在预期值中。</target>
         <note>{0} is the key present on the actual dictionary but missing from the expected dictionary.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchValue">
@@ -200,7 +200,7 @@
       </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
-        <target state="needs-review-translation">应为: &lt;{1}&gt; 以外的任意值，实际为: &lt;{2}&gt;。{0}</target>
+        <target state="translated">应为: &lt;{1}&gt; 以外的任意值，实际为: &lt;{2}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the unexpected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="AreNotEqualStringsCaseInsensitiveFailedSummary">
@@ -235,7 +235,7 @@
       </trans-unit>
       <trans-unit id="AreNotSameBothNull">
         <source>Both values are &lt;null&gt;. {0}</source>
-        <target state="needs-review-translation">两个值均为 &lt;null&gt;。{0}</target>
+        <target state="translated">两个值均为 &lt;null&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreNotSequenceEqualInAnyOrderFailedSummary">
@@ -250,17 +250,17 @@
       </trans-unit>
       <trans-unit id="AreSameActualIsNull">
         <source>Actual is &lt;null&gt;. {0}</source>
-        <target state="needs-review-translation">实际值为 &lt;null&gt;。{0}</target>
+        <target state="translated">实际值为 &lt;null&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreSameExpectedIsNull">
         <source>Expected is &lt;null&gt;. {0}</source>
-        <target state="needs-review-translation">应为 &lt;null&gt;。{0}</target>
+        <target state="translated">应为 &lt;null&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreSameGivenValues">
         <source>Do not pass value types to AreSame(). Values converted to Object will never be the same. Consider using AreEqual(). {0}</source>
-        <target state="needs-review-translation">不要向 AreSame() 传递值类型。转换为 Object 的值将永远不会相等。请考虑使用 AreEqual()。{0}</target>
+        <target state="translated">不要向 AreSame() 传递值类型。转换为 Object 的值将永远不会相等。请考虑使用 AreEqual()。{0}</target>
         <note>{0} is the user-provided assertion message. Do not localize assertion method names {Locked="AreSame"}{Locked="AreEqual"} or the type name {Locked="Object"}.</note>
       </trans-unit>
       <trans-unit id="AreSequenceEqualInAnyOrderFailedSummary">
@@ -275,17 +275,17 @@
       </trans-unit>
       <trans-unit id="AreSequenceEqualLengthDiffMsg">
         <source>Sequences have different lengths (expected: {0}, actual: {1}).</source>
-        <target state="needs-review-translation">序列长度不同(预期: {0}，实际: {1})。</target>
+        <target state="translated">序列长度不同(预期: {0}，实际: {1})。</target>
         <note>{0} is the expected sequence length. {1} is the actual sequence length.</note>
       </trans-unit>
       <trans-unit id="AreSequenceEqualMissingUnexpectedMsg">
         <source>Missing {0} element(s) from actual. Found {1} unexpected element(s).</source>
-        <target state="needs-review-translation">实际值缺少 {0} 个元素。发现 {1} 个意外元素。</target>
+        <target state="translated">实际值缺少 {0} 个元素。发现 {1} 个意外元素。</target>
         <note>{0} is the number of missing elements in the actual sequence. {1} is the number of unexpected elements in the actual sequence.</note>
       </trans-unit>
       <trans-unit id="AreSequenceEqualSameLengthDiffMsg">
         <source>Sequences have {0} element(s). {1} element(s) differ. First difference at index {2}.</source>
-        <target state="needs-review-translation">序列包含 {0} 个元素。有 {1} 个元素不同。首次差异位于索引 {2}。</target>
+        <target state="translated">序列包含 {0} 个元素。有 {1} 个元素不同。首次差异位于索引 {2}。</target>
         <note>{0} is the sequence length. {1} is the number of differing elements. {2} is the index of the first difference.</note>
       </trans-unit>
       <trans-unit id="AssertScopeFailure">
@@ -310,12 +310,12 @@
       </trans-unit>
       <trans-unit id="AssertThatMessageFormat">
         <source>Message: {0}</source>
-        <target state="needs-review-translation">消息: {0}</target>
+        <target state="translated">消息: {0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="BothCollectionsEmpty">
         <source>Both collections are empty. {0}</source>
-        <target state="needs-review-translation">这两个集合都为空。{0}</target>
+        <target state="translated">这两个集合都为空。{0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="BothCollectionsSameElements">
@@ -325,32 +325,32 @@
       </trans-unit>
       <trans-unit id="BothCollectionsSameReference">
         <source>Both collection references point to the same collection object. {0}</source>
-        <target state="needs-review-translation">这两个集合引用指向同一个集合对象。{0}</target>
+        <target state="translated">这两个集合引用指向同一个集合对象。{0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="BothSameElements">
         <source>Both collections contain the same elements. {0}</source>
-        <target state="needs-review-translation">这两个集合包含相同的元素。{0}</target>
+        <target state="translated">这两个集合包含相同的元素。{0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionSingleParameterMessage">
         <source>'{0}' expression: '{1}'.</source>
-        <target state="needs-review-translation">‘{0}’表达式:‘{1}’。</target>
+        <target state="translated">‘{0}’表达式:‘{1}’。</target>
         <note>{0} is the assertion parameter name. {1} is the expression the user passed for that parameter.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionThreeParametersMessage">
         <source>'{0}' expression: '{1}', '{2}' expression: '{3}', '{4}' expression: '{5}'.</source>
-        <target state="needs-review-translation">‘{0}’表达式:‘{1}’，‘{2}’表达式:‘{3}’，‘{4}’表达式:‘{5}’。</target>
+        <target state="translated">‘{0}’表达式:‘{1}’，‘{2}’表达式:‘{3}’，‘{4}’表达式:‘{5}’。</target>
         <note>{0} is the first assertion parameter name. {1} is the expression the user passed for the first parameter. {2} is the second assertion parameter name. {3} is the expression the user passed for the second parameter. {4} is the third assertion parameter name. {5} is the expression the user passed for the third parameter.</note>
       </trans-unit>
       <trans-unit id="CallerArgumentExpressionTwoParametersMessage">
         <source>'{0}' expression: '{1}', '{2}' expression: '{3}'.</source>
-        <target state="needs-review-translation">‘{0}’表达式:‘{1}’,‘{2}’表达式:‘{3}’。</target>
+        <target state="translated">‘{0}’表达式:‘{1}’,‘{2}’表达式:‘{3}’。</target>
         <note>{0} is the first assertion parameter name. {1} is the expression the user passed for the first parameter. {2} is the second assertion parameter name. {3} is the expression the user passed for the second parameter.</note>
       </trans-unit>
       <trans-unit id="CollectionEqualReason">
         <source>{0}. {1}</source>
-        <target state="needs-review-translation">{0}。{1}</target>
+        <target state="translated">{0}。{1}</target>
         <note>{0} is the user-provided assertion message. {1} is the collection comparison failure reason.</note>
       </trans-unit>
       <trans-unit id="ContainsAllFailedSummary">
@@ -360,12 +360,12 @@
       </trans-unit>
       <trans-unit id="ContainsFail">
         <source>String '{0}' does not contain string '{1}'. {2}.</source>
-        <target state="needs-review-translation">字符串“{0}”不包含字符串“{1}”。{2}。</target>
+        <target state="translated">字符串“{0}”不包含字符串“{1}”。{2}。</target>
         <note>{0} is the string being searched. {1} is the expected substring. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="ContainsItemFailMsg">
         <source>Expected collection to contain the specified item. {0}</source>
-        <target state="needs-review-translation">预期集合包含指定项。{0}</target>
+        <target state="translated">预期集合包含指定项。{0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="ContainsItemFailedSummary">
@@ -375,7 +375,7 @@
       </trans-unit>
       <trans-unit id="ContainsPredicateFailMsg">
         <source>Expected at least one item to match the predicate. {0}</source>
-        <target state="needs-review-translation">应至少有一项与谓词匹配。{0}</target>
+        <target state="translated">应至少有一项与谓词匹配。{0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="ContainsPredicateFailedSummary">
@@ -385,7 +385,7 @@
       </trans-unit>
       <trans-unit id="ContainsSingleFailMsg">
         <source>Expected collection to contain exactly one element but found {1} element(s). {0}</source>
-        <target state="needs-review-translation">预期集合仅包含一个元素，但找到 {1} 个元素。{0}</target>
+        <target state="translated">预期集合仅包含一个元素，但找到 {1} 个元素。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the collection element count.</note>
       </trans-unit>
       <trans-unit id="ContainsSingleFailedSummary">
@@ -395,7 +395,7 @@
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailMsg">
         <source>Expected exactly one item to match the predicate but found {1} item(s). {0}</source>
-        <target state="needs-review-translation">应恰好只有一项与谓词匹配，但找到 {1} 项。{0}</target>
+        <target state="translated">应恰好只有一项与谓词匹配，但找到 {1} 项。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the number of items matching the predicate.</note>
       </trans-unit>
       <trans-unit id="ContainsSingleMatchFailedSummary">
@@ -415,12 +415,12 @@
       </trans-unit>
       <trans-unit id="DoesNotContainFail">
         <source>String '{0}' does contain string '{1}'. {2}.</source>
-        <target state="needs-review-translation">字符串“{0}”确实包含字符串“{1}”。{2}</target>
+        <target state="translated">字符串“{0}”确实包含字符串“{1}”。{2}</target>
         <note>{0} is the string being checked. {1} is the substring that should not be present. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailMsg">
         <source>Expected collection to not contain the specified item. {0}</source>
-        <target state="needs-review-translation">预期集合不包含指定项。{0}</target>
+        <target state="translated">预期集合不包含指定项。{0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotContainItemFailedSummary">
@@ -430,7 +430,7 @@
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailMsg">
         <source>Expected no items to match the predicate. {0}</source>
-        <target state="needs-review-translation">预期没有与谓词匹配的项。{0}</target>
+        <target state="translated">预期没有与谓词匹配的项。{0}</target>
         <note>{0} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotContainPredicateFailedSummary">
@@ -445,7 +445,7 @@
       </trans-unit>
       <trans-unit id="DoesNotEndWithFail">
         <source>String '{0}' ends with string '{1}'. {2}</source>
-        <target state="needs-review-translation">字符串 '{0}' 以字符串 '{1}'结尾。{2}</target>
+        <target state="translated">字符串 '{0}' 以字符串 '{1}'结尾。{2}</target>
         <note>{0} is the string being checked. {1} is the suffix that should not be present. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotEndWithFailedSummary">
@@ -460,7 +460,7 @@
       </trans-unit>
       <trans-unit id="DoesNotStartWithFail">
         <source>String '{0}' starts with string '{1}'. {2}</source>
-        <target state="needs-review-translation">字符串 '{0}' 以字符串 '{1}' 开头。{2}</target>
+        <target state="translated">字符串 '{0}' 以字符串 '{1}' 开头。{2}</target>
         <note>{0} is the string being checked. {1} is the prefix that should not be present. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="DoesNotStartWithFailedSummary">
@@ -470,51 +470,51 @@
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
         <source>Dynamic data field '{0}' should be static.</source>
-        <target state="needs-review-translation">动态数据字段“{0}”应该是静态的。</target>
+        <target state="new">Dynamic data field '{0}' should be static.</target>
         <note>{0} is the dynamic data field name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</source>
-        <target state="needs-review-translation">动态数据方法 ‘{0}’ 应为静态、非泛型，并且不能具有 ‘params’ 参数。</target>
+        <target state="new">Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</target>
         <note>{0} is the dynamic data method name. Do not localize C# keywords {Locked="static"}{Locked="params"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidPropertyLayout">
         <source>Dynamic data property '{0}' should be static and have a getter.</source>
-        <target state="needs-review-translation">动态数据属性“{0}”应为静态且具有 getter。</target>
+        <target state="new">Dynamic data property '{0}' should be static and have a getter.</target>
         <note>{0} is the dynamic data property name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
         <source>The dynamic data source '{0}' in type '{1}' should exist and be a property, a method, or a field.</source>
-        <target state="needs-review-translation">类型“{1}”中的动态数据源“{0}”应该存在，并且应为属性、方法或字段。</target>
+        <target state="translated">类型“{1}”中的动态数据源“{0}”应该存在，并且应为属性、方法或字段。</target>
         <note>{0} is the dynamic data source member name. {1} is the declaring type name.</note>
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
-        <target state="needs-review-translation">集合中元素的数量不匹配。应为: &lt;{1}&gt;，实际为: &lt;{2}&gt;。{0}</target>
+        <target state="translated">集合中元素的数量不匹配。应为: &lt;{1}&gt;，实际为: &lt;{2}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected element count. {2} is the actual element count.</note>
       </trans-unit>
       <trans-unit id="ElementsAtIndexDontMatch">
         <source>Element at index {0} do not match.
 Expected: {1}
 Actual: {2}</source>
-        <target state="needs-review-translation">索引 {0} 处的元素不匹配。
+        <target state="translated">索引 {0} 处的元素不匹配。
 预计值: {1}
 实际值: {2}</target>
         <note>{0} is the index of the mismatched element. {1} is the expected element. {2} is the actual element.</note>
       </trans-unit>
       <trans-unit id="ElementTypesAtIndexDontMatch">
         <source>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</source>
-        <target state="needs-review-translation">索引 {1} 处的元素不是所需类型。所需类型为: &lt;{2}&gt;，实际类型为: &lt;{3}&gt;。{0}</target>
+        <target state="translated">索引 {1} 处的元素不是所需类型。所需类型为: &lt;{2}&gt;，实际类型为: &lt;{3}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the element index. {2} is the expected type. {3} is the actual type.</note>
       </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}</source>
-        <target state="needs-review-translation">字符串 '{0}' 不以字符串 '{1}' 结尾。{2}</target>
+        <target state="translated">字符串 '{0}' 不以字符串 '{1}' 结尾。{2}</target>
         <note>{0} is the string being checked. {1} is the expected suffix. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed.</source>
-        <target state="needs-review-translation">{0} 失败。</target>
+        <target state="translated">{0} 失败。</target>
         <note>{0} is the assertion name.</note>
       </trans-unit>
       <trans-unit id="EndsWithFailedSummary">
@@ -529,12 +529,12 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="InconclusivePrefix">
         <source>Assert.Inconclusive.</source>
-        <target state="needs-review-translation">Assert.Inconclusive。</target>
+        <target state="translated">Assert.Inconclusive。</target>
         <note>Do not localize the assertion API name {Locked="Assert.Inconclusive"}.</note>
       </trans-unit>
       <trans-unit id="InvalidAccessToTestContextProperty">
         <source>The property 'TestContext.{0}' is related to current test is not available during assembly or class fixtures.</source>
-        <target state="needs-review-translation">属性‘TestContext.{0}’与当前测试相关，在程序集或类固定例程期间不可用。</target>
+        <target state="translated">属性‘TestContext.{0}’与当前测试相关，在程序集或类固定例程期间不可用。</target>
         <note>{0} is the {Locked="TestContext"} property name. Do not localize the API prefix {Locked="TestContext."}.</note>
       </trans-unit>
       <trans-unit id="InvalidGitHubUrl">
@@ -549,7 +549,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="needs-review-translation">预期条件为 false。</target>
+        <target state="translated">预期条件为 false。</target>
         <note>Do not localize the C# keyword {Locked="false"}.</note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -564,7 +564,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsInRangeFail">
         <source>Value '{0}' is not within the expected range [{1}..{2}]. {3}</source>
-        <target state="needs-review-translation">值 "{0}" 不在预期范围 [{1}..{2}] 内。{3}</target>
+        <target state="translated">值 "{0}" 不在预期范围 [{1}..{2}] 内。{3}</target>
         <note>{0} is the actual value. {1} is the minimum expected value. {2} is the maximum expected value. {3} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="IsInRangeFailedSummary">
@@ -579,7 +579,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
         <source>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="needs-review-translation">{0} 类型应为: &lt;{1}&gt;。类型实为: &lt;{2}&gt;。</target>
+        <target state="translated">{0} 类型应为: &lt;{1}&gt;。类型实为: &lt;{2}&gt;。</target>
         <note>{0} is the user-provided assertion message. {1} is the expected type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsLessThanFailedSummary">
@@ -594,7 +594,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsMatchFail">
         <source>String '{0}' does not match pattern '{1}'. {2}</source>
-        <target state="needs-review-translation">字符串 '{0}' 与模式 '{1}' 不匹配。{2}</target>
+        <target state="translated">字符串 '{0}' 与模式 '{1}' 不匹配。{2}</target>
         <note>{0} is the string being checked. {1} is the regular expression pattern. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="IsNegativeFailedSummary">
@@ -609,27 +609,27 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotInstanceOfFailMsg">
         <source>Wrong Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="needs-review-translation">错误类型为: &lt;{1}&gt;，实际类型为: &lt;{2}&gt;。{0}</target>
+        <target state="translated">错误类型为: &lt;{1}&gt;，实际类型为: &lt;{2}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the unexpected type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsExactInstanceOfFailMsg">
         <source>{0} Expected exact type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</source>
-        <target state="needs-review-translation">{0} 预期的确切类型: &lt;{1}&gt;。实际类型: &lt;{2}&gt;。</target>
+        <target state="translated">{0} 预期的确切类型: &lt;{1}&gt;。实际类型: &lt;{2}&gt;。</target>
         <note>{0} is the user-provided assertion message. {1} is the expected exact type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsNotExactInstanceOfFailMsg">
         <source>Wrong exact Type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;. {0}</source>
-        <target state="needs-review-translation">错误的确切类型: &lt;{1}&gt;。实际类型: &lt;{2}&gt;。{0}</target>
+        <target state="translated">错误的确切类型: &lt;{1}&gt;。实际类型: &lt;{2}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the unexpected exact type. {2} is the actual type.</note>
       </trans-unit>
       <trans-unit id="IsNotMatchFail">
         <source>String '{0}' matches pattern '{1}'. {2}</source>
-        <target state="needs-review-translation">字符串 '{0}' 与模式 '{1}' 匹配。{2}</target>
+        <target state="translated">字符串 '{0}' 与模式 '{1}' 匹配。{2}</target>
         <note>{0} is the string being checked. {1} is the regular expression pattern. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="needs-review-translation">预期值不应为 null。</target>
+        <target state="translated">预期值不应为 null。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
@@ -654,7 +654,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="needs-review-translation">预期值为 null。</target>
+        <target state="translated">预期值为 null。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
@@ -664,7 +664,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="needs-review-translation">预期条件为 true。</target>
+        <target state="translated">预期条件为 true。</target>
         <note>Do not localize the C# keyword {Locked="true"}.</note>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
@@ -678,10 +678,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="needs-review-translation">
-      未能找到指定的成员({0})。可能需要重新生成专用访问器，
-      或者该成员可能是私有成员并且是在基类上定义的。如果属于后一种情况，则需要将定义
-      该成员的类型传递到 PrivateObject 的构造函数中。
+        <target state="new">
+      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -691,16 +691,16 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="needs-review-translation">
-      未能找到具有指定签名的构造函数。可能需要重新生成专用访问器，
-      或者该成员可能是私有成员并且是在基类上定义的。如果属于后一种情况，则需要将定义
-      该成员的类型传递到 PrivateObject 的构造函数。
+        <target state="new">
+      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
+      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
+      that defines the member into PrivateObject's constructor.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="needs-review-translation">参数“{0}”无效。值不能为 NULL。</target>
+        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
         <note>{0} is the parameter name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
@@ -710,27 +710,27 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="ReturnedSubsetValueMessage">
         <source>Element(s) &lt;{0}&gt; is/are not present in the collection.</source>
-        <target state="needs-review-translation">集合中不存在元素 &lt;{0}&gt;。</target>
+        <target state="translated">集合中不存在元素 &lt;{0}&gt;。</target>
         <note>{0} is a comma-separated list of missing elements.</note>
       </trans-unit>
       <trans-unit id="STATestMethodNonWindowsNotSupported">
         <source>[STATestMethod] is not supported on non-Windows platforms. STA (Single Threaded Apartment) is a Windows-only COM threading concept. Use [OSCondition(OperatingSystems.Windows)] to skip this test on non-Windows platforms.</source>
-        <target state="needs-review-translation">非 Windows 平台不支持[STATestMethod]。STA (单线程单元)是 Windows 独有的 COM 线程模型。请使用 [OSCondition(OperatingSystems.Windows)]在非 Windows 平台上跳过此测试。</target>
+        <target state="translated">非 Windows 平台不支持[STATestMethod]。STA (单线程单元)是 Windows 独有的 COM 线程模型。请使用 [OSCondition(OperatingSystems.Windows)]在非 Windows 平台上跳过此测试。</target>
         <note>Do not localize MSTest attribute names {Locked="[STATestMethod]"}{Locked="[OSCondition(OperatingSystems.Windows)]"} or COM threading acronym {Locked="STA"}.</note>
       </trans-unit>
       <trans-unit id="StartsWithFail">
         <source>String '{0}' does not start with string '{1}'. {2}</source>
-        <target state="needs-review-translation">字符串 '{0}' 不以字符串 '{1}' 开头。{2}</target>
+        <target state="translated">字符串 '{0}' 不以字符串 '{1}' 开头。{2}</target>
         <note>{0} is the string being checked. {1} is the expected prefix. {2} is the user-provided assertion message.</note>
       </trans-unit>
       <trans-unit id="InvalidPropertyType">
         <source>The property {0} has type {1}; expected type {2}.</source>
-        <target state="needs-review-translation">属性 {0} 的类型为 {1}；类型应为 {2}。</target>
+        <target state="translated">属性 {0} 的类型为 {1}；类型应为 {2}。</target>
         <note>{0} is the property name. {1} is the actual property type. {2} is the expected property type.</note>
       </trans-unit>
       <trans-unit id="Common_NullInMessages">
         <source>(null)</source>
-        <target state="needs-review-translation">(NULL)</target>
+        <target state="new">(null)</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="Common_ObjectString">
@@ -745,72 +745,72 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="UTF_FailedToGetExceptionMessage">
         <source>(Failed to get the message for an exception of type {0} due to an exception.)</source>
-        <target state="needs-review-translation">(因异常而未能获取类型为 {0} 的异常的消息。)</target>
+        <target state="translated">(因异常而未能获取类型为 {0} 的异常的消息。)</target>
         <note>{0} is the exception type.</note>
       </trans-unit>
       <trans-unit id="NoExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt; but no exception was thrown. {0}</source>
-        <target state="needs-review-translation">预期异常类型:&lt;{1}&gt;，但未引发异常。{0}</target>
+        <target state="translated">预期异常类型:&lt;{1}&gt;，但未引发异常。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected exception type.</note>
       </trans-unit>
       <trans-unit id="WrongExceptionThrown">
         <source>Expected exception type:&lt;{1}&gt;. Actual exception type:&lt;{2}&gt;. {0}</source>
-        <target state="needs-review-translation">预期异常类型:&lt;{1}&gt;。实际异常类型:&lt;{2}&gt;。{0}</target>
+        <target state="translated">预期异常类型:&lt;{1}&gt;。实际异常类型:&lt;{2}&gt;。{0}</target>
         <note>{0} is the user-provided assertion message. {1} is the expected exception type. {2} is the actual exception type.</note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
         <source>{0} ({1})</source>
-        <target state="needs-review-translation">{0} ({1})</target>
+        <target state="translated">{0} ({1})</target>
         <note>{0} is the test method display name. {1} is the comma-separated list of test data arguments.</note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable'.</source>
-        <target state="needs-review-translation">{1} 返回类型上的属性或方法 {0} 不能分配给 "IEnumerable"。</target>
+        <target state="translated">{1} 返回类型上的属性或方法 {0} 不能分配给 "IEnumerable"。</target>
         <note>{0} is the dynamic data property or method name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
-        <target state="needs-review-translation">属性或方法 {0} 返回的值不能为 null。</target>
+        <target state="translated">属性或方法 {0} 返回的值不能为 null。</target>
         <note>{0} is the dynamic data property or method name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
         <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
-        <target state="needs-review-translation">方法 {0} 必须匹配预期签名: public static {1} {0}({2})。</target>
+        <target state="translated">方法 {0} 必须匹配预期签名: public static {1} {0}({2})。</target>
         <note>{0} is the dynamic display-name method name. {1} is the expected return type. {2} is the expected parameter list. Do not localize the C# signature tokens {Locked="public static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableEmpty">
         <source>Property or method {0} on {1} returns empty IEnumerable&lt;object[]&gt;.</source>
-        <target state="needs-review-translation">{1} 上的属性或方法 {0} 返回空 IEnumerable&lt;object[]&gt;。</target>
+        <target state="translated">{1} 上的属性或方法 {0} 返回空 IEnumerable&lt;object[]&gt;。</target>
         <note>{0} is the dynamic data property or method name. {1} is the declaring type name. Do not localize the type name {Locked="IEnumerable&lt;object[]&gt;"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertEquals">
         <source>Assert.Equals should not be used for Assertions. Please use Assert.AreEqual &amp; overloads instead.</source>
-        <target state="needs-review-translation">Assert.Equals 不应用于断言。请改用 Assert.AreEqual 和重载。</target>
+        <target state="translated">Assert.Equals 不应用于断言。请改用 Assert.AreEqual 和重载。</target>
         <note>Do not localize assertion API names {Locked="Assert.Equals"}{Locked="Assert.AreEqual"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
         <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="needs-review-translation">Assert.ReferenceEquals 不应用于断言。请改用 Assert.AreSame 和重载。</target>
+        <target state="translated">Assert.ReferenceEquals 不应用于断言。请改用 Assert.AreSame 和重载。</target>
         <note>Do not localize assertion API names {Locked="Assert.ReferenceEquals"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertEquals">
         <source>StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual &amp; overloads instead.</source>
-        <target state="needs-review-translation">StringAssert.Equals 不应用于断言。请改用 StringAssert 方法或 Assert.AreEqual 和重载。</target>
+        <target state="translated">StringAssert.Equals 不应用于断言。请改用 StringAssert 方法或 Assert.AreEqual 和重载。</target>
         <note>Do not localize assertion API names {Locked="StringAssert.Equals"}{Locked="StringAssert"}{Locked="Assert.AreEqual"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertReferenceEquals">
         <source>StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="needs-review-translation">StringAssert.ReferenceEquals 不应用于断言。请改用 StringAssert 方法或 Assert.AreSame 和重载。</target>
+        <target state="translated">StringAssert.ReferenceEquals 不应用于断言。请改用 StringAssert 方法或 Assert.AreSame 和重载。</target>
         <note>Do not localize assertion API names {Locked="StringAssert.ReferenceEquals"}{Locked="StringAssert"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertEquals">
         <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
-        <target state="needs-review-translation">CollectionAssert.Equals 不应用于断言。请改用 CollectionAssert.AreEqual 和重载。</target>
+        <target state="translated">CollectionAssert.Equals 不应用于断言。请改用 CollectionAssert.AreEqual 和重载。</target>
         <note>Do not localize assertion API names {Locked="CollectionAssert.Equals"}{Locked="CollectionAssert.AreEqual"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertReferenceEquals">
         <source>CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame &amp; overloads instead.</source>
-        <target state="needs-review-translation">CollectionAssert.ReferenceEquals 不应用于断言。请改用 CollectionAssert 方法或 Assert.AreSame 和重载。</target>
+        <target state="translated">CollectionAssert.ReferenceEquals 不应用于断言。请改用 CollectionAssert 方法或 Assert.AreSame 和重载。</target>
         <note>Do not localize assertion API names {Locked="CollectionAssert.ReferenceEquals"}{Locked="CollectionAssert"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
     </body>
