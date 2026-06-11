@@ -28,7 +28,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             [System.AttributeUsage(System.AttributeTargets.Class)]
             public class TestClassAttribute : System.Attribute { }
 
-            [System.AttributeUsage(System.AttributeTargets.Method)]
+            [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
             public class TestMethodAttribute : System.Attribute
             {
                 public TestMethodAttribute() { }
@@ -57,6 +57,13 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             {
                 public int Workers { get; set; }
                 public string? Scope { get; set; }
+            }
+
+            [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+            public class DataRowAttribute : System.Attribute
+            {
+                public DataRowAttribute(object? data1) { }
+                public DataRowAttribute(object? data1, params object?[] moreData) { }
             }
         }
         """;
@@ -564,6 +571,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 [TestClass]
                 public class DerivedTests : BaseTests
                 {
+                    // [TestMethod] is re-applied here because the real attribute is declared
+                    // with AttributeUsage(Inherited = false) and would not be inherited.
+                    [TestMethod]
                     public override void Run() { }
                 }
             }
@@ -576,9 +586,6 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         runEntries.Should().Be(1, "the derived override must replace the base entry (not duplicate it)");
         registry.Should().Contain("((global::Sample.DerivedTests)instance!).Run();");
         registry.Should().NotContain("((global::Sample.BaseTests)instance!).Run();");
-
-        // The override does NOT re-apply [TestMethod] but the attribute must still be visible
-        // via the override chain — matching the runtime semantics of GetCustomAttributes(inherit: true).
         registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute");
     }
 
@@ -884,6 +891,148 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_EmitsEmptyDataRows_WhenMethodHasNoDataRow()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    public void NoData() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = Array.Empty<object?[]>()");
+        registry.Should().NotContain("DataRows = new object?[][]");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesSingleDataRow_WithScalarArgs()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, "x")]
+                    public void Test(int a, string b) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = new object?[][]");
+        registry.Should().Contain("new object?[] { 1, \"x\" }");
+    }
+
+    [TestMethod]
+    public void Generator_CapturesMultipleDataRows_InDeclarationOrder()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, "a")]
+                    [DataRow(2, "b")]
+                    [DataRow(3, "c")]
+                    public void Test(int a, string b) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = new object?[][]");
+
+        int idx1 = registry.IndexOf("new object?[] { 1, \"a\" }", StringComparison.Ordinal);
+        int idx2 = registry.IndexOf("new object?[] { 2, \"b\" }", StringComparison.Ordinal);
+        int idx3 = registry.IndexOf("new object?[] { 3, \"c\" }", StringComparison.Ordinal);
+
+        idx1.Should().BeGreaterThan(-1);
+        idx2.Should().BeGreaterThan(idx1);
+        idx3.Should().BeGreaterThan(idx2);
+    }
+
+    [TestMethod]
+    public void Generator_FlattensParamsArrayInDataRow()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(1, 2, 3, 4)]
+                    public void Test(int a, int b, int c, int d) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        // The variadic `params object?[] moreData` tail must be flattened into a single flat row
+        // within the DataRows block — the row contains all four values inline, not nested.
+        registry.Should().Contain("new object?[] { 1, 2, 3, 4 }");
+    }
+
+    [TestMethod]
+    public void Generator_HandlesNullValueInDataRow()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DataRow(null)]
+                    public void Test(string? value) { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("DataRows = new object?[][]");
+        // The single-arg DataRowAttribute(object? data1) overload binds null to object,
+        // which surfaces as `(object)null!` from BuildConstantExpression (C# keyword form
+        // produced by FullyQualifiedFormat for System.Object).
+        registry.Should().Contain("new object?[] { (object)null! }");
+    }
+
+    [TestMethod]
     public void Generator_SkipsProtectedAndPrivateProtectedMembers()
     {
         // Generated invokers live in a separate static helper class (not a derived type),
@@ -1003,6 +1152,42 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             .Matches(registry, "Name = \"Run\"")
             .Count;
         occurrences.Should().Be(3);
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInherit_TestMethodOrDataRow_OntoOverride()
+    {
+        // [TestMethod] and [DataRow] are declared with AttributeUsage(Inherited = false) in
+        // the real MSTest assembly. An override that does NOT re-apply [TestMethod] is not a
+        // test, and inherited [DataRow]s must not leak from the base method onto the override.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [DataRow(1)]
+                    [DataRow(2)]
+                    public virtual void Run(int x) { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    // Override deliberately does not re-apply [TestMethod] or any [DataRow].
+                    public override void Run(int x) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Neither the [TestMethod] nor the inherited [DataRow]s should propagate onto the override.
+        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute()");
+        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(");
+        registry.Should().NotContain("new DataRowModel(");
     }
 
     [TestMethod]

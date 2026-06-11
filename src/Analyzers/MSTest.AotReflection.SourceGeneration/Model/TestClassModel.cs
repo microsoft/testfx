@@ -41,6 +41,12 @@ internal enum ConstantValueKind
 
 internal sealed record TestParameterModel(string FullyQualifiedType, string Name);
 
+/// <summary>
+/// One row of arguments from a <c>[DataRow]</c> attribute, materialized at compile time so
+/// the consumer can iterate without re-reading <c>DataRowAttribute.Data</c> via reflection.
+/// </summary>
+internal sealed record DataRowModel(EquatableArray<TypedConstantModel> Arguments);
+
 internal sealed record TestMethodModel(
     string Name,
     bool IsStatic,
@@ -49,7 +55,8 @@ internal sealed record TestMethodModel(
     bool ReturnsValueTask,
     bool ReturnsVoid,
     EquatableArray<TestParameterModel> Parameters,
-    EquatableArray<AttributeApplicationModel> Attributes);
+    EquatableArray<AttributeApplicationModel> Attributes,
+    EquatableArray<DataRowModel> DataRows);
 
 internal sealed record TestPropertyModel(
     string Name,

@@ -20,6 +20,10 @@
          warning on the output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate them
          on $(TF_BUILD) so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output. -->
     <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-progress --report-azdo-summary</TestingPlatformCommandLineArguments>
+    <!-- Dogfood the JUnit report extension (Microsoft.Testing.Extensions.JUnitReport). The .xml files end up in
+         $(ResultsDirectory) (Arcade default) alongside the TRX files so they are picked up by the AzDO
+         PublishTestResults task and any external JUnit consumer. -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
 
   </PropertyGroup>
@@ -34,6 +38,8 @@
     <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
     <_TestArchitecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).trx --results-directory $(ArtifactsTestResultsDir)</TestingPlatformCommandLineArguments>
+    <!-- Match the TRX filename pattern so the JUnit XML report sits next to its TRX twin per (project x TFM x arch). -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).xml</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
@@ -41,7 +47,12 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.JUnitReport\Microsoft.Testing.Extensions.JUnitReport.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
+    <!-- Microsoft.Testing.Extensions.OpenTelemetry is referenced so the per-project Program.cs can wire
+         AddOpenTelemetryProvider with AddTestingPlatformInstrumentation, exercising the platform's
+         OpenTelemetryResultHandler pipeline end-to-end in CI. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseMSTestFromSource)' == 'true'" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
