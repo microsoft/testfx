@@ -519,6 +519,58 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_ExcludesProtectedAndPrivateProtectedMembersFromBaseType()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+
+                    [TestMethod]
+                    protected internal void ProtectedInternalTest() { }
+
+                    [TestContext]
+                    protected TestContext ProtectedContext { get; set; } = new();
+
+                    [TestContext]
+                    private protected TestContext PrivateProtectedContext { get; set; } = new();
+
+                    [TestContext]
+                    protected internal TestContext ProtectedInternalContext { get; set; } = new();
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("Name = \"ProtectedTest\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedTest\"");
+        registry.Should().NotContain("Name = \"ProtectedContext\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedContext\"");
+        registry.Should().Contain("Name = \"ProtectedInternalTest\"");
+        registry.Should().Contain("Name = \"ProtectedInternalContext\"");
+    }
+
+    [TestMethod]
     public void Generator_IncludesMethodsFromMultiLevelInheritance()
     {
         const string userCode = """
