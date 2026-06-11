@@ -837,9 +837,9 @@ See full log [of v1.4.2...v1.4.3](https://github.com/microsoft/testanywhere/comp
 
 ### Fixed
 
-* Fix live output with HotReload by @nohwnd in [#3983](https://github.com/microsoft/testfx/pull//3983)
-* Fix hangdump space in dump path by @nohwnd in [#3994](https://github.com/microsoft/testfx/pull//3994)
-* Fix hangdump not showing tests in progress by @nohwnd in [#3992](https://github.com/microsoft/testfx/pull//3992)
+* Fix live output with HotReload by @nohwnd in [#3983](https://github.com/microsoft/testfx/pull/3983)
+* Fix hangdump space in dump path by @nohwnd in [#3994](https://github.com/microsoft/testfx/pull/3994)
+* Fix hangdump not showing tests in progress by @nohwnd in [#3992](https://github.com/microsoft/testfx/pull/3992)
 
 ### Artifacts
 

@@ -1075,7 +1075,7 @@ See full log [of v3.6.2...v3.6.3](https://github.com/microsoft/testfx/compare/v3
 
 ### Fixed
 
-* Only ship TestAdapter related resources by @nohwnd in [#4013](https://github.com/microsoft/testfx/pull//4013)
+* Only ship TestAdapter related resources by @nohwnd in [#4013](https://github.com/microsoft/testfx/pull/4013)
 
 ### Artifacts
 
