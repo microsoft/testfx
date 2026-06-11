@@ -100,6 +100,7 @@ public sealed class JUnitReportRetryAttributeTests : AcceptanceTestBase<JUnitRep
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
   </ItemGroup>
@@ -233,6 +234,7 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
