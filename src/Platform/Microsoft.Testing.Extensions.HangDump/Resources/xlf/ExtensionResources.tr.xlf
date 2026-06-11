@@ -78,9 +78,9 @@ Disk bilgileri:
       </trans-unit>
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="translated">Döküm dosyasının adını belirtin.
-Şu yer tutucuları destekler: {pname} (test uygulaması adı), {pid} (işlem kimliği), {asm} (girdi derleme adı), {tfm} (hedef çerçeve bilinen adı), {time} (zaman damgası). Geriye dönük uyumluluk için eski %p belirteci (işlem kimliği) de desteklenir.</target>
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
+        <target state="new">Specify the name of the dump file.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
         <note />
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">

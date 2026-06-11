@@ -21,8 +21,8 @@ failed.
 ## Instructions
 
 1. Read the agent-context environment variables: `GH_AW_BUILD_OUTCOME`,
-   `GH_AW_BINLOG_PATH`, `GH_AW_PR_NUMBER`, `GH_AW_PR_HEAD_SHA`,
-   `GH_AW_WORKSPACE`.
+   `GH_AW_BINLOG_PATH`, `GH_AW_BINLOG_HOST_PATH`, `GH_AW_PR_NUMBER`,
+   `GH_AW_PR_HEAD_SHA`, `GH_AW_WORKSPACE`.
 
 2. If `GH_AW_BUILD_OUTCOME == 'success'`, the build did not actually fail —
    there is nothing to analyse. Call `noop` with the message
@@ -32,11 +32,15 @@ failed.
    task (`task` tool, `agent_type: "general-purpose"`,
    `model: "claude-opus-4.6"`, `mode: "background"`). In the sub-agent prompt
    include:
-   - All five `GH_AW_*` environment values verbatim so the sub-agent knows
-     which binlog metadata to read and where to post.
-   - A reminder that the pre-agent steps already dumped overview / errors /
-     warnings to `/tmp/binlog-data/*.json` and that the sub-agent should
-     start by `cat`ing those files via the `bash` tool.
+   - All six `GH_AW_*` environment values verbatim so the sub-agent knows
+     which binlog to query (`GH_AW_BINLOG_PATH` is the in-container path
+     `/data/build.binlog` exposed by the `binlog-mcp` MCP server) and where
+     to post.
+   - A reminder that the binlog is live-queryable through the `binlog-mcp`
+     MCP server: the sub-agent should call MCP tools such as
+     `binlog_overview`, `binlog_errors`, `binlog_warnings` (and others as
+     needed) with `binlog_file: "$GH_AW_BINLOG_PATH"`, rather than reading
+     pre-dumped JSON files.
    - A reminder that the parent workflow `noop`s immediately and that the
      sub-agent itself is responsible for calling `add_comment` (summary) and
      `create_pull_request_review_comment` (inline ```suggestion blocks).
