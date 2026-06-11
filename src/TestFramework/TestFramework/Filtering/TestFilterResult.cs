@@ -8,9 +8,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 /// <remarks>
 /// Designed as a <see langword="readonly"/> <see langword="struct"/> so the filter hot path stays
-/// allocation-free. The static <see cref="Run"/> / <see cref="Drop"/> properties (one shared value
-/// each) and the parameterized <see cref="Skip(string)"/> factory are the only ways to construct
-/// a result; this keeps the surface evolvable.
+/// allocation-free. Use the static <see cref="Run"/> / <see cref="Drop"/> properties (one shared
+/// value each) or the parameterized <see cref="Skip(string)"/> factory to create explicit results.
+/// The default value also represents <see cref="Run"/>.
 /// </remarks>
 public readonly struct TestFilterResult : IEquatable<TestFilterResult>
 {

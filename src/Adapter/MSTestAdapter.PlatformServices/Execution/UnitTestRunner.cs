@@ -268,13 +268,6 @@ internal sealed class UnitTestRunner
             {
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
 
-                // Flow properties set during AssemblyInitialize so the AssemblyCleanup method
-                // observes them. Class-init properties are intentionally NOT flowed here because
-                // AssemblyCleanup is assembly-scoped and runs once across many classes; picking
-                // a single class's snapshot would be arbitrary.
-                // testMethodInfo is non-null inside this block thanks to the guard above.
-                ((TestContextImplementation)testContextForAssemblyCleanup.Context).MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
-
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)
                 {
@@ -340,9 +333,16 @@ internal sealed class UnitTestRunner
     private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
         var testContextImpl = testContext as TestContextImplementation;
+        var testContextForAssemblyCleanup = testContext.Context as TestContextImplementation;
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
+            // Flow properties set during AssemblyInitialize so the AssemblyCleanup method observes
+            // them. Class-init properties are intentionally NOT flowed here because AssemblyCleanup
+            // is assembly-scoped and runs once across many classes; picking a single class's
+            // snapshot would be arbitrary.
+            testContextForAssemblyCleanup?.MergeProperties(assemblyInfo.PostAssemblyInitProperties);
+
             TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
             if (ex is not null)
@@ -511,7 +511,7 @@ internal sealed class UnitTestRunner
                 methodArity = arity;
                 parameterTypeFullNames = parameterTypes ?? (IReadOnlyList<string>)[];
             }
-            catch
+            catch (InvalidManagedNameException)
             {
                 // Defensive: if the managed name is malformed for any reason, surface what we
                 // can via the flat strings rather than failing the filter.

@@ -82,8 +82,11 @@ public class TestFilterResultTests : TestContainer
 
     public void Equality_RunAndDropAreNotEqual()
     {
-        (TestFilterResult.Run == TestFilterResult.Drop).Should().BeFalse();
-        TestFilterResult.Run.Equals(TestFilterResult.Drop).Should().BeFalse();
+        TestFilterResult run = TestFilterResult.Run;
+        TestFilterResult drop = TestFilterResult.Drop;
+
+        (run == drop).Should().BeFalse();
+        run.Equals(drop).Should().BeFalse();
     }
 
     public void Equality_BoxedComparisonAgainstNonResultIsFalse()

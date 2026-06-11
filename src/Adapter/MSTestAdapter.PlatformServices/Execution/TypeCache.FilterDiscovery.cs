@@ -8,11 +8,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed partial class TypeCache
 {
-    // Single filter instance cached per test assembly source path. Computed lazily on the first
-    // request for that source so the cost is paid at most once per run, even when many tests
-    // target the same assembly. Stored as a TestFilterBox so the dictionary can cache the
-    // "no filter" answer alongside real filter instances.
-    private readonly ConcurrentDictionary<string, TestFilterBox> _testFilterBySource =
+    // Single filter instance cached per test assembly source path. The Lazy ensures discovery
+    // (including any failure) is evaluated once per source per run, even under contention.
+    // Stored as a TestFilterBox so the dictionary can cache the "no filter" answer alongside
+    // real filter instances.
+    private readonly ConcurrentDictionary<string, Lazy<TestFilterBox>> _testFilterBySource =
         new(StringComparer.Ordinal);
 
     /// <summary>
@@ -29,8 +29,12 @@ internal sealed partial class TypeCache
     /// </remarks>
     internal ITestFilter? GetOrLoadTestFilter(string assemblySource)
         => _testFilterBySource
-            .GetOrAdd(assemblySource, static src => new TestFilterBox(LoadTestFilterForSource(src)))
+            .GetOrAdd(assemblySource, CreateTestFilterBox)
+            .Value
             .Filter;
+
+    private static Lazy<TestFilterBox> CreateTestFilterBox(string assemblySource)
+        => new(() => new TestFilterBox(LoadTestFilterForSource(assemblySource)), isThreadSafe: true);
 
     private static ITestFilter? LoadTestFilterForSource(string assemblySource)
     {
