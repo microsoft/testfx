@@ -33,4 +33,9 @@
     <InternalsVisibleTo Include="MSTest.AotReflection.SourceGeneration.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\MSTest.SourceGeneration\Helpers\Constants.cs" Link="Helpers\Constants.cs" />
+    <Compile Include="..\MSTest.SourceGeneration\Helpers\IndentedStringBuilder.cs" Link="Helpers\IndentedStringBuilder.cs" />
+  </ItemGroup>
+
 </Project>
