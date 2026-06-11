@@ -451,6 +451,64 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_IsIncremental_ProducesStableOutputAndCachesSteps_WhenInputUnchanged()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class IncTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: null,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
+
+        GeneratorDriver firstDriver = driver.RunGenerators(compilation);
+        GeneratorDriverRunResult firstResult = firstDriver.GetRunResult();
+
+        GeneratorDriver secondDriver = firstDriver.RunGenerators(compilation);
+        GeneratorDriverRunResult secondResult = secondDriver.GetRunResult();
+
+        firstResult.Diagnostics.Should().BeEmpty();
+        secondResult.Diagnostics.Should().BeEmpty();
+        firstResult.Results.Should().ContainSingle();
+        secondResult.Results.Should().ContainSingle();
+
+        // Two passes against the same compilation MUST produce identical sources (deterministic output).
+        secondResult.Results[0].GeneratedSources
+            .Select(s => (s.HintName, Text: s.SourceText.ToString()))
+            .Should()
+            .BeEquivalentTo(firstResult.Results[0].GeneratedSources
+                .Select(s => (s.HintName, Text: s.SourceText.ToString())));
+
+        // The implementation-source-output pipeline MUST report cached steps on the second run
+        // (proves the generator's incremental graph actually short-circuits when inputs are unchanged).
+        secondResult.Results[0].TrackedOutputSteps
+            .Should()
+            .NotBeEmpty("the generator registers RegisterImplementationSourceOutput which produces a tracked output step");
+
+        secondResult.Results[0].TrackedOutputSteps
+            .SelectMany(static kv => kv.Value)
+            .SelectMany(static step => step.Outputs)
+            .Should()
+            .OnlyContain(
+                static o => o.Reason == IncrementalStepRunReason.Cached || o.Reason == IncrementalStepRunReason.Unchanged,
+                "output steps for unchanged inputs MUST be Cached or Unchanged on subsequent runs");
+    }
+
+    [TestMethod]
     public void Generator_IsIncremental_SupportTypesAreCached_WhenInputUnchanged()
     {
         const string userCode = """
