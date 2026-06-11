@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
@@ -22,6 +22,7 @@ builder.AddTrxReportProvider();
 builder.AddJUnitReportProvider();
 builder.AddAppInsightsTelemetryProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
 
 // Dogfood the OpenTelemetry extension: subscribe to the Microsoft.Testing.Platform activity source
 // and meter so the OpenTelemetryResultHandler pipeline is exercised end-to-end in CI. No exporter

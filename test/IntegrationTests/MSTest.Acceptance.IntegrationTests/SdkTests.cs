@@ -202,8 +202,26 @@ namespace MSTestSdkTest
               "--crashdump"));
 
             yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>",
+              "--report-ctrf",
+              "--crashdump"));
+
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsHtmlReport>true</EnableMicrosoftTestingExtensionsHtmlReport>",
+              "--report-html",
+              "--crashdump"));
+
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>",
               "--report-junit",
+              "--crashdump"));
+
+            // OpenTelemetry is API-only (no CLI flag); the enable property only opts the package into the build.
+            // We pass an empty enable arg to validate the package restores and the test host runs cleanly, and we
+            // assert that an unrelated extension's CLI arg ('--crashdump') is rejected to prove no other extensions leaked in.
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>",
+              string.Empty,
               "--crashdump"));
         }
     }
@@ -251,7 +269,7 @@ namespace MSTestSdkTest
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo", cancellationToken: TestContext.CancellationToken);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo --report-html", cancellationToken: TestContext.CancellationToken);
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
     }

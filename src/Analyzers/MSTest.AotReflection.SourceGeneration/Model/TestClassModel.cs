@@ -87,7 +87,7 @@ internal sealed record TestClassModel(
 /// Value-equatable wrapper around <see cref="ImmutableArray{T}"/> so incremental generation
 /// can cache results between runs. Kept minimal — we don't need indexing in this PoC.
 /// </summary>
-/// <typeparam name="T">The equatable element type.</typeparam>
+/// <typeparam name="T">Element type stored in the underlying <see cref="ImmutableArray{T}"/>.</typeparam>
 internal readonly struct EquatableArray<T> : IEquatable<EquatableArray<T>>
     where T : IEquatable<T>
 {

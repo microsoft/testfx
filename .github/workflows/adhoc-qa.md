@@ -1,5 +1,5 @@
 ---
-source: "githubnext/agentics/workflows/adhoc-qa.md@main"
+source: githubnext/agentics/workflows/adhoc-qa.md@main
 description: |
   This workflow performs ad hoc, subjective quality assurance by validating project health daily.
   Checks that code builds and runs, tests pass, documentation is clear, and code
