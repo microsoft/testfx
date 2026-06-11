@@ -19,14 +19,8 @@ internal static partial class SerializerUtilities
         Deserializers = [];
 
         Serializers[typeof(object)] = new ObjectSerializer<object>(_ => new Dictionary<string, object?>());
-        Serializers[typeof(KeyValuePair<string, string>)] = new ObjectSerializer<KeyValuePair<string, string>>(o =>
-        {
-            Dictionary<string, object?> values = new()
-            {
-                { o.Key, o.Value },
-            };
-            return values;
-        });
+        Serializers[typeof(KeyValuePair<string, string>)] = new ObjectSerializer<KeyValuePair<string, string>>(
+            o => new Dictionary<string, object?> { [o.Key] = o.Value });
 
         RegisterRpcMessageSerializers();
         RegisterTestNodeSerializers();
