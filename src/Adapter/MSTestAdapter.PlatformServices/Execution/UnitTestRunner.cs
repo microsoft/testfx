@@ -332,8 +332,7 @@ internal sealed class UnitTestRunner
 
     private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
-        var testContextImpl = testContext as TestContextImplementation;
-        var testContextForAssemblyCleanup = testContext.Context as TestContextImplementation;
+        var testContextImpl = testContext.Context as TestContextImplementation;
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
@@ -341,7 +340,7 @@ internal sealed class UnitTestRunner
             // them. Class-init properties are intentionally NOT flowed here because AssemblyCleanup
             // is assembly-scoped and runs once across many classes; picking a single class's
             // snapshot would be arbitrary.
-            testContextForAssemblyCleanup?.MergeProperties(assemblyInfo.PostAssemblyInitProperties);
+            testContextImpl?.MergeProperties(assemblyInfo.PostAssemblyInitProperties);
 
             TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 

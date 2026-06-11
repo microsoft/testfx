@@ -4,7 +4,7 @@
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Read-only snapshot of the metadata MSTest exposes to an <see cref="ITestFilter"/> for a single
+/// Snapshot of the metadata MSTest exposes to an <see cref="ITestFilter"/> for a single
 /// test under consideration.
 /// </summary>
 /// <remarks>
@@ -13,6 +13,14 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// must be able to decide using strings, categories, traits, and priority alone. This is what allows
 /// the filter to drop tests <em>before</em> their declaring type is loaded and before
 /// <c>[AssemblyInitialize]</c> / <c>[ClassInitialize]</c> run.
+/// </para>
+/// <para>
+/// Properties are mutable (settable) so the platform can populate them via an object initializer
+/// and so the type can grow new metadata fields over time without breaking existing
+/// <see cref="ITestFilter"/> implementations or their unit tests. MSTest itself does not mutate
+/// a <see cref="TestFilterContext"/> after it is handed to an <see cref="ITestFilter"/>; filters
+/// should likewise treat the instance they receive as effectively read-only for the duration of
+/// the call.
 /// </para>
 /// <para>
 /// Each property describes a separate facet of the test. The flat string properties
