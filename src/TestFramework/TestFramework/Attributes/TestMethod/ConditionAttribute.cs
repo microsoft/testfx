@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.ObjectModel;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -57,6 +59,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
 
     private readonly string[] _conditionMemberNames;
     private string? _groupName;
+    private ReadOnlyCollection<string>? _conditionMemberNamesView;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConditionAttribute"/> class with
@@ -193,7 +196,8 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// field, or parameterless method) on <see cref="ConditionType"/> evaluated for this condition.
     /// Multiple values are combined with a logical AND.
     /// </summary>
-    public IReadOnlyList<string> ConditionMemberNames => _conditionMemberNames;
+    public IReadOnlyList<string> ConditionMemberNames
+        => _conditionMemberNamesView ??= new ReadOnlyCollection<string>(_conditionMemberNames);
 
     /// <inheritdoc />
     /// <remarks>
@@ -236,9 +240,11 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
         PropertyInfo? property = ConditionType.GetProperty(memberName, Flags);
         if (property is not null)
         {
-            return property.PropertyType != typeof(bool) || property.GetMethod is null
+            return property.PropertyType != typeof(bool)
+                || property.GetIndexParameters().Length != 0
+                || property.GetGetMethod(nonPublic: true) is null
                 ? throw new InvalidOperationException(
-                    $"Member '{typeName}.{memberName}' must be a public static bool readable property to be used with [Condition].")
+                    $"Member '{typeName}.{memberName}' must be a public static bool readable parameterless property to be used with [Condition].")
                 : (bool)property.GetValue(null)!;
         }
 

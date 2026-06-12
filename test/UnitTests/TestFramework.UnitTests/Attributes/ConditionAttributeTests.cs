@@ -194,4 +194,11 @@ public class ConditionAttributeTests : TestContainer
 
         a.GroupName.Should().Be(b.GroupName);
     }
+
+    public void ConditionMemberNames_CannotBeDowncastToMutableArray()
+    {
+        var attribute = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+
+        attribute.ConditionMemberNames.Should().NotBeAssignableTo<string[]>();
+    }
 }
