@@ -950,4 +950,40 @@ The type declaring these methods should also respect the following rules:
     <value>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</value>
     <comment>{Locked="[Ignore]"}{Locked="class"}</comment>
   </data>
+  <data name="MemberConditionShouldBeValidTitle" xml:space="preserve">
+    <value>'[MemberCondition]' arguments should be valid</value>
+    <comment>{Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidDescription" xml:space="preserve">
+    <value>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</value>
+    <comment>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberNotFound" xml:space="preserve">
+    <value>'[MemberCondition]' member '{0}.{1}' cannot be found</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberNotPublic" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberNotStatic" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberWrongKind" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MethodHasParameters" xml:space="preserve">
+    <value>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</value>
+    <comment>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable" xml:space="preserve">
+    <value>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</value>
+    <comment>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</comment>
+  </data>
 </root>
