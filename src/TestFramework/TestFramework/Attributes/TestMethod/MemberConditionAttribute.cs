@@ -240,7 +240,7 @@ public sealed class MemberConditionAttribute : ConditionBaseAttribute
 
     private Func<bool> BuildEvaluator(string memberName)
     {
-        const BindingFlags Flags = BindingFlags.Public | BindingFlags.Static;
+        const BindingFlags Flags = BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
         string typeName = ConditionType.FullName ?? ConditionType.Name;
 
         PropertyInfo? property = ConditionType.GetProperty(memberName, Flags);
@@ -248,7 +248,7 @@ public sealed class MemberConditionAttribute : ConditionBaseAttribute
         {
             return property.PropertyType != typeof(bool)
                 || property.GetIndexParameters().Length != 0
-                || property.GetGetMethod(nonPublic: true) is null
+                || property.GetGetMethod(nonPublic: false) is null
                 ? throw new InvalidOperationException(
                     $"Member '{typeName}.{memberName}' must be a public static bool readable parameterless property to be used with [MemberCondition].")
                 : () => (bool)property.GetValue(null)!;

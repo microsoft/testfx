@@ -17,6 +17,8 @@ public class MemberConditionAttributeTests : TestContainer
 
         public static bool FalsePropertyValue => false;
 
+        public static bool PropertyWithPrivateGetter { private get; set; }
+
         public static readonly bool TrueField = true;
 
 #pragma warning disable CA1805 // explicit init illustrates intent in the test fixture
@@ -36,6 +38,15 @@ public class MemberConditionAttributeTests : TestContainer
         public bool InstanceProp => true;
 
         internal static bool InternalTrueProperty => true;
+    }
+
+    private class ConditionsBase
+    {
+        public static bool InheritedTrueProperty => true;
+    }
+
+    private sealed class ConditionsDerived : ConditionsBase
+    {
     }
 
     #endregion
@@ -217,4 +228,16 @@ public class MemberConditionAttributeTests : TestContainer
 
         attribute.ConditionMemberNames.Should().NotBeAssignableTo<string[]>();
     }
+
+    public void IsConditionMet_InheritedStaticProperty_ResolvesViaDerivedType()
+    {
+        var attribute = new MemberConditionAttribute(typeof(ConditionsDerived), nameof(ConditionsBase.InheritedTrueProperty));
+
+        attribute.IsConditionMet.Should().BeTrue();
+    }
+
+    public void IsConditionMet_PropertyWithPrivateGetter_ThrowsInvalidOperation()
+        => ((Func<bool>)(() => new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.PropertyWithPrivateGetter)).IsConditionMet))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*public static bool readable*");
 }
