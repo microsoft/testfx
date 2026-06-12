@@ -1836,4 +1836,31 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithUserDefinedConversion_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Wrapper();
+                    Assert.AreNotEqual((int)x, (int)x);
+                }
+
+                private sealed class Wrapper
+                {
+                    private static int _counter;
+                    public static explicit operator int(Wrapper value) => ++_counter;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

@@ -64,7 +64,9 @@ internal static class IOperationExtensions
     /// <remarks>
     /// This intentionally excludes method invocations and indexer accesses, since those may
     /// have side effects or return different values on repeated evaluation. Parenthesized
-    /// expressions and conversions are skipped transparently.
+    /// expressions and <em>built-in</em> conversions are skipped transparently, but
+    /// user-defined conversions are treated as opaque because their operators may execute
+    /// arbitrary code with side effects.
     /// </remarks>
     public static bool IsEquivalentReferenceTo(this IOperation? left, IOperation? right)
     {
@@ -106,7 +108,7 @@ internal static class IOperationExtensions
                     case IParenthesizedOperation parenthesized:
                         operation = parenthesized.Operand;
                         break;
-                    case IConversionOperation conversion:
+                    case IConversionOperation conversion when !conversion.Conversion.IsUserDefined:
                         operation = conversion.Operand;
                         break;
                     default:

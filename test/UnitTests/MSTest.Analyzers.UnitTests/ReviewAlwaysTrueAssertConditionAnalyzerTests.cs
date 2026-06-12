@@ -1435,4 +1435,52 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithUserDefinedConversion_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Wrapper();
+                    Assert.AreEqual((int)x, (int)x);
+                }
+
+                private sealed class Wrapper
+                {
+                    private static int _counter;
+                    public static explicit operator int(Wrapper value) => ++_counter;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithBuiltInConversion_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual((long)x, (long)x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

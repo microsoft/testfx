@@ -91,9 +91,12 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
         };
 
     private static bool HasIdenticalExpectedAndActual(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
-        => GetArgumentWithName(operation, expectedOrNotExpectedParameterName) is { } expectedArgument
-        && GetArgumentWithName(operation, ActualParameterName) is { } actualArgument
+        => GetRawArgumentValueWithName(operation, expectedOrNotExpectedParameterName) is { } expectedArgument
+        && GetRawArgumentValueWithName(operation, ActualParameterName) is { } actualArgument
         && expectedArgument.IsEquivalentReferenceTo(actualArgument);
+
+    private static IOperation? GetRawArgumentValueWithName(IInvocationOperation operation, string name)
+        => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name)?.Value;
 
     private static bool IsNotNullableType(IOperation valueArgumentOperation)
     {
