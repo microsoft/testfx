@@ -515,6 +515,41 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">{0}.TestContext의 형식이 잘못되었습니다.</target>
         <note>{0} is the test class name. {Locked="TestContext"}</note>
       </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
+        <source>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</source>
+        <target state="new">UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderLoadFailed">
+        <source>UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</source>
+        <target state="new">UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderMultipleDeclared">
+        <source>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</source>
+        <target state="new">UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderThrew">
+        <source>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</source>
+        <target state="new">UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeDoesNotImplementInterface">
+        <source>UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</source>
+        <target state="new">UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsGeneric">
+        <source>UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</source>
+        <target state="new">UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsNotInstantiable">
+        <source>UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</source>
+        <target state="new">UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
         <target state="new">Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
