@@ -29,6 +29,7 @@ internal static class MetadataRegistryEmitter
 
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine();
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
@@ -36,46 +37,46 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
-                sb.AppendLine("public Type Type { get; init; } = null!;");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
-                sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; init; } = Array.Empty<TestMethodReflectionInfo>();");
-                sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; init; } = Array.Empty<TestPropertyReflectionInfo>();");
-                sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; init; } = Array.Empty<TestConstructorReflectionInfo>();");
+                sb.AppendLine("public Type Type { get; set; } = null!;");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");
+                sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; set; } = Array.Empty<TestPropertyReflectionInfo>();");
+                sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; set; } = Array.Empty<TestConstructorReflectionInfo>();");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestMethodReflectionInfo"))
             {
-                sb.AppendLine("public string Name { get; init; } = string.Empty;");
-                sb.AppendLine("public bool IsStatic { get; init; }");
-                sb.AppendLine("public bool ReturnsTask { get; init; }");
-                sb.AppendLine("public bool ReturnsValueTask { get; init; }");
-                sb.AppendLine("public bool ReturnsVoid { get; init; }");
-                sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
-                sb.AppendLine("public string[] ParameterNames { get; init; } = Array.Empty<string>();");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("public bool IsStatic { get; set; }");
+                sb.AppendLine("public bool ReturnsTask { get; set; }");
+                sb.AppendLine("public bool ReturnsValueTask { get; set; }");
+                sb.AppendLine("public bool ReturnsVoid { get; set; }");
+                sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
+                sb.AppendLine("public string[] ParameterNames { get; set; } = Array.Empty<string>();");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
-                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; init; } = Array.Empty<object?[]>();");
-                sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />.</summary>");
-                sb.AppendLine("public Func<object?, object?[]?, object?> Invoke { get; init; } = static (_, _) => null;");
+                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
+                sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
+                sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestPropertyReflectionInfo"))
             {
-                sb.AppendLine("public string Name { get; init; } = string.Empty;");
-                sb.AppendLine("public Type PropertyType { get; init; } = typeof(object);");
-                sb.AppendLine("public bool HasPublicSetter { get; init; }");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
-                sb.AppendLine("public Func<object?, object?> Get { get; init; } = static _ => null;");
-                sb.AppendLine("public Action<object?, object?> Set { get; init; } = static (_, _) => { };");
+                sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("public Type PropertyType { get; set; } = typeof(object);");
+                sb.AppendLine("public bool HasPublicSetter { get; set; }");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public Func<object?, object?> Get { get; set; } = static _ => null;");
+                sb.AppendLine("public Action<object?, object?> Set { get; set; } = static (_, _) => { };");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestConstructorReflectionInfo"))
             {
-                sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
-                sb.AppendLine("public Func<object?[]?, object> Invoke { get; init; } = static _ => throw new InvalidOperationException(\"No constructor registered.\");");
+                sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
+                sb.AppendLine("public Func<object?[]?, object> Invoke { get; set; } = static _ => throw new InvalidOperationException(\"No constructor registered.\");");
             }
         }
 
@@ -89,6 +90,7 @@ internal static class MetadataRegistryEmitter
 
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine();
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
@@ -274,9 +276,35 @@ internal static class MetadataRegistryEmitter
         string args = BuildArgumentsFromObjectArray(method.Parameters);
         string call = $"{target}.{method.Name}({args})";
 
-        string body = method.ReturnsVoid
-            ? $"{{ {call}; return null; }}"
-            : $"{{ return {call}; }}";
+        // The contract is: return a non-null Task representing the (async or sync) completion of the
+        // test method, discarding any result value. This lets the caller use a single `await invoker(...)`
+        // path regardless of the underlying return shape.
+        //   - void / non-Task sync: invoke, return Task.CompletedTask.
+        //   - Task / Task<T>: forward the returned Task (treat a `null` return as success).
+        //   - ValueTask / ValueTask<T>: avoid Task allocation for the synchronously-completed fast path
+        //     via IsCompletedSuccessfully, otherwise call AsTask().
+        string body;
+        if (method.ReturnsTask)
+        {
+            // Task<T> derives from Task, so the same forwarding code handles both. A test method that
+            // *declares* a Task return type and then returns `null` is broken at runtime, but mirroring
+            // reflection-Invoke we tolerate it and treat it as already-completed.
+            body = $"{{ Task? __t = {call}; return __t ?? Task.CompletedTask; }}";
+        }
+        else if (method.ReturnsValueTask)
+        {
+            body = $"{{ var __vt = {call}; return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); }}";
+        }
+        else if (method.ReturnsVoid)
+        {
+            body = $"{{ {call}; return Task.CompletedTask; }}";
+        }
+        else
+        {
+            // Non-void, non-Task return (e.g. `int Test()`). The test runner discards the value; we still
+            // execute the call for its side effects and report success.
+            body = $"{{ _ = {call}; return Task.CompletedTask; }}";
+        }
 
         sb.AppendLine($"Invoke = static (instance, args) => {body},");
     }

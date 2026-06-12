@@ -30,6 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+    <AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="MSTest.AotReflection.SourceGeneration.UnitTests" Key="$(VsPublicKey)" />
   </ItemGroup>
 
