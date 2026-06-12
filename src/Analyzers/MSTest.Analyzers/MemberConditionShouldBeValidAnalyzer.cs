@@ -110,7 +110,7 @@ public sealed class MemberConditionShouldBeValidAnalyzer : DiagnosticAnalyzer
         //   (ConditionMode, Type, string), (ConditionMode, Type, string, params string[]) )
         // we can identify the condition type, the first member name, and the optional params array
         // by inspecting argument kinds and types.
-        INamedTypeSymbol? conditionType = null;
+        ITypeSymbol? conditionType = null;
         var memberNames = new List<string>();
         foreach (TypedConstant argument in attribute.ConstructorArguments)
         {
@@ -119,7 +119,7 @@ public sealed class MemberConditionShouldBeValidAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            if (argument.Kind == TypedConstantKind.Type && argument.Value is INamedTypeSymbol typeValue)
+            if (argument.Kind == TypedConstantKind.Type && argument.Value is ITypeSymbol typeValue)
             {
                 conditionType = typeValue;
             }
@@ -142,9 +142,30 @@ public sealed class MemberConditionShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         string typeName = conditionType.Name;
+
+        // Non-named types (arrays, pointers, function pointers) can't carry user-declared static
+        // bool members the way [MemberCondition] requires. The runtime will throw
+        // ``InvalidOperationException`` at first ``IsConditionMet`` access; surface that as
+        // MSTEST0070 (MemberNotFound) here so the user sees it at edit-time.
+        if (conditionType is not INamedTypeSymbol namedConditionType)
+        {
+            string nonNamedTypeName = string.IsNullOrEmpty(conditionType.Name)
+                ? conditionType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)
+                : conditionType.Name;
+            foreach (string memberName in memberNames)
+            {
+                if (!string.IsNullOrWhiteSpace(memberName))
+                {
+                    context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberNotFoundRule, nonNamedTypeName, memberName));
+                }
+            }
+
+            return;
+        }
+
         foreach (string memberName in memberNames)
         {
-            ValidateMember(context, attributeSyntax, conditionType, typeName, memberName);
+            ValidateMember(context, attributeSyntax, namedConditionType, typeName, memberName);
         }
     }
 

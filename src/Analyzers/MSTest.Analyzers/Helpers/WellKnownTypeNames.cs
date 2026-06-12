@@ -30,6 +30,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior = "Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior";
     public const string MicrosoftVisualStudioTestToolsUnitTestingMemberConditionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingOSConditionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OwnerAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute";
@@ -43,7 +44,6 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTimeoutAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
-    public const string MicrosoftVisualStudioTestToolsUnitTestingOSConditionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OSConditionAttribute";
 
     public const string System = "System";
     public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";

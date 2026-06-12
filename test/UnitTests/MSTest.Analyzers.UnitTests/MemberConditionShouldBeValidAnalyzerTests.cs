@@ -438,7 +438,7 @@ public sealed class MemberConditionShouldBeValidAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenStaticFieldIsInstance_MemberNotStatic()
+    public async Task WhenFieldIsInstance_MemberNotStatic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -550,5 +550,30 @@ public sealed class MemberConditionShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenConditionTypeIsArrayType_MemberNotFound()
+    {
+        // typeof(int[]) is an IArrayTypeSymbol, not INamedTypeSymbol. The runtime would still throw
+        // InvalidOperationException because int[] has no user-declared static bool members; the
+        // analyzer must surface MSTEST0070 rather than silently skipping the attribute.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:MemberCondition(typeof(int[]), "AnyName")|}]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(MemberConditionShouldBeValidAnalyzer.MemberNotFoundRule)
+                .WithLocation(0)
+                .WithArguments("int[]", "AnyName"));
     }
 }
