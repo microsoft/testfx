@@ -60,6 +60,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     private readonly string[] _conditionMemberNames;
     private string? _groupName;
     private ReadOnlyCollection<string>? _conditionMemberNamesView;
+    private Func<bool>[]? _evaluators;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConditionAttribute"/> class with
@@ -202,37 +203,44 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// <inheritdoc />
     /// <remarks>
     /// Each <see cref="ConditionAttribute"/> instance produces a group name derived from
-    /// <see cref="ConditionType"/> and <see cref="ConditionMemberNames"/>, so stacking multiple
-    /// <see cref="ConditionAttribute"/> declarations on the same target combines them with a
-    /// logical AND.
+    /// <see cref="ConditionType"/>, <see cref="ConditionMemberNames"/>, and
+    /// <see cref="ConditionBaseAttribute.Mode"/>, so stacking multiple <see cref="ConditionAttribute"/>
+    /// declarations on the same target combines them with a logical AND -- including pairs with
+    /// the same type/members but opposite <see cref="ConditionMode"/> values, which would otherwise
+    /// silently cancel each other out.
     /// </remarks>
     public override string GroupName
-        => _groupName ??= $"{nameof(ConditionAttribute)}:{ConditionType.FullName ?? ConditionType.Name}:{string.Join("|", _conditionMemberNames)}";
+        => _groupName ??= $"{nameof(ConditionAttribute)}:{ConditionType.FullName ?? ConditionType.Name}:{string.Join("|", _conditionMemberNames)}:{Mode}";
 
     /// <inheritdoc />
     /// <remarks>
     /// All referenced members are evaluated in order and combined with a logical AND. Throws
     /// <see cref="InvalidOperationException"/> if a member can't be resolved as a
     /// <see langword="public"/> <see langword="static"/> <see cref="bool"/> property, field, or
-    /// parameterless method.
+    /// parameterless method. Resolved members are cached after the first access so subsequent
+    /// evaluations don't pay the reflection cost again.
     /// </remarks>
     public override bool IsConditionMet
     {
         get
         {
-            foreach (string memberName in _conditionMemberNames)
-            {
-                if (!EvaluateMember(memberName))
-                {
-                    return false;
-                }
-            }
-
-            return true;
+            Func<bool>[] evaluators = _evaluators ??= BuildEvaluators();
+            return evaluators.All(static evaluator => evaluator());
         }
     }
 
-    private bool EvaluateMember(string memberName)
+    private Func<bool>[] BuildEvaluators()
+    {
+        var evaluators = new Func<bool>[_conditionMemberNames.Length];
+        for (int i = 0; i < _conditionMemberNames.Length; i++)
+        {
+            evaluators[i] = BuildEvaluator(_conditionMemberNames[i]);
+        }
+
+        return evaluators;
+    }
+
+    private Func<bool> BuildEvaluator(string memberName)
     {
         const BindingFlags Flags = BindingFlags.Public | BindingFlags.Static;
         string typeName = ConditionType.FullName ?? ConditionType.Name;
@@ -245,7 +253,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
                 || property.GetGetMethod(nonPublic: true) is null
                 ? throw new InvalidOperationException(
                     $"Member '{typeName}.{memberName}' must be a public static bool readable parameterless property to be used with [Condition].")
-                : (bool)property.GetValue(null)!;
+                : () => (bool)property.GetValue(null)!;
         }
 
         FieldInfo? field = ConditionType.GetField(memberName, Flags);
@@ -254,17 +262,17 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
             return field.FieldType != typeof(bool)
                 ? throw new InvalidOperationException(
                     $"Member '{typeName}.{memberName}' must be a public static bool field to be used with [Condition].")
-                : (bool)field.GetValue(null)!;
+                : () => (bool)field.GetValue(null)!;
         }
 
-        MethodInfo? method = ConditionType.GetMethod(memberName, Flags, binder: null, types: Type.EmptyTypes, modifiers: null);
-        return method is null
+        MethodInfo? method = ConditionType.GetMethod(memberName, Flags, binder: null, types: Type.EmptyTypes, modifiers: null)
+            ?? throw new InvalidOperationException(
+                $"Could not find a public static bool property, field, or parameterless method named '{memberName}' on type '{typeName}'.");
+
+        return method.ReturnType != typeof(bool)
             ? throw new InvalidOperationException(
-                $"Could not find a public static bool property, field, or parameterless method named '{memberName}' on type '{typeName}'.")
-            : method.ReturnType != typeof(bool)
-                ? throw new InvalidOperationException(
-                    $"Member '{typeName}.{memberName}' must be a public static parameterless bool method to be used with [Condition].")
-                : (bool)method.Invoke(null, null)!;
+                $"Member '{typeName}.{memberName}' must be a public static parameterless bool method to be used with [Condition].")
+            : () => (bool)method.Invoke(null, null)!;
     }
 
     private string FormatMemberList()

@@ -29,6 +29,8 @@ public class ConditionAttributeTests : TestContainer
 
         public static int NotABool => 42;
 
+        public static int NotABoolMethod() => 42;
+
         public static bool WithParam(int _) => true;
 
         public bool InstanceProp => true;
@@ -100,7 +102,8 @@ public class ConditionAttributeTests : TestContainer
         var attribute = new ConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         attribute.IgnoreMessage.Should().Contain("not supported")
-            .And.Contain(nameof(Conditions.TruePropertyValue));
+            .And.Contain(nameof(Conditions.TruePropertyValue))
+            .And.Contain(typeof(Conditions).FullName!);
     }
 
     public void IgnoreMessage_MultipleMembers_ListsAllWithAnd()
@@ -165,6 +168,11 @@ public class ConditionAttributeTests : TestContainer
             .Should().Throw<InvalidOperationException>()
             .WithMessage("*WithParam*");
 
+    public void IsConditionMet_ParameterlessMethodWithNonBoolReturn_ThrowsInvalidOperation()
+        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), nameof(Conditions.NotABoolMethod)).IsConditionMet))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*static parameterless bool method*");
+
     public void IsConditionMet_InstanceProperty_NotFoundForStaticLookup()
         => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), nameof(Conditions.InstanceProp)).IsConditionMet))
             .Should().Throw<InvalidOperationException>()
@@ -193,6 +201,14 @@ public class ConditionAttributeTests : TestContainer
         var b = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         a.GroupName.Should().Be(b.GroupName);
+    }
+
+    public void GroupName_DifferentMode_AreDifferentGroups()
+    {
+        var include = new ConditionAttribute(ConditionMode.Include, typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var exclude = new ConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
+
+        include.GroupName.Should().NotBe(exclude.GroupName);
     }
 
     public void ConditionMemberNames_CannotBeDowncastToMutableArray()
