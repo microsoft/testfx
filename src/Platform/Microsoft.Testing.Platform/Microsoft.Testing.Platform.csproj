@@ -5,6 +5,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>
+
+    <!-- Treat "missing XML doc comment for publicly visible type or member" as a build error so
+         the public API stays fully documented. See #9060. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
