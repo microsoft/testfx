@@ -793,6 +793,52 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_ExcludesProtectedBaseMembers()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public abstract class BaseTests
+                {
+                    [TestInitialize]
+                    protected void ProtectedSetup() { }
+
+                    [TestCleanup]
+                    private protected void PrivateProtectedCleanup() { }
+
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void PublicTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("PublicTest");
+        registry.Should().NotContain("ProtectedSetup");
+        registry.Should().NotContain("PrivateProtectedCleanup");
+        registry.Should().NotContain("ProtectedTest");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("generated invokers are emitted from a non-derived type and cannot call protected base members");
+    }
+
+    [TestMethod]
     public void Generator_DoesNotInheritConstructors()
     {
         const string userCode = """
@@ -1330,39 +1376,6 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_DoesNotInheritAttribute_WhenAttributeUsageInheritedFalse()
-    {
-        // Custom attribute declared with [AttributeUsage(Inherited = false)] must not leak
-        // from the base method onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
-        const string userCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            namespace Sample
-            {
-                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
-                public class NonInheritedMarkerAttribute : System.Attribute { }
-
-                public class BaseTests
-                {
-                    [TestMethod]
-                    [NonInheritedMarker]
-                    public virtual void Run() { }
-                }
-
-                [TestClass]
-                public class DerivedTests : BaseTests
-                {
-                    public override void Run() { }
-                }
-            }
-            """;
-
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
-
-        registry.Should().NotContain("NonInheritedMarker");
-    }
-
-    [TestMethod]
     public void Generator_InvokerForVoidMethod_ReturnsCompletedTask()
     {
         const string userCode = """
@@ -1433,7 +1446,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_InvokerForValueTaskMethod_UnwrapsViaAsTask()
+    public void Generator_InvokerForValueTaskMethod_ConsumesCompletedValueTask()
     {
         const string userCode = """
             using System.Threading.Tasks;
@@ -1453,12 +1466,12 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         // ValueTask unwrap uses IsCompletedSuccessfully so the synchronous-completion fast path
-        // skips the Task allocation; only when the operation actually went async do we pay AsTask().
-        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTask(); return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); },");
+        // skips the Task allocation while still consuming the ValueTask source.
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTask(); if (__vt.IsCompletedSuccessfully) { __vt.GetAwaiter().GetResult(); return Task.CompletedTask; } return __vt.AsTask(); },");
     }
 
     [TestMethod]
-    public void Generator_InvokerForValueTaskOfTMethod_UnwrapsViaAsTask()
+    public void Generator_InvokerForValueTaskOfTMethod_ConsumesCompletedValueTask()
     {
         const string userCode = """
             using System.Threading.Tasks;
@@ -1477,7 +1490,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
-        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTaskOfString(); return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); },");
+        registry.Should().Contain("Invoke = static (instance, args) => { var __vt = ((global::Sample.Tests)instance!).AsyncValueTaskOfString(); if (__vt.IsCompletedSuccessfully) { __vt.GetAwaiter().GetResult(); return Task.CompletedTask; } return __vt.AsTask(); },");
     }
 
     [TestMethod]
@@ -1500,8 +1513,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         // For a sync non-void test the returned value is discarded but the call must still execute
-        // (its side-effects ARE the test). We surface that with a `_ = call;` pattern.
-        registry.Should().Contain("Invoke = static (instance, args) => { _ = ((global::Sample.Tests)instance!).SyncInt(); return Task.CompletedTask; },");
+        // (its side-effects ARE the test). A plain invocation statement discards the value while also
+        // supporting `ref`-returning methods, where assigning a byref return to `_` would not compile.
+        registry.Should().Contain("Invoke = static (instance, args) => { ((global::Sample.Tests)instance!).SyncInt(); return Task.CompletedTask; },");
     }
 
     [TestMethod]
@@ -1526,6 +1540,39 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // The registry file references Task.CompletedTask directly in every invoker, so it must
         // bring System.Threading.Tasks into scope.
         registry.Should().Contain("using System.Threading.Tasks;");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInheritAttribute_WhenAttributeUsageInheritedFalse()
+    {
+        // Custom attribute declared with [AttributeUsage(Inherited = false)] must not leak
+        // from the base method onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+                public class NonInheritedMarkerAttribute : System.Attribute { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [NonInheritedMarker]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("NonInheritedMarker");
     }
 
     [TestMethod]

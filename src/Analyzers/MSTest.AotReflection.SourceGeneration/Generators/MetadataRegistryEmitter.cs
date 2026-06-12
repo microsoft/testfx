@@ -282,7 +282,8 @@ internal static class MetadataRegistryEmitter
         //   - void / non-Task sync: invoke, return Task.CompletedTask.
         //   - Task / Task<T>: forward the returned Task (treat a `null` return as success).
         //   - ValueTask / ValueTask<T>: avoid Task allocation for the synchronously-completed fast path
-        //     via IsCompletedSuccessfully, otherwise call AsTask().
+        //     via IsCompletedSuccessfully, consuming the result before returning Task.CompletedTask;
+        //     otherwise call AsTask().
         string body;
         if (method.ReturnsTask)
         {
@@ -293,7 +294,7 @@ internal static class MetadataRegistryEmitter
         }
         else if (method.ReturnsValueTask)
         {
-            body = $"{{ var __vt = {call}; return __vt.IsCompletedSuccessfully ? Task.CompletedTask : __vt.AsTask(); }}";
+            body = $"{{ var __vt = {call}; if (__vt.IsCompletedSuccessfully) {{ __vt.GetAwaiter().GetResult(); return Task.CompletedTask; }} return __vt.AsTask(); }}";
         }
         else if (method.ReturnsVoid)
         {
@@ -303,7 +304,11 @@ internal static class MetadataRegistryEmitter
         {
             // Non-void, non-Task return (e.g. `int Test()`). The test runner discards the value; we still
             // execute the call for its side effects and report success.
-            body = $"{{ _ = {call}; return Task.CompletedTask; }}";
+            //
+            // Note: using a plain invocation statement (instead of `_ = {call}`) discards the value while
+            // also handling `ref`-returning methods (e.g. `ref int M()`), where assigning the byref return
+            // to a discard would not compile.
+            body = $"{{ {call}; return Task.CompletedTask; }}";
         }
 
         sb.AppendLine($"Invoke = static (instance, args) => {body},");
