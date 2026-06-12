@@ -92,11 +92,18 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
             "IsTrue" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
             "IsFalse" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
             "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.NotEqual,
-            "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal,
+            "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.Equal
+                || HasIdenticalExpectedAndActual(operation, NotExpectedParameterName),
+            "AreNotSame" => HasIdenticalExpectedAndActual(operation, NotExpectedParameterName),
             "IsNotNull" => GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation),
             _ => false,
         };
+
+    private static bool HasIdenticalExpectedAndActual(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
+        => GetArgumentWithName(operation, expectedOrNotExpectedParameterName) is { } expectedArgument
+        && GetArgumentWithName(operation, ActualParameterName) is { } actualArgument
+        && expectedArgument.IsEquivalentReferenceTo(actualArgument);
 
     private static bool IsNotNullableType(IOperation valueArgumentOperation)
     {
