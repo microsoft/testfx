@@ -416,7 +416,7 @@ internal static class MetadataRegistryEmitter
         }
     }
 
-    private static string BuildAttributeExpression(AttributeApplicationModel attribute)
+    internal static string BuildAttributeExpression(AttributeApplicationModel attribute)
     {
         string ctorArgs = string.Join(", ", attribute.ConstructorArguments.AsImmutableArray().Select(BuildConstantExpression));
         string ctorCall = $"new {attribute.FullyQualifiedAttributeType}({ctorArgs})";
@@ -502,7 +502,7 @@ internal static class MetadataRegistryEmitter
 
     private static string Bool(bool value) => value ? "true" : "false";
 
-    private static string Escape(string value)
+    internal static string Escape(string value)
         => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static void AppendHeader(IndentedStringBuilder sb)

@@ -77,6 +77,20 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
             string source = MetadataRegistryEmitter.EmitRegistry(assemblyName, payload.Metadata, payload.Classes);
             ctx.AddSource("MSTestReflectionMetadata.Registry.g.cs", SourceText.From(source, Encoding.UTF8));
         });
+
+        // Emit the [ModuleInitializer] that registers this assembly with the adapter. Without it,
+        // referencing this generator would emit metadata that nothing consumes. We skip emission
+        // when there are no test classes — there is nothing to register.
+        context.RegisterImplementationSourceOutput(combined, static (ctx, payload) =>
+        {
+            if (payload.Classes.IsDefaultOrEmpty)
+            {
+                return;
+            }
+
+            string source = RuntimeRegistrationEmitter.Emit(payload.Metadata, payload.Classes);
+            ctx.AddSource("MSTestReflectionMetadata.Registration.g.cs", SourceText.From(source, Encoding.UTF8));
+        });
     }
 
     private static TestClassTransformResult BuildResult(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
