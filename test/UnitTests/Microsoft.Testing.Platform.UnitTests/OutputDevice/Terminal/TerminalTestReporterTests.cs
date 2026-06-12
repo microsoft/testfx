@@ -1018,6 +1018,94 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenEmpty_ReturnsEmptyList()
+    {
+        var state = new TestNodeResultsState(1);
+
+        List<TestDetailState> tasks = state.GetRunningTasks(maxCount: 5);
+
+        Assert.IsEmpty(tasks);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenFewerThanMax_ReturnsAllSortedByElapsedDescending()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        // Create the stopwatches in age order so we know what "elapsed descending" should look like:
+        // "OldTest" runs the longest, "MiddleTest" next, "YoungTest" shortest.
+        state.AddRunningTestNode(id: 10, uid: "uid-old", name: "OldTest", stopwatchFactory.CreateStopwatch());
+        stopwatchFactory.AddTime(TimeSpan.FromSeconds(2));
+        state.AddRunningTestNode(id: 11, uid: "uid-middle", name: "MiddleTest", stopwatchFactory.CreateStopwatch());
+        stopwatchFactory.AddTime(TimeSpan.FromSeconds(2));
+        state.AddRunningTestNode(id: 12, uid: "uid-young", name: "YoungTest", stopwatchFactory.CreateStopwatch());
+
+        List<TestDetailState> tasks = state.GetRunningTasks(maxCount: 5);
+
+        Assert.HasCount(3, tasks);
+        Assert.AreEqual("OldTest", tasks[0].Text);
+        Assert.AreEqual("MiddleTest", tasks[1].Text);
+        Assert.AreEqual("YoungTest", tasks[2].Text);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenMoreThanMax_TruncatesAndAppendsSummary()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        // 5 running tasks, ages decreasing so "Test0" is oldest, "Test4" is youngest.
+        for (int i = 0; i < 5; i++)
+        {
+            state.AddRunningTestNode(id: 10 + i, uid: $"uid-{i}", name: $"Test{i}", stopwatchFactory.CreateStopwatch());
+            stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+        }
+
+        List<TestDetailState> tasks = state.GetRunningTasks(maxCount: 3);
+
+        // Expect exactly maxCount entries: (maxCount - 1) oldest tasks + 1 summary line.
+        Assert.HasCount(3, tasks);
+        Assert.AreEqual("Test0", tasks[0].Text);
+        Assert.AreEqual("Test1", tasks[1].Text);
+        // The trailing summary mentions how many tasks are NOT shown (5 - 2 = 3).
+        // Assert exact text (matching the maxCount=1 test's pattern) so this can't accidentally
+        // pass for unrelated reasons (any '3' anywhere in a localized/format-changed string).
+        string expectedSummary = $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, 3)}";
+        Assert.AreEqual(expectedSummary, tasks[2].Text);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_WhenMaxCountIsOneAndMultipleRunning_ReturnsOnlySummary()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "FirstTest", stopwatchFactory.CreateStopwatch());
+        state.AddRunningTestNode(id: 11, uid: "uid-2", name: "SecondTest", stopwatchFactory.CreateStopwatch());
+
+        List<TestDetailState> tasks = state.GetRunningTasks(maxCount: 1);
+
+        Assert.HasCount(1, tasks);
+        // When maxCount is 1 and we're over budget, no individual test fits — we only show the summary.
+        string expectedSummary = string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, 2);
+        Assert.AreEqual(expectedSummary, tasks[0].Text);
+        Assert.DoesNotContain("FirstTest", tasks[0].Text);
+        Assert.DoesNotContain("SecondTest", tasks[0].Text);
+    }
+
+    [TestMethod]
+    public void TestNodeResultsState_GetRunningTasks_ReturnsCachedBufferReusedAcrossCalls()
+    {
+        var stopwatchFactory = new StopwatchFactory();
+        var state = new TestNodeResultsState(1);
+        state.AddRunningTestNode(id: 10, uid: "uid-1", name: "T1", stopwatchFactory.CreateStopwatch());
+
+        List<TestDetailState> first = state.GetRunningTasks(maxCount: 5);
+        List<TestDetailState> second = state.GetRunningTasks(maxCount: 5);
+
+        // The buffer is intentionally reused (documented contract) — same reference across calls.
+        Assert.AreSame(first, second);
+    }
+
+    [TestMethod]
     public void TerminalTestReporter_WhenInDiscoveryMode_ShouldIncrementDiscoveredTests()
     {
         // Arrange

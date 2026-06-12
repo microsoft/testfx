@@ -39,6 +39,8 @@ internal static partial class PlatformResources
 #if IS_MTP_UNIT_TESTS
     internal static string @ActiveTestsRunning_FullTestsCount => GetResourceString("ActiveTestsRunning_FullTestsCount");
 
+    internal static string @ActiveTestsRunning_MoreTestsCount => GetResourceString("ActiveTestsRunning_MoreTestsCount");
+
     internal static string @PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage => GetResourceString("PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage");
 
     internal static string @PlatformCommandLineDiscoverTestsInvalidArgument => GetResourceString("PlatformCommandLineDiscoverTestsInvalidArgument");

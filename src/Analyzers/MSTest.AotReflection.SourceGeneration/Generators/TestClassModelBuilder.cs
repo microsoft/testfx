@@ -5,6 +5,7 @@ using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
 
+using MSTest.AotReflection.SourceGeneration.Diagnostics;
 using MSTest.AotReflection.SourceGeneration.Helpers;
 using MSTest.AotReflection.SourceGeneration.Model;
 
@@ -20,7 +21,7 @@ internal static class TestClassModelBuilder
         SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
             SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
 
-    public static TestClassModel Build(INamedTypeSymbol typeSymbol)
+    public static TestClassModel Build(INamedTypeSymbol typeSymbol, List<DiagnosticInfo> diagnostics)
     {
         // Methods / properties are walked across the full inheritance chain (excluding
         // System.Object) so that MSTest members declared on a base class —
@@ -37,6 +38,8 @@ internal static class TestClassModelBuilder
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
 
+        string leafFqn = typeSymbol.ToDisplayString(FullyQualifiedFormat);
+
         for (INamedTypeSymbol? current = typeSymbol;
              current is not null && current.SpecialType != SpecialType.System_Object;
              current = current.BaseType)
@@ -49,6 +52,13 @@ internal static class TestClassModelBuilder
                 {
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
                         when IsAccessibleFromConsumer(method):
+                        if (TryReportUnsupportedMethod(method, leafFqn, diagnostics))
+                        {
+                            // Skip generic / by-ref methods entirely so the emitter does not produce
+                            // code that references unbound type parameters or ref/in/out arguments.
+                            break;
+                        }
+
                         string key = BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
@@ -59,7 +69,7 @@ internal static class TestClassModelBuilder
 
                         break;
                     case IPropertySymbol property
-                        when IsAccessibleFromConsumer(property):
+                        when !property.IsIndexer && IsAccessibleFromConsumer(property):
                         if (!propertiesByName.ContainsKey(property.Name))
                         {
                             TestPropertyModel model = BuildProperty(property);
@@ -70,6 +80,11 @@ internal static class TestClassModelBuilder
                         break;
                     case IMethodSymbol { MethodKind: MethodKind.Constructor, IsStatic: false } ctor
                         when isLeaf && ctor.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
+                        if (TryReportUnsupportedMethod(ctor, leafFqn, diagnostics))
+                        {
+                            break;
+                        }
+
                         ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
                         break;
                 }
@@ -77,7 +92,7 @@ internal static class TestClassModelBuilder
         }
 
         return new TestClassModel(
-            FullyQualifiedTypeName: typeSymbol.ToDisplayString(FullyQualifiedFormat),
+            FullyQualifiedTypeName: leafFqn,
             ContainingNamespace: typeSymbol.ContainingNamespace.IsGlobalNamespace
                 ? string.Empty
                 : typeSymbol.ContainingNamespace.ToDisplayString(),
@@ -88,6 +103,41 @@ internal static class TestClassModelBuilder
             Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
             Attributes: BuildAttributes(typeSymbol.GetAttributes()));
+    }
+
+    // Reports AOTSG0004 (generic method) and AOTSG0005 (by-ref parameter) when applicable.
+    // Returns true if the member must be excluded from the emitted model.
+    private static bool TryReportUnsupportedMethod(IMethodSymbol method, string owningClassFqn, List<DiagnosticInfo> diagnostics)
+    {
+        bool unsupported = false;
+
+        // AOTSG0004 only applies to ordinary methods. Constructors cannot be generic so
+        // method.IsGenericMethod is false for them.
+        if (method.IsGenericMethod)
+        {
+            diagnostics.Add(DiagnosticInfo.Create(
+                DiagnosticDescriptors.GenericTestMethod,
+                LocationInfo.CreateFrom(method),
+                owningClassFqn,
+                method.Name));
+            unsupported = true;
+        }
+
+        foreach (IParameterSymbol parameter in method.Parameters)
+        {
+            if (parameter.RefKind != RefKind.None)
+            {
+                diagnostics.Add(DiagnosticInfo.Create(
+                    DiagnosticDescriptors.ByRefParameter,
+                    LocationInfo.CreateFrom(parameter),
+                    owningClassFqn,
+                    method.MethodKind == MethodKind.Constructor ? "ctor" : method.Name,
+                    parameter.Name));
+                unsupported = true;
+            }
+        }
+
+        return unsupported;
     }
 
     // Restricted to accessibilities the emitted helper class (a separate static type
@@ -228,14 +278,23 @@ internal static class TestClassModelBuilder
         => new(
             Name: property.Name,
             FullyQualifiedType: property.Type.ToDisplayString(FullyQualifiedFormat),
+            IsStatic: property.IsStatic,
+
+            // The generated registry lives in the consuming assembly, so a getter is reachable
+            // when it is public, internal, or protected-internal. private / protected getters
+            // cannot be read from the generated (non-derived) call site.
+            HasGettableValue: property.GetMethod is
+            {
+                DeclaredAccessibility: Accessibility.Public
+                or Accessibility.Internal
+                or Accessibility.ProtectedOrInternal,
+            },
             HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public },
             Attributes: BuildAttributes(CollectInheritedAttributes(property)));
 
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
-    // overridden-method chain and union attributes, keeping the most-derived application when
-    // the same attribute type appears on multiple levels — but respect
-    // [AttributeUsage(Inherited = false)] (the attribute is NOT visible past the level it was
-    // declared on) and [AttributeUsage(AllowMultiple = true)] (every occurrence is kept).
+    // overridden-member chain, honor AttributeUsageAttribute.Inherited, and keep only the
+    // most-derived application for attributes that do not allow multiple instances.
     private static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
     {
         ImmutableArray<AttributeData> own = method.GetAttributes();
@@ -246,10 +305,10 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own, isInheritedLevel: false);
+        AppendAttributes(builder, seen, own, inheritedOnly: false);
         for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
         {
-            AppendUnique(builder, seen, baseMethod.GetAttributes(), isInheritedLevel: true);
+            AppendAttributes(builder, seen, baseMethod.GetAttributes(), inheritedOnly: true);
         }
 
         return builder.ToImmutable();
@@ -265,20 +324,20 @@ internal static class TestClassModelBuilder
 
         var seen = new HashSet<string>(StringComparer.Ordinal);
         ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendUnique(builder, seen, own, isInheritedLevel: false);
+        AppendAttributes(builder, seen, own, inheritedOnly: false);
         for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
         {
-            AppendUnique(builder, seen, baseProperty.GetAttributes(), isInheritedLevel: true);
+            AppendAttributes(builder, seen, baseProperty.GetAttributes(), inheritedOnly: true);
         }
 
         return builder.ToImmutable();
     }
 
-    private static void AppendUnique(
+    private static void AppendAttributes(
         ImmutableArray<AttributeData>.Builder builder,
         HashSet<string> seen,
         ImmutableArray<AttributeData> attributes,
-        bool isInheritedLevel)
+        bool inheritedOnly)
     {
         foreach (AttributeData attribute in attributes)
         {
@@ -287,65 +346,82 @@ internal static class TestClassModelBuilder
                 continue;
             }
 
-            (bool allowMultiple, bool inherited) = GetAttributeUsage(attributeClass);
-
-            // A base-level attribute declared with AttributeUsage(Inherited = false) must
-            // not leak onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
-            if (isInheritedLevel && !inherited)
+            AttributeUsageMetadata usage = GetAttributeUsage(attributeClass);
+            if (inheritedOnly && !usage.Inherited)
             {
-                continue;
-            }
-
-            // Attributes declared with AttributeUsage(AllowMultiple = true) may legitimately
-            // appear several times across the override chain (e.g. [TestCategory], [DataRow])
-            // — keep every instance instead of collapsing them to one.
-            if (allowMultiple)
-            {
-                builder.Add(attribute);
                 continue;
             }
 
             string key = attributeClass.ToDisplayString(FullyQualifiedFormat);
-            if (seen.Add(key))
+            if (usage.AllowMultiple || seen.Add(key))
             {
                 builder.Add(attribute);
             }
         }
     }
 
-    private static (bool AllowMultiple, bool Inherited) GetAttributeUsage(INamedTypeSymbol attributeClass)
+    private static AttributeUsageMetadata GetAttributeUsage(INamedTypeSymbol attributeClass)
     {
-        for (INamedTypeSymbol? current = attributeClass; current is not null; current = current.BaseType)
+        bool inherited = true;
+        bool allowMultiple = false;
+
+        // [AttributeUsage] is itself inherited (its own AttributeUsage declares Inherited=true).
+        // Roslyn's GetAttributes() does NOT walk the base-type chain, so we have to walk it
+        // ourselves to honor an [AttributeUsage] declared on a base attribute type (e.g. when
+        // a user-defined attribute derives from one of MSTest's attributes without re-declaring
+        // its own [AttributeUsage]).
+        for (INamedTypeSymbol? current = attributeClass;
+             current is not null && current.SpecialType != SpecialType.System_Object;
+             current = current.BaseType)
         {
-            foreach (AttributeData attribute in current.GetAttributes())
+            if (TryReadAttributeUsage(current, out bool currentInherited, out bool currentAllowMultiple))
             {
-                if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
+                inherited = currentInherited;
+                allowMultiple = currentAllowMultiple;
+                break;
+            }
+        }
+
+        return new AttributeUsageMetadata(inherited, allowMultiple);
+    }
+
+    private static bool TryReadAttributeUsage(INamedTypeSymbol attributeClass, out bool inherited, out bool allowMultiple)
+    {
+        inherited = true;
+        allowMultiple = false;
+
+        foreach (AttributeData attribute in attributeClass.GetAttributes())
+        {
+            if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
+            {
+                continue;
+            }
+
+            foreach (KeyValuePair<string, TypedConstant> namedArgument in attribute.NamedArguments)
+            {
+                if (namedArgument.Value.Value is not bool value)
                 {
                     continue;
                 }
 
-                bool allowMultiple = false;
-                bool inherited = true;
-                foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
+                switch (namedArgument.Key)
                 {
-                    if (named.Key == "AllowMultiple" && named.Value.Value is bool am)
-                    {
-                        allowMultiple = am;
-                    }
-                    else if (named.Key == "Inherited" && named.Value.Value is bool inh)
-                    {
-                        inherited = inh;
-                    }
+                    case nameof(AttributeUsageAttribute.Inherited):
+                        inherited = value;
+                        break;
+                    case nameof(AttributeUsageAttribute.AllowMultiple):
+                        allowMultiple = value;
+                        break;
                 }
-
-                // [AttributeUsage] on a derived attribute class shadows the base per CLI rules;
-                // stop at the first level where it is found.
-                return (allowMultiple, inherited);
             }
+
+            return true;
         }
 
-        return (AllowMultiple: false, Inherited: true);
+        return false;
     }
+
+    private readonly record struct AttributeUsageMetadata(bool Inherited, bool AllowMultiple);
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {

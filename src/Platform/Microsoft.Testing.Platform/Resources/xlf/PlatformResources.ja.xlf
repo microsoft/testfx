@@ -374,6 +374,11 @@
         <target state="translated">コマンド ラインの引数が無効です:</target>
         <note />
       </trans-unit>
+      <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
+        <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</source>
+        <target state="new">The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</target>
+        <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</note>
+      </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
         <source>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</source>
         <target state="translated">testconfig.json ファイル ('{0}') のセクション '{1}' にあるエントリ '{2}' は、スカラー値 (文字列、数値、ブール値) またはスカラー値の配列のいずれかである必要があります。入れ子になったオブジェクトはサポートされていません。</target>

@@ -50,6 +50,7 @@ This package extends Microsoft Testing Platform to produce JUnit XML test report
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameHelper.cs" Link="Helpers\ReportFileNameHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameSanitizer.cs" Link="Helpers\ReportFileNameSanitizer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameValidator.cs" Link="Helpers\ReportFileNameValidator.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestResultCaptureHelper.cs" Link="Helpers\TestResultCaptureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />

@@ -65,7 +65,6 @@
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
-    <PackageVersion Include="Codecov" Version="1.12.3" />
     <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
     <PackageVersion Include="NUnit" Version="4.6.0" />
