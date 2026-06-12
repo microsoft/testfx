@@ -71,11 +71,15 @@ internal sealed class TestNodeResultsState
     /// running" summary detail when truncation occurs).
     /// </summary>
     /// <remarks>
-    /// The returned <see cref="List{T}"/> is a cached buffer reused across calls to avoid
-    /// per-render-tick allocation. Callers MUST consume it immediately and MUST NOT store
-    /// the reference, mutate it, or hand it to other code that might cache it — the next
-    /// call to <see cref="GetRunningTasks"/> will <see cref="List{T}.Clear"/> and rebuild
-    /// the same instance, silently invalidating prior callers' views.
+    /// The returned <see cref="List{T}"/> is a cached buffer reused across calls on the same
+    /// <see cref="TestNodeResultsState"/> instance to avoid per-render-tick allocation.
+    /// Callers MUST NOT call <see cref="GetRunningTasks"/> on the same instance again before
+    /// finishing use of the previously-returned buffer — the next call on that instance will
+    /// <see cref="List{T}.Clear"/> and rebuild it in place, silently invalidating the prior
+    /// caller's view. Buffers from different instances are independent and may be held
+    /// concurrently. This type is not designed for concurrent calls on the same instance;
+    /// the production caller (<c>AnsiTerminalTestProgressFrame</c>) only invokes this from
+    /// the single-threaded render loop.
     /// </remarks>
     public List<TestDetailState> GetRunningTasks(int maxCount)
     {
