@@ -622,6 +622,58 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_ExcludesProtectedAndPrivateProtectedMembersFromBaseType()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+
+                    [TestMethod]
+                    protected internal void ProtectedInternalTest() { }
+
+                    [TestContext]
+                    protected TestContext ProtectedContext { get; set; } = new();
+
+                    [TestContext]
+                    private protected TestContext PrivateProtectedContext { get; set; } = new();
+
+                    [TestContext]
+                    protected internal TestContext ProtectedInternalContext { get; set; } = new();
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void Test() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().NotContain("Name = \"ProtectedTest\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedTest\"");
+        registry.Should().NotContain("Name = \"ProtectedContext\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedContext\"");
+        registry.Should().Contain("Name = \"ProtectedInternalTest\"");
+        registry.Should().Contain("Name = \"ProtectedInternalContext\"");
+    }
+
+    [TestMethod]
     public void Generator_IncludesMethodsFromMultiLevelInheritance()
     {
         const string userCode = """
@@ -1169,6 +1221,212 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_SkipsProtectedAndPrivateProtectedMembers()
+    {
+        // Generated invokers live in a separate static helper class (not a derived type),
+        // so 'protected' and 'private protected' members are not callable from the emitted
+        // code. They MUST be excluded from the registry to keep the generated source compiling.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    public void PublicTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the generated registry MUST NOT reference protected / private protected members");
+
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("Name = \"PublicTest\"");
+        registry.Should().NotContain("Name = \"ProtectedTest\"");
+        registry.Should().NotContain("Name = \"PrivateProtectedTest\"");
+    }
+
+    [TestMethod]
+    public void Generator_KeepsAllowMultipleAttributes_AcrossOverrideChain()
+    {
+        // [TestCategory] is AllowMultiple=true. Collecting attributes across the override chain
+        // MUST keep every instance instead of collapsing them by type, otherwise the inherited
+        // categories disappear from the registry.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [TestCategory("BaseCat")]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestCategory("DerivedCat")]
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"BaseCat\"");
+        registry.Should().Contain("\"DerivedCat\"");
+    }
+
+    [TestMethod]
+    public void Generator_HonorsAttributeUsage_DeclaredOnBaseAttributeType()
+    {
+        // GetAttributeUsage MUST walk the attribute type's base-type chain. AllowMultiple is
+        // inherited from a base attribute that declares [AttributeUsage(AllowMultiple = true)]
+        // even when the derived attribute does not redeclare its own [AttributeUsage]. If the
+        // walk were skipped, the fallback default AllowMultiple=false would silently drop the
+        // second occurrence below.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+                public class BaseTagAttribute : Attribute
+                {
+                    public BaseTagAttribute(string value) { Value = value; }
+                    public string Value { get; }
+                }
+
+                // No [AttributeUsage] here on purpose — must inherit AllowMultiple=true from BaseTagAttribute.
+                public class DerivedTagAttribute : BaseTagAttribute
+                {
+                    public DerivedTagAttribute(string value) : base(value) { }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DerivedTag("first")]
+                    [DerivedTag("second")]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"first\"");
+        registry.Should().Contain("\"second\"");
+    }
+
+    [TestMethod]
+    public void Generator_ReportsAndSkipsGenericMethods_WithSameName()
+    {
+        // Methods that differ only in generic arity (e.g. M() vs M<T>()) MUST be treated as
+        // distinct in the per-class dedup key, otherwise the generator might drop the
+        // non-generic overload alongside the generic ones.
+        //
+        // Generic test methods themselves are unsupported (AOTSG0004), so they are excluded
+        // from the registry — but the non-generic overload must still be emitted independently.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class GenericArityTests
+                {
+                    [TestMethod]
+                    public void Run() { }
+
+                    [TestMethod]
+                    public void Run<T>() { }
+
+                    [TestMethod]
+                    public void Run<T, U>() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty();
+
+        result.Diagnostics.Where(d => d.Id == "AOTSG0004").Should().HaveCount(2);
+        string registry = GetRegistry(result);
+
+        // Only the non-generic Run must be emitted. The generic overloads are excluded by AOTSG0004
+        // but must not cause the non-generic sibling to be dropped through key collision.
+        int occurrences = System.Text.RegularExpressions.Regex
+            .Matches(registry, "Name = \"Run\"")
+            .Count;
+        occurrences.Should().Be(1);
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInherit_TestMethodOrDataRow_OntoOverride()
+    {
+        // [TestMethod] and [DataRow] are declared with AttributeUsage(Inherited = false) in
+        // the real MSTest assembly. An override that does NOT re-apply [TestMethod] is not a
+        // test, and inherited [DataRow]s must not leak from the base method onto the override.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [DataRow(1)]
+                    [DataRow(2)]
+                    public virtual void Run(int x) { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    // Override deliberately does not re-apply [TestMethod] or any [DataRow].
+                    public override void Run(int x) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        // Neither the [TestMethod] nor the inherited [DataRow]s should propagate onto the override.
+        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute()");
+        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(");
+        registry.Should().NotContain("new DataRowModel(");
+    }
+
+    [TestMethod]
     public void Generator_SupportType_DeclaresInvokeAsTaskReturning()
     {
         const string userCode = """
@@ -1184,7 +1442,41 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         support.Should().Contain("using System.Threading.Tasks;");
         // Invoke must be Task-returning so consumers can await without type-testing the result.
-        support.Should().Contain("public Func<object?, object?[]?, Task> Invoke { get; init; } = static (_, _) => Task.CompletedTask;");
+        // Uses `set` (not `init`) per the repo guideline that new public-shaped API must not use init accessors.
+        support.Should().Contain("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotInheritAttribute_WhenAttributeUsageInheritedFalse()
+    {
+        // Custom attribute declared with [AttributeUsage(Inherited = false)] must not leak
+        // from the base method onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
+                public class NonInheritedMarkerAttribute : System.Attribute { }
+
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [NonInheritedMarker]
+                    public virtual void Run() { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    public override void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("NonInheritedMarker");
     }
 
     [TestMethod]
@@ -1599,6 +1891,11 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
 
         result.Diagnostics.Should().ContainSingle(d => d.Id == "AOTSG0005");
+        // Constructor display name in the diagnostic must not produce a double-dot ("Tests..ctor"); we emit "Tests.ctor".
+        Diagnostic ctorDiagnostic = result.Diagnostics.Single(d => d.Id == "AOTSG0005");
+        string message = ctorDiagnostic.GetMessage(System.Globalization.CultureInfo.InvariantCulture);
+        message.Should().NotContain("..ctor");
+        message.Should().Contain("Sample.Tests.ctor");
         string registry = GetRegistry(result);
         // The valid parameterless constructor is still emitted.
         registry.Should().Contain("typeof(global::Sample.Tests)");
@@ -1630,232 +1927,32 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_SkipsProtectedAndPrivateProtectedMembers()
+    public void Generator_SupportTypes_DoNotUseInitAccessors()
     {
-        // Generated invokers live in a separate static helper class (not a derived type),
-        // so 'protected' and 'private protected' members are not callable from the emitted
-        // code. They MUST be excluded from the registry to keep the generated source compiling.
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             namespace Sample
             {
-                public class BaseTests
-                {
-                    [TestMethod]
-                    protected void ProtectedTest() { }
-
-                    [TestMethod]
-                    private protected void PrivateProtectedTest() { }
-                }
-
-                [TestClass]
-                public class DerivedTests : BaseTests
-                {
-                    [TestMethod]
-                    public void PublicTest() { }
-                }
-            }
-            """;
-
-        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
-        IEnumerable<Diagnostic> errors = outputCompilation
-            .GetDiagnostics()
-            .Where(d => d.Severity == DiagnosticSeverity.Error);
-        errors.Should().BeEmpty("the generated registry MUST NOT reference protected / private protected members");
-
-        string registry = outputCompilation
-            .SyntaxTrees
-            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
-            .ToString();
-
-        registry.Should().Contain("Name = \"PublicTest\"");
-        registry.Should().NotContain("Name = \"ProtectedTest\"");
-        registry.Should().NotContain("Name = \"PrivateProtectedTest\"");
-    }
-
-    [TestMethod]
-    public void Generator_KeepsAllowMultipleAttributes_AcrossOverrideChain()
-    {
-        // [TestCategory] is AllowMultiple=true. Collecting attributes across the override chain
-        // MUST keep every instance instead of collapsing them by type, otherwise the inherited
-        // categories disappear from the registry.
-        const string userCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            namespace Sample
-            {
-                public class BaseTests
-                {
-                    [TestMethod]
-                    [TestCategory("BaseCat")]
-                    public virtual void Run() { }
-                }
-
-                [TestClass]
-                public class DerivedTests : BaseTests
-                {
-                    [TestCategory("DerivedCat")]
-                    public override void Run() { }
-                }
-            }
-            """;
-
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
-
-        registry.Should().Contain("\"BaseCat\"");
-        registry.Should().Contain("\"DerivedCat\"");
-    }
-
-    [TestMethod]
-    public void Generator_HonorsAttributeUsage_DeclaredOnBaseAttributeType()
-    {
-        // GetAttributeUsage MUST walk the attribute type's base-type chain. AllowMultiple is
-        // inherited from a base attribute that declares [AttributeUsage(AllowMultiple = true)]
-        // even when the derived attribute does not redeclare its own [AttributeUsage]. If the
-        // walk were skipped, the fallback default AllowMultiple=false would silently drop the
-        // second occurrence below.
-        const string userCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-            using System;
-
-            namespace Sample
-            {
-                [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-                public class BaseTagAttribute : Attribute
-                {
-                    public BaseTagAttribute(string value) { Value = value; }
-                    public string Value { get; }
-                }
-
-                // No [AttributeUsage] here on purpose — must inherit AllowMultiple=true from BaseTagAttribute.
-                public class DerivedTagAttribute : BaseTagAttribute
-                {
-                    public DerivedTagAttribute(string value) : base(value) { }
-                }
-
                 [TestClass]
                 public class Tests
                 {
                     [TestMethod]
-                    [DerivedTag("first")]
-                    [DerivedTag("second")]
-                    public void Run() { }
-                }
-            }
-            """;
-
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
-
-        registry.Should().Contain("\"first\"");
-        registry.Should().Contain("\"second\"");
-    }
-
-    [TestMethod]
-    public void Generator_ReportsAndSkipsGenericMethods_WithSameName()
-    {
-        // Generic methods are diagnosed and skipped because the source-generated invoker has
-        // no concrete type-argument list at compile time. The non-generic overload is preserved.
-        const string userCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            namespace Sample
-            {
-                [TestClass]
-                public class GenericArityTests
-                {
-                    [TestMethod]
-                    public void Run() { }
-
-                    [TestMethod]
-                    public void Run<T>() { }
-
-                    [TestMethod]
-                    public void Run<T, U>() { }
+                    public void Test() { }
                 }
             }
             """;
 
         GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
 
-        result.Diagnostics.Where(d => d.Id == "AOTSG0004").Should().HaveCount(2);
-        string registry = GetRegistry(result);
+        string support = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.SupportTypes.g.cs")
+            .SourceText.ToString();
 
-        // The 3 overloads must all be present. Each TestMethod entry is emitted once, so
-        // counting "Name = \"Run\"" gives us the total emitted invocations.
-        int occurrences = System.Text.RegularExpressions.Regex
-            .Matches(registry, "Name = \"Run\"")
-            .Count;
-        occurrences.Should().Be(1);
-    }
-
-    [TestMethod]
-    public void Generator_DoesNotInherit_TestMethodOrDataRow_OntoOverride()
-    {
-        // [TestMethod] and [DataRow] are declared with AttributeUsage(Inherited = false) in
-        // the real MSTest assembly. An override that does NOT re-apply [TestMethod] is not a
-        // test, and inherited [DataRow]s must not leak from the base method onto the override.
-        const string userCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            namespace Sample
-            {
-                public class BaseTests
-                {
-                    [TestMethod]
-                    [DataRow(1)]
-                    [DataRow(2)]
-                    public virtual void Run(int x) { }
-                }
-
-                [TestClass]
-                public class DerivedTests : BaseTests
-                {
-                    // Override deliberately does not re-apply [TestMethod] or any [DataRow].
-                    public override void Run(int x) { }
-                }
-            }
-            """;
-
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
-
-        // Neither the [TestMethod] nor the inherited [DataRow]s should propagate onto the override.
-        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute()");
-        registry.Should().NotContain("Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute(");
-        registry.Should().NotContain("new DataRowModel(");
-    }
-
-    [TestMethod]
-    public void Generator_DoesNotInheritAttribute_WhenAttributeUsageInheritedFalse()
-    {
-        // Custom attribute declared with [AttributeUsage(Inherited = false)] must not leak
-        // from the base method onto the derived override (matches MemberInfo.GetCustomAttributes(inherit: true)).
-        const string userCode = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            namespace Sample
-            {
-                [System.AttributeUsage(System.AttributeTargets.Method, Inherited = false)]
-                public class NonInheritedMarkerAttribute : System.Attribute { }
-
-                public class BaseTests
-                {
-                    [TestMethod]
-                    [NonInheritedMarker]
-                    public virtual void Run() { }
-                }
-
-                [TestClass]
-                public class DerivedTests : BaseTests
-                {
-                    public override void Run() { }
-                }
-            }
-            """;
-
-        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
-
-        registry.Should().NotContain("NonInheritedMarker");
+        // Repo guideline: newly introduced public-shaped API (even when emitted as `internal sealed`
+        // into the consumer assembly) MUST NOT use `init` accessors. Guard against accidental
+        // reintroduction.
+        support.Should().NotContain("{ get; init; }");
     }
 
     private static string GetRegistry(GeneratorRunResult result)

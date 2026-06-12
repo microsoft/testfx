@@ -35,20 +35,20 @@ internal static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor InaccessibleTestClass = new(
         id: "AOTSG0003",
         title: "Test class is not accessible from generated code",
-        messageFormat: "[TestClass] type '{0}' is not reachable from generated code in the same assembly (file-local, or nested in a non-public/non-internal outer type)",
+        messageFormat: "[TestClass] type '{0}' is not reachable from generated code in the same assembly (file-local, or nested in a private/private-protected outer type)",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Generated registry code lives in the same assembly but in a different file/type and therefore cannot reference file-local types or types nested in a private, protected, or private-protected outer type. Make the test class — and every enclosing type — at least internal.");
+        description: "Generated registry code lives in the same assembly but in a different file/type and therefore cannot reference file-local types or types nested in a private (or private-protected) outer type. Make the test class — and every enclosing type — at least internal.");
 
     public static readonly DiagnosticDescriptor GenericTestMethod = new(
         id: "AOTSG0004",
-        title: "Method is generic",
+        title: "Test method is generic",
         messageFormat: "Method '{0}.{1}' has type parameters which are not knowable at compile time; the source-generated invoker will skip it",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "Generic methods would need a concrete type-argument list at the invocation site. Replace the method with one or more non-generic specializations.");
+        description: "Generic test methods would need a concrete type-argument list at the invocation site. Replace the method with one or more non-generic specializations.");
 
     public static readonly DiagnosticDescriptor ByRefParameter = new(
         id: "AOTSG0005",
@@ -57,7 +57,7 @@ internal static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        description: "By-ref parameters cannot flow through the 'Func<object?, object?[]?, Task>' invoker shape. Drop the ref/in/out modifier or move the dependency out of the member signature.");
+        description: "By-ref parameters cannot flow through the 'Func<object?, object?[]?, Task>' invoker shape. Drop the ref/in/out modifier or move the dependency out of the test signature.");
 
     private static readonly Dictionary<string, DiagnosticDescriptor> ById = new(StringComparer.Ordinal)
     {

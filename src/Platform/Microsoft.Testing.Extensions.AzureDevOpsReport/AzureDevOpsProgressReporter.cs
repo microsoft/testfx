@@ -17,7 +17,6 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsProgressReporter : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
-    private const string AzureDevOpsTfBuildVariableName = "TF_BUILD";
     internal const int MinimumEmissionIntervalMs = 250;
 
     private readonly IEnvironment _environment;
@@ -94,7 +93,7 @@ internal sealed class AzureDevOpsProgressReporter : IDataConsumer, ITestSessionL
                 return;
             }
 
-            _emitAzureDevOpsCommands = string.Equals(_environment.GetEnvironmentVariable(AzureDevOpsTfBuildVariableName), "true", StringComparison.OrdinalIgnoreCase);
+            _emitAzureDevOpsCommands = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
             if (!_emitAzureDevOpsCommands)
             {
                 if (_logger.IsEnabled(LogLevel.Warning))
