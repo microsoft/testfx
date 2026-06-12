@@ -69,7 +69,7 @@ internal static class TestClassModelBuilder
 
                         break;
                     case IPropertySymbol property
-                        when IsAccessibleFromConsumer(property):
+                        when !property.IsIndexer && IsAccessibleFromConsumer(property):
                         if (!propertiesByName.ContainsKey(property.Name))
                         {
                             TestPropertyModel model = BuildProperty(property);
@@ -278,6 +278,17 @@ internal static class TestClassModelBuilder
         => new(
             Name: property.Name,
             FullyQualifiedType: property.Type.ToDisplayString(FullyQualifiedFormat),
+            IsStatic: property.IsStatic,
+
+            // The generated registry lives in the consuming assembly, so a getter is reachable
+            // when it is public, internal, or protected-internal. private / protected getters
+            // cannot be read from the generated (non-derived) call site.
+            HasGettableValue: property.GetMethod is
+            {
+                DeclaredAccessibility: Accessibility.Public
+                or Accessibility.Internal
+                or Accessibility.ProtectedOrInternal,
+            },
             HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public },
             Attributes: BuildAttributes(CollectInheritedAttributes(property)));
 

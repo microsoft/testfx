@@ -68,6 +68,21 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         }
         """;
 
+    /// <summary>
+    /// Minimal stub of the adapter's runtime hook so the emitted <c>[ModuleInitializer]</c> wiring
+    /// (shared from MSTest.SourceGeneration) compiles in the Roslyn test compilation without
+    /// referencing MSTestAdapter.PlatformServices.
+    /// </summary>
+    private const string RuntimeHookStub = """
+        namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration
+        {
+            public static class ReflectionMetadataHook
+            {
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
+            }
+        }
+        """;
+
     [TestMethod]
     public void Generator_EmitsSupportTypes_OnAnyCompilation()
     {
@@ -362,6 +377,113 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("HasPublicSetter = true");
         registry.Should().Contain("Get = static instance => instance is null ? null : (object?)((global::Sample.PropTests)instance).Context,");
         registry.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext)value!,");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsStaticPropertyAccess_WithoutInstanceCast()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class StaticProps
+                {
+                    public static int Value { get; set; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Value\"");
+
+        // A static member must be accessed through the type, never through an instance cast,
+        // otherwise the generated code fails to compile with CS0176.
+        registry.Should().Contain("Get = static instance => (object?)global::Sample.StaticProps.Value,");
+        registry.Should().Contain("Set = static (instance, value) => global::Sample.StaticProps.Value = (int)value!,");
+        registry.Should().NotContain("((global::Sample.StaticProps)instance).Value");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsIndexerProperty()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class WithIndexer
+                {
+                    public int this[int index] => index;
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        // Indexers cannot be represented by the name-based Get/Set delegate shape, so they are
+        // dropped entirely instead of emitting non-compiling `((T)instance).this[]` code.
+        registry.Should().NotContain("this[");
+        registry.Should().NotContain("Name = \"Item\"");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("indexers must be skipped so the emitted registry still compiles");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsThrowingGetter_ForSetOnlyProperty()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class WriteOnly
+                {
+                    private int _value;
+                    public int Value { set { _value = value; } }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("Name = \"Value\"");
+
+        // A set-only property has no readable getter; emitting `instance.Value` would not compile,
+        // so the Get delegate throws instead.
+        registry.Should().Contain("Get = static instance => throw new InvalidOperationException(\"Property 'Value' has no accessible getter.\"),");
+        registry.Should().Contain("((global::Sample.WriteOnly)instance!).Value = (int)value!");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("a set-only property must still produce a compiling registry");
     }
 
     [TestMethod]
@@ -2000,6 +2122,49 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // into the consumer assembly) MUST NOT use `init` accessors. Guard against accidental
         // reintroduction.
         support.Should().NotContain("{ get; init; }");
+    }
+
+    [TestMethod]
+    public void WiringGenerator_EmitsModuleInitializer_RegisteringAssembly_AndCompilesAgainstHook()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        // The AOT generator package shares MSTest.SourceGeneration's proven runtime-wiring
+        // generator so that referencing ONLY this package makes a test assembly discoverable and
+        // runnable today (via ReflectionMetadataHook.Register), in addition to emitting the
+        // reflection-free registry the future 0%-reflection path will consume.
+        var wiringGenerator = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators.ReflectionMetadataGenerator();
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, RuntimeHookStub, userCode);
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(wiringGenerator);
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
+
+        GeneratorRunResult result = driver.GetRunResult().Results[0];
+        result.Diagnostics.Should().BeEmpty();
+
+        string wiring = result.GeneratedSources
+            .Single(s => s.HintName.EndsWith(".MSTestReflectionMetadata.g.cs", System.StringComparison.Ordinal))
+            .SourceText.ToString();
+
+        wiring.Should().Contain("[ModuleInitializer]");
+        wiring.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]");
+        wiring.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods);");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the emitted module initializer must compile against the adapter's ReflectionMetadataHook");
     }
 
     private static string GetRegistry(GeneratorRunResult result)
