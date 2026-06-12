@@ -7,7 +7,7 @@ using TestFramework.ForTestingMSTest;
 
 namespace UnitTestFramework.Tests;
 
-public class ConditionAttributeTests : TestContainer
+public class MemberConditionAttributeTests : TestContainer
 {
     #region Test helpers (condition members)
 
@@ -42,7 +42,7 @@ public class ConditionAttributeTests : TestContainer
 
     public void Constructor_DefaultMode_IsInclude()
     {
-        var attribute = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var attribute = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         attribute.Mode.Should().Be(ConditionMode.Include);
         attribute.ConditionType.Should().Be(typeof(Conditions));
@@ -51,46 +51,46 @@ public class ConditionAttributeTests : TestContainer
 
     public void Constructor_ExplicitMode_IsHonored()
     {
-        var attribute = new ConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var attribute = new MemberConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         attribute.Mode.Should().Be(ConditionMode.Exclude);
     }
 
     public void Constructor_NullType_Throws()
-        => ((Action)(() => _ = new ConditionAttribute(null!, "Foo")))
+        => ((Action)(() => _ = new MemberConditionAttribute(null!, "Foo")))
             .Should().Throw<ArgumentNullException>()
             .And.ParamName.Should().Be("conditionType");
 
     public void Constructor_NullMemberName_Throws()
-        => ((Action)(() => _ = new ConditionAttribute(typeof(Conditions), null!)))
+        => ((Action)(() => _ = new MemberConditionAttribute(typeof(Conditions), null!)))
             .Should().Throw<ArgumentNullException>()
             .And.ParamName.Should().Be("conditionMemberName");
 
     public void Constructor_NullAdditionalMemberNames_DoesNotThrow()
     {
-        var attribute = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), null!);
+        var attribute = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), null!);
         attribute.ConditionMemberNames.Should().BeEquivalentTo([nameof(Conditions.TruePropertyValue)]);
     }
 
     public void Constructor_EmptyAdditionalMemberNames_Ok()
     {
-        var attribute = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), []);
+        var attribute = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), []);
         attribute.ConditionMemberNames.Should().BeEquivalentTo([nameof(Conditions.TruePropertyValue)]);
     }
 
     public void Constructor_WhitespaceMemberName_Throws()
-        => ((Action)(() => _ = new ConditionAttribute(typeof(Conditions), "   ")))
+        => ((Action)(() => _ = new MemberConditionAttribute(typeof(Conditions), "   ")))
             .Should().Throw<ArgumentException>()
             .And.ParamName.Should().Be("conditionMemberName");
 
     public void Constructor_WhitespaceAdditionalMemberName_Throws()
-        => ((Action)(() => _ = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), "   ")))
+        => ((Action)(() => _ = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), "   ")))
             .Should().Throw<ArgumentException>()
             .And.ParamName.Should().Be("additionalConditionMemberNames");
 
     public void IgnoreMessage_Include_HasExpectedText()
     {
-        var attribute = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var attribute = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         attribute.IgnoreMessage.Should().Contain("only supported")
             .And.Contain(nameof(Conditions.TruePropertyValue))
@@ -99,7 +99,7 @@ public class ConditionAttributeTests : TestContainer
 
     public void IgnoreMessage_Exclude_HasExpectedText()
     {
-        var attribute = new ConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var attribute = new MemberConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         attribute.IgnoreMessage.Should().Contain("not supported")
             .And.Contain(nameof(Conditions.TruePropertyValue))
@@ -108,7 +108,7 @@ public class ConditionAttributeTests : TestContainer
 
     public void IgnoreMessage_MultipleMembers_ListsAllWithAnd()
     {
-        var attribute = new ConditionAttribute(
+        var attribute = new MemberConditionAttribute(
             typeof(Conditions),
             nameof(Conditions.TruePropertyValue),
             nameof(Conditions.TrueField));
@@ -120,100 +120,100 @@ public class ConditionAttributeTests : TestContainer
 
     public void IsConditionMet_StaticPublicProperty_ReturnsValue()
     {
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue)).IsConditionMet.Should().BeTrue();
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.FalsePropertyValue)).IsConditionMet.Should().BeFalse();
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue)).IsConditionMet.Should().BeTrue();
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.FalsePropertyValue)).IsConditionMet.Should().BeFalse();
     }
 
     public void IsConditionMet_StaticPublicField_ReturnsValue()
     {
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.TrueField)).IsConditionMet.Should().BeTrue();
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.FalseField)).IsConditionMet.Should().BeFalse();
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TrueField)).IsConditionMet.Should().BeTrue();
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.FalseField)).IsConditionMet.Should().BeFalse();
     }
 
     public void IsConditionMet_StaticParameterlessMethod_ReturnsValue()
     {
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.TrueMethod)).IsConditionMet.Should().BeTrue();
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.FalseMethod)).IsConditionMet.Should().BeFalse();
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TrueMethod)).IsConditionMet.Should().BeTrue();
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.FalseMethod)).IsConditionMet.Should().BeFalse();
     }
 
     public void IsConditionMet_NonPublicStaticProperty_ThrowsInvalidOperation()
-        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), "InternalTrueProperty").IsConditionMet))
+        => ((Func<bool>)(() => new MemberConditionAttribute(typeof(Conditions), "InternalTrueProperty").IsConditionMet))
             .Should().Throw<InvalidOperationException>()
             .WithMessage("*InternalTrueProperty*");
 
     public void IsConditionMet_MultipleMembers_AndsValues()
     {
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), nameof(Conditions.TrueField), nameof(Conditions.TrueMethod))
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), nameof(Conditions.TrueField), nameof(Conditions.TrueMethod))
             .IsConditionMet.Should().BeTrue();
 
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), nameof(Conditions.FalseField))
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue), nameof(Conditions.FalseField))
             .IsConditionMet.Should().BeFalse();
 
-        new ConditionAttribute(typeof(Conditions), nameof(Conditions.FalsePropertyValue), nameof(Conditions.TrueField))
+        new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.FalsePropertyValue), nameof(Conditions.TrueField))
             .IsConditionMet.Should().BeFalse();
     }
 
     public void IsConditionMet_MissingMember_ThrowsInvalidOperation()
-        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), "DoesNotExist").IsConditionMet))
+        => ((Func<bool>)(() => new MemberConditionAttribute(typeof(Conditions), "DoesNotExist").IsConditionMet))
             .Should().Throw<InvalidOperationException>()
             .WithMessage("*DoesNotExist*");
 
     public void IsConditionMet_NonBoolProperty_ThrowsInvalidOperation()
-        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), nameof(Conditions.NotABool)).IsConditionMet))
+        => ((Func<bool>)(() => new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.NotABool)).IsConditionMet))
             .Should().Throw<InvalidOperationException>()
             .WithMessage("*static bool*");
 
     public void IsConditionMet_MethodWithParameters_FallsThroughAndThrows()
-        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), nameof(Conditions.WithParam)).IsConditionMet))
+        => ((Func<bool>)(() => new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.WithParam)).IsConditionMet))
             .Should().Throw<InvalidOperationException>()
             .WithMessage("*WithParam*");
 
     public void IsConditionMet_ParameterlessMethodWithNonBoolReturn_ThrowsInvalidOperation()
-        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), nameof(Conditions.NotABoolMethod)).IsConditionMet))
+        => ((Func<bool>)(() => new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.NotABoolMethod)).IsConditionMet))
             .Should().Throw<InvalidOperationException>()
             .WithMessage("*static parameterless bool method*");
 
     public void IsConditionMet_InstanceProperty_NotFoundForStaticLookup()
-        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), nameof(Conditions.InstanceProp)).IsConditionMet))
+        => ((Func<bool>)(() => new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.InstanceProp)).IsConditionMet))
             .Should().Throw<InvalidOperationException>()
             .WithMessage("*InstanceProp*");
 
     public void GroupName_EncodesTypeAndMembers()
     {
-        var attribute = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var attribute = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
-        attribute.GroupName.Should().Contain(nameof(ConditionAttribute))
+        attribute.GroupName.Should().Contain(nameof(MemberConditionAttribute))
             .And.Contain(typeof(Conditions).FullName!)
             .And.Contain(nameof(Conditions.TruePropertyValue));
     }
 
     public void GroupName_DifferentMembers_AreDifferentGroups()
     {
-        var a = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
-        var b = new ConditionAttribute(typeof(Conditions), nameof(Conditions.FalsePropertyValue));
+        var a = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var b = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.FalsePropertyValue));
 
         a.GroupName.Should().NotBe(b.GroupName);
     }
 
     public void GroupName_SameTypeAndMembers_AreSameGroup()
     {
-        var a = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
-        var b = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var a = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var b = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         a.GroupName.Should().Be(b.GroupName);
     }
 
     public void GroupName_DifferentMode_AreDifferentGroups()
     {
-        var include = new ConditionAttribute(ConditionMode.Include, typeof(Conditions), nameof(Conditions.TruePropertyValue));
-        var exclude = new ConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var include = new MemberConditionAttribute(ConditionMode.Include, typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var exclude = new MemberConditionAttribute(ConditionMode.Exclude, typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         include.GroupName.Should().NotBe(exclude.GroupName);
     }
 
     public void ConditionMemberNames_CannotBeDowncastToMutableArray()
     {
-        var attribute = new ConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
+        var attribute = new MemberConditionAttribute(typeof(Conditions), nameof(Conditions.TruePropertyValue));
 
         attribute.ConditionMemberNames.Should().NotBeAssignableTo<string[]>();
     }

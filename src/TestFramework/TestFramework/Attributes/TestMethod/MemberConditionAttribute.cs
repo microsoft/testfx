@@ -17,8 +17,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// every referenced member evaluates to <see langword="true"/>.
 /// </para>
 /// <para>
-/// Each <see cref="ConditionAttribute"/> instance forms its own <see cref="ConditionBaseAttribute.GroupName"/>,
-/// so stacking multiple <see cref="ConditionAttribute"/> declarations on the same target is combined
+/// Each <see cref="MemberConditionAttribute"/> instance forms its own <see cref="ConditionBaseAttribute.GroupName"/>,
+/// so stacking multiple <see cref="MemberConditionAttribute"/> declarations on the same target is combined
 /// with a logical AND, matching the typical <c>[ConditionalFact]</c> usage pattern in other test frameworks.
 /// </para>
 /// <para>
@@ -34,23 +34,23 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <example>
 /// <code>
 /// [TestMethod]
-/// [Condition(typeof(Environment), nameof(Environment.Is64BitProcess))]
+/// [MemberCondition(typeof(Environment), nameof(Environment.Is64BitProcess))]
 /// public void Only_Runs_On_64Bit() { }
 ///
 /// [TestMethod]
-/// [Condition(typeof(PlatformDetection),
+/// [MemberCondition(typeof(PlatformDetection),
 ///     nameof(PlatformDetection.IsNotBrowser),
 ///     nameof(PlatformDetection.IsThreadingSupported))]
 /// public void Requires_Threading_And_Not_Browser() { }
 ///
 /// [TestMethod]
-/// [Condition(ConditionMode.Exclude, typeof(PlatformDetection), nameof(PlatformDetection.IsMonoRuntime))]
+/// [MemberCondition(ConditionMode.Exclude, typeof(PlatformDetection), nameof(PlatformDetection.IsMonoRuntime))]
 /// public void Does_Not_Run_On_Mono() { }
 /// </code>
 /// </example>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
-public sealed class ConditionAttribute : ConditionBaseAttribute
+public sealed class MemberConditionAttribute : ConditionBaseAttribute
 {
     private const DynamicallyAccessedMemberTypes RequiredMembers =
         DynamicallyAccessedMemberTypes.PublicProperties
@@ -63,7 +63,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     private Func<bool>[]? _evaluators;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConditionAttribute"/> class with
+    /// Initializes a new instance of the <see cref="MemberConditionAttribute"/> class with
     /// <see cref="ConditionMode.Include"/> semantics: the test runs only when the referenced
     /// member evaluates to <see langword="true"/>.
     /// </summary>
@@ -72,7 +72,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// The name of the <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
     /// (property, field, or parameterless method) to evaluate.
     /// </param>
-    public ConditionAttribute(
+    public MemberConditionAttribute(
         [DynamicallyAccessedMembers(RequiredMembers)] Type conditionType,
         string conditionMemberName)
         : this(ConditionMode.Include, conditionType, conditionMemberName, additionalConditionMemberNames: [])
@@ -80,7 +80,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConditionAttribute"/> class with
+    /// Initializes a new instance of the <see cref="MemberConditionAttribute"/> class with
     /// <see cref="ConditionMode.Include"/> semantics: the test runs only when every referenced
     /// member evaluates to <see langword="true"/>.
     /// </summary>
@@ -93,8 +93,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// Additional <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
     /// name(s) to evaluate. All referenced members are AND-combined.
     /// </param>
-    [CLSCompliant(false)]
-    public ConditionAttribute(
+    public MemberConditionAttribute(
         [DynamicallyAccessedMembers(RequiredMembers)] Type conditionType,
         string conditionMemberName,
         params string[] additionalConditionMemberNames)
@@ -103,7 +102,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConditionAttribute"/> class.
+    /// Initializes a new instance of the <see cref="MemberConditionAttribute"/> class.
     /// </summary>
     /// <param name="mode">
     /// Whether the test should be included (run when the condition is met) or excluded
@@ -114,7 +113,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// The name of the <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
     /// (property, field, or parameterless method) to evaluate.
     /// </param>
-    public ConditionAttribute(
+    public MemberConditionAttribute(
         ConditionMode mode,
         [DynamicallyAccessedMembers(RequiredMembers)] Type conditionType,
         string conditionMemberName)
@@ -123,7 +122,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConditionAttribute"/> class.
+    /// Initializes a new instance of the <see cref="MemberConditionAttribute"/> class.
     /// </summary>
     /// <param name="mode">
     /// Whether the test should be included (run when the condition is met) or excluded
@@ -138,8 +137,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// Additional <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
     /// name(s) to evaluate. All referenced members are AND-combined.
     /// </param>
-    [CLSCompliant(false)]
-    public ConditionAttribute(
+    public MemberConditionAttribute(
         ConditionMode mode,
         [DynamicallyAccessedMembers(RequiredMembers)] Type conditionType,
         string conditionMemberName,
@@ -202,15 +200,15 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
 
     /// <inheritdoc />
     /// <remarks>
-    /// Each <see cref="ConditionAttribute"/> instance produces a group name derived from
+    /// Each <see cref="MemberConditionAttribute"/> instance produces a group name derived from
     /// <see cref="ConditionType"/>, <see cref="ConditionMemberNames"/>, and
-    /// <see cref="ConditionBaseAttribute.Mode"/>, so stacking multiple <see cref="ConditionAttribute"/>
+    /// <see cref="ConditionBaseAttribute.Mode"/>, so stacking multiple <see cref="MemberConditionAttribute"/>
     /// declarations on the same target combines them with a logical AND -- including pairs with
     /// the same type/members but opposite <see cref="ConditionMode"/> values, which would otherwise
     /// silently cancel each other out.
     /// </remarks>
     public override string GroupName
-        => _groupName ??= $"{nameof(ConditionAttribute)}:{ConditionType.FullName ?? ConditionType.Name}:{string.Join("|", _conditionMemberNames)}:{Mode}";
+        => _groupName ??= $"{nameof(MemberConditionAttribute)}:{ConditionType.FullName ?? ConditionType.Name}:{string.Join("|", _conditionMemberNames)}:{Mode}";
 
     /// <inheritdoc />
     /// <remarks>
@@ -252,7 +250,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
                 || property.GetIndexParameters().Length != 0
                 || property.GetGetMethod(nonPublic: true) is null
                 ? throw new InvalidOperationException(
-                    $"Member '{typeName}.{memberName}' must be a public static bool readable parameterless property to be used with [Condition].")
+                    $"Member '{typeName}.{memberName}' must be a public static bool readable parameterless property to be used with [MemberCondition].")
                 : () => (bool)property.GetValue(null)!;
         }
 
@@ -261,7 +259,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
         {
             return field.FieldType != typeof(bool)
                 ? throw new InvalidOperationException(
-                    $"Member '{typeName}.{memberName}' must be a public static bool field to be used with [Condition].")
+                    $"Member '{typeName}.{memberName}' must be a public static bool field to be used with [MemberCondition].")
                 : () => (bool)field.GetValue(null)!;
         }
 
@@ -271,7 +269,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
 
         return method.ReturnType != typeof(bool)
             ? throw new InvalidOperationException(
-                $"Member '{typeName}.{memberName}' must be a public static parameterless bool method to be used with [Condition].")
+                $"Member '{typeName}.{memberName}' must be a public static parameterless bool method to be used with [MemberCondition].")
             : () => (bool)method.Invoke(null, null)!;
     }
 
