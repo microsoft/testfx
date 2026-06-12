@@ -259,11 +259,13 @@ internal static class MetadataRegistryEmitter
                     // Static members are accessed through the type name; instance members through
                     // the cast receiver. Indexers are filtered out earlier because the name-based
                     // Get/Set delegate shape cannot represent them.
-                    string getBody = prop.HasGettableValue
-                        ? prop.IsStatic
-                            ? $"(object?){fqn}.{prop.Name}"
-                            : $"instance is null ? null : (object?)(({fqn})instance).{prop.Name}"
-                        : $"throw new InvalidOperationException(\"Property '{prop.Name}' has no accessible getter.\")";
+                    string getBody = (prop.HasGettableValue, prop.IsStatic) switch
+                    {
+                        (false, _) => $"throw new InvalidOperationException(\"Property '{prop.Name}' has no accessible getter.\")",
+                        (true, true) => $"(object?){fqn}.{prop.Name}",
+                        (true, false) => $"instance is null ? null : (object?)(({fqn})instance).{prop.Name}",
+                    };
+
                     sb.AppendLine($"Get = static instance => {getBody},");
 
                     string setTarget = prop.IsStatic ? fqn : $"(({fqn})instance!)";
