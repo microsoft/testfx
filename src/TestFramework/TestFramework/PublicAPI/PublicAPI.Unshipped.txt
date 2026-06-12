@@ -5,6 +5,15 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.As
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.FixtureType.get -> System.Type!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.ConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.ConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.ConditionAttribute(System.Type! conditionType, string! conditionMemberName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.ConditionAttribute(System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.ConditionMemberNames.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.ConditionType.get -> System.Type!
+override Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.ConditionAttribute.IsConditionMet.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InOrder = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
