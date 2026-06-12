@@ -1816,6 +1816,94 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenAssertAreNotSameIsPassedSameLocalWithMessage_Diagnostic()
+    {
+        // Mirror the AreNotEqual(..., "should differ") test below so the code fix's
+        // message-forwarding path is exercised for AreNotSame too.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new object();
+                    [|Assert.AreNotSame(x, x, "references must differ")|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new object();
+                    Assert.Fail("references must differ");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameProperty_Diagnostic()
+    {
+        // Exercises IsEquivalentReferenceTo's IPropertyReferenceOperation arm directly so a
+        // regression that breaks property equivalence detection is caught here.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Holder
+            {
+                public int Value { get; set; }
+                public Holder Inner { get; set; } = new Holder();
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var h = new Holder();
+                    [|Assert.AreNotEqual(h.Value, h.Value)|];
+                    [|Assert.AreNotEqual(h.Inner.Value, h.Inner.Value)|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Holder
+            {
+                public int Value { get; set; }
+                public Holder Inner { get; set; } = new Holder();
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var h = new Holder();
+                    Assert.Fail();
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenAssertAreNotSameIsPassedDifferentLocals_NoDiagnostic()
     {
         string code = """
