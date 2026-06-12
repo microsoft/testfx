@@ -91,6 +91,7 @@ internal static class IOperationExtensions
                 AreInstancesEquivalent(fa.Instance, fb.Instance),
 
             (IPropertyReferenceOperation pra, IPropertyReferenceOperation prb) =>
+                !pra.Property.IsIndexer &&
                 SymbolEqualityComparer.Default.Equals(pra.Property, prb.Property) &&
                 AreInstancesEquivalent(pra.Instance, prb.Instance),
 

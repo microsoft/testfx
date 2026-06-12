@@ -1483,4 +1483,31 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedIndexerAccess_NoDiagnostic()
+    {
+        // list[0] and list[1] are IPropertyReferenceOperation on the same Item indexer + same
+        // receiver, but the index arguments differ -- and the analyzer doesn't compare those.
+        // We must NOT flag this as always-equal.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var list = new List<string> { "a", "b" };
+                    Assert.AreEqual(list[0], list[1]);
+                    Assert.AreEqual(list[0], list[0]);
+                    Assert.AreSame(list[0], list[1]);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
