@@ -37,34 +37,24 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         context.EnableConcurrentExecution();
 
         context.RegisterCompilationStartAction(context =>
-        {
-            if (FixtureMethodAnalyzerHelper.TryGetFixtureMethodSymbols(context.Compilation, WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute, out FixtureMethodAnalyzerHelper.FixtureMethodSymbols symbols))
-            {
-                INamedTypeSymbol? testContextSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext);
-                context.RegisterSymbolAction(
-                    symbolContext => AnalyzeSymbol(symbolContext, symbols.FixtureAttributeSymbol, symbols.TestClassAttributeSymbol, symbols.TaskSymbol, symbols.ValueTaskSymbol, testContextSymbol, symbols.CanDiscoverInternals),
-                    SymbolKind.Method);
-            }
-        });
+            FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
+                context,
+                WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute,
+                AnalyzeSymbol));
     }
 
     private static void AnalyzeSymbol(
         SymbolAnalysisContext context,
-        INamedTypeSymbol assemblyCleanupAttributeSymbol,
-        INamedTypeSymbol testClassAttributeSymbol,
-        INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol,
-        INamedTypeSymbol? testContextSymbol,
-        bool canDiscoverInternals)
+        FixtureMethodAnalyzerHelper.FixtureMethodSymbols symbols)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        if (!methodSymbol.HasAttribute(assemblyCleanupAttributeSymbol))
+        if (!methodSymbol.HasAttribute(symbols.FixtureAttributeSymbol))
         {
             return;
         }
 
-        if (!methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true, allowGenericType: false, FixtureParameterMode.OptionalTestContext, testContextSymbol, testClassAttributeSymbol, fixtureAllowInheritedTestClass: false, out bool isFixable))
+        if (!methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: true, allowGenericType: false, FixtureParameterMode.OptionalTestContext, symbols.TestContextSymbol, symbols.TestClassAttributeSymbol, fixtureAllowInheritedTestClass: false, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)

@@ -73,7 +73,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
             return;
         }
 
-        if (!string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase))
+        if (!AzureDevOpsConstants.IsRunningInAzureDevOps(_environment))
         {
             return;
         }

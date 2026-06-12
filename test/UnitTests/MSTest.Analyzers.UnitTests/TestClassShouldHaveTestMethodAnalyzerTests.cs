@@ -348,4 +348,74 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
+
+    [TestMethod]
+    public async Task WhenNonStaticTestClassWithGlobalTestCleanup_DoesNotHaveTestMethod_Diagnostic()
+    {
+        // GlobalTestCleanup only exempts static test classes from needing a test method,
+        // not non-static ones. This mirrors the existing GlobalTestInitialize counterpart.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class {|#0:MyTestClass|}
+            {
+                [GlobalTestCleanup]
+                public static void GlobalTestCleanup(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasDataTestMethod_NoDiagnostic()
+    {
+        // DataTestMethodAttribute inherits from TestMethodAttribute, so the Inherits() check
+        // should recognise it as a test method and suppress the diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                public void MyTestMethod(int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasDerivedTestMethodAttribute_NoDiagnostic()
+    {
+        // A custom attribute that derives from TestMethodAttribute should satisfy the
+        // Inherits() check and prevent the "no test method" diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

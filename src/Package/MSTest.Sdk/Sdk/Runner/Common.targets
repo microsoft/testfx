@@ -4,7 +4,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >$(MicrosoftTestingPlatformVersion)</MicrosoftTestingExtensionsCommonVersion>
-    <TestingExtensionsProfile Condition=" $(TestingExtensionsProfile) == '' ">Default</TestingExtensionsProfile>
+    <TestingExtensionsProfile Condition=" '$(TestingExtensionsProfile)' == '' ">Default</TestingExtensionsProfile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">

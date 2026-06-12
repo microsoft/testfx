@@ -17,10 +17,10 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         List<string> missingVariables = [];
 
-        bool isTfBuild = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase);
+        bool isTfBuild = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
         if (!isTfBuild)
         {
-            missingVariables.Add("TF_BUILD=true");
+            missingVariables.Add($"{AzureDevOpsConstants.TfBuildEnvironmentVariableName}={AzureDevOpsConstants.TfBuildEnabledValue}");
         }
 
         string? collectionUri = GetRequiredEnvironmentVariable("SYSTEM_COLLECTIONURI", missingVariables);
