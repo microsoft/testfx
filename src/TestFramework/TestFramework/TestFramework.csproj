@@ -14,6 +14,10 @@
     <PackageId>NotPublishable</PackageId>
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL</DefineConstants>
+
+    <!-- Treat "missing XML doc comment for publicly visible type or member" as a build error so
+         the public API stays fully documented. See #9060. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
