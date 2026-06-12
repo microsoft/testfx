@@ -13,7 +13,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public sealed partial class Assert
 {
     /// <summary>
-    /// Provides an interpolated string handler used by <c>Assert.Count</c> and <c>Assert.HasCount</c> overloads
+    /// Provides an interpolated string handler used by <see cref="Assert.HasCount{T}(int, IEnumerable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>
+    /// and <see cref="Assert.IsEmpty{T}(IEnumerable{T}, ref AssertCountInterpolatedStringHandler{T}, string)"/>
     /// that only allocates and formats the message when the assertion is failing.
     /// </summary>
     /// <typeparam name="TItem">The type of item in the collection.</typeparam>
