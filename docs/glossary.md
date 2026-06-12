@@ -26,6 +26,10 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [
 
 ## C
 
+### CIConditionAttribute
+
+An MSTest attribute (`[CIConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on whether the test is executing in a CI environment. Accepts a `ConditionMode` argument: `Include` (run only in CI) or `Exclude` (skip in CI). Detection is delegated to `CIEnvironmentDetector`, which checks well-known CI environment variables (e.g., `CI`, `TF_BUILD`). The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
 ### CodeCoverage
 
 An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option; VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are proposed via a [command-line option mapping](#commandlineoptionmapping) (see `docs/RFCs/015-Command-Line-Option-Mappings.md`).
@@ -33,6 +37,14 @@ An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments 
 ### CommandLineOptionMapping
 
 A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would let an extension declaratively accept a user-facing option (e.g. `--collect "XPlat Code Coverage"`) and rewrite it at parse time into one or more first-class MTP options (e.g. `--coverage`). In RFC 015, this is expressed via `ICommandLineOptionMappingProvider`. Intended to smooth migration from VSTest by allowing legacy `--logger` and `--collect` argument forms to be forwarded to their MTP equivalents without polluting the canonical MTP option set.
+
+### ConditionBaseAttribute
+
+An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. The built-in concrete implementation is [CIConditionAttribute](#ciconditionattribute).
+
+### ConditionMode
+
+A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` used with [ConditionBaseAttribute](#conditionbaseattribute)-derived attributes to control whether the condition is reversed. `Include` (default): run the test only when the condition is met. `Exclude`: skip (ignore) the test when the condition is met, reversing the condition.
 
 ### CrashDump
 
@@ -136,6 +148,10 @@ The self-contained test runner mode for MSTest, built on top of Microsoft.Testin
 
 A meta-package that bundles `MSTest.TestFramework`, `MSTest.TestAdapter`, and `MSTest.Analyzers` with default MSBuild SDK configuration. Simplifies project setup by providing a single package reference.
 
+### MSTest.SourceGeneration
+
+A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. Adoption requires only a `<PackageReference>` to `MSTest.SourceGeneration`; existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
+
 ### MTP
 
 See **Microsoft.Testing.Platform**.
@@ -166,6 +182,10 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports tes
 
 ## P
 
+### PlannedTest
+
+A sealed class (`Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest`, currently `[Experimental("MSTESTEXP")]`) that describes a test that has been discovered and passed the active filter for the current assembly, before execution begins. Exposes the test's `FullyQualifiedTestClassName`, `TestName`, `TestDisplayName`, `AssemblyPath`, `ManagedTypeName`, `ManagedMethodName`, source file location (`DeclaringFilePath`, `DeclaringLineNumber`), `TestCategories` (from `[TestCategory]`), and `TestProperties` (from `[TestProperty]`). Instances are accessed via `TestRun.Current.PlannedTests`. Data-driven tests whose rows are resolved only at execution time (non-serializable data, `UnfoldingStrategy.Fold`, `[DataSource]`) appear as a single `PlannedTest` entry rather than one per row. See also [TestRun](#testrun) and RFC 014 (`docs/RFCs/014-TestRun-Current-PlannedTests.md`).
+
 ### PropertyBag
 
 An MTP class (`Microsoft.Testing.Platform.Extensions.Messages.PropertyBag`) that holds a typed collection of `IProperty` instances attached to a [TestNode](#testnode). Extension authors populate a `PropertyBag` with properties such as `TimingProperty`, `TestFileLocationProperty`, and `TestMetadataProperty` to communicate rich metadata about a test to the platform and to other extensions. A `PropertyBag` enforces that at most one `TestNodeStateProperty` may be present at a time.
@@ -189,6 +209,10 @@ The per-project configuration file for Microsoft.Testing.Platform, placed at the
 ### TestNode
 
 A core MTP class (`Microsoft.Testing.Platform.Extensions.Messages.TestNode`) that represents a single test item — either discovered or executed. Each `TestNode` carries a unique `Uid` (`TestNodeUid`), a human-readable `DisplayName`, and a [PropertyBag](#propertybag) of typed properties (state, timing, file location, metadata, etc.). `TestNode` instances are published to the `IMessageBus` by test framework adapters during discovery and execution phases.
+
+### TestRun
+
+A static ambient class (`Microsoft.VisualStudio.TestTools.UnitTesting.TestRun`, currently `[Experimental("MSTESTEXP")]`) that exposes run-wide information about the currently executing test session via `TestRun.Current` (type `ITestRunInfo`). `Current` is never `null`: before discovery is complete for an assembly it returns an empty `ITestRunInfo`; once the adapter has finished filtering, `Current.PlannedTests` contains one [PlannedTest](#plannedtest) per test that will run. Unlike `TestContext.Current` (which is `null` outside test execution), `TestRun.Current` is accessible from `[AssemblyInitialize]`, helper classes, fixtures, and extension code. Scoped per process and per AppDomain (on .NET Framework). See also [PlannedTest](#plannedtest) and RFC 014 (`docs/RFCs/014-TestRun-Current-PlannedTests.md`).
 
 ### TFM (Target Framework Moniker)
 
