@@ -2171,6 +2171,11 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registration.Should().Contain("\"Test1\"");
         registration.Should().NotContain("\"NotATest\"");
 
+        // The generator run itself should produce no diagnostics. This guards against future
+        // generator changes that emit warnings/errors going unnoticed because the emitted code
+        // still happens to compile.
+        result.Diagnostics.Should().BeEmpty();
+
         IEnumerable<Diagnostic> errors = outputCompilation
             .GetDiagnostics()
             .Where(d => d.Severity == DiagnosticSeverity.Error);

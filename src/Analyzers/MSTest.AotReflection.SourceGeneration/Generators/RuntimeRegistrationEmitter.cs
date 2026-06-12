@@ -20,7 +20,8 @@ namespace MSTest.AotReflection.SourceGeneration.Generators;
 /// </summary>
 internal static class RuntimeRegistrationEmitter
 {
-    private const string GeneratedTypeName = "MSTestSourceGeneratedReflectionMetadata";
+    private const string GeneratedTypeName = "MSTestAotSourceGeneratedReflectionMetadata";
+    private const string GeneratedNamespace = "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generated.Aot";
 
     public static string Emit(AssemblyMetadataModel assemblyMetadata, IReadOnlyList<TestClassModel> testClasses)
     {
@@ -38,7 +39,7 @@ internal static class RuntimeRegistrationEmitter
         sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine();
 
-        using (sb.Block("namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generated"))
+        using (sb.Block($"namespace {GeneratedNamespace}"))
         {
             sb.AppendLine("/// <summary>Source-generated MSTest reflection metadata hook for this test assembly.</summary>");
             using (sb.Block($"internal static class {GeneratedTypeName}"))
