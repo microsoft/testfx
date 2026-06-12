@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
-internal sealed class JUnitReportEngine
+internal sealed class JUnitReportEngine : ReportEngineBase
 {
     // Default cap on the rendered testpath property. Test trees can in theory be very
     // deep, and each level contributes a (capped) display name to the path, so we put
@@ -24,17 +24,6 @@ internal sealed class JUnitReportEngine
 
     private const string TestPathSeparator = "/";
 
-    private readonly IFileSystem _fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    private readonly IEnvironment _environment;
-    private readonly ICommandLineOptions _commandLineOptions;
-    private readonly IConfiguration _configuration;
-    private readonly IClock _clock;
-    private readonly ITestFramework _testFramework;
-    private readonly DateTimeOffset _testStartTime;
-    private readonly int _exitCode;
-    private readonly CancellationToken _cancellationToken;
-
     public JUnitReportEngine(
         IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -46,17 +35,18 @@ internal sealed class JUnitReportEngine
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
+        : base(
+            fileSystem,
+            testApplicationModuleInfo,
+            environment,
+            commandLineOptions,
+            configuration,
+            clock,
+            testFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken)
     {
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
-        _environment = environment;
-        _commandLineOptions = commandLineOptions;
-        _configuration = configuration;
-        _clock = clock;
-        _testFramework = testFramework;
-        _testStartTime = testStartTime;
-        _exitCode = exitCode;
-        _cancellationToken = cancellationToken;
     }
 
     public Task<(string FileName, string? Warning)> GenerateReportAsync(
@@ -97,11 +87,6 @@ internal sealed class JUnitReportEngine
 
         return await WriteOutputAsync(finalPath, suites).ConfigureAwait(false);
     }
-
-    private static string GetProvidedFileName(string[]? providedFileName)
-        => providedFileName is { Length: > 0 }
-            ? providedFileName[0]
-            : throw ApplicationStateGuard.Unreachable();
 
     private async Task<(string FileName, string? Warning)> WriteOutputAsync(
         string finalPath,
