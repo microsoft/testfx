@@ -365,6 +365,113 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_EmitsStaticPropertyAccess_WithoutInstanceCast()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class StaticProps
+                {
+                    public static int Value { get; set; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+        registry.Should().Contain("Name = \"Value\"");
+
+        // A static member must be accessed through the type, never through an instance cast,
+        // otherwise the generated code fails to compile with CS0176.
+        registry.Should().Contain("Get = static instance => (object?)global::Sample.StaticProps.Value,");
+        registry.Should().Contain("Set = static (instance, value) => global::Sample.StaticProps.Value = (int)value!,");
+        registry.Should().NotContain("((global::Sample.StaticProps)instance).Value");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsIndexerProperty()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class WithIndexer
+                {
+                    public int this[int index] => index;
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        // Indexers cannot be represented by the name-based Get/Set delegate shape, so they are
+        // dropped entirely instead of emitting non-compiling `((T)instance).this[]` code.
+        registry.Should().NotContain("this[");
+        registry.Should().NotContain("Name = \"Item\"");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("indexers must be skipped so the emitted registry still compiles");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsThrowingGetter_ForSetOnlyProperty()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class WriteOnly
+                {
+                    private int _value;
+                    public int Value { set { _value = value; } }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().Contain("Name = \"Value\"");
+
+        // A set-only property has no readable getter; emitting `instance.Value` would not compile,
+        // so the Get delegate throws instead.
+        registry.Should().Contain("Get = static instance => throw new InvalidOperationException(\"Property 'Value' has no accessible getter.\"),");
+        registry.Should().Contain("((global::Sample.WriteOnly)instance!).Value = (int)value!");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("a set-only property must still produce a compiling registry");
+    }
+
+    [TestMethod]
     public void Generator_EmittedSource_CompilesCleanly()
     {
         const string userCode = """
