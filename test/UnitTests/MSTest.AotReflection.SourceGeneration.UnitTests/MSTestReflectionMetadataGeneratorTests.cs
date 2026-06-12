@@ -36,7 +36,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public string? DisplayName { get; set; }
             }
 
-            [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Method, AllowMultiple = true)]
+            [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
             public class TestCategoryAttribute : System.Attribute
             {
                 public TestCategoryAttribute(string category) { Category = category; }
@@ -404,6 +404,51 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_SkipsProtectedMembers()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class ProtectedShapes
+                {
+                    [TestContext]
+                    protected TestContext? Context { get; set; }
+
+                    [TestMethod]
+                    protected void ProtectedTest() { }
+
+                    [TestMethod]
+                    private protected void PrivateProtectedTest() { }
+
+                    [TestMethod]
+                    protected internal void ProtectedInternalTest() { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+        string registry = outputCompilation
+            .SyntaxTrees
+            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
+            .ToString();
+
+        registry.Should().NotContain("ProtectedTest");
+        registry.Should().NotContain("PrivateProtectedTest");
+        registry.Should().NotContain("Context");
+        registry.Should().Contain("ProtectedInternalTest");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the registry can only call members accessible from a non-derived type in the same assembly");
+    }
+
+    [TestMethod]
     public void Generator_StripsNullableAnnotation_FromTypeofExpressions()
     {
         const string userCode = """
@@ -681,9 +726,6 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 [TestClass]
                 public class DerivedTests : BaseTests
                 {
-                    // [TestMethod] is re-applied here because the real attribute is declared
-                    // with AttributeUsage(Inherited = false) and would not be inherited.
-                    [TestMethod]
                     public override void Run() { }
                 }
             }
@@ -696,7 +738,43 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         runEntries.Should().Be(1, "the derived override must replace the base entry (not duplicate it)");
         registry.Should().Contain("((global::Sample.DerivedTests)instance!).Run();");
         registry.Should().NotContain("((global::Sample.BaseTests)instance!).Run();");
-        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute");
+
+        // TestMethodAttribute is not inherited, so the override should not pick up the base attribute.
+        registry.Should().NotContain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute");
+    }
+
+    [TestMethod]
+    public void Generator_OverriddenVirtualMethod_HonorsInheritedAttributeUsage()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class BaseTests
+                {
+                    [TestMethod]
+                    [TestCategory("Base")]
+                    [DataRow(1)]
+                    public virtual void Run(int value) { }
+                }
+
+                [TestClass]
+                public class DerivedTests : BaseTests
+                {
+                    [TestMethod]
+                    [TestCategory("Derived")]
+                    public override void Run(int value) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"Base\"");
+        registry.Should().Contain("\"Derived\"");
+        registry.Should().Contain("DataRows = Array.Empty<object?[]>()");
+        registry.Should().NotContain("new object?[] { 1 }");
     }
 
     [TestMethod]
@@ -1267,7 +1345,51 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_DistinguishesGenericArity_BetweenSameNamedMethods()
+    public void Generator_HonorsAttributeUsage_DeclaredOnBaseAttributeType()
+    {
+        // GetAttributeUsage MUST walk the attribute type's base-type chain. AllowMultiple is
+        // inherited from a base attribute that declares [AttributeUsage(AllowMultiple = true)]
+        // even when the derived attribute does not redeclare its own [AttributeUsage]. If the
+        // walk were skipped, the fallback default AllowMultiple=false would silently drop the
+        // second occurrence below.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System;
+
+            namespace Sample
+            {
+                [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+                public class BaseTagAttribute : Attribute
+                {
+                    public BaseTagAttribute(string value) { Value = value; }
+                    public string Value { get; }
+                }
+
+                // No [AttributeUsage] here on purpose — must inherit AllowMultiple=true from BaseTagAttribute.
+                public class DerivedTagAttribute : BaseTagAttribute
+                {
+                    public DerivedTagAttribute(string value) : base(value) { }
+                }
+
+                [TestClass]
+                public class Tests
+                {
+                    [TestMethod]
+                    [DerivedTag("first")]
+                    [DerivedTag("second")]
+                    public void Run() { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("\"first\"");
+        registry.Should().Contain("\"second\"");
+    }
+
+    [TestMethod]
+    public void Generator_ReportsAndSkipsGenericMethods_WithSameName()
     {
         // Methods that differ only in generic arity (e.g. M() vs M<T>()) MUST be treated as
         // distinct in the per-class dedup key, otherwise the generator might drop the
@@ -1297,19 +1419,14 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
 
-        // The two generic overloads each emit AOTSG0004; the non-generic Run is supported.
-        result.Diagnostics.Where(d => d.Id == "AOTSG0004").Should().HaveCount(2);
-
         Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
         IEnumerable<Diagnostic> errors = outputCompilation
             .GetDiagnostics()
             .Where(d => d.Severity == DiagnosticSeverity.Error);
         errors.Should().BeEmpty();
 
-        string registry = outputCompilation
-            .SyntaxTrees
-            .Single(t => t.FilePath.EndsWith("MSTestReflectionMetadata.Registry.g.cs", System.StringComparison.Ordinal))
-            .ToString();
+        result.Diagnostics.Where(d => d.Id == "AOTSG0004").Should().HaveCount(2);
+        string registry = GetRegistry(result);
 
         // Only the non-generic Run must be emitted. The generic overloads are excluded by AOTSG0004
         // but must not cause the non-generic sibling to be dropped through key collision.
