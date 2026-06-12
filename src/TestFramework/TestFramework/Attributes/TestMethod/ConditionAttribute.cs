@@ -20,10 +20,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// with a logical AND, matching the typical <c>[ConditionalFact]</c> usage pattern in other test frameworks.
 /// </para>
 /// <para>
-/// If the referenced member cannot be found, is not <see langword="static"/>, does not return
-/// <see cref="bool"/>, or (for methods) requires parameters, evaluating <see cref="IsConditionMet"/>
-/// throws an <see cref="InvalidOperationException"/>. This surfaces as a test error rather than a
-/// silent skip so typos and refactors don't accidentally disable tests.
+/// If the referenced member cannot be found as a <see langword="public"/> <see langword="static"/>
+/// <see cref="bool"/> property, field, or parameterless method, or (for methods) requires parameters,
+/// evaluating <see cref="IsConditionMet"/> throws an <see cref="InvalidOperationException"/>. This
+/// surfaces as a test error rather than a silent skip so typos and refactors don't accidentally
+/// disable tests.
 /// </para>
 /// <para>
 /// This attribute isn't inherited. Applying it to a base class will not affect derived classes.
@@ -51,11 +52,8 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
 {
     private const DynamicallyAccessedMemberTypes RequiredMembers =
         DynamicallyAccessedMemberTypes.PublicProperties
-        | DynamicallyAccessedMemberTypes.NonPublicProperties
         | DynamicallyAccessedMemberTypes.PublicFields
-        | DynamicallyAccessedMemberTypes.NonPublicFields
-        | DynamicallyAccessedMemberTypes.PublicMethods
-        | DynamicallyAccessedMemberTypes.NonPublicMethods;
+        | DynamicallyAccessedMemberTypes.PublicMethods;
 
     private readonly string[] _conditionMemberNames;
     private string? _groupName;
@@ -67,8 +65,8 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// </summary>
     /// <param name="conditionType">The type declaring the static member to evaluate.</param>
     /// <param name="conditionMemberName">
-    /// The name of the <see langword="static"/> <see cref="bool"/> member (property, field,
-    /// or parameterless method) to evaluate.
+    /// The name of the <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
+    /// (property, field, or parameterless method) to evaluate.
     /// </param>
     public ConditionAttribute(
         [DynamicallyAccessedMembers(RequiredMembers)] Type conditionType,
@@ -84,12 +82,12 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// </summary>
     /// <param name="conditionType">The type declaring the static member(s) to evaluate.</param>
     /// <param name="conditionMemberName">
-    /// The name of the first <see langword="static"/> <see cref="bool"/> member (property, field,
-    /// or parameterless method) to evaluate.
+    /// The name of the first <see langword="public"/> <see langword="static"/> <see cref="bool"/>
+    /// member (property, field, or parameterless method) to evaluate.
     /// </param>
     /// <param name="additionalConditionMemberNames">
-    /// Additional <see langword="static"/> <see cref="bool"/> member name(s) to evaluate. All
-    /// referenced members are AND-combined.
+    /// Additional <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
+    /// name(s) to evaluate. All referenced members are AND-combined.
     /// </param>
     [CLSCompliant(false)]
     public ConditionAttribute(
@@ -109,8 +107,8 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// </param>
     /// <param name="conditionType">The type declaring the static member to evaluate.</param>
     /// <param name="conditionMemberName">
-    /// The name of the <see langword="static"/> <see cref="bool"/> member (property, field,
-    /// or parameterless method) to evaluate.
+    /// The name of the <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
+    /// (property, field, or parameterless method) to evaluate.
     /// </param>
     public ConditionAttribute(
         ConditionMode mode,
@@ -129,12 +127,12 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// </param>
     /// <param name="conditionType">The type declaring the static member(s) to evaluate.</param>
     /// <param name="conditionMemberName">
-    /// The name of the first <see langword="static"/> <see cref="bool"/> member (property, field,
-    /// or parameterless method) to evaluate.
+    /// The name of the first <see langword="public"/> <see langword="static"/> <see cref="bool"/>
+    /// member (property, field, or parameterless method) to evaluate.
     /// </param>
     /// <param name="additionalConditionMemberNames">
-    /// Additional <see langword="static"/> <see cref="bool"/> member name(s) to evaluate. All
-    /// referenced members are AND-combined.
+    /// Additional <see langword="public"/> <see langword="static"/> <see cref="bool"/> member
+    /// name(s) to evaluate. All referenced members are AND-combined.
     /// </param>
     [CLSCompliant(false)]
     public ConditionAttribute(
@@ -211,8 +209,8 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
     /// <remarks>
     /// All referenced members are evaluated in order and combined with a logical AND. Throws
     /// <see cref="InvalidOperationException"/> if a member can't be resolved as a
-    /// <see langword="public"/> or <see langword="non-public"/> <see langword="static"/>
-    /// <see cref="bool"/> property, field, or parameterless method.
+    /// <see langword="public"/> <see langword="static"/> <see cref="bool"/> property, field, or
+    /// parameterless method.
     /// </remarks>
     public override bool IsConditionMet
     {
@@ -232,7 +230,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
 
     private bool EvaluateMember(string memberName)
     {
-        const BindingFlags Flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+        const BindingFlags Flags = BindingFlags.Public | BindingFlags.Static;
         string typeName = ConditionType.FullName ?? ConditionType.Name;
 
         PropertyInfo? property = ConditionType.GetProperty(memberName, Flags);
@@ -240,7 +238,7 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
         {
             return property.PropertyType != typeof(bool) || property.GetMethod is null
                 ? throw new InvalidOperationException(
-                    $"Member '{typeName}.{memberName}' must be a static bool readable property to be used with [Condition].")
+                    $"Member '{typeName}.{memberName}' must be a public static bool readable property to be used with [Condition].")
                 : (bool)property.GetValue(null)!;
         }
 
@@ -249,17 +247,17 @@ public sealed class ConditionAttribute : ConditionBaseAttribute
         {
             return field.FieldType != typeof(bool)
                 ? throw new InvalidOperationException(
-                    $"Member '{typeName}.{memberName}' must be a static bool field to be used with [Condition].")
+                    $"Member '{typeName}.{memberName}' must be a public static bool field to be used with [Condition].")
                 : (bool)field.GetValue(null)!;
         }
 
         MethodInfo? method = ConditionType.GetMethod(memberName, Flags, binder: null, types: Type.EmptyTypes, modifiers: null);
         return method is null
             ? throw new InvalidOperationException(
-                $"Could not find a static bool property, field, or parameterless method named '{memberName}' on type '{typeName}'.")
+                $"Could not find a public static bool property, field, or parameterless method named '{memberName}' on type '{typeName}'.")
             : method.ReturnType != typeof(bool)
                 ? throw new InvalidOperationException(
-                    $"Member '{typeName}.{memberName}' must be a static parameterless bool method to be used with [Condition].")
+                    $"Member '{typeName}.{memberName}' must be a public static parameterless bool method to be used with [Condition].")
                 : (bool)method.Invoke(null, null)!;
     }
 

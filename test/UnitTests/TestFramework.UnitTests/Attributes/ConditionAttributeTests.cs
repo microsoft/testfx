@@ -133,8 +133,10 @@ public class ConditionAttributeTests : TestContainer
         new ConditionAttribute(typeof(Conditions), nameof(Conditions.FalseMethod)).IsConditionMet.Should().BeFalse();
     }
 
-    public void IsConditionMet_NonPublicStaticProperty_IsResolved()
-        => new ConditionAttribute(typeof(Conditions), "InternalTrueProperty").IsConditionMet.Should().BeTrue();
+    public void IsConditionMet_NonPublicStaticProperty_ThrowsInvalidOperation()
+        => ((Func<bool>)(() => new ConditionAttribute(typeof(Conditions), "InternalTrueProperty").IsConditionMet))
+            .Should().Throw<InvalidOperationException>()
+            .WithMessage("*InternalTrueProperty*");
 
     public void IsConditionMet_MultipleMembers_AndsValues()
     {
