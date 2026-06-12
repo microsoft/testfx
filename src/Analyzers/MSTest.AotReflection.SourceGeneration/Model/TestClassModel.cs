@@ -58,6 +58,8 @@ internal sealed record TestMethodModel(
 internal sealed record TestPropertyModel(
     string Name,
     string FullyQualifiedType,
+    bool IsStatic,
+    bool HasGettableValue,
     bool HasPublicSetter,
     EquatableArray<AttributeApplicationModel> Attributes);
 

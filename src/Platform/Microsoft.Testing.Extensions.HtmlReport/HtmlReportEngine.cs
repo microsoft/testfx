@@ -11,22 +11,11 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
-internal sealed class HtmlReportEngine
+internal sealed class HtmlReportEngine : ReportEngineBase
 {
     private const string TemplateResourceName = "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html";
     private const string DataPlaceholder = "/*__MTP_DATA__*/null";
     private const string GeneratorVersionPlaceholder = "__MTP_GENERATOR_VERSION__";
-
-    private readonly IFileSystem _fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    private readonly IEnvironment _environment;
-    private readonly ICommandLineOptions _commandLineOptions;
-    private readonly IConfiguration _configuration;
-    private readonly IClock _clock;
-    private readonly ITestFramework _testFramework;
-    private readonly DateTimeOffset _testStartTime;
-    private readonly int _exitCode;
-    private readonly CancellationToken _cancellationToken;
 
     public HtmlReportEngine(
         IFileSystem fileSystem,
@@ -39,17 +28,18 @@ internal sealed class HtmlReportEngine
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
+        : base(
+            fileSystem,
+            testApplicationModuleInfo,
+            environment,
+            commandLineOptions,
+            configuration,
+            clock,
+            testFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken)
     {
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
-        _environment = environment;
-        _commandLineOptions = commandLineOptions;
-        _configuration = configuration;
-        _clock = clock;
-        _testFramework = testFramework;
-        _testStartTime = testStartTime;
-        _exitCode = exitCode;
-        _cancellationToken = cancellationToken;
     }
 
     public Task<(string FileName, string? Warning)> GenerateReportAsync(CapturedTestResult[] results)
@@ -89,11 +79,6 @@ internal sealed class HtmlReportEngine
 
         return await WriteAsync(finalPath, bytes).ConfigureAwait(false);
     }
-
-    private static string GetProvidedFileName(string[]? providedFileName)
-        => providedFileName is { Length: > 0 }
-            ? providedFileName[0]
-            : throw ApplicationStateGuard.Unreachable();
 
     private async Task<(string FileName, string? Warning)> WriteAsync(string finalPath, byte[] bytes)
     {

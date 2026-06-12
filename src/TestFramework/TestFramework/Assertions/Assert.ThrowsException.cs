@@ -14,16 +14,30 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.Throws</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <typeparam name="TException">The type of exception expected to be thrown.</typeparam>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public readonly struct AssertNonStrictThrowsInterpolatedStringHandler<TException>
         where TException : Exception
     {
         private readonly StringBuilder? _builder;
         private readonly ThrowsExceptionState _state;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertNonStrictThrowsInterpolatedStringHandler{TException}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="action">The delegate being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, Action action, out bool shouldAppend)
         {
             _state = IsThrowsFailing<TException>(action, isStrictType: false);
@@ -34,6 +48,13 @@ public sealed partial class Assert
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertNonStrictThrowsInterpolatedStringHandler{TException}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="action">The delegate being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertNonStrictThrowsInterpolatedStringHandler(int literalLength, int formattedCount, Func<object?> action, out bool shouldAppend)
             : this(literalLength, formattedCount, (Action)(() => _ = action()), out shouldAppend)
         {
@@ -54,14 +75,27 @@ public sealed partial class Assert
             return null!;
         }
 
+        /// <summary>Appends a literal string to the interpolated message.</summary>
+        /// <param name="value">The literal string to append.</param>
         public void AppendLiteral(string value) => _builder!.Append(value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
         public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
 
 #if NETCOREAPP3_1_OR_GREATER
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The character span to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
@@ -71,21 +105,54 @@ public sealed partial class Assert
         // and should be okay if not very optimized.
         // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
         // the BCL's StringBuilder.AppendInterpolatedStringHandler
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
         public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
+    /// <summary>
+    /// Provides an interpolated string handler used by <c>Assert.ThrowsExactly</c> overloads
+    /// that only allocates and formats the message when the assertion is failing.
+    /// </summary>
+    /// <typeparam name="TException">The type of exception expected to be thrown.</typeparam>
+    /// <remarks>
+    /// This type is intended to be used by the compiler; users should not reference it directly.
+    /// </remarks>
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -95,6 +162,13 @@ public sealed partial class Assert
         private readonly StringBuilder? _builder;
         private readonly ThrowsExceptionState _state;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertThrowsExactlyInterpolatedStringHandler{TException}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="action">The delegate being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, Action action, out bool shouldAppend)
         {
             _state = IsThrowsFailing<TException>(action, isStrictType: true);
@@ -105,6 +179,13 @@ public sealed partial class Assert
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertThrowsExactlyInterpolatedStringHandler{TException}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="action">The delegate being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
         public AssertThrowsExactlyInterpolatedStringHandler(int literalLength, int formattedCount, Func<object?> action, out bool shouldAppend)
             : this(literalLength, formattedCount, (Action)(() => _ = action()), out shouldAppend)
         {
@@ -125,14 +206,27 @@ public sealed partial class Assert
             return null!;
         }
 
+        /// <summary>Appends a literal string to the interpolated message.</summary>
+        /// <param name="value">The literal string to append.</param>
         public void AppendLiteral(string value) => _builder!.Append(value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
         public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
 
 #if NETCOREAPP3_1_OR_GREATER
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
         public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The character span to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 #endif
@@ -142,21 +236,45 @@ public sealed partial class Assert
         // and should be okay if not very optimized.
         // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
         // the BCL's StringBuilder.AppendInterpolatedStringHandler
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
         public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <typeparam name="T">The type of the value being appended.</typeparam>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
         public void AppendFormatted(string? value) => _builder!.Append(value);
 
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
+
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 
+        /// <summary>Appends a formatted value to the interpolated message.</summary>
+        /// <param name="value">The value to append.</param>
+        /// <param name="alignment">The minimum width of the formatted value.</param>
+        /// <param name="format">The format string to use.</param>
         public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
     /// <summary>
     /// Asserts that the delegate <paramref name="action"/> throws an exception of type <typeparamref name="TException"/>
@@ -534,6 +652,7 @@ public sealed partial class Assert
         return null!;
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private static async Task<ThrowsExceptionState> IsThrowsAsyncFailingAsync<TException>(Func<Task> action, bool isStrictType)
         where TException : Exception
     {
@@ -555,6 +674,7 @@ public sealed partial class Assert
         return ThrowsExceptionState.CreateNoExceptionState();
     }
 
+    [DebuggerDisableUserUnhandledExceptions]
     private static ThrowsExceptionState IsThrowsFailing<TException>(Action action, bool isStrictType)
         where TException : Exception
     {
