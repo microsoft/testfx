@@ -494,4 +494,61 @@ public sealed class MemberConditionShouldBeValidAnalyzerTests
                 .WithLocation(1)
                 .WithArguments("Conditions", "Second"));
     }
+
+    [TestMethod]
+    public async Task WhenMethodHasParameterlessAndParameterizedOverloads_PicksParameterless_NoDiagnostic()
+    {
+        // Runtime binding uses Type.GetMethod(name, ..., types: Type.EmptyTypes), which selects
+        // the parameterless overload. The analyzer must not falsely flag this just because the
+        // parameterized overload comes first in declaration order.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsTrue(int unused) => true;
+                public static bool IsTrue() => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Conditions), nameof(Conditions.IsTrue))]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedHasInstanceMemberShadowingBaseStatic_PicksBaseStatic_NoDiagnostic()
+    {
+        // Runtime FlattenHierarchy + Public + Static binds to Base.IsTrue (the static one),
+        // not Derived.IsTrue (the instance one). The analyzer must mirror that.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Base
+            {
+                public static bool IsTrue => true;
+            }
+
+            public class Derived : Base
+            {
+                public new bool IsTrue => false; // instance, shadows the static base member
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Derived), nameof(Derived.IsTrue))]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

@@ -129,12 +129,9 @@ public sealed class MemberConditionShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
             else if (argument.Kind == TypedConstantKind.Array)
             {
-                foreach (TypedConstant element in argument.Values)
+                foreach (TypedConstant element in argument.Values.Where(static e => !e.IsNull && e.Value is string))
                 {
-                    if (!element.IsNull && element.Value is string s)
-                    {
-                        memberNames.Add(s);
-                    }
+                    memberNames.Add((string)element.Value!);
                 }
             }
         }
@@ -167,11 +164,30 @@ public sealed class MemberConditionShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        // Match the runtime resolution preference: property → field → method (first match wins).
+        // Match the runtime resolution order: GetProperty / GetField / GetMethod with
+        // BindingFlags.Public | Static | FlattenHierarchy, where GetMethod looks for the
+        // *parameterless* overload only. If the runtime would bind to a candidate that
+        // satisfies those filters, prefer it so we don't report a false positive against an
+        // instance member or a parameterized overload that shadows the real binding target.
         ISymbol? selected =
-            candidates.FirstOrDefault(s => s.Kind == SymbolKind.Property)
-            ?? candidates.FirstOrDefault(s => s.Kind == SymbolKind.Field)
-            ?? candidates.FirstOrDefault(s => s.Kind == SymbolKind.Method);
+            // Property: public + static + non-indexer (runtime rejects indexers).
+            candidates.OfType<IPropertySymbol>()
+                .FirstOrDefault(static p => p.DeclaredAccessibility == Accessibility.Public && p.IsStatic && !p.IsIndexer)
+            // Field: public + static.
+            ?? (ISymbol?)candidates.OfType<IFieldSymbol>()
+                .FirstOrDefault(static f => f.DeclaredAccessibility == Accessibility.Public && f.IsStatic)
+            // Method: public + static + ordinary + parameterless.
+            ?? candidates.OfType<IMethodSymbol>()
+                .FirstOrDefault(static m =>
+                    m.DeclaredAccessibility == Accessibility.Public
+                    && m.IsStatic
+                    && m.MethodKind == MethodKind.Ordinary
+                    && m.Parameters.Length == 0)
+            // Fallback when no runtime-binding candidate exists: pick the first member by
+            // kind so the more specific diagnostic (not-public, not-static, etc.) is reported.
+            ?? candidates.FirstOrDefault(static s => s.Kind == SymbolKind.Property)
+            ?? candidates.FirstOrDefault(static s => s.Kind == SymbolKind.Field)
+            ?? candidates.FirstOrDefault(static s => s.Kind == SymbolKind.Method);
 
         if (selected is null)
         {
@@ -221,6 +237,14 @@ public sealed class MemberConditionShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     private static void ValidateProperty(SymbolAnalysisContext context, SyntaxNode attributeSyntax, string typeName, string memberName, IPropertySymbol property)
     {
+        if (property.IsIndexer)
+        {
+            // Indexer properties (e.g. public static bool this[int i] in C# 13+) are rejected by
+            // the runtime because the attribute requires a *parameterless* readable property.
+            context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberWrongKindRule, typeName, memberName));
+            return;
+        }
+
         if (property.DeclaredAccessibility != Accessibility.Public)
         {
             context.ReportDiagnostic(attributeSyntax.CreateDiagnostic(MemberNotPublicRule, typeName, memberName));
