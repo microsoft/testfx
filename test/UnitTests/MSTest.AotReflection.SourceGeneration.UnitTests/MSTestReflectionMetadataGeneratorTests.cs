@@ -68,6 +68,21 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         }
         """;
 
+    /// <summary>
+    /// Minimal stub of the adapter's runtime hook so the emitted <c>[ModuleInitializer]</c> wiring
+    /// (shared from MSTest.SourceGeneration) compiles in the Roslyn test compilation without
+    /// referencing MSTestAdapter.PlatformServices.
+    /// </summary>
+    private const string RuntimeHookStub = """
+        namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration
+        {
+            public static class ReflectionMetadataHook
+            {
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
+            }
+        }
+        """;
+
     [TestMethod]
     public void Generator_EmitsSupportTypes_OnAnyCompilation()
     {
@@ -2107,6 +2122,49 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // into the consumer assembly) MUST NOT use `init` accessors. Guard against accidental
         // reintroduction.
         support.Should().NotContain("{ get; init; }");
+    }
+
+    [TestMethod]
+    public void WiringGenerator_EmitsModuleInitializer_RegisteringAssembly_AndCompilesAgainstHook()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        // The AOT generator package shares MSTest.SourceGeneration's proven runtime-wiring
+        // generator so that referencing ONLY this package makes a test assembly discoverable and
+        // runnable today (via ReflectionMetadataHook.Register), in addition to emitting the
+        // reflection-free registry the future 0%-reflection path will consume.
+        var wiringGenerator = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators.ReflectionMetadataGenerator();
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, RuntimeHookStub, userCode);
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(wiringGenerator);
+        driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
+
+        GeneratorRunResult result = driver.GetRunResult().Results[0];
+        result.Diagnostics.Should().BeEmpty();
+
+        string wiring = result.GeneratedSources
+            .Single(s => s.HintName.EndsWith(".MSTestReflectionMetadata.g.cs", System.StringComparison.Ordinal))
+            .SourceText.ToString();
+
+        wiring.Should().Contain("[ModuleInitializer]");
+        wiring.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]");
+        wiring.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods);");
+
+        IEnumerable<Diagnostic> errors = outputCompilation
+            .GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error);
+        errors.Should().BeEmpty("the emitted module initializer must compile against the adapter's ReflectionMetadataHook");
     }
 
     private static string GetRegistry(GeneratorRunResult result)
