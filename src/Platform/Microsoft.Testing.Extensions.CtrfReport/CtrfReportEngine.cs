@@ -10,22 +10,11 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
-internal sealed partial class CtrfReportEngine
+internal sealed partial class CtrfReportEngine : ReportEngineBase
 {
     // CTRF spec: https://github.com/ctrf-io/ctrf
     private const string CtrfReportFormat = "CTRF";
     private const string CtrfSpecVersion = "0.0.0";
-
-    private readonly IFileSystem _fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    private readonly IEnvironment _environment;
-    private readonly ICommandLineOptions _commandLineOptions;
-    private readonly IConfiguration _configuration;
-    private readonly IClock _clock;
-    private readonly ITestFramework _testFramework;
-    private readonly DateTimeOffset _testStartTime;
-    private readonly int _exitCode;
-    private readonly CancellationToken _cancellationToken;
 
     public CtrfReportEngine(
         IFileSystem fileSystem,
@@ -38,17 +27,18 @@ internal sealed partial class CtrfReportEngine
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
+        : base(
+            fileSystem,
+            testApplicationModuleInfo,
+            environment,
+            commandLineOptions,
+            configuration,
+            clock,
+            testFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken)
     {
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
-        _environment = environment;
-        _commandLineOptions = commandLineOptions;
-        _configuration = configuration;
-        _clock = clock;
-        _testFramework = testFramework;
-        _testStartTime = testStartTime;
-        _exitCode = exitCode;
-        _cancellationToken = cancellationToken;
     }
 
     public Task<(string FileName, string? Warning)> GenerateReportAsync(CapturedTestResult[] results)
@@ -81,9 +71,4 @@ internal sealed partial class CtrfReportEngine
 
         return await WriteWithRetryAsync(finalPath, bytes, fileNameExplicitlyProvided).ConfigureAwait(false);
     }
-
-    private static string GetProvidedFileName(string[]? providedFileName)
-        => providedFileName is { Length: > 0 }
-            ? providedFileName[0]
-            : throw ApplicationStateGuard.Unreachable();
 }
