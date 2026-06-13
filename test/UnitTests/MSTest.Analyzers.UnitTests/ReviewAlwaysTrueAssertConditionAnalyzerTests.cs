@@ -1167,4 +1167,67 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualOrAreSameIsPassedIdenticalOperands_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private readonly object _field = new();
+                private object Property { get; } = new();
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object local = new();
+                    [|Assert.AreEqual(local, local)|];
+                    [|Assert.AreSame(local, local)|];
+                    TestParameter(local);
+                    [|Assert.AreEqual(_field, _field)|];
+                    [|Assert.AreSame(_field, _field)|];
+                    [|Assert.AreEqual(Property, Property)|];
+                    [|Assert.AreSame(Property, Property)|];
+                }
+
+                private static void TestParameter(object parameter)
+                {
+                    [|Assert.AreEqual(parameter, parameter)|];
+                    [|Assert.AreSame(parameter, parameter)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualOrAreSameIsPassedDifferentOrMethodCallOperands_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object left = new();
+                    object right = new();
+                    Assert.AreEqual(left, right);
+                    Assert.AreSame(left, right);
+                    Assert.AreEqual(GetObject(), GetObject());
+                    Assert.AreSame(GetObject(), GetObject());
+                }
+
+                private static object GetObject() => new();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

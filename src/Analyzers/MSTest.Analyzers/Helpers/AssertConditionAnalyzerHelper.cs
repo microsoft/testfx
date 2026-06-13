@@ -44,14 +44,67 @@ internal static class AssertConditionAnalyzerHelper
     internal static EqualityStatus GetEqualityStatus(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
     {
         if (GetArgumentWithName(operation, expectedOrNotExpectedParameterName) is { } expectedOrNotExpectedArgument &&
-            GetArgumentWithName(operation, ActualParameterName) is { } actualArgument &&
-            expectedOrNotExpectedArgument.ConstantValue.HasValue &&
-            actualArgument.ConstantValue.HasValue)
+            GetArgumentWithName(operation, ActualParameterName) is { } actualArgument)
         {
-            return Equals(expectedOrNotExpectedArgument.ConstantValue.Value, actualArgument.ConstantValue.Value) ? EqualityStatus.Equal : EqualityStatus.NotEqual;
+            if (expectedOrNotExpectedArgument.ConstantValue.HasValue &&
+                actualArgument.ConstantValue.HasValue)
+            {
+                return Equals(expectedOrNotExpectedArgument.ConstantValue.Value, actualArgument.ConstantValue.Value) ? EqualityStatus.Equal : EqualityStatus.NotEqual;
+            }
+
+            if (AreSameReference(expectedOrNotExpectedArgument, actualArgument))
+            {
+                return EqualityStatus.Equal;
+            }
         }
 
         // We are not sure about the equality status
         return EqualityStatus.Unknown;
     }
+
+    internal static bool AreSameReference(IOperation? left, IOperation? right)
+    {
+        left = WalkDownConversionsAndParentheses(left);
+        right = WalkDownConversionsAndParentheses(right);
+
+        return (left, right) switch
+        {
+            (ILocalReferenceOperation leftLocal, ILocalReferenceOperation rightLocal)
+                => SymbolEqualityComparer.Default.Equals(leftLocal.Local, rightLocal.Local),
+
+            (IParameterReferenceOperation leftParameter, IParameterReferenceOperation rightParameter)
+                => SymbolEqualityComparer.Default.Equals(leftParameter.Parameter, rightParameter.Parameter),
+
+            (IFieldReferenceOperation leftField, IFieldReferenceOperation rightField)
+                => SymbolEqualityComparer.Default.Equals(leftField.Field, rightField.Field)
+                && AreSameInstance(leftField.Instance, rightField.Instance),
+
+            (IPropertyReferenceOperation leftProperty, IPropertyReferenceOperation rightProperty)
+                => SymbolEqualityComparer.Default.Equals(leftProperty.Property, rightProperty.Property)
+                && AreSameInstance(leftProperty.Instance, rightProperty.Instance),
+
+            (IInstanceReferenceOperation, IInstanceReferenceOperation) => true,
+
+            _ => false,
+        };
+    }
+
+    private static IOperation? WalkDownConversionsAndParentheses(IOperation? operation)
+    {
+        while (operation is IConversionOperation or IParenthesizedOperation)
+        {
+            operation = operation switch
+            {
+                IConversionOperation conversion => conversion.Operand,
+                IParenthesizedOperation parenthesized => parenthesized.Operand,
+                _ => operation,
+            };
+        }
+
+        return operation;
+    }
+
+    private static bool AreSameInstance(IOperation? left, IOperation? right)
+        => (left is null && right is null)
+        || (left is not null && right is not null && AreSameReference(left, right));
 }

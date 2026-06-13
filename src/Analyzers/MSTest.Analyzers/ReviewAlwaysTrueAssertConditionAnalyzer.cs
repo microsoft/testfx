@@ -69,6 +69,9 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
             "IsFalse" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
             "AreEqual" => AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.ExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.Equal,
             "AreNotEqual" => AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.NotEqual,
+            "AreSame" => AssertConditionAnalyzerHelper.AreSameReference(
+                AssertConditionAnalyzerHelper.GetArgumentWithName(operation, AssertConditionAnalyzerHelper.ExpectedParameterName),
+                AssertConditionAnalyzerHelper.GetArgumentWithName(operation, AssertConditionAnalyzerHelper.ActualParameterName)),
             "IsNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNotNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { } valueArgumentOperation && AssertConditionAnalyzerHelper.IsNotNullableType(valueArgumentOperation),
             _ => false,

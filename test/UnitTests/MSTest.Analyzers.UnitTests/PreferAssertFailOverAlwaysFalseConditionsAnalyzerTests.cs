@@ -1560,4 +1560,67 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualOrAreNotSameIsPassedIdenticalOperands_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private readonly object _field = new();
+                private object Property { get; } = new();
+
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object local = new();
+                    [|Assert.AreNotEqual(local, local)|];
+                    [|Assert.AreNotSame(local, local)|];
+                    TestParameter(local);
+                    [|Assert.AreNotEqual(_field, _field)|];
+                    [|Assert.AreNotSame(_field, _field)|];
+                    [|Assert.AreNotEqual(Property, Property)|];
+                    [|Assert.AreNotSame(Property, Property)|];
+                }
+
+                private static void TestParameter(object parameter)
+                {
+                    [|Assert.AreNotEqual(parameter, parameter)|];
+                    [|Assert.AreNotSame(parameter, parameter)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualOrAreNotSameIsPassedDifferentOrMethodCallOperands_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object left = new();
+                    object right = new();
+                    Assert.AreNotEqual(left, right);
+                    Assert.AreNotSame(left, right);
+                    Assert.AreNotEqual(GetObject(), GetObject());
+                    Assert.AreNotSame(GetObject(), GetObject());
+                }
+
+                private static object GetObject() => new();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

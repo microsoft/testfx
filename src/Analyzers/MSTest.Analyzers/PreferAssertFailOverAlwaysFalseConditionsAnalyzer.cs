@@ -80,6 +80,9 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
             "IsFalse" => AssertConditionAnalyzerHelper.GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
             "AreEqual" => AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.ExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.NotEqual,
             "AreNotEqual" => AssertConditionAnalyzerHelper.GetEqualityStatus(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName) == AssertConditionAnalyzerHelper.EqualityStatus.Equal,
+            "AreNotSame" => AssertConditionAnalyzerHelper.AreSameReference(
+                AssertConditionAnalyzerHelper.GetArgumentWithName(operation, AssertConditionAnalyzerHelper.NotExpectedParameterName),
+                AssertConditionAnalyzerHelper.GetArgumentWithName(operation, AssertConditionAnalyzerHelper.ActualParameterName)),
             "IsNotNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNull" => AssertConditionAnalyzerHelper.GetValueArgument(operation) is { } valueArgumentOperation && AssertConditionAnalyzerHelper.IsNotNullableType(valueArgumentOperation),
             _ => false,
