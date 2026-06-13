@@ -713,6 +713,11 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
         <target state="translated">Çıkmayı zorlamak için Ctrl+C tuşlarına yeniden basın.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
+      <trans-unit id="PlatformOutputDeviceAlreadyRegisteredErrorMessage">
+        <source>A custom output device has already been registered.</source>
+        <target state="new">A custom output device has already been registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Bu değeri belirleyebilmemiz için süreçten çıkılmış olması gerekir</target>
