@@ -54,7 +54,7 @@
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
-        <target state="new">The bridged framework supports only one session at a time. A session with UID {0} is already open.</target>
+        <target state="translated">Интегрированная среда Bridged Framework поддерживает только один сеанс одновременно. Сеанс с UID {0} уже открыт.</target>
         <note>{0} is the session {Locked="UID"}.</note>
       </trans-unit>
     </body>
