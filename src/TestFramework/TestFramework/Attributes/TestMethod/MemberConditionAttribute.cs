@@ -228,15 +228,7 @@ public sealed class MemberConditionAttribute : ConditionBaseAttribute
     }
 
     private Func<bool>[] BuildEvaluators()
-    {
-        var evaluators = new Func<bool>[_conditionMemberNames.Length];
-        for (int i = 0; i < _conditionMemberNames.Length; i++)
-        {
-            evaluators[i] = BuildEvaluator(_conditionMemberNames[i]);
-        }
-
-        return evaluators;
-    }
+        => Array.ConvertAll(_conditionMemberNames, BuildEvaluator);
 
     private Func<bool> BuildEvaluator(string memberName)
     {
