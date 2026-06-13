@@ -13,7 +13,11 @@
 // #define DETECT_LEAKS  //for now always enable DETECT_LEAKS in debug.
 // #endif
 
+#if IS_CORE_MTP
 namespace Microsoft.Testing.Platform.Helpers;
+#else
+namespace Analyzer.Utilities.PooledObjects;
+#endif
 
 /// <summary>
 /// Generic implementation of object pooling pattern with predefined pool size limit. The main

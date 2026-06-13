@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="RoslynAnalyzerHelpers\RoslynHashCode.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ObjectPool.cs" Link="RoslynAnalyzerHelpers\ObjectPool.cs" />
   </ItemGroup>
 
   <ItemGroup>
