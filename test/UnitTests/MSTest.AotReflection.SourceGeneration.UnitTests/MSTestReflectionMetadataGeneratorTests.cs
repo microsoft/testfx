@@ -79,6 +79,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             public static class ReflectionMetadataHook
             {
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes) { }
             }
         }
         """;
@@ -704,8 +705,9 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         GeneratorDriverRunResult result = driver.GetRunResult();
         result.Diagnostics.Should().BeEmpty();
         result.Results.Should().ContainSingle();
-        // Two passes against the same compilation must produce identical sources.
-        result.Results[0].GeneratedSources.Should().HaveCount(2);
+        // Two passes against the same compilation must produce identical sources:
+        // support types + registry + module-initializer registration.
+        result.Results[0].GeneratedSources.Should().HaveCount(3);
     }
 
     [TestMethod]
@@ -2125,7 +2127,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void WiringGenerator_EmitsModuleInitializer_RegisteringAssembly_AndCompilesAgainstHook()
+    public void Generator_EmitsModuleInitializer_RegisteringAssemblyWithAttributes_AndCompilesAgainstHook()
     {
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2133,33 +2135,46 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             namespace Sample
             {
                 [TestClass]
+                [TestCategory("Smoke")]
                 public class MyTests
                 {
                     [TestMethod]
                     public void Test1() { }
+
+                    public void NotATest() { }
                 }
             }
             """;
 
-        // The AOT generator package shares MSTest.SourceGeneration's proven runtime-wiring
-        // generator so that referencing ONLY this package makes a test assembly discoverable and
-        // runnable today (via ReflectionMetadataHook.Register), in addition to emitting the
-        // reflection-free registry the future 0%-reflection path will consume.
-        var wiringGenerator = new Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators.ReflectionMetadataGenerator();
-        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, RuntimeHookStub, userCode);
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(wiringGenerator);
+        // The AOT generator is self-contained: it emits a single [ModuleInitializer] that registers
+        // the assembly with the adapter (so referencing only this package makes tests runnable),
+        // and the registration also publishes pre-materialized type-level attributes so the adapter
+        // serves them without runtime reflection.
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MSTestReflectionMetadataGenerator());
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
 
         GeneratorRunResult result = driver.GetRunResult().Results[0];
-        result.Diagnostics.Should().BeEmpty();
 
-        string wiring = result.GeneratedSources
-            .Single(s => s.HintName.EndsWith(".MSTestReflectionMetadata.g.cs", System.StringComparison.Ordinal))
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
             .SourceText.ToString();
 
-        wiring.Should().Contain("[ModuleInitializer]");
-        wiring.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]");
-        wiring.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods);");
+        registration.Should().Contain("[ModuleInitializer]");
+        registration.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes);");
+
+        // Type-level attributes are materialized into the registration (reflection-free), and only
+        // [TestMethod]-annotated methods are registered for the assembly.
+        registration.Should().Contain("[typeof(global::Sample.MyTests)] = new Attribute[] {");
+        registration.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"Smoke\")");
+        registration.Should().Contain("\"Test1\"");
+        registration.Should().NotContain("\"NotATest\"");
+
+        // The generator run itself should produce no diagnostics. This guards against future
+        // generator changes that emit warnings/errors going unnoticed because the emitted code
+        // still happens to compile.
+        result.Diagnostics.Should().BeEmpty();
 
         IEnumerable<Diagnostic> errors = outputCompilation
             .GetDiagnostics()
@@ -2191,7 +2206,10 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
     private static CSharpCompilation CreateCompilation(params string[] sources)
     {
-        IEnumerable<SyntaxTree> trees = sources.Select(s => CSharpSyntaxTree.ParseText(s));
+        // Always include the adapter hook stub so the emitted [ModuleInitializer] registration
+        // (which calls ReflectionMetadataHook.Register) compiles in the Roslyn test compilation
+        // without referencing MSTestAdapter.PlatformServices.
+        IEnumerable<SyntaxTree> trees = sources.Append(RuntimeHookStub).Select(s => CSharpSyntaxTree.ParseText(s));
         MetadataReference[] references = new[]
         {
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
