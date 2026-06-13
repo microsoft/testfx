@@ -678,10 +678,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      Не удается найти указанный элемент ({0}). Возможно, требуется снова создать закрытый метод доступа
+      либо элемент является закрытым и определенным на основе базового класса. Если справедливо последнее (true), то
+      необходимо передать тип, определяющий элемент, в конструктор для PrivateObject.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -691,10 +691,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      Не удается найти конструктор с указанной подписью. Возможно, требуется снова создать закрытый метод доступа
+      либо элемент является закрытым и определенным на основе базового класса. Если справедливо последнее (true), то
+      необходимо передать тип, определяющий элемент, в конструктор для PrivateObject.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -730,7 +730,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="Common_NullInMessages">
         <source>(null)</source>
-        <target state="new">(null)</target>
+        <target state="translated">(null)</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="Common_ObjectString">
@@ -770,7 +770,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
-        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
+        <target state="translated">Значение, возвращаемое свойством или методом {0}, не должно быть равно null.</target>
         <note>{0} is the dynamic data property or method name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
