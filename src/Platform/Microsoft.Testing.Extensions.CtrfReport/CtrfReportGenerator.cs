@@ -4,11 +4,8 @@
 using Microsoft.Testing.Extensions.CtrfReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -17,28 +14,8 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
-internal sealed class CtrfReportGenerator :
-    IDataConsumer,
-    ITestSessionLifetimeHandler,
-    IDataProducer,
-    IOutputDeviceDataProducer
+internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenerator, CapturedTestResult>
 {
-    private readonly IConfiguration _configuration;
-    private readonly ICommandLineOptions _commandLineOptions;
-    private readonly IFileSystem _fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    private readonly IMessageBus _messageBus;
-    private readonly IClock _clock;
-    private readonly IEnvironment _environment;
-    private readonly IOutputDevice _outputDevice;
-    private readonly ITestFramework _testFramework;
-    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
-    private readonly ILogger<CtrfReportGenerator> _logger;
-    private readonly List<CapturedTestResult> _tests = [];
-    private readonly bool _isEnabled;
-
-    private DateTimeOffset? _testStartTime;
-
     public CtrfReportGenerator(
         IConfiguration configuration,
         ICommandLineOptions commandLineOptions,
@@ -51,83 +28,47 @@ internal sealed class CtrfReportGenerator :
         ITestFramework testFramework,
         ITestApplicationProcessExitCode testApplicationProcessExitCode,
         ILogger<CtrfReportGenerator> logger)
+        : base(
+            configuration,
+            commandLineOptions,
+            fileSystem,
+            testApplicationModuleInfo,
+            messageBus,
+            clock,
+            environment,
+            outputDevice,
+            testFramework,
+            testApplicationProcessExitCode,
+            logger,
+            CtrfReportGeneratorCommandLine.CtrfReportOptionName)
     {
-        _configuration = configuration;
-        _commandLineOptions = commandLineOptions;
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
-        _messageBus = messageBus;
-        _clock = clock;
-        _environment = environment;
-        _outputDevice = outputDevice;
-        _testFramework = testFramework;
-        _testApplicationProcessExitCode = testApplicationProcessExitCode;
-        _logger = logger;
-        _isEnabled = commandLineOptions.IsOptionSet(CtrfReportGeneratorCommandLine.CtrfReportOptionName);
     }
 
-    public Type[] DataTypesConsumed { get; } =
-    [
-        typeof(TestNodeUpdateMessage),
-    ];
-
-    public Type[] DataTypesProduced { get; } = [typeof(SessionFileArtifact)];
+    /// <inheritdoc />
+    public override string Uid => nameof(CtrfReportGenerator);
 
     /// <inheritdoc />
-    public string Uid => nameof(CtrfReportGenerator);
+    public override string DisplayName { get; } = ExtensionResources.CtrfReportGeneratorDisplayName;
 
     /// <inheritdoc />
-    public string Version => ExtensionVersion.DefaultSemVer;
+    public override string Description { get; } = ExtensionResources.CtrfReportGeneratorDescription;
 
-    /// <inheritdoc />
-    public string DisplayName { get; } = ExtensionResources.CtrfReportGeneratorDisplayName;
+    protected override string ArtifactDisplayName => ExtensionResources.CtrfReportArtifactDisplayName;
 
-    /// <inheritdoc />
-    public string Description { get; } = ExtensionResources.CtrfReportGeneratorDescription;
+    protected override string ArtifactDescription => ExtensionResources.CtrfReportArtifactDescription;
 
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
+    protected override string GetGenerationLogMessage(int testResultCount)
+        => $"Generating CTRF report for {testResultCount} test result(s).";
 
-    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    protected override CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
+        => TestResultCapture.TryCapture(update.TestNode);
+
+    protected override Task<(string FileName, string? Warning)> GenerateReportAsync(
+        CapturedTestResult[] tests,
+        DateTimeOffset testStartTime,
+        int exitCode,
+        CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (value is TestNodeUpdateMessage update)
-        {
-            // Project to a capped DTO immediately so we don't retain the original
-            // TestNode (and its potentially huge stdout/stderr/stack trace strings)
-            // for the whole session. We capture every TestNode update as-is here; the
-            // engine later collapses captures that share the same UID into a single
-            // CTRF test entry (earlier captures become `retryAttempts[]`, marking the
-            // test as `flaky` when an earlier attempt failed). See
-            // CtrfReportEngine.CollapseAttempts for the deduplication logic.
-            CapturedTestResult? captured = TestResultCapture.TryCapture(update.TestNode);
-            if (captured is not null)
-            {
-                _tests.Add(captured);
-            }
-        }
-
-        return Task.CompletedTask;
-    }
-
-    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
-    {
-        testSessionContext.CancellationToken.ThrowIfCancellationRequested();
-        _testStartTime = _clock.UtcNow;
-        return Task.CompletedTask;
-    }
-
-    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
-    {
-        CancellationToken cancellationToken = testSessionContext.CancellationToken;
-        cancellationToken.ThrowIfCancellationRequested();
-
-        ApplicationStateGuard.Ensure(_testStartTime is not null);
-
-        await _logger.LogTraceAsync($"Generating CTRF report for {_tests.Count} test result(s).").ConfigureAwait(false);
-
-        int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
         var engine = new CtrfReportEngine(
             _fileSystem,
             _testApplicationModuleInfo,
@@ -136,23 +77,9 @@ internal sealed class CtrfReportGenerator :
             _configuration,
             _clock,
             _testFramework,
-            _testStartTime.Value,
+            testStartTime,
             exitCode,
             cancellationToken);
-
-        (string reportFileName, string? warning) = await engine.GenerateReportAsync([.. _tests]).ConfigureAwait(false);
-
-        if (warning is not null)
-        {
-            await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(warning), cancellationToken).ConfigureAwait(false);
-        }
-
-        await _messageBus.PublishAsync(
-            this,
-            new SessionFileArtifact(
-                testSessionContext.SessionUid,
-                new FileInfo(reportFileName),
-                ExtensionResources.CtrfReportArtifactDisplayName,
-                ExtensionResources.CtrfReportArtifactDescription)).ConfigureAwait(false);
+        return engine.GenerateReportAsync(tests);
     }
 }
