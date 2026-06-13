@@ -16,6 +16,8 @@ public class DataTestMethodAttribute : TestMethodAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="DataTestMethodAttribute"/> class.
     /// </summary>
+    /// <param name="callerFilePath">The source file path supplied by the compiler for the attribute declaration.</param>
+    /// <param name="callerLineNumber">The source line number supplied by the compiler for the attribute declaration.</param>
     public DataTestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
         : base(callerFilePath, callerLineNumber)
     {

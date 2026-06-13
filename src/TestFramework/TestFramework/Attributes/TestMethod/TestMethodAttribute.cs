@@ -36,6 +36,8 @@ public class TestMethodAttribute : Attribute
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodAttribute"/> class.
     /// </summary>
+    /// <param name="callerFilePath">The source file path supplied by the compiler for the attribute declaration.</param>
+    /// <param name="callerLineNumber">The source line number supplied by the compiler for the attribute declaration.</param>
     public TestMethodAttribute([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
     {
         DeclaringFilePath = callerFilePath;
