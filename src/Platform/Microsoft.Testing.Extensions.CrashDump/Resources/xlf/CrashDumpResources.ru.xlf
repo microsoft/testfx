@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</target>
+        <target state="translated">[только net6.0+] Создавать файлы аварийного дампа при неожиданном сбое процесса выполнения теста</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes</target>
+        <target state="translated">[только net6.0+] Создавать файл дампа в случае сбоя тестового процесса</target>
         <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
@@ -108,7 +108,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
-        <target state="new">'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</target>
+        <target state="translated">"--crashdump-type" ожидает в качестве аргумента один тип дампа (например, "--crashdump-type Heap")</target>
         <note>Do not localize option name {Locked="--crashdump-type"} or example command {Locked="--crashdump-type Heap"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
