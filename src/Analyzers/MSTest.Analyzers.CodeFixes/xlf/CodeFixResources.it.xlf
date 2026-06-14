@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="AddIgnoreJustificationFix">
         <source>Add a placeholder justification to '[Ignore]'</source>
-        <target state="new">Add a placeholder justification to '[Ignore]'</target>
+        <target state="translated">Aggiungi una giustificazione segnaposto a '[Ignore]'</target>
         <note>{Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="AddTestClassFix">
@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
-        <target state="new">Change method accessibility to 'private'</target>
+        <target state="translated">Modifica l'accessibilità del metodo in 'private'</target>
         <note>{Locked="private"}</note>
       </trans-unit>
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
-        <target state="new">Fix actual/expected arguments order</target>
+        <target state="translated">Correggi l'ordine degli argomenti actual/expected</target>
         <note>{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
@@ -119,7 +119,7 @@
       </trans-unit>
       <trans-unit id="ReplaceWithDisposeFix">
         <source>Replace TestCleanup with Dispose method</source>
-        <target state="new">Replace TestCleanup with Dispose method</target>
+        <target state="translated">Sostituisci TestCleanup con il metodo Dispose</target>
         <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
@@ -164,7 +164,7 @@
       </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
         <source>Use async assertion</source>
-        <target state="new">Use async assertion</target>
+        <target state="translated">Usare un'asserzione async</target>
         <note>{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">

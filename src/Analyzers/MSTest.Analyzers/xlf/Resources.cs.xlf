@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should either not take any parameter, or take a single parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
+– Nesmí být deklarované pro obecnou class.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr, nebo musí přijímat jediný parametr typu TestContext.
+– Návratový typ musí být void, Task nebo ValueTask.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být class.
+– class by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– class by neměla být static.
+– class by měla být označena atributem [TestClass] (nebo odvozeným atributem).
+– class by neměla být obecná.</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[AssemblyCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -64,22 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
+– Nesmí být deklarované pro obecnou class.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Musí mít jeden parametr typu TestContext.
+– Návratový typ musí být void, Task nebo ValueTask.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být class.
+– class by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– class by neměla být static.
+– class by měla být označena atributem [TestClass] (nebo odvozeným atributem).
+– class by neměla být obecná.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[DiscoverInternals]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -104,7 +104,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
         <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
+        <target state="translated">Assert.AreEqual, Assert.AreNotEqual, Assert.AreSame a Assert.AreNotSame očekává, že se jako první argument předá expected hodnota a jako druhý argument actual hodnota.</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
@@ -206,24 +206,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should either not take any parameter, or take a single parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
+– Nesmí být deklarované pro obecnou class bez nastavení režimu InheritanceBehavior.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr, nebo musí přijímat jediný parametr typu TestContext.
+– Návratový typ musí být void, Task nebo ValueTask.
+– V případě class abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+– V případě class sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být class.
+– class by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– class by neměla být static.
+– Pokud je class sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).
+– class by neměla být obecná.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -255,24 +255,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
+– Nesmí být deklarované pro obecnou class bez nastavení režimu InheritanceBehavior.
+– Musí být public.
+– Musí být static.
+– Nesmí být async void.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Musí mít jeden parametr typu TestContext.
+– Návratový typ musí být void, Task nebo ValueTask.
+– V případě class abstract by měl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
+– V případě class sealed by neměl být zadán parametr atributu InheritanceBehavior.BeforeEachDerivedClass.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být class.
+– class by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– class by neměla být static.
+– Pokud je class sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).
+– class by neměla být obecná.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -308,7 +308,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
         <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
-        <target state="new">DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</target>
+        <target state="translated">Počet argumentů DataRow by měl odpovídat počtu parametrů metody (argumenty konstruktoru: {0}, parametry metody: {1})</target>
         <note>{0} is the number of constructor arguments. {1} is the number of method parameters. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
@@ -378,7 +378,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="new">Member '{0}' already exists in the base class</target>
+        <target state="translated">Člen {0} už v základní (kořenové) class existuje.</target>
         <note>{0} is the member name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
@@ -519,22 +519,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
+– Nesmí být deklarované pro obecnou class.
+– Musí být „public“.
+– Musí být „static“.
+– Nesmí být „async void“.
+– Nesmí být speciální metodou („finalizer“, „operator“...).
+– Nesmí být obecné.
+– Musí mít jeden parametr typu TestContext.
+– Návratový typ musí být „void“, „Task“ nebo „ValueTask“.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být class.
+– class by měla být „public“.
+– class by neměla být „static“.
+– class by měla být označena atributem [TestClass] (nebo odvozeným atributem).
+– class by neměla být obecná.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -549,7 +549,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
+        <target state="translated">Atribut „[Ignore]“ použitý u testovací metody nebo testovací class by měl obsahovat neprázdnou zprávu vysvětlující, proč jsou test nebo class ignorovány. Zpráva o odůvodnění usnadňuje třídění přeskočených testů, pomáhá revidujícím porozumět záměru a zabránit tomu, aby se testy navždy bezobslužně zakázaly.</target>
         <note>{Locked="[Ignore]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
@@ -684,7 +684,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
-        <target state="new">It's considered a good practice to have only test classes marked public in a test project.</target>
+        <target state="translated">Osvědčeným postupem je označit jako public v testovacím projektu jen testovací třídy.</target>
         <note>{Locked="public"}</note>
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassMessageFormat">
@@ -709,7 +709,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="new">Test class '{0}' should be valid</target>
+        <target state="translated">Testovací class {0} by měla být platná.</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -719,12 +719,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <target state="translated">Odvozená class TestMethodAttribute {0} by měla do svého konstruktoru přidat parametry CallerFilePath a CallerLineNumber</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <target state="translated">Odvozená class TestMethodAttribute by měla šířit informace o zdroji</target>
         <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
@@ -775,17 +775,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">Testovací class by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">Testovací class {0} by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialize] a/nebo [AssemblyCleanup].</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">Testovací class by měla mít testovací metodu</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -804,21 +804,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
+– Musí být public.
+– Nesmí být abstract.
+– Nesmí být async void.
+– Nesmí být static.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr.
+– Návratový typ musí být void, Task nebo ValueTask.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být class.
+– class by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– class by neměla být static.
+– Pokud je class sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -863,21 +863,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
+– Musí být public.
+– Nesmí být abstract.
+– Nesmí být async void.
+– Nesmí být static.
+– Nesmí být speciální metodou (finalizační metoda, operátor...).
+– Nesmí být obecné.
+– Nesmí přijímat žádný parametr.
+– Návratový typ musí být void, Task nebo ValueTask.
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Typ deklarující tyto metody by měl také respektovat následující pravidla: 
+– Typ by měl být class.
+– class by měla být public nebo internal (pokud testovací projekt používá atribut [DiscoverInternals]).
+– class by neměla být static.
+– Pokud je class sealed, měla by být označena atributem [TestClass] (nebo odvozeným atributem).</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -916,7 +916,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
         <source>Test methods should not be ignored (marked with '[Ignore]').</source>
-        <target state="new">Test methods should not be ignored (marked with '[Ignore]').</target>
+        <target state="translated">Testovací metody by se neměly ignorovat (označené jako „[Ignore]“).</target>
         <note>{Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
@@ -996,12 +996,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">[DeploymentItem] se dá zadat jenom pro testovací class nebo testovací metodu.</target>
         <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">[DeploymentItem] se dá zadat jenom pro testovací class nebo testovací metodu.</target>
         <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
@@ -1031,12 +1031,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
+        <target state="translated">Atribut, který je odvozen od RetryBaseAttribute, lze zadat pouze v testovací metodě nebo testovací class</target>
         <note>{Locked="RetryBaseAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="new">Use retry attribute on test method or test class</target>
+        <target state="translated">Použití atributu retry u testovací metody nebo testovací class</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
@@ -1051,7 +1051,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">Některé vlastnosti TestContext jsou k dispozici pouze během provádění testu a nelze k nim přistupovat v metodách inicializace sestavení, inicializace class, vyčištění class nebo vyčištění sestavení.</target>
         <note>{Locked="TestContext"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
@@ -1151,12 +1151,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">Testovací class {0} nemá platný konstruktor. Platné konstruktory jsou public a buď bez parametrů, nebo s jedním parametrem typu TestContext.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">Testovací class musí mít public konstruktor, který je buď bez parametrů, nebo přijímá jeden parametr typu TestContext. To umožňuje testovací architektuře správně vytvořit instanci testovací class.</target>
         <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
     </body>

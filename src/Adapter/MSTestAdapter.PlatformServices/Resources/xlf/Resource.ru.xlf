@@ -400,7 +400,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
-        <target state="new">UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</target>
+        <target state="translated">UTA031: в классе {0} отсутствует допустимое свойство TestContext. Свойство TestContext должно относиться к типу TestContext, быть non-static и public. Например: public TestContext TestContext.</target>
         <note>{0} is the test class name. {Locked="UTA031"}{Locked="TestContext"}{Locked="non-static"}{Locked="public"}{Locked="public TestContext TestContext"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
