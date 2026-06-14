@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
@@ -295,6 +295,51 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
         <source>Use 'Assert' instead of 'CollectionAssert'</source>
         <target state="translated">Verwenden Sie „Assert“ anstelle von „CollectionAssert“</target>
         <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidDescription">
+        <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
+        <target state="new">The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</target>
+        <note>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotFound">
+        <source>'[MemberCondition]' member '{0}.{1}' cannot be found</source>
+        <target state="new">'[MemberCondition]' member '{0}.{1}' cannot be found</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotPublic">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</source>
+        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotStatic">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</source>
+        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongKind">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</source>
+        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</source>
+        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MethodHasParameters">
+        <source>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</source>
+        <target state="new">'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</target>
+        <note>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable">
+        <source>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</source>
+        <target state="new">'[MemberCondition]' referenced property '{0}.{1}' must have a getter</target>
+        <note>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidTitle">
+        <source>'[MemberCondition]' arguments should be valid</source>
+        <target state="new">'[MemberCondition]' arguments should be valid</target>
+        <note>{Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
         <source>DataRow entry should have the following layout to be valid:
