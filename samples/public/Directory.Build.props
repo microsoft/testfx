@@ -5,6 +5,12 @@
     <CodeCoverageVersion>18.5.2</CodeCoverageVersion>
     <MSTestVersion>4.2.2</MSTestVersion>
     <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
+    <!--
+      MSTest.Sdk 4.2.3 defaults MSTestEngineVersion to 2.0.0-alpha.26264.3, which is not yet mirrored to the
+      dotnet-public NuGet feed used by these samples. Override it to the highest version available in
+      dotnet-public until the mirror catches up.
+    -->
+    <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
     <PlaywrightVersion>1.58.0</PlaywrightVersion>
     <TestingPlatformVersion>2.2.2</TestingPlatformVersion>
     <VSTestVersion>18.3.0</VSTestVersion>
