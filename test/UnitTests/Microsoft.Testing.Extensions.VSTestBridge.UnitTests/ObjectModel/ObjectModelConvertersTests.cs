@@ -128,8 +128,8 @@ public sealed class ObjectModelConvertersTests
     public void ToTestNode_WhenTestCaseHasManagedTypeAndManagedMethod_TestNodePropertiesContainThem()
     {
         var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
-        var managedTypeProperty = TestProperty.Register("TestCase.ManagedType", "TestCase.ManagedType", typeof(string), typeof(TestCase));
-        var managedMethodProperty = TestProperty.Register("TestCase.ManagedMethod", "TestCase.ManagedMethod", typeof(string), typeof(TestCase));
+        var managedTypeProperty = TestProperty.Register("TestCase.ManagedType", "ManagedType", typeof(string), typeof(TestCase));
+        var managedMethodProperty = TestProperty.Register("TestCase.ManagedMethod", "ManagedMethod", typeof(string), typeof(TestCase));
         testCase.SetPropertyValue<string>(managedTypeProperty, "MyNamespace.MyClass");
         testCase.SetPropertyValue<string>(managedMethodProperty, "MyMethod(System.Int32)");
 

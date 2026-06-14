@@ -24,11 +24,13 @@ internal static class ObjectModelConverters
     // VSTest TestCase property ids (set by adapters that support ECMA-335 managed names, e.g. MSTest).
     // These are intentionally the VSTest property ids (no "vstest." prefix), which differ from the wire
     // property keys we emit on the TestNode (see VSTestTestNodeProperties.ManagedType/ManagedMethodPropertyName).
+    // Owner/label match the canonical registration used by MSTest (TestCaseExtensions) so that if the
+    // adapter already registered these ids first, TestProperty.Register returns the same cached instance.
     private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-        "TestCase.ManagedType", "TestCase.ManagedType", typeof(string), typeof(TestNode));
+        "TestCase.ManagedType", "ManagedType", typeof(string), typeof(TestCase));
 
     private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-        "TestCase.ManagedMethod", "TestCase.ManagedMethod", typeof(string), typeof(TestNode));
+        "TestCase.ManagedMethod", "ManagedMethod", typeof(string), typeof(TestCase));
 
     private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
