@@ -78,13 +78,33 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
             return;
         }
 
-        TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
+        // Collect all required properties in a single zero-allocation GetStructEnumerator() pass,
+        // replacing 3 × SingleOrDefault<T>() linked-list walks with 1.
+        TestNodeStateProperty? stateProperty = null;
+        TimingProperty? timingProperty = null;
+        TestFileLocationProperty? testFileLocationProperty = null;
+
+        PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TestNodeStateProperty s when stateProperty is null:
+                    stateProperty = s;
+                    break;
+                case TimingProperty t when timingProperty is null:
+                    timingProperty = t;
+                    break;
+                case TestFileLocationProperty f when testFileLocationProperty is null:
+                    testFileLocationProperty = f;
+                    break;
+            }
+        }
+
         string? duration = timingProperty is null ? null :
             ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
 
-        TestFileLocationProperty? testFileLocationProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
-
-        switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+        switch (stateProperty)
         {
             case ErrorTestNodeStateProperty errorState:
                 await HandleFailuresAsync(
