@@ -64,6 +64,8 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         // Single-pass collection: replaces 1 × OfType<FileArtifactProperty>() loop + 2 × SingleOrDefault<T>()
         // with one GetStructEnumerator() walk, saving 2 linked-list traversals + 1 LINQ allocation per failure.
+        // Preserve PropertyBag.SingleOrDefault's throw-on-duplicate invariant for the stdout/stderr
+        // properties so a malformed message still fails fast instead of silently dropping data.
         PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
@@ -87,9 +89,19 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                         comment: fileArtifact.Description ?? fileArtifact.DisplayName));
                     break;
                 case StandardOutputProperty so:
+                    if (stdout is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardOutputProperty)}'.");
+                    }
+
                     stdout = so;
                     break;
                 case StandardErrorProperty se:
+                    if (stderr is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardErrorProperty)}'.");
+                    }
+
                     stderr = se;
                     break;
             }
