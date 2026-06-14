@@ -3,6 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
+using MSTest.Analyzers.Shared;
 using MSTest.AotReflection.SourceGeneration.Model;
 
 namespace MSTest.AotReflection.SourceGeneration.Generators;

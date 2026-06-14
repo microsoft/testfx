@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
 
-using MSTest.AotReflection.SourceGeneration.Model;
+using MSTest.Analyzers.Shared;
 
 namespace MSTest.AotReflection.SourceGeneration.Diagnostics;
 

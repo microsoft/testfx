@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
+using MSTest.Analyzers.Shared;
 using MSTest.AotReflection.SourceGeneration.Diagnostics;
 using MSTest.AotReflection.SourceGeneration.Helpers;
 using MSTest.AotReflection.SourceGeneration.Model;
