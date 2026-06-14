@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="AreAllNotNullFailedSummary">
         <source>Expected all items in collection to be non-null.</source>
-        <target state="new">Expected all items in collection to be non-null.</target>
+        <target state="translated">Tous les éléments attendus de la collection doivent être non null.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreAllOfTypeFailedSummary">
@@ -165,7 +165,7 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchNull">
         <source>one side is null, the other is not.</source>
-        <target state="new">one side is null, the other is not.</target>
+        <target state="translated">un côté est null, l’autre ne l’est pas.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchTopology">
@@ -470,17 +470,17 @@
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
         <source>Dynamic data field '{0}' should be static.</source>
-        <target state="new">Dynamic data field '{0}' should be static.</target>
+        <target state="translated">Le champ de données dynamiques « {0} » doit être static.</target>
         <note>{0} is the dynamic data field name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</source>
-        <target state="new">Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</target>
+        <target state="translated">La méthode de données dynamiques « {0} » doit être static, non générique et ne peut pas avoir le paramètre « params ».</target>
         <note>{0} is the dynamic data method name. Do not localize C# keywords {Locked="static"}{Locked="params"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidPropertyLayout">
         <source>Dynamic data property '{0}' should be static and have a getter.</source>
-        <target state="new">Dynamic data property '{0}' should be static and have a getter.</target>
+        <target state="translated">La propriété de données dynamiques « {0} » doit être static et avoir un getter.</target>
         <note>{0} is the dynamic data property name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
@@ -678,10 +678,10 @@ Réel : {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      Le membre spécifié ({0}) est introuvable. Vous devrez peut-être régénérer votre accesseur private,
+      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est true, vous devez transmettre le type
+      qui définit le membre dans le constructeur de PrivateObject.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -691,10 +691,10 @@ Réel : {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      Le constructeur doté de la signature spécifiée est introuvable. Vous devrez peut-être régénérer votre accesseur private,
+      ou le membre est peut-être private et défini sur une classe de base. Si le dernier cas est true, vous devez transmettre le type
+      qui définit le membre dans le constructeur de PrivateObject.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -770,7 +770,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
-        <target state="new">Value returned by property or method {0} shouldn't be null.</target>
+        <target state="translated">La valeur retournée par la propriété ou la méthode {0} ne doit pas être null.</target>
         <note>{0} is the dynamic data property or method name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataDisplayName">
@@ -790,7 +790,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
         <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Assert.ReferenceEquals ne doit pas être utilisé pour les assertions. Utilisez Assert.AreSame &amp; overloads à la place.</target>
         <note>Do not localize assertion API names {Locked="Assert.ReferenceEquals"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertEquals">
@@ -805,7 +805,7 @@ Réel : {2}</target>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertEquals">
         <source>CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</source>
-        <target state="new">CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual &amp; overloads instead.</target>
+        <target state="translated">CollectionAssert.Equals ne doit pas être utilisé pour les assertions. Utilisez plutôt CollectionAssert.AreEqual &amp; overloads.</target>
         <note>Do not localize assertion API names {Locked="CollectionAssert.Equals"}{Locked="CollectionAssert.AreEqual"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseCollectionAssertReferenceEquals">

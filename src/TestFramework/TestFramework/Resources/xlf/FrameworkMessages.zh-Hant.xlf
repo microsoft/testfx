@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="AreAllNotNullFailedSummary">
         <source>Expected all items in collection to be non-null.</source>
-        <target state="new">Expected all items in collection to be non-null.</target>
+        <target state="translated">預期集合中的所有項目為非 null。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreAllOfTypeFailedSummary">
@@ -165,7 +165,7 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchNull">
         <source>one side is null, the other is not.</source>
-        <target state="new">one side is null, the other is not.</target>
+        <target state="translated">一邊是 null，另一邊不是。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchTopology">
@@ -470,17 +470,17 @@
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
         <source>Dynamic data field '{0}' should be static.</source>
-        <target state="new">Dynamic data field '{0}' should be static.</target>
+        <target state="translated">動態資料欄位 '{0}' 應該為 static 。</target>
         <note>{0} is the dynamic data field name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</source>
-        <target state="new">Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</target>
+        <target state="translated">動態資料方法 '{0}' 應該是 static 、非一般，而且不能有 'params' 參數。</target>
         <note>{0} is the dynamic data method name. Do not localize C# keywords {Locked="static"}{Locked="params"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidPropertyLayout">
         <source>Dynamic data property '{0}' should be static and have a getter.</source>
-        <target state="new">Dynamic data property '{0}' should be static and have a getter.</target>
+        <target state="translated">動態資料屬性 '{0}' 應為 static 且具有 getter。</target>
         <note>{0} is the dynamic data property name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
@@ -549,7 +549,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="new">Expected condition to be false.</target>
+        <target state="translated">預期條件為 false。</target>
         <note>Do not localize the C# keyword {Locked="false"}.</note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -629,7 +629,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">預期值不可為 null。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
@@ -654,7 +654,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">預期值可為 null。</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
@@ -664,7 +664,7 @@ Actual: {2}</source>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="new">Expected condition to be true.</target>
+        <target state="translated">預期條件為 true。</target>
         <note>Do not localize the C# keyword {Locked="true"}.</note>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
@@ -678,10 +678,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      找不到所指定的成員 ({0})。您可能必須重新產生私用存取子，
+      或者該成員可能為私用，並且定義在基底類別上。如果是後者為 true，
+      您必須將定義該成員的類型傳遞至 PrivateObject 的建構函式。
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -691,10 +691,10 @@ Actual: {2}</source>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      找不到具有所指定簽章的建構函式。您可能必須重新產生私用存取子，
+      或者該成員可能為私用，並且定義在基底類別上。如果是後者為 true，
+      您必須將定義該成員的類型傳遞至 PrivateObject 的建構函式。
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
