@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="JUnitReportFileNameExtensionIsNotXml">
         <source>'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</source>
-        <target state="new">'--report-junit-filename' file name argument must end with '.xml' (e.g. --report-junit-filename myreport.xml)</target>
+        <target state="translated">'--report-junit-filename' 파일 이름 인수는 '.xml'로 끝나야 합니다. 예: --report-junit-filename myreport.xml</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example command {Locked="--report-junit-filename myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameMustNotBeEmpty">

@@ -58,7 +58,7 @@ Example: MyReport_{tfm}.xml</source>
       </trans-unit>
       <trans-unit id="JUnitReportGeneratorDisplayName">
         <source>JUnit XML report generator</source>
-        <target state="new">JUnit XML report generator</target>
+        <target state="translated">Генератор XML-отчетов JUnit</target>
         <note>Do not localize {Locked="JUnit"} or {Locked="XML"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportIsNotValidForDiscovery">
