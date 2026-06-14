@@ -24,21 +24,13 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     where TGenerator : ReportGeneratorBase<TGenerator, TCapturedTestResult>
     where TCapturedTestResult : class
 {
-#pragma warning disable SA1401 // Fields should be private - derived report generators create report-specific engines from these services.
-    protected readonly IConfiguration _configuration;
-    protected readonly ICommandLineOptions _commandLineOptions;
-    protected readonly IFileSystem _fileSystem;
-    protected readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    protected readonly IClock _clock;
-    protected readonly IEnvironment _environment;
-    protected readonly ITestFramework _testFramework;
-#pragma warning restore SA1401
-
+    // MTP guarantees that ConsumeAsync is called sequentially (never concurrently)
+    // for a given consumer instance, so List<T> is safe here without locking.
+    private readonly List<TCapturedTestResult> _tests = [];
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger<TGenerator> _logger;
-    private readonly List<TCapturedTestResult> _tests = [];
     private readonly bool _isEnabled;
 
     private DateTimeOffset? _testStartTime;
@@ -57,15 +49,15 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         ILogger<TGenerator> logger,
         string optionName)
     {
-        _configuration = configuration;
-        _commandLineOptions = commandLineOptions;
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
+        Configuration = configuration;
+        CommandLineOptions = commandLineOptions;
+        FileSystem = fileSystem;
+        TestApplicationModuleInfo = testApplicationModuleInfo;
         _messageBus = messageBus;
-        _clock = clock;
-        _environment = environment;
+        Clock = clock;
+        Environment = environment;
         _outputDevice = outputDevice;
-        _testFramework = testFramework;
+        TestFramework = testFramework;
         _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = logger;
         _isEnabled = commandLineOptions.IsOptionSet(optionName);
@@ -90,6 +82,20 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     /// <inheritdoc />
     public abstract string Description { get; }
 
+    protected IConfiguration Configuration { get; }
+
+    protected ICommandLineOptions CommandLineOptions { get; }
+
+    protected IFileSystem FileSystem { get; }
+
+    protected ITestApplicationModuleInfo TestApplicationModuleInfo { get; }
+
+    protected IClock Clock { get; }
+
+    protected IEnvironment Environment { get; }
+
+    protected ITestFramework TestFramework { get; }
+
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 
@@ -108,7 +114,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         testSessionContext.CancellationToken.ThrowIfCancellationRequested();
-        _testStartTime = _clock.UtcNow;
+        _testStartTime = Clock.UtcNow;
         return Task.CompletedTask;
     }
 
@@ -118,11 +124,12 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         cancellationToken.ThrowIfCancellationRequested();
 
         ApplicationStateGuard.Ensure(_testStartTime is not null);
+        DateTimeOffset testStartTime = _testStartTime.Value;
 
         await _logger.LogTraceAsync(GetGenerationLogMessage(_tests.Count)).ConfigureAwait(false);
 
         int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
-        (string reportFileName, string? warning) = await GenerateReportAsync([.. _tests], _testStartTime.Value, exitCode, cancellationToken).ConfigureAwait(false);
+        (string reportFileName, string? warning) = await GenerateReportAsync([.. _tests], testStartTime, exitCode, cancellationToken).ConfigureAwait(false);
 
         if (warning is not null)
         {
@@ -138,6 +145,11 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
                 ArtifactDescription)).ConfigureAwait(false);
     }
 
+    // Capture every update unconditionally — no UID-based deduplication.
+    // CTRF relies on this to detect flaky tests (earlier attempts become retryAttempts[];
+    // see CtrfReportEngine.CollapseAttempts). HTML/JUnit rely on it to surface all results
+    // for tests that emit multiple updates per UID (parameterized rows, in-process retries,
+    // framework quirks). Engine-side logic handles any deduplication.
     protected virtual void OnTestNodeUpdate(TestNodeUpdateMessage update)
     {
         TCapturedTestResult? captured = TryCapture(update);

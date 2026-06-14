@@ -70,13 +70,13 @@ internal sealed class HtmlReportGenerator : ReportGeneratorBase<HtmlReportGenera
         CancellationToken cancellationToken)
     {
         var engine = new HtmlReportEngine(
-            _fileSystem,
-            _testApplicationModuleInfo,
-            _environment,
-            _commandLineOptions,
-            _configuration,
-            _clock,
-            _testFramework,
+            FileSystem,
+            TestApplicationModuleInfo,
+            Environment,
+            CommandLineOptions,
+            Configuration,
+            Clock,
+            TestFramework,
             testStartTime,
             exitCode,
             cancellationToken);

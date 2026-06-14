@@ -21,6 +21,8 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
     // so it matches the capped RawUid / ParentRawUid keys used everywhere else in capture
     // (see TestResultCapture.GetParentChainEntry / TryCapture). The engine uses this to
     // reconstruct the testpath of every test case in the report.
+    // MTP guarantees ConsumeAsync (and therefore OnTestNodeUpdate) is called sequentially
+    // for a given consumer instance, so Dictionary<TKey, TValue> is safe here without locking.
     private readonly Dictionary<string, TestResultCapture.ParentChainEntry> _parentChain = [];
 
     public JUnitReportGenerator(
@@ -93,13 +95,13 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         CancellationToken cancellationToken)
     {
         var engine = new JUnitReportEngine(
-            _fileSystem,
-            _testApplicationModuleInfo,
-            _environment,
-            _commandLineOptions,
-            _configuration,
-            _clock,
-            _testFramework,
+            FileSystem,
+            TestApplicationModuleInfo,
+            Environment,
+            CommandLineOptions,
+            Configuration,
+            Clock,
+            TestFramework,
             testStartTime,
             exitCode,
             cancellationToken);

@@ -70,13 +70,13 @@ internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenera
         CancellationToken cancellationToken)
     {
         var engine = new CtrfReportEngine(
-            _fileSystem,
-            _testApplicationModuleInfo,
-            _environment,
-            _commandLineOptions,
-            _configuration,
-            _clock,
-            _testFramework,
+            FileSystem,
+            TestApplicationModuleInfo,
+            Environment,
+            CommandLineOptions,
+            Configuration,
+            Clock,
+            TestFramework,
             testStartTime,
             exitCode,
             cancellationToken);
