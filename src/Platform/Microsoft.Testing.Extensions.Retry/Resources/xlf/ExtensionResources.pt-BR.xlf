@@ -52,12 +52,12 @@ Movendo arquivos de ativo da última tentativa para o diretório de resultados p
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionDescription">
         <source>Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</source>
-        <target state="new">Add a delay between retries. The delay is expressed as a time value, e.g. 200, 500ms, 1s, 2.5m, 1h, 1d. Default unit is milliseconds.</target>
+        <target state="translated">Adicione um atraso entre as repetições. O atraso é expresso como um valor temporal, por exemplo, 200, 500ms, 1s, 2.5m, 1h, 1d. A unidade padrão é milissegundos.</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsDelayOptionInvalidArgument">
         <source>Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</source>
-        <target state="new">Option '--retry-failed-tests-delay' requires a valid time span value that is non-negative and no greater than 2147483647ms (~24.20:31:23.647) (e.g. 200, 500ms, 1s, 2.5m, 1h, 1d)</target>
+        <target state="translated">A opção '--retry-failed-tests-delay' requer um valor de tempo válido que não é negativo e não é maior que 2147483647ms (~24.20:31:23.647) (por exemplo, 200, 500ms, 1s, 2.5m, 1h, 1d)</target>
         <note>Do not localize option name {Locked="--retry-failed-tests-delay"} or time examples {Locked="2147483647ms"}{Locked="200"}{Locked="500ms"}{Locked="1s"}{Locked="2.5m"}{Locked="1h"}{Locked="1d"}.</note>
       </trans-unit>
       <trans-unit id="RetryFailedTestsExtensionDescription">

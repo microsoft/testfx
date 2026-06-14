@@ -31,9 +31,9 @@
         <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.html</source>
-        <target state="new">The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-Example: MyReport_{tfm}.html</target>
+        <target state="translated">生成された HTML レポートの名前。相対パスまたは絶対パスを含めることができます。相対パスはテスト結果ディレクトリに対して解決され、存在しないディレクトリは作成されます。
+次のプレースホルダーがサポートされています: {pname} (テスト アプリケーション名)、{pid} (プロセス ID)、{asm} (エントリ アセンブリ名)、{tfm} (ターゲット フレームワーク モニカー)、{arch} (プロセス アーキテクチャ)、{time} (タイムスタンプ)。
+例: MyReport_{tfm}.html</target>
         <note>Do not localize option name {Locked="--report-html-filename"}, format name {Locked="HTML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".html"}, or example file name {Locked="MyReport_{tfm}.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">

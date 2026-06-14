@@ -4,66 +4,66 @@
     <body>
       <trans-unit id="CtrfReportArtifactDescription">
         <source>CTRF (Common Test Report Format) JSON test report</source>
-        <target state="new">CTRF (Common Test Report Format) JSON test report</target>
+        <target state="translated">Informe de prueba JSON de CTRF (Common Test Report Format)</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, or {Locked="JSON"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportArtifactDisplayName">
         <source>CTRF Report</source>
-        <target state="new">CTRF Report</target>
+        <target state="translated">Informe de CTRF</target>
         <note>Do not localize {Locked="CTRF"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileExistsAndWillBeOverwritten">
         <source>Warning: CTRF report file '{0}' already exists and will be overwritten.</source>
-        <target state="new">Warning: CTRF report file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">Advertencia: el archivo de informe CTRF "{0}" ya existe y se sobrescribirá.</target>
         <note>{0} is the {Locked="CTRF"} report file path.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameExtensionIsNotJson">
         <source>'--report-ctrf-filename' file name argument must end with '.json' (e.g. --report-ctrf-filename myreport.ctrf.json)</source>
-        <target state="new">'--report-ctrf-filename' file name argument must end with '.json' (e.g. --report-ctrf-filename myreport.ctrf.json)</target>
+        <target state="translated">El argumento de nombre de archivo "--report-ctrf-filename" debe terminar con ".json" (por ejemplo, --report-ctrf-filename myreport.ctrf.json)</target>
         <note>Do not localize option name {Locked="--report-ctrf-filename"}, file extension {Locked=".json"}, or example command {Locked="--report-ctrf-filename myreport.ctrf.json"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameMustNotBeEmpty">
         <source>'--report-ctrf-filename' file name part must not be empty (e.g. --report-ctrf-filename myreport.ctrf.json)</source>
-        <target state="new">'--report-ctrf-filename' file name part must not be empty (e.g. --report-ctrf-filename myreport.ctrf.json)</target>
+        <target state="translated">La parte del nombre de archivo "--report-ctrf-filename" no debe estar vacía (por ejemplo, --report-ctrf-filename myreport.ctrf.json)</target>
         <note>Do not localize option name {Locked="--report-ctrf-filename"}, file extension {Locked=".json"}, or example command {Locked="--report-ctrf-filename myreport.ctrf.json"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameOptionDescription">
         <source>The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
 Example: MyReport_{tfm}.ctrf.json</source>
-        <target state="new">The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-Example: MyReport_{tfm}.ctrf.json</target>
+        <target state="translated">Nombre del informe CTRF generado. Puede incluir una ruta de acceso relativa o absoluta; las rutas de acceso relativas se resuelven respecto al directorio de resultados de pruebas y se crean los directorios que falten.
+Admite los siguientes marcadores de posición: {pname} (nombre de la aplicación de prueba), {pid} (identificador de proceso), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {time} (marca de tiempo).
+Ejemplo: MyReport_{tfm}.ctrf.json</target>
         <note>Do not localize option name {Locked="--report-ctrf-filename"}, format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="MyReport_{tfm}.ctrf.json"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</source>
-        <target state="new">'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</target>
+        <target state="translated">Las rutas de acceso relativas "--report-ctrf-filename" deben permanecer en el directorio de resultados de pruebas (por ejemplo, --report-ctrf-filename nested/myreport.ctrf.json)</target>
         <note>Do not localize option name {Locked="--report-ctrf-filename"}, file extension {Locked=".json"}, or example path {Locked="nested/myreport.ctrf.json"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRequiresCtrfReport">
         <source>'--report-ctrf-filename' requires '--report-ctrf' to be enabled</source>
-        <target state="new">'--report-ctrf-filename' requires '--report-ctrf' to be enabled</target>
+        <target state="translated">"--report-ctrf-filename" requiere que se habilite "--report-ctrf"</target>
         <note>Do not localize option names {Locked="--report-ctrf-filename"}{Locked="--report-ctrf"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDescription">
         <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</source>
-        <target state="new">Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</target>
+        <target state="translated">Generar un informe JSON de CTRF (Common Test Report Format) para la sesión de prueba actual (https://ctrf.io)</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDisplayName">
         <source>CTRF report generator</source>
-        <target state="new">CTRF report generator</target>
+        <target state="translated">Generador de informes CTRF</target>
         <note>Do not localize {Locked="CTRF"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportIsNotValidForDiscovery">
         <source>'--report-ctrf' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-ctrf' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">"--report-ctrf" no se puede habilitar cuando se usa "--list-tests"</target>
         <note>Do not localize option names {Locked="--report-ctrf"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportOptionDescription">
         <source>Enable generating a CTRF (Common Test Report Format) JSON report</source>
-        <target state="new">Enable generating a CTRF (Common Test Report Format) JSON report</target>
+        <target state="translated">Habilitación de la generación de un informe JSON de CTRF (Common Test Report Format)</target>
         <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
     </body>

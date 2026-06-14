@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="CommandLineInvalidOptionName">
         <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="new">Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</target>
+        <target state="translated">Nieprawidłowa nazwa opcji „{0}”, może zawierać tylko literę i znak „-” (np. my-option)</target>
         <note>{0} is the invalid option name. {Locked="-"}{Locked="my-option"}</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
@@ -376,7 +376,7 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
         <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</source>
-        <target state="new">The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</target>
+        <target state="translated">Opcja „--{0}” jest odczytywana podczas ładowania początkowego platformy (przed załadowaniem pliku testconfig.json) i dlatego musi być przekazywana w wierszu polecenia, a nie zadeklarowana w obszarze „commandLineOptions” w pliku testconfig.json.</target>
         <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
@@ -521,8 +521,8 @@ Pamiętaj, że to spowalnia wykonywanie testu.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</target>
+        <target state="translated">Włącz rejestrowanie diagnostyczne. Domyślny poziom dziennika to „Trace”.
+Plik zostanie zapisany w katalogu wyjściowym o nazwie log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -544,7 +544,7 @@ W katalogu domyślnym „TestResults” zostanie wygenerowany plik, jeśli nie z
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="new">Prefix for the log file name that will replace '[log]_.'</target>
+        <target state="translated">Prefiks nazwy pliku dziennika, który zastąpi element „[log]_.”</target>
         <note>{Locked="[log]_."}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
@@ -573,7 +573,7 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
-        <target state="new">dotnet test pipe.</target>
+        <target state="translated">potok dotnet test.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -611,8 +611,8 @@ Opcjonalnie akceptuje „text” (domyślne dane wyjściowe czytelne dla człowi
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
         <source>Do not report non successful exit value for specific exit codes
 (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="new">Do not report non successful exit value for specific exit codes
-(e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
+        <target state="translated">Nie zgłaszaj wartości zakończenia zakończonego niepowodzeniem dla określonych kodów zakończenia
+(np. „--ignore-exit-code 8;9” ignoruje kod zakończenia 8 i 9 i zwróci wartość 0 w tym przypadku)</target>
         <note>{Locked="--ignore-exit-code 8;9"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
@@ -892,13 +892,13 @@ When both --ansi and --no-ansi are provided, --ansi wins.</target>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">Szczegółowość danych wyjściowych podczas raportowania testów.
+Prawidłowe wartości to „Normal”, „Detailed”. Wartość domyślna to „Normal”.</target>
         <note>{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">Parametr --output oczekuje pojedynczego parametru o wartości „Normal” lub „Detailed”.</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
@@ -909,15 +909,15 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Określa, kiedy pokazać przechwycone dane wyjściowe błędu testu.
+Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyślna to „All” (lub „Failed” po wykryciu środowiska modelu LLM / agenta AI).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Określa, kiedy pokazać przechwycone standardowe dane wyjściowe testu.
+Prawidłowe wartości to „All”, „Failed”, „None”. Wartość domyślna to „All” (lub „Failed” po wykryciu środowiska modelu LLM / agenta AI).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
@@ -1119,7 +1119,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInWasiErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</source>
-        <target state="new">Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</target>
+        <target state="translated">Oczekiwanie na dołączenie debugera (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) nie jest obsługiwane w środowisku wasi.</target>
         <note>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">

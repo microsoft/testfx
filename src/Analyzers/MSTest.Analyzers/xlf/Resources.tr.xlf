@@ -19,22 +19,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should either not take any parameter, or take a single parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[AssemblyCleanup]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
+-genel bir class tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir metot (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+-herhangi bir parametre almamalı veya 'TestContext' türünde tek bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir class olmalıdır
+-class 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-class 'static' olmamalıdır
+-class '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
+-class genel olmamalıdır.</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[AssemblyCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -64,22 +64,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[AssemblyInitialize]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni izlemesi gerekir:
+-genel bir class tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- 'TestContext' türünden bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir class olmalıdır
+-class 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-class 'static' olmamalıdır
+-class '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
+-class genel olmamalıdır.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[DiscoverInternals]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -94,7 +94,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
-        <target state="new">Prefer adding an additional assertion that checks for null</target>
+        <target state="translated">null değerini denetlerken ek bir onaylama eklemeyi tercih et</target>
         <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
@@ -104,7 +104,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
         <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
+        <target state="translated">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' ve 'Assert.AreNotSame' ilk olarak expected değerin geçirilmesini ve actual değerin ikinci bağımsız değişken olarak geçirilmesini bekliyor.</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
@@ -134,7 +134,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
-        <target state="new">Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</target>
+        <target state="translated">Değer türlerini karşılaştırırken 'Assert.AreSame'/'Assert.AreNotSame' yerine 'Assert.AreEqual'/'Assert.AreNotEqual' kullanın. 'Assert.AreSame'/'Assert.AreNotSame' yöntemine bir değer türü geçirildiğinde kutulanır ve yeni bir nesne oluşturulur. 'Assert.AreSame'/'Assert.AreNotSame' karşılaştırmayı başvuruya göre yaptığından, kutulama olduğunda 'Assert.AreSame' başarısız olur ve 'Assert.AreNotSame' her zaman geçer.</target>
         <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
@@ -174,7 +174,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
-        <target state="new">Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</target>
+        <target state="translated">'async void' yöntemlerinin, yerel işlevlerin veya lambda ifadelerinin içinde onaylamayın. Bu bağlamda oluşturulan özel durumlar işlenmeyen özel durumlar olur. .NET Framework altında VSTest kullanıldığında bunlar sessizce yutulur. Microsoft.Testing.Platform veya modern .NET altında VSTest kullanıldığında işlem çöker.</target>
         <note>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
@@ -206,24 +206,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should either not take any parameter, or take a single parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">'[ClassCleanup]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gereklidir:
+-'InheritanceBehavior' modu ayarlanmadan genel bir class tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir metot (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+-herhangi bir parametre almamalı veya 'TestContext' türünde tek bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
+-class 'abstract' ise 'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir
+-'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi, class 'sealed' ise belirtilmemelidir
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir class olmalıdır
+-class 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-class 'static' olmamalıdır
+-class 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
+-class genel olmamalıdır.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -255,24 +255,24 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
--it can't be declared on a generic class without the 'InheritanceBehavior' mode is set
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should be specified if the class is 'abstract'
--'InheritanceBehavior.BeforeEachDerivedClass' attribute parameter should not be specified if the class is 'sealed'
+        <target state="translated">'[ClassInitialize]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gereklidir:
+-'InheritanceBehavior' modu ayarlanmadan genel bir class tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- 'TestContext' türünden bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
+-class 'abstract' ise 'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi belirtilmelidir.
+-'InheritanceBehavior.BeforeEachDerivedClass' öznitelik parametresi, class 'sealed' ise belirtilmemelidir
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir class olmalıdır
+-class 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-class 'static' olmamalıdır
+-class 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.
+-class genel olmamalıdır.</target>
         <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -363,12 +363,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
         <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
+        <target state="translated">TestContext'i static üyede depolama</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
         <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
+        <target state="translated">TestContext'i static üyede depolama</target>
         <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
@@ -378,7 +378,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="new">Member '{0}' already exists in the base class</target>
+        <target state="translated">'{0}' adlı üye zaten temel class mevcut</target>
         <note>{0} is the member name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
@@ -489,7 +489,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="new">When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</target>
+        <target state="translated">CancellationToken parametresini kabul eden aşırı yüklemeleri olan async yöntemleri çağırırken, işbirliğine dayalı iptal işlemini etkinleştirmek ve test zaman aşımlarını dikkate almak için TestContext.CancellationToken ile aşırı yüklemeyi kullanmayı tercih edin.</target>
         <note>{Locked="TestContext.CancellationToken"}{Locked="CancellationToken"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
@@ -499,7 +499,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
         <source>Flow TestContext.CancellationToken to async operations</source>
-        <target state="new">Flow TestContext.CancellationToken to async operations</target>
+        <target state="translated">TestContext.CancellationToken'ı async işlemler için akışa aktarın</target>
         <note>{Locked="TestContext.CancellationToken"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
@@ -519,22 +519,22 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">‘[GlobalTestInitialize]’ veya ‘[GlobalTestCleanup]’ ile işaretlenmiş yöntemlerin geçerli olabilmesi için şu düzeni izlemesi gerekir:
+-genel bir class tanımlanamaz
+-'public' olmalıdır
+-'static' olmalıdır
+-'async void' olmamalıdır
+-özel bir metot (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- 'TestContext' türünden bir parametre almalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class shouldn't be 'static'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir class olmalıdır
+-class ‘public’ olmalıdır
+-class 'static' olmamalıdır
+-class '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
+-class genel olmamalıdır.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -549,7 +549,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="new">An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</target>
+        <target state="translated">Bir test yöntemine veya test class uygulanan '[Ignore]' özniteliği, testin ya da class neden yoksayıldığını açıklayan boş olmayan bir ileti içermelidir. Bir gerekçe iletisi, atlanan testleri önceliklendirmeyi kolaylaştırır, gözden geçirenlerin amacı anlamasına yardımcı olur ve testlerin sessizce sonsuza kadar devre dışı bırakılmasını önler.</target>
         <note>{Locked="[Ignore]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
@@ -594,7 +594,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="new">Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</target>
+        <target state="translated">'Assert.{0}' içinde async bir çağrıyı engellemek yerine 'Assert.{1}' kullanın</target>
         <note>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
@@ -709,7 +709,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="new">Test class '{0}' should be valid</target>
+        <target state="translated">'{0}' test class geçerli olmalıdır</target>
         <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
@@ -719,12 +719,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="new">TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</target>
+        <target state="translated">TestMethodAttribute türetilmiş class '{0}', yapıcıya CallerFilePath ve CallerLineNumber parametrelerini eklemelidir</target>
         <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="new">TestMethodAttribute derived class should propagate source information</target>
+        <target state="translated">TestMethodAttribute türetilmiş class kaynak bilgilerini yaymalıdır</target>
         <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
@@ -776,17 +776,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">Test class en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır.</target>
         <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">'{0}' test class en az bir test yöntemine sahip olmalıdır veya '[AssemblyInitialize]' ve/veya '[AssemblyCleanup]' ile işaretlenen yöntemlere sahip 'static' olmalıdır</target>
         <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">Test class test yöntemine sahip olmalıdır</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
@@ -805,21 +805,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestCleanup]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[TestCleanup]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni takip etmesi gerekir:
+-'public' olmalıdır 
+- 'abstract' olmamalıdır
+-'async void' olmamalıdır
+-'static' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- herhangi bir parametre almamalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir class olmalıdır
+--class 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-class 'static' olmamalıdır
+-class 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -837,10 +837,10 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="new">'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
-- it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
-- it should not be 'static'
-- it should have a setter.</target>
+        <target state="translated">'TestContext' oluşturucuda atanan static olmayan bir özellik olmalıdır veya MSTest tarafından ayarlanmalıdır. MSTest tarafından ayarlanacaksa şu düzeni izlemelidir:
+- '[assembly: DiscoverInternals]' özniteliğinin ayarlanıp ayarlanmadığına bakılmaksızın 'public' olmalıdır.
+- 'static' olmamalıdır
+- bir ayarlayıcı içermelidir.</target>
         <note>{Locked="TestContext"}{Locked="MSTest"}{Locked="public"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
@@ -864,21 +864,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</source>
-        <target state="new">Methods marked with '[TestInitialize]' should follow the following layout to be valid:
--it should be 'public'
--it should not be 'abstract'
--it should not be 'async void'
--it should not be 'static'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should not take any parameter
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">'[TestInitialize]' ile işaretlenen yöntemlerin geçerli olması için aşağıdaki düzeni izlemesi gerekir:
+-'public' olmalıdır 
+- 'abstract' olmamalıdır
+-'async void' olmamalıdır
+-'static' olmamalıdır
+-özel bir yöntem (sonlandırıcı, işleç...) olmamalıdır.
+- genel olmamalıdır
+- herhangi bir parametre almamalıdır
+- dönüş türü 'void', 'Task' veya 'ValueTask' olmalı
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
--The class shouldn't be 'static'
--If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</target>
+Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
+-Tür bir class olmalıdır
+--class 'public' veya 'internal' olmalıdır (test projesi '[DiscoverInternals]' niteliğini kullanıyorsa)
+-class 'static' olmamalıdır
+-class 'sealed' ise '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir.</target>
         <note>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
@@ -948,7 +948,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <target state="translated">Asynchronous test düzeni metotları için 'Async' soneki gerekmez</target>
         <note>{Locked="Async"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
@@ -998,12 +998,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' yalnızca test class veya test yönteminde belirtilebilir</target>
         <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="new">'[DeploymentItem]' can be specified only on test class or test method</target>
+        <target state="translated">'[DeploymentItem]' yalnızca test class veya test yönteminde belirtilebilir</target>
         <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
@@ -1033,12 +1033,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="new">An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</target>
+        <target state="translated">'RetryBaseAttribute' özniteliğinden türetilen bir öznitelik yalnızca bir test yönteminde veya test class belirtilebilir</target>
         <note>{Locked="RetryBaseAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="new">Use retry attribute on test method or test class</target>
+        <target state="translated">Test yönteminde veya test class yeniden deneme özniteliğini kullan</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
@@ -1053,7 +1053,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
-        <target state="new">Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</target>
+        <target state="translated">Bazı TestContext özellikleri yalnızca test yürütmesi sırasında kullanılabilir ve derleme başlatma, class başlatma, class temizleme veya derleme temizleme yöntemlerinde erişilemez.</target>
         <note>{Locked="TestContext"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
@@ -1153,12 +1153,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="new">Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</target>
+        <target state="translated">‘{0}’ test class geçerli bir oluşturucusu yok Geçerli oluşturucular 'public' ve parametresiz veya 'TestContext' türünde tek bir parametre içeriyor.</target>
         <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="new">Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</target>
+        <target state="translated">Test class, parametresiz olan veya tek bir TestContext parametresini kabul eden bir public oluşturucuya sahip olmalıdır. Bu, test çerçevesinin test class örneğini doğru şekilde oluşturmasına olanak tanır.</target>
         <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
     </body>

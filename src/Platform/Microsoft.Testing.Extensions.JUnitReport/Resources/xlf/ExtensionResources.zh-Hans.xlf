@@ -36,9 +36,9 @@
         <source>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.xml</source>
-        <target state="new">The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-Example: MyReport_{tfm}.xml</target>
+        <target state="translated">生成的 JUnit XML 报表的名称。可以包含相对路径或绝对路径；相对路径针对测试结果目录进行解析，并创建缺少的目录。
+支持以下占位符: {pname} (测试应用程序名称)、{pid} (进程 ID)、{asm} (入口程序集名称)、{tfm} (目标框架名字对象)、{arch} (进程体系结果)、{time} (时间戳)。
+示例: MyReport_{tfm}.xml</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">

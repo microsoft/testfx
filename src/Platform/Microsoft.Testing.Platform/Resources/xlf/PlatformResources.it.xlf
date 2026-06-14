@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="CommandLineInvalidOptionName">
         <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="new">Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</target>
+        <target state="translated">Il nome dell'opzione '{0}' non è valido. Deve contenere solo lettere e '-' (ad esempio my-option)</target>
         <note>{0} is the invalid option name. {Locked="-"}{Locked="my-option"}</note>
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
@@ -376,7 +376,7 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
         <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</source>
-        <target state="new">The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</target>
+        <target state="translated">L'opzione '--{0}' viene letta durante il bootstrap della piattaforma (prima del caricamento del file testconfig.json) e deve quindi essere passata sulla riga di comando anziché dichiarata in 'commandLineOptions' in testconfig.json.</target>
         <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
@@ -521,8 +521,8 @@ Tenere presente ciò rallenta l'esecuzione del test.</target>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</target>
+        <target state="translated">Abilita la registrazione diagnostica. Il livello di registro per impostazione predefinita è ''Trace''.
+Il file verrà scritto nella directory di output con il nome log_[yyMMddHHmmssfff].diag</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -573,7 +573,7 @@ Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per 
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
-        <target state="new">dotnet test pipe.</target>
+        <target state="translated">pipe di dotnet test.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
@@ -898,7 +898,7 @@ I valori validi sono 'Normal', 'Detailed'. L'impostazione predefinita è 'Normal
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">l’--output prevede un singolo parametro con un valore 'Normal' o 'Detailed'.</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">

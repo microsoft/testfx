@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="AreAllNotNullFailedSummary">
         <source>Expected all items in collection to be non-null.</source>
-        <target state="new">Expected all items in collection to be non-null.</target>
+        <target state="translated">Espera-se que todos os itens da coleção não sejam null.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreAllOfTypeFailedSummary">
@@ -140,7 +140,7 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchIEquatableThrew">
         <source>IEquatable.Equals threw {0}: {1}.</source>
-        <target state="new">IEquatable.Equals threw {0}: {1}.</target>
+        <target state="translated">IEquatable.Equals lançou {0}: {1}.</target>
         <note>{0} is the exception type thrown by {Locked="IEquatable.Equals"}. {1} is the exception message.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchLength">
@@ -165,7 +165,7 @@
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchNull">
         <source>one side is null, the other is not.</source>
-        <target state="new">one side is null, the other is not.</target>
+        <target state="translated">um lado é null, o outro não.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreEquivalentMismatchTopology">
@@ -470,17 +470,17 @@
       </trans-unit>
       <trans-unit id="DynamicDataInvalidFieldLayout">
         <source>Dynamic data field '{0}' should be static.</source>
-        <target state="new">Dynamic data field '{0}' should be static.</target>
+        <target state="translated">O campo de dados dinâmicos '{0}' deve ser static.</target>
         <note>{0} is the dynamic data field name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</source>
-        <target state="new">Dynamic data method '{0}' should be static, non-generic, and cannot have 'params' parameter.</target>
+        <target state="translated">O método de dados dinâmicos '{0}' deve ser static, não genérico e não pode ter um parâmetro 'params'.</target>
         <note>{0} is the dynamic data method name. Do not localize C# keywords {Locked="static"}{Locked="params"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataInvalidPropertyLayout">
         <source>Dynamic data property '{0}' should be static and have a getter.</source>
-        <target state="new">Dynamic data property '{0}' should be static and have a getter.</target>
+        <target state="translated">A propriedade de dados dinâmicos "{0}" deve ser static e ter um getter.</target>
         <note>{0} is the dynamic data property name. Do not localize the C# keyword {Locked="static"}.</note>
       </trans-unit>
       <trans-unit id="DynamicDataSourceShouldExistAndBeValid">
@@ -549,7 +549,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="IsFalseFailedSummary">
         <source>Expected condition to be false.</source>
-        <target state="new">Expected condition to be false.</target>
+        <target state="translated">Condição esperada como false.</target>
         <note>Do not localize the C# keyword {Locked="false"}.</note>
       </trans-unit>
       <trans-unit id="IsGreaterThanFailedSummary">
@@ -629,7 +629,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="IsNotNullFailedSummary">
         <source>Expected value to not be null.</source>
-        <target state="new">Expected value to not be null.</target>
+        <target state="translated">O valor esperado não deve ser null.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="AreNotEqualFailedSummary">
@@ -654,7 +654,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="IsNullFailedSummary">
         <source>Expected value to be null.</source>
-        <target state="new">Expected value to be null.</target>
+        <target state="translated">O valor esperado deve ser null.</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="IsPositiveFailedSummary">
@@ -664,7 +664,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="IsTrueFailedSummary">
         <source>Expected condition to be true.</source>
-        <target state="new">Expected condition to be true.</target>
+        <target state="translated">Condição esperada como true.</target>
         <note>Do not localize the C# keyword {Locked="true"}.</note>
       </trans-unit>
       <trans-unit id="MatchesRegexFailedSummary">
@@ -678,10 +678,10 @@ Real: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The member specified ({0}) could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      O membro especificado ({0}) não pôde ser encontrado. Talvez você precise gerar novamente seu acessador particular
+      ou o membro pode ser particular e definido em uma classe base. Se o último caso for true, você deverá passar o tipo
+      que define o membro no construtor do PrivateObject.
     </target>
         <note>{0} is the member name. Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
@@ -691,16 +691,16 @@ Real: {2}</target>
       or the member may be private and defined on a base class. If the latter is true, you need to pass the type
       that defines the member into PrivateObject's constructor.
     </source>
-        <target state="new">
-      The constructor with the specified signature could not be found. You might need to regenerate your private accessor,
-      or the member may be private and defined on a base class. If the latter is true, you need to pass the type
-      that defines the member into PrivateObject's constructor.
+        <target state="translated">
+      O construtor com a assinatura especificada não pôde ser encontrado. Talvez você precise gerar novamente seu acessador particular
+      ou o membro pode ser particular e definido em uma classe base. Se o último caso for true, você deverá passar o tipo
+      que define o membro no construtor do PrivateObject.
     </target>
         <note>Do not localize the C# keyword {Locked="true"} or the type name {Locked="PrivateObject"}.</note>
       </trans-unit>
       <trans-unit id="NullParameterToAssert">
         <source>The parameter '{0}' is invalid. The value cannot be null.</source>
-        <target state="new">The parameter '{0}' is invalid. The value cannot be null.</target>
+        <target state="translated">O parâmetro '{0}' é inválido. O valor não pode ser null.</target>
         <note>{0} is the parameter name. Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="NumberOfElementsDiff">
@@ -730,7 +730,7 @@ Real: {2}</target>
       </trans-unit>
       <trans-unit id="Common_NullInMessages">
         <source>(null)</source>
-        <target state="new">(null)</target>
+        <target state="translated">(null)</target>
         <note>Do not localize the C# keyword {Locked="null"}.</note>
       </trans-unit>
       <trans-unit id="Common_ObjectString">

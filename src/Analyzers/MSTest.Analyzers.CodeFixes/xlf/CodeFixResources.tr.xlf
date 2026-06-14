@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
-        <target state="new">Change method accessibility to 'private'</target>
+        <target state="translated">Yöntem erişilebilirliğini ‘private’ olarak değiştir</target>
         <note>{Locked="private"}</note>
       </trans-unit>
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
-        <target state="new">Fix test class signature</target>
+        <target state="translated">Test class imzasını düzeltme</target>
         <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidFix">

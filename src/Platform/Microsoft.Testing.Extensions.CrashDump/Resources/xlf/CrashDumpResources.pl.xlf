@@ -96,14 +96,14 @@
         <source>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</source>
-        <target state="new">Specify the type of the dump.
-Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
-For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
+        <target state="translated">Określ typ zrzutu.
+Prawidłowe wartości to „Mini”, „Heap”, „Triage” i „Full”. Typ domyślny to „Full”.
+Aby uzyskać więcej informacji, odwiedź stronę https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</target>
+        <target state="translated">Typ „{0}” nie jest prawidłowym typem zrzutu. Prawidłowe opcje to „Mini”, „Heap”, „Triage” i „Full”</target>
         <note>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">

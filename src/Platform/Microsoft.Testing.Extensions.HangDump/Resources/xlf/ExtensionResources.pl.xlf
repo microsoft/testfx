@@ -78,8 +78,8 @@ Informacje o dysku:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Określ nazwę pliku zrzutu.
+Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej), {pid} (identyfikator procesu), {asm} (nazwa zestawu wejściowego), {tfm} (moniker platformy docelowej), {arch} (architektura procesu), {time} (sygnatura czasowa). Starszy token %p (identyfikator procesu) jest również obsługiwany na potrzeby zgodności z poprzednimi wersjami.</target>
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -102,15 +102,15 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated.
-The timeout value is specified in one of the following formats:
+        <target state="translated">Określ limit czasu, po którym zostanie wygenerowany zrzut.
+Wartość limitu czasu jest określana w jednym z następujących formatów:
     500ms, 500mil, 500millisecond, 500milliseconds,
     5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
     1.5h, 1.5hour, 1.5hours,
     1d, 1day, 1days.
-    A bare number (with no suffix) is interpreted as milliseconds.
-    Default is 30m.</target>
+    Liczba bez sufiksu jest interpretowana jako milisekunda.
+    Wartość domyślna to 30m.</target>
         <note>Do not localize option name {Locked="--hangdump-timeout"} or time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -137,9 +137,9 @@ The timeout value is specified in one of the following formats:
         <source>Specify the type of the dump.
 Valid values are {0}.
 Default type is 'Full'</source>
-        <target state="new">Specify the type of the dump.
-Valid values are {0}.
-Default type is 'Full'</target>
+        <target state="translated">Określ typ zrzutu.
+Prawidłowe wartości to: {0}.
+Domyślny typ to „Full”</target>
         <note>0 is the list of valid dump type values. Do not localize option name {Locked="--hangdump-type"} or default dump type {Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionInvalidType">

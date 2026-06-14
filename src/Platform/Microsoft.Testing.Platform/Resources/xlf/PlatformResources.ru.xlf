@@ -179,7 +179,7 @@
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
-        <target state="new">The same instance of 'CompositeExtensionFactory' is already registered</target>
+        <target state="translated">Такой же экземпляр "CompositeExtensionFactory" уже зарегистрирован</target>
         <note>{Locked="CompositeExtensionFactory"}</note>
       </trans-unit>
       <trans-unit id="ConfigurationFileNotFound">
@@ -356,7 +356,7 @@
       </trans-unit>
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
-        <target state="new">&lt;test application runner&gt;</target>
+        <target state="translated">&lt;test application runner&gt;</target>
         <note>{Locked="&lt;test application runner&gt;"}</note>
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
@@ -376,7 +376,7 @@
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionIsBootstrapOnlyErrorMessage">
         <source>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</source>
-        <target state="new">The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</target>
+        <target state="translated">Параметр "--{0}" считывается во время начальной загрузки платформы (до загрузки файла testconfig.json) и поэтому должен передаваться в командной строке, а не указываться в "commandLineOptions" в testconfig.json.</target>
         <note>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</note>
       </trans-unit>
       <trans-unit id="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage">
@@ -521,8 +521,8 @@ Note that this is slowing down the test execution.</source>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Trace'.
-The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</target>
+        <target state="translated">Включить ведение журнала диагностики. Уровень журнала по умолчанию — "Trace".
+Файл с именем log_[yyMMddHHmmssfff].diag будет записан в выходной каталог</target>
         <note>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
@@ -573,7 +573,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
-        <target state="new">dotnet test pipe.</target>
+        <target state="translated">dotnet test канал.</target>
         <note>{Locked="dotnet test"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
