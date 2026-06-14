@@ -138,8 +138,28 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
 
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
-            string fullyQualifiedName = GetFullyQualifiedName(update.TestNode);
-            TimeSpan duration = GetDuration(update.TestNode);
+
+            // Single-pass collection of TimingProperty and the FQN SerializableKeyValuePairStringProperty:
+            // replaces 1 × SingleOrDefault<TimingProperty>() + 1 × OfType<>().FirstOrDefault() with one
+            // GetStructEnumerator() walk, saving 1 linked-list traversal and 1 LINQ allocation per terminal result.
+            TimingProperty? timing = null;
+            string? fqnValue = null;
+            PropertyBag.PropertyBagEnumerator enumerator = update.TestNode.Properties.GetStructEnumerator();
+            while (enumerator.MoveNext())
+            {
+                switch (enumerator.Current)
+                {
+                    case TimingProperty t:
+                        timing = t;
+                        break;
+                    case SerializableKeyValuePairStringProperty kv when kv.Key == FullyQualifiedNamePropertyKey:
+                        fqnValue = kv.Value;
+                        break;
+                }
+            }
+
+            string fullyQualifiedName = fqnValue ?? displayName;
+            TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
             lock (_stateLock)
             {
@@ -408,18 +428,6 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         }
 
         return sb.ToString();
-    }
-
-    private static string GetFullyQualifiedName(TestNode testNode)
-        => testNode.Properties
-            .OfType<SerializableKeyValuePairStringProperty>()
-            .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
-            ?? testNode.DisplayName;
-
-    private static TimeSpan GetDuration(TestNode testNode)
-    {
-        TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
-        return timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
     }
 
     private static TerminalKind GetTerminalKind(TestNodeStateProperty? state)
