@@ -36,4 +36,24 @@ public sealed class TargetFrameworkParserTests
     [TestMethod]
     public void ParseNET(string longName, string expectedShortName)
         => Assert.AreEqual(expectedShortName, TargetFrameworkParser.GetShortTargetFramework(longName));
+
+    [TestMethod]
+    public void BuildTargetFrameworkMoniker_WithoutPlatform_ReturnsShortTargetFramework()
+        => Assert.AreEqual("net8.0", TargetFrameworkParser.BuildTargetFrameworkMoniker("net8.0", null));
+
+    [TestMethod]
+    public void BuildTargetFrameworkMoniker_WithEmptyPlatform_ReturnsShortTargetFramework()
+        => Assert.AreEqual("net8.0", TargetFrameworkParser.BuildTargetFrameworkMoniker("net8.0", string.Empty));
+
+    [TestMethod]
+    public void BuildTargetFrameworkMoniker_WithPlatform_AppendsLowercasedPlatform()
+        => Assert.AreEqual("net8.0-windows10.0.18362.0", TargetFrameworkParser.BuildTargetFrameworkMoniker("net8.0", "Windows10.0.18362.0"));
+
+    [TestMethod]
+    public void BuildTargetFrameworkMoniker_WithNullShortTargetFramework_ReturnsNull()
+        => Assert.IsNull(TargetFrameworkParser.BuildTargetFrameworkMoniker(null, "Windows10.0.18362.0"));
+
+    [TestMethod]
+    public void GetTargetPlatformName_WithNullAssembly_ReturnsNull()
+        => Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(null));
 }
