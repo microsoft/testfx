@@ -81,12 +81,22 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzer : DiagnosticAnalyzer
         {
             "IsTrue" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: true } },
             "IsFalse" => GetConditionArgument(operation) is { ConstantValue: { HasValue: true, Value: false } },
-            "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.Equal,
+            "AreEqual" => GetEqualityStatus(operation, ExpectedParameterName) == EqualityStatus.Equal
+                || HasIdenticalExpectedAndActual(operation, ExpectedParameterName),
             "AreNotEqual" => GetEqualityStatus(operation, NotExpectedParameterName) == EqualityStatus.NotEqual,
+            "AreSame" => HasIdenticalExpectedAndActual(operation, ExpectedParameterName),
             "IsNull" => GetValueArgument(operation) is { ConstantValue: { HasValue: true, Value: null } },
             "IsNotNull" => GetValueArgument(operation) is { } valueArgumentOperation && IsNotNullableType(valueArgumentOperation),
             _ => false,
         };
+
+    private static bool HasIdenticalExpectedAndActual(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
+        => GetRawArgumentValueWithName(operation, expectedOrNotExpectedParameterName) is { } expectedArgument
+        && GetRawArgumentValueWithName(operation, ActualParameterName) is { } actualArgument
+        && expectedArgument.IsEquivalentReferenceTo(actualArgument);
+
+    private static IOperation? GetRawArgumentValueWithName(IInvocationOperation operation, string name)
+        => operation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == name)?.Value;
 
     private static bool IsNotNullableType(IOperation valueArgumentOperation)
     {
