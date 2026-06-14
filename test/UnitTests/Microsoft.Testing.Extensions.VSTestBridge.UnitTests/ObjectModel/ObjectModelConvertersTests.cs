@@ -125,6 +125,36 @@ public sealed class ObjectModelConvertersTests
     }
 
     [TestMethod]
+    public void ToTestNode_WhenTestCaseHasManagedTypeAndManagedMethod_TestNodePropertiesContainThem()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+        var managedTypeProperty = TestProperty.Register("TestCase.ManagedType", "TestCase.ManagedType", typeof(string), typeof(TestCase));
+        var managedMethodProperty = TestProperty.Register("TestCase.ManagedMethod", "TestCase.ManagedMethod", typeof(string), typeof(TestCase));
+        testCase.SetPropertyValue<string>(managedTypeProperty, "MyNamespace.MyClass");
+        testCase.SetPropertyValue<string>(managedMethodProperty, "MyMethod(System.Int32)");
+
+        var testNode = testCase.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
+
+        SerializableKeyValuePairStringProperty[] properties = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
+        SerializableKeyValuePairStringProperty managedType = properties.Single(p => p.Key == VSTestTestNodeProperties.ManagedTypePropertyName);
+        SerializableKeyValuePairStringProperty managedMethod = properties.Single(p => p.Key == VSTestTestNodeProperties.ManagedMethodPropertyName);
+        Assert.AreEqual("MyNamespace.MyClass", managedType.Value);
+        Assert.AreEqual("MyMethod(System.Int32)", managedMethod.Value);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenTestCaseHasNoManagedTypeAndManagedMethod_TestNodePropertiesDoNotContainThem()
+    {
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+
+        var testNode = testCase.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), ClientInfo);
+
+        SerializableKeyValuePairStringProperty[] properties = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
+        Assert.IsNull(properties.SingleOrDefault(p => p.Key == VSTestTestNodeProperties.ManagedTypePropertyName));
+        Assert.IsNull(properties.SingleOrDefault(p => p.Key == VSTestTestNodeProperties.ManagedMethodPropertyName));
+    }
+
+    [TestMethod]
     public void ToTestNode_WhenTestResultHasFullyQualifiedTypeAndTrxEnabled_TestNodeHasFullyQualifiedTypeName()
     {
         TestResult testResult = new(new TestCase("assembly.class.test", new("executor://uri", UriKind.Absolute), "source.cs"));

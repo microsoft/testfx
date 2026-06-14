@@ -21,6 +21,15 @@ internal static class ObjectModelConverters
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
 
+    // VSTest TestCase property ids (set by adapters that support ECMA-335 managed names, e.g. MSTest).
+    // These are intentionally the VSTest property ids (no "vstest." prefix), which differ from the wire
+    // property keys we emit on the TestNode (see VSTestTestNodeProperties.ManagedType/ManagedMethodPropertyName).
+    private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
+        "TestCase.ManagedType", "TestCase.ManagedType", typeof(string), typeof(TestNode));
+
+    private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
+        "TestCase.ManagedMethod", "TestCase.ManagedMethod", typeof(string), typeof(TestNode));
+
     private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
     /// <summary>
@@ -105,6 +114,20 @@ internal static class ObjectModelConverters
         if (testCase.FullyQualifiedName is string testCaseFqn)
         {
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", testCaseFqn));
+        }
+
+        // Emit the ECMA-335 managed type/method (when the underlying adapter provides them, e.g. MSTest) so that
+        // clients can map a test to its source method and compute namespace/class without parsing the (non-standard)
+        // FullyQualifiedName or relying on the original executor URI. This is purely additive: clients that don't
+        // understand these keys keep using FullyQualifiedName, while clients that do prefer the structured values.
+        if (testCase.GetPropertyValue<string?>(ManagedTypeProperty, null) is { Length: > 0 } managedType)
+        {
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty(VSTestTestNodeProperties.ManagedTypePropertyName, managedType));
+        }
+
+        if (testCase.GetPropertyValue<string?>(ManagedMethodProperty, null) is { Length: > 0 } managedMethod)
+        {
+            testNode.Properties.Add(new SerializableKeyValuePairStringProperty(VSTestTestNodeProperties.ManagedMethodPropertyName, managedMethod));
         }
 
         if (testCase.GetPropertyValue(OriginalExecutorUriProperty) is Uri originalExecutorUri)
