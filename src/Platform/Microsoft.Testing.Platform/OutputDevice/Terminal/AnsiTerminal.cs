@@ -258,12 +258,12 @@ internal sealed class AnsiTerminal : ITerminal
     /// </summary>
     public void EraseProgress()
     {
-        if (_currentFrame.RenderedLines == null || _currentFrame.RenderedLines.Count == 0)
+        if (_currentFrame.RenderedLinesCount == 0)
         {
             return;
         }
 
-        AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLines.Count + 2}{AnsiCodes.MoveUpToLineStart}");
+        AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLinesCount + 2}{AnsiCodes.MoveUpToLineStart}");
         Append(AnsiCodes.CsiEraseInDisplay);
         _currentFrame.Clear();
     }
