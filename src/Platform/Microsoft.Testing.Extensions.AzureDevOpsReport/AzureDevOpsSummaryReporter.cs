@@ -142,9 +142,9 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
             // Single-pass collection of TimingProperty and the FQN SerializableKeyValuePairStringProperty:
             // replaces 1 × SingleOrDefault<TimingProperty>() + 1 × OfType<>().FirstOrDefault() with one
             // GetStructEnumerator() walk, saving 1 linked-list traversal and 1 LINQ allocation per terminal result.
-            // Preserve PropertyBag.SingleOrDefault's throw-on-duplicate invariant for TimingProperty so
-            // malformed messages still fail fast, and the original FirstOrDefault semantics for the FQN
-            // key (first match wins) so we don't silently overwrite earlier values.
+            // Singleton-typed properties use the local GetSingleOrDefaultValue helper to preserve the
+            // throw-on-duplicate invariant that SingleOrDefault<T>() provided; the FQN key keeps the
+            // prior FirstOrDefault semantics (first match wins) so we don't silently overwrite earlier values.
             TimingProperty? timing = null;
             string? fqnValue = null;
             PropertyBag.PropertyBagEnumerator enumerator = update.TestNode.Properties.GetStructEnumerator();
@@ -152,19 +152,18 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
             {
                 switch (enumerator.Current)
                 {
-                    case TimingProperty t:
-                        if (timing is not null)
-                        {
-                            throw new InvalidOperationException($"Found multiple properties of type '{typeof(TimingProperty)}'.");
-                        }
-
-                        timing = t;
-                        break;
+                    case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
                     case SerializableKeyValuePairStringProperty kv when kv.Key == FullyQualifiedNamePropertyKey && fqnValue is null:
                         fqnValue = kv.Value;
                         break;
                 }
             }
+
+            static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+                where TProperty : class, IProperty
+                => existingProperty is not null
+                    ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                    : property;
 
             string fullyQualifiedName = fqnValue ?? displayName;
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;

@@ -64,8 +64,9 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
 
         // Single-pass collection: replaces 1 × OfType<FileArtifactProperty>() loop + 2 × SingleOrDefault<T>()
         // with one GetStructEnumerator() walk, saving 2 linked-list traversals + 1 LINQ allocation per failure.
-        // Preserve PropertyBag.SingleOrDefault's throw-on-duplicate invariant for the stdout/stderr
-        // properties so a malformed message still fails fast instead of silently dropping data.
+        // Singleton-typed properties (stdout/stderr) use the local GetSingleOrDefaultValue helper to preserve
+        // the throw-on-duplicate invariant that SingleOrDefault<T>() provided; FileArtifactProperty is
+        // intentionally multi-valued and accumulates into a list.
         PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
@@ -88,24 +89,16 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                         AzureDevOpsAttachmentTypes.GeneralAttachment,
                         comment: fileArtifact.Description ?? fileArtifact.DisplayName));
                     break;
-                case StandardOutputProperty so:
-                    if (stdout is not null)
-                    {
-                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardOutputProperty)}'.");
-                    }
-
-                    stdout = so;
-                    break;
-                case StandardErrorProperty se:
-                    if (stderr is not null)
-                    {
-                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(StandardErrorProperty)}'.");
-                    }
-
-                    stderr = se;
-                    break;
+                case StandardOutputProperty so: stdout = GetSingleOrDefaultValue(stdout, so); break;
+                case StandardErrorProperty se: stderr = GetSingleOrDefaultValue(stderr, se); break;
             }
         }
+
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : class, IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
 
         if (stdout is not null && !RoslynString.IsNullOrEmpty(stdout.StandardOutput))
         {
