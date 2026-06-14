@@ -1,6 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET
+using System.Reflection.Emit;
+#endif
+
 using Microsoft.Testing.Platform.OutputDevice;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -56,4 +60,68 @@ public sealed class TargetFrameworkParserTests
     [TestMethod]
     public void GetTargetPlatformName_WithNullAssembly_ReturnsNull()
         => Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(null));
+
+#if NET
+    [TestMethod]
+    public void GetTargetPlatformName_WithTargetPlatformAttribute_ReturnsPlatformName()
+    {
+        Assembly dynamicAssembly = CreateAssemblyWithTargetPlatform("Windows10.0.18362.0");
+        Assert.AreEqual("Windows10.0.18362.0", TargetFrameworkParser.GetTargetPlatformName(dynamicAssembly));
+    }
+
+    [TestMethod]
+    public void GetTargetPlatformName_WithoutTargetPlatformAttribute_ReturnsNull()
+    {
+        Assembly dynamicAssembly = CreateAssemblyWithoutTargetPlatform();
+        Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(dynamicAssembly));
+    }
+
+    [TestMethod]
+    public void GetTargetPlatformName_WithEmptyPlatformValue_ReturnsNull()
+    {
+        Assembly dynamicAssembly = CreateAssemblyWithTargetPlatform(string.Empty);
+        Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(dynamicAssembly));
+    }
+
+    [TestMethod]
+    public void GetShortTargetFrameworkIncludingPlatform_WithTargetPlatformAttribute_AppendsLowercasedPlatform()
+    {
+        Assembly dynamicAssembly = CreateAssemblyWithTargetPlatform("Windows10.0.18362.0");
+
+        // The dynamic assembly carries no TargetFrameworkAttribute, so the parser falls back to
+        // RuntimeInformation.FrameworkDescription. The point of this test is to verify the platform
+        // discriminator gets appended (and lowercased) on top of whatever the .NET runtime reports.
+        string? result = TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(dynamicAssembly);
+
+        Assert.IsNotNull(result);
+        Assert.EndsWith("-windows10.0.18362.0", result);
+    }
+
+    [TestMethod]
+    public void GetShortTargetFrameworkIncludingPlatform_WithoutTargetPlatformAttribute_ReturnsShortTargetFrameworkOnly()
+    {
+        Assembly dynamicAssembly = CreateAssemblyWithoutTargetPlatform();
+
+        string? result = TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(dynamicAssembly);
+
+        Assert.IsNotNull(result);
+        Assert.DoesNotContain("-", result);
+    }
+
+    private static Assembly CreateAssemblyWithTargetPlatform(string platformName)
+    {
+        var name = new AssemblyName($"TestAssembly_{Guid.NewGuid():N}");
+        var builder = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
+
+        ConstructorInfo ctor = typeof(System.Runtime.Versioning.TargetPlatformAttribute).GetConstructor([typeof(string)])!;
+        builder.SetCustomAttribute(new CustomAttributeBuilder(ctor, [platformName]));
+        return builder;
+    }
+
+    private static Assembly CreateAssemblyWithoutTargetPlatform()
+    {
+        var name = new AssemblyName($"TestAssembly_{Guid.NewGuid():N}");
+        return AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
+    }
+#endif
 }
