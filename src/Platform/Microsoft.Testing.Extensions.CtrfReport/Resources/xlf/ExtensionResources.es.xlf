@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="CtrfReportArtifactDescription">
         <source>CTRF (Common Test Report Format) JSON test report</source>
-        <target state="new">CTRF (Common Test Report Format) JSON test report</target>
+        <target state="translated">Informe de prueba JSON de CTRF (Common Test Report Format)</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, or {Locked="JSON"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportArtifactDisplayName">
@@ -38,7 +38,7 @@ Ejemplo: MyReport_{tfm}.ctrf.json</target>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</source>
-        <target state="new">'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</target>
+        <target state="translated">Las rutas de acceso relativas "--report-ctrf-filename" deben permanecer en el directorio de resultados de pruebas (por ejemplo, --report-ctrf-filename nested/myreport.ctrf.json)</target>
         <note>Do not localize option name {Locked="--report-ctrf-filename"}, file extension {Locked=".json"}, or example path {Locked="nested/myreport.ctrf.json"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportFileNameRequiresCtrfReport">
@@ -48,7 +48,7 @@ Ejemplo: MyReport_{tfm}.ctrf.json</target>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDescription">
         <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</source>
-        <target state="new">Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</target>
+        <target state="translated">Generar un informe JSON de CTRF (Common Test Report Format) para la sesión de prueba actual (https://ctrf.io)</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDisplayName">
@@ -63,7 +63,7 @@ Ejemplo: MyReport_{tfm}.ctrf.json</target>
       </trans-unit>
       <trans-unit id="CtrfReportOptionDescription">
         <source>Enable generating a CTRF (Common Test Report Format) JSON report</source>
-        <target state="new">Enable generating a CTRF (Common Test Report Format) JSON report</target>
+        <target state="translated">Habilitación de la generación de un informe JSON de CTRF (Common Test Report Format)</target>
         <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
     </body>

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="CtrfReportArtifactDescription">
         <source>CTRF (Common Test Report Format) JSON test report</source>
-        <target state="new">CTRF (Common Test Report Format) JSON test report</target>
+        <target state="translated">CTRF (Common Test Report Format) JSON 測試報告</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, or {Locked="JSON"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportArtifactDisplayName">
@@ -48,7 +48,7 @@ Example: MyReport_{tfm}.ctrf.json</source>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDescription">
         <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</source>
-        <target state="new">Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</target>
+        <target state="translated">為目前測試工作階段產生 CTRF (Common Test Report Format) JSON 報告 (https://ctrf.io)</target>
         <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</note>
       </trans-unit>
       <trans-unit id="CtrfReportGeneratorDisplayName">
@@ -63,7 +63,7 @@ Example: MyReport_{tfm}.ctrf.json</source>
       </trans-unit>
       <trans-unit id="CtrfReportOptionDescription">
         <source>Enable generating a CTRF (Common Test Report Format) JSON report</source>
-        <target state="new">Enable generating a CTRF (Common Test Report Format) JSON report</target>
+        <target state="translated">能夠產生 CTRF (Common Test Report Format) JSON 報告</target>
         <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
     </body>

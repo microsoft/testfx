@@ -78,8 +78,8 @@ Informações do disco:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Especifique o nome do arquivo de despejo.
+Dá suporte aos seguintes espaços reservados: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome do assembly de entrada), {tfm} (moniker da estrutura de destino), {arch} (arquitetura do processo), {time} (carimbo de data/hora). O token %p herdado (ID do processo) também é aceito para compatibilidade com versões anteriores.</target>
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -102,15 +102,15 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated.
-The timeout value is specified in one of the following formats:
+        <target state="translated">Especifique o tempo limite após o qual o despejo será gerado.
+O valor de tempo limite é especificado em um dos seguintes formatos:
     500ms, 500mil, 500millisecond, 500milliseconds,
     5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
     1.5h, 1.5hour, 1.5hours,
     1d, 1day, 1days.
-    A bare number (with no suffix) is interpreted as milliseconds.
-    Default is 30m.</target>
+    Um número simples (sem sufixo) é interpretado como milissegundos.
+    O padrão é 30m.</target>
         <note>Do not localize option name {Locked="--hangdump-timeout"} or time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
