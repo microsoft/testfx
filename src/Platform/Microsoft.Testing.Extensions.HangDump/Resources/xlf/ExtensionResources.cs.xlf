@@ -78,8 +78,8 @@ Informace o disku:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Zadejte název souboru výpisu paměti.
+Podporuje následující zástupné symboly: {pname} (název testovací aplikace), {pid} (ID procesu), {asm} (název sestavení položky), {tfm} (moniker cílové architektury), {arch} (architektura procesu), {time} (časové razítko). Starší token %p (ID procesu) je také podporován z důvodu zpětné kompatibility.</target>
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -171,7 +171,7 @@ Platné možnosti jsou {1}</target>
       </trans-unit>
       <trans-unit id="RunningTestsWhileDumping">
         <source>The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
-        <target state="new">The following tests were still running when dump was taken (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
+        <target state="translated">Při pořízení výpisu paměti stále běžely následující testy (formát: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</target>
         <note>Do not localize format tokens {Locked="[&lt;time-elapsed-since-start&gt;]"} and {Locked="&lt;name&gt;"}.</note>
       </trans-unit>
     </body>

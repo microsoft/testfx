@@ -39,17 +39,17 @@
       </trans-unit>
       <trans-unit id="UnsupportedRunconfigurationSetting">
         <source>Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">'{0}' Runsettings özniteliği Microsoft.Testing.Platform tarafından desteklenmiyor ve yoksayılacak</target>
         <note>0 is the unsupported {Locked="Runsettings"} attribute name. Do not localize {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsDatacollectors">
         <source>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Runsettings veri toplayıcıları Microsoft.Testing.Platform tarafından desteklenmiyor ve yoksayılacak</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsLoggers">
         <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Runsettings günlükçüleri Microsoft.Testing.Platform tarafından desteklenmiyor ve yoksayılacak</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">

@@ -14,17 +14,17 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</target>
+        <target state="translated">Für „--report-azdo-demote-known-flaky“ muss „--report-azdo“ aktiviert sein.</target>
         <note>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</source>
-        <target state="new">'--report-azdo-demote-known-flaky' requires '--report-azdo-flaky-history' to be enabled</target>
+        <target state="translated">Für „--report-azdo-demote-known-flaky“ muss „--report-azdo-flaky-history“ aktiviert sein.</target>
         <note>{Locked="--report-azdo-demote-known-flaky"}{Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsFlakyHistoryRequiresAzureDevOps">
         <source>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</target>
+        <target state="translated">Für „--report-azdo-flaky-history“ muss „--report-azdo“ aktiviert sein.</target>
         <note>{Locked="--report-azdo-flaky-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -199,7 +199,7 @@
       </trans-unit>
       <trans-unit id="InvalidFlakyHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</target>
+        <target state="translated">Ungültiger Wert „{0}“ für „--report-azdo-flaky-history“. Geben Sie eine ganze Zahl zwischen 1 und 90 an.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
       <trans-unit id="InvalidSeverity">

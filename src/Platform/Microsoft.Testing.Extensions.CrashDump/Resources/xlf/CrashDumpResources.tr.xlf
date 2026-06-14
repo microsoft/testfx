@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
-        <target state="new">Crash dump feature is only available in .NET (Core)</target>
+        <target state="translated">Kilitlenme dökümü özelliği yalnızca .NET (Core) kullanılabilir</target>
         <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">

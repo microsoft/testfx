@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="TestRunParameterOptionArgumentIsNotParameter">
         <source>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</source>
-        <target state="new">argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</target>
+        <target state="translated">el argumento "{0}" no es un parámetro. Los argumentos de parámetros coinciden con el patrón "key=value" siguiente.</target>
         <note>0 is the invalid argument. Do not localize pattern {Locked="key=value"}.</note>
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">

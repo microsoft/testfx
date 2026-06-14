@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
-        <target state="new">Change method accessibility to 'private'</target>
+        <target state="translated">Remplacer l’accessibilité de la méthode par « private »</target>
         <note>{Locked="private"}</note>
       </trans-unit>
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
-        <target state="new">Fix actual/expected arguments order</target>
+        <target state="translated">Corriger l’ordre des arguments actual/expected</target>
         <note>{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
@@ -174,7 +174,7 @@
       </trans-unit>
       <trans-unit id="UseContainsKeyInsteadOfContainsFix">
         <source>Use 'ContainsKey' instead of 'Contains'</source>
-        <target state="new">Use 'ContainsKey' instead of 'Contains'</target>
+        <target state="translated">Utilisez « ContainsKey » au lieu de « Contains »</target>
         <note>{Locked="ContainsKey"}{Locked="Contains"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">

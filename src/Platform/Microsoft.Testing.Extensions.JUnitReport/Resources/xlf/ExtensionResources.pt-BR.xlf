@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="JUnitReportFileExistsAndWillBeOverwritten">
         <source>The JUnit report file '{0}' already exists and will be overwritten.</source>
-        <target state="new">The JUnit report file '{0}' already exists and will be overwritten.</target>
+        <target state="translated">Aviso: o JUnit de relatório HTML "{0}" já existe e será substituído.</target>
         <note>{0} is the {Locked="JUnit"} report file path.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameExtensionIsNotXml">
@@ -36,14 +36,14 @@
         <source>The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.xml</source>
-        <target state="new">The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
-Example: MyReport_{tfm}.xml</target>
+        <target state="translated">O nome do relatório XML JUnit gerado. Pode incluir um caminho relativo ou absoluto; os caminhos relativos são resolvidos com base no diretório de resultados dos testes, e os diretórios ausentes são criados.
+Dá suporte aos seguintes espaços reservados: {pname} (nome do aplicativo de teste), {pid} (ID do processo), {asm} (nome do assembly de entrada), {tfm} (moniker da estrutura de destino), {arch} (arquitetura do processo), {time} (carimbo de data/hora).
+Exemplo: MyReport_{tfm}.xml</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, format names {Locked="JUnit"}{Locked="XML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".xml"}, or example file name {Locked="MyReport_{tfm}.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</source>
-        <target state="new">'--report-junit-filename' relative paths must stay under the test results directory (e.g. --report-junit-filename nested/myreport.xml)</target>
+        <target state="translated">Os caminhos relativos “--report-junit-filename” devem permanecer no diretório de resultados do teste (por exemplo, --report-junit-filename nested/myreport.xml)</target>
         <note>Do not localize option name {Locked="--report-junit-filename"}, file extension {Locked=".xml"}, or example path {Locked="nested/myreport.xml"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportFileNameRequiresJUnitReport">
@@ -63,7 +63,7 @@ Example: MyReport_{tfm}.xml</target>
       </trans-unit>
       <trans-unit id="JUnitReportIsNotValidForDiscovery">
         <source>'--report-junit' cannot be enabled when using '--list-tests'</source>
-        <target state="new">'--report-junit' cannot be enabled when using '--list-tests'</target>
+        <target state="translated">Não é possível habilitar "--report-junit" ao usar "--list-tests"</target>
         <note>Do not localize option names {Locked="--report-junit"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="JUnitReportOptionDescription">

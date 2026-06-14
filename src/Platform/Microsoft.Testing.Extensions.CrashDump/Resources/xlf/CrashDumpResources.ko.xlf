@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
-        <target state="new">[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</target>
+        <target state="translated">[net6.0+만] 테스트 실행 프로세스가 예기치 않게 충돌할 때 크래시 덤프 파일 생성</target>
         <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
-        <target state="new">Crash dump feature is only available in .NET (Core)</target>
+        <target state="translated">크래시 덤프 기능은 .NET (Core)에서만 사용할 수 있습니다.</target>
         <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
-        <target state="new">[net6.0+ only] Generate a dump file if the test process crashes</target>
+        <target state="translated">[net6.0+만] 테스트 프로세스가 충돌하는 경우 덤프 파일 생성</target>
         <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">

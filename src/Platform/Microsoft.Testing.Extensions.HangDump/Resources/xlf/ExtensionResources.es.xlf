@@ -78,8 +78,8 @@ Información del disco:
       <trans-unit id="HangDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.</target>
+        <target state="translated">Especifique el nombre del archivo de volcado.
+Admite los siguientes marcadores de posición: {pname} (nombre de la aplicación de prueba), {pid} (id. de proceso), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {arch} (arquitectura del proceso), {time} (marca de tiempo). También se admite el token heredado %p (id. de proceso) para mantener la compatibilidad con versiones anteriores.</target>
         <note>Do not localize option name {Locked="--hangdump-filename"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, or legacy token {Locked="%p"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpOptionDescription">
@@ -102,15 +102,15 @@ The timeout value is specified in one of the following formats:
     1d, 1day, 1days.
     A bare number (with no suffix) is interpreted as milliseconds.
     Default is 30m.</source>
-        <target state="new">Specify the timeout after which the dump will be generated.
-The timeout value is specified in one of the following formats:
+        <target state="translated">Especifique el tiempo de espera después del cual se generará el volcado.
+El valor de tiempo de espera se especifica en uno de los formatos siguientes:
     500ms, 500mil, 500millisecond, 500milliseconds,
     5400s, 5400sec, 5400second, 5400seconds,
     90m, 90min, 90minute, 90minutes,
     1.5h, 1.5hour, 1.5hours,
     1d, 1day, 1days.
-    A bare number (with no suffix) is interpreted as milliseconds.
-    Default is 30m.</target>
+    Un número vacío (sin sufijo) se interpreta como milisegundos.
+    El valor predeterminado es 30m.</target>
         <note>Do not localize option name {Locked="--hangdump-timeout"} or time examples {Locked="500ms"}{Locked="500mil"}{Locked="500millisecond"}{Locked="500milliseconds"}{Locked="5400s"}{Locked="5400sec"}{Locked="5400second"}{Locked="5400seconds"}{Locked="90m"}{Locked="90min"}{Locked="90minute"}{Locked="90minutes"}{Locked="1.5h"}{Locked="1.5hour"}{Locked="1.5hours"}{Locked="1d"}{Locked="1day"}{Locked="1days"}{Locked="30m"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTimeoutOptionInvalidArgument">
@@ -130,7 +130,7 @@ The timeout value is specified in one of the following formats:
       </trans-unit>
       <trans-unit id="HangDumpTypeIfSupportedOptionDescription">
         <source>Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</source>
-        <target state="new">Same as '--hangdump-type' but silently falls back (with an informational message) to the closest supported dump type when the requested type is not available on the current runtime (e.g. 'Triage' is only supported on .NET Core and falls back to 'Mini' on .NET Framework). Use this option to keep the same command line across CI matrices that mix .NET Framework and .NET. Valid values are 'Mini', 'Heap', 'Full', 'Triage', 'None'. Mutually exclusive with '--hangdump-type'.</target>
+        <target state="translated">Igual que "--hangdump-type", pero retrocede silenciosamente (con un mensaje informativo) al tipo de volcado admitido más cercano cuando el tipo solicitado no está disponible en el tiempo de ejecución actual (por ejemplo, "Triage" solo se admite en .NET Core y vuelve a "Mini" en .NET Framework). Use esta opción para mantener la misma línea de comandos en matrices de CI que combinan .NET Framework y .NET. Los valores válidos son "Mini", "Heap", "Full", "Triage" y "None". Mutuamente excluyente con "--hangdump-type".</target>
         <note>Do not localize option names {Locked="--hangdump-type"}{Locked="--hangdump-type-if-supported"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Full"}{Locked="Triage"}{Locked="None"}, or runtime names {Locked=".NET Core"}{Locked=".NET Framework"}{Locked=".NET"}.</note>
       </trans-unit>
       <trans-unit id="HangDumpTypeOptionDescription">
