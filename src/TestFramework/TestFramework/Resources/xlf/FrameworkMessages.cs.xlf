@@ -790,7 +790,7 @@ Skutečnost: {2}</target>
       </trans-unit>
       <trans-unit id="DoNotUseAssertReferenceEquals">
         <source>Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</source>
-        <target state="new">Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame &amp; overloads instead.</target>
+        <target state="translated">Assert.ReferenceEquals se nemá používat pro kontrolní výrazy. Použijte prosím místo toho Assert.AreSame &amp; overloads.</target>
         <note>Do not localize assertion API names {Locked="Assert.ReferenceEquals"}{Locked="Assert.AreSame"}.</note>
       </trans-unit>
       <trans-unit id="DoNotUseStringAssertEquals">
