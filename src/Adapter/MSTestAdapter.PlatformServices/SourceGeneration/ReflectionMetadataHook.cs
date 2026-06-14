@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// that needs to call it across the assembly boundary, and module initializers cannot use
 /// <c>internal</c> APIs from a different assembly. The signature and behaviour of this hook are
 /// implementation details that may evolve with the generator without a major version bump; do
-/// not hand-roll a call to <see cref="Register"/> from your own code.
+/// not hand-roll a call to <see cref="Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/> from your own code.
 /// </para>
 /// <para>
 /// <b>Discovery limitation.</b> The MSTest source generator only enumerates types that carry
@@ -62,6 +62,33 @@ public static class ReflectionMetadataHook
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static void Register(Assembly assembly, Type[] types, IReadOnlyDictionary<Type, MethodInfo[]> testMethods)
+        => Register(assembly, types, testMethods, EmptyTypeAttributes, []);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes source-generated metadata for <paramref name="assembly"/>
+    /// to the MSTest adapter, including pre-materialized type-level and assembly-level attributes
+    /// so the adapter serves them without runtime reflection. Safe to call from multiple module
+    /// initializers; later registrations are merged with earlier ones.
+    /// </summary>
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
+    /// <param name="testMethods">A map from each test class to its <c>[TestMethod]</c> set.</param>
+    /// <param name="typeAttributes">
+    /// A map from each test class to its pre-inflated <see cref="Attribute"/> instances. The adapter
+    /// returns these from <c>GetCustomAttributes(Type)</c> instead of reflecting at runtime.
+    /// </param>
+    /// <param name="assemblyAttributes">Pre-inflated assembly-level attribute instances.</param>
+    /// <remarks>
+    /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
+    /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes)
     {
         if (assembly is null)
         {
@@ -78,6 +105,16 @@ public static class ReflectionMetadataHook
             throw new ArgumentNullException(nameof(testMethods));
         }
 
+        if (typeAttributes is null)
+        {
+            throw new ArgumentNullException(nameof(typeAttributes));
+        }
+
+        if (assemblyAttributes is null)
+        {
+            throw new ArgumentNullException(nameof(assemblyAttributes));
+        }
+
         var typesCopy = (Type[])types.Clone();
 
         var testMethodsCopy = new Dictionary<Type, MethodInfo[]>(testMethods.Count);
@@ -85,6 +122,14 @@ public static class ReflectionMetadataHook
         {
             testMethodsCopy[kvp.Key] = (MethodInfo[])kvp.Value.Clone();
         }
+
+        var typeAttributesCopy = new Dictionary<Type, Attribute[]>(typeAttributes.Count);
+        foreach (KeyValuePair<Type, Attribute[]> kvp in typeAttributes)
+        {
+            typeAttributesCopy[kvp.Key] = (Attribute[])kvp.Value.Clone();
+        }
+
+        object[] assemblyAttributesCopy = (object[])assemblyAttributes.Clone();
 
         // TypesByName must always match Type.FullName at runtime (see comment in the source
         // generator emitter): compute it on the runtime side from typeof(T).FullName so the
@@ -106,6 +151,8 @@ public static class ReflectionMetadataHook
             Types = typesCopy,
             TypesByName = typesByName,
             TypeMethods = testMethodsCopy,
+            TypeAttributes = typeAttributesCopy,
+            AssemblyAttributes = assemblyAttributesCopy,
         };
 
         lock (Lock)
@@ -121,4 +168,6 @@ public static class ReflectionMetadataHook
             }
         }
     }
+
+    private static readonly Dictionary<Type, Attribute[]> EmptyTypeAttributes = [];
 }

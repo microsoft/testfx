@@ -37,6 +37,7 @@ internal static class TestClassModelBuilder
         ImmutableArray<TestMethodModel>.Builder methods = ImmutableArray.CreateBuilder<TestMethodModel>();
         ImmutableArray<TestPropertyModel>.Builder properties = ImmutableArray.CreateBuilder<TestPropertyModel>();
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
+        ImmutableArray<string>.Builder baseTypes = ImmutableArray.CreateBuilder<string>();
 
         string leafFqn = typeSymbol.ToDisplayString(FullyQualifiedFormat);
 
@@ -45,6 +46,15 @@ internal static class TestClassModelBuilder
              current = current.BaseType)
         {
             bool isLeaf = SymbolEqualityComparer.Default.Equals(current, typeSymbol);
+
+            // Capture each accessible, non-generic base type so the runtime registration can root
+            // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
+            // under trimming / Native AOT. Members are folded into the leaf model, but the trimmer
+            // only keeps members of the concrete type unless the base is rooted explicitly too.
+            if (!isLeaf && !current.IsGenericType && IsTypeReachableFromGeneratedCode(current))
+            {
+                baseTypes.Add(current.ToDisplayString(FullyQualifiedFormat));
+            }
 
             foreach (ISymbol member in current.GetMembers())
             {
@@ -102,7 +112,49 @@ internal static class TestClassModelBuilder
             Constructors: new EquatableArray<TestConstructorModel>(ctors.ToImmutable()),
             Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
-            Attributes: BuildAttributes(typeSymbol.GetAttributes()));
+            Attributes: BuildAttributes(typeSymbol.GetAttributes()),
+            BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
+    }
+
+    // The generated registration lives in the same assembly as the test class, so a type is
+    // reachable when it (and every enclosing type) is at least internal and not file-local.
+    private static bool IsTypeReachableFromGeneratedCode(INamedTypeSymbol type)
+    {
+        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.IsFileLocal)
+            {
+                return false;
+            }
+
+            switch (current.DeclaredAccessibility)
+            {
+                case Accessibility.Private:
+                case Accessibility.Protected:
+                case Accessibility.ProtectedAndInternal:
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsTestMethodAttributePresent(IMethodSymbol method)
+    {
+        foreach (AttributeData attribute in method.GetAttributes())
+        {
+            for (INamedTypeSymbol? attributeClass = attribute.AttributeClass;
+                 attributeClass is not null;
+                 attributeClass = attributeClass.BaseType)
+            {
+                if (attributeClass.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.TestMethod)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // Reports AOTSG0004 (generic method) and AOTSG0005 (by-ref parameter) when applicable.
@@ -214,6 +266,7 @@ internal static class TestClassModelBuilder
             ReturnsTask: returnsTask,
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
+            IsTestMethod: IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
             Attributes: BuildAttributes(inheritedAttributes),
             DataRows: BuildDataRows(inheritedAttributes));

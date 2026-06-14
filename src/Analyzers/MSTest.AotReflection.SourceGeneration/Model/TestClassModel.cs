@@ -51,6 +51,7 @@ internal sealed record TestMethodModel(
     bool ReturnsTask,
     bool ReturnsValueTask,
     bool ReturnsVoid,
+    bool IsTestMethod,
     EquatableArray<TestParameterModel> Parameters,
     EquatableArray<AttributeApplicationModel> Attributes,
     EquatableArray<DataRowModel> DataRows);
@@ -83,7 +84,8 @@ internal sealed record TestClassModel(
     EquatableArray<TestConstructorModel> Constructors,
     EquatableArray<TestMethodModel> Methods,
     EquatableArray<TestPropertyModel> Properties,
-    EquatableArray<AttributeApplicationModel> Attributes);
+    EquatableArray<AttributeApplicationModel> Attributes,
+    EquatableArray<string> BaseTypeFullyQualifiedNames);
 
 /// <summary>
 /// Value-equatable wrapper around <see cref="ImmutableArray{T}"/> so incremental generation
