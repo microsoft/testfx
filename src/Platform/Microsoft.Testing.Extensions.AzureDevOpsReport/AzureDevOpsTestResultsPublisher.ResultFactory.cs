@@ -59,27 +59,42 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     private static IReadOnlyList<AzureDevOpsTestResultAttachment> BuildAttachmentsFromTestNode(TestNode testNode)
     {
         List<AzureDevOpsTestResultAttachment>? attachments = null;
+        StandardOutputProperty? stdout = null;
+        StandardErrorProperty? stderr = null;
 
-        foreach (FileArtifactProperty fileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
+        // Single-pass collection: replaces 1 × OfType<FileArtifactProperty>() loop + 2 × SingleOrDefault<T>()
+        // with one GetStructEnumerator() walk, saving 2 linked-list traversals + 1 LINQ allocation per failure.
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
         {
-            string? fullPath;
-            try
+            switch (enumerator.Current)
             {
-                fullPath = fileArtifact.FileInfo.FullName;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
-            {
-                continue;
-            }
+                case FileArtifactProperty fileArtifact:
+                    string? fullPath;
+                    try
+                    {
+                        fullPath = fileArtifact.FileInfo.FullName;
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
+                    {
+                        break;
+                    }
 
-            attachments ??= [];
-            attachments.Add(AzureDevOpsTestResultAttachment.FromFile(
-                fullPath,
-                AzureDevOpsAttachmentTypes.GeneralAttachment,
-                comment: fileArtifact.Description ?? fileArtifact.DisplayName));
+                    attachments ??= [];
+                    attachments.Add(AzureDevOpsTestResultAttachment.FromFile(
+                        fullPath,
+                        AzureDevOpsAttachmentTypes.GeneralAttachment,
+                        comment: fileArtifact.Description ?? fileArtifact.DisplayName));
+                    break;
+                case StandardOutputProperty so:
+                    stdout = so;
+                    break;
+                case StandardErrorProperty se:
+                    stderr = se;
+                    break;
+            }
         }
 
-        StandardOutputProperty? stdout = testNode.Properties.SingleOrDefault<StandardOutputProperty>();
         if (stdout is not null && !RoslynString.IsNullOrEmpty(stdout.StandardOutput))
         {
             attachments ??= [];
@@ -89,7 +104,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 AzureDevOpsAttachmentTypes.ConsoleLog));
         }
 
-        StandardErrorProperty? stderr = testNode.Properties.SingleOrDefault<StandardErrorProperty>();
         if (stderr is not null && !RoslynString.IsNullOrEmpty(stderr.StandardError))
         {
             attachments ??= [];
