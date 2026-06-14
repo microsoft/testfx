@@ -96,7 +96,7 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
+          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true
             name: Test
             displayName: Test
             condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
@@ -136,7 +136,7 @@ stages:
           #   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
           #     Azure DevOps" steps below), so collecting coverage in Release would just write unused
           #     .coverage files.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-progress --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-progress --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
