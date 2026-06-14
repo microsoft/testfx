@@ -76,7 +76,7 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
         // Skip types the generated module initializer (emitted as `internal`) cannot reference,
         // for example a private/protected nested [TestClass]. Emitting `typeof(Outer.PrivateNested)`
         // would fail with CS0122 inside auto-generated code.
-        if (!IsAccessibleFromGeneratedCode(typeSymbol))
+        if (!SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(typeSymbol))
         {
             return null;
         }
@@ -103,7 +103,7 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
             // testMethods{}; runtime discovery still flows through the concrete [TestClass].
             if (!SymbolEqualityComparer.Default.Equals(currentType, typeSymbol)
                 && !currentType.IsGenericType
-                && IsAccessibleFromGeneratedCode(currentType))
+                && SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(currentType))
             {
                 baseTypes.Add(currentType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
             }
@@ -174,32 +174,6 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
 
     private static bool HasByRefParameter(IMethodSymbol method)
         => method.Parameters.Any(parameter => parameter.RefKind != RefKind.None);
-
-    private static bool IsAccessibleFromGeneratedCode(INamedTypeSymbol type)
-    {
-        // The generated module initializer lives in the same assembly, so anything visible at
-        // `internal` or above works. `NotApplicable` is the default for top-level types and is
-        // also fine. Anything stricter (private, protected, private protected) is rejected.
-        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
-        {
-            // `file`-scoped types are only addressable from within their own source file, so the
-            // generated module initializer (which lives in a different file) cannot reference them.
-            if (current.IsFileLocal)
-            {
-                return false;
-            }
-
-            switch (current.DeclaredAccessibility)
-            {
-                case Accessibility.Private:
-                case Accessibility.Protected:
-                case Accessibility.ProtectedAndInternal:
-                    return false;
-            }
-        }
-
-        return true;
-    }
 
     private static bool HasTestMethodAttribute(IMethodSymbol method)
     {

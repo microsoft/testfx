@@ -40,6 +40,7 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\EquatableArray.cs" Link="Shared\EquatableArray.cs" />
+    <Compile Include="..\Shared\SymbolAccessibilityHelper.cs" Link="Shared\SymbolAccessibilityHelper.cs" />
     <Compile Include="..\MSTest.SourceGeneration\Helpers\Constants.cs" Link="Helpers\Constants.cs" />
     <Compile Include="..\MSTest.SourceGeneration\Helpers\IndentedStringBuilder.cs" Link="Helpers\IndentedStringBuilder.cs" />
 

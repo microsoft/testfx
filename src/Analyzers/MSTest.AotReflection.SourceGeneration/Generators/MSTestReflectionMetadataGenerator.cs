@@ -124,7 +124,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
             return new TestClassTransformResult(Model: null, Diagnostics: ToEquatable(diagnostics));
         }
 
-        if (!IsReachableFromGeneratedCode(typeSymbol))
+        if (!SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(typeSymbol))
         {
             diagnostics.Add(DiagnosticInfo.Create(DiagnosticDescriptors.InaccessibleTestClass, classLocation, fqn));
             return new TestClassTransformResult(Model: null, Diagnostics: ToEquatable(diagnostics));
@@ -158,40 +158,6 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
         }
 
         return false;
-    }
-
-    private static bool IsReachableFromGeneratedCode(INamedTypeSymbol type)
-    {
-        // The generated registry lives in the same assembly but in a different file/type,
-        // so it can reach Public / Internal / ProtectedOrInternal types (the latter being
-        // "protected internal" — visible from anywhere in the same assembly). Private,
-        // Protected (alone), and ProtectedAndInternal ("private protected") containing
-        // types make the type unreachable.
-        if (type.IsFileLocal)
-        {
-            return false;
-        }
-
-        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
-        {
-            if (current.IsFileLocal)
-            {
-                return false;
-            }
-
-            switch (current.DeclaredAccessibility)
-            {
-                case Accessibility.Public:
-                case Accessibility.Internal:
-                case Accessibility.ProtectedOrInternal:
-                case Accessibility.NotApplicable:
-                    continue;
-                default:
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     private sealed record TestClassTransformResult(TestClassModel? Model, EquatableArray<DiagnosticInfo> Diagnostics)
