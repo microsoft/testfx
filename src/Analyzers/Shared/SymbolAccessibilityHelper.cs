@@ -7,13 +7,15 @@ namespace MSTest.Analyzers.Shared;
 
 internal static class SymbolAccessibilityHelper
 {
-    public static bool IsAccessibleFromGeneratedCode(INamedTypeSymbol type)
+    internal static bool IsAccessibleFromGeneratedCode(INamedTypeSymbol type)
     {
         // The generated code lives in the same assembly but in a different file/type,
         // so it can reach Public / Internal / ProtectedOrInternal types (the latter being
         // "protected internal" — visible from anywhere in the same assembly). Private,
         // Protected (alone), and ProtectedAndInternal ("private protected") containing
-        // types make the type unreachable.
+        // types make the type unreachable. NotApplicable is also treated as accessible
+        // since it appears for symbols where Roslyn does not assign a meaningful
+        // accessibility (e.g. compiler-synthesized helpers in well-formed source).
         for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
         {
             if (current.IsFileLocal)
