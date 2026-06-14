@@ -99,7 +99,7 @@
     <!-- This comes transitively via StreamJsonRpc, but we want to upgrade it to fix a security vulnerability -->
     <PackageVersion Include="Nerdbank.MessagePack" Version="1.2.4" />
     <!-- This comes transitively via StreamJsonRpc, but we want to upgrade it to fix a security vulnerability -->
-    <PackageVersion Include="MessagePack" Version="2.5.301" />
+    <PackageVersion Include="MessagePack" Version="3.1.7" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="9.0.4" />
