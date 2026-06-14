@@ -59,27 +59,47 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
     private static IReadOnlyList<AzureDevOpsTestResultAttachment> BuildAttachmentsFromTestNode(TestNode testNode)
     {
         List<AzureDevOpsTestResultAttachment>? attachments = null;
+        StandardOutputProperty? stdout = null;
+        StandardErrorProperty? stderr = null;
 
-        foreach (FileArtifactProperty fileArtifact in testNode.Properties.OfType<FileArtifactProperty>())
+        // Single-pass collection: replaces 1 × OfType<FileArtifactProperty>() loop + 2 × SingleOrDefault<T>()
+        // with one GetStructEnumerator() walk, saving 2 linked-list traversals + 1 LINQ allocation per failure.
+        // Singleton-typed properties (stdout/stderr) use the local GetSingleOrDefaultValue helper to preserve
+        // the throw-on-duplicate invariant that SingleOrDefault<T>() provided; FileArtifactProperty is
+        // intentionally multi-valued and accumulates into a list.
+        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
         {
-            string? fullPath;
-            try
+            switch (enumerator.Current)
             {
-                fullPath = fileArtifact.FileInfo.FullName;
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
-            {
-                continue;
-            }
+                case FileArtifactProperty fileArtifact:
+                    string? fullPath;
+                    try
+                    {
+                        fullPath = fileArtifact.FileInfo.FullName;
+                    }
+                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException or PathTooLongException)
+                    {
+                        break;
+                    }
 
-            attachments ??= [];
-            attachments.Add(AzureDevOpsTestResultAttachment.FromFile(
-                fullPath,
-                AzureDevOpsAttachmentTypes.GeneralAttachment,
-                comment: fileArtifact.Description ?? fileArtifact.DisplayName));
+                    attachments ??= [];
+                    attachments.Add(AzureDevOpsTestResultAttachment.FromFile(
+                        fullPath,
+                        AzureDevOpsAttachmentTypes.GeneralAttachment,
+                        comment: fileArtifact.Description ?? fileArtifact.DisplayName));
+                    break;
+                case StandardOutputProperty so: stdout = GetSingleOrDefaultValue(stdout, so); break;
+                case StandardErrorProperty se: stderr = GetSingleOrDefaultValue(stderr, se); break;
+            }
         }
 
-        StandardOutputProperty? stdout = testNode.Properties.SingleOrDefault<StandardOutputProperty>();
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : class, IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
+
         if (stdout is not null && !RoslynString.IsNullOrEmpty(stdout.StandardOutput))
         {
             attachments ??= [];
@@ -89,7 +109,6 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
                 AzureDevOpsAttachmentTypes.ConsoleLog));
         }
 
-        StandardErrorProperty? stderr = testNode.Properties.SingleOrDefault<StandardErrorProperty>();
         if (stderr is not null && !RoslynString.IsNullOrEmpty(stderr.StandardError))
         {
             attachments ??= [];
