@@ -9,6 +9,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceG
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
+using MSTest.Analyzers.Shared;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators;
 
 /// <summary>
