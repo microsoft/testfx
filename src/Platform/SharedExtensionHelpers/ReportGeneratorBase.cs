@@ -123,8 +123,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
         CancellationToken cancellationToken = testSessionContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
-        ApplicationStateGuard.Ensure(_testStartTime is not null);
-        DateTimeOffset testStartTime = _testStartTime.Value;
+        DateTimeOffset testStartTime = _testStartTime ?? throw ApplicationStateGuard.Unreachable();
 
         await _logger.LogTraceAsync(GetGenerationLogMessage(_tests.Count)).ConfigureAwait(false);
 
