@@ -464,7 +464,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenNonTestClassHasDataTestMethod_Diagnostic()
+    public async Task WhenClassWithoutTestAttribute_HasDataTestMethod_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -493,7 +493,7 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenNonTestClassInheritsDataTestMethodFromAbstractBase_Diagnostic()
+    public async Task WhenClassWithoutTestAttribute_InheritsDataTestMethodFromAbstractBase_Diagnostic()
     {
         // Abstract base is exempt from the diagnostic; derived non-test class
         // that inherits [DataTestMethod] via the inheritance walk should fire.
