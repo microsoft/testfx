@@ -17,7 +17,10 @@
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
-    <!-- Pinned to a daily build for PublicApi analyzer support until the next stable package. -->
+    <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers pinned to a daily build (5.5.x).
+         The last stable release (3.3.4, 2022) lacks newer RS0017/RS0026/RS0036 fixes that testfx's
+         public-API surface tracking depends on. Promote back to the next stable 5.x once one ships.
+         Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.5.0-2.26224.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
@@ -26,7 +29,10 @@
     <MicrosoftNETTestSdkVersion>18.4.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.58.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
-    <!-- Pinned to a preview build for internal test framework features until the next stable package. -->
+    <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
+         opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public
+         stable release on nuget.org. Promote when the internal feed ships a non-preview version.
+         Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
   </PropertyGroup>
