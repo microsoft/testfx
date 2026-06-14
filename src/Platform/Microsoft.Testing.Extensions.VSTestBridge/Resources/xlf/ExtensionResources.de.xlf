@@ -14,12 +14,12 @@
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
         <source>runsettings file '{0}' cannot be read</source>
-        <target state="new">runsettings file '{0}' cannot be read</target>
+        <target state="translated">runsettings-Datei „{0}“ kann nicht gelesen werden.</target>
         <note>0 is the {Locked="runsettings"} file path.</note>
       </trans-unit>
       <trans-unit id="RunsettingsFileDoesNotExist">
         <source>runsettings file '{0}' does not exist</source>
-        <target state="new">runsettings file '{0}' does not exist</target>
+        <target state="translated">runsettings-Datei „{0}“ ist nicht vorhanden.</target>
         <note>0 is the {Locked="runsettings"} file path.</note>
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
