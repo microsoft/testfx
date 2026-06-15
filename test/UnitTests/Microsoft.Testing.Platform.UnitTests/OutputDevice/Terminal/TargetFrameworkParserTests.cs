@@ -54,8 +54,16 @@ public sealed class TargetFrameworkParserTests
         => Assert.AreEqual("net8.0-windows10.0.18362.0", TargetFrameworkParser.BuildTargetFrameworkMoniker("net8.0", "Windows10.0.18362.0"));
 
     [TestMethod]
+    public void BuildTargetFrameworkMoniker_WithWhitespacePlatform_ReturnsShortTargetFramework()
+        => Assert.AreEqual("net8.0", TargetFrameworkParser.BuildTargetFrameworkMoniker("net8.0", "   "));
+
+    [TestMethod]
     public void BuildTargetFrameworkMoniker_WithNullShortTargetFramework_ReturnsNull()
         => Assert.IsNull(TargetFrameworkParser.BuildTargetFrameworkMoniker(null, "Windows10.0.18362.0"));
+
+    [TestMethod]
+    public void BuildTargetFrameworkMoniker_WithEmptyShortTargetFramework_DoesNotEmitDanglingPlatform()
+        => Assert.AreEqual(string.Empty, TargetFrameworkParser.BuildTargetFrameworkMoniker(string.Empty, "BrowserWasm1.0"));
 
     [TestMethod]
     public void GetTargetPlatformName_WithNullAssembly_ReturnsNull()
@@ -84,6 +92,13 @@ public sealed class TargetFrameworkParserTests
     }
 
     [TestMethod]
+    public void GetTargetPlatformName_WithWhitespacePlatformValue_ReturnsNull()
+    {
+        Assembly dynamicAssembly = CreateAssemblyWithTargetPlatform("   ");
+        Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(dynamicAssembly));
+    }
+
+    [TestMethod]
     public void GetShortTargetFrameworkIncludingPlatform_WithTargetPlatformAttribute_AppendsLowercasedPlatform()
     {
         Assembly dynamicAssembly = CreateAssemblyWithTargetPlatform("Windows10.0.18362.0");
@@ -108,6 +123,21 @@ public sealed class TargetFrameworkParserTests
         Assert.DoesNotContain("-", result);
     }
 
+    [TestMethod]
+    public void GetShortTargetFrameworkIncludingPlatform_WithEmptyFrameworkDisplayName_FallsBackToRuntimeBase()
+    {
+        // Simulates a build whose TargetFrameworkAttribute carries an empty FrameworkDisplayName (as can happen
+        // for a custom TargetFrameworkIdentifier such as Uno's net8.0-browserwasm). The base must fall back to
+        // the runtime description (e.g. net8.0) instead of leaving a dangling "-browserwasm1.0" name.
+        Assembly dynamicAssembly = CreateAssemblyWithFrameworkDisplayNameAndTargetPlatform(string.Empty, "BrowserWasm1.0");
+
+        string? result = TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(dynamicAssembly);
+
+        Assert.IsNotNull(result);
+        Assert.StartsWith("net", result);
+        Assert.EndsWith("-browserwasm1.0", result);
+    }
+
     private static Assembly CreateAssemblyWithTargetPlatform(string platformName)
     {
         var name = new AssemblyName($"TestAssembly_{Guid.NewGuid():N}");
@@ -115,6 +145,20 @@ public sealed class TargetFrameworkParserTests
 
         ConstructorInfo ctor = typeof(System.Runtime.Versioning.TargetPlatformAttribute).GetConstructor([typeof(string)])!;
         builder.SetCustomAttribute(new CustomAttributeBuilder(ctor, [platformName]));
+        return builder;
+    }
+
+    private static Assembly CreateAssemblyWithFrameworkDisplayNameAndTargetPlatform(string frameworkDisplayName, string platformName)
+    {
+        var name = new AssemblyName($"TestAssembly_{Guid.NewGuid():N}");
+        var builder = AssemblyBuilder.DefineDynamicAssembly(name, AssemblyBuilderAccess.RunAndCollect);
+
+        ConstructorInfo frameworkCtor = typeof(System.Runtime.Versioning.TargetFrameworkAttribute).GetConstructor([typeof(string)])!;
+        PropertyInfo displayNameProperty = typeof(System.Runtime.Versioning.TargetFrameworkAttribute).GetProperty(nameof(System.Runtime.Versioning.TargetFrameworkAttribute.FrameworkDisplayName))!;
+        builder.SetCustomAttribute(new CustomAttributeBuilder(frameworkCtor, [".NETCoreApp,Version=v8.0"], [displayNameProperty], [frameworkDisplayName]));
+
+        ConstructorInfo platformCtor = typeof(System.Runtime.Versioning.TargetPlatformAttribute).GetConstructor([typeof(string)])!;
+        builder.SetCustomAttribute(new CustomAttributeBuilder(platformCtor, [platformName]));
         return builder;
     }
 
