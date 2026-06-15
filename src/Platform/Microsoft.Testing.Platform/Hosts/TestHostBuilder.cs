@@ -116,6 +116,8 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
         public bool IsJsonRpcProtocol { get; set; }
 
+        public bool IsPipeProtocol { get; set; }
+
         public bool IsHelpCommand { get; set; }
 
         public bool IsInfoCommand { get; set; }

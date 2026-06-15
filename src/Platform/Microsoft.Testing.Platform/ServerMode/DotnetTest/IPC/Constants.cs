@@ -55,5 +55,11 @@ internal static class HandshakeMessageExecutionModes
 
 internal static class ProtocolConstants
 {
-    internal const string Version = "1.0.0";
+    // The change between 1.0.0 and 1.1.0 is that TerminalOutputDevice is no longer plugged in.
+    // That's not really a protocol change, but we use the version to signal to the SDK that it
+    // can safely keep the test host's standard output/error visible (TerminalTestReporter and
+    // host output will no longer collide).
+    // When both sides advertise 1.1.0 and we negotiate to that version, the SDK can keep its
+    // live output enabled.
+    internal const string SupportedVersions = "1.0.0;1.1.0";
 }
