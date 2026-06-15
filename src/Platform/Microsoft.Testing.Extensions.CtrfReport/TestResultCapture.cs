@@ -13,11 +13,11 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 // stdout/stderr/stack traces) in memory for the whole session.
 internal static class TestResultCapture
 {
-    internal const int MaxStandardStreamLength = 32 * 1024;
-    internal const int MaxStackTraceLength = 32 * 1024;
-    internal const int MaxMessageLength = 16 * 1024;
-    internal const int MaxIdentityFieldLength = 4 * 1024;
-    internal const int MaxTraitFieldLength = 1024;
+    internal const int MaxStandardStreamLength = TestResultCaptureHelper.MaxStandardStreamLength;
+    internal const int MaxStackTraceLength = TestResultCaptureHelper.MaxStackTraceLength;
+    internal const int MaxMessageLength = TestResultCaptureHelper.MaxMessageLength;
+    internal const int MaxIdentityFieldLength = TestResultCaptureHelper.MaxIdentityFieldLength;
+    internal const int MaxTraitFieldLength = TestResultCaptureHelper.MaxTraitFieldLength;
 
     public static CapturedTestResult? TryCapture(TestNode node)
     {
@@ -149,8 +149,5 @@ internal static class TestResultCapture
     }
 
     internal static string? Truncate(string? value, int maxLength)
-        => value is null || value.Length <= maxLength
-            ? value
-            : value.Substring(0, maxLength)
-                + $"\n…[truncated, original length: {value.Length.ToString(CultureInfo.InvariantCulture)}]";
+        => TestResultCaptureHelper.Truncate(value, maxLength);
 }
