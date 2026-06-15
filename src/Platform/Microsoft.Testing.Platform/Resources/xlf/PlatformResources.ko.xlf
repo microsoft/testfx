@@ -891,7 +891,7 @@ When both --ansi and --no-ansi are provided, --ansi wins.</target>
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
-        <target state="needs-review-translation">화면에 보고 진행률을 사용하지 않도록 설정합니다.</target>
+        <target state="new">[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</target>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">

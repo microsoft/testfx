@@ -868,10 +868,10 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="needs-review-translation">Controle se os caracteres de escape ANSI são emitidos.
-Os valores válidos são 'auto' (padrão), 'on' (também aceita 'true', 'enable', '1') ou 'off' (também aceita 'false', 'disable', '0').
-'on' força códigos de escape ANSI (incluindo movimento de cursor) mesmo quando stdout é redirecionado; emparelhe-o com --no-progress se você quiser apenas cores.
-Quando --ansi e --no-ansi são fornecidos, --ansi ganha.</target>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</target>
         <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
@@ -891,7 +891,7 @@ Quando --ansi e --no-ansi são fornecidos, --ansi ganha.</target>
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
-        <target state="needs-review-translation">Desabilite o progresso do relatório na tela.</target>
+        <target state="new">[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</target>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
