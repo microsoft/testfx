@@ -69,6 +69,9 @@ stages:
         set -euo pipefail
 
         target="${SYSTEM_PULLREQUEST_TARGETBRANCH:-}"
+        # ADO exposes the target branch as a full ref (e.g. "refs/heads/main"); strip the
+        # "refs/heads/" prefix so it can be combined with the "origin/" remote-tracking prefix.
+        target="${target#refs/heads/}"
         if [[ -z "${target}" ]]; then
           echo "Not a PR build (SYSTEM_PULLREQUEST_TARGETBRANCH is empty); running all jobs."
           hasProduct=true
@@ -88,13 +91,16 @@ stages:
             hasProduct=true
             hasSamples=true
           else
-            # Anything outside samples/** counts as a product change.
-            if echo "${files}" | grep -qv '^samples/'; then
+            # A file is a "samples-affecting" change if it lives under samples/** or it is
+            # one of the eng/ scripts that drives the samples build (build-samples.ps1).
+            # Everything else is treated as a product change.
+            samples_pattern='^(samples/|eng/build-samples\.ps1$)'
+            if echo "${files}" | grep -Eqv "${samples_pattern}"; then
               hasProduct=true
             else
               hasProduct=false
             fi
-            if echo "${files}" | grep -q '^samples/'; then
+            if echo "${files}" | grep -Eq "${samples_pattern}"; then
               hasSamples=true
             else
               hasSamples=false
@@ -123,7 +129,7 @@ stages:
       jobs:
       - job: Windows
         dependsOn: DetectChanges
-        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
@@ -254,7 +260,7 @@ stages:
 
       - job: Linux
         dependsOn: DetectChanges
-        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
@@ -284,7 +290,7 @@ stages:
 
       - job: MacOS
         dependsOn: DetectChanges
-        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
@@ -325,7 +331,7 @@ stages:
       jobs:
       - job: WindowsSamples
         dependsOn: DetectChanges
-        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false'))
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false'))
         timeoutInMinutes: 30
         pool:
           name: NetCore-Public
