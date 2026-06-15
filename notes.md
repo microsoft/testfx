@@ -33,6 +33,10 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-15 | Task 3 (MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases), Task 7 (Monthly Issue Jun) |
+| 2026-06-13 | Task 3 (UseConditionBaseWithTestClassAnalyzer MSTEST0041 edge cases), Task 7 (Monthly Issue Jun) |
+| 2026-06-12 | Task 3 (TypeContainingTestMethodShouldBeATestClassAnalyzer MSTEST0030 edge cases), Task 7 (Monthly Issue Jun) |
+| 2026-06-11 | Task 3 (TestClassShouldHaveTestMethodAnalyzer MSTEST0016 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-10 | Task 3 (DoNotUseSystemDescriptionAttributeAnalyzer MSTEST0031 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-09 | Task 3 (UseDeploymentItemWithTestMethodOrTestClass MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-08 | Task 3 (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases), Task 7 (Monthly Issue Jun) |
@@ -49,11 +53,15 @@
 
 ## Last Run
 
-2026-06-10 23:25 UTC
+2026-06-15 23:30 UTC
 
 ## Completed Work
 
-- PR for DoNotUseSystemDescriptionAttributeAnalyzer edge cases (2026-06-10, pending merge) — DataTestMethod→diagnostic (Inherits() path), MSTest Description→no diagnostic
+- PR (pending) for MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases (2026-06-15) — instance method→NotStatic, internal method→NotPublic, private getter→NotReadable, params+ConditionMode
+- PR #9103 merged (UseConditionBaseWithTestClassAnalyzer MSTEST0041 edge cases) — merged 2026-06-14
+- PR #9092 merged (TypeContainingTestMethodShouldBeATestClassAnalyzer MSTEST0030 edge cases) — merged 2026-06-13
+- PR #9061 merged (TestClassShouldHaveTestMethodAnalyzer MSTEST0016 edge cases) — merged 2026-06-12
+- PR #9020 merged (DoNotUseSystemDescriptionAttributeAnalyzer MSTEST0031 edge cases) — merged 2026-06-11
 - PR #8977 merged (UseDeploymentItemWithTestMethodOrTestClass MSTEST0035 edge cases) — merged 2026-06-10
 - PR #8941 merged (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases) — merged 2026-06-09
 - PR #8909 merged (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases) — merged 2026-06-08
