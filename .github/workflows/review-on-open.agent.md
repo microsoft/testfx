@@ -34,6 +34,11 @@ imports:
 # claude-opus-4.6, so the default 1000 AI-credit budget is too low (see #9115).
 max-ai-credits: 2000
 
+# This same fan-out means a single run can consume several thousand AI credits, so
+# raise the per-workflow 24h budget above the enterprise default to avoid skipping
+# reviews on a busy PR day (see issue #9053).
+max-daily-ai-credits: 20K
+
 safe-outputs:
   report-failure-as-issue: false
   messages:

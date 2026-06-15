@@ -37,6 +37,8 @@ if: needs.pre_activation.outputs.check_result == 'success'
 
 timeout-minutes: 60
 
+max-ai-credits: 2000
+
 permissions: read-all
 
 network:
