@@ -133,8 +133,6 @@ Extension options:
         Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
     --report-azdo-flaky-history
         Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
-    --report-azdo-progress
-        Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
     --report-azdo-quarantine-file
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
@@ -404,10 +402,6 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
-      --report-azdo-progress
-        Arity: 0
-        Hidden: False
-        Description: Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
       --report-azdo-quarantine-file
         Arity: 1
         Hidden: False

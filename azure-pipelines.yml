@@ -50,11 +50,6 @@ variables:
   #   --report-azdo-summary — Markdown job summary uploaded to the build's Summary tab.
   #   --hangdump --hangdump-timeout 15m — dump a module that hangs past 15 minutes.
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
-  # We intentionally do NOT pass --report-azdo-progress: it emits ##vso[task.logdetail ...;progress=...]
-  # timeline detail records, and per the AzDO logging-commands docs ("While customers can add entries to
-  # the timeline, they won't typically be shown in the UI") these are not rendered in the modern run view
-  # (the classic run view that used to show them is retired), so it adds no observable value in CI. The
-  # option remains available in the product for Timeline REST API consumers.
   - name: _ReleaseUnitTestReportArgs
     value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
 

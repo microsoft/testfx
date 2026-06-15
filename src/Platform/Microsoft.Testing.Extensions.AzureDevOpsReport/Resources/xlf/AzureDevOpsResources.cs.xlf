@@ -107,11 +107,6 @@
         <target state="translated">Časový limit: {0}</target>
         <note>{0} is the timeout reason.</note>
       </trans-unit>
-      <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
-        <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
-        <target state="translated">--report-azdo-progress vyžaduje, aby byla povolena možnost --report-azdo</target>
-        <note>{Locked="--report-azdo-progress"}{Locked="--report-azdo"}</note>
-      </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="translated">Aby bylo možné použít parametr --report-azdo-quarantine-file, musí být povolený parametr --report-azdo.</target>
@@ -221,16 +216,6 @@
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">Umožňuje generátoru sestav Azure DevOps zapisovat chyby do výstupu způsobem, který je pro AzureDev Ops srozumitelný.</target>
         <note />
-      </trans-unit>
-      <trans-unit id="ProgressOptionDescription">
-        <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
-        <target state="translated">Během testovacího běhu generujte záznamy průběhu časové osy Azure DevOps, aby dlouhotrvající relace zobrazovaly živý indikátor průběhu na časové ose sestavení. Vyžaduje --report-azdo.</target>
-        <note>{Locked="--report-azdo"}</note>
-      </trans-unit>
-      <trans-unit id="ProgressRequiresTfBuildWarning">
-        <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
-        <target state="translated">Bylo vyžádáno hlášení průběhu do Azure DevOps, ale TF_BUILD není nastavený na hodnotu true. Odesílání průběhu do Azure DevOps se přeskočí.</target>
-        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>

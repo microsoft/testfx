@@ -80,19 +80,6 @@ public sealed class AzureDevOpsCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenProgressIsUsedWithoutAzureDevOpsAsync()
-    {
-        AzureDevOpsCommandLineProvider provider = new();
-        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
-        {
-            [AzureDevOpsCommandLineOptions.AzureDevOpsProgress] = [],
-        })).ConfigureAwait(false);
-
-        Assert.IsFalse(validationResult.IsValid);
-        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsProgressRequiresAzureDevOps, validationResult.ErrorMessage);
-    }
-
-    [TestMethod]
     public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSummaryIsUsedWithoutAzureDevOpsAsync()
     {
         AzureDevOpsCommandLineProvider provider = new();

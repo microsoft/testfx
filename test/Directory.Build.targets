@@ -19,10 +19,7 @@
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
     <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
          output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
-         so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output.
-         We deliberately omit report-azdo-progress: it emits task.logdetail timeline detail records which,
-         per the AzDO logging-commands docs, "won't typically be shown in the UI" (the classic run view that
-         rendered them is retired), so it has no observable value. -->
+         so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output. -->
     <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-summary</TestingPlatformCommandLineArguments>
     <!-- Dogfood the JUnit report extension (Microsoft.Testing.Extensions.JUnitReport). The .xml files end up in
          $(ResultsDirectory) (Arcade default) alongside the TRX files so they are picked up by the AzDO
