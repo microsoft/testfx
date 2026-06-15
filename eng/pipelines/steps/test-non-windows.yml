@@ -14,7 +14,13 @@ steps:
 # Because the build step is using -ci flag, restore is done in a local .packages directory.
 # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
 # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true
+#
+# -p:TestingPlatformCaptureOutput=false streams each test exe's stdout to the AzDO console at
+# MessageImportance.High. Required so the silence-driven heartbeat (and per-test progress) emitted
+# by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
+# output is buffered into a per-module .log file and only surfaced on failure, so no live progress
+# is visible during long-running test sessions.
+- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
   name: Test
   displayName: Test
   condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
