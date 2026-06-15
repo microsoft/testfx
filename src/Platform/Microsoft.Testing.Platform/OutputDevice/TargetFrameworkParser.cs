@@ -113,7 +113,7 @@ internal static class TargetFrameworkParser
     internal static string? BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName)
         => RoslynString.IsNullOrEmpty(shortTargetFramework) || RoslynString.IsNullOrEmpty(targetPlatformName)
             ? shortTargetFramework
-            : $"{shortTargetFramework}-{targetPlatformName!.ToLowerInvariant()}";
+            : $"{shortTargetFramework}-{targetPlatformName.ToLowerInvariant()}";
 
     /// <summary>
     /// Reads the OS-platform name from <c>System.Runtime.Versioning.TargetPlatformAttribute</c> on
