@@ -13,14 +13,21 @@
 
       This package contains the MSTest MSBuild project SDK.
     </PackageDescription>
+<<<<<<< HEAD
     <!-- This package only ships MSBuild SDK props/targets: no lib and no dependencies. -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+=======
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
+>>>>>>> MSTest migrated
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <!-- This is a packaging-only project - suppress build output from package -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
     <!--
       Pack the MSBuild SDK props/targets into the 'Sdk' folder of the package.
       These are listed explicitly (rather than via a glob) because Sdk.props and
@@ -38,6 +45,14 @@
     <None Include="Sdk\Runner\ClassicEngine.targets" Pack="true" PackagePath="Sdk\Runner\ClassicEngine.targets" />
     <None Include="Sdk\Runner\NativeAOT.targets" Pack="true" PackagePath="Sdk\Runner\NativeAOT.targets" />
     <None Include="Sdk\VSTest\VSTest.targets" Pack="true" PackagePath="Sdk\VSTest\VSTest.targets" />
+=======
+    <Content Include="Sdk\**" Exclude="Sdk\**\*.template" Pack="true" PackagePath="Sdk">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Sdk\**\*.template" Pack="false">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+>>>>>>> MSTest migrated
   </ItemGroup>
 
   <ItemGroup>
