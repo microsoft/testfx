@@ -49,11 +49,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         try
         {
-            // When writing to ANSI, we update the progress in place and it should look responsive so we
-            // update every half second, because we only show seconds on the screen, so it is good enough.
-            // When writing to non-ANSI, we never show progress as the output can get long and messy.
-            const int AnsiUpdateCadenceInMs = 500;
-            while (!cancellationTokenSource.Token.WaitHandle.WaitOne(AnsiUpdateCadenceInMs))
+            // The renderer chooses the cadence: cursor renderers want a responsive sub-second redraw,
+            // while the silence-driven heartbeat only needs second-level granularity.
+            int updateCadenceInMs = (int)_renderer.TickInterval.TotalMilliseconds;
+            while (!cancellationTokenSource.Token.WaitHandle.WaitOne(updateCadenceInMs))
             {
                 // Note: OnProgressStartUpdate is invoked outside the lock to avoid a deadlock where
                 // a test subscriber blocks the event handler (e.g. with WaitOne) while the lock is held,

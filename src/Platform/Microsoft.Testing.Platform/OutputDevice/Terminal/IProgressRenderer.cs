@@ -22,6 +22,13 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal interface IProgressRenderer
 {
     /// <summary>
+    /// Gets the desired cadence between <see cref="OnTick"/> invocations. Cursor renderers want a responsive
+    /// sub-second redraw, whereas the silence-driven heartbeat only needs second-level granularity, so a
+    /// slower cadence avoids unnecessary scan/sort work on every tick in CI / redirected runs.
+    /// </summary>
+    TimeSpan TickInterval { get; }
+
+    /// <summary>
     /// Called once when progress reporting starts, before the first tick.
     /// </summary>
     void OnStart();

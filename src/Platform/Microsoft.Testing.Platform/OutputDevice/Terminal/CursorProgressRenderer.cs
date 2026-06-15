@@ -11,6 +11,10 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [UnsupportedOSPlatform("browser")]
 internal sealed class CursorProgressRenderer : IProgressRenderer
 {
+    // We only show seconds on the screen, but we want the in-place progress to look responsive, so we
+    // redraw every half second.
+    public TimeSpan TickInterval => TimeSpan.FromMilliseconds(500);
+
     public void OnStart()
     {
         // Nothing to do, the busy indicator and refresher are managed by TestProgressStateAwareTerminal.

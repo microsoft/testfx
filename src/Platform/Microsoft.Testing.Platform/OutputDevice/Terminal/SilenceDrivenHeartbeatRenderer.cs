@@ -40,13 +40,22 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
         _createStopwatch = createStopwatch;
     }
 
-    private long NowTicks => _clock?.Elapsed.Ticks ?? 0;
+    // The heartbeat rules only need second-level granularity, so we tick once per second instead of the
+    // sub-second cadence the cursor renderer uses, avoiding an unnecessary running-test scan/sort twice
+    // per second in CI / redirected runs.
+    public TimeSpan TickInterval => TimeSpan.FromSeconds(1);
+
+    // _clock is published once in OnStart() and then read from other threads (OnTick on the refresher
+    // thread, OnTestCompleted from the message pump), so use Volatile to make the publication explicit
+    // and avoid reading a stale null reference (which would make NowTicks return 0).
+    private long NowTicks => Volatile.Read(ref _clock)?.Elapsed.Ticks ?? 0;
 
     public void OnStart()
     {
         _slowTestNextThresholdTicks.Clear();
-        _clock = _createStopwatch();
-        Interlocked.Exchange(ref _lastActivityTicks, _clock.Elapsed.Ticks);
+        IStopwatch clock = _createStopwatch();
+        Volatile.Write(ref _clock, clock);
+        Interlocked.Exchange(ref _lastActivityTicks, clock.Elapsed.Ticks);
     }
 
     public void OnTestCompleted()
@@ -146,7 +155,9 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
                 // Exponential backoff: next emission at twice the crossed threshold (60s -> 2m -> 4m -> 8m ...).
                 _slowTestNextThresholdTicks[detail.Id] = next * 2;
 
-                string duration = HumanReadableDurationFormatter.Render(TimeSpan.FromTicks(next), wrapInParentheses: false);
+                // Report the test's actual elapsed time rather than the scheduled threshold so a delayed
+                // tick (GC pause, debugger break, CPU starvation) does not under-report the runtime.
+                string duration = HumanReadableDurationFormatter.Render(TimeSpan.FromTicks(elapsed), wrapInParentheses: false);
                 terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.TerminalProgressSlowTest, duration, BuildSlowTestDescription(item, detail)));
             }
         }

@@ -141,6 +141,33 @@ public sealed class SilenceDrivenHeartbeatRendererTests
     }
 
     [TestMethod]
+    public void SlowTest_WhenTickIsDelayedPastThreshold_ReportsActualElapsedNotThreshold()
+    {
+        var clock = new FakeClock();
+        var terminal = new RecordingStringTerminal();
+        // Disable the silence heartbeat to isolate slow-test behavior.
+        var renderer = new SilenceDrivenHeartbeatRenderer(TimeSpan.Zero, Slow60s, clock.CreateStopwatch);
+        renderer.OnStart();
+
+        var results = new TestNodeResultsState(1);
+        results.AddRunningTestNode(id: 10, uid: "uid-1", name: "SlowTest.IntegrationFoo", clock.CreateStopwatch());
+        TestProgressState asm = CreateAssembly(clock, totalTests: 0, failedTests: 0, activeTestName: null);
+        asm.TestNodeResultsState = results;
+        TestProgressState?[] items = [asm];
+
+        // The first tick is delayed (e.g. GC pause / CPU starvation): the test has actually been running
+        // 95s by the time we render, even though the crossed threshold was 60s.
+        clock.Advance(TimeSpan.FromSeconds(95));
+        renderer.OnTick(terminal, items);
+
+        Assert.AreEqual(1, terminal.LineCount);
+        Assert.Contains("[slow]", terminal.Output);
+        // The emitted duration reflects the real elapsed time, not the 60s scheduled threshold.
+        Assert.Contains(HumanReadableDurationFormatter.Render(TimeSpan.FromSeconds(95), wrapInParentheses: false)!, terminal.Output);
+        Assert.DoesNotContain(HumanReadableDurationFormatter.Render(TimeSpan.FromSeconds(60), wrapInParentheses: false)!, terminal.Output);
+    }
+
+    [TestMethod]
     public void SlowTest_WhenBelowThreshold_EmitsNothing()
     {
         var clock = new FakeClock();
