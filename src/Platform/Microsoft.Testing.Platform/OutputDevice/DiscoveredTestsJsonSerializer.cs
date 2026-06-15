@@ -62,7 +62,32 @@ internal static class DiscoveredTestsJsonSerializer
         writer.WriteString("uid", test.Uid.Value);
         writer.WriteString("displayName", test.DisplayName);
 
-        TestMethodIdentifierProperty? methodIdentifier = test.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        // Collect all required properties in a single linked-list pass — replacing
+        // 4 × PropertyBag traversals (2 × SingleOrDefault + 2 × OfType) with one
+        // zero-allocation GetStructEnumerator() pass per discovered test.
+        TestMethodIdentifierProperty? methodIdentifier = null;
+        TestFileLocationProperty? fileLocation = null;
+        List<TestMetadataProperty>? traits = null;
+        List<SerializableKeyValuePairStringProperty>? kvps = null;
+
+        PropertyBag.PropertyBagEnumerator enumerator = test.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TestMethodIdentifierProperty m: methodIdentifier = GetSingleOrDefaultValue(methodIdentifier, m); break;
+                case TestFileLocationProperty l: fileLocation = GetSingleOrDefaultValue(fileLocation, l); break;
+                case TestMetadataProperty meta: (traits ??= []).Add(meta); break;
+                case SerializableKeyValuePairStringProperty kvp: (kvps ??= []).Add(kvp); break;
+            }
+        }
+
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : class, IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
+
         if (methodIdentifier is not null)
         {
             writer.WriteStartObject("type");
@@ -86,7 +111,6 @@ internal static class DiscoveredTestsJsonSerializer
             writer.WriteEndObject();
         }
 
-        TestFileLocationProperty? fileLocation = test.Properties.SingleOrDefault<TestFileLocationProperty>();
         if (fileLocation is not null)
         {
             writer.WriteStartObject("location");
@@ -96,14 +120,12 @@ internal static class DiscoveredTestsJsonSerializer
             writer.WriteEndObject();
         }
 
-        TestMetadataProperty[] traits = test.Properties.OfType<TestMetadataProperty>();
-        if (traits.Length > 0)
+        if (traits is not null)
         {
-            // PropertyBag stores properties as a linked list and prepends on Add, so OfType walks
-            // them in reverse insertion order. Reverse here so the JSON reflects the order in
-            // which the adapter recorded the traits, which is what consumers will reasonably
-            // expect and what makes diffs stable across runs.
-            Array.Reverse(traits);
+            // PropertyBag prepends on Add, so GetStructEnumerator yields in reverse insertion order.
+            // Reverse here so the JSON reflects the order in which the adapter recorded the traits,
+            // which is what consumers will reasonably expect and what makes diffs stable across runs.
+            traits.Reverse();
             writer.WriteStartArray("traits");
             foreach (TestMetadataProperty trait in traits)
             {
@@ -116,13 +138,12 @@ internal static class DiscoveredTestsJsonSerializer
             writer.WriteEndArray();
         }
 
-        SerializableKeyValuePairStringProperty[] kvps = test.Properties.OfType<SerializableKeyValuePairStringProperty>();
-        if (kvps.Length > 0)
+        if (kvps is not null)
         {
             // Same rationale as traits above: reverse so the JSON reflects insertion order.
             // Emit as an array of {key, value} (mirroring traits) so duplicate keys — which
             // PropertyBag allows — survive serialization. A JSON object would silently collapse them.
-            Array.Reverse(kvps);
+            kvps.Reverse();
             writer.WriteStartArray("properties");
             foreach (SerializableKeyValuePairStringProperty kvp in kvps)
             {
