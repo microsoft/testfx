@@ -33,7 +33,7 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
             testHost, cancellationToken: TestContext.CancellationToken);
 
         Assert.IsNotNull(result.ReceivedHandshake, "Test app never sent a handshake message.");
-        Assert.IsNotNull(result.SentHandshakeReply);
+        Assert.IsNotNull(result.SentHandshakeReply, "Fake SDK never sent a handshake reply — check that the handshake frame was received and decoded.");
 
         Assert.IsTrue(
             result.ReceivedHandshake.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.SupportedProtocolVersions, out string? appVersions),
@@ -92,7 +92,7 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
             testHost, cancellationToken: TestContext.CancellationToken);
 
         Assert.DoesNotMatchRegex(
-            BannerRegex.ToString(),
+            BannerRegex,
             result.TestHostResult.StandardOutput,
             $"BASELINE: under --server dotnettestcli the test app already silences its banner. " +
             $"If this fails, something started re-emitting the banner under pipe mode.{Environment.NewLine}" +

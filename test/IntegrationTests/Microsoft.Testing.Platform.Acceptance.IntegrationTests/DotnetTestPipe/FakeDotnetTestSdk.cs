@@ -40,7 +40,8 @@ internal static class FakeDotnetTestSdk
         string pipeId = Guid.NewGuid().ToString("N");
         string osPipeName = DotnetTestPipeProtocol.GetPipeName(pipeId);
 
-        // CurrentUserOnly only exists on .NET Core; on .NET Framework we omit it.
+        // CurrentUserOnly hardens the pipe ACL so only the current user can connect. It is
+        // available here because this harness only targets .NET (Core) ($(NetCurrent)).
         PipeOptions options = PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly;
 
         // .NET Framework's NamedPipeServerStream takes the pipe name without leading \\.\pipe\
@@ -53,14 +54,9 @@ internal static class FakeDotnetTestSdk
         Dictionary<byte, string>? sentHandshakeReply = null;
         string? negotiatedVersion = null;
 
-        Task<TestHostResult> hostRun = Task.Run(
-            async () =>
-            {
-                string pipeArgs = $"--server dotnettestcli --dotnet-test-pipe {osPipeName}";
-                string finalArgs = extraArguments is null ? pipeArgs : $"{pipeArgs} {extraArguments}";
-                return await testHost.ExecuteAsync(finalArgs, environmentVariables, cancellationToken: cancellationToken).ConfigureAwait(false);
-            },
-            cancellationToken);
+        string pipeArgs = $"--server dotnettestcli --dotnet-test-pipe {osPipeName}";
+        string finalArgs = extraArguments is null ? pipeArgs : $"{pipeArgs} {extraArguments}";
+        Task<TestHostResult> hostRun = testHost.ExecuteAsync(finalArgs, environmentVariables, cancellationToken: cancellationToken);
 
         // Wait for the test app to connect.
         await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
@@ -108,7 +104,7 @@ internal static class FakeDotnetTestSdk
     /// also in <paramref name="sdkSupportedVersions"/>. Returns <see cref="string.Empty"/> if none
     /// match.
     /// </summary>
-    public static string SelectHighestMutuallySupportedVersion(Dictionary<byte, string> handshakeProperties, string sdkSupportedVersions)
+    private static string SelectHighestMutuallySupportedVersion(Dictionary<byte, string> handshakeProperties, string sdkSupportedVersions)
     {
         if (!handshakeProperties.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.SupportedProtocolVersions, out string? appVersions)
             || string.IsNullOrWhiteSpace(appVersions))
@@ -116,13 +112,14 @@ internal static class FakeDotnetTestSdk
             return string.Empty;
         }
 
-        HashSet<string> sdkSet = new(sdkSupportedVersions.Split(';', StringSplitOptions.RemoveEmptyEntries), StringComparer.Ordinal);
+        HashSet<string> sdkSet = new(
+            sdkSupportedVersions.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(static raw => raw.Trim()),
+            StringComparer.Ordinal);
 
         string? best = null;
         Version? bestParsed = null;
-        foreach (string raw in appVersions.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string candidate in appVersions.Split(';', StringSplitOptions.RemoveEmptyEntries).Select(static raw => raw.Trim()))
         {
-            string candidate = raw.Trim();
             if (!sdkSet.Contains(candidate))
             {
                 continue;

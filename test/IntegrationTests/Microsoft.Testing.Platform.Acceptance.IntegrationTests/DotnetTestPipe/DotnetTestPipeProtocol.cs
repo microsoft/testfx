@@ -195,6 +195,14 @@ internal static class DotnetTestPipeProtocol
             {
                 case TestSessionEventFields.SessionType:
                     sessionType = (byte)stream.ReadByte();
+
+                    // SessionType is a single byte today, but advance past any extra bytes the
+                    // wire format may carry so subsequent fields stay aligned.
+                    if (fieldSize > 1)
+                    {
+                        stream.Seek(fieldSize - 1, SeekOrigin.Current);
+                    }
+
                     break;
                 case TestSessionEventFields.SessionUid:
                     sessionUid = ReadFixedSizeString(stream, fieldSize);
