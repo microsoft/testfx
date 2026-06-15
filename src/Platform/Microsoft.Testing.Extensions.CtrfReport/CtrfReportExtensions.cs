@@ -24,7 +24,7 @@ public static class CtrfReportExtensions
         => ReportProviderRegistration.AddReportProvider(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
-            new CtrfReportGeneratorCommandLine(),
+            () => new CtrfReportGeneratorCommandLine(),
             serviceProvider =>
                 new CtrfReportGenerator(
                     serviceProvider.GetConfiguration(),

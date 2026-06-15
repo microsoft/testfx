@@ -24,7 +24,7 @@ public static class HtmlReportExtensions
         => ReportProviderRegistration.AddReportProvider(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
-            new HtmlReportGeneratorCommandLine(),
+            () => new HtmlReportGeneratorCommandLine(),
             serviceProvider =>
                 new HtmlReportGenerator(
                     serviceProvider.GetConfiguration(),

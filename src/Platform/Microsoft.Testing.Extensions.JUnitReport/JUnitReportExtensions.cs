@@ -24,7 +24,7 @@ public static class JUnitReportExtensions
         => ReportProviderRegistration.AddReportProvider(
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
-            new JUnitReportGeneratorCommandLine(),
+            () => new JUnitReportGeneratorCommandLine(),
             serviceProvider =>
                 new JUnitReportGenerator(
                     serviceProvider.GetConfiguration(),

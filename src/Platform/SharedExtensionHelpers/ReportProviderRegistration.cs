@@ -12,19 +12,19 @@ internal static class ReportProviderRegistration
 {
     /// <summary>
     /// Registers a report generator as both a data consumer and a test session lifetime handler, along with its
-    /// command-line options provider, applying the shared <see cref="TestApplicationBuilder"/> guard.
+    /// command-line options provider, applying the shared <c>TestApplicationBuilder</c> implementation guard.
     /// </summary>
     /// <typeparam name="TGenerator">The report generator type.</typeparam>
     /// <param name="builder">The test application builder.</param>
     /// <param name="invalidBuilderTypeErrorMessage">
-    /// The error message used when <paramref name="builder"/> is not a <see cref="TestApplicationBuilder"/>.
+    /// The error message used when <paramref name="builder"/> is not a <c>TestApplicationBuilder</c>.
     /// </param>
-    /// <param name="commandLine">The command-line options provider associated with the report.</param>
+    /// <param name="commandLineFactory">The factory that creates the command-line options provider associated with the report.</param>
     /// <param name="generatorFactory">The factory that creates the report generator from the service provider.</param>
     public static void AddReportProvider<TGenerator>(
         ITestApplicationBuilder builder,
         string invalidBuilderTypeErrorMessage,
-        ICommandLineOptionsProvider commandLine,
+        Func<ICommandLineOptionsProvider> commandLineFactory,
         Func<IServiceProvider, TGenerator> generatorFactory)
         where TGenerator : class, IDataConsumer, ITestSessionLifetimeHandler
     {
@@ -38,6 +38,7 @@ internal static class ReportProviderRegistration
         builder.TestHost.AddDataConsumer(compositeReportGenerator);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReportGenerator);
 
+        ICommandLineOptionsProvider commandLine = commandLineFactory();
         builder.CommandLine.AddProvider(() => commandLine);
     }
 }
