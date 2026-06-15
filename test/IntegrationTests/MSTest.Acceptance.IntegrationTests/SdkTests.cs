@@ -97,7 +97,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --no-progress --no-ansi", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --progress off --no-ansi", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net10\.0\|x64\) passed");

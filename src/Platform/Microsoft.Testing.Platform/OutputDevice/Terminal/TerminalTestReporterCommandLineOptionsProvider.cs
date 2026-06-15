@@ -12,6 +12,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
     public const string NoProgressOption = "no-progress";
+    public const string ProgressOption = "progress";
     public const string NoAnsiOption = "no-ansi";
     public const string AnsiOption = "ansi";
     public const string OutputOption = "output";
@@ -31,6 +32,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             PlatformResources.TerminalTestReporterDescription,
             [
                 new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
+                new(ProgressOption, PlatformResources.TerminalProgressOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
                 new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
@@ -44,6 +46,9 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
         => commandOption.Name switch
         {
             NoProgressOption => ValidationResult.ValidTask,
+            ProgressOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(PlatformResources.TerminalProgressOptionInvalidArgument),
             NoAnsiOption => ValidationResult.ValidTask,
             AnsiOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask

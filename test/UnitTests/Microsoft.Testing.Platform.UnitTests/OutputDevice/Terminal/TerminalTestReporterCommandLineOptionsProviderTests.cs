@@ -70,6 +70,64 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         Assert.IsTrue(option.IsBuiltIn);
     }
 
+    [TestMethod]
+    [DataRow("auto")]
+    [DataRow("AUTO")]
+    [DataRow("on")]
+    [DataRow("true")]
+    [DataRow("enable")]
+    [DataRow("1")]
+    [DataRow("off")]
+    [DataRow("false")]
+    [DataRow("disable")]
+    [DataRow("0")]
+    public async Task ValidateOptionArguments_ProgressOption_AcceptsValidValues(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ProgressOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsTrue(result.IsValid, $"Expected '{value}' to be a valid --progress value, but got: {result.ErrorMessage}");
+    }
+
+    [TestMethod]
+    [DataRow("")]
+    [DataRow("yes")]
+    [DataRow("no")]
+    [DataRow("enabled")]
+    [DataRow("force")]
+    [DataRow("2")]
+    public async Task ValidateOptionArguments_ProgressOption_RejectsInvalidValues(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ProgressOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsFalse(result.IsValid, $"Expected '{value}' to be rejected as a --progress value but it was accepted.");
+        Assert.IsNotNull(result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void GetCommandLineOptions_IncludesProgressOption()
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ProgressOption);
+
+        Assert.AreEqual(ArgumentArity.ExactlyOne, option.Arity);
+        Assert.IsFalse(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
+    }
+
+    [TestMethod]
+    public void GetCommandLineOptions_StillIncludesNoProgressOption()
+    {
+        // Validate backward compatibility: --no-progress is preserved alongside --progress.
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
+
+        Assert.AreEqual(ArgumentArity.Zero, option.Arity);
+        Assert.IsFalse(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
+    }
+
     private CommandLineOption GetOption(string name)
         => _provider.GetCommandLineOptions().Single(o => o.Name == name);
 }

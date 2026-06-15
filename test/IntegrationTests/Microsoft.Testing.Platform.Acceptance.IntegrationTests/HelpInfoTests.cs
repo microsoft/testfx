@@ -23,7 +23,7 @@ Options:
     --ansi
         Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
         When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
@@ -63,10 +63,15 @@ Options:
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
-        Disable reporting progress to screen.
+        [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --progress
+        Control whether progress is reported to screen.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+        This option takes precedence over the deprecated --no-progress flag.
     --results-directory
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
@@ -120,7 +125,7 @@ Options:
         const string wildcardMatchPattern = $"""
 Microsoft.Testing.Platform v*
 Unknown option '--{UnknownOption}'
-Command line: --no-ansi --no-progress -{UnknownOption}
+Command line: --no-ansi --progress off -{UnknownOption}
 Usage {TestAssetFixture.NoExtensionAssetName}* [option providers] [extension option providers]
 Execute a .NET Test Application.
 Options:
@@ -268,7 +273,7 @@ Built-in command line providers:
         Hidden: False
         Description: Control whether ANSI escape characters are emitted\.
         Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\)\.
-        'on' forces ANSI escape codes \(including cursor movement\) even when stdout is redirected; pair it with --no-progress if you only want colors\.
+        'on' forces ANSI escape codes \(including cursor movement\) even when stdout is redirected; pair it with --progress off if you only want colors\.
         When both --ansi and --no-ansi are provided, --ansi wins\.
       --no-ansi
         Arity: 0
@@ -277,12 +282,19 @@ Built-in command line providers:
       --no-progress
         Arity: 0
         Hidden: False
-        Description: Disable reporting progress to screen.
+        Description: \[Deprecated, use '--progress off' instead\] Disable reporting progress to screen.
       --output
         Arity: 1
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+      --progress
+        Arity: 1
+        Hidden: False
+        Description: Control whether progress is reported to screen.
+        Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
+        'auto' shows progress unless the terminal cannot update in place \(for example with --no-ansi or in CI\).
+        This option takes precedence over the deprecated --no-progress flag.
       --show-stderr
         Arity: 1
         Hidden: False

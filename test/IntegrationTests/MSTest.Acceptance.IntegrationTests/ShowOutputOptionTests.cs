@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -16,7 +16,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stdout none --output detailed --no-progress --no-ansi",
+            "--show-stdout none --output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputDoesNotContain("Standard output");
@@ -30,7 +30,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stdout failed --output detailed --no-progress --no-ansi",
+            "--show-stdout failed --output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("stdout from failing test");
@@ -43,7 +43,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stdout all --output detailed --no-progress --no-ansi",
+            "--show-stdout all --output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("stdout from failing test");
@@ -56,7 +56,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--output detailed --no-progress --no-ansi",
+            "--output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("stdout from failing test");
@@ -69,7 +69,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--output detailed --no-progress --no-ansi",
+            "--output detailed --progress off --no-ansi",
             new Dictionary<string, string?>
             {
                 { "CLAUDECODE", "1" },
@@ -86,7 +86,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stdout all --output detailed --no-progress --no-ansi",
+            "--show-stdout all --output detailed --progress off --no-ansi",
             new Dictionary<string, string?>
             {
                 { "CLAUDECODE", "1" },
@@ -116,7 +116,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stderr none --output detailed --no-progress --no-ansi",
+            "--show-stderr none --output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputDoesNotContain("Error output");
@@ -130,7 +130,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stderr failed --output detailed --no-progress --no-ansi",
+            "--show-stderr failed --output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("stderr from failing test");
@@ -143,7 +143,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stderr all --output detailed --no-progress --no-ansi",
+            "--show-stderr all --output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("stderr from failing test");
@@ -156,7 +156,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--output detailed --no-progress --no-ansi",
+            "--output detailed --progress off --no-ansi",
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertOutputContains("stderr from failing test");
@@ -169,7 +169,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--output detailed --no-progress --no-ansi",
+            "--output detailed --progress off --no-ansi",
             new Dictionary<string, string?>
             {
                 { "CLAUDECODE", "1" },
@@ -186,7 +186,7 @@ public sealed class ShowOutputOptionTests : AcceptanceTestBase<ShowOutputOptionT
     {
         var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--show-stderr all --output detailed --no-progress --no-ansi",
+            "--show-stderr all --output detailed --progress off --no-ansi",
             new Dictionary<string, string?>
             {
                 { "CLAUDECODE", "1" },
