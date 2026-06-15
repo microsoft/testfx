@@ -37,6 +37,20 @@ variables:
     value: False
   - name: _RunAsPublic
     value: True
+  # OS-agnostic Microsoft.Testing.Platform report/dump arguments shared by the Release unit-test
+  # ("--test-modules") commands in the Windows job (below) and the Linux/MacOS jobs
+  # (eng/pipelines/steps/test-non-windows.yml). Keeping them in a single variable guarantees every OS
+  # emits the same set of reports (TRX + CTRF + JUnit + AzDO) so the published TestResults drops stay
+  # in sync. Only the test-module glob, --results-directory, and --diagnostic-output-directory differ
+  # per OS (path separators + .exe vs .dll), so those stay inline in each script.
+  #   --report-trx / --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM).
+  #   --report-ctrf / --report-ctrf-filename "{asm}_{tfm}.ctrf.json" — CTRF JSON per (assembly x TFM).
+  #   --report-junit / --report-junit-filename "{asm}_{tfm}.xml" — JUnit XML per (assembly x TFM).
+  #   --report-azdo / --report-azdo-progress / --report-azdo-summary — AzDO UI integration.
+  #   --hangdump --hangdump-timeout 15m — dump a module that hangs past 15 minutes.
+  # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
+  - name: _ReleaseUnitTestReportArgs
+    value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-progress --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
 
 stages:
 
@@ -180,27 +194,12 @@ stages:
           #
           # --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
           # any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
-          # options that makes sense in Release:
-          #   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
-          #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
-          #   --report-ctrf + --report-ctrf-filename "{asm}_{tfm}.ctrf.json" — CTRF report per
-          #     (assembly x TFM). Same placeholder resolver as TRX. Dogfoods the new CTRF extension
-          #     so any regression in the report shape surfaces on every CI run.
-          #   --report-azdo — surfaces failed tests in the AzDO UI.
-          #   --report-azdo-progress — emits ##vso[task.logdetail ...;progress=...] timeline records so
-          #     long-running test sessions show live progress on the AzDO timeline. No-op outside AzDO
-          #     (gated on TF_BUILD; emits a warning if the option is set but TF_BUILD is not 'true').
-          #   --report-azdo-summary — writes a Markdown job summary and uploads it via ##vso[task.uploadsummary]
-          #     so failure context shows up on the build's summary tab. No-op outside AzDO (gated on TF_BUILD;
-          #     emits a warning if the option is set but TF_BUILD is not 'true').
-          #   --report-junit + --report-junit-filename "{asm}_{tfm}.xml" — JUnit XML per (assembly x TFM),
-          #     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper. Dogfoods the
-          #     Microsoft.Testing.Extensions.JUnitReport extension; the .xml output is published alongside
-          #     the .trx files and can be consumed by AzDO PublishTestResults@2 (testResultsFormat: 'JUnit'),
-          #     Jenkins, GitLab, GitHub Actions test reporters, etc.
-          #   --hangdump --hangdump-timeout 15m — captures a dump if a module hangs past 15 minutes.
-          #   --diagnostic + --diagnostic-verbosity trace — produces per-host diagnostic logs;
-          #     directory is published by the Arcade jobs.yml template (artifacts.publish.logs: true).
+          # options that makes sense in Release. The OS-agnostic report/dump flags (TRX + CTRF + JUnit +
+          # AzDO + hangdump) live in the $(_ReleaseUnitTestReportArgs) variable defined at the top of this
+          # file so the Windows and Linux/MacOS commands stay in sync; see that variable for the per-flag
+          # documentation. Only the test-module glob, --results-directory, and --diagnostic-output-directory
+          # are inlined here because they differ per OS (path separators + .exe vs .dll).
+          # Use *.exe to cover both net4x (native exe) and net8+/net9+ (apphost exe) in a single glob.
           # We intentionally do NOT pass:
           #   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
           #     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
@@ -209,7 +208,7 @@ stages:
           #   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
           #     Azure DevOps" steps below), so collecting coverage in Release would just write unused
           #     .coverage files.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-progress --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed $(_ReleaseUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
