@@ -91,6 +91,13 @@ public sealed partial class Assert
     /// Use this overload when you need to inspect more than a single type (for example to render any object
     /// that implements a marker interface) or when you need explicit control over delegation to <c>next</c>.
     /// For the common "format a specific type" case prefer <see cref="AddValueFormatter{T}(Func{T, string?})"/>.
+    /// <para>
+    /// <paramref name="factory"/> is the chain builder, not the formatter itself: it is invoked every time a
+    /// value is rendered while the registration is active (the chain is rebuilt per render so that out-of-order
+    /// disposal of other registrations is honored), not just once at registration time. Keep it cheap and
+    /// side-effect free; perform any expensive setup outside the factory and have it return a formatter that
+    /// closes over the precomputed state.
+    /// </para>
     /// </remarks>
     [Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
     public static IDisposable AddValueFormatter(Func<Func<object?, string>, Func<object?, string>> factory)

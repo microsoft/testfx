@@ -144,6 +144,24 @@ public partial class AssertTests : TestContainer
         AssertionValueRenderer.RenderValue(7).Should().Be("7");
     }
 
+    public void AddValueFormatter_DisposingAllRegistrationsRestoresFastPath()
+    {
+        AssertionValueFormatterRegistry.HasFormatters.Should().BeFalse();
+
+        IDisposable outer = Assert.AddValueFormatter<int>(i => $"outer:{i}");
+        IDisposable inner = Assert.AddValueFormatter<int>(i => $"inner:{i}");
+        AssertionValueFormatterRegistry.HasFormatters.Should().BeTrue();
+
+        // Disposing the leading (newest) registration leaves the older one active.
+        inner.Dispose();
+        AssertionValueFormatterRegistry.HasFormatters.Should().BeTrue();
+
+        // Once every registration in the flow is disposed the zero-allocation fast-path is restored
+        // instead of leaving HasFormatters permanently true on a removed node.
+        outer.Dispose();
+        AssertionValueFormatterRegistry.HasFormatters.Should().BeFalse();
+    }
+
     public void AddValueFormatter_AppliesToCollectionItems()
     {
         using (Assert.AddValueFormatter<int>(i => $"#{i}"))

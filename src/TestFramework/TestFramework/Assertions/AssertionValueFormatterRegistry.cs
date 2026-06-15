@@ -31,10 +31,10 @@ internal static class AssertionValueFormatterRegistry
     private static readonly AsyncLocal<Node?> CurrentStack = new();
 
     /// <summary>
-    /// Gets a value indicating whether any formatter node is present in the current async flow.
+    /// Gets a value indicating whether any active formatter node is present in the current async flow.
     /// The fast-path check; the renderer still needs <see cref="Render"/> to skip removed nodes.
     /// </summary>
-    internal static bool HasFormatters => CurrentStack.Value is not null;
+    internal static bool HasFormatters => GetActiveHead() is not null;
 
     /// <summary>
     /// Registers a chain-of-responsibility factory and returns an <see cref="IDisposable"/> whose
@@ -59,7 +59,7 @@ internal static class AssertionValueFormatterRegistry
     /// </remarks>
     internal static string Render(object? value, Func<object?, string> builtIn)
     {
-        Node? head = CurrentStack.Value;
+        Node? head = GetActiveHead();
         if (head is null)
         {
             return builtIn(value);
@@ -73,6 +73,28 @@ internal static class AssertionValueFormatterRegistry
         {
             return $"{builtIn(value)} (value formatter threw {ex.GetType().Name})";
         }
+    }
+
+    // Returns the newest active node for the current async flow, pruning any leading removed nodes and
+    // updating the AsyncLocal head so the zero-allocation fast-path is restored once every registration
+    // in the flow has been disposed. Without this, CurrentStack.Value would keep pointing at a removed
+    // node, leaving HasFormatters permanently true and forcing every subsequent render to walk (and skip)
+    // removed nodes for the remainder of the flow.
+    private static Node? GetActiveHead()
+    {
+        Node? head = CurrentStack.Value;
+        Node? active = head;
+        while (active is not null && active.IsRemoved)
+        {
+            active = active.Next;
+        }
+
+        if (!ReferenceEquals(active, head))
+        {
+            CurrentStack.Value = active;
+        }
+
+        return active;
     }
 
     private static Func<object?, string> BuildChain(Node? node, Func<object?, string> terminal)
