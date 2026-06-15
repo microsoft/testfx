@@ -54,6 +54,10 @@ public sealed class TargetFrameworkParserTests
         => Assert.AreEqual("net8.0-windows10.0.18362.0", TargetFrameworkParser.BuildTargetFrameworkMoniker("net8.0", "Windows10.0.18362.0"));
 
     [TestMethod]
+    public void BuildTargetFrameworkMoniker_WithWhitespacePlatform_ReturnsShortTargetFramework()
+        => Assert.AreEqual("net8.0", TargetFrameworkParser.BuildTargetFrameworkMoniker("net8.0", "   "));
+
+    [TestMethod]
     public void BuildTargetFrameworkMoniker_WithNullShortTargetFramework_ReturnsNull()
         => Assert.IsNull(TargetFrameworkParser.BuildTargetFrameworkMoniker(null, "Windows10.0.18362.0"));
 
@@ -84,6 +88,13 @@ public sealed class TargetFrameworkParserTests
     public void GetTargetPlatformName_WithEmptyPlatformValue_ReturnsNull()
     {
         Assembly dynamicAssembly = CreateAssemblyWithTargetPlatform(string.Empty);
+        Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(dynamicAssembly));
+    }
+
+    [TestMethod]
+    public void GetTargetPlatformName_WithWhitespacePlatformValue_ReturnsNull()
+    {
+        Assembly dynamicAssembly = CreateAssemblyWithTargetPlatform("   ");
         Assert.IsNull(TargetFrameworkParser.GetTargetPlatformName(dynamicAssembly));
     }
 

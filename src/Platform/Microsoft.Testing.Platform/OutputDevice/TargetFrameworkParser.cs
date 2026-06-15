@@ -76,8 +76,8 @@ internal static class TargetFrameworkParser
 
     /// <summary>
     /// Resolves the short target framework moniker of <paramref name="entryAssembly"/>, including the
-    /// OS-platform component (e.g. <c>net8.0-windows10.0.18362.0</c>) when the assembly was built for an
-    /// OS-specific TFM.
+    /// platform component (e.g. <c>net8.0-windows10.0.18362.0</c>) when the assembly was built for a
+    /// platform-specific TFM, including non-OS / custom platform identifiers such as Uno's <c>browserwasm</c>.
     /// </summary>
     /// <remarks>
     /// A plain <c>net8.0</c> build and a <c>net8.0-windows10.0.18362.0</c> build carry the exact same
@@ -107,17 +107,18 @@ internal static class TargetFrameworkParser
     }
 
     /// <summary>
-    /// Combines a short target framework (e.g. <c>net8.0</c>) with an optional OS-platform name
+    /// Combines a short target framework (e.g. <c>net8.0</c>) with an optional platform name
     /// (e.g. <c>Windows10.0.18362.0</c>) into a full moniker (e.g. <c>net8.0-windows10.0.18362.0</c>).
     /// </summary>
     internal static string? BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName)
-        => RoslynString.IsNullOrEmpty(shortTargetFramework) || RoslynString.IsNullOrEmpty(targetPlatformName)
+        => RoslynString.IsNullOrWhiteSpace(shortTargetFramework) || RoslynString.IsNullOrWhiteSpace(targetPlatformName)
             ? shortTargetFramework
             : $"{shortTargetFramework}-{targetPlatformName.ToLowerInvariant()}";
 
     /// <summary>
-    /// Reads the OS-platform name from <c>System.Runtime.Versioning.TargetPlatformAttribute</c> on
-    /// <paramref name="entryAssembly"/>, or <see langword="null"/> when the assembly targets no specific OS.
+    /// Reads the platform name from <c>System.Runtime.Versioning.TargetPlatformAttribute</c> on
+    /// <paramref name="entryAssembly"/>, or <see langword="null"/> when the assembly targets no specific
+    /// platform (or only carries an empty/whitespace platform value).
     /// </summary>
     internal static string? GetTargetPlatformName(Assembly? entryAssembly)
     {
@@ -133,7 +134,7 @@ internal static class TargetFrameworkParser
             if (string.Equals(attribute.AttributeType.FullName, "System.Runtime.Versioning.TargetPlatformAttribute", StringComparison.Ordinal)
                 && attribute.ConstructorArguments.Count == 1
                 && attribute.ConstructorArguments[0].Value is string platformName
-                && platformName.Length > 0)
+                && !RoslynString.IsNullOrWhiteSpace(platformName))
             {
                 return platformName;
             }
