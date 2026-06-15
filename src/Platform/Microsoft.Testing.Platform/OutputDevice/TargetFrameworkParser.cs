@@ -73,4 +73,61 @@ internal static class TargetFrameworkParser
 
         return frameworkDescription;
     }
+
+    /// <summary>
+    /// Resolves the short target framework moniker of <paramref name="entryAssembly"/>, including the
+    /// OS-platform component (e.g. <c>net8.0-windows10.0.18362.0</c>) when the assembly was built for an
+    /// OS-specific TFM.
+    /// </summary>
+    /// <remarks>
+    /// A plain <c>net8.0</c> build and a <c>net8.0-windows10.0.18362.0</c> build carry the exact same
+    /// <see cref="TargetFrameworkAttribute"/> (<c>.NETCoreApp,Version=v8.0</c>) and produce the same
+    /// <see cref="RuntimeInformation.FrameworkDescription"/>, so the short TFM alone cannot tell them apart.
+    /// The only runtime-visible signal is <c>System.Runtime.Versioning.TargetPlatformAttribute</c>, which the
+    /// SDK emits for OS-specific TFMs only. Appending it here keeps report file names unique per build so two
+    /// modules of the same assembly no longer overwrite each other's report.
+    /// </remarks>
+    public static string? GetShortTargetFrameworkIncludingPlatform(Assembly? entryAssembly)
+    {
+        string? shortTargetFramework = GetShortTargetFramework(entryAssembly?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
+            ?? GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+
+        return BuildTargetFrameworkMoniker(shortTargetFramework, GetTargetPlatformName(entryAssembly));
+    }
+
+    /// <summary>
+    /// Combines a short target framework (e.g. <c>net8.0</c>) with an optional OS-platform name
+    /// (e.g. <c>Windows10.0.18362.0</c>) into a full moniker (e.g. <c>net8.0-windows10.0.18362.0</c>).
+    /// </summary>
+    internal static string? BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName)
+        => shortTargetFramework is null || RoslynString.IsNullOrEmpty(targetPlatformName)
+            ? shortTargetFramework
+            : $"{shortTargetFramework}-{targetPlatformName!.ToLowerInvariant()}";
+
+    /// <summary>
+    /// Reads the OS-platform name from <c>System.Runtime.Versioning.TargetPlatformAttribute</c> on
+    /// <paramref name="entryAssembly"/>, or <see langword="null"/> when the assembly targets no specific OS.
+    /// </summary>
+    internal static string? GetTargetPlatformName(Assembly? entryAssembly)
+    {
+        if (entryAssembly is null)
+        {
+            return null;
+        }
+
+        // TargetPlatformAttribute only exists in the .NET 5+ BCL, so read it by full type name through
+        // CustomAttributeData to keep this method compiling for netstandard2.0 / net462 consumers.
+        foreach (CustomAttributeData attribute in entryAssembly.GetCustomAttributesData())
+        {
+            if (string.Equals(attribute.AttributeType.FullName, "System.Runtime.Versioning.TargetPlatformAttribute", StringComparison.Ordinal)
+                && attribute.ConstructorArguments.Count == 1
+                && attribute.ConstructorArguments[0].Value is string platformName
+                && platformName.Length > 0)
+            {
+                return platformName;
+            }
+        }
+
+        return null;
+    }
 }
