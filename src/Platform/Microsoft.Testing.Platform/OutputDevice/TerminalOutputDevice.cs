@@ -609,19 +609,35 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
-                string? standardOutput = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardOutputProperty>()?.StandardOutput;
-                string? standardError = testNodeStateChanged.TestNode.Properties.SingleOrDefault<StandardErrorProperty>()?.StandardError;
-
-                foreach (FileArtifactProperty artifact in testNodeStateChanged.TestNode.Properties.OfType<FileArtifactProperty>())
+                // Single-pass collection: replaces 3 × SingleOrDefault<T>() + 1 × OfType<T>() + 1 × SingleOrDefault<TestNodeStateProperty>()
+                // with one zero-allocation GetStructEnumerator() walk, saving 4 linked-list traversals and 1 LINQ heap alloc per test result.
+                TimingProperty? timing = null;
+                StandardOutputProperty? stdoutProp = null;
+                StandardErrorProperty? stderrProp = null;
+                TestNodeStateProperty? nodeState = null;
+                PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    _terminalTestReporter.ArtifactAdded(
-                        outOfProcess: _processRole != TestProcessRole.TestHost,
-                        testNodeStateChanged.TestNode.DisplayName,
-                        artifact.FileInfo.FullName);
+                    switch (enumerator.Current)
+                    {
+                        case TimingProperty t: timing = t; break;
+                        case StandardOutputProperty so: stdoutProp = so; break;
+                        case StandardErrorProperty se: stderrProp = se; break;
+                        case TestNodeStateProperty s: nodeState = s; break;
+                        case FileArtifactProperty fa:
+                            _terminalTestReporter.ArtifactAdded(
+                                outOfProcess: _processRole != TestProcessRole.TestHost,
+                                testNodeStateChanged.TestNode.DisplayName,
+                                fa.FileInfo.FullName);
+                            break;
+                    }
                 }
 
-                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+                TimeSpan? duration = timing?.GlobalTiming.Duration;
+                string? standardOutput = stdoutProp?.StandardOutput;
+                string? standardError = stderrProp?.StandardError;
+
+                switch (nodeState)
                 {
                     case InProgressTestNodeStateProperty:
                         _terminalTestReporter.TestInProgress(
