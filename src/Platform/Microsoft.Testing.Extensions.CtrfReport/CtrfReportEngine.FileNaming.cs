@@ -33,9 +33,7 @@ internal sealed partial class CtrfReportEngine
     }
 
     private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(
-            Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription)
+        => TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(Assembly.GetEntryAssembly())
             ?? "unknown";
 
     // CTRF `osPlatform` is the short Node-style platform identifier (e.g. "win32",

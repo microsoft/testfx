@@ -38,8 +38,7 @@ internal static partial class ArtifactNamingHelper
         string? asmName = Assembly.GetEntryAssembly()?.GetName().Name;
         replacements["asm"] = asmName ?? "unknown";
 
-        string? tfm = TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+        string? tfm = TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(Assembly.GetEntryAssembly());
         replacements["tfm"] = tfm ?? "unknown";
 
         return replacements;
