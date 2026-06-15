@@ -44,6 +44,71 @@ stages:
   displayName: Build
   jobs:
 
+  # Lightweight job that classifies the PR diff into two scopes (product vs samples)
+  # and exposes them as output variables. Downstream jobs use them to skip work that
+  # the diff does not touch (so e.g. a samples-only Dependabot PR does not spin up
+  # the full Windows/Linux/macOS product matrix, and a product-only PR does not run
+  # the samples build).
+  #
+  # Fail-safe behaviour:
+  #   - Non-PR triggers (manual queue, scheduled, etc.) leave SYSTEM_PULLREQUEST_TARGETBRANCH
+  #     empty, so we emit "true" for both flags and run everything.
+  #   - If the diff is empty (e.g. force-push to the same SHA), we also run everything.
+  #   - Downstream conditions use `ne(..., 'false')` rather than `eq(..., 'true')`
+  #     so a missing/empty output (e.g. detect step failed) still runs the job.
+  - job: DetectChanges
+    displayName: Detect changed paths
+    pool:
+      name: NetCore-Public
+      demands: ImageOverride -equals build.ubuntu.2204.amd64.open
+    steps:
+    - checkout: self
+      fetchDepth: 0
+      clean: false
+    - bash: |
+        set -euo pipefail
+
+        target="${SYSTEM_PULLREQUEST_TARGETBRANCH:-}"
+        if [[ -z "${target}" ]]; then
+          echo "Not a PR build (SYSTEM_PULLREQUEST_TARGETBRANCH is empty); running all jobs."
+          hasProduct=true
+          hasSamples=true
+        else
+          echo "PR target branch: ${target}"
+          git fetch --no-tags --depth=200 origin "${target}" 2>/dev/null \
+            || git fetch --no-tags origin "${target}"
+          base="$(git merge-base "origin/${target}" HEAD)"
+          echo "Diff range: ${base}..HEAD"
+          files="$(git diff --name-only "${base}" HEAD)"
+          echo "Changed files:"
+          echo "${files}"
+
+          if [[ -z "${files}" ]]; then
+            echo "No files changed in diff; running all jobs."
+            hasProduct=true
+            hasSamples=true
+          else
+            # Anything outside samples/** counts as a product change.
+            if echo "${files}" | grep -qv '^samples/'; then
+              hasProduct=true
+            else
+              hasProduct=false
+            fi
+            if echo "${files}" | grep -q '^samples/'; then
+              hasSamples=true
+            else
+              hasSamples=false
+            fi
+          fi
+        fi
+
+        echo "hasProductChanges=${hasProduct}"
+        echo "hasSamplesChanges=${hasSamples}"
+        echo "##vso[task.setvariable variable=hasProductChanges;isOutput=true]${hasProduct}"
+        echo "##vso[task.setvariable variable=hasSamplesChanges;isOutput=true]${hasSamples}"
+      name: detect
+      displayName: Classify changed files
+
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableMicrobuild: true
@@ -57,6 +122,8 @@ stages:
       enableTelemetry: true
       jobs:
       - job: Windows
+        dependsOn: DetectChanges
+        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
@@ -186,6 +253,8 @@ stages:
             condition: failed()
 
       - job: Linux
+        dependsOn: DetectChanges
+        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
@@ -214,6 +283,8 @@ stages:
               osName: Linux
 
       - job: MacOS
+        dependsOn: DetectChanges
+        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
@@ -253,6 +324,8 @@ stages:
       enableTelemetry: true
       jobs:
       - job: WindowsSamples
+        dependsOn: DetectChanges
+        condition: and(succeeded(), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false'))
         timeoutInMinutes: 30
         pool:
           name: NetCore-Public
