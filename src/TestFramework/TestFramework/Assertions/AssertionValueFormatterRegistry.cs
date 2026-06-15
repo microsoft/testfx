@@ -53,8 +53,9 @@ internal static class AssertionValueFormatterRegistry
     /// <paramref name="builtIn"/> when no formatter handles the value.
     /// </summary>
     /// <remarks>
-    /// If a user formatter throws, the built-in renderer's output is returned with a trailing
-    /// annotation so the original assertion failure is not lost behind a formatter bug.
+    /// If a user formatter throws — either while building the chain (the factory delegate) or while
+    /// rendering the value — the built-in renderer's output is returned with a trailing annotation so the
+    /// original assertion failure is not lost behind a formatter bug.
     /// </remarks>
     internal static string Render(object? value, Func<object?, string> builtIn)
     {
@@ -64,10 +65,9 @@ internal static class AssertionValueFormatterRegistry
             return builtIn(value);
         }
 
-        Func<object?, string> chain = BuildChain(head, builtIn);
         try
         {
-            return chain(value);
+            return BuildChain(head, builtIn)(value);
         }
         catch (Exception ex)
         {
@@ -101,10 +101,17 @@ internal static class AssertionValueFormatterRegistry
 
         internal Node? Next { get; }
 
-        // Mutated by Registration.Dispose. Volatile is unnecessary here because reads/writes to a
-        // bool field are atomic on every CLR-supported platform and we only need eventual visibility
-        // across async continuations, which AsyncLocal already provides.
-        internal bool IsRemoved { get; set; }
+        // Mutated by Registration.Dispose, potentially from a different async flow/thread than the one
+        // rendering. Marked volatile so the renderer reliably observes the removal across threads — a
+        // plain bool read/write is atomic but carries no memory barrier, so visibility would otherwise
+        // not be guaranteed for out-of-flow disposal.
+        private volatile bool _isRemoved;
+
+        internal bool IsRemoved
+        {
+            get => _isRemoved;
+            set => _isRemoved = value;
+        }
     }
 
     private sealed class Registration : IDisposable
