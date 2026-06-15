@@ -18,7 +18,7 @@ public sealed class HangDumpOutputTests : AcceptanceTestBase<HangDumpOutputTests
         string resultDirectory = Path.Combine(AssetFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), format);
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "HangDump", TargetFrameworks.NetCurrent);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--hangdump --hangdump-timeout 8s --hangdump-type {format} --results-directory {resultDirectory} --no-progress",
+            $"--hangdump --hangdump-timeout 8s --hangdump-type {format} --results-directory {resultDirectory}",
             new Dictionary<string, string?>
             {
                 { "SLEEPTIMEMS1", "100" },

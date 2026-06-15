@@ -96,9 +96,18 @@
     <PackageVersion Include="Polly" Version="8.6.6" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.24.84" />
-    <!-- This comes transitively via StreamJsonRpc, but we want to upgrade it to fix a security vulnerability -->
+    <!--
+      Nerdbank.MessagePack and MessagePack both come transitively via StreamJsonRpc, but we pin them
+      here to pick up versions that fix security vulnerabilities in the transitive versions shipped
+      by StreamJsonRpc.
+
+      IMPORTANT: Central Package Management only pins the version when a project actually declares a
+      <PackageReference> for the package. Any project that references StreamJsonRpc (directly or via
+      a ProjectReference chain) must ALSO add explicit <PackageReference Include="Nerdbank.MessagePack" />
+      AND <PackageReference Include="MessagePack" /> entries, otherwise the transitive (vulnerable)
+      versions get restored. See PR #9120 / #9124 for context.
+    -->
     <PackageVersion Include="Nerdbank.MessagePack" Version="1.2.4" />
-    <!-- This comes transitively via StreamJsonRpc, but we want to upgrade it to fix a security vulnerability -->
     <PackageVersion Include="MessagePack" Version="3.1.7" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />

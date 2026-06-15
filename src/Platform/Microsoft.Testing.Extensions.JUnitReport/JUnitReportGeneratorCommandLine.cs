@@ -2,13 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
-internal sealed class JUnitReportGeneratorCommandLine : CommandLineOptionsProviderBase
+internal sealed class JUnitReportGeneratorCommandLine : ReportGeneratorCommandLineBase
 {
     public const string JUnitReportOptionName = "report-junit";
     public const string JUnitReportFileNameOptionName = "report-junit-filename";
@@ -16,32 +13,18 @@ internal sealed class JUnitReportGeneratorCommandLine : CommandLineOptionsProvid
     public JUnitReportGeneratorCommandLine()
         : base(
             nameof(JUnitReportGeneratorCommandLine),
-            ExtensionVersion.DefaultSemVer,
             ExtensionResources.JUnitReportGeneratorDisplayName,
             ExtensionResources.JUnitReportGeneratorDescription,
-            [
-                new(JUnitReportOptionName, ExtensionResources.JUnitReportOptionDescription, ArgumentArity.Zero, false),
-                new(JUnitReportFileNameOptionName, ExtensionResources.JUnitReportFileNameOptionDescription, ArgumentArity.ExactlyOne, false),
-            ])
-    {
-    }
-
-    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-        => commandOption.Name == JUnitReportFileNameOptionName
-            ? ReportFileNameValidator.ValidateReportFileNameArgumentAsync(
-                arguments,
-                ".xml",
-                ExtensionResources.JUnitReportFileNameMustNotBeEmpty,
-                ExtensionResources.JUnitReportFileNameExtensionIsNotXml,
-                ExtensionResources.JUnitReportFileNameRelativePathMustStayUnderResultsDirectory)
-            : ValidationResult.ValidTask;
-
-    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(
-            commandLineOptions,
             JUnitReportOptionName,
             JUnitReportFileNameOptionName,
+            ExtensionResources.JUnitReportOptionDescription,
+            ExtensionResources.JUnitReportFileNameOptionDescription,
+            ".xml",
+            ExtensionResources.JUnitReportFileNameMustNotBeEmpty,
+            ExtensionResources.JUnitReportFileNameExtensionIsNotXml,
+            ExtensionResources.JUnitReportFileNameRelativePathMustStayUnderResultsDirectory,
             ExtensionResources.JUnitReportFileNameRequiresJUnitReport,
-            ExtensionResources.JUnitReportIsNotValidForDiscovery,
-            PlatformCommandLineProvider.DiscoverTestsOptionKey);
+            ExtensionResources.JUnitReportIsNotValidForDiscovery)
+    {
+    }
 }

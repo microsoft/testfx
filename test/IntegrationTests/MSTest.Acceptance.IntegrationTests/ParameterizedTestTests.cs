@@ -56,7 +56,8 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             """);
 
         // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
-        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress", cancellationToken: TestContext.CancellationToken);
+        // TestHost.ExecuteAsync already injects --progress off, so no need to pass it here.
+        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);

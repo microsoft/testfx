@@ -66,6 +66,11 @@ Ejemplo: MyReport_{tfm}.ctrf.json</target>
         <target state="translated">Habilitación de la generación de un informe JSON de CTRF (Common Test Report Format)</target>
         <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
       </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
+        <target state="new">Invalid test application builder type. Expected 'TestApplicationBuilder'.</target>
+        <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
+      </trans-unit>
     </body>
   </file>
 </xliff>

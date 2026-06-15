@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.JUnitReport;
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -22,16 +21,11 @@ public static class JUnitReportExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddJUnitReportProvider(this ITestApplicationBuilder builder)
-    {
-        if (builder is not TestApplicationBuilder)
-        {
-            throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
-        }
-
-        var commandLine = new JUnitReportGeneratorCommandLine();
-
-        var compositeJUnitReportGenerator =
-            new CompositeExtensionFactory<JUnitReportGenerator>(serviceProvider =>
+        => ReportProviderRegistration.AddReportProvider(
+            builder,
+            ExtensionResources.InvalidTestApplicationBuilderType,
+            () => new JUnitReportGeneratorCommandLine(),
+            serviceProvider =>
                 new JUnitReportGenerator(
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetCommandLineOptions(),
@@ -44,10 +38,4 @@ public static class JUnitReportExtensions
                     serviceProvider.GetTestFramework(),
                     serviceProvider.GetTestApplicationProcessExitCode(),
                     serviceProvider.GetLoggerFactory().CreateLogger<JUnitReportGenerator>()));
-
-        builder.TestHost.AddDataConsumer(compositeJUnitReportGenerator);
-        builder.TestHost.AddTestSessionLifetimeHandler(compositeJUnitReportGenerator);
-
-        builder.CommandLine.AddProvider(() => commandLine);
-    }
 }
