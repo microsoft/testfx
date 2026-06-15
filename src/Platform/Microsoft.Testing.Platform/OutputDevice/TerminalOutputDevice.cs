@@ -26,6 +26,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
+
+    // Opt-in knobs (env vars only) for the silence-driven heartbeat renderer used in non-cursor modes.
+    private const string MTP_PROGRESS_SILENCE_SECONDS = nameof(MTP_PROGRESS_SILENCE_SECONDS);
+    private const string MTP_PROGRESS_SLOW_TEST_SECONDS = nameof(MTP_PROGRESS_SLOW_TEST_SECONDS);
 #pragma warning restore SA1310 // Field names should not contain underscore
 
     private const char Dash = '-';
@@ -235,10 +239,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
         OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
 
-        Func<bool?> shouldShowProgress = noProgress || ansiMode is AnsiMode.NoAnsi or AnsiMode.SimpleAnsi
+        Func<bool?> shouldShowProgress = noProgress
             // User preference is to not show progress.
-            // Or, we are in terminal that's not capable of changing cursor and we can't update progress in-place.
-            // In that case, we force disable progress as well.
             ? static () => false
             // User preference is to allow showing progress, figure if we should actually show it based on whether or not we are a testhost controller.
             //
@@ -261,7 +263,22 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             ShowProgress = shouldShowProgress,
             ShowStdout = showStdout,
             ShowStderr = showStderr,
+            HeartbeatSilenceThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
+            SlowTestThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
         });
+    }
+
+    // Reads an integer number of seconds from the given environment variable, falling back to
+    // <paramref name="defaultSeconds"/> when unset or invalid. A value of 0 disables the related
+    // heartbeat rule (returns TimeSpan.Zero). Negative or non-integer values are ignored.
+    private static TimeSpan GetProgressThreshold(IEnvironment environment, string variableName, int defaultSeconds)
+    {
+        string? raw = environment.GetEnvironmentVariable(variableName);
+        return !RoslynString.IsNullOrWhiteSpace(raw)
+            && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds)
+            && seconds >= 0
+            ? TimeSpan.FromSeconds(seconds)
+            : TimeSpan.FromSeconds(defaultSeconds);
     }
 
     // When the option is absent, default to OutputShowMode.Failed when running under a known

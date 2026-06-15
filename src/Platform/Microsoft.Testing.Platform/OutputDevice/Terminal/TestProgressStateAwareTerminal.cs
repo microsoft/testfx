@@ -20,6 +20,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
+    private readonly IProgressRenderer _renderer;
 
     /// <summary>
     /// A cancellation token to signal the rendering thread that it should exit.
@@ -63,7 +64,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                     _terminal.StartUpdate();
                     try
                     {
-                        _terminal.RenderProgress(_progressItems);
+                        _renderer.OnTick(_terminal, _progressItems);
                     }
                     finally
                     {
@@ -95,10 +96,11 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
     }
 
-    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress)
+    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, IProgressRenderer renderer)
     {
         _terminal = terminal;
         _showProgress = showProgress;
+        _renderer = renderer;
     }
 
     public int AddWorker(TestProgressState testWorker)
@@ -135,6 +137,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         _cts = cancellationTokenSource;
 
         _terminal.StartBusyIndicator();
+        _renderer.OnStart();
         // If we crash unexpectedly without completing this thread we don't want it to keep the process running.
         _refresher = new Thread(() => ThreadProc(cancellationTokenSource)) { IsBackground = true };
         _refresher.Start();
@@ -194,9 +197,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 try
                 {
                     _terminal.StartUpdate();
-                    _terminal.EraseProgress();
-                    write(_terminal);
-                    _terminal.RenderProgress(_progressItems);
+                    _renderer.OnWrite(_terminal, _progressItems, write);
                 }
                 finally
                 {
@@ -240,6 +241,14 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
             TestProgressState? progress = _progressItems[slotIndex];
             progress?.Version = _counter;
+        }
+    }
+
+    internal void NotifyTestCompleted()
+    {
+        if (GetShowProgress())
+        {
+            _renderer.OnTestCompleted();
         }
     }
 

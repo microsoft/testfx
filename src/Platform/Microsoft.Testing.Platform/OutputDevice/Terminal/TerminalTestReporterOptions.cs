@@ -42,6 +42,19 @@ internal sealed class TerminalTestReporterOptions
     /// Gets a value indicating when to show standard error output.
     /// </summary>
     public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
+
+    /// <summary>
+    /// Gets the silence threshold for the non-cursor heartbeat renderer (E1). When no test completes for this
+    /// duration, a single heartbeat line is emitted. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
+    /// </summary>
+    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Gets the per-test threshold for the non-cursor heartbeat renderer (E2). When a single test exceeds this
+    /// duration, a single "[slow]" line is emitted (with exponential backoff). <see cref="TimeSpan.Zero"/>
+    /// disables slow-test surfacing.
+    /// </summary>
+    public TimeSpan SlowTestThreshold { get; init; } = TimeSpan.FromSeconds(60);
 }
 
 internal enum OutputShowMode

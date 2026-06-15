@@ -906,6 +906,16 @@ Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
         <target state="translated">--output 应为值为“Normal”或“Detailed”的单个参数。</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeat">
+        <source>running... {0} completed, {1} failed</source>
+        <target state="new">running... {0} completed, {1} failed</target>
+        <note>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
+        <source> | active: {0}</source>
+        <target state="new"> | active: {0}</target>
+        <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
+      </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">
         <source>Control whether progress is reported to screen.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
@@ -921,6 +931,11 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="new">--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
         <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressSlowTest">
+        <source>[slow] still running after {0}: {1}</source>
+        <target state="new">[slow] still running after {0}: {1}</target>
+        <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>

@@ -756,6 +756,18 @@ This option takes precedence over the deprecated --no-progress flag.</value>
     <value>warning: --no-progress is deprecated; use --progress off instead.</value>
     <comment>{Locked="--no-progress"}{Locked="--progress off"}</comment>
   </data>
+  <data name="TerminalProgressHeartbeat" xml:space="preserve">
+    <value>running... {0} completed, {1} failed</value>
+    <comment>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</comment>
+  </data>
+  <data name="TerminalProgressHeartbeatActiveSuffix" xml:space="preserve">
+    <value> | active: {0}</value>
+    <comment>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</comment>
+  </data>
+  <data name="TerminalProgressSlowTest" xml:space="preserve">
+    <value>[slow] still running after {0}: {1}</value>
+    <comment>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</comment>
+  </data>
   <data name="TerminalTestReporterDescription" xml:space="preserve">
     <value>Writes test results to terminal.</value>
   </data>
