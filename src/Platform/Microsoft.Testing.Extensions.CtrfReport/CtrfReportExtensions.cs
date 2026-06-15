@@ -4,7 +4,6 @@
 using Microsoft.Testing.Extensions.CtrfReport;
 using Microsoft.Testing.Extensions.CtrfReport.Resources;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -22,16 +21,11 @@ public static class CtrfReportExtensions
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddCtrfReportProvider(this ITestApplicationBuilder builder)
-    {
-        if (builder is not TestApplicationBuilder)
-        {
-            throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
-        }
-
-        var commandLine = new CtrfReportGeneratorCommandLine();
-
-        var compositeCtrfReportGenerator =
-            new CompositeExtensionFactory<CtrfReportGenerator>(serviceProvider =>
+        => ReportProviderRegistration.AddReportProvider(
+            builder,
+            ExtensionResources.InvalidTestApplicationBuilderType,
+            new CtrfReportGeneratorCommandLine(),
+            serviceProvider =>
                 new CtrfReportGenerator(
                     serviceProvider.GetConfiguration(),
                     serviceProvider.GetCommandLineOptions(),
@@ -44,10 +38,4 @@ public static class CtrfReportExtensions
                     serviceProvider.GetTestFramework(),
                     serviceProvider.GetTestApplicationProcessExitCode(),
                     serviceProvider.GetLoggerFactory().CreateLogger<CtrfReportGenerator>()));
-
-        builder.TestHost.AddDataConsumer(compositeCtrfReportGenerator);
-        builder.TestHost.AddTestSessionLifetimeHandler(compositeCtrfReportGenerator);
-
-        builder.CommandLine.AddProvider(() => commandLine);
-    }
 }
