@@ -84,13 +84,24 @@ internal static class TargetFrameworkParser
     /// <see cref="TargetFrameworkAttribute"/> (<c>.NETCoreApp,Version=v8.0</c>) and produce the same
     /// <see cref="RuntimeInformation.FrameworkDescription"/>, so the short TFM alone cannot tell them apart.
     /// The only runtime-visible signal is <c>System.Runtime.Versioning.TargetPlatformAttribute</c>, which the
-    /// SDK emits for OS-specific TFMs only. Appending it here keeps report file names unique per build so two
-    /// modules of the same assembly no longer overwrite each other's report.
+    /// SDK emits for any platform-specific TFM (including non-OS / custom platform identifiers such as Uno's
+    /// <c>browserwasm</c>). Appending it here keeps report file names unique per build so two modules of the
+    /// same assembly no longer overwrite each other's report.
     /// </remarks>
     public static string? GetShortTargetFrameworkIncludingPlatform(Assembly? entryAssembly)
     {
-        string? shortTargetFramework = GetShortTargetFramework(entryAssembly?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+        string? shortTargetFramework = GetShortTargetFramework(entryAssembly?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkDisplayName);
+
+        // FrameworkDisplayName can be missing, empty, or whitespace for some assemblies (e.g. when the SDK
+        // emits a TargetFrameworkAttribute without a display name for a custom TargetFrameworkIdentifier such
+        // as Uno's net8.0-browserwasm). In that case GetShortTargetFramework echoes the empty value back rather
+        // than returning null, so a plain null-coalesce would not fall back. Treat null/empty/whitespace alike
+        // and fall back to the runtime description so the base moniker stays meaningful (e.g. net8.0) and we
+        // never produce a dangling "-platform" name.
+        if (RoslynString.IsNullOrWhiteSpace(shortTargetFramework))
+        {
+            shortTargetFramework = GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
+        }
 
         return BuildTargetFrameworkMoniker(shortTargetFramework, GetTargetPlatformName(entryAssembly));
     }
@@ -100,7 +111,7 @@ internal static class TargetFrameworkParser
     /// (e.g. <c>Windows10.0.18362.0</c>) into a full moniker (e.g. <c>net8.0-windows10.0.18362.0</c>).
     /// </summary>
     internal static string? BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName)
-        => shortTargetFramework is null || RoslynString.IsNullOrEmpty(targetPlatformName)
+        => RoslynString.IsNullOrEmpty(shortTargetFramework) || RoslynString.IsNullOrEmpty(targetPlatformName)
             ? shortTargetFramework
             : $"{shortTargetFramework}-{targetPlatformName!.ToLowerInvariant()}";
 
