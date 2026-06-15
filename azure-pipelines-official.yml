@@ -12,6 +12,11 @@ trigger:
       - .github/**
       - .gitignore
       - azure-pipelines-codeql.yml
+      # The official pipeline ships product packages. The samples/** folder is not part of the
+      # shipping product (it is built by the PR pipeline via eng/build-samples.ps1). Skip the
+      # official pipeline for samples-only changes.
+      - samples/**
+      - eng/build-samples.ps1
 
 parameters:
 - name: isRTM
