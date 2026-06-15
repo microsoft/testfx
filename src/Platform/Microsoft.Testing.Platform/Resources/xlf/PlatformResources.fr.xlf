@@ -866,13 +866,13 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       <trans-unit id="TerminalAnsiOptionDescription">
         <source>Control whether ANSI escape characters are emitted.
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="translated">Déterminez si des caractères d’échappement ANSI sont émis.
+        <target state="needs-review-translation">Déterminez si des caractères d’échappement ANSI sont émis.
 Les valeurs valides sont « auto » (par défaut), « on » (accepte également « true », « enable », « 1 ») ou « off » (accepte également « false », « disable », « 0 »).
 « on » force les codes d’échappement ANSI, notamment le déplacement du curseur, même lorsque stdout est redirigé, associez-le à --no-progress si vous ne voulez que des couleurs.
 Lorsque --ansi et --no-ansi sont fournis, --ansi est prioritaire.</target>
-        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-progress"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
@@ -884,10 +884,15 @@ Lorsque --ansi et --no-ansi sont fournis, --ansi est prioritaire.</target>
         <target state="translated">Désactiver la sortie des caractères d’échappement ANSI à l’écran.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TerminalNoProgressDeprecatedWarning">
+        <source>warning: --no-progress is deprecated; use --progress off instead.</source>
+        <target state="new">warning: --no-progress is deprecated; use --progress off instead.</target>
+        <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
+      </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
-        <source>Disable reporting progress to screen.</source>
-        <target state="translated">Désactiver la progression des rapports à l’écran.</target>
-        <note />
+        <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
+        <target state="needs-review-translation">Désactiver la progression des rapports à l’écran.</target>
+        <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
@@ -900,6 +905,22 @@ Les valeurs valides sont « Normal » et « Detailed ». La valeur par défa
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
         <target state="translated">--output attend un seul paramètre avec la valeur « Normal » ou « Detailed ».</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressOptionDescription">
+        <source>Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+This option takes precedence over the deprecated --no-progress flag.</source>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+This option takes precedence over the deprecated --no-progress flag.</target>
+        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressOptionInvalidArgument">
+        <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
+        <target state="new">--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>

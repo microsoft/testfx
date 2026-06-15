@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHostControllers;
 using Microsoft.Testing.Platform.UnitTests.Helpers;
@@ -58,6 +61,100 @@ public sealed class TerminalOutputDeviceTests
             Console.SetError(originalError);
             ConsoleErrorSemaphore.Release();
         }
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_NoProgressLegacyFlag_WritesDeprecationWarningToStandardError()
+    {
+        string standardError = await InitializeAndCaptureStandardErrorAsync(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
+        });
+
+        Assert.Contains("--no-progress is deprecated", standardError);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_ProgressOff_DoesNotWriteDeprecationWarning()
+    {
+        string standardError = await InitializeAndCaptureStandardErrorAsync(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["off"],
+        });
+
+        Assert.IsFalse(standardError.Contains("deprecated", StringComparison.Ordinal), standardError);
+    }
+
+    [TestMethod]
+    public async Task InitializeAsync_ProgressOption_TakesPrecedenceOverLegacyNoProgress_NoDeprecationWarning()
+    {
+        // When --progress is provided it wins over the legacy --no-progress alias, so no warning is emitted.
+        string standardError = await InitializeAndCaptureStandardErrorAsync(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["off"],
+            [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
+        });
+
+        Assert.IsFalse(standardError.Contains("deprecated", StringComparison.Ordinal), standardError);
+    }
+
+    private static async Task<string> InitializeAndCaptureStandardErrorAsync(Dictionary<string, string[]> options)
+    {
+        await ConsoleErrorSemaphore.WaitAsync();
+        TextWriter originalError = Console.Error;
+        using var errorWriter = new StringWriter(CultureInfo.InvariantCulture);
+        Console.SetError(errorWriter);
+        ResetNoProgressDeprecationWarning();
+
+        try
+        {
+            using TerminalOutputDevice outputDevice = CreateOutputDevice(options);
+            await outputDevice.InitializeAsync();
+
+            return errorWriter.ToString();
+        }
+        finally
+        {
+            Console.SetError(originalError);
+            ResetNoProgressDeprecationWarning();
+            ConsoleErrorSemaphore.Release();
+        }
+    }
+
+    private static void ResetNoProgressDeprecationWarning()
+        => typeof(TerminalOutputDevice)
+            .GetField("s_noProgressDeprecationWarningEmitted", BindingFlags.NonPublic | BindingFlags.Static)!
+            .SetValue(null, 0);
+
+    private static TerminalOutputDevice CreateOutputDevice(Dictionary<string, string[]> options)
+    {
+        var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
+        testApplicationModuleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
+
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
+
+        var stopPoliciesService = new Mock<IStopPoliciesService>();
+        stopPoliciesService.Setup(x => x.RegisterOnAbortCallbackAsync(It.IsAny<Func<Task>>()))
+            .Returns(Task.CompletedTask);
+
+        var testApplicationCancellationTokenSource = new Mock<ITestApplicationCancellationTokenSource>();
+        testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
+
+        return new TerminalOutputDevice(
+            Mock.Of<IConsole>(),
+            testApplicationModuleInfo.Object,
+            Mock.Of<ITestHostControllerInfo>(),
+            Mock.Of<IAsyncMonitor>(),
+            Mock.Of<IRuntimeFeature>(),
+            environment.Object,
+            Mock.Of<IPlatformInformation>(),
+            new TestCommandLineOptions(options),
+            fileLoggerInformation: null,
+            Mock.Of<ILoggerFactory>(),
+            Mock.Of<IClock>(),
+            stopPoliciesService.Object,
+            testApplicationCancellationTokenSource.Object);
     }
 
     private static TerminalOutputDevice CreateListTestsJsonAzureDevOpsOutputDevice()

@@ -30,6 +30,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     private const char Dash = '-';
 
+    // Guards the one-per-process deprecation warning emitted when the legacy --no-progress flag is used.
+    private static int s_noProgressDeprecationWarningEmitted;
+
     private readonly IConsole _console;
     private readonly ITestHostControllerInfo _testHostControllerInfo;
     private readonly IAsyncMonitor _asyncMonitor;
@@ -192,7 +195,30 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             _ => AnsiMode.AnsiIfPossible,
         };
 
-        bool noProgress = _commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption);
+        // --progress <auto|on|off> is the modern, positive form. When present it wins over the legacy
+        // --no-progress flag. --no-progress keeps working as a deprecated alias for --progress off and
+        // emits a single deprecation warning per process.
+        bool noProgress;
+        if (_commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ProgressOption, out string[]? progressArguments)
+            && progressArguments is { Length: > 0 })
+        {
+            // 'on' and 'auto' currently behave the same: progress is shown unless the terminal is not capable
+            // of in-place updates (NoAnsi/SimpleAnsi) or we are a test-host controller, --list-tests, or server
+            // mode. A dedicated heartbeat renderer for the non-cursor modes is tracked by #9125.
+            noProgress = CommandLineOptionArgumentValidator.IsOffValue(progressArguments[0]);
+        }
+        else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
+        {
+            noProgress = true;
+            if (Interlocked.Exchange(ref s_noProgressDeprecationWarningEmitted, 1) == 0)
+            {
+                await WriteToStandardErrorAsync(PlatformResources.TerminalNoProgressDeprecatedWarning).ConfigureAwait(false);
+            }
+        }
+        else
+        {
+            noProgress = false;
+        }
 
         // _runtimeFeature.IsHotReloadEnabled is not set to true here, even if the session will be HotReload,
         // we need to postpone that decision until the first test result.

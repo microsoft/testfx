@@ -24,7 +24,7 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
 
         result.AssertExitCodeIs(ExitCode.Success);
 
-        // TestHost.ExecuteAsync prepends `--no-ansi --no-progress`. `--ansi <on-alias>` must take precedence
+        // TestHost.ExecuteAsync prepends `--no-ansi --progress off`. `--ansi <on-alias>` must take precedence
         // over `--no-ansi` and re-enable ANSI escape codes, even though stdout is being redirected to a pipe.
         Assert.IsTrue(
             result.StandardOutput.Contains(EscapeCharacter, StringComparison.Ordinal),
@@ -50,7 +50,7 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     [TestMethod]
     public async Task AnsiOption_Auto_OverridesNoAnsi_AndFollowsEnvironmentDetection()
     {
-        // TestHost.ExecuteAsync auto-injects `--no-ansi --no-progress`. Asserting "no ESC" with
+        // TestHost.ExecuteAsync auto-injects `--no-ansi --progress off`. Asserting "no ESC" with
         // `--ansi auto` would not actually prove `auto` won over `--no-ansi`: stdout-redirection
         // alone also produces no ESC. To deterministically prove the override, we force the platform
         // into a CI environment (which makes `auto` map to `SimpleAnsi`, which emits ESC) and clear
@@ -116,7 +116,7 @@ public sealed class AnsiOptionTests : AcceptanceTestBase<AnsiOptionTests.TestAss
     {
         // The de-facto NO_COLOR convention (https://no-color.org): when present with any non-empty
         // value, color (and in our implementation, all ANSI escape codes) must be suppressed.
-        // TestHost.ExecuteAsync auto-injects `--no-ansi --no-progress` which would already suppress ESC,
+        // TestHost.ExecuteAsync auto-injects `--no-ansi --progress off` which would already suppress ESC,
         // so we use `--ansi auto` together with the CI env (which would otherwise produce SimpleAnsi
         // ESC) to deterministically prove NO_COLOR alone forces NoAnsi. With NO_COLOR set the output
         // must contain no ESC even though `--ansi auto` is opted in.
