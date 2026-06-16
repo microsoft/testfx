@@ -80,6 +80,7 @@ internal sealed partial class TerminalTestReporter
         }
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+        _terminalWithProgress.NotifyTestCompleted();
         if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(

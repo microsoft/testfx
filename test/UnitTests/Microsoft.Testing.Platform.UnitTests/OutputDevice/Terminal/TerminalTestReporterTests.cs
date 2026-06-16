@@ -485,7 +485,7 @@ public sealed class TerminalTestReporterTests
     public void TestProgressStateAwareTerminal_WriteToTerminal_ShouldEraseProgressThenRenderProgress()
     {
         var terminal = new RecordingTerminal();
-        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true);
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, new CursorProgressRenderer());
 
         var stopwatchFactory = new StopwatchFactory();
         var progressState = new TestProgressState(1, "assembly.dll", "net8.0", "x64", stopwatchFactory.CreateStopwatch(), isDiscovery: false);
@@ -517,7 +517,7 @@ public sealed class TerminalTestReporterTests
     public void TestProgressStateAwareTerminal_CanStopProgressAcrossMultipleSessions()
     {
         var terminal = new RecordingTerminal();
-        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true);
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, new CursorProgressRenderer());
 
         progressAwareTerminal.StartShowingProgress(workerCount: 1);
         progressAwareTerminal.StopShowingProgress();
