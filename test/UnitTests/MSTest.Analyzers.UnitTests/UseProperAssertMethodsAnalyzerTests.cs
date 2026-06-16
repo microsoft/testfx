@@ -4952,6 +4952,33 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithSpanLengthNonIntExpected_NoDiagnostic()
+    {
+        // Assert.HasCount takes int, so a non-int expected value compared against span.Length
+        // must not be rewritten (there is no matching HasCount overload).
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    long longCount = 3L;
+                    int? nullableCount = 3;
+                    Assert.AreEqual(longCount, span.Length);
+                    Assert.AreEqual(nullableCount, span.Length);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 #endif
 
     [TestMethod]

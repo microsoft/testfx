@@ -191,6 +191,100 @@ public partial class AssertTests
         o.WasToStringCalled.Should().BeTrue();
     }
 
+    public void Count_Span_WhenCountIsNotSame_ShouldFail()
+    {
+        int[] array = [1];
+        Span<int> span = array;
+        // Span cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.HasCount(3, span);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to contain a specific number of elements.
+
+            expected count: 3
+            actual count:   1
+
+            Assert.HasCount(3, span)
+            """);
+    }
+
+    public void Count_ReadOnlyMemory_WhenCountIsNotSame_ShouldFail()
+    {
+        int[] array = [1];
+        ReadOnlyMemory<int> memory = array;
+        Action action = () => Assert.HasCount(3, memory);
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, memory)
+                """);
+    }
+
+    public void Count_Span_InterpolatedString_WhenCountIsNotSame_ShouldEvaluateMessageAndFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1];
+        Span<int> span = array;
+        // Span cannot be captured by a lambda, so call directly inside a try/catch.
+        Exception? exception = null;
+        try
+        {
+            Assert.HasCount(3, span, $"User-provided message: {o}");
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+
+        exception.Should().NotBeNull();
+        exception!.Message.Should().Be(
+            """
+            Assertion failed. Expected collection to contain a specific number of elements.
+            User-provided message: DummyClassTrackingToStringCalls
+
+            expected count: 3
+            actual count:   1
+
+            Assert.HasCount(3, span)
+            """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+
+    public void Count_ReadOnlyMemory_InterpolatedString_WhenCountIsNotSame_ShouldEvaluateMessageAndFail()
+    {
+        DummyClassTrackingToStringCalls o = new();
+        int[] array = [1];
+        ReadOnlyMemory<int> memory = array;
+        Action action = () => Assert.HasCount(3, memory, $"User-provided message: {o}");
+        action.Should().Throw<Exception>()
+            .WithMessage(
+                """
+                Assertion failed. Expected collection to contain a specific number of elements.
+                User-provided message: DummyClassTrackingToStringCalls
+
+                expected count: 3
+                actual count:   1
+
+                Assert.HasCount(3, memory)
+                """);
+        o.WasToStringCalled.Should().BeTrue();
+    }
+
     public void Count_Array_InterpolatedString_WhenCountIsSame_ShouldNotEvaluateMessage()
     {
         // Arrays bind to the ReadOnlySpan<T> overload now that it exists; the interpolated

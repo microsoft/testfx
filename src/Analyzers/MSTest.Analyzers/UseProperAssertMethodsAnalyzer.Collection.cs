@@ -47,6 +47,29 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         => type.OriginalDefinition is INamedTypeSymbol { Arity: 1, Name: "Span" or "ReadOnlySpan" or "Memory" or "ReadOnlyMemory", ContainingNamespace: { Name: "System" } containingNamespace } &&
             containingNamespace.ContainingNamespace?.IsGlobalNamespace == true;
 
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="assertTypeSymbol"/> exposes a <c>HasCount</c>
+    /// overload whose collection parameter matches the given span/memory <paramref name="spanOrMemoryType"/>.
+    /// The span/memory <c>HasCount</c> overloads are compiled only for .NET (not .NET Framework), so this
+    /// check prevents the analyzer from suggesting a code fix that would not compile for the targeted framework.
+    /// </summary>
+    private static bool AssertHasMatchingSpanOrMemoryHasCountOverload(INamedTypeSymbol assertTypeSymbol, ITypeSymbol spanOrMemoryType)
+    {
+        ITypeSymbol spanOrMemoryDefinition = spanOrMemoryType.OriginalDefinition;
+        foreach (ISymbol member in assertTypeSymbol.GetMembers("HasCount"))
+        {
+            // Public HasCount span/memory overloads are HasCount<T>(int expected, ReadOnlySpan<T> collection, ...),
+            // so the collection is the second parameter (ordinal 1).
+            if (member is IMethodSymbol { Parameters.Length: >= 2 } method &&
+                SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type.OriginalDefinition, spanOrMemoryDefinition))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private static CollectionCheckStatus RecognizeCollectionMethodCheck(
         IOperation operation,
         INamedTypeSymbol objectTypeSymbol,
@@ -364,6 +387,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     private static CountCheckStatus RecognizeCountCheck(
         IOperation expectedArgument,
         IOperation actualArgument,
+        INamedTypeSymbol assertTypeSymbol,
         INamedTypeSymbol objectTypeSymbol,
         INamedTypeSymbol? enumerableTypeSymbol,
         out SyntaxNode? nodeToBeReplaced1,
@@ -374,9 +398,14 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         // Check if actualArgument is a Span/ReadOnlySpan/Memory/ReadOnlyMemory '.Length'.
         // These types have HasCount overloads but no IsEmpty/IsNotEmpty overloads, so we always
         // suggest Assert.HasCount (even when the expected value is 0) and never Assert.IsEmpty.
+        // We only do this when the referenced MSTest framework actually exposes a matching span/memory
+        // HasCount overload (these are guarded out on .NET Framework targets); otherwise the code fix
+        // would generate a call that does not compile.
         if (actualArgument is IPropertyReferenceOperation { Property.Name: "Length" } spanLengthRef &&
             spanLengthRef.Instance?.Type is { } spanInstanceType &&
-            IsSpanOrMemoryType(spanInstanceType))
+            IsSpanOrMemoryType(spanInstanceType) &&
+            IsBCLSymbol(spanInstanceType, objectTypeSymbol) &&
+            AssertHasMatchingSpanOrMemoryHasCountOverload(assertTypeSymbol, spanInstanceType))
         {
             // Assert.HasCount takes int, so skip if expectedCount is not an int (e.g. int?, long, uint, decimal).
             if (expectedArgument.Type?.SpecialType == SpecialType.System_Int32)
