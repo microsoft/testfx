@@ -1,7 +1,7 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Last Updated
-2026-06-10
+2026-06-16
 
 ## Build/Test Commands
 - Build: `./build.sh` (Linux/macOS), `.\build.cmd` (Windows)
@@ -15,19 +15,9 @@
 - NOTE: Only .NET 11.0 preview runtime is available in this environment; build succeeds but test runner needs net8.0/net9.0
 
 ## Tasks Last Run (round-robin cursor)
-- 2026-05-29: Task 1, Task 2, Task 3, Task 7
-- 2026-05-30: Task 3, Task 4, Task 7
-- 2026-05-31: Task 3, Task 7
-- 2026-06-01: Task 3 (TrxReportEngine single-pass), Task 7
-- 2026-06-02: Task 2, Task 3 (SimpleAnsiTerminal cache), Task 7
-- 2026-06-03: Task 3 (SerializerUtilities single-pass), Task 7
-- 2026-06-04: Task 3 (SimpleAnsiTerminal cache - actually submitted), Task 7
-- 2026-06-05: Task 2, Task 3 (DotnetTestDataConsumer - cache ExecutionId + single-pass property scan), Task 7
-- 2026-06-06: Task 2, Task 3 (AzureDevOps OfType→SingleOrDefault), Task 4, Task 7
-- 2026-06-07: Task 3 (OpenTelemetry OfType→SingleOrDefault stdout/stderr), Task 7
-- 2026-06-08: Task 3 (OTel HandleTestResult 5-walk→1-walk), Task 7
-- 2026-06-09: Task 2 (scan for new opportunities), Task 3 (TrxTestResultExtractor 9-walk→1-walk), Task 7
-- 2026-06-10: Task 3 (JUnitReport TestResultCapture 6-walk→1-walk), Task 7
+- 2026-06-10: Task 3 (JUnitReport TestResultCapture single-pass), Task 7
+- 2026-06-15: Task 3 (DiscoveredTestsJsonSerializer single-pass), Task 7
+- 2026-06-16: Task 2 (scan), Task 3 (AzureDevOpsReporter defer GetTestName), Task 7
 
 ## Completed Work
 - PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED 2026-05-31)
@@ -41,9 +31,13 @@
 - PR #8908: perf: SingleOrDefault instead of OfType().Select() for stdout/stderr in OpenTelemetryResultHandler (MERGED 2026-06-08)
 - PR #8938: perf: single-pass PropertyBag walk in OpenTelemetryResultHandler.HandleTestResult (MERGED 2026-06-09)
 - PR #8975: perf: single-pass PropertyBag walk in TrxTestResultExtractor (MERGED 2026-06-10)
-- PR (efficiency/junit-single-pass-property-walk): perf: single-pass PropertyBag walk in JUnitReport TestResultCapture (submitted 2026-06-10, awaiting merge)
-  - Replaces 5 SingleOrDefault<T>() + 1 foreach/GetEnumerator() with 1 GetStructEnumerator() pass in TryCapture()
-  - Saves 5 linked-list walks + 1 IEnumerator<IProperty> heap allocation per JUnit test result
+- PR #9018: perf: single-pass PropertyBag walk in JUnitReport TestResultCapture (MERGED 2026-06-11)
+- PR #9159: perf: single-pass PropertyBag walk in TerminalOutputDevice and SimplifiedConsoleOutputDeviceBase (MERGED 2026-06-16, submitted by perf-improver workflow)
+- PR #9162: perf: single-pass PropertyBag walk in DiscoveredTestsJsonSerializer (MERGED 2026-06-16)
+- PR (efficiency/azdo-reporter-defer-getname): perf: defer GetTestName() to failure branches and avoid OfType<> alloc in AzureDevOpsReporter (submitted 2026-06-16, awaiting merge)
+  - Defers GetTestName() call to failure branches only (passing tests no longer call it)
+  - Replaces OfType<SerializableKeyValuePairStringProperty>().FirstOrDefault(predicate) with zero-alloc struct enumerator + early-exit key search
+  - Saves: 1 PropertyBag walk + 1 SerializableKeyValuePairStringProperty[] alloc per passing test
 
 ## Optimisation Backlog
 | Priority | Focus Area | Opportunity | Estimated Impact |
@@ -58,20 +52,16 @@
 - TreeNodeFilter uses compiled Regex (already optimized)
 - No BenchmarkDotNet benchmarks in repo; performance tests use PerfView
 - TcpMessageHandler is server mode only (--server flag, IDE-driven test runs)
-- TrxReportEngine.Results.cs: trxMessages was enumerated 6x per test result; now 1x (2026-06-01)
-- SerializerUtilities TestNode: Properties was enumerated twice; now single-pass (2026-06-03)
-- SimpleAnsiTerminal: SetColorPerLine cached "\n"+_foregroundColor to avoid per-call allocation (2026-06-04)
-- SimpleAnsiTerminal used in CI environments (Azure DevOps, GitHub Actions) with ANSI but no cursor control
-- DotnetTestDataConsumer: ExecutionId was computed property (env var lookup + string alloc per test); now readonly field (2026-06-05)
-- DotnetTestDataConsumer: GetTestNodeDetails did 3 separate PropertyBag linked-list walks per test; now single pass via GetStructEnumerator() (2026-06-05)
-- PropertyBag.GetStructEnumerator() returns internal struct (zero alloc); accessible within Microsoft.Testing.Platform assembly
-- PropertyBag.OfType<T>() allocates TProperty[] even for single-element results; use SingleOrDefault<T>() when only first match is needed (2026-06-06)
-- OpenTelemetryResultHandler: 5 separate PropertyBag walks (2 OfType + 3 SingleOrDefault) → 1 GetStructEnumerator() pass (2026-06-08)
-- GetTestInitialInfo in OTel uses yield return (state machine alloc) + 3 walks; considered but left as-is (yield return trade-off: state machine ≈ List<KVP>, no net allocation saving)
-- TrxTestResultExtractor: 7 SingleOrDefault + 2 OfType (9 walks + 2 array allocs) → 1 GetStructEnumerator() pass (2026-06-09)
-- GetStructEnumerator() accessible in TrxReport + JUnitReport via InternalsVisibleTo; both reference Microsoft.Testing.Platform directly
-- JUnitReport TestResultCapture: 5 SingleOrDefault + 1 foreach (6 walks + 1 IEnumerator heap alloc) → 1 GetStructEnumerator() pass (2026-06-10)
-- Backlog is essentially exhausted for PropertyBag/LINQ wins in hot paths; only startup-only code remains (ToolsTestHost.cs, negligible impact)
+- PropertyBag.GetStructEnumerator() returns internal struct (zero alloc); accessible within Microsoft.Testing.Platform and all report extensions (TrxReport, JUnitReport, CtrfReport, HtmlReport, AzureDevOpsReport, MSBuild, OTel) via direct project reference
+- PropertyBag.OfType<T>() allocates TProperty[] even for single-element results; use SingleOrDefault<T>() or GetStructEnumerator() depending on need
+- Hot-path PropertyBag optimization series is substantially complete across all report generators
+- AzureDevOpsReporter: GetTestName() was called eagerly for every test; now only called for 4 failure-state types (2026-06-16)
+- CtrfReport, HtmlReport, JUnitReport, TrxTestResultExtractor, OTel, MSBuildConsumer, AzureDevOpsSummaryReporter, AzureDevOpsTestResultsPublisher.ResultFactory, DiscoveredTestsJsonSerializer, TerminalOutputDevice, SimplifiedConsoleOutputDeviceBase: all now use single-pass GetStructEnumerator()
+- RetryDataConsumer: only 1 SingleOrDefault → no multi-walk to optimize
+- VSTestBridge ObjectModelConverters: mostly PropertyBag.Add() calls, not reads; not a hot-path read scenario
+- AzureDevOpsReporter ConsumeAsync: last remaining sub-optimal pattern now fixed (2026-06-16)
+- Backlog is now very sparse; next scan should focus on MSTest core (src/TestFramework) and Analyzers for new categories of work
 
 ## Monthly Activity Issue
-- 2026-06 issue: #8939 (created 2026-06-08, updated 2026-06-10)
+- 2026-06 previous issue: #8939 (closed by Evangelink 2026-06-14 as "completed")
+- 2026-06 new issue: to be created in this run
