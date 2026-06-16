@@ -100,15 +100,19 @@ public abstract class TestContext
     public virtual string? TestRunDirectory => GetProperty<string>(TestRunDirectoryLabel);
 
     /// <summary>
-    /// Gets the directory for files deployed for the test run (the "Out" directory). This is the <c>Out</c> subdirectory of <see cref="TestRunDirectory"/>.
+    /// Gets the directory for files deployed for the test run (the "Out" directory). This is typically the <c>Out</c> subdirectory of <see cref="TestRunDirectory"/>.
     /// </summary>
+    /// <remarks>
+    /// When app domains are disabled, this can instead point at the test assembly directory.
+    /// </remarks>
     public virtual string? DeploymentDirectory => GetProperty<string>(DeploymentDirectoryLabel);
 
     /// <summary>
-    /// Gets the base directory for results from the test run (the "In" directory). This is the <c>In</c> subdirectory of <see cref="TestRunDirectory"/>.
+    /// Gets the base directory for results from the test run (the "In" directory). This is typically the <c>In</c> subdirectory of <see cref="TestRunDirectory"/>.
     /// </summary>
     /// <remarks>
     /// In the current implementation this returns the same path as <see cref="TestResultsDirectory"/> (the <c>In</c> directory).
+    /// When run directory information is unavailable, the platform services layer can fall back to the application base directory.
     /// </remarks>
     public virtual string? ResultsDirectory => GetProperty<string>(ResultsDirectoryLabel);
 
@@ -118,22 +122,24 @@ public abstract class TestContext
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Despite the similar names, this directory is a <b>child</b> of <see cref="TestResultsDirectory"/>, not the other way around.
+    /// Despite the similar names, this directory is typically a <b>child</b> of <see cref="TestResultsDirectory"/>, not the other way around.
     /// For example, with <see cref="ResultsDirectory"/> set to <c>...\In</c> on a machine named <c>BUILD01</c>:
     /// </para>
     /// <code>
     /// TestResultsDirectory    => ...\In
     /// TestRunResultsDirectory => ...\In\BUILD01
     /// </code>
+    /// <para>
+    /// When run directory information is unavailable, the platform services layer can return the same path for both properties.
+    /// </para>
     /// </remarks>
     public virtual string? TestRunResultsDirectory => GetProperty<string>(TestRunResultsDirectoryLabel);
 
     /// <summary>
     /// Gets the directory for test result files (the "In" directory). This is the same path as <see cref="ResultsDirectory"/>
-    /// and the parent of <see cref="TestRunResultsDirectory"/>.
+    /// and is typically the parent of <see cref="TestRunResultsDirectory"/>. When run directory information is unavailable,
+    /// the platform services layer can return the same path for both properties.
     /// </summary>
-    // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but we are setting it to "In" only
-    // because MSTest does not create the GUID directory.
     public virtual string? TestResultsDirectory => GetProperty<string>(TestResultsDirectoryLabel);
 
     #endregion
