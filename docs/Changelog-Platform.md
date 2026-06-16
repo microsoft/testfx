@@ -31,12 +31,11 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add Azure DevOps result-level attachments and run-level coverage upload by @Evangelink in [#8782](https://github.com/microsoft/testfx/pull/8782)
 * Add Microsoft.Testing.Extensions.JUnitReport extension by @Evangelink in [#8850](https://github.com/microsoft/testfx/pull/8850)
 * Add Microsoft.Testing.Extensions.CtrfReport extension (CTRF reporter) by @Evangelink in [#8903](https://github.com/microsoft/testfx/pull/8903)
-* \[MSTest.Sdk] Wire Microsoft.Testing.Extensions.JUnitReport into MSTest.Sdk (opt-in) by @Evangelink in [#8956](https://github.com/microsoft/testfx/pull/8956)
 * Add --progress {auto|on|off} and deprecate --no-progress in MTP terminal reporter by @Evangelink in [#9145](https://github.com/microsoft/testfx/pull/9145)
 
 ### Fixed
 
-* (MISSING #7415)
+* Fix TreeNodeFilter OR-pattern diagnostics by @Evangelink in [#7415](https://github.com/microsoft/testfx/pull/7415)
 * Fix TRX result attachment layout to include per-test relative results directory by @Copilot in [#8188](https://github.com/microsoft/testfx/pull/8188)
 * Prevent telemetry host termination on boolean MSTest setting payloads by @Copilot in [#8189](https://github.com/microsoft/testfx/pull/8189)
 * Avoid duplicate async cleanup for test host lifecycle callbacks by @Copilot in [#8254](https://github.com/microsoft/testfx/pull/8254)

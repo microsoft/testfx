@@ -27,6 +27,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add MSTEST0066: \[Ignore] should have a justification message by @Evangelink in [#8649](https://github.com/microsoft/testfx/pull/8649)
 * Add \[AssemblyFixtureProvider] for cross-assembly assembly fixtures by @Evangelink in [#8677](https://github.com/microsoft/testfx/pull/8677)
 * Add MSTEST0068 - CollectionAssert to Assert analyzer and code fix by @Evangelink in [#8768](https://github.com/microsoft/testfx/pull/8768)
+* \[MSTest.Sdk] Wire Microsoft.Testing.Extensions.JUnitReport into MSTest.Sdk (opt-in) by @Evangelink in [#8956](https://github.com/microsoft/testfx/pull/8956)
 * Add \[MemberCondition] attribute for static-member-based test conditions by @Evangelink in [#9071](https://github.com/microsoft/testfx/pull/9071)
 * Add MSTEST0070 analyzer validating \[MemberCondition] member references by @Evangelink in [#9076](https://github.com/microsoft/testfx/pull/9076)
 
