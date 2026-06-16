@@ -83,6 +83,7 @@ Categorize assertions into tiers based on whether their post-conditions narrow t
 - `Fail` — semantically means "unconditional failure"; annotated `[DoesNotReturn]` on public API
 - `Inconclusive` — semantically means "unconditional inconclusive"; annotated `[DoesNotReturn]` on public API and throws `AssertInconclusiveException` (not `AssertFailedException`)
 - `ContainsSingle` — returns the matched element; returning `default` in soft mode would give callers a bogus `null`/`default(T)` causing downstream errors
+- `Throws<T>` / `ThrowsExactly<T>` / `ThrowsAsync<T>` / `ThrowsExactlyAsync<T>` — return the caught exception; returning `null` in soft mode would give callers a bogus `null` causing downstream errors (same shape as `ContainsSingle`)
 
 **Tier 2 — Soft, but annotations removed:** Assertions that had conditional `[DoesNotReturnIf]` annotations. The annotation is removed so the compiler no longer assumes the condition is guaranteed. The assertions become soft (collected within a scope).
 
@@ -105,7 +106,7 @@ This is the approach recommended by the Roslyn team: leave all nullable attribut
 **Pros:**
 
 - **No user-facing annotation changes.** Users outside `Assert.Scope()` get the exact same experience — `Assert.IsNotNull(obj); obj.Method()` has no nullable warning, `Assert.IsTrue(b)` narrows `bool?` to `bool`. Zero regression.
-- **All assertions participate in soft collection.** `IsNotNull`, `IsInstanceOfType`, `IsExactInstanceOfType`, `ContainsSingle`, `IsTrue`, `IsFalse` are all soft within a scope. This maximizes the value of `Assert.Scope()`.
+- **All assertions participate in soft collection.** `IsNotNull`, `IsInstanceOfType`, `IsExactInstanceOfType`, `ContainsSingle`, `Throws<T>`, `ThrowsExactly<T>`, `ThrowsAsync<T>`, `ThrowsExactlyAsync<T>`, `IsTrue`, `IsFalse` are all soft within a scope. This maximizes the value of `Assert.Scope()`.
 - **Consistent mental model.** The rule is simple: within `Assert.Scope()`, assertion failures are collected and postconditions are not enforced. This applies uniformly to all assertions (except `Assert.Fail()` and `Assert.Inconclusive()`), whether the postcondition is about nullability, type narrowing, equality, or anything else.
 
 **Cons:**
@@ -181,6 +182,28 @@ All assertions participate in soft failure collection, with the following except
 
 - **`Assert.Fail()`** and **`Assert.Inconclusive()`** are the only assertion APIs that do not respect soft failure mode. They always throw immediately, even within a scope — `Fail()` because it semantically means "this test has unconditionally failed" and `Inconclusive()` because it means "this test cannot determine its result." Additionally, `Inconclusive()` throws `AssertInconclusiveException` (not `AssertFailedException`), so it cannot be collected in the scope's failure queue.
 - **Null precondition checks** inside Assert APIs (e.g., validating that a `Type` argument passed to `IsInstanceOfType` is not null) also throw directly rather than collecting. These are internal parameter validation checks (`CheckParameterNotNull`), not assertions on the value under test. Note that `Assert.IsNotNull` / `Assert.IsNull` are *not* precondition checks — they are assertions on test values and participate in soft collection normally.
+
+#### Value-returning assertions return `null`/`default` in scoped mode
+
+Some assertions return a value on success:
+
+- `Assert.ContainsSingle(...)` returns the single matched element.
+- `Assert.Throws<T>(...)`, `Assert.ThrowsExactly<T>(...)`, `Assert.ThrowsAsync<T>(...)`, and `Assert.ThrowsExactlyAsync<T>(...)` return the caught exception.
+
+These are soft within a scope, like every other assertion (except `Fail`/`Inconclusive`). When such an assertion *fails* inside a scope, the failure is collected and execution continues — so the method returns `null`/`default(T)` rather than throwing. The non-null return contract (and any nullable annotation) is intentionally not enforced in scoped mode, exactly as described above for all other postconditions.
+
+```csharp
+using (Assert.Scope())
+{
+    // The exception assertion fails (no exception is thrown), so the failure is
+    // collected and 'ex' is null. Accessing 'ex' below throws NullReferenceException,
+    // which is a *secondary* symptom of the already-collected failure.
+    InvalidOperationException ex = Assert.Throws<InvalidOperationException>(() => { });
+    _ = ex.Message; // NullReferenceException — do not rely on the return value in scoped mode
+}
+```
+
+If the returned value is needed by subsequent code, do not capture it from a soft assertion inside a scope — either move the `Throws`/`ContainsSingle` call outside the scope, or restructure the test so nothing depends on the return value until after the scope is disposed.
 
 ### Dealing with postcondition-dependent code in scoped mode
 
