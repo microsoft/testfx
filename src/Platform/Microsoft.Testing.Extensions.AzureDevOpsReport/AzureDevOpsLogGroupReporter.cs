@@ -21,8 +21,6 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 /// </summary>
 internal sealed class AzureDevOpsLogGroupReporter : ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
-    private const string TfBuildVariableName = "TF_BUILD";
-
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
     private readonly IOutputDevice _outputDevice;
@@ -63,8 +61,7 @@ internal sealed class AzureDevOpsLogGroupReporter : ITestSessionLifetimeHandler,
             return Task.FromResult(false);
         }
 
-        bool isEnabledByEnvVariable = string.Equals(_environment.GetEnvironmentVariable(TfBuildVariableName), "true", StringComparison.OrdinalIgnoreCase);
-        return Task.FromResult(isEnabledByEnvVariable);
+        return Task.FromResult(AzureDevOpsConstants.IsRunningInAzureDevOps(_environment));
     }
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
