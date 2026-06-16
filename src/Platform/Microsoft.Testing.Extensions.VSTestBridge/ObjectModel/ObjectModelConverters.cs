@@ -21,17 +21,6 @@ internal static class ObjectModelConverters
         VSTestTestNodeProperties.OriginalExecutorUriPropertyName, VSTestTestNodeProperties.OriginalExecutorUriPropertyName,
         typeof(Uri), typeof(TestNode));
 
-    // VSTest TestCase property ids (set by adapters that support ECMA-335 managed names, e.g. MSTest).
-    // These are intentionally the VSTest property ids (no "vstest." prefix), which differ from the wire
-    // property keys we emit on the TestNode (see VSTestTestNodeProperties.ManagedType/ManagedMethodPropertyName).
-    // Owner/label match the canonical registration used by MSTest (TestCaseExtensions) so that if the
-    // adapter already registered these ids first, TestProperty.Register returns the same cached instance.
-    private static readonly TestProperty ManagedTypeProperty = TestProperty.Register(
-        "TestCase.ManagedType", "ManagedType", typeof(string), typeof(TestCase));
-
-    private static readonly TestProperty ManagedMethodProperty = TestProperty.Register(
-        "TestCase.ManagedMethod", "ManagedMethod", typeof(string), typeof(TestCase));
-
     private static readonly Uri ExecutorUri = new(Constants.ExecutorUri);
 
     /// <summary>
@@ -116,29 +105,6 @@ internal static class ObjectModelConverters
         if (testCase.FullyQualifiedName is string testCaseFqn)
         {
             testNode.Properties.Add(new SerializableKeyValuePairStringProperty("vstest.TestCase.FullyQualifiedName", testCaseFqn));
-        }
-
-        // Emit the ECMA-335 managed type/method (when the underlying adapter provides them, e.g. MSTest) so that
-        // clients can map a test to its source method and compute namespace/class without parsing the (non-standard)
-        // FullyQualifiedName or relying on the original executor URI.
-        //
-        // Managed type/method are "location" properties (location.type/location.method per the IDE-integration
-        // protocol doc). Newer Visual Studio clients read them from the structured TestMethodIdentifierProperty
-        // (serialized as location.type/location.method/location.method-arity), which the adapter already adds.
-        // So we only send the legacy vstest.TestCase.ManagedType/ManagedMethod key-value-pair properties to older
-        // clients that don't respect location.* for the vstestProvider, mirroring the CodeFilePath/LineNumber gate
-        // below. See ClientCompatibilityService for details.
-        if (compatibilityService.UseVSTestTestCaseLocationProperties)
-        {
-            if (testCase.GetPropertyValue<string?>(ManagedTypeProperty, null) is { Length: > 0 } managedType)
-            {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty(VSTestTestNodeProperties.ManagedTypePropertyName, managedType));
-            }
-
-            if (testCase.GetPropertyValue<string?>(ManagedMethodProperty, null) is { Length: > 0 } managedMethod)
-            {
-                testNode.Properties.Add(new SerializableKeyValuePairStringProperty(VSTestTestNodeProperties.ManagedMethodPropertyName, managedMethod));
-            }
         }
 
         if (testCase.GetPropertyValue(OriginalExecutorUriProperty) is Uri originalExecutorUri)

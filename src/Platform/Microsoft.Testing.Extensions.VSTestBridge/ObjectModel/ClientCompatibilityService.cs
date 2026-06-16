@@ -11,10 +11,8 @@ internal readonly struct ClientCompatibilityService
     private readonly string _clientName;
     private readonly Version? _clientVersion;
 
-    // Visual Studio Test Explorer used to use the location.* properties (location.file/location.line-start and
-    // location.type/location.method) only for non-vstestProvider. And for vstestProvider, it used the legacy
-    // vstest.TestCase.* key-value-pair properties (vstest.TestCase.CodeFilePath/LineNumber and
-    // vstest.TestCase.ManagedType/ManagedMethod).
+    // Visual Studio Test Explorer used to use location.file and location.line-start only for non-vstestProvider.
+    // And for vstestProvider, it uses vstest.TestCase.CodeFilePath and vstest.TestCase.LineNumber.
     // This behavior changed and we now always support location.* both for vstestProvider and non-vstestProvider.
     // However, we still want to send the vstest.TestCase.* if the client doesn't respect location.*
     // Note that this refers to VS 2026, as the fix here was not backported to VS 2022.

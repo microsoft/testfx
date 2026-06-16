@@ -6,8 +6,4 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 internal static class VSTestTestNodeProperties
 {
     public const string OriginalExecutorUriPropertyName = "vstest.original-executor-uri";
-
-    public const string ManagedTypePropertyName = "vstest.TestCase.ManagedType";
-
-    public const string ManagedMethodPropertyName = "vstest.TestCase.ManagedMethod";
 }
