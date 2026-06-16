@@ -576,4 +576,118 @@ public sealed class MemberConditionShouldBeValidAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("int[]", "AnyName"));
     }
+
+    [TestMethod]
+    public async Task WhenMethodIsInstance_MemberNotStatic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Conditions
+            {
+                public bool InstanceMethod() => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:MemberCondition(typeof(Conditions), nameof(Conditions.InstanceMethod))|}]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(MemberConditionShouldBeValidAnalyzer.MemberNotStaticRule)
+                .WithLocation(0)
+                .WithArguments("Conditions", "InstanceMethod"));
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsInternalStatic_MemberNotPublic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                internal static bool InternalMethod() => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:MemberCondition(typeof(Conditions), nameof(Conditions.InternalMethod))|}]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(MemberConditionShouldBeValidAnalyzer.MemberNotPublicRule)
+                .WithLocation(0)
+                .WithArguments("Conditions", "InternalMethod"));
+    }
+
+    [TestMethod]
+    public async Task WhenPropertyHasPrivateGetter_PropertyNotReadable()
+    {
+        // Property is public static but the getter is private — the runtime cannot invoke the getter.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool PrivateGet { private get; set; }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:MemberCondition(typeof(Conditions), nameof(Conditions.PrivateGet))|}]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(MemberConditionShouldBeValidAnalyzer.PropertyNotReadableRule)
+                .WithLocation(0)
+                .WithArguments("Conditions", "PrivateGet"));
+    }
+
+    [TestMethod]
+    public async Task WhenParamsArrayWithConditionMode_MultipleInvalidMembers_AllReported()
+    {
+        // Tests the 4-argument constructor overload: (ConditionMode, Type, string, params string[])
+        // All member names (the fixed name + each params element) must be validated.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsTrue => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:MemberCondition(ConditionMode.Exclude, typeof(Conditions), "Missing1", "Missing2")|}]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(MemberConditionShouldBeValidAnalyzer.MemberNotFoundRule)
+                .WithLocation(0)
+                .WithArguments("Conditions", "Missing1"),
+            VerifyCS.Diagnostic(MemberConditionShouldBeValidAnalyzer.MemberNotFoundRule)
+                .WithLocation(0)
+                .WithArguments("Conditions", "Missing2"));
+    }
 }
