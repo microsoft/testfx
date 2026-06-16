@@ -149,3 +149,4 @@ How to set the Issue Type from each surface:
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
 - Do the changes when you are specifically tagged or mentioned as copilot.
 - If you are unsure, comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.
+- PRs that address a security vulnerability (e.g. a Component Governance / CG alert or a vulnerable dependency bump) MUST keep their title and description vague to avoid drawing attention to the unpatched vulnerability before the fix ships. Use a generic title (e.g. `Update package X`) and a generic description (e.g. `Fix CG alert`); do NOT spell out the CVE, the exploit, the affected versions, or the attack details.
