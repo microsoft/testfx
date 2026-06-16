@@ -27,21 +27,30 @@ internal static class TestRunSummaryHelper
     /// <summary>
     /// Computes the verdict string for the test run.
     /// </summary>
-    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests) =>
-        wasCancelled
-            ? PlatformResources.Aborted
-            : totalTests < minimumExpectedTests
-                ? string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests)
-                : totalTests == 0 || totalTests == skippedTests
-                    ? PlatformResources.ZeroTestsRan
-                    : failedTests > 0
-                        ? $"{PlatformResources.Failed}!"
-                        : $"{PlatformResources.Passed}!";
+    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests)
+    {
+        if (wasCancelled)
+        {
+            return PlatformResources.Aborted;
+        }
+
+        if (totalTests < minimumExpectedTests)
+        {
+            return string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests);
+        }
+
+        if (totalTests == 0 || totalTests == skippedTests)
+        {
+            return PlatformResources.ZeroTestsRan;
+        }
+
+        return failedTests > 0 ? $"{PlatformResources.Failed}!" : $"{PlatformResources.Passed}!";
+    }
 
     /// <summary>
-    /// Formats a plain-text test run summary suitable for console output (no ANSI escape codes).
-    /// Produces the same logical content as <see cref="Terminal.TerminalTestReporter.AppendTestRunSummary"/>
-    /// but as a simple multi-line string.
+    /// Formats a plain-text test run summary with verdict and counts, suitable for console output
+    /// (no ANSI escape codes). Unlike <see cref="Terminal.TerminalTestReporter.AppendTestRunSummary"/>,
+    /// this does not include artifacts, duration, or assembly/TFM/architecture context.
     /// </summary>
     internal static string FormatSummaryText(int totalTests, int failedTests, int passedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests)
     {

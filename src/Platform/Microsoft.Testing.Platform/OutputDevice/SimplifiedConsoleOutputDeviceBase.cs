@@ -42,7 +42,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
-    private bool _wasCancelled;
+    private volatile bool _wasCancelled;
 
     private int _passedTests;
     private int _failedTests;
@@ -212,6 +212,10 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             }
 
             int total = _skippedTests + _passedTests + _failedTests;
+
+            // minimumExpectedTests is always 0 here because SimplifiedConsoleOutputDeviceBase does not
+            // receive ICommandLineOptions. The --minimum-expected-tests policy is still enforced via
+            // TestApplicationResult (exit code), but it is not surfaced in this summary.
             string text = TestRunSummaryHelper.FormatSummaryText(total, _failedTests, _passedTests, _skippedTests, _wasCancelled, minimumExpectedTests: 0);
 
             if (TestRunSummaryHelper.IsRunFailed(total, _failedTests, _skippedTests, _wasCancelled, minimumExpectedTests: 0))
