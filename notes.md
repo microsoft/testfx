@@ -23,6 +23,8 @@
 - **sealed + inheritance in tests**: When writing tests that need multi-level inheritance, the first level class must NOT be sealed
 - **`[Experimental("MSTESTEXP")]` types** (`RetryContext`, `RetryResult`, `RetryBaseAttribute.ExecuteAsync`): do NOT inherit from `RetryBaseAttribute` in test code strings — would require `#pragma warning disable MSTESTEXP` (not used in tests). Use `[Retry]` directly.
 - **Static classes in Roslyn**: Static classes are NOT abstract (`IsAbstract=false`); they have `IsStatic=true`. The `UseDeploymentItem` analyzer's abstract-class early return does NOT apply to static classes.
+- **Nullable annotation (CS8632)**: In analyzer test code strings, avoid `object?` — use `object` instead, or add `#nullable enable` at top of test code string. The test harness doesn't enable nullable by default.
+- **ManagedMethod/ManagedType**: Listed in TestContextPropertyUsageAnalyzer restriction sets but these properties do NOT exist on the actual TestContext class — those entries are dead code in the restriction sets.
 
 ## Testing Opportunities Backlog
 
@@ -33,6 +35,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-16 | Task 3 (DuplicateDataRowAnalyzer MSTEST0042 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-15 | Task 3 (MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-13 | Task 3 (UseConditionBaseWithTestClassAnalyzer MSTEST0041 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-12 | Task 3 (TypeContainingTestMethodShouldBeATestClassAnalyzer MSTEST0030 edge cases), Task 7 (Monthly Issue Jun) |
@@ -53,11 +56,12 @@
 
 ## Last Run
 
-2026-06-15 23:30 UTC
+2026-06-16 23:25 UTC
 
 ## Completed Work
 
-- PR (pending) for MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases (2026-06-15) — instance method→NotStatic, internal method→NotPublic, private getter→NotReadable, params+ConditionMode
+- PR (pending) for DuplicateDataRowAnalyzer MSTEST0042 edge cases (2026-06-16) — enum, typeof, null-element-in-array paths in TypedConstantArrayComparer
+- PR #9164 merged (MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases) — merged 2026-06-16
 - PR #9103 merged (UseConditionBaseWithTestClassAnalyzer MSTEST0041 edge cases) — merged 2026-06-14
 - PR #9092 merged (TypeContainingTestMethodShouldBeATestClassAnalyzer MSTEST0030 edge cases) — merged 2026-06-13
 - PR #9061 merged (TestClassShouldHaveTestMethodAnalyzer MSTEST0016 edge cases) — merged 2026-06-12
