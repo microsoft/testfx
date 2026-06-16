@@ -107,11 +107,6 @@
         <target state="translated">タイムアウト: {0}</target>
         <note>{0} is the timeout reason.</note>
       </trans-unit>
-      <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
-        <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-progress' では、'--report-azdo' を有効にする必要があります</target>
-        <note>{Locked="--report-azdo-progress"}{Locked="--report-azdo"}</note>
-      </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="translated">'--report-azdo-quarantine-file' では、'--report-azdo' を有効にする必要があります</target>
@@ -226,16 +221,6 @@
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">AzureDevOps が理解する方法で出力にエラーを書き込む Azure DevOps レポート生成プログラムを有効にします。</target>
         <note />
-      </trans-unit>
-      <trans-unit id="ProgressOptionDescription">
-        <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
-        <target state="translated">テスト実行中に Azure DevOps のタイムライン進行状況レコードを出力して、長時間実行されるセッションでビルドのタイムラインにライブ進行状況バーが表示されるようにします。'--report-azdo' が必要です。</target>
-        <note>{Locked="--report-azdo"}</note>
-      </trans-unit>
-      <trans-unit id="ProgressRequiresTfBuildWarning">
-        <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
-        <target state="translated">Azure DevOps の進行状況レポートが要求されましたが、TF_BUILD が 'true' に設定されていないため、Azure DevOps の進行状況の出力をスキップしています。</target>
-        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>

@@ -44,15 +44,6 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetLoggerFactory()));
 
-        var compositeProgressReporter =
-            new CompositeExtensionFactory<AzureDevOpsProgressReporter>(serviceProvider =>
-                new AzureDevOpsProgressReporter(
-                    serviceProvider.GetCommandLineOptions(),
-                    serviceProvider.GetEnvironment(),
-                    serviceProvider.GetOutputDevice(),
-                    serviceProvider.GetTestApplicationModuleInfo(),
-                    serviceProvider.GetLoggerFactory()));
-
         var compositeLogGroupReporter =
             new CompositeExtensionFactory<AzureDevOpsLogGroupReporter>(serviceProvider =>
                 new AzureDevOpsLogGroupReporter(
@@ -90,13 +81,11 @@ public static class AzureDevOpsExtensions
         });
         builder.TestHost.AddDataConsumer(compositeArtifactUploader);
         builder.TestHost.AddDataConsumer(compositeSummaryReporter);
-        builder.TestHost.AddDataConsumer(compositeProgressReporter);
         builder.TestHost.AddDataConsumer(compositeTestResultsPublisher);
         builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
             historyService ??= CreateHistoryService(serviceProvider));
         builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
-        builder.TestHost.AddTestSessionLifetimeHandler(compositeProgressReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeLogGroupReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());

@@ -107,11 +107,6 @@
         <target state="translated">逾時: {0}</target>
         <note>{0} is the timeout reason.</note>
       </trans-unit>
-      <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
-        <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
-        <target state="translated">'--report-azdo-progress' 需要啟用 '--report-azdo'</target>
-        <note>{Locked="--report-azdo-progress"}{Locked="--report-azdo"}</note>
-      </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="translated">需要啟用 '--report-azdo'，才能使用 '--report-azdo-quarantine-file'</target>
@@ -226,16 +221,6 @@
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">啟用 Azure DevOps 報告產生器以 Azure DevOps 可理解的方式將錯誤寫入輸出。</target>
         <note />
-      </trans-unit>
-      <trans-unit id="ProgressOptionDescription">
-        <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
-        <target state="translated">在測試執行期間發出 Azure DevOps 時間表進度記錄，讓長時間執行的工作階段在建置的時間表上顯示即時進度列。需要 '--report-azdo'。</target>
-        <note>{Locked="--report-azdo"}</note>
-      </trans-unit>
-      <trans-unit id="ProgressRequiresTfBuildWarning">
-        <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
-        <target state="translated">已要求 Azure DevOps 進度報告，但 TF_BUILD 未設定為 'true'；略過 Azure DevOps 進度發出。</target>
-        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>

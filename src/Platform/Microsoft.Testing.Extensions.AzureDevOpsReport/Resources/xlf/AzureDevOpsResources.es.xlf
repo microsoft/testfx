@@ -107,11 +107,6 @@
         <target state="translated">Tiempo de espera: {0}</target>
         <note>{0} is the timeout reason.</note>
       </trans-unit>
-      <trans-unit id="AzureDevOpsProgressRequiresAzureDevOps">
-        <source>'--report-azdo-progress' requires '--report-azdo' to be enabled</source>
-        <target state="translated">"--report-azdo-progress" requiere que se habilite "--report-azdo"</target>
-        <note>{Locked="--report-azdo-progress"}{Locked="--report-azdo"}</note>
-      </trans-unit>
       <trans-unit id="AzureDevOpsQuarantineFileRequiresAzureDevOps">
         <source>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-quarantine-file" requiere que se habilite "--report-azdo"</target>
@@ -226,16 +221,6 @@
         <source>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</source>
         <target state="translated">Habilite el generador de informes de Azure DevOps para que escriba errores en la salida de una forma que Azure DevOps entienda.</target>
         <note />
-      </trans-unit>
-      <trans-unit id="ProgressOptionDescription">
-        <source>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</source>
-        <target state="translated">Emita registros de progreso de la línea de tiempo de Azure DevOps durante la ejecución de la prueba para que las sesiones de larga duración muestren una barra de progreso en directo en la línea de tiempo de la compilación. Requiere "--report-azdo".</target>
-        <note>{Locked="--report-azdo"}</note>
-      </trans-unit>
-      <trans-unit id="ProgressRequiresTfBuildWarning">
-        <source>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</source>
-        <target state="translated">Se solicitó la generación de informes de progreso de Azure DevOps, pero TF_BUILD no está establecido en "true"; se omite el envío de información de progreso de Azure DevOps.</target>
-        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PublishAzdoRunNameOptionDescription">
         <source>Custom Azure DevOps test run name for live test-result publishing.</source>

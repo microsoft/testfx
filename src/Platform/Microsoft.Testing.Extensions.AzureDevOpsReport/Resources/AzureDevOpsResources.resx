@@ -193,10 +193,6 @@
     <value>Timeout: {0}</value>
     <comment>{0} is the timeout reason.</comment>
   </data>
-  <data name="AzureDevOpsProgressRequiresAzureDevOps" xml:space="preserve">
-    <value>'--report-azdo-progress' requires '--report-azdo' to be enabled</value>
-    <comment>{Locked="--report-azdo-progress"}{Locked="--report-azdo"}</comment>
-  </data>
   <data name="AzureDevOpsQuarantineFileRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-quarantine-file' requires '--report-azdo' to be enabled</value>
     <comment>{Locked="--report-azdo-quarantine-file"}{Locked="--report-azdo"}</comment>
@@ -283,14 +279,6 @@
   </data>
   <data name="OptionDescription" xml:space="preserve">
     <value>Enable Azure DevOps report generator to write errors to the output in a way that Azure DevOps understands.</value>
-  </data>
-  <data name="ProgressOptionDescription" xml:space="preserve">
-    <value>Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.</value>
-    <comment>{Locked="--report-azdo"}</comment>
-  </data>
-  <data name="ProgressRequiresTfBuildWarning" xml:space="preserve">
-    <value>Azure DevOps progress reporting was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps progress emissions.</value>
-    <comment>{Locked="TF_BUILD"}{Locked="true"}</comment>
   </data>
   <data name="PublishAzdoRunNameOptionDescription" xml:space="preserve">
     <value>Custom Azure DevOps test run name for live test-result publishing.</value>
