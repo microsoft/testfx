@@ -26,15 +26,14 @@ internal static class AzureDevOpsSlowTestThresholds
         }
 
         double historyThresholdMs = stats.P99Milliseconds * multiplier;
-        if (double.IsNaN(historyThresholdMs) || double.IsInfinity(historyThresholdMs) || historyThresholdMs < 0)
-        {
-            // A pathological multiplier (or overflow to infinity) would make TimeSpan.FromMilliseconds throw;
-            // fall back to the static threshold instead of silently disabling slow-test detection.
-            return staticThreshold;
-        }
 
-        var historyThreshold = TimeSpan.FromMilliseconds(historyThresholdMs);
-        return historyThreshold < staticThreshold ? historyThreshold : staticThreshold;
+        // The effective threshold is min(static, history), so any history value that is not strictly below the
+        // static threshold falls back to the static one without a TimeSpan conversion. Short-circuiting here also
+        // guards against TimeSpan.FromMilliseconds throwing: it covers NaN, +Infinity, and any large *finite*
+        // value that would exceed TimeSpan.MaxValue.TotalMilliseconds and overflow during conversion.
+        return double.IsNaN(historyThresholdMs) || historyThresholdMs <= 0 || historyThresholdMs >= staticThreshold.TotalMilliseconds
+            ? staticThreshold
+            : TimeSpan.FromMilliseconds(historyThresholdMs);
     }
 
     /// <summary>

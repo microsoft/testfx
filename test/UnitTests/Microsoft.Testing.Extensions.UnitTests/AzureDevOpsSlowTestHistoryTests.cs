@@ -107,6 +107,20 @@ public sealed class AzureDevOpsSlowTestHistoryTests
     }
 
     [TestMethod]
+    public void ComputeThreshold_WhenHistoryExceedsTimeSpanMax_UsesStaticThreshold()
+    {
+        // A large *finite* history threshold (neither NaN nor Infinity) can still exceed
+        // TimeSpan.MaxValue.TotalMilliseconds and throw inside TimeSpan.FromMilliseconds. Because the result is
+        // never below the static threshold, the method must short-circuit to the static one without converting.
+        double hugeButFinite = TimeSpan.MaxValue.TotalMilliseconds * 2;
+        var stats = new DurationHistoryStats(hugeButFinite, hugeButFinite, sampleCount: 120);
+        TimeSpan threshold = AzureDevOpsSlowTestThresholds.ComputeThreshold(
+            TimeSpan.FromSeconds(60), stats, hasStats: true, multiplier: 1.0, minimumSampleCount: 10);
+
+        Assert.AreEqual(TimeSpan.FromSeconds(60), threshold);
+    }
+
+    [TestMethod]
     public void HasUsableHistory_RespectsMinimumSampleCount()
     {
         var stats = new DurationHistoryStats(2000, 3000, sampleCount: 9);

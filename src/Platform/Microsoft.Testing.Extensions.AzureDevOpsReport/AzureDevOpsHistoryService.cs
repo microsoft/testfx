@@ -315,6 +315,11 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         collectDurations = false;
         bool anyEnabled = false;
 
+        // Flaky-history and slow-test-history share a single Azure DevOps query to avoid paying for the fetch
+        // twice. When both are enabled with different windows we deliberately query the *maximum* of the two
+        // windows so neither feature is starved of data; the narrower feature simply ignores the extra days.
+        // This means the flaky "in last {N}d" annotation reflects the effective (maximum) window, not necessarily
+        // the value passed to --report-azdo-flaky-history when the slow-test window is larger.
         if (TryGetWindowInDays(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, out int flakyWindow))
         {
             anyEnabled = true;

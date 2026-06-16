@@ -228,7 +228,12 @@ internal sealed class AzureDevOpsSlowTestReporter : IDataConsumer, ITestSessionL
             }
 
             // Exponential backoff so a genuinely stuck test does not spam the log: T, 2T, 4T, ...
-            test.NextEmitThreshold = TimeSpan.FromTicks(test.NextEmitThreshold.Ticks * 2);
+            // Clamp at TimeSpan.MaxValue so a very long-running test cannot overflow Ticks * 2 into a
+            // negative value (which would make the backoff fire on every scan).
+            long currentTicks = test.NextEmitThreshold.Ticks;
+            test.NextEmitThreshold = currentTicks > TimeSpan.MaxValue.Ticks / 2
+                ? TimeSpan.MaxValue
+                : TimeSpan.FromTicks(currentTicks * 2);
 
             try
             {
