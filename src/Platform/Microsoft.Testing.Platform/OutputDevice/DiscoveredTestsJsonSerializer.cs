@@ -70,7 +70,7 @@ internal static class DiscoveredTestsJsonSerializer
         List<TestMetadataProperty>? traits = null;
         List<SerializableKeyValuePairStringProperty>? kvps = null;
 
-        PropertyBag.PropertyBagEnumerator enumerator = test.Properties.GetStructEnumerator();
+        using PropertyBag.PropertyBagEnumerator enumerator = test.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
             switch (enumerator.Current)
