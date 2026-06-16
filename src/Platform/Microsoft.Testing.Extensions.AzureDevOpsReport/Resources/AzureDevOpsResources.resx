@@ -270,6 +270,10 @@
     <value>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</value>
     <comment>{0} is the regex pattern. {1} is the validation error message. {Locked="--report-azdo-stackframe-filter"}</comment>
   </data>
+  <data name="LogGroupHeader" xml:space="preserve">
+    <value>Tests: {0}</value>
+    <comment>{0} is the test assembly name and target framework, e.g. 'MSTest.UnitTests (net9.0)'. This text is the collapsible Azure DevOps log group header.</comment>
+  </data>
   <data name="NoFailureMessageFallback" xml:space="preserve">
     <value>Test failed without an additional message.</value>
   </data>

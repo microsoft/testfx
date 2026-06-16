@@ -55,6 +55,15 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetLoggerFactory(),
                     historyService ??= CreateHistoryService(serviceProvider)));
 
+        var compositeLogGroupReporter =
+            new CompositeExtensionFactory<AzureDevOpsLogGroupReporter>(serviceProvider =>
+                new AzureDevOpsLogGroupReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
         var compositeTestResultsPublisher =
             new CompositeExtensionFactory<AzureDevOpsTestResultsPublisher>(serviceProvider =>
                new AzureDevOpsTestResultsPublisher(
@@ -85,12 +94,17 @@ public static class AzureDevOpsExtensions
         builder.TestHost.AddDataConsumer(compositeSummaryReporter);
         builder.TestHost.AddDataConsumer(compositeSlowTestReporter);
         builder.TestHost.AddDataConsumer(compositeTestResultsPublisher);
+        builder.TestHost.AddDataConsumer(compositeLogGroupReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
             historyService ??= CreateHistoryService(serviceProvider));
         builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSlowTestReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
+
+        // Registered last so its OnTestSessionFinishingAsync (the closing ##[endgroup]) runs after
+        // the other AzDO handlers' finishing callbacks, ensuring the group wraps all their output.
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeLogGroupReporter);
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
 

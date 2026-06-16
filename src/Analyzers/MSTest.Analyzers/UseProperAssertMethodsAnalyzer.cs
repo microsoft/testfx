@@ -292,11 +292,11 @@ public sealed partial class UseProperAssertMethodsAnalyzer : DiagnosticAnalyzer
                 break;
 
             case "AreEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true, objectTypeSymbol, enumerableTypeSymbol);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: true, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol);
                 break;
 
             case "AreNotEqual":
-                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, objectTypeSymbol, enumerableTypeSymbol);
+                AnalyzeAreEqualOrAreNotEqualInvocation(context, firstArgument, isAreEqualInvocation: false, assertTypeSymbol, objectTypeSymbol, enumerableTypeSymbol);
                 break;
         }
     }

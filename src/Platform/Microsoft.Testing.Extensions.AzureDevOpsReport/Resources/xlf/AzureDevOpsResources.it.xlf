@@ -237,6 +237,11 @@
         <target state="translated">Espressione regolare non valida per "--report-azdo-stackframe-filter" "{0}": {1}</target>
         <note>{0} is the regex pattern. {1} is the validation error message. {Locked="--report-azdo-stackframe-filter"}</note>
       </trans-unit>
+      <trans-unit id="LogGroupHeader">
+        <source>Tests: {0}</source>
+        <target state="new">Tests: {0}</target>
+        <note>{0} is the test assembly name and target framework, e.g. 'MSTest.UnitTests (net9.0)'. This text is the collapsible Azure DevOps log group header.</note>
+      </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>Test failed without an additional message.</source>
         <target state="translated">Test non riuscito senza un messaggio aggiuntivo.</target>
