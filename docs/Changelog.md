@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="4.3.0" />[4.3.0] - UNRELEASED
+
+See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
+
+### Added
+
+* Apply structured assertion messages to IsTrue, IsFalse, IsNull, IsNotNull by @Evangelink in [#8187](https://github.com/microsoft/testfx/pull/8187)
+* Add MSTestParallelizeScope/Workers MSBuild properties by @Evangelink in [#8233](https://github.com/microsoft/testfx/pull/8233)
+* Add Assert.ContainsAll and Assert.DoesNotContainAll with structured assertion messages by @Evangelink in [#8234](https://github.com/microsoft/testfx/pull/8234)
+* Add Assert.AreAllNotNull / AreAllDistinct / AreAllOfType by @Evangelink in [#8237](https://github.com/microsoft/testfx/pull/8237)
+* Add MSTEST0064 to prefer async assertions by @Copilot in [#8256](https://github.com/microsoft/testfx/pull/8256)
+* Add Assert.AreEquivalent for deep structural comparison by @Evangelink in [#8266](https://github.com/microsoft/testfx/pull/8266)
+* Add Assert.AreSequenceEqual / AreNotSequenceEqual with SequenceOrder option by @Evangelink in [#8334](https://github.com/microsoft/testfx/pull/8334)
+* Add MSTEST0065 analyzer: Avoid Assert.AreEqual on collection types by @Evangelink in [#8337](https://github.com/microsoft/testfx/pull/8337)
+* Flow TestContext.Properties through Assembly/Class lifecycle by @Evangelink in [#8386](https://github.com/microsoft/testfx/pull/8386)
+* RFC 014 + impl: experimental TestRun.Current / PlannedTests API by @Evangelink in [#8461](https://github.com/microsoft/testfx/pull/8461)
+* Support class-level \[Retry] attribute by @Evangelink in [#8566](https://github.com/microsoft/testfx/pull/8566)
+* Add MSTest reflection source generator (issue #1837) by @Evangelink in [#8586](https://github.com/microsoft/testfx/pull/8586)
+* Add MSTEST0067 analyzer to flag Thread.Sleep/Task.Wait/Task&lt;T&gt;.Result in tests by @Evangelink in [#8646](https://github.com/microsoft/testfx/pull/8646)
+* Add opt-in random test order to MSTest adapter by @Evangelink in [#8647](https://github.com/microsoft/testfx/pull/8647)
+* Add MSTEST0066: \[Ignore] should have a justification message by @Evangelink in [#8649](https://github.com/microsoft/testfx/pull/8649)
+* Add \[AssemblyFixtureProvider] for cross-assembly assembly fixtures by @Evangelink in [#8677](https://github.com/microsoft/testfx/pull/8677)
+* Add MSTEST0068 - CollectionAssert to Assert analyzer and code fix by @Evangelink in [#8768](https://github.com/microsoft/testfx/pull/8768)
+* Add \[MemberCondition] attribute for static-member-based test conditions by @Evangelink in [#9071](https://github.com/microsoft/testfx/pull/9071)
+* Add MSTEST0070 analyzer validating \[MemberCondition] member references by @Evangelink in [#9076](https://github.com/microsoft/testfx/pull/9076)
+
+### Fixed
+
+* Fix Assert.That: single-pass evaluation (#6690) and consistent method-call display by @Evangelink in [#8306](https://github.com/microsoft/testfx/pull/8306)
+* Apply \[StackTraceHidden] to Assert/CollectionAssert/StringAssert by @Evangelink in [#8393](https://github.com/microsoft/testfx/pull/8393)
+* Fix folded data-driven tests sharing TestContextImplementation across iterations by @Evangelink in [#8439](https://github.com/microsoft/testfx/pull/8439)
+* MSTEST0005: Stop reporting on fields of type TestContext by @Evangelink in [#8629](https://github.com/microsoft/testfx/pull/8629)
+* Fix MSTEST0066 false positive for \[Ignore(IgnoreMessage = "...")] by @Evangelink in [#8662](https://github.com/microsoft/testfx/pull/8662)
+* Add \[StackTraceHidden] to assertion API internals by @Evangelink in [#8853](https://github.com/microsoft/testfx/pull/8853)
+* Render BCL values with full precision in assertion failure messages by @Evangelink in [#8964](https://github.com/microsoft/testfx/pull/8964)
+* Apply DebuggerDisableUserUnhandledExceptionsAttribute to Assert.Throws helpers by @Evangelink in [#9041](https://github.com/microsoft/testfx/pull/9041)
+* Flag `Assert.AreEqual(x, x)` / `AreSame(x, x)` / `AreNotEqual(x, x)` / `AreNotSame(x, x)` by @Evangelink in [#9088](https://github.com/microsoft/testfx/pull/9088)
+
 ## <a name="4.2.3" />[4.2.3] - 2026-05-14
 
 See full log [of v4.2.2...v4.2.3](https://github.com/microsoft/testfx/compare/v4.2.2...v4.2.3)
