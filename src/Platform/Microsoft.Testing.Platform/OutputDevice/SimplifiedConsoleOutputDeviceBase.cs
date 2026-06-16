@@ -42,6 +42,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
+    private bool _wasCancelled;
 
     private int _passedTests;
     private int _failedTests;
@@ -84,6 +85,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         => await _policiesService.RegisterOnAbortCallbackAsync(
             () =>
             {
+                _wasCancelled = true;
                 ConsoleLog(PlatformResources.CancellingTestSession);
                 ConsoleLog(PlatformResources.PressCtrlCAgainToForceExit);
                 return Task.CompletedTask;
@@ -210,16 +212,9 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             }
 
             int total = _skippedTests + _passedTests + _failedTests;
-            // TODO: Duplicate the logic from TerminalTestReporter.AppendTestRunSummary, or refactor it
-            // so that it's easily shareable between the two implementations.
-            string text = $"""
-                    Total tests: {total}
-                    Failed tests: {_failedTests}
-                    Passed tests: {_passedTests}
-                    Skipped tests: {_skippedTests}
-                    """;
+            string text = TestRunSummaryHelper.FormatSummaryText(total, _failedTests, _passedTests, _skippedTests, _wasCancelled, minimumExpectedTests: 0);
 
-            if (_failedTests > 0)
+            if (TestRunSummaryHelper.IsRunFailed(total, _failedTests, _skippedTests, _wasCancelled, minimumExpectedTests: 0))
             {
                 ConsoleError(text);
             }
