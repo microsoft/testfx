@@ -56,18 +56,13 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     private static bool AssertHasMatchingSpanOrMemoryHasCountOverload(INamedTypeSymbol assertTypeSymbol, ITypeSymbol spanOrMemoryType)
     {
         ITypeSymbol spanOrMemoryDefinition = spanOrMemoryType.OriginalDefinition;
-        foreach (ISymbol member in assertTypeSymbol.GetMembers("HasCount"))
-        {
-            // Public HasCount span/memory overloads are HasCount<T>(int expected, ReadOnlySpan<T> collection, ...),
-            // so the collection is the second parameter (ordinal 1).
-            if (member is IMethodSymbol { Parameters.Length: >= 2 } method &&
-                SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type.OriginalDefinition, spanOrMemoryDefinition))
-            {
-                return true;
-            }
-        }
 
-        return false;
+        // Public HasCount span/memory overloads are HasCount<T>(int expected, ReadOnlySpan<T> collection, ...),
+        // so the collection is the second parameter (ordinal 1).
+        return assertTypeSymbol.GetMembers("HasCount")
+            .OfType<IMethodSymbol>()
+            .Where(method => method.Parameters.Length >= 2)
+            .Any(method => SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type.OriginalDefinition, spanOrMemoryDefinition));
     }
 
     private static CollectionCheckStatus RecognizeCollectionMethodCheck(
