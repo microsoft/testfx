@@ -9,10 +9,27 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [StackTraceHidden]
 internal static class AssertionValueRenderer
 {
+    // Cache the built-in renderer as a delegate so passing it to the formatter registry doesn't allocate
+    // on every RenderValue call.
+    private static readonly Func<object?, string> BuiltInRenderer = RenderBuiltIn;
+
     /// <summary>
     /// Renders a value as a string suitable for display in the evidence block.
     /// </summary>
+    /// <remarks>
+    /// User-registered formatters (see <see cref="Assert.AddValueFormatter{T}(Func{T, string?})"/>) are consulted
+    /// first for non-<see langword="null"/> values. <see langword="null"/> is always rendered as <c>"null"</c>
+    /// and is not exposed to user formatters, to avoid surprising <see cref="NullReferenceException"/>s
+    /// inside user code.
+    /// </remarks>
     internal static string RenderValue(object? value)
+        => value is null
+            ? "null"
+            : AssertionValueFormatterRegistry.HasFormatters
+                ? AssertionValueFormatterRegistry.Render(value, BuiltInRenderer)
+                : RenderBuiltIn(value);
+
+    private static string RenderBuiltIn(object? value)
         => value switch
         {
             null => "null",

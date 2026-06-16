@@ -324,9 +324,24 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
+                // Single-pass collection: replaces SingleOrDefault<TimingProperty>() + SingleOrDefault<TestNodeStateProperty>()
+                // with one zero-allocation GetStructEnumerator() walk. Note: TestNodeStateProperty was already O(1) via direct
+                // field access, so the win here is code-path simplification and consistency with the established single-pass pattern.
+                TimingProperty? timingProp = null;
+                TestNodeStateProperty? nodeStateProp = null;
+                PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    switch (enumerator.Current)
+                    {
+                        case TimingProperty t: timingProp = t; break;
+                        case TestNodeStateProperty s: nodeStateProp = s; break;
+                    }
+                }
 
-                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+                TimeSpan? duration = timingProp?.GlobalTiming.Duration;
+
+                switch (nodeStateProp)
                 {
                     case InProgressTestNodeStateProperty:
                         break;

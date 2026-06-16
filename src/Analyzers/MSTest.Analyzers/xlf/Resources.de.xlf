@@ -298,47 +298,47 @@ Der Typ, der diese Methoden deklariert, sollte auch die folgenden Regeln beachte
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
-        <target state="new">The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</target>
+        <target state="translated">Die Mitglieder, auf die ein „[MemberCondition]“-Attribut verweist, müssen für den Referenztyp vorhanden sein, „public static“, „bool“ zurückgeben und (für Methoden) parameterlos sein. Das Attribut wird zur Laufzeit ausgelöst, wenn diese Regeln verletzt werden. Dieses Analysetool zeigt die gleichen Probleme zur Buildzeit an, sodass Tippfehler und Refactors die Testgating nicht im Hintergrund unterbrechen.</target>
         <note>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotFound">
         <source>'[MemberCondition]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[MemberCondition]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">„[MemberCondition]“ Mitglied „{0}.{1}“ wurde nicht gefunden</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotPublic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</target>
+        <target state="translated">„[MemberCondition]“, auf die das Mitglied „{0}.{1}“ verweist, muss „public“ sein</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotStatic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</target>
+        <target state="translated">„[MemberCondition]“, auf die das Mitglied „{0}.{1}“ verweist, muss „static“ sein</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongKind">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</target>
+        <target state="translated">„[MemberCondition]“, auf die das Mitglied „{0}.{1}“ verweist, muss eine Eigenschaft, ein Feld oder eine parameterlose Methode sein</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</target>
+        <target state="translated">„[MemberCondition]“, auf die das Mitglied „{0}.{1}“ verweist, muss „bool“ zurückgeben</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MethodHasParameters">
         <source>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</source>
-        <target state="new">'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</target>
+        <target state="translated">„[MemberCondition]“, auf die die Methode „{0}.{1}“ verweist, muss parameterlos sein</target>
         <note>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable">
         <source>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</source>
-        <target state="new">'[MemberCondition]' referenced property '{0}.{1}' must have a getter</target>
+        <target state="translated">„[MemberCondition]“, auf die die Eigenschaft „{0}.{1}“ verweist, muss einen Getter aufweisen</target>
         <note>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidTitle">
         <source>'[MemberCondition]' arguments should be valid</source>
-        <target state="new">'[MemberCondition]' arguments should be valid</target>
+        <target state="translated">„[MemberCondition]“-Argumente müssen gültig sein</target>
         <note>{Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">

@@ -297,47 +297,47 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
-        <target state="new">The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</target>
+        <target state="translated">'[MemberCondition]' 屬性所參考的成員必須存在於參考的類型上、為 'public static'、傳回 'bool'，以及 (針對方法) 無參數。違反這些規則時，此屬性會在執行階段擲回；此分析器在建置階段遇到相同的問題，因此錯字和重構不會以無訊息方式中斷測試管制。</target>
         <note>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotFound">
         <source>'[MemberCondition]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[MemberCondition]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">找不到 '[MemberCondition]' 成員 '{0}。{1}'</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotPublic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</target>
+        <target state="translated">'[MemberCondition]' 參考的成員 '{0}。{1}' 必須為 'public'</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotStatic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</target>
+        <target state="translated">'[MemberCondition]' 參考的成員 '{0}。{1}' 必須為 'static'</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongKind">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</target>
+        <target state="translated">'[MemberCondition]' 參考的成員 '{0}。{1}' 必須是屬性、欄位或無參數方法</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</target>
+        <target state="translated">'[MemberCondition]' 參考的成員 '{0}。{1}' 必須傳回 'bool'</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MethodHasParameters">
         <source>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</source>
-        <target state="new">'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</target>
+        <target state="translated">'[MemberCondition]' 參考的方法 '{0}。{1}' 必須無參數</target>
         <note>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable">
         <source>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</source>
-        <target state="new">'[MemberCondition]' referenced property '{0}.{1}' must have a getter</target>
+        <target state="translated">'[MemberCondition]' 參考的屬性 '{0}。{1}' 必須有 getter</target>
         <note>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidTitle">
         <source>'[MemberCondition]' arguments should be valid</source>
-        <target state="new">'[MemberCondition]' arguments should be valid</target>
+        <target state="translated">'[MemberCondition]' 引數應該有效</target>
         <note>{Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">

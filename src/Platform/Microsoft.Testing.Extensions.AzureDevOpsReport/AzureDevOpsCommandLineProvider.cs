@@ -47,7 +47,6 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
-                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsProgress, AzureDevOpsResources.ProgressOptionDescription, ArgumentArity.Zero, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter, StackFrameFilterOptionDescriptionFormatted, ArgumentArity.OneOrMore, false),
@@ -88,10 +87,6 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory))
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsFlakyHistoryRequiresAzureDevOps;
-            }
-            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsProgress))
-            {
-                errorMessage = AzureDevOpsResources.AzureDevOpsProgressRequiresAzureDevOps;
             }
             else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile))
             {
