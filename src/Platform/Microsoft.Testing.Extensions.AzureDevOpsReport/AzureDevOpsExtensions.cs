@@ -53,6 +53,15 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetLoggerFactory()));
 
+        var compositeLogGroupReporter =
+            new CompositeExtensionFactory<AzureDevOpsLogGroupReporter>(serviceProvider =>
+                new AzureDevOpsLogGroupReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
         var compositeTestResultsPublisher =
             new CompositeExtensionFactory<AzureDevOpsTestResultsPublisher>(serviceProvider =>
                new AzureDevOpsTestResultsPublisher(
@@ -88,6 +97,7 @@ public static class AzureDevOpsExtensions
         builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeProgressReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeLogGroupReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
