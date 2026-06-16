@@ -18,7 +18,13 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestClass]
 public sealed class ObjectModelConvertersTests
 {
+    // A client that predates the fix making VS respect location.* for the vstestProvider, so the legacy
+    // vstest.TestCase.* key-value-pair properties (including ManagedType/ManagedMethod) are still emitted.
     private static readonly IClientInfo ClientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0");
+
+    // A client that respects location.* (location.type/location.method) for the vstestProvider, so the legacy
+    // vstest.TestCase.ManagedType/ManagedMethod key-value-pair properties are no longer needed.
+    private static readonly IClientInfo NewClientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.1");
 
     [TestMethod]
     [DataRow(true)]
@@ -125,7 +131,7 @@ public sealed class ObjectModelConvertersTests
     }
 
     [TestMethod]
-    public void ToTestNode_WhenTestCaseHasManagedTypeAndManagedMethod_TestNodePropertiesContainThem()
+    public void ToTestNode_WhenClientDoesNotRespectLocationAndTestCaseHasManagedTypeAndManagedMethod_TestNodePropertiesContainThem()
     {
         var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
         var managedTypeProperty = TestProperty.Register("TestCase.ManagedType", "ManagedType", typeof(string), typeof(TestCase));
@@ -140,6 +146,24 @@ public sealed class ObjectModelConvertersTests
         SerializableKeyValuePairStringProperty managedMethod = properties.Single(p => p.Key == VSTestTestNodeProperties.ManagedMethodPropertyName);
         Assert.AreEqual("MyNamespace.MyClass", managedType.Value);
         Assert.AreEqual("MyMethod(System.Int32)", managedMethod.Value);
+    }
+
+    [TestMethod]
+    public void ToTestNode_WhenClientRespectsLocationAndTestCaseHasManagedTypeAndManagedMethod_TestNodePropertiesDoNotContainThem()
+    {
+        // Newer clients read the managed type/method from the structured location.type/location.method
+        // (TestMethodIdentifierProperty added by the adapter), so the legacy key-value-pair properties are omitted.
+        var testCase = new TestCase("SomeFqn", new("executor://uri", UriKind.Absolute), "source.cs");
+        var managedTypeProperty = TestProperty.Register("TestCase.ManagedType", "TestCase.ManagedType", typeof(string), typeof(TestCase));
+        var managedMethodProperty = TestProperty.Register("TestCase.ManagedMethod", "TestCase.ManagedMethod", typeof(string), typeof(TestCase));
+        testCase.SetPropertyValue<string>(managedTypeProperty, "MyNamespace.MyClass");
+        testCase.SetPropertyValue<string>(managedMethodProperty, "MyMethod(System.Int32)");
+
+        var testNode = testCase.ToTestNode(isTrxEnabled: false, useFullyQualifiedNameAsUid: false, static (_, _) => { }, new NamedFeatureCapabilityWithVSTestProvider(), new ServerModeCommandLineOptions(), NewClientInfo);
+
+        SerializableKeyValuePairStringProperty[] properties = [.. testNode.Properties.OfType<SerializableKeyValuePairStringProperty>()];
+        Assert.IsNull(properties.SingleOrDefault(p => p.Key == VSTestTestNodeProperties.ManagedTypePropertyName));
+        Assert.IsNull(properties.SingleOrDefault(p => p.Key == VSTestTestNodeProperties.ManagedMethodPropertyName));
     }
 
     [TestMethod]
