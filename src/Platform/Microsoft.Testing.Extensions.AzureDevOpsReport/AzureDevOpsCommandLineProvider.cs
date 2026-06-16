@@ -37,6 +37,16 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
         MaxStackFrameFilterPatterns,
         StackFrameFilterMatchTimeoutMs);
 
+    private static readonly string SlowTestHistoryMinSampleOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.SlowTestHistoryMinSampleOptionDescription,
+        AzureDevOpsCommandLineOptions.SlowTestHistoryDefaultMinSample);
+
+    private static readonly string SlowTestHistoryMultiplierOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.SlowTestHistoryMultiplierOptionDescription,
+        AzureDevOpsCommandLineOptions.SlowTestHistoryDefaultMultiplier);
+
     public AzureDevOpsCommandLineProvider()
         : base(
             nameof(AzureDevOpsCommandLineProvider),
@@ -49,6 +59,9 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, AzureDevOpsResources.SlowTestHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample, SlowTestHistoryMinSampleOptionDescriptionFormatted, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier, SlowTestHistoryMultiplierOptionDescriptionFormatted, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter, StackFrameFilterOptionDescriptionFormatted, ArgumentArity.OneOrMore, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSummary, AzureDevOpsResources.SummaryOptionDescription, ArgumentArity.ZeroOrOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude, AzureDevOpsResources.UploadArtifactExcludeOptionDescription, ArgumentArity.ZeroOrMore, false),
@@ -65,6 +78,9 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
         => commandOption.Name switch
         {
             AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory => ValidateFlakyHistoryArgumentsAsync(arguments),
+            AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory => ValidateSlowTestHistoryArgumentsAsync(arguments),
+            AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample => ValidateSlowTestHistoryMinSampleArgumentsAsync(arguments),
+            AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier => ValidateSlowTestHistoryMultiplierArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity when !SeverityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSeverity, arguments[0])),
             AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter => ValidateStackFrameFilterArgumentsAsync(arguments),
@@ -96,6 +112,10 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps;
             }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryRequiresAzureDevOps;
+            }
             else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter))
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsStackFrameFilterRequiresAzureDevOps;
@@ -109,6 +129,16 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory))
         {
             errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory;
+        }
+        else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample)
+            && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
+        {
+            errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory;
+        }
+        else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier)
+            && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
+        {
+            errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory;
         }
 
         if (errorMessage is null && HasArtifactUploadConfiguration(commandLineOptions) && IsArtifactUploadDisabled(commandLineOptions))
@@ -174,6 +204,24 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
             && days is >= 1 and <= 90
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidFlakyHistoryDays, arguments[0]));
+
+    private static Task<ValidationResult> ValidateSlowTestHistoryArgumentsAsync(string[] arguments)
+        => int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int days)
+            && days is >= 1 and <= 90
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSlowTestHistoryDays, arguments[0]));
+
+    private static Task<ValidationResult> ValidateSlowTestHistoryMinSampleArgumentsAsync(string[] arguments)
+        => int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int minimum)
+            && minimum >= 1
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSlowTestHistoryMinSample, arguments[0]));
+
+    private static Task<ValidationResult> ValidateSlowTestHistoryMultiplierArgumentsAsync(string[] arguments)
+        => double.TryParse(arguments[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double multiplier)
+            && multiplier > 0
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSlowTestHistoryMultiplier, arguments[0]));
 
     private static Task<ValidationResult> ValidateStackFrameFilterArgumentsAsync(string[] arguments)
     {

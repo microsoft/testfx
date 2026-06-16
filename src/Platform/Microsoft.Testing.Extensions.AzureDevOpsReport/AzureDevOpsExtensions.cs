@@ -44,6 +44,17 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetLoggerFactory()));
 
+        var compositeSlowTestReporter =
+            new CompositeExtensionFactory<AzureDevOpsSlowTestReporter>(serviceProvider =>
+                new AzureDevOpsSlowTestReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTask(),
+                    serviceProvider.GetClock(),
+                    serviceProvider.GetLoggerFactory(),
+                    historyService ??= CreateHistoryService(serviceProvider)));
+
         var compositeTestResultsPublisher =
             new CompositeExtensionFactory<AzureDevOpsTestResultsPublisher>(serviceProvider =>
                new AzureDevOpsTestResultsPublisher(
@@ -72,11 +83,13 @@ public static class AzureDevOpsExtensions
         });
         builder.TestHost.AddDataConsumer(compositeArtifactUploader);
         builder.TestHost.AddDataConsumer(compositeSummaryReporter);
+        builder.TestHost.AddDataConsumer(compositeSlowTestReporter);
         builder.TestHost.AddDataConsumer(compositeTestResultsPublisher);
         builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
             historyService ??= CreateHistoryService(serviceProvider));
         builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSlowTestReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }

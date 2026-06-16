@@ -32,6 +32,50 @@ public sealed class AzureDevOpsCommandLineTests : AcceptanceTestBase<AzureDevOps
         testHostResult.AssertOutputContains("Option '--report-azdo-severity' has invalid arguments: Invalid option invalid.");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task AzureDevOps_WhenSlowTestHistoryValueIsInvalid_ShouldFail(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-azdo --report-azdo-slow-test-history 0", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("Option '--report-azdo-slow-test-history' has invalid arguments: Invalid value '0' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task AzureDevOps_WhenSlowTestHistoryMultiplierIsInvalid_ShouldFail(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-azdo --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-multiplier 0", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("Option '--report-azdo-slow-test-history-multiplier' has invalid arguments: Invalid value '0' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0.");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task AzureDevOps_WhenSlowTestHistoryUsedWithoutReportAzdo_ShouldFail(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-azdo-slow-test-history 30", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled");
+    }
+
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task AzureDevOps_WhenSlowTestHistoryMinSampleUsedWithoutSlowTestHistory_ShouldFail(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-azdo --report-azdo-slow-test-history-min-sample 5", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """

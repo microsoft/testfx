@@ -348,4 +348,52 @@
     <value>Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.</value>
     <comment>{Locked="off"}{Locked="tags-only"}{Locked="files"}{Locked="all"}</comment>
   </data>
+  <data name="AzureDevOpsSlowTestHistoryRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked="--report-azdo-slow-test-history"}{Locked="--report-azdo"}</comment>
+  </data>
+  <data name="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory" xml:space="preserve">
+    <value>'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</value>
+    <comment>{Locked="--report-azdo-slow-test-history-min-sample"}{Locked="--report-azdo-slow-test-history"}</comment>
+  </data>
+  <data name="AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory" xml:space="preserve">
+    <value>'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</value>
+    <comment>{Locked="--report-azdo-slow-test-history-multiplier"}{Locked="--report-azdo-slow-test-history"}</comment>
+  </data>
+  <data name="InvalidSlowTestHistoryDays" xml:space="preserve">
+    <value>Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</value>
+    <comment>{0} is the invalid value. {Locked="--report-azdo-slow-test-history"}</comment>
+  </data>
+  <data name="InvalidSlowTestHistoryMinSample" xml:space="preserve">
+    <value>Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</value>
+    <comment>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</comment>
+  </data>
+  <data name="InvalidSlowTestHistoryMultiplier" xml:space="preserve">
+    <value>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0.</value>
+    <comment>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</comment>
+  </data>
+  <data name="SlowTestHistoryOptionDescription" xml:space="preserve">
+    <value>Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</value>
+    <comment>{Locked="--report-azdo"}</comment>
+  </data>
+  <data name="SlowTestHistoryMinSampleOptionDescription" xml:space="preserve">
+    <value>Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</value>
+    <comment>{0} is the default minimum sample count. {Locked="--report-azdo-slow-test-history"}</comment>
+  </data>
+  <data name="SlowTestHistoryMultiplierOptionDescription" xml:space="preserve">
+    <value>Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</value>
+    <comment>{0} is the default multiplier. {Locked="--report-azdo-slow-test-history"}</comment>
+  </data>
+  <data name="SlowTestHistoryRequiresTfBuildWarning" xml:space="preserve">
+    <value>Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</value>
+    <comment>{Locked="TF_BUILD"}{Locked="true"}</comment>
+  </data>
+  <data name="SlowTestStillRunning" xml:space="preserve">
+    <value>[slow] still running after {0}: {1}</value>
+    <comment>{0} is the elapsed duration. {1} is the test name. {Locked="[slow]"}</comment>
+  </data>
+  <data name="SlowTestHistoryDecoration" xml:space="preserve">
+    <value>(historical p95 = {0}, p99 = {1}, samples = {2})</value>
+    <comment>{0} is the p95 duration. {1} is the p99 duration. {2} is the sample count.</comment>
+  </data>
 </root>
