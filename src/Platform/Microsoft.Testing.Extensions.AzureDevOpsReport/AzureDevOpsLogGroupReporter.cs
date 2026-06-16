@@ -4,6 +4,8 @@
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
@@ -19,7 +21,16 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 /// default. Unlike <c>##vso[task.logdetail]</c> records, the <c>##[group]</c> format commands are
 /// rendered by the modern Azure DevOps Pipelines log viewer.
 /// </summary>
-internal sealed class AzureDevOpsLogGroupReporter : ITestSessionLifetimeHandler, IOutputDeviceDataProducer
+/// <remarks>
+/// This handler also implements <see cref="IDataConsumer"/> (with a no-op
+/// <see cref="ConsumeAsync(IDataProducer, IData, CancellationToken)"/>) purely so that, at session
+/// end, <c>CommonTestHost.NotifyTestSessionEndAsync</c> runs its
+/// <see cref="OnTestSessionFinishingAsync(ITestSessionContext)"/> in the consumer phase — i.e.
+/// after the producer-only AzDO handlers. Combined with registering it last, this ensures the
+/// closing <c>##[endgroup]</c> is emitted after the other reporters' final <c>##vso[...]</c> lines,
+/// so the group truly wraps the whole assembly's output.
+/// </remarks>
+internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
@@ -53,16 +64,17 @@ internal sealed class AzureDevOpsLogGroupReporter : ITestSessionLifetimeHandler,
 
     public string Description => AzureDevOpsResources.Description;
 
-    public Task<bool> IsEnabledAsync()
-    {
-        bool isEnabledByParameter = _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName);
-        if (!isEnabledByParameter)
-        {
-            return Task.FromResult(false);
-        }
+    public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
 
-        return Task.FromResult(AzureDevOpsConstants.IsRunningInAzureDevOps(_environment));
-    }
+    public Task<bool> IsEnabledAsync()
+        => Task.FromResult(
+            _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
+            && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment));
+
+    // No-op: this consumer subscribes to data only to be ordered in the consumer phase at session
+    // end (see the type-level remarks). It does not act on individual messages.
+    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        => Task.CompletedTask;
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {

@@ -2,8 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport;
+using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -64,7 +67,8 @@ public sealed class AzureDevOpsLogGroupReporterTests
 
         string[] lines = GetFormattedLines();
         Assert.HasCount(1, lines);
-        Assert.StartsWith("##[group]Tests: MyAssembly (", lines[0]);
+        string headerPrefix = AzureDevOpsResources.LogGroupHeader.Replace("{0}", string.Empty);
+        Assert.StartsWith($"##[group]{headerPrefix}MyAssembly (", lines[0]);
     }
 
     [TestMethod]
@@ -91,12 +95,39 @@ public sealed class AzureDevOpsLogGroupReporterTests
         Assert.IsEmpty(GetFormattedLines());
     }
 
+    [TestMethod]
+    public async Task ConsumeAsync_IsNoOp_AndEmitsNothingAsync()
+    {
+        // The handler subscribes as an IDataConsumer only to be ordered in the consumer phase at
+        // session end; ConsumeAsync itself must not emit anything.
+        AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true);
+
+        Assert.Contains(typeof(TestNodeUpdateMessage), reporter.DataTypesConsumed);
+        await reporter.ConsumeAsync(
+            Mock.Of<IDataProducer>(),
+            CreateTestNodeUpdateMessage("t1", new PassedTestNodeStateProperty()),
+            CancellationToken.None);
+
+        Assert.IsEmpty(GetFormattedLines());
+    }
+
+    private static TestNodeUpdateMessage CreateTestNodeUpdateMessage(string uid, TestNodeStateProperty state)
+        => new(
+            new SessionUid("session"),
+            new TestNode
+            {
+                Uid = uid,
+                DisplayName = uid,
+                Properties = new PropertyBag(state),
+            });
+
     private AzureDevOpsLogGroupReporter CreateReporter(bool enabled, bool tfBuild)
     {
         Dictionary<string, string[]> options = enabled
             ? new Dictionary<string, string[]> { [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [] }
             : [];
-        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns(tfBuild ? "true" : null);
+        _ = _environmentMock.Setup(e => e.GetEnvironmentVariable(AzureDevOpsConstants.TfBuildEnvironmentVariableName))
+            .Returns(tfBuild ? AzureDevOpsConstants.TfBuildEnabledValue : null);
         return new AzureDevOpsLogGroupReporter(
             new TestCommandLineOptions(options),
             _environmentMock.Object,
