@@ -297,47 +297,47 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
-        <target state="new">The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</target>
+        <target state="translated">Členy, na které odkazuje atribut [MemberCondition], musí existovat v odkazovaném typu, musí být public static, vracet bool a v případě metod nesmí mít žádné parametry. Atribut při porušení těchto pravidel vyvolá za běhu výjimku. Tento analyzátor upozorňuje na stejné problémy už při sestavení, aby překlepy a refaktorizace nenarušily řízení testů bez povšimnutí.</target>
         <note>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotFound">
         <source>'[MemberCondition]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[MemberCondition]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">Člen [MemberCondition] {0}.{1} nebyl nalezen.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotPublic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</target>
+        <target state="translated">Odkazovaný člen [MemberCondition] {0}.{1} musí být public.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotStatic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</target>
+        <target state="translated">Odkazovaný člen [MemberCondition] {0}.{1} musí být static.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongKind">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</target>
+        <target state="translated">Odkazovaný člen [MemberCondition] {0}.{1} musí být vlastnost, pole nebo metoda bez parametrů.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</target>
+        <target state="translated">Odkazovaný člen [MemberCondition] {0}.{1} musí vracet logickou hodnotu (bool).</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MethodHasParameters">
         <source>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</source>
-        <target state="new">'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</target>
+        <target state="translated">Odkazovaná metoda [MemberCondition] {0}.{1} musí být bez parametrů.</target>
         <note>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable">
         <source>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</source>
-        <target state="new">'[MemberCondition]' referenced property '{0}.{1}' must have a getter</target>
+        <target state="translated">Odkazovaná vlastnost [MemberCondition] {0}.{1} musí mít metodu getter.</target>
         <note>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidTitle">
         <source>'[MemberCondition]' arguments should be valid</source>
-        <target state="new">'[MemberCondition]' arguments should be valid</target>
+        <target state="translated">Argumenty [MemberCondition] by měly být platné</target>
         <note>{Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
