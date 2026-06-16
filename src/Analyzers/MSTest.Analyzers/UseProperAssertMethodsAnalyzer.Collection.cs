@@ -37,6 +37,34 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             i.OriginalDefinition.SpecialType == SpecialType.System_Collections_IEnumerable) &&
             IsBCLSymbol(type, objectTypeSymbol);
 
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="type"/> is one of <see cref="System.Span{T}"/>,
+    /// <see cref="System.ReadOnlySpan{T}"/>, <see cref="System.Memory{T}"/> or <see cref="System.ReadOnlyMemory{T}"/>.
+    /// These types expose <c>Length</c> and have <c>Assert.HasCount</c> overloads, but cannot satisfy
+    /// the <see cref="System.Collections.Generic.IEnumerable{T}"/>-based collection assertions.
+    /// </summary>
+    private static bool IsSpanOrMemoryType(ITypeSymbol type)
+        => type.OriginalDefinition is INamedTypeSymbol { Arity: 1, Name: "Span" or "ReadOnlySpan" or "Memory" or "ReadOnlyMemory", ContainingNamespace: { Name: "System" } containingNamespace } &&
+            containingNamespace.ContainingNamespace?.IsGlobalNamespace == true;
+
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="assertTypeSymbol"/> exposes a <c>HasCount</c>
+    /// overload whose collection parameter matches the given span/memory <paramref name="spanOrMemoryType"/>.
+    /// The span/memory <c>HasCount</c> overloads are compiled only for .NET (not .NET Framework), so this
+    /// check prevents the analyzer from suggesting a code fix that would not compile for the targeted framework.
+    /// </summary>
+    private static bool AssertHasMatchingSpanOrMemoryHasCountOverload(INamedTypeSymbol assertTypeSymbol, ITypeSymbol spanOrMemoryType)
+    {
+        ITypeSymbol spanOrMemoryDefinition = spanOrMemoryType.OriginalDefinition;
+
+        // Public HasCount span/memory overloads are HasCount<T>(int expected, ReadOnlySpan<T> collection, ...),
+        // so the collection is the second parameter (ordinal 1).
+        return assertTypeSymbol.GetMembers("HasCount")
+            .OfType<IMethodSymbol>()
+            .Where(method => method.Parameters.Length >= 2)
+            .Any(method => SymbolEqualityComparer.Default.Equals(method.Parameters[1].Type.OriginalDefinition, spanOrMemoryDefinition));
+    }
+
     private static CollectionCheckStatus RecognizeCollectionMethodCheck(
         IOperation operation,
         INamedTypeSymbol objectTypeSymbol,
@@ -354,6 +382,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
     private static CountCheckStatus RecognizeCountCheck(
         IOperation expectedArgument,
         IOperation actualArgument,
+        INamedTypeSymbol assertTypeSymbol,
         INamedTypeSymbol objectTypeSymbol,
         INamedTypeSymbol? enumerableTypeSymbol,
         out SyntaxNode? nodeToBeReplaced1,
@@ -361,6 +390,35 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         out SyntaxNode? nodeToBeReplaced2,
         out SyntaxNode? replacement2)
     {
+        // Check if actualArgument is a Span/ReadOnlySpan/Memory/ReadOnlyMemory '.Length'.
+        // These types have HasCount overloads but no IsEmpty/IsNotEmpty overloads, so we always
+        // suggest Assert.HasCount (even when the expected value is 0) and never Assert.IsEmpty.
+        // We only do this when the referenced MSTest framework actually exposes a matching span/memory
+        // HasCount overload (these are guarded out on .NET Framework targets); otherwise the code fix
+        // would generate a call that does not compile.
+        if (actualArgument is IPropertyReferenceOperation { Property.Name: "Length" } spanLengthRef &&
+            spanLengthRef.Instance?.Type is { } spanInstanceType &&
+            IsSpanOrMemoryType(spanInstanceType) &&
+            IsBCLSymbol(spanInstanceType, objectTypeSymbol) &&
+            AssertHasMatchingSpanOrMemoryHasCountOverload(assertTypeSymbol, spanInstanceType))
+        {
+            // Assert.HasCount takes int, so skip if expectedCount is not an int (e.g. int?, long, uint, decimal).
+            if (expectedArgument.Type?.SpecialType == SpecialType.System_Int32)
+            {
+                nodeToBeReplaced1 = actualArgument.Syntax; // span.Length
+                replacement1 = spanLengthRef.Instance.Syntax; // span
+                nodeToBeReplaced2 = null;
+                replacement2 = null;
+                return CountCheckStatus.HasCount;
+            }
+
+            nodeToBeReplaced1 = null;
+            replacement1 = null;
+            nodeToBeReplaced2 = null;
+            replacement2 = null;
+            return CountCheckStatus.Unknown;
+        }
+
         // Check if actualArgument is a count/length property
         if (actualArgument is IPropertyReferenceOperation propertyRef &&
             TryGetCollectionExpressionIfBCLCollectionLengthOrCount(propertyRef, objectTypeSymbol) is { } expression)
