@@ -205,37 +205,38 @@ internal sealed class AzureDevOpsSlowTestReporter : IDataConsumer, ITestSessionL
             try
             {
                 await _task.Delay(ScanInterval, cancellationToken).ConfigureAwait(false);
+                await ScanOnceAsync(_clock.UtcNow, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException)
             {
                 return;
             }
+        }
+    }
 
-            DateTimeOffset now = _clock.UtcNow;
-            foreach (KeyValuePair<string, InProgressTest> entry in _inProgress)
+    // Internal for unit testing: performs a single surfacing pass at the given 'now' so tests can drive
+    // the emission/backoff logic deterministically without relying on the timer-driven loop.
+    internal async Task ScanOnceAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        foreach (KeyValuePair<string, InProgressTest> entry in _inProgress)
+        {
+            InProgressTest test = entry.Value;
+            TimeSpan elapsed = now - test.StartTime;
+            if (elapsed < test.NextEmitThreshold)
             {
-                InProgressTest test = entry.Value;
-                TimeSpan elapsed = now - test.StartTime;
-                if (elapsed < test.NextEmitThreshold)
-                {
-                    continue;
-                }
+                continue;
+            }
 
-                // Exponential backoff so a genuinely stuck test does not spam the log: T, 2T, 4T, ...
-                test.NextEmitThreshold = TimeSpan.FromTicks(test.NextEmitThreshold.Ticks * 2);
+            // Exponential backoff so a genuinely stuck test does not spam the log: T, 2T, 4T, ...
+            test.NextEmitThreshold = TimeSpan.FromTicks(test.NextEmitThreshold.Ticks * 2);
 
-                try
-                {
-                    await EmitSlowTestAsync(test, elapsed, cancellationToken).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    LogUnexpectedException(nameof(ScanLoopAsync), ex);
-                }
+            try
+            {
+                await EmitSlowTestAsync(test, elapsed, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                LogUnexpectedException(nameof(ScanOnceAsync), ex);
             }
         }
     }

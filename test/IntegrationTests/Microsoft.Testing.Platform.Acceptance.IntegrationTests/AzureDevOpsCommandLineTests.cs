@@ -76,6 +76,17 @@ public sealed class AzureDevOpsCommandLineTests : AcceptanceTestBase<AzureDevOps
         testHostResult.AssertOutputContains("'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled");
     }
 
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    [TestMethod]
+    public async Task AzureDevOps_WhenSlowTestHistoryMultiplierUsedWithoutSlowTestHistoryAndWithoutReportAzdo_ShouldFail(string tfm)
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--report-azdo-slow-test-history-multiplier 3", cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        testHostResult.AssertOutputContains("'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled");
+    }
+
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """

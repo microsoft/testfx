@@ -130,12 +130,18 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
         {
             errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory;
         }
-        else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample)
+
+        // The slow-test-history sub-options depend on '--report-azdo-slow-test-history' regardless of whether
+        // '--report-azdo' itself is set, so these checks live outside the '--report-azdo' branch above.
+        if (errorMessage is null
+            && commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample)
             && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
         {
             errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory;
         }
-        else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier)
+
+        if (errorMessage is null
+            && commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier)
             && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
         {
             errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory;
