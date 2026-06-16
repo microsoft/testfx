@@ -455,7 +455,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
-        if (_isServerMode)
+        // In --list-tests json mode we must still emit the JSON document, even under --server
+        // (e.g. when launched by `dotnet test` with `--server dotnettestcli`). The JSON is written
+        // to stdout below, which the dotnet-test SDK captures and forwards. Only the genuine server
+        // run (no JSON discovery) short-circuits here, because its output flows through the pipe.
+        if (_isServerMode && !_isListTestsJson)
         {
             return;
         }
@@ -588,7 +592,12 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
         cancellationToken.ThrowIfCancellationRequested();
-        if (_isServerMode)
+
+        // In --list-tests json mode we still need to buffer discovered tests, even under --server
+        // (e.g. when launched by `dotnet test` with `--server dotnettestcli`), so the JSON document
+        // can be emitted at the end of the session. Only the genuine server run (no JSON discovery)
+        // short-circuits here, because its data flows through the pipe instead of the terminal.
+        if (_isServerMode && !_isListTestsJson)
         {
             return Task.CompletedTask;
         }
