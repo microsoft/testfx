@@ -13,7 +13,7 @@ internal partial class AssemblyResolver
     /// <summary>
     /// Adds the subdirectories of the provided path to the collection.
     /// </summary>
-    /// <param name="path"> Path go get subdirectories for. </param>
+    /// <param name="path"> Path to get subdirectories for. </param>
     /// <param name="searchDirectories"> The search Directories. </param>
     internal
 #if NET
@@ -24,7 +24,7 @@ internal partial class AssemblyResolver
         DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "'path' cannot be null or empty.");
         DebugEx.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
 
-        // If the directory exists, get it's subdirectories
+        // If the directory exists, get its subdirectories
         if (DoesDirectoryExist(path))
         {
             // Get the directories in the path provided.

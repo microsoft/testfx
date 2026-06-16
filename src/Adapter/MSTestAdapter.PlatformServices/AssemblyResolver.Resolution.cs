@@ -120,8 +120,8 @@ internal partial class AssemblyResolver
                             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                             {
                                 PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                                "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist",
-                                currentNode.DirectoryPath);
+                                        "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist",
+                                        currentNode.DirectoryPath);
                             }
                         });
                 }
