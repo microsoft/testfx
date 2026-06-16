@@ -609,8 +609,9 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                // Single-pass collection: replaces 3 × SingleOrDefault<T>() + 1 × OfType<T>() + 1 × SingleOrDefault<TestNodeStateProperty>()
-                // with one zero-allocation GetStructEnumerator() walk, saving 4 linked-list traversals and 1 LINQ heap alloc per test result.
+                // Single-pass collection: replaces 3 × SingleOrDefault<T>() + 1 × OfType<T>() (4 O(n) traversals + 1 heap alloc)
+                //   + 1 × SingleOrDefault<TestNodeStateProperty>() (O(1) fast path, now folded into the walk)
+                // with one zero-allocation GetStructEnumerator() walk.
                 TimingProperty? timing = null;
                 StandardOutputProperty? stdoutProp = null;
                 StandardErrorProperty? stderrProp = null;
