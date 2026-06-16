@@ -95,6 +95,18 @@ public sealed class AzureDevOpsSlowTestHistoryTests
     }
 
     [TestMethod]
+    public void ComputeThreshold_WhenMultiplierOverflowsToInfinity_UsesStaticThreshold()
+    {
+        // A pathological multiplier would overflow p99 * multiplier to +Infinity, which would throw inside
+        // TimeSpan.FromMilliseconds; the guard must fall back to the static threshold instead.
+        var stats = new DurationHistoryStats(25000, 30000, sampleCount: 120);
+        TimeSpan threshold = AzureDevOpsSlowTestThresholds.ComputeThreshold(
+            TimeSpan.FromSeconds(60), stats, hasStats: true, multiplier: double.MaxValue, minimumSampleCount: 10);
+
+        Assert.AreEqual(TimeSpan.FromSeconds(60), threshold);
+    }
+
+    [TestMethod]
     public void HasUsableHistory_RespectsMinimumSampleCount()
     {
         var stats = new DurationHistoryStats(2000, 3000, sampleCount: 9);

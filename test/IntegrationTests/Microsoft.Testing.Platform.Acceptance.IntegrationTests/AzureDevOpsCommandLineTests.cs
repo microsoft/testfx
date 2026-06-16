@@ -51,7 +51,7 @@ public sealed class AzureDevOpsCommandLineTests : AcceptanceTestBase<AzureDevOps
         TestHostResult testHostResult = await testHost.ExecuteAsync("--report-azdo --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-multiplier 0", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Option '--report-azdo-slow-test-history-multiplier' has invalid arguments: Invalid value '0' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0.");
+        testHostResult.AssertOutputContains("Option '--report-azdo-slow-test-history-multiplier' has invalid arguments: Invalid value '0' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

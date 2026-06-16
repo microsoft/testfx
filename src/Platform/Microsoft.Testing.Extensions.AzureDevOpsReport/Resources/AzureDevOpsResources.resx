@@ -369,7 +369,7 @@
     <comment>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</comment>
   </data>
   <data name="InvalidSlowTestHistoryMultiplier" xml:space="preserve">
-    <value>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0.</value>
+    <value>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</value>
     <comment>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</comment>
   </data>
   <data name="SlowTestHistoryOptionDescription" xml:space="preserve">

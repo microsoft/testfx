@@ -26,6 +26,13 @@ internal static class AzureDevOpsSlowTestThresholds
         }
 
         double historyThresholdMs = stats.P99Milliseconds * multiplier;
+        if (double.IsNaN(historyThresholdMs) || double.IsInfinity(historyThresholdMs) || historyThresholdMs < 0)
+        {
+            // A pathological multiplier (or overflow to infinity) would make TimeSpan.FromMilliseconds throw;
+            // fall back to the static threshold instead of silently disabling slow-test detection.
+            return staticThreshold;
+        }
+
         var historyThreshold = TimeSpan.FromMilliseconds(historyThresholdMs);
         return historyThreshold < staticThreshold ? historyThreshold : staticThreshold;
     }
@@ -57,8 +64,9 @@ internal static class AzureDevOpsSlowTestThresholds
     {
         // One decimal place is enough resolution for a heartbeat line; drop a trailing ".0".
         double rounded = Math.Round(value, 1, MidpointRounding.AwayFromZero);
-        return rounded == Math.Floor(rounded)
-            ? ((long)rounded).ToString(CultureInfo.InvariantCulture)
+        long whole = (long)Math.Round(rounded, 0, MidpointRounding.AwayFromZero);
+        return Math.Abs(rounded - whole) < 1e-9
+            ? whole.ToString(CultureInfo.InvariantCulture)
             : rounded.ToString("0.0", CultureInfo.InvariantCulture);
     }
 }

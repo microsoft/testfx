@@ -42,8 +42,8 @@ internal sealed class AzureDevOpsSlowTestReporter : IDataConsumer, ITestSessionL
     private readonly TimeSpan _staticThreshold;
 
     private double _multiplier;
-    private int _minimumSampleCount;
-    private bool _active;
+    private volatile int _minimumSampleCount;
+    private volatile bool _active;
     private CancellationTokenSource? _loopCancellationTokenSource;
     private Task? _loopTask;
 
@@ -96,16 +96,20 @@ internal sealed class AzureDevOpsSlowTestReporter : IDataConsumer, ITestSessionL
 
             if (!string.Equals(_environment.GetEnvironmentVariable(AzureDevOpsTfBuildVariableName), "true", StringComparison.OrdinalIgnoreCase))
             {
-                if (_logger.IsEnabled(LogLevel.Warning))
+                // Outside Azure DevOps the feature truly no-ops: we only leave a low-noise trace and never
+                // surface an output-device line, so local/dev runs that happen to pass the option stay quiet.
+                if (_logger.IsEnabled(LogLevel.Trace))
                 {
-                    _logger.LogWarning(AzureDevOpsResources.SlowTestHistoryRequiresTfBuildWarning);
+                    _logger.LogTrace(AzureDevOpsResources.SlowTestHistoryRequiresTfBuildWarning);
                 }
 
-                await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(AzureDevOpsResources.SlowTestHistoryRequiresTfBuildWarning), testSessionContext.CancellationToken).ConfigureAwait(false);
                 return;
             }
 
-            _multiplier = GetMultiplier();
+            // 'double' cannot be marked 'volatile', so publish the multiplier through Volatile.Write; the
+            // remaining fields use the 'volatile' modifier. Writing _active = true last (below) acts as the
+            // release fence that publishes all three to the test-data-producer threads in ConsumeAsync.
+            Volatile.Write(ref _multiplier, GetMultiplier());
             _minimumSampleCount = GetMinimumSampleCount();
 
             _loopCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(testSessionContext.CancellationToken);
@@ -179,6 +183,8 @@ internal sealed class AzureDevOpsSlowTestReporter : IDataConsumer, ITestSessionL
             }
             catch (OperationCanceledException)
             {
+                // Expected during normal shutdown: cancelling _loopCancellationTokenSource above unblocks the
+                // scan loop, which surfaces as a cancellation here. Nothing to do — swallow and finish teardown.
             }
             catch (Exception ex)
             {
@@ -257,7 +263,7 @@ internal sealed class AzureDevOpsSlowTestReporter : IDataConsumer, ITestSessionL
     private TimeSpan ResolveThreshold(string testName)
     {
         bool hasStats = _historyService.TryGetDurationStats(testName, out DurationHistoryStats stats);
-        return AzureDevOpsSlowTestThresholds.ComputeThreshold(_staticThreshold, stats, hasStats, _multiplier, _minimumSampleCount);
+        return AzureDevOpsSlowTestThresholds.ComputeThreshold(_staticThreshold, stats, hasStats, Volatile.Read(ref _multiplier), _minimumSampleCount);
     }
 
     private double GetMultiplier()

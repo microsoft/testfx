@@ -219,7 +219,7 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
 
     private static Task<ValidationResult> ValidateSlowTestHistoryMultiplierArgumentsAsync(string[] arguments)
         => double.TryParse(arguments[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double multiplier)
-            && multiplier > 0
+            && multiplier is > 0 and <= 10_000
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSlowTestHistoryMultiplier, arguments[0]));
 
