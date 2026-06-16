@@ -84,27 +84,53 @@ public abstract class TestContext
     #region Test run deployment directories
 
     /// <summary>
-    /// Gets base directory for the test run, under which deployed files and result files are stored.
+    /// Gets the top-level directory for the test run, under which deployed files and result files are stored.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This is the root of the layout used by the other deployment directory properties. A typical run produces:
+    /// </para>
+    /// <code>
+    /// &lt;solution&gt;\TestResults\&lt;run-guid&gt;        // TestRunDirectory
+    ///     \In                                  // ResultsDirectory and TestResultsDirectory
+    ///         \&lt;MachineName&gt;                    // TestRunResultsDirectory
+    ///     \Out                                 // DeploymentDirectory
+    /// </code>
+    /// </remarks>
     public virtual string? TestRunDirectory => GetProperty<string>(TestRunDirectoryLabel);
 
     /// <summary>
-    /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+    /// Gets the directory for files deployed for the test run (the "Out" directory). This is the <c>Out</c> subdirectory of <see cref="TestRunDirectory"/>.
     /// </summary>
     public virtual string? DeploymentDirectory => GetProperty<string>(DeploymentDirectoryLabel);
 
     /// <summary>
-    /// Gets base directory for results from the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
+    /// Gets the base directory for results from the test run (the "In" directory). This is the <c>In</c> subdirectory of <see cref="TestRunDirectory"/>.
     /// </summary>
+    /// <remarks>
+    /// In the current implementation this returns the same path as <see cref="TestResultsDirectory"/> (the <c>In</c> directory).
+    /// </remarks>
     public virtual string? ResultsDirectory => GetProperty<string>(ResultsDirectoryLabel);
 
     /// <summary>
-    /// Gets directory for test run result files. Typically a subdirectory of <see cref="ResultsDirectory"/>.
+    /// Gets the per-machine directory for test run result files. This is the <c>&lt;MachineName&gt;</c> subdirectory of <see cref="ResultsDirectory"/>
+    /// (i.e. <c>In\&lt;MachineName&gt;</c>).
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Despite the similar names, this directory is a <b>child</b> of <see cref="TestResultsDirectory"/>, not the other way around.
+    /// For example, with <see cref="ResultsDirectory"/> set to <c>...\In</c> on a machine named <c>BUILD01</c>:
+    /// </para>
+    /// <code>
+    /// TestResultsDirectory    => ...\In
+    /// TestRunResultsDirectory => ...\In\BUILD01
+    /// </code>
+    /// </remarks>
     public virtual string? TestRunResultsDirectory => GetProperty<string>(TestRunResultsDirectoryLabel);
 
     /// <summary>
-    /// Gets directory for test result files.
+    /// Gets the directory for test result files (the "In" directory). This is the same path as <see cref="ResultsDirectory"/>
+    /// and the parent of <see cref="TestRunResultsDirectory"/>.
     /// </summary>
     // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but we are setting it to "In" only
     // because MSTest does not create the GUID directory.
