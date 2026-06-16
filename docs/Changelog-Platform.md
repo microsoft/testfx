@@ -35,7 +35,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 
 ### Fixed
 
-* Fix TreeNodeFilter OR-pattern diagnostics by @Evangelink in [#7415](https://github.com/microsoft/testfx/pull/7415)
+* Clarify TreeNodeFilter OR-pattern diagnostics for unsupported parenthesized full-path expressions by @Evangelink in [#7415](https://github.com/microsoft/testfx/pull/7415)
 * Fix TRX result attachment layout to include per-test relative results directory by @Copilot in [#8188](https://github.com/microsoft/testfx/pull/8188)
 * Prevent telemetry host termination on boolean MSTest setting payloads by @Copilot in [#8189](https://github.com/microsoft/testfx/pull/8189)
 * Avoid duplicate async cleanup for test host lifecycle callbacks by @Copilot in [#8254](https://github.com/microsoft/testfx/pull/8254)

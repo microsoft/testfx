@@ -22,6 +22,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * RFC 014 + impl: experimental TestRun.Current / PlannedTests API by @Evangelink in [#8461](https://github.com/microsoft/testfx/pull/8461)
 * Support class-level \[Retry] attribute by @Evangelink in [#8566](https://github.com/microsoft/testfx/pull/8566)
 * Add MSTest reflection source generator (issue #1837) by @Evangelink in [#8586](https://github.com/microsoft/testfx/pull/8586)
+* Add MSTEST0069: flag test classes relying on an inherited \[TestClass] attribute incompatible with MSTest source generation by @Evangelink in [#8586](https://github.com/microsoft/testfx/pull/8586)
 * Add MSTEST0067 analyzer to flag Thread.Sleep/Task.Wait/Task&lt;T&gt;.Result in tests by @Evangelink in [#8646](https://github.com/microsoft/testfx/pull/8646)
 * Add opt-in random test order to MSTest adapter by @Evangelink in [#8647](https://github.com/microsoft/testfx/pull/8647)
 * Add MSTEST0066: \[Ignore] should have a justification message by @Evangelink in [#8649](https://github.com/microsoft/testfx/pull/8649)
