@@ -130,23 +130,24 @@ internal sealed class AzureDevOpsReporter :
         EnsureEnabledConfigurationLoaded();
         TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         string testDisplayName = nodeUpdateMessage.TestNode.DisplayName;
-        string testName = GetTestName(nodeUpdateMessage.TestNode);
 
+        // Defer GetTestName() to failure branches only: for passing/skipped/in-progress tests
+        // nodeState falls through the switch with no match and testName is never needed.
         switch (nodeState)
         {
             case FailedTestNodeStateProperty failed:
-                await WriteExceptionAsync(testDisplayName, testName, failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case ErrorTestNodeStateProperty error:
-                await WriteExceptionAsync(testDisplayName, testName, error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
                 break;
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
             case CancelledTestNodeStateProperty cancelled:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                await WriteExceptionAsync(testDisplayName, testName, cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
                 break;
             case TimeoutTestNodeStateProperty timeout:
-                await WriteExceptionAsync(testDisplayName, testName, timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
+                await WriteExceptionAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
                 break;
         }
     }
