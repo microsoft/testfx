@@ -146,6 +146,10 @@ internal abstract class TestDataConnection : IDisposable
         Action<string> setFilePath,
         List<string> dataFolders)
     {
+        // Precondition: any builder mutations that must be preserved in the returned string
+        // (e.g. Pooling = false) must be applied before calling this helper, AND
+        // getFilePath() must not return null/empty at that point — otherwise those
+        // mutations are discarded and originalConnectionString is returned unchanged.
         string? filePath = getFilePath();
         if (StringEx.IsNullOrEmpty(filePath))
         {

@@ -3,11 +3,13 @@
 
 namespace Microsoft.Testing.Extensions;
 
-// Minimal capped-size projection of a TestNodeUpdateMessage. The consumer projects
-// each message into this DTO immediately so that we don't retain entire test nodes
-// (and their potentially huge stdout/stderr/stack trace strings) in memory for the
-// whole session. All variable-length text fields are already truncated at this point
-// so the engine doesn't need to truncate again.
+// Minimal projection of a terminal test result, shared by the HtmlReport, JUnitReport and
+// CtrfReport consumers (which capture from either a TestNode or a TestNodeUpdateMessage).
+// The consumer projects each result into this DTO immediately so that we don't retain
+// entire test nodes (and their potentially huge stdout/stderr/stack trace strings) in
+// memory for the whole session. The variable-length text fields declared here are
+// truncated by the capturing code before construction; derived DTOs may add further
+// fields that follow their own truncation rules, so do not assume every field is capped.
 internal abstract class CapturedTestResultBase
 {
     public required string Uid { get; init; }
