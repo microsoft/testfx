@@ -250,6 +250,125 @@ public sealed class ProtocolTests
         Assert.HasCount(0, actual.InProgressMessages);
     }
 
+    [TestMethod]
+    public void CommandLineOptionMessagesSerializeDeserialize()
+    {
+        object serializer = new CommandLineOptionMessagesSerializer();
+        var message = new CommandLineOptionMessages(
+            "path/to/module.dll",
+            [
+                new CommandLineOptionMessage("filter", "Filters the tests", false, true),
+                new CommandLineOptionMessage("hidden-option", null, true, false),
+                new CommandLineOptionMessage(null, "no name", null, null),
+            ]);
+
+        var stream = new MemoryStream();
+        Serialize(serializer, message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (CommandLineOptionMessages)Deserialize(serializer, stream);
+
+        Assert.AreEqual(message.ModulePath, actual.ModulePath);
+        Assert.IsNotNull(message.CommandLineOptionMessageList);
+        Assert.IsNotNull(actual.CommandLineOptionMessageList);
+        Assert.HasCount(message.CommandLineOptionMessageList.Length, actual.CommandLineOptionMessageList);
+        for (int i = 0; i < message.CommandLineOptionMessageList.Length; i++)
+        {
+            CommandLineOptionMessage expected = message.CommandLineOptionMessageList[i];
+            CommandLineOptionMessage actualOption = actual.CommandLineOptionMessageList[i];
+            Assert.AreEqual(expected.Name, actualOption.Name);
+            Assert.AreEqual(expected.Description, actualOption.Description);
+            Assert.AreEqual(expected.IsHidden, actualOption.IsHidden);
+            Assert.AreEqual(expected.IsBuiltIn, actualOption.IsBuiltIn);
+        }
+    }
+
+    [TestMethod]
+    public void FileArtifactMessagesSerializeDeserialize()
+    {
+        object serializer = new FileArtifactMessagesSerializer();
+        var message = new FileArtifactMessages(
+            "MyExecId",
+            "MyInstId",
+            [
+                new FileArtifactMessage("/full/path/artifact1.txt", "artifact1", "description1", "uid-1", "Test 1", "session-1"),
+                new FileArtifactMessage("/full/path/artifact2.coverage", "artifact2", null, null, null, null),
+            ]);
+
+        var stream = new MemoryStream();
+        Serialize(serializer, message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (FileArtifactMessages)Deserialize(serializer, stream);
+
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+        Assert.AreEqual(message.InstanceId, actual.InstanceId);
+        Assert.HasCount(message.FileArtifacts.Length, actual.FileArtifacts);
+        for (int i = 0; i < message.FileArtifacts.Length; i++)
+        {
+            FileArtifactMessage expected = message.FileArtifacts[i];
+            FileArtifactMessage actualArtifact = actual.FileArtifacts[i];
+            Assert.AreEqual(expected.FullPath, actualArtifact.FullPath);
+            Assert.AreEqual(expected.DisplayName, actualArtifact.DisplayName);
+            Assert.AreEqual(expected.Description, actualArtifact.Description);
+            Assert.AreEqual(expected.TestUid, actualArtifact.TestUid);
+            Assert.AreEqual(expected.TestDisplayName, actualArtifact.TestDisplayName);
+            Assert.AreEqual(expected.SessionUid, actualArtifact.SessionUid);
+        }
+    }
+
+    [TestMethod]
+    public void TestSessionEventSerializeDeserialize()
+    {
+        object serializer = new TestSessionEventSerializer();
+        var message = new TestSessionEvent(SessionEventTypes.TestSessionStart, "session-uid", "exec-id");
+
+        var stream = new MemoryStream();
+        Serialize(serializer, message, stream);
+        stream.Seek(0, SeekOrigin.Begin);
+        var actual = (TestSessionEvent)Deserialize(serializer, stream);
+
+        Assert.AreEqual(message.SessionType, actual.SessionType);
+        Assert.AreEqual(message.SessionUid, actual.SessionUid);
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+    }
+
+    // The serializer ids registered in RegisterSerializers flow over IPC to dotnet test in the
+    // dotnet/sdk repository (see ObjectFieldIds.cs, which carries a "must be kept aligned" warning).
+    // Changing any existing id is a wire-protocol break for older platform <-> SDK pairings, so the
+    // full registry is intentionally pinned here. Note id 4 is permanently reserved (was ModuleSerializer).
+    [TestMethod]
+    public void SerializerIds_AreStable()
+    {
+        // Building the map through the constants (instead of asserting on the literals directly)
+        // keeps the MSTest analyzer from flagging compile-time constant comparisons, and the
+        // dictionary initializer additionally guarantees every id is unique.
+        Dictionary<int, string> serializerIds = new()
+        {
+            [VoidResponseFieldsId.MessagesSerializerId] = nameof(VoidResponseFieldsId),
+            [TestHostCompletedRequestFieldsId.MessagesSerializerId] = nameof(TestHostCompletedRequestFieldsId),
+            [TestHostProcessPIDRequestFieldsId.MessagesSerializerId] = nameof(TestHostProcessPIDRequestFieldsId),
+            [CommandLineOptionMessagesFieldsId.MessagesSerializerId] = nameof(CommandLineOptionMessagesFieldsId),
+            [DiscoveredTestMessagesFieldsId.MessagesSerializerId] = nameof(DiscoveredTestMessagesFieldsId),
+            [TestResultMessagesFieldsId.MessagesSerializerId] = nameof(TestResultMessagesFieldsId),
+            [FileArtifactMessagesFieldsId.MessagesSerializerId] = nameof(FileArtifactMessagesFieldsId),
+            [TestSessionEventFieldsId.MessagesSerializerId] = nameof(TestSessionEventFieldsId),
+            [HandshakeMessageFieldsId.MessagesSerializerId] = nameof(HandshakeMessageFieldsId),
+            [TestInProgressMessagesFieldsId.MessagesSerializerId] = nameof(TestInProgressMessagesFieldsId),
+        };
+
+        Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
+        Assert.AreEqual(nameof(TestHostCompletedRequestFieldsId), serializerIds[1]);
+        Assert.AreEqual(nameof(TestHostProcessPIDRequestFieldsId), serializerIds[2]);
+        Assert.AreEqual(nameof(CommandLineOptionMessagesFieldsId), serializerIds[3]);
+        // Id 4 is reserved (formerly ModuleSerializer) and must never be reused.
+        Assert.IsFalse(serializerIds.ContainsKey(4), "Serializer id 4 is reserved and must not be reassigned.");
+        Assert.AreEqual(nameof(DiscoveredTestMessagesFieldsId), serializerIds[5]);
+        Assert.AreEqual(nameof(TestResultMessagesFieldsId), serializerIds[6]);
+        Assert.AreEqual(nameof(FileArtifactMessagesFieldsId), serializerIds[7]);
+        Assert.AreEqual(nameof(TestSessionEventFieldsId), serializerIds[8]);
+        Assert.AreEqual(nameof(HandshakeMessageFieldsId), serializerIds[9]);
+        Assert.AreEqual(nameof(TestInProgressMessagesFieldsId), serializerIds[10]);
+    }
+
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
         => serializer.GetType()
             .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
