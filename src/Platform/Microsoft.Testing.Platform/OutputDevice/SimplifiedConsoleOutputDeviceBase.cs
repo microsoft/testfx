@@ -213,12 +213,17 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
             int total = _skippedTests + _passedTests + _failedTests;
 
+            // The abort callback sets _wasCancelled, but it does not cover every cancellation path
+            // (e.g. cancellations that request the session token without going through the abort
+            // callback). Fold in the token state so the verdict and routing also reflect those.
+            bool wasCancelled = _wasCancelled || cancellationToken.IsCancellationRequested;
+
             // minimumExpectedTests is always 0 here because SimplifiedConsoleOutputDeviceBase does not
             // receive ICommandLineOptions. The --minimum-expected-tests policy is still enforced via
             // TestApplicationResult (exit code), but it is not surfaced in this summary.
-            string text = TestRunSummaryHelper.FormatSummaryText(total, _failedTests, _passedTests, _skippedTests, _wasCancelled, minimumExpectedTests: 0);
+            string text = TestRunSummaryHelper.FormatSummaryText(total, _failedTests, _passedTests, _skippedTests, wasCancelled, minimumExpectedTests: 0);
 
-            if (TestRunSummaryHelper.IsRunFailed(total, _failedTests, _skippedTests, _wasCancelled, minimumExpectedTests: 0))
+            if (TestRunSummaryHelper.IsRunFailed(total, _failedTests, _skippedTests, wasCancelled, minimumExpectedTests: 0))
             {
                 ConsoleError(text);
             }
