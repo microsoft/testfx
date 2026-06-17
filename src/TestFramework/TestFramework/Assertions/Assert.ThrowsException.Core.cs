@@ -188,7 +188,7 @@ public sealed partial class Assert
             string clrTypeName = actualType.ToString();
             if (actualExceptionText.StartsWith(clrTypeName, StringComparison.Ordinal))
             {
-                actualExceptionText = GetDisplayTypeName(actualType, includeNamespace: true) + actualExceptionText.Substring(clrTypeName.Length);
+                actualExceptionText = GetDisplayTypeName(actualType, includeNamespace: true) + actualExceptionText[clrTypeName.Length..];
             }
 
             EvidenceBlock evidence = EvidenceBlock.Create()
@@ -217,7 +217,7 @@ public sealed partial class Assert
         int tick = name.IndexOf('`');
         if (tick >= 0)
         {
-            name = name.Substring(0, tick);
+            name = name[..tick];
         }
 
         if (includeNamespace && !string.IsNullOrEmpty(type.Namespace))
