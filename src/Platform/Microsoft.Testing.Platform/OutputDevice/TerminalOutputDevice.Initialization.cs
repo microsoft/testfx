@@ -106,7 +106,12 @@ internal sealed partial class TerminalOutputDevice
         else if (_commandLineOptions.IsOptionSet(TerminalTestReporterCommandLineOptionsProvider.NoProgressOption))
         {
             noProgress = true;
-            if (Interlocked.Exchange(ref s_noProgressDeprecationWarningEmitted, 1) == 0)
+
+            // The deprecation warning is a nudge for interactive users to move to --progress off. We deliberately
+            // do not emit it in CI: it is invisible noise there, and build infrastructure (e.g. the Arcade SDK test
+            // runner) passes --no-progress unconditionally, so emitting to stderr would surface as a build error in
+            // logging setups that treat any stderr output as a failure.
+            if (!inCI && Interlocked.Exchange(ref s_noProgressDeprecationWarningEmitted, 1) == 0)
             {
                 await WriteToStandardErrorAsync(PlatformResources.TerminalNoProgressDeprecatedWarning).ConfigureAwait(false);
             }
