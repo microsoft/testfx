@@ -34,6 +34,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add --progress {auto|on|off} and deprecate --no-progress in MTP terminal reporter by @Evangelink in [#9145](https://github.com/microsoft/testfx/pull/9145)
 * Add silence-driven progress heartbeat for SimpleAnsi/NoAnsi output modes by @Evangelink in [#9147](https://github.com/microsoft/testfx/pull/9147)
 * Add Azure DevOps per-assembly log groups by @Evangelink in [#9177](https://github.com/microsoft/testfx/pull/9177)
+* Handshake from the test host orchestrator in the dotnet test pipe protocol, advertising the orchestration feature (e.g. retry) by @Copilot in [#9215](https://github.com/microsoft/testfx/pull/9215)
 
 ### Fixed
 

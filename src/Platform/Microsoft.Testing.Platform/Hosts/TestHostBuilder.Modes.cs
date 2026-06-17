@@ -54,7 +54,7 @@ internal sealed partial class TestHostBuilder
                 // detect mismatches such as --help being injected via RunArguments during a
                 // normal run. The handshake is needed for the SDK to know that the test host
                 // is in help mode, so it can ignore any incoming CommandLineOptionMessages.
-                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync("TestHost").ConfigureAwait(false);
+                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost).ConfigureAwait(false);
                 if (!isProtocolCompatible)
                 {
                     CompleteBuilderActivity(context.BuilderActivity, nameof(InformativeCommandLineHost));

@@ -173,6 +173,7 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.InstanceId, nameof(HandshakeMessagePropertyNames.InstanceId) },
             { HandshakeMessagePropertyNames.IsIDE, nameof(HandshakeMessagePropertyNames.IsIDE) },
             { HandshakeMessagePropertyNames.ExecutionMode, nameof(HandshakeMessagePropertyNames.ExecutionMode) },
+            { HandshakeMessagePropertyNames.OrchestratorFeature, nameof(HandshakeMessagePropertyNames.OrchestratorFeature) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -186,6 +187,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.InstanceId), properties[8]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.IsIDE), properties[9]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ExecutionMode), properties[10]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.OrchestratorFeature), properties[11]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
