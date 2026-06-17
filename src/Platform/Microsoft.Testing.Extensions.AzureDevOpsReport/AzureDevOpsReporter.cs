@@ -439,7 +439,7 @@ internal sealed class AzureDevOpsReporter :
         // Walk the PropertyBag once with the zero-allocation struct enumerator and short-circuit
         // on the first matching key, avoiding the SerializableKeyValuePairStringProperty[] heap
         // allocation that OfType<T>() would incur.
-        PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        using PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
             if (enumerator.Current is SerializableKeyValuePairStringProperty kvp
