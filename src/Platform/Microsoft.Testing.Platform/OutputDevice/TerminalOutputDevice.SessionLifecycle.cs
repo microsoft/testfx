@@ -27,7 +27,7 @@ internal sealed partial class TerminalOutputDevice
 
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
-        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
+        RoslynDebug.Assert(_terminalTestReporter is not null);
 
         if (_isListTestsJson)
         {
@@ -82,7 +82,7 @@ internal sealed partial class TerminalOutputDevice
             return;
         }
 
-        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
+        RoslynDebug.Assert(_terminalTestReporter is not null);
 
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
@@ -127,7 +127,7 @@ internal sealed partial class TerminalOutputDevice
 
     private async Task DisplayAfterSessionEndRunInternalAsync()
     {
-        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
+        RoslynDebug.Assert(_terminalTestReporter is not null);
 
         if (_isListTestsJson)
         {

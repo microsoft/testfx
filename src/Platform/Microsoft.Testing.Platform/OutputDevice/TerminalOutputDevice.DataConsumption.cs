@@ -18,7 +18,7 @@ internal sealed partial class TerminalOutputDevice
     /// <param name="cancellationToken">The cancellation token.</param>
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
-        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
+        RoslynDebug.Assert(_terminalTestReporter is not null);
 
         if (_isListTestsJson)
         {
@@ -95,7 +95,7 @@ internal sealed partial class TerminalOutputDevice
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
+        RoslynDebug.Assert(_terminalTestReporter is not null);
         cancellationToken.ThrowIfCancellationRequested();
         if (_isServerMode)
         {
