@@ -25,8 +25,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     IAsyncInitializableExtension
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
-    private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
-
     // Opt-in knobs (env vars only) for the silence-driven heartbeat renderer used in non-cursor modes.
     private const string MTP_PROGRESS_SILENCE_SECONDS = nameof(MTP_PROGRESS_SILENCE_SECONDS);
     private const string MTP_PROGRESS_SLOW_TEST_SECONDS = nameof(MTP_PROGRESS_SLOW_TEST_SECONDS);
@@ -110,7 +108,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         _assemblyName = testApplicationModuleInfo.GetDisplayName();
 
-        if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
+        if (environment.GetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
             _bannerDisplayed = true;
         }

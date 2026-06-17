@@ -35,7 +35,7 @@ internal sealed partial class TerminalOutputDevice
             // The env var propagates to any child test host the controller spawns so they also
             // stay quiet — important because the JSON document must be the sole stdout content.
             _bannerDisplayed = true;
-            _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+            _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
             return;
         }
 
@@ -44,7 +44,7 @@ internal sealed partial class TerminalOutputDevice
             if (!_bannerDisplayed && !_isServerMode)
             {
                 // skip the banner for the children processes
-                _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+                _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
 
                 _bannerDisplayed = true;
 
@@ -54,33 +54,7 @@ internal sealed partial class TerminalOutputDevice
                 }
                 else
                 {
-                    StringBuilder stringBuilder = new();
-                    stringBuilder.Append(_platformInformation.Name);
-
-                    if (_platformInformation.Version is { } version)
-                    {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
-                        if (_platformInformation.CommitHash is { } commitHash)
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
-                        }
-                    }
-
-                    if (_platformInformation.BuildDate is { } buildDate)
-                    {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
-                    }
-
-                    if (_runtimeFeature.IsDynamicCodeSupported)
-                    {
-                        stringBuilder.Append(" [");
-                        stringBuilder.Append(_longArchitecture);
-                        stringBuilder.Append(" - ");
-                        stringBuilder.Append(_runtimeFramework);
-                        stringBuilder.Append(']');
-                    }
-
-                    _terminalTestReporter.WriteMessage(stringBuilder.ToString());
+                    _terminalTestReporter.WriteMessage(OutputDeviceBannerHelper.BuildBannerText(_platformInformation, _runtimeFeature, _longArchitecture, _runtimeFramework));
                 }
             }
 
