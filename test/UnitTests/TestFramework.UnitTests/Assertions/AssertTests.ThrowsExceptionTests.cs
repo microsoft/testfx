@@ -150,7 +150,7 @@ public partial class AssertTests
                 message constructed via builder.
 
                 expected type:    System.ArgumentNullException (or derived)
-                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*
+                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*MyParamNameHere*
 
                 Assert.Throws<ArgumentNullException>(() => throw new ArgumentOutOfRangeException("MyParamNameHere"))
                 """);
@@ -212,7 +212,7 @@ public partial class AssertTests
                 message constructed via builder.
 
                 expected type:    System.ArgumentNullException
-                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*
+                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*MyParamNameHere*
 
                 Assert.ThrowsExactly<ArgumentNullException>(() => throw new ArgumentOutOfRangeException("MyParamNameHere"))
                 """);
@@ -274,7 +274,7 @@ public partial class AssertTests
                 message constructed via builder.
 
                 expected type:    System.ArgumentNullException (or derived)
-                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*
+                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*MyParamNameHere*
 
                 Assert.ThrowsAsync<ArgumentNullException>(() => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere")))
                 """);
@@ -336,7 +336,7 @@ public partial class AssertTests
                 message constructed via builder.
 
                 expected type:    System.ArgumentNullException
-                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*
+                actual exception: System.ArgumentOutOfRangeException: Specified argument was out of the range of valid values.*MyParamNameHere*
 
                 Assert.ThrowsExactlyAsync<ArgumentNullException>(() => Task.FromException(new ArgumentOutOfRangeException("MyParamNameHere")))
                 """);
