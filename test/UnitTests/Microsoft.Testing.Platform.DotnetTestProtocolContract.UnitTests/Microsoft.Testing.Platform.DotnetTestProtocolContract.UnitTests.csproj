@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462</TargetFrameworks>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <!--
+    This project intentionally does NOT reference Microsoft.Testing.Platform's protocol types directly. It compiles
+    the shared 'dotnet test' wire-contract source (ObjectFieldIds + Constants) into its own assembly via the shared
+    .props, proving that the contract can live in testfx and be consumed by an independent assembly (e.g. dotnet/sdk)
+    with a single source of truth.
+  -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
+
+</Project>

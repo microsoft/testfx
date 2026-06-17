@@ -134,6 +134,7 @@
   <Folder Name="/test/UnitTests/">
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
