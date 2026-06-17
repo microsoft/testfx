@@ -220,6 +220,170 @@ internal static class DotnetTestPipeProtocol
         return (sessionType, sessionUid, executionId);
     }
 
+    /// <summary>
+    /// Decodes the tests carried by a <see cref="SerializerIds.DiscoveredTestMessages"/> frame,
+    /// including the full discovery details (file path, line number, namespace, type/method name,
+    /// parameter types and traits). Mirrors the wire layout produced by
+    /// <c>DiscoveredTestMessagesSerializer</c>: the body is a field-tagged object whose
+    /// <c>DiscoveredTestMessageList</c> field (id 3) holds a length-prefixed array of field-tagged
+    /// test messages. Unknown fields are skipped via their declared size, exactly like the product
+    /// deserializer.
+    /// <para>
+    /// Decoding the whole object (not just the display name) lets the acceptance test catch
+    /// regressions where the SDK-facing metadata required to build the <c>--list-tests json</c>
+    /// document stops flowing over the pipe.
+    /// </para>
+    /// </summary>
+    public static IReadOnlyList<DiscoveredTest> DecodeDiscoveredTests(byte[] body)
+    {
+        const ushort discoveredTestMessageListFieldId = 3;
+        const ushort uidFieldId = 1;
+        const ushort displayNameFieldId = 2;
+        const ushort filePathFieldId = 3;
+        const ushort lineNumberFieldId = 4;
+        const ushort namespaceFieldId = 5;
+        const ushort typeNameFieldId = 6;
+        const ushort methodNameFieldId = 7;
+        const ushort traitsFieldId = 8;
+        const ushort parameterTypeFullNamesFieldId = 9;
+
+        List<DiscoveredTest> discoveredTests = [];
+        using MemoryStream stream = new(body, writable: false);
+
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            if (fieldId != discoveredTestMessageListFieldId)
+            {
+                // ExecutionId / InstanceId (or any future field): skip the whole payload.
+                stream.Seek(fieldSize, SeekOrigin.Current);
+                continue;
+            }
+
+            int messageCount = ReadInt(stream);
+            for (int m = 0; m < messageCount; m++)
+            {
+                string? uid = null;
+                string? displayName = null;
+                string? filePath = null;
+                int? lineNumber = null;
+                string? @namespace = null;
+                string? typeName = null;
+                string? methodName = null;
+                string[] parameterTypeFullNames = [];
+                Dictionary<string, string> traits = [];
+
+                ushort messageFieldCount = ReadUShort(stream);
+                for (int f = 0; f < messageFieldCount; f++)
+                {
+                    ushort messageFieldId = ReadUShort(stream);
+                    int messageFieldSize = ReadInt(stream);
+                    switch (messageFieldId)
+                    {
+                        case uidFieldId:
+                            uid = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case displayNameFieldId:
+                            displayName = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case filePathFieldId:
+                            filePath = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case lineNumberFieldId:
+                            lineNumber = ReadInt(stream);
+                            break;
+                        case namespaceFieldId:
+                            @namespace = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case typeNameFieldId:
+                            typeName = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case methodNameFieldId:
+                            methodName = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case traitsFieldId:
+                            foreach (KeyValuePair<string, string> trait in ReadTraits(stream))
+                            {
+                                traits[trait.Key] = trait.Value;
+                            }
+
+                            break;
+                        case parameterTypeFullNamesFieldId:
+                            parameterTypeFullNames = ReadParameterTypeFullNames(stream);
+                            break;
+                        default:
+                            stream.Seek(messageFieldSize, SeekOrigin.Current);
+                            break;
+                    }
+                }
+
+                discoveredTests.Add(new DiscoveredTest(
+                    uid, displayName, filePath, lineNumber, @namespace, typeName, methodName, parameterTypeFullNames, traits));
+            }
+        }
+
+        return discoveredTests;
+    }
+
+    /// <summary>
+    /// Reads the <c>Traits</c> payload (id 8) of a discovered test message: a length-prefixed array
+    /// of field-tagged key/value pairs (<c>Key</c> id 1, <c>Value</c> id 2).
+    /// </summary>
+    private static IReadOnlyList<KeyValuePair<string, string>> ReadTraits(Stream stream)
+    {
+        const ushort keyFieldId = 1;
+        const ushort valueFieldId = 2;
+
+        int length = ReadInt(stream);
+        List<KeyValuePair<string, string>> traits = [];
+        for (int i = 0; i < length; i++)
+        {
+            string? key = null;
+            string? value = null;
+            ushort fieldCount = ReadUShort(stream);
+            for (int f = 0; f < fieldCount; f++)
+            {
+                ushort fieldId = ReadUShort(stream);
+                int fieldSize = ReadInt(stream);
+                switch (fieldId)
+                {
+                    case keyFieldId:
+                        key = ReadFixedSizeString(stream, fieldSize);
+                        break;
+                    case valueFieldId:
+                        value = ReadFixedSizeString(stream, fieldSize);
+                        break;
+                    default:
+                        stream.Seek(fieldSize, SeekOrigin.Current);
+                        break;
+                }
+            }
+
+            traits.Add(new KeyValuePair<string, string>(key ?? string.Empty, value ?? string.Empty));
+        }
+
+        return traits;
+    }
+
+    /// <summary>
+    /// Reads the <c>ParameterTypeFullNames</c> payload (id 9) of a discovered test message: a
+    /// length-prefixed array of length-prefixed UTF-8 strings.
+    /// </summary>
+    private static string[] ReadParameterTypeFullNames(Stream stream)
+    {
+        int length = ReadInt(stream);
+        string[] parameterTypeFullNames = new string[length];
+        for (int i = 0; i < length; i++)
+        {
+            parameterTypeFullNames[i] = ReadLengthPrefixedString(stream);
+        }
+
+        return parameterTypeFullNames;
+    }
+
     private static async Task<bool> TryReadExactlyAsync(Stream stream, Memory<byte> buffer, CancellationToken cancellationToken)
     {
         int totalRead = 0;
@@ -299,3 +463,18 @@ internal static class DotnetTestPipeProtocol
 
 /// <summary>A raw decoded pipe frame (serializer id + body bytes, no further decoding).</summary>
 internal sealed record RawMessage(int SerializerId, byte[] Body);
+
+/// <summary>
+/// A fully decoded discovered test message: the complete discovery object the SDK needs to build the
+/// <c>--list-tests json</c> document (display name plus file/method location and traits).
+/// </summary>
+internal sealed record DiscoveredTest(
+    string? Uid,
+    string? DisplayName,
+    string? FilePath,
+    int? LineNumber,
+    string? Namespace,
+    string? TypeName,
+    string? MethodName,
+    string[] ParameterTypeFullNames,
+    IReadOnlyDictionary<string, string> Traits);
