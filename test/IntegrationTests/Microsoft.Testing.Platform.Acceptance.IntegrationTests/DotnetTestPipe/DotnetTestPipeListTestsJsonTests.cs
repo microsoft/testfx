@@ -28,8 +28,11 @@ public class DotnetTestPipeListTestsJsonTests : AcceptanceTestBase<DotnetTestPip
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
 
+        // The SDK requests the full discovery object by advertising IsIDE in the handshake (the same
+        // signal it sets when running `dotnet test --list-tests json`), so the host streams the
+        // complete discovery details (file location, method identifier, traits) we assert below.
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
-            testHost, extraArguments: "--list-tests json", cancellationToken: TestContext.CancellationToken);
+            testHost, extraArguments: "--list-tests json", isIde: true, cancellationToken: TestContext.CancellationToken);
 
         result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
 
@@ -48,8 +51,10 @@ public class DotnetTestPipeListTestsJsonTests : AcceptanceTestBase<DotnetTestPip
             $"Expected no stderr noise for a successful discovery.{Environment.NewLine}" +
             $"Captured stderr:{Environment.NewLine}{result.TestHostResult.StandardError}");
 
-        // The discovered tests must instead be streamed to the SDK as DiscoveredTestMessages frames.
-        var discoveredDisplayNames = new HashSet<string>(StringComparer.Ordinal);
+        // The discovered tests must instead be streamed to the SDK as DiscoveredTestMessages frames,
+        // carrying the full discovery object (file location, method identifier, traits) the SDK needs
+        // to build the --list-tests json document.
+        var discoveredTests = new Dictionary<string, DiscoveredTest>(StringComparer.Ordinal);
         bool sawDiscoveredFrame = false;
         foreach (RawMessage frame in result.ReceivedMessages)
         {
@@ -59,15 +64,31 @@ public class DotnetTestPipeListTestsJsonTests : AcceptanceTestBase<DotnetTestPip
             }
 
             sawDiscoveredFrame = true;
-            foreach (string displayName in DotnetTestPipeProtocol.DecodeDiscoveredTestDisplayNames(frame.Body))
+            foreach (DiscoveredTest test in DotnetTestPipeProtocol.DecodeDiscoveredTests(frame.Body))
             {
-                discoveredDisplayNames.Add(displayName);
+                Assert.IsNotNull(test.DisplayName, "Every discovered test must carry a display name.");
+                discoveredTests[test.DisplayName] = test;
             }
         }
 
         Assert.IsTrue(sawDiscoveredFrame, "Expected at least one DiscoveredTestMessages frame over the dotnet-test pipe.");
-        Assert.Contains("Test1", discoveredDisplayNames);
-        Assert.Contains("Test2", discoveredDisplayNames);
+        Assert.Contains("Test1", discoveredTests.Keys);
+        Assert.Contains("Test2", discoveredTests.Keys);
+
+        // Regression guard: the full discovery details must keep flowing over the pipe so the SDK can
+        // build the --list-tests json document. If any of these fields stop being streamed the test
+        // fails, even though the display names alone would still arrive.
+        DiscoveredTest test1 = discoveredTests["Test1"];
+        Assert.AreEqual("MyTests.cs", test1.FilePath);
+        Assert.AreEqual("MyNamespace", test1.Namespace);
+        Assert.AreEqual("MyTestClass", test1.TypeName);
+        Assert.AreEqual("Test1", test1.MethodName);
+        Assert.AreEqual("Smoke", test1.Traits["Category"]);
+
+        DiscoveredTest test2 = discoveredTests["Test2"];
+        Assert.AreEqual("MyTests.cs", test2.FilePath);
+        Assert.AreEqual("Test2", test2.MethodName);
+        Assert.AreEqual("Integration", test2.Traits["Category"]);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -122,9 +143,27 @@ public class DiscoveringTestFramework : ITestFramework, IDataProducer
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "Test1", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+            new TestNode()
+            {
+                Uid = "0",
+                DisplayName = "Test1",
+                Properties = new(
+                    DiscoveredTestNodeStateProperty.CachedInstance,
+                    new TestFileLocationProperty("MyTests.cs", new LinePositionSpan(new LinePosition(10, 1), new LinePosition(10, 5))),
+                    new TestMethodIdentifierProperty("MyTestAssembly", "MyNamespace", "MyTestClass", "Test1", 0, [], "System.Void"),
+                    new TestMetadataProperty("Category", "Smoke")),
+            }));
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid,
-            new TestNode() { Uid = "1", DisplayName = "Test2", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+            new TestNode()
+            {
+                Uid = "1",
+                DisplayName = "Test2",
+                Properties = new(
+                    DiscoveredTestNodeStateProperty.CachedInstance,
+                    new TestFileLocationProperty("MyTests.cs", new LinePositionSpan(new LinePosition(20, 1), new LinePosition(20, 5))),
+                    new TestMethodIdentifierProperty("MyTestAssembly", "MyNamespace", "MyTestClass", "Test2", 0, [], "System.Void"),
+                    new TestMetadataProperty("Category", "Integration")),
+            }));
 
         context.Complete();
     }
