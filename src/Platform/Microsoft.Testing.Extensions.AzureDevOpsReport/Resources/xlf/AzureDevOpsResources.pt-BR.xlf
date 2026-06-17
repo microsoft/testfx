@@ -117,21 +117,6 @@
         <target state="translated">'--report-azdo-severity' requer que '--report-azdo' esteja habilitado</target>
         <note>{Locked="--report-azdo-severity"}{Locked="--report-azdo"}</note>
       </trans-unit>
-      <trans-unit id="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory">
-        <source>'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</target>
-        <note>{Locked="--report-azdo-slow-test-history-min-sample"}{Locked="--report-azdo-slow-test-history"}</note>
-      </trans-unit>
-      <trans-unit id="AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory">
-        <source>'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</target>
-        <note>{Locked="--report-azdo-slow-test-history-multiplier"}{Locked="--report-azdo-slow-test-history"}</note>
-      </trans-unit>
-      <trans-unit id="AzureDevOpsSlowTestHistoryRequiresAzureDevOps">
-        <source>'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</target>
-        <note>{Locked="--report-azdo-slow-test-history"}{Locked="--report-azdo"}</note>
-      </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
         <source>'--report-azdo-stackframe-filter' requires '--report-azdo' to be enabled</source>
         <target state="translated">'--report-azdo-stackframe-filter' exige que '--report-azdo' esteja habilitado</target>
@@ -217,21 +202,6 @@
         <target state="translated">Opção {0} inválida.</target>
         <note>{0} is the invalid option value.</note>
       </trans-unit>
-      <trans-unit id="InvalidSlowTestHistoryDays">
-        <source>Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</target>
-        <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history"}</note>
-      </trans-unit>
-      <trans-unit id="InvalidSlowTestHistoryMinSample">
-        <source>Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</target>
-        <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</note>
-      </trans-unit>
-      <trans-unit id="InvalidSlowTestHistoryMultiplier">
-        <source>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</target>
-        <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</note>
-      </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
         <source>Invalid '--report-azdo-stackframe-filter' regex '{0}': {1}</source>
         <target state="translated">Regex '--report-azdo-stackframe-filter' inválida '{0}': {1}</target>
@@ -301,36 +271,6 @@
         <source>Severity to use for the reported event. Options are: error (default) and warning.</source>
         <target state="translated">A gravidade que será usada para o evento relatado. As opções são: error (padrão) e warning.</target>
         <note>{Locked="error"}{Locked="warning"}</note>
-      </trans-unit>
-      <trans-unit id="SlowTestHistoryDecoration">
-        <source>(historical p95 = {0}, p99 = {1}, samples = {2})</source>
-        <target state="new">(historical p95 = {0}, p99 = {1}, samples = {2})</target>
-        <note>{0} is the p95 duration. {1} is the p99 duration. {2} is the sample count.</note>
-      </trans-unit>
-      <trans-unit id="SlowTestHistoryMinSampleOptionDescription">
-        <source>Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
-        <note>{0} is the default minimum sample count. {Locked="--report-azdo-slow-test-history"}</note>
-      </trans-unit>
-      <trans-unit id="SlowTestHistoryMultiplierOptionDescription">
-        <source>Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
-        <note>{0} is the default multiplier. {Locked="--report-azdo-slow-test-history"}</note>
-      </trans-unit>
-      <trans-unit id="SlowTestHistoryOptionDescription">
-        <source>Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</source>
-        <target state="new">Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</target>
-        <note>{Locked="--report-azdo"}</note>
-      </trans-unit>
-      <trans-unit id="SlowTestHistoryRequiresTfBuildWarning">
-        <source>Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</source>
-        <target state="new">Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</target>
-        <note>{Locked="TF_BUILD"}{Locked="true"}</note>
-      </trans-unit>
-      <trans-unit id="SlowTestStillRunning">
-        <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
-        <note>{0} is the elapsed duration. {1} is the test name. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
         <source>Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to {0} patterns. Compiled with a {1}ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.</source>
