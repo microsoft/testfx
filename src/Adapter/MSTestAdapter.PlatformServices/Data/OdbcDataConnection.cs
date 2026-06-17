@@ -68,28 +68,14 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         OdbcConnectionStringBuilder builder = [with(connectionString)];
 
         // only fix this for excel
-        if (!string.Equals(builder.Dsn, "Excel Files", StringComparison.Ordinal))
-        {
-            return connectionString;
-        }
-
-        string? fileName = builder["dbq"] as string;
-
-        if (StringEx.IsNullOrEmpty(fileName))
-        {
-            return connectionString;
-        }
-        else
-        {
-            // Fix-up magic file paths
-            string? fixedFilePath = FixPath(fileName, dataFolders);
-            if (fixedFilePath != null)
-            {
-                builder["dbq"] = fixedFilePath;
-            }
-
-            return builder.ConnectionString;
-        }
+        return !string.Equals(builder.Dsn, "Excel Files", StringComparison.Ordinal)
+            ? connectionString
+            : FixConnectionStringFilePath(
+                builder,
+                connectionString,
+                () => builder["dbq"] as string,
+                fixedFilePath => builder["dbq"] = fixedFilePath,
+                dataFolders);
     }
 }
 #endif
