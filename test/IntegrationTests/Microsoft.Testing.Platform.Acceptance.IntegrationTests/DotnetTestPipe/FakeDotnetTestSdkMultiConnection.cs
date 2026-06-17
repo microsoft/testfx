@@ -72,16 +72,32 @@ internal static class FakeDotnetTestSdkMultiConnection
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var stream = new NamedPipeServerStream(
-                    osPipeName,
-                    PipeDirection.InOut,
-                    NamedPipeServerStream.MaxAllowedServerInstances,
-                    PipeTransmissionMode.Byte,
-                    options);
+                NamedPipeServerStream? stream = null;
+                try
+                {
+                    stream = new NamedPipeServerStream(
+                        osPipeName,
+                        PipeDirection.InOut,
+                        NamedPipeServerStream.MaxAllowedServerInstances,
+                        PipeTransmissionMode.Byte,
+                        options);
 
-                await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+                    await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
 
-                connectionTasks.Add(HandleConnectionAsync(stream, supportedProtocolVersions, receivedHandshakes, cancellationToken));
+                    connectionTasks.Add(HandleConnectionAsync(stream, supportedProtocolVersions, receivedHandshakes, cancellationToken));
+
+                    // Ownership transferred; HandleConnectionAsync's finally disposes the stream.
+                    stream = null;
+                }
+                finally
+                {
+                    // Only reached with a non-null stream when WaitForConnectionAsync threw (e.g.
+                    // cancellation during teardown) before we handed the stream off.
+                    if (stream is not null)
+                    {
+                        await stream.DisposeAsync().ConfigureAwait(false);
+                    }
+                }
             }
         }
         catch (OperationCanceledException)
