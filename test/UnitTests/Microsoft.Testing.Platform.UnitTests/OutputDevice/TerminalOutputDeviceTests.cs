@@ -75,6 +75,21 @@ public sealed class TerminalOutputDeviceTests
     }
 
     [TestMethod]
+    public async Task InitializeAsync_NoProgressLegacyFlagInCI_DoesNotWriteDeprecationWarning()
+    {
+        // In CI the warning is invisible noise and build infrastructure (e.g. the Arcade SDK test runner) passes
+        // --no-progress unconditionally, so emitting it to stderr would surface as a build error.
+        string standardError = await InitializeAndCaptureStandardErrorAsync(
+            new Dictionary<string, string[]>
+            {
+                [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
+            },
+            isCIEnvironment: true);
+
+        Assert.IsFalse(standardError.Contains("--no-progress is deprecated", StringComparison.Ordinal), standardError);
+    }
+
+    [TestMethod]
     public async Task InitializeAsync_ProgressOff_DoesNotWriteDeprecationWarning()
     {
         string standardError = await InitializeAndCaptureStandardErrorAsync(new Dictionary<string, string[]>
@@ -82,7 +97,7 @@ public sealed class TerminalOutputDeviceTests
             [TerminalTestReporterCommandLineOptionsProvider.ProgressOption] = ["off"],
         });
 
-        Assert.IsFalse(standardError.Contains("deprecated", StringComparison.Ordinal), standardError);
+        Assert.IsFalse(standardError.Contains("--no-progress is deprecated", StringComparison.Ordinal), standardError);
     }
 
     [TestMethod]
@@ -95,10 +110,10 @@ public sealed class TerminalOutputDeviceTests
             [TerminalTestReporterCommandLineOptionsProvider.NoProgressOption] = [],
         });
 
-        Assert.IsFalse(standardError.Contains("deprecated", StringComparison.Ordinal), standardError);
+        Assert.IsFalse(standardError.Contains("--no-progress is deprecated", StringComparison.Ordinal), standardError);
     }
 
-    private static async Task<string> InitializeAndCaptureStandardErrorAsync(Dictionary<string, string[]> options)
+    private static async Task<string> InitializeAndCaptureStandardErrorAsync(Dictionary<string, string[]> options, bool isCIEnvironment = false)
     {
         await ConsoleErrorSemaphore.WaitAsync();
         TextWriter originalError = Console.Error;
@@ -108,7 +123,7 @@ public sealed class TerminalOutputDeviceTests
 
         try
         {
-            using TerminalOutputDevice outputDevice = CreateOutputDevice(options);
+            using TerminalOutputDevice outputDevice = CreateOutputDevice(options, isCIEnvironment);
             await outputDevice.InitializeAsync();
 
             return errorWriter.ToString();
@@ -126,13 +141,14 @@ public sealed class TerminalOutputDeviceTests
             .GetField("s_noProgressDeprecationWarningEmitted", BindingFlags.NonPublic | BindingFlags.Static)!
             .SetValue(null, 0);
 
-    private static TerminalOutputDevice CreateOutputDevice(Dictionary<string, string[]> options)
+    private static TerminalOutputDevice CreateOutputDevice(Dictionary<string, string[]> options, bool isCIEnvironment = false)
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
 
         var environment = new Mock<IEnvironment>();
-        environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
+        environment.Setup(x => x.GetEnvironmentVariable(It.IsAny<string>()))
+            .Returns<string>(name => isCIEnvironment && name == "TF_BUILD" ? "true" : null);
 
         var stopPoliciesService = new Mock<IStopPoliciesService>();
         stopPoliciesService.Setup(x => x.RegisterOnAbortCallbackAsync(It.IsAny<Func<Task>>()))
