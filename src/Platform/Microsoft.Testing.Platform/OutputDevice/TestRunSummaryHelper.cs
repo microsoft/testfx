@@ -28,24 +28,14 @@ internal static class TestRunSummaryHelper
     /// Computes the verdict string for the test run.
     /// </summary>
     internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests)
-    {
-        if (wasCancelled)
+        => true switch
         {
-            return PlatformResources.Aborted;
-        }
-
-        if (totalTests < minimumExpectedTests)
-        {
-            return string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests);
-        }
-
-        if (totalTests == 0 || totalTests == skippedTests)
-        {
-            return PlatformResources.ZeroTestsRan;
-        }
-
-        return failedTests > 0 ? $"{PlatformResources.Failed}!" : $"{PlatformResources.Passed}!";
-    }
+            _ when wasCancelled => PlatformResources.Aborted,
+            _ when totalTests < minimumExpectedTests => string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests),
+            _ when totalTests == 0 || totalTests == skippedTests => PlatformResources.ZeroTestsRan,
+            _ when failedTests > 0 => $"{PlatformResources.Failed}!",
+            _ => $"{PlatformResources.Passed}!",
+        };
 
     /// <summary>
     /// Formats a plain-text test run summary with verdict and counts, suitable for console output
