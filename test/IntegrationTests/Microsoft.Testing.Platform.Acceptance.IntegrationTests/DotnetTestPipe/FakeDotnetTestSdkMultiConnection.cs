@@ -72,33 +72,61 @@ internal static class FakeDotnetTestSdkMultiConnection
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var stream = new NamedPipeServerStream(
-                    osPipeName,
-                    PipeDirection.InOut,
-                    NamedPipeServerStream.MaxAllowedServerInstances,
-                    PipeTransmissionMode.Byte,
-                    options);
+                var connectionEstablished = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
-                try
-                {
-                    await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
-                }
-                catch
-                {
-                    // WaitForConnectionAsync threw (e.g. cancellation during teardown) before we
-                    // handed the stream off to a connection handler, so dispose it here.
-                    await stream.DisposeAsync().ConfigureAwait(false);
-                    throw;
-                }
+                // Each connection's NamedPipeServerStream is created, awaited, used and disposed
+                // entirely within ServeConnectionAsync (via await using), so a single method owns
+                // its whole lifetime and it never leaks on the cancellation path.
+                connectionTasks.Add(ServeConnectionAsync(osPipeName, options, supportedProtocolVersions, receivedHandshakes, connectionEstablished, cancellationToken));
 
-                // Ownership is transferred to HandleConnectionAsync, whose finally disposes the stream.
-                connectionTasks.Add(HandleConnectionAsync(stream, supportedProtocolVersions, receivedHandshakes, cancellationToken));
+                // Throttle the accept loop to one outstanding listener at a time (mirrors the real
+                // SDK's serial accept loop): only create the next server instance after the current
+                // one has connected. If teardown cancels us first, the TCS is canceled and we exit.
+                await connectionEstablished.Task.ConfigureAwait(false);
             }
         }
         catch (OperationCanceledException)
         {
             // Expected: we cancel the accept loop once the test app process exits.
         }
+    }
+
+    private static async Task ServeConnectionAsync(
+        string osPipeName,
+        PipeOptions options,
+        string supportedProtocolVersions,
+        ConcurrentBag<Dictionary<byte, string>> receivedHandshakes,
+        TaskCompletionSource connectionEstablished,
+        CancellationToken cancellationToken)
+    {
+        await using NamedPipeServerStream stream = new(
+            osPipeName,
+            PipeDirection.InOut,
+            NamedPipeServerStream.MaxAllowedServerInstances,
+            PipeTransmissionMode.Byte,
+            options);
+
+        try
+        {
+            await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Teardown canceled us before a peer connected; unblock the accept loop and stop.
+            connectionEstablished.TrySetCanceled(cancellationToken);
+            return;
+        }
+        catch (Exception ex)
+        {
+            // Surface unexpected accept failures to the loop instead of leaving it waiting forever.
+            connectionEstablished.TrySetException(ex);
+            return;
+        }
+
+        // Let the accept loop create the next listener now that this one has connected.
+        connectionEstablished.TrySetResult();
+
+        await HandleConnectionAsync(stream, supportedProtocolVersions, receivedHandshakes, cancellationToken).ConfigureAwait(false);
     }
 
     private static async Task HandleConnectionAsync(
@@ -122,10 +150,7 @@ internal static class FakeDotnetTestSdkMultiConnection
                     Dictionary<byte, string> handshake = DotnetTestPipeProtocol.DecodeHandshakeBody(frame.Body);
                     receivedHandshakes.Add(handshake);
 
-                    string selected = handshake.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.SupportedProtocolVersions, out string? appVersions)
-                        && appVersions.Split(';', StringSplitOptions.RemoveEmptyEntries).Contains(supportedProtocolVersions)
-                            ? supportedProtocolVersions
-                            : string.Empty;
+                    string selected = FakeDotnetTestSdk.SelectHighestMutuallySupportedVersion(handshake, supportedProtocolVersions);
 
                     byte[] replyBody = DotnetTestPipeProtocol.EncodeHandshakeBody(BuildSdkHandshakeReply(selected));
                     await DotnetTestPipeProtocol.WriteFrameAsync(stream, DotnetTestPipeProtocol.SerializerIds.HandshakeMessage, replyBody, cancellationToken).ConfigureAwait(false);
@@ -143,10 +168,6 @@ internal static class FakeDotnetTestSdkMultiConnection
         catch (IOException)
         {
             // The peer disconnected abruptly; nothing more to read on this connection.
-        }
-        finally
-        {
-            await stream.DisposeAsync().ConfigureAwait(false);
         }
     }
 

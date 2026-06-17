@@ -104,7 +104,7 @@ internal static class FakeDotnetTestSdk
     /// also in <paramref name="sdkSupportedVersions"/>. Returns <see cref="string.Empty"/> if none
     /// match.
     /// </summary>
-    private static string SelectHighestMutuallySupportedVersion(Dictionary<byte, string> handshakeProperties, string sdkSupportedVersions)
+    internal static string SelectHighestMutuallySupportedVersion(Dictionary<byte, string> handshakeProperties, string sdkSupportedVersions)
     {
         if (!handshakeProperties.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.SupportedProtocolVersions, out string? appVersions)
             || string.IsNullOrWhiteSpace(appVersions))
