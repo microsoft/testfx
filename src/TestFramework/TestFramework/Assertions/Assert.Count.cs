@@ -587,7 +587,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void HasCount<T>(int expected, Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => HasCount(nameof(HasCount), expected, ((ReadOnlyMemory<T>)collection).Span, message, collectionExpression);
+        => HasCount(nameof(HasCount), expected, collection.Span, message, collectionExpression);
 
 #endif
 
