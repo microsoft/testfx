@@ -327,6 +327,7 @@ Tests that share state are the #1 cause of flaky test suites.
 3. Wall-clock time assertions with tight tolerances are flaky.
 4. File system race conditions from non-unique names or shared directories.
 5. Order-dependent assertions on unordered collections.
+6. Regex/string assertions on rendered test **durations** that hard-code `\(\d+ms\)` are flaky: the platform renders longer runs as `(1s 040ms)`, `(2m 03s 040ms)`, etc., so a `\d+ms`-only pattern fails when a normally-fast test occasionally crosses the one-second boundary (commonly on macOS, sometimes Windows). Acceptance tests MUST use the shared `AcceptanceAssert.DurationPattern` constant instead.
 
 **CHECK — Flag if:**
 - [ ] `Thread.Sleep` / `Task.Delay` for synchronization
@@ -334,6 +335,7 @@ Tests that share state are the #1 cause of flaky test suites.
 - [ ] `DateTime.Now` comparisons with tight tolerance
 - [ ] File system race conditions
 - [ ] Order-dependent assertions on unordered results
+- [ ] Duration assertions hard-coding `\(\d+ms\)` instead of `AcceptanceAssert.DurationPattern`
 
 ---
 
