@@ -19,7 +19,9 @@ namespace Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests;
 [TestClass]
 public sealed class DotnetTestProtocolContractTests
 {
-    // The dictionary initializer additionally guarantees every serializer id is unique.
+    // Uniqueness of the serializer ids is enforced by the assertions below, not by the indexer
+    // initializer (a duplicate id would silently overwrite the earlier entry). This test is mirrored
+    // by ProtocolTests.SerializerIds_AreStable in Microsoft.Testing.Platform.UnitTests; keep both in sync.
     [TestMethod]
     public void SerializerIds_AreStable()
     {

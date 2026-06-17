@@ -335,12 +335,15 @@ public sealed class ProtocolTests
     // dotnet/sdk repository (see ObjectFieldIds.cs, which carries a "must be kept aligned" warning).
     // Changing any existing id is a wire-protocol break for older platform <-> SDK pairings, so the
     // full registry is intentionally pinned here. Note id 4 is permanently reserved (was ModuleSerializer).
+    // This test is mirrored by DotnetTestProtocolContractTests.SerializerIds_AreStable in the standalone
+    // Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests project; keep both in sync.
     [TestMethod]
     public void SerializerIds_AreStable()
     {
         // Building the map through the constants (instead of asserting on the literals directly)
-        // keeps the MSTest analyzer from flagging compile-time constant comparisons, and the
-        // dictionary initializer additionally guarantees every id is unique.
+        // keeps the MSTest analyzer from flagging compile-time constant comparisons. Uniqueness of the
+        // ids is not guaranteed by the indexer initializer (a duplicate id would silently overwrite the
+        // earlier entry); the assertions below are what enforce that every id maps to its expected serializer.
         Dictionary<int, string> serializerIds = new()
         {
             [VoidResponseFieldsId.MessagesSerializerId] = nameof(VoidResponseFieldsId),
@@ -367,6 +370,62 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(TestSessionEventFieldsId), serializerIds[8]);
         Assert.AreEqual(nameof(HandshakeMessageFieldsId), serializerIds[9]);
         Assert.AreEqual(nameof(TestInProgressMessagesFieldsId), serializerIds[10]);
+    }
+
+    // The SessionEventTypes byte values flow over IPC to dotnet test in the dotnet/sdk repository.
+    // Changing any existing value is a wire-protocol break, so it is intentionally pinned here.
+    // Mirrored by DotnetTestProtocolContractTests.SessionEventTypes_AreStable.
+    [TestMethod]
+    public void SessionEventTypes_AreStable()
+    {
+        Dictionary<byte, string> sessionEventTypes = new()
+        {
+            [SessionEventTypes.TestSessionStart] = nameof(SessionEventTypes.TestSessionStart),
+            [SessionEventTypes.TestSessionEnd] = nameof(SessionEventTypes.TestSessionEnd),
+        };
+
+        Assert.AreEqual(nameof(SessionEventTypes.TestSessionStart), sessionEventTypes[0]);
+        Assert.AreEqual(nameof(SessionEventTypes.TestSessionEnd), sessionEventTypes[1]);
+    }
+
+    // The TestStates byte values flow over IPC to dotnet test in the dotnet/sdk repository.
+    // Changing any existing value is a wire-protocol break, so it is intentionally pinned here.
+    // Mirrored by DotnetTestProtocolContractTests.TestStates_AreStable.
+    [TestMethod]
+    public void TestStates_AreStable()
+    {
+        Dictionary<byte, string> testStates = new()
+        {
+            [TestStates.Discovered] = nameof(TestStates.Discovered),
+            [TestStates.Passed] = nameof(TestStates.Passed),
+            [TestStates.Skipped] = nameof(TestStates.Skipped),
+            [TestStates.Failed] = nameof(TestStates.Failed),
+            [TestStates.Error] = nameof(TestStates.Error),
+            [TestStates.Timeout] = nameof(TestStates.Timeout),
+            [TestStates.Cancelled] = nameof(TestStates.Cancelled),
+            [TestStates.InProgress] = nameof(TestStates.InProgress),
+        };
+
+        Assert.AreEqual(nameof(TestStates.Discovered), testStates[0]);
+        Assert.AreEqual(nameof(TestStates.Passed), testStates[1]);
+        Assert.AreEqual(nameof(TestStates.Skipped), testStates[2]);
+        Assert.AreEqual(nameof(TestStates.Failed), testStates[3]);
+        Assert.AreEqual(nameof(TestStates.Error), testStates[4]);
+        Assert.AreEqual(nameof(TestStates.Timeout), testStates[5]);
+        Assert.AreEqual(nameof(TestStates.Cancelled), testStates[6]);
+        Assert.AreEqual(nameof(TestStates.InProgress), testStates[7]);
+    }
+
+    // The protocol version string flows over IPC to dotnet test in the dotnet/sdk repository.
+    // Changing it is a wire-protocol break, so it is intentionally pinned here.
+    // Mirrored by DotnetTestProtocolContractTests.ProtocolVersion_IsStable.
+    [TestMethod]
+    public void ProtocolVersion_IsStable()
+    {
+        // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
+        // constant as "always true" (MSTEST0032).
+        string[] versions = [ProtocolConstants.Version];
+        Assert.AreEqual("1.0.0", versions[0]);
     }
 
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
