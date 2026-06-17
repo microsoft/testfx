@@ -172,7 +172,6 @@ public sealed partial class Assert
             Exception actualException = state.ExceptionThrown!;
             Type actualType = actualException.GetType();
             string actualTypeName = GetDisplayTypeName(actualType, includeNamespace: false);
-            string actualTypeFullName = GetDisplayTypeName(actualType, includeNamespace: true);
 
             string summary = isStrictType
                 ? $"Expected exception of exact type {expectedTypeName} but caught {actualTypeName}."
@@ -180,11 +179,11 @@ public sealed partial class Assert
 
             string expectedTypeLabel = isStrictType ? expectedTypeFullName : $"{expectedTypeFullName} (or derived)";
 
-            // The "actual exception:" line is already prefixed with the exception type name, so we don't emit a
-            // separate "actual type:" line to avoid duplicating that information.
+            // Render the full exception (type, message, inner-exception chain and stack trace) via ToString so the
+            // unexpected exception can be diagnosed without re-running under a debugger. See issue #9190.
             EvidenceBlock evidence = EvidenceBlock.Create()
                 .AddLine("expected type:", expectedTypeLabel)
-                .AddLine("actual exception:", $"{actualTypeFullName}: {actualException.Message}");
+                .AddLine("actual exception:", actualException.ToString());
 
             message = new StructuredAssertionMessage(summary)
                 .WithUserMessage(userMessage)
