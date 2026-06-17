@@ -21,7 +21,6 @@ internal sealed class AzureDevOpsReporter :
 {
     internal const double KnownFlakyFailureRateThreshold = 0.25;
     private const string DeterministicBuildRoot = "/_/";
-    private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MinSamplesForRegressionAnnotation = 5;
     private const string QuarantineBuildTagLine = "##vso[build.addbuildtag]has-quarantined-test-failure";
     private const string WarningSeverity = "warning";
@@ -434,10 +433,7 @@ internal sealed class AzureDevOpsReporter :
     }
 
     private static string GetTestName(TestNode testNode)
-        => testNode.Properties
-            .OfType<SerializableKeyValuePairStringProperty>()
-            .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
-            ?? testNode.DisplayName;
+        => TestNodeIdentity.GetTestName(testNode);
 
     /// <summary>
     /// Formats the reporter message so the test name lands on its own line.

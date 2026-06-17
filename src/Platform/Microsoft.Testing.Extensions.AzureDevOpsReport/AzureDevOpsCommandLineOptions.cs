@@ -10,6 +10,9 @@ internal static class AzureDevOpsCommandLineOptions
     public const string AzureDevOpsFlakyHistory = "report-azdo-flaky-history";
     public const string AzureDevOpsQuarantineFile = "report-azdo-quarantine-file";
     public const string AzureDevOpsReportSeverity = "report-azdo-severity";
+    public const string AzureDevOpsSlowTestHistory = "report-azdo-slow-test-history";
+    public const string AzureDevOpsSlowTestHistoryMinSample = "report-azdo-slow-test-history-min-sample";
+    public const string AzureDevOpsSlowTestHistoryMultiplier = "report-azdo-slow-test-history-multiplier";
     public const string AzureDevOpsStackFrameFilter = "report-azdo-stackframe-filter";
     public const string AzureDevOpsSummary = "report-azdo-summary";
     public const string AzureDevOpsUploadArtifactExclude = "report-azdo-upload-artifact-exclude";
@@ -22,4 +25,8 @@ internal static class AzureDevOpsCommandLineOptions
     public const string AzureDevOpsUploadArtifactsModeTagsOnly = "tags-only";
     public const string PublishAzureDevOpsRunNameOptionName = "publish-azdo-run-name";
     public const string PublishAzureDevOpsTestResultsOptionName = "publish-azdo-test-results";
+
+    public const int SlowTestHistoryDefaultMinSample = 10;
+    public const double SlowTestHistoryDefaultMultiplier = 3.0;
+    public const int SlowTestStaticThresholdSeconds = 60;
 }

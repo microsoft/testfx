@@ -35,6 +35,12 @@
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
+    <!-- System.Memory flows in transitively (via System.Reflection.Metadata / System.Collections.Immutable)
+         at 4.5.5, whose .NETFramework assembly version is 4.0.1.2. We pin it explicitly to 4.6.3
+         (assembly 4.0.5.0) so the .NETFramework adapter assemblies reference 4.0.5.0. Hosts that unify
+         System.Memory to 4.0.5.0 (e.g. Visual Studio) and run the adapter without applying a binding
+         redirect (the VSTest test host uses its own config) cannot otherwise load the 4.0.1.2 reference. -->
+    <SystemMemoryVersion>4.6.3</SystemMemoryVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.24423.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
@@ -69,6 +75,7 @@
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
     <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
+    <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
     <PackageVersion Include="System.Text.Json" Version="10.0.8" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>

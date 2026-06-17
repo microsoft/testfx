@@ -22,7 +22,7 @@ internal static class OutputDeviceBannerHelper
             stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
             if (platformInformation.CommitHash is { } commitHash)
             {
-                stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
+                stringBuilder.Append(CultureInfo.InvariantCulture, $"+{(commitHash.Length >= 10 ? commitHash[..10] : commitHash)}");
             }
         }
 
