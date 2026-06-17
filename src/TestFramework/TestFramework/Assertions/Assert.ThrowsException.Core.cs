@@ -180,9 +180,10 @@ public sealed partial class Assert
 
             string expectedTypeLabel = isStrictType ? expectedTypeFullName : $"{expectedTypeFullName} (or derived)";
 
+            // The "actual exception:" line is already prefixed with the exception type name, so we don't emit a
+            // separate "actual type:" line to avoid duplicating that information.
             EvidenceBlock evidence = EvidenceBlock.Create()
                 .AddLine("expected type:", expectedTypeLabel)
-                .AddLine("actual type:", actualTypeFullName)
                 .AddLine("actual exception:", $"{actualTypeFullName}: {actualException.Message}");
 
             message = new StructuredAssertionMessage(summary)

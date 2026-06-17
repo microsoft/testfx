@@ -32,6 +32,8 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add Microsoft.Testing.Extensions.JUnitReport extension by @Evangelink in [#8850](https://github.com/microsoft/testfx/pull/8850)
 * Add Microsoft.Testing.Extensions.CtrfReport extension (CTRF reporter) by @Evangelink in [#8903](https://github.com/microsoft/testfx/pull/8903)
 * Add --progress {auto|on|off} and deprecate --no-progress in MTP terminal reporter by @Evangelink in [#9145](https://github.com/microsoft/testfx/pull/9145)
+* Add silence-driven progress heartbeat for SimpleAnsi/NoAnsi output modes by @Evangelink in [#9147](https://github.com/microsoft/testfx/pull/9147)
+* Add Azure DevOps per-assembly log groups by @Evangelink in [#9177](https://github.com/microsoft/testfx/pull/9177)
 
 ### Fixed
 

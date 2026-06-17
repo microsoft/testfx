@@ -110,6 +110,10 @@ internal sealed partial class TerminalOutputDevice
 
     public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
+        // Under --server (e.g. `dotnet test` with `--server dotnettestcli`) the terminal device stays
+        // silent: discovered tests are streamed to the SDK through the dotnet-test pipe (see
+        // DotnetTestDataConsumer), and the SDK owns rendering — including building the --list-tests json
+        // document by combining the discovered tests from every test app into a single output.
         if (_isServerMode)
         {
             return;

@@ -97,6 +97,10 @@ internal sealed partial class TerminalOutputDevice
     {
         RoslynDebug.Assert(_terminalTestReporter is not null);
         cancellationToken.ThrowIfCancellationRequested();
+
+        // Under --server (e.g. `dotnet test` with `--server dotnettestcli`) the terminal device does not
+        // buffer or render anything: data flows to the SDK through the dotnet-test pipe instead, and the
+        // SDK is responsible for producing the output (including the --list-tests json document).
         if (_isServerMode)
         {
             return Task.CompletedTask;

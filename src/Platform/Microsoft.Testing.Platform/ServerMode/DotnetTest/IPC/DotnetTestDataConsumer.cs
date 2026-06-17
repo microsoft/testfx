@@ -54,6 +54,11 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 switch (testNodeDetails.State)
                 {
                     case TestStates.Discovered:
+                        // Only stream the full discovery details (file location, method identifier,
+                        // traits) when the consumer asked for them. We reuse the existing IsIDE flag
+                        // for that — despite the name, it is the handshake signal a consumer sets when
+                        // it wants the complete discovery object (e.g. an IDE, or the SDK when running
+                        // `dotnet test --list-tests json`). Plain runs keep the payload minimal.
                         TestFileLocationProperty? testFileLocationProperty = null;
                         TestMethodIdentifierProperty? testMethodIdentifierProperty = null;
                         TestMetadataProperty[] traits = [];

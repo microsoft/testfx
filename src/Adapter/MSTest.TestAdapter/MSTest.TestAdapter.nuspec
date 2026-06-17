@@ -8,10 +8,12 @@
         <dependency id="Microsoft.Testing.Platform.MSBuild" version="$TestingPlatformVersion$" />
         <dependency id="MSTest.TestFramework" version="$Version$" />
         <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <dependency id="System.Memory" version="$SystemMemoryVersion$" />
       </group>
       <group targetFramework="uap10.0">
         <dependency id="MSTest.TestFramework" version="$Version$" />
         <dependency id="System.Threading.Tasks.Extensions" version="$SystemThreadingTasksExtensionsVersion$" />
+        <dependency id="System.Memory" version="$SystemMemoryVersion$" />
       </group>
       <group targetFramework="net8.0">
         <dependency id="Microsoft.Testing.Extensions.VSTestBridge" version="$TestingPlatformVersion$" />

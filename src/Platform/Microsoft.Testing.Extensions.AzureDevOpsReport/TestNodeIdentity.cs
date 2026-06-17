@@ -15,8 +15,20 @@ internal static class TestNodeIdentity
     /// fully-qualified name property is unavailable.
     /// </summary>
     public static string GetTestName(TestNode testNode)
-        => testNode.Properties
-            .OfType<SerializableKeyValuePairStringProperty>()
-            .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
-            ?? testNode.DisplayName;
+    {
+        // Walk the PropertyBag once with the zero-allocation struct enumerator and short-circuit
+        // on the first matching key, avoiding the LINQ iterator/boxed-enumerator allocations that
+        // OfType<T>().FirstOrDefault(...) would incur.
+        using PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            if (enumerator.Current is SerializableKeyValuePairStringProperty kvp
+                && kvp.Key == FullyQualifiedNamePropertyKey)
+            {
+                return kvp.Value;
+            }
+        }
+
+        return testNode.DisplayName;
+    }
 }
