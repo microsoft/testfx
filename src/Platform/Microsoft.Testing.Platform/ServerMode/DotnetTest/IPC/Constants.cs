@@ -61,5 +61,11 @@ internal static class ProtocolConstants
     // host output will no longer collide).
     // When both sides advertise 1.1.0 and we negotiate to that version, the SDK can keep its
     // live output enabled.
+    //
+    // NOTE: The no-op output device is installed for all pipe-protocol connections, regardless
+    // of the negotiated protocol version. With an old SDK that only supports 1.0.0, both sides
+    // will produce no live output (the SDK suppresses its TerminalTestReporter to avoid colliding
+    // with the host output it expected before this change). Users must update to an SDK that
+    // negotiates 1.1.0 to see live output via the SDK's TerminalTestReporter.
     internal const string SupportedVersions = "1.0.0;1.1.0";
 }

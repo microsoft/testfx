@@ -45,6 +45,7 @@ public sealed class NopPlatformOutputDeviceTests
         await device.DisplayAfterSessionEndRunAsync(CancellationToken.None);
         await device.HandleProcessRoleAsync(TestProcessRole.TestHost, CancellationToken.None);
         await device.HandleProcessRoleAsync(TestProcessRole.TestHostController, CancellationToken.None);
+        await device.HandleProcessRoleAsync(TestProcessRole.TestHostOrchestrator, CancellationToken.None);
 
         // No interaction with the producer/data should have occurred.
         producerMock.VerifyNoOtherCalls();
