@@ -68,7 +68,7 @@ Example: MyReport_{tfm}.ctrf.json</source>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="new">Invalid test application builder type. Expected 'TestApplicationBuilder'.</target>
+        <target state="translated">無效的測試應用程式建立器類型。必須是 'TestApplicationBuilder'。</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>

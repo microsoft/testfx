@@ -25,8 +25,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     IAsyncInitializableExtension
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
-    private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
-
     // Opt-in knobs (env vars only) for the silence-driven heartbeat renderer used in non-cursor modes.
     private const string MTP_PROGRESS_SILENCE_SECONDS = nameof(MTP_PROGRESS_SILENCE_SECONDS);
     private const string MTP_PROGRESS_SLOW_TEST_SECONDS = nameof(MTP_PROGRESS_SLOW_TEST_SECONDS);
@@ -110,7 +108,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
         _assemblyName = testApplicationModuleInfo.GetDisplayName();
 
-        if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
+        if (environment.GetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
             _bannerDisplayed = true;
         }
@@ -371,7 +369,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             // The env var propagates to any child test host the controller spawns so they also
             // stay quiet — important because the JSON document must be the sole stdout content.
             _bannerDisplayed = true;
-            _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+            _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
             return;
         }
 
@@ -380,7 +378,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
             if (!_bannerDisplayed && !_isServerMode)
             {
                 // skip the banner for the children processes
-                _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+                _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
 
                 _bannerDisplayed = true;
 
@@ -390,33 +388,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
                 }
                 else
                 {
-                    StringBuilder stringBuilder = new();
-                    stringBuilder.Append(_platformInformation.Name);
-
-                    if (_platformInformation.Version is { } version)
-                    {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
-                        if (_platformInformation.CommitHash is { } commitHash)
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
-                        }
-                    }
-
-                    if (_platformInformation.BuildDate is { } buildDate)
-                    {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
-                    }
-
-                    if (_runtimeFeature.IsDynamicCodeSupported)
-                    {
-                        stringBuilder.Append(" [");
-                        stringBuilder.Append(_longArchitecture);
-                        stringBuilder.Append(" - ");
-                        stringBuilder.Append(_runtimeFramework);
-                        stringBuilder.Append(']');
-                    }
-
-                    _terminalTestReporter.WriteMessage(stringBuilder.ToString());
+                    _terminalTestReporter.WriteMessage(OutputDeviceBannerHelper.BuildBannerText(_platformInformation, _runtimeFeature, _longArchitecture, _runtimeFramework));
                 }
             }
 

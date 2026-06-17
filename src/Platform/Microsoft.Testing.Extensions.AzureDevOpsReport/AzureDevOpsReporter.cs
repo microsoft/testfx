@@ -21,7 +21,6 @@ internal sealed class AzureDevOpsReporter :
 {
     internal const double KnownFlakyFailureRateThreshold = 0.25;
     private const string DeterministicBuildRoot = "/_/";
-    private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MinSamplesForRegressionAnnotation = 5;
     private const string QuarantineBuildTagLine = "##vso[build.addbuildtag]has-quarantined-test-failure";
     private const string WarningSeverity = "warning";
@@ -435,22 +434,7 @@ internal sealed class AzureDevOpsReporter :
     }
 
     private static string GetTestName(TestNode testNode)
-    {
-        // Walk the PropertyBag once with the zero-allocation struct enumerator and short-circuit
-        // on the first matching key, avoiding the SerializableKeyValuePairStringProperty[] heap
-        // allocation that OfType<T>() would incur.
-        using PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
-        while (enumerator.MoveNext())
-        {
-            if (enumerator.Current is SerializableKeyValuePairStringProperty kvp
-                && kvp.Key == FullyQualifiedNamePropertyKey)
-            {
-                return kvp.Value;
-            }
-        }
-
-        return testNode.DisplayName;
-    }
+        => TestNodeIdentity.GetTestName(testNode);
 
     /// <summary>
     /// Formats the reporter message so the test name lands on its own line.
