@@ -68,7 +68,7 @@ Příklad: MyReport_{tfm}.ctrf.json</target>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
-        <target state="new">Invalid test application builder type. Expected 'TestApplicationBuilder'.</target>
+        <target state="translated">Neplatný typ tvůrce testovací aplikace Očekával se typ TestApplicationBuilder.</target>
         <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>
