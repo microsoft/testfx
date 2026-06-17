@@ -59,23 +59,12 @@ internal sealed class OleDataConnection : TestDataConnectionSql
     {
         OleDbConnectionStringBuilder oleDbBuilder = [with(connectionString)];
 
-        string fileName = oleDbBuilder.DataSource;
-
-        if (StringEx.IsNullOrEmpty(fileName))
-        {
-            return connectionString;
-        }
-        else
-        {
-            // Fix-up magic file paths
-            string? fixedFilePath = FixPath(fileName, dataFolders);
-            if (fixedFilePath != null)
-            {
-                oleDbBuilder.DataSource = fixedFilePath;
-            }
-
-            return oleDbBuilder.ConnectionString;
-        }
+        return FixConnectionStringFilePath(
+            oleDbBuilder,
+            connectionString,
+            () => oleDbBuilder.DataSource,
+            fixedFilePath => oleDbBuilder.DataSource = fixedFilePath,
+            dataFolders);
     }
 }
 

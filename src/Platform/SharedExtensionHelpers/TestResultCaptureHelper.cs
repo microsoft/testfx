@@ -16,6 +16,69 @@ internal static class TestResultCaptureHelper
     internal const int MaxIdentityFieldLength = 4 * 1024;
     internal const int MaxTraitFieldLength = 1024;
 
+    internal static CapturedTestResultProperties ExtractProperties(PropertyBag propertyBag, bool includeLocation = false)
+    {
+        TimingProperty? timing = null;
+        TestMethodIdentifierProperty? identifier = null;
+        StandardOutputProperty? standardOutput = null;
+        StandardErrorProperty? standardError = null;
+        TestFileLocationProperty? location = null;
+        List<KeyValuePair<string, string>>? traits = null;
+
+        PropertyBag.PropertyBagEnumerator enumerator = propertyBag.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
+                case TestMethodIdentifierProperty m: identifier = GetSingleOrDefaultValue(identifier, m); break;
+                case StandardOutputProperty so: standardOutput = GetSingleOrDefaultValue(standardOutput, so); break;
+                case StandardErrorProperty se: standardError = GetSingleOrDefaultValue(standardError, se); break;
+                case TestFileLocationProperty loc when includeLocation: location = GetSingleOrDefaultValue(location, loc); break;
+                case TestMetadataProperty meta:
+                    traits ??= [];
+                    traits.Add(new KeyValuePair<string, string>(
+                        Truncate(meta.Key, MaxTraitFieldLength)!,
+                        Truncate(meta.Value, MaxTraitFieldLength)!));
+                    break;
+            }
+        }
+
+        return new CapturedTestResultProperties(timing, identifier, standardOutput, standardError, location, traits);
+
+        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+            where TProperty : class, IProperty
+            => existingProperty is not null
+                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                : property;
+    }
+
+    internal static CapturedExceptionDetails ExtractExceptionDetails(TestNodeStateProperty state)
+    {
+        string? errorMessage = state.Explanation;
+        string? stackTrace = null;
+        string? exceptionType = null;
+        Exception? exception = state switch
+        {
+            FailedTestNodeStateProperty f => f.Exception,
+            ErrorTestNodeStateProperty e => e.Exception,
+            TimeoutTestNodeStateProperty t => t.Exception,
+#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
+            CancelledTestNodeStateProperty c => c.Exception,
+#pragma warning restore CS0618, MTP0001
+            _ => null,
+        };
+
+        if (exception is not null)
+        {
+            errorMessage ??= exception.Message;
+            stackTrace = exception.StackTrace;
+            exceptionType = exception.GetType().FullName;
+        }
+
+        return new CapturedExceptionDetails(errorMessage, stackTrace, exceptionType);
+    }
+
     internal static string ClassifyOutcome(TestNodeStateProperty state)
         => state switch
         {
@@ -64,3 +127,16 @@ internal static class TestResultCaptureHelper
             + $"\n…[truncated, original length: {value.Length.ToString(CultureInfo.InvariantCulture)}]";
     }
 }
+
+internal readonly record struct CapturedTestResultProperties(
+    TimingProperty? Timing,
+    TestMethodIdentifierProperty? Identifier,
+    StandardOutputProperty? StandardOutput,
+    StandardErrorProperty? StandardError,
+    TestFileLocationProperty? Location,
+    IReadOnlyList<KeyValuePair<string, string>>? Traits);
+
+internal readonly record struct CapturedExceptionDetails(
+    string? ErrorMessage,
+    string? StackTrace,
+    string? ExceptionType);

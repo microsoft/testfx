@@ -139,6 +139,32 @@ internal abstract class TestDataConnection : IDisposable
         return Path.GetFullPath(Path.GetFileName(relPath));
     }
 
+    protected static string FixConnectionStringFilePath(
+        DbConnectionStringBuilder builder,
+        string originalConnectionString,
+        Func<string?> getFilePath,
+        Action<string> setFilePath,
+        List<string> dataFolders)
+    {
+        // Precondition: any builder mutations that must be preserved in the returned string
+        // (e.g. Pooling = false) must be applied before calling this helper, AND
+        // getFilePath() must not return null/empty at that point — otherwise those
+        // mutations are discarded and originalConnectionString is returned unchanged.
+        string? filePath = getFilePath();
+        if (StringEx.IsNullOrEmpty(filePath))
+        {
+            return originalConnectionString;
+        }
+
+        string? fixedFilePath = FixPath(filePath, dataFolders);
+        if (fixedFilePath is not null)
+        {
+            setFilePath(fixedFilePath);
+        }
+
+        return builder.ConnectionString;
+    }
+
     [Conditional("DEBUG")]
     protected internal static void WriteDiagnostics(string formatString, params object?[] parameters)
     {
