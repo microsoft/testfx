@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text.Json;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
 
 /// <summary>
-/// Validates the fix for <a href="https://github.com/microsoft/testfx/issues/8661">microsoft/testfx#8661</a>:
-/// <c>--list-tests json</c> must still emit its JSON document to stdout when the test app runs under
-/// <c>--server dotnettestcli</c> (the mode the .NET SDK always uses for <c>dotnet test</c>).
+/// Validates the agreed design for <c>--list-tests json</c> under <c>--server dotnettestcli</c>
+/// (the mode the .NET SDK always uses for <c>dotnet test</c>): the test app does <b>not</b> render
+/// the JSON document itself. Instead it streams the discovered tests to the SDK over the dotnet-test
+/// pipe, and the SDK is responsible for producing the JSON (combining the tests from every test app
+/// into a single document).
 /// <para>
 /// Built on the black-box <see cref="FakeDotnetTestSdk"/> harness introduced in
 /// <a href="https://github.com/microsoft/testfx/pull/9153">microsoft/testfx#9153</a>, so the
-/// before/after of this behavior is exercised end-to-end against the real wire protocol.
+/// behavior is exercised end-to-end against the real wire protocol.
 /// </para>
 /// </summary>
 [TestClass]
@@ -23,7 +23,7 @@ public class DotnetTestPipeListTestsJsonTests : AcceptanceTestBase<DotnetTestPip
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
-    public async Task DotnetTestPipe_ListTestsJson_EmitsJsonDocumentToStdoutUnderServerMode()
+    public async Task DotnetTestPipe_ListTestsJson_StreamsDiscoveredTestsOverPipeAndKeepsStdoutClean()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -33,42 +33,42 @@ public class DotnetTestPipeListTestsJsonTests : AcceptanceTestBase<DotnetTestPip
 
         result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
 
-        // The JSON document must be the only thing on stdout (no banner, no progress, no summary).
-        // Trim because the test infrastructure may append a trailing newline.
-        string output = result.TestHostResult.StandardOutput.Trim();
-        Assert.IsTrue(
-            output.StartsWith('{') && output.EndsWith('}'),
-            $"Expected stdout to be a single JSON object under --server dotnettestcli, but got:{Environment.NewLine}{output}");
+        // Under --server the test app must stay silent on stdout/stderr: the SDK owns rendering,
+        // including building the --list-tests json document. In particular the app must NOT print a
+        // JSON document itself, otherwise the SDK would receive duplicated/raw output.
+        Assert.AreEqual(
+            string.Empty,
+            result.TestHostResult.StandardOutput.Trim(),
+            $"Expected no stdout under --server dotnettestcli (the SDK renders the output).{Environment.NewLine}" +
+            $"Captured stdout:{Environment.NewLine}{result.TestHostResult.StandardOutput}");
 
         Assert.AreEqual(
             string.Empty,
             result.TestHostResult.StandardError.Trim(),
-            $"Expected no stderr noise for a successful JSON discovery.{Environment.NewLine}" +
+            $"Expected no stderr noise for a successful discovery.{Environment.NewLine}" +
             $"Captured stderr:{Environment.NewLine}{result.TestHostResult.StandardError}");
 
-        using var document = JsonDocument.Parse(output);
-        JsonElement root = document.RootElement;
-
-        Assert.AreEqual(DiscoveredTestsJsonSchemaVersion, root.GetProperty("schemaVersion").GetInt32());
-
-        JsonElement tests = root.GetProperty("tests");
-        var displayNames = new HashSet<string>(StringComparer.Ordinal);
-        for (int i = 0; i < tests.GetArrayLength(); i++)
+        // The discovered tests must instead be streamed to the SDK as DiscoveredTestMessages frames.
+        var discoveredDisplayNames = new HashSet<string>(StringComparer.Ordinal);
+        bool sawDiscoveredFrame = false;
+        foreach (RawMessage frame in result.ReceivedMessages)
         {
-            displayNames.Add(tests[i].GetProperty("displayName").GetString()!);
+            if (frame.SerializerId != DotnetTestPipeProtocol.SerializerIds.DiscoveredTestMessages)
+            {
+                continue;
+            }
+
+            sawDiscoveredFrame = true;
+            foreach (string displayName in DotnetTestPipeProtocol.DecodeDiscoveredTestDisplayNames(frame.Body))
+            {
+                discoveredDisplayNames.Add(displayName);
+            }
         }
 
-        Assert.Contains("Test1", displayNames);
-        Assert.Contains("Test2", displayNames);
+        Assert.IsTrue(sawDiscoveredFrame, "Expected at least one DiscoveredTestMessages frame over the dotnet-test pipe.");
+        Assert.Contains("Test1", discoveredDisplayNames);
+        Assert.Contains("Test2", discoveredDisplayNames);
     }
-
-    /// <summary>
-    /// Mirror of <c>DiscoveredTestsJsonSerializer.SchemaVersion</c>. The serializer type is
-    /// <c>[Microsoft.CodeAnalysis.Embedded]</c> internal and cannot be referenced from this
-    /// acceptance project, so the expected schema version is duplicated here intentionally — a
-    /// bump on the product side should be a conscious update here too.
-    /// </summary>
-    private const int DiscoveredTestsJsonSchemaVersion = 1;
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {

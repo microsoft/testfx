@@ -54,15 +54,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 switch (testNodeDetails.State)
                 {
                     case TestStates.Discovered:
-                        TestFileLocationProperty? testFileLocationProperty = null;
-                        TestMethodIdentifierProperty? testMethodIdentifierProperty = null;
-                        TestMetadataProperty[] traits = [];
-                        if (_dotnetTestConnection.IsIDE)
-                        {
-                            testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
-                            testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-                            traits = testNodeUpdateMessage.TestNode.Properties.OfType<TestMetadataProperty>();
-                        }
+                        // Always stream the full discovery details (file location, method identifier,
+                        // traits) to the SDK — not only for IDEs. `dotnet test --list-tests json` is
+                        // produced on the SDK side by combining the discovered tests from every test
+                        // app into a single document, so the SDK needs the complete object here.
+                        TestFileLocationProperty? testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
+                        TestMethodIdentifierProperty? testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+                        TestMetadataProperty[] traits = testNodeUpdateMessage.TestNode.Properties.OfType<TestMetadataProperty>();
 
                         DiscoveredTestMessages discoveredTestMessages = new(
                             _executionId,

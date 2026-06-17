@@ -455,11 +455,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
     {
-        // In --list-tests json mode we must still emit the JSON document, even under --server
-        // (e.g. when launched by `dotnet test` with `--server dotnettestcli`). The JSON is written
-        // to stdout below, which the dotnet-test SDK captures and forwards. Only the genuine server
-        // run (no JSON discovery) short-circuits here, because its output flows through the pipe.
-        if (_isServerMode && !_isListTestsJson)
+        // Under --server (e.g. `dotnet test` with `--server dotnettestcli`) the terminal device stays
+        // silent: discovered tests are streamed to the SDK through the dotnet-test pipe (see
+        // DotnetTestDataConsumer), and the SDK owns rendering — including building the --list-tests json
+        // document by combining the discovered tests from every test app into a single output.
+        if (_isServerMode)
         {
             return;
         }
@@ -593,11 +593,10 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         RoslynDebug.Assert(_terminalTestReporter is not null);
         cancellationToken.ThrowIfCancellationRequested();
 
-        // In --list-tests json mode we still need to buffer discovered tests, even under --server
-        // (e.g. when launched by `dotnet test` with `--server dotnettestcli`), so the JSON document
-        // can be emitted at the end of the session. Only the genuine server run (no JSON discovery)
-        // short-circuits here, because its data flows through the pipe instead of the terminal.
-        if (_isServerMode && !_isListTestsJson)
+        // Under --server (e.g. `dotnet test` with `--server dotnettestcli`) the terminal device does not
+        // buffer or render anything: data flows to the SDK through the dotnet-test pipe instead, and the
+        // SDK is responsible for producing the output (including the --list-tests json document).
+        if (_isServerMode)
         {
             return Task.CompletedTask;
         }

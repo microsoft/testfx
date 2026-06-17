@@ -220,6 +220,58 @@ internal static class DotnetTestPipeProtocol
         return (sessionType, sessionUid, executionId);
     }
 
+    /// <summary>
+    /// Decodes the display names carried by a <see cref="SerializerIds.DiscoveredTestMessages"/>
+    /// frame. Mirrors the wire layout produced by <c>DiscoveredTestMessagesSerializer</c>: the body
+    /// is a field-tagged object whose <c>DiscoveredTestMessageList</c> field (id 3) holds a
+    /// length-prefixed array of field-tagged test messages, each carrying a <c>DisplayName</c>
+    /// field (id 2). Unknown fields are skipped via their declared size, exactly like the product
+    /// deserializer.
+    /// </summary>
+    public static IReadOnlyList<string> DecodeDiscoveredTestDisplayNames(byte[] body)
+    {
+        const ushort discoveredTestMessageListFieldId = 3;
+        const ushort displayNameFieldId = 2;
+
+        List<string> displayNames = [];
+        using MemoryStream stream = new(body, writable: false);
+
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            if (fieldId != discoveredTestMessageListFieldId)
+            {
+                // ExecutionId / InstanceId (or any future field): skip the whole payload.
+                stream.Seek(fieldSize, SeekOrigin.Current);
+                continue;
+            }
+
+            int messageCount = ReadInt(stream);
+            for (int m = 0; m < messageCount; m++)
+            {
+                ushort messageFieldCount = ReadUShort(stream);
+                for (int f = 0; f < messageFieldCount; f++)
+                {
+                    ushort messageFieldId = ReadUShort(stream);
+                    int messageFieldSize = ReadInt(stream);
+                    if (messageFieldId == displayNameFieldId)
+                    {
+                        displayNames.Add(ReadFixedSizeString(stream, messageFieldSize));
+                    }
+                    else
+                    {
+                        stream.Seek(messageFieldSize, SeekOrigin.Current);
+                    }
+                }
+            }
+        }
+
+        return displayNames;
+    }
+
     private static async Task<bool> TryReadExactlyAsync(Stream stream, Memory<byte> buffer, CancellationToken cancellationToken)
     {
         int totalRead = 0;
