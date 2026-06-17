@@ -10,4 +10,6 @@ internal interface IAzureDevOpsHistoryService
     bool TryGetStats(string testName, out FlakyStats stats);
 
     bool IsLikelyFlaky(string testName, double threshold);
+
+    bool TryGetDurationStats(string testName, out DurationHistoryStats stats);
 }

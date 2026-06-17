@@ -137,6 +137,12 @@ Extension options:
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-slow-test-history
+        Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.
+    --report-azdo-slow-test-history-min-sample
+        Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to 10. Requires '--report-azdo-slow-test-history'.
+    --report-azdo-slow-test-history-multiplier
+        Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to 3. Requires '--report-azdo-slow-test-history'.
     --report-azdo-stackframe-filter
         Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to 16 patterns. Compiled with a 500ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.
     --report-azdo-summary
@@ -410,6 +416,18 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-slow-test-history
+        Arity: 1
+        Hidden: False
+        Description: Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.
+      --report-azdo-slow-test-history-min-sample
+        Arity: 1
+        Hidden: False
+        Description: Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to 10. Requires '--report-azdo-slow-test-history'.
+      --report-azdo-slow-test-history-multiplier
+        Arity: 1
+        Hidden: False
+        Description: Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to 3. Requires '--report-azdo-slow-test-history'.
       --report-azdo-stackframe-filter
         Arity: 1..N
         Hidden: False
