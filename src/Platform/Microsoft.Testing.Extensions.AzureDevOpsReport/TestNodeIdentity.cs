@@ -17,8 +17,8 @@ internal static class TestNodeIdentity
     public static string GetTestName(TestNode testNode)
     {
         // Walk the PropertyBag once with the zero-allocation struct enumerator and short-circuit
-        // on the first matching key, avoiding the SerializableKeyValuePairStringProperty[] heap
-        // allocation that OfType<T>() would incur.
+        // on the first matching key, avoiding the LINQ iterator/boxed-enumerator allocations that
+        // OfType<T>().FirstOrDefault(...) would incur.
         using PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
