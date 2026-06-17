@@ -31,6 +31,8 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * \[MSTest.Sdk] Wire Microsoft.Testing.Extensions.JUnitReport into MSTest.Sdk (opt-in) by @Evangelink in [#8956](https://github.com/microsoft/testfx/pull/8956)
 * Add \[MemberCondition] attribute for static-member-based test conditions by @Evangelink in [#9071](https://github.com/microsoft/testfx/pull/9071)
 * Add MSTEST0070 analyzer validating \[MemberCondition] member references by @Evangelink in [#9076](https://github.com/microsoft/testfx/pull/9076)
+* Add Assert.AddValueFormatter for customizing assertion failure rendering by @Evangelink in [#9148](https://github.com/microsoft/testfx/pull/9148)
+* Add Span\<T> and Memory\<T> overloads to Assert.HasCount and extend MSTEST0037 coverage by @Evangelink in [#9176](https://github.com/microsoft/testfx/pull/9176)
 
 ### Fixed
 
