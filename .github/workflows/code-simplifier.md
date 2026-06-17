@@ -14,7 +14,6 @@ network:
 imports:
 - shared/formatting.md
 - shared/reporting.md
-max-ai-credits: 2000
 safe-outputs:
   create-pull-request:
     expires: 1d
@@ -28,6 +27,7 @@ safe-outputs:
   noop:
     report-as-issue: false
 description: Analyzes recently modified code and creates pull requests with simplifications that improve clarity, consistency, and maintainability while preserving functionality
+max-ai-credits: 2000
 name: Code Simplifier
 source: githubnext/agentics/workflows/code-simplifier.md@main
 timeout-minutes: 30
