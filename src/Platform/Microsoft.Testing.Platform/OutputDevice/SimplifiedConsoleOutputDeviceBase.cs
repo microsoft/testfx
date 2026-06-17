@@ -21,10 +21,6 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     ITestSessionLifetimeHandler,
     IAsyncInitializableExtension
 {
-#pragma warning disable SA1310 // Field names should not contain underscore
-    private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
-#pragma warning restore SA1310 // Field names should not contain underscore
-
     private readonly IConsole _console;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
@@ -74,7 +70,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
         _assemblyName = testApplicationModuleInfo.GetDisplayName();
 
-        if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
+        if (environment.GetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
             _bannerDisplayed = true;
         }
@@ -127,7 +123,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             }
 
             // skip the banner for the children processes
-            _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+            _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
 
             _bannerDisplayed = true;
 
@@ -137,33 +133,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                 return;
             }
 
-            StringBuilder stringBuilder = new();
-            stringBuilder.Append(_platformInformation.Name);
-
-            if (_platformInformation.Version is { } version)
-            {
-                stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
-                if (_platformInformation.CommitHash is { } commitHash)
-                {
-                    stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
-                }
-            }
-
-            if (_platformInformation.BuildDate is { } buildDate)
-            {
-                stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
-            }
-
-            if (_runtimeFeature.IsDynamicCodeSupported)
-            {
-                stringBuilder.Append(" [");
-                stringBuilder.Append(_longArchitecture);
-                stringBuilder.Append(" - ");
-                stringBuilder.Append(_runtimeFramework);
-                stringBuilder.Append(']');
-            }
-
-            ConsoleLog(stringBuilder.ToString());
+            ConsoleLog(OutputDeviceBannerHelper.BuildBannerText(_platformInformation, _runtimeFeature, _longArchitecture, _runtimeFramework));
         }
     }
 
