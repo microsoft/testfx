@@ -17,15 +17,17 @@ internal sealed partial class TerminalOutputDevice
         }
     }
 
-    // Sole point that bypasses IConsole to reach stderr; used only by --list-tests json paths
-    // so stdout stays reserved for the JSON document while errors and the cancellation notice
-    // still surface somewhere. If IConsole ever grows a stderr abstraction, replace this helper.
+    // Sole point that bypasses IConsole to reach stderr (IConsole has no stderr abstraction today).
+    // Used whenever stdout must stay clean or for process-level notices that should not pollute
+    // stdout: the --list-tests json paths (so stdout stays reserved for the JSON document), the
+    // Ctrl+C cancellation notice, and the --no-progress deprecation warning. If IConsole ever grows
+    // a stderr abstraction, replace this helper.
     private static async Task WriteToStandardErrorAsync(string message)
         => await Console.Error.WriteLineAsync(message).ConfigureAwait(false);
 
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
-        RoslynDebug.Assert(_terminalTestReporter is not null);
+        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
 
         if (_isListTestsJson)
         {
@@ -106,7 +108,7 @@ internal sealed partial class TerminalOutputDevice
             return;
         }
 
-        RoslynDebug.Assert(_terminalTestReporter is not null);
+        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
 
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
@@ -151,7 +153,7 @@ internal sealed partial class TerminalOutputDevice
 
     private async Task DisplayAfterSessionEndRunInternalAsync()
     {
-        RoslynDebug.Assert(_terminalTestReporter is not null);
+        ApplicationStateGuard.Ensure(_terminalTestReporter is not null);
 
         if (_isListTestsJson)
         {

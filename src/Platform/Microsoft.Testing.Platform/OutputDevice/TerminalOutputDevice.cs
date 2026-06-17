@@ -114,8 +114,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
         {
             _bannerDisplayed = true;
         }
-
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     }
 
     public Type[] DataTypesConsumed { get; } =
