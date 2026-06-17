@@ -72,32 +72,27 @@ internal static class FakeDotnetTestSdkMultiConnection
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                NamedPipeServerStream? stream = null;
+                var stream = new NamedPipeServerStream(
+                    osPipeName,
+                    PipeDirection.InOut,
+                    NamedPipeServerStream.MaxAllowedServerInstances,
+                    PipeTransmissionMode.Byte,
+                    options);
+
                 try
                 {
-                    stream = new NamedPipeServerStream(
-                        osPipeName,
-                        PipeDirection.InOut,
-                        NamedPipeServerStream.MaxAllowedServerInstances,
-                        PipeTransmissionMode.Byte,
-                        options);
-
                     await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
-
-                    connectionTasks.Add(HandleConnectionAsync(stream, supportedProtocolVersions, receivedHandshakes, cancellationToken));
-
-                    // Ownership transferred; HandleConnectionAsync's finally disposes the stream.
-                    stream = null;
                 }
-                finally
+                catch
                 {
-                    // Only reached with a non-null stream when WaitForConnectionAsync threw (e.g.
-                    // cancellation during teardown) before we handed the stream off.
-                    if (stream is not null)
-                    {
-                        await stream.DisposeAsync().ConfigureAwait(false);
-                    }
+                    // WaitForConnectionAsync threw (e.g. cancellation during teardown) before we
+                    // handed the stream off to a connection handler, so dispose it here.
+                    await stream.DisposeAsync().ConfigureAwait(false);
+                    throw;
                 }
+
+                // Ownership is transferred to HandleConnectionAsync, whose finally disposes the stream.
+                connectionTasks.Add(HandleConnectionAsync(stream, supportedProtocolVersions, receivedHandshakes, cancellationToken));
             }
         }
         catch (OperationCanceledException)
