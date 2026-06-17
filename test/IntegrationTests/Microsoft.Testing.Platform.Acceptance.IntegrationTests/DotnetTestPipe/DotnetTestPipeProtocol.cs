@@ -55,6 +55,7 @@ internal static class DotnetTestPipeProtocol
         public const byte InstanceId = 8;
         public const byte IsIDE = 9;
         public const byte ExecutionMode = 10;
+        public const byte OrchestratorFeature = 11;
     }
 
     public static class SessionEventTypes

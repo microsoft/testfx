@@ -11,7 +11,7 @@ internal interface IPushOnlyProtocol : IDisposable
 
     Task HelpInvokedAsync();
 
-    Task<bool> IsCompatibleProtocolAsync(string testHostType);
+    Task<bool> IsCompatibleProtocolAsync(string testHostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null);
 
     Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync();
 

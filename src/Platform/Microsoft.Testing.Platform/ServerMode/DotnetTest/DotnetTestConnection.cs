@@ -87,12 +87,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public bool IsIDE { get; private set; }
 
-    public async Task<bool> IsCompatibleProtocolAsync(string hostType)
+    public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
         string supportedProtocolVersions = ProtocolConstants.Version;
-        HandshakeMessage handshakeMessage = new(new Dictionary<byte, string>
+        Dictionary<byte, string> properties = new()
         {
             { HandshakeMessagePropertyNames.PID, _environment.ProcessId.ToString(CultureInfo.InvariantCulture) },
             { HandshakeMessagePropertyNames.Architecture, RuntimeInformation.ProcessArchitecture.ToString() },
@@ -104,7 +104,17 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
-        });
+        };
+
+        if (additionalHandshakeProperties is not null)
+        {
+            foreach (KeyValuePair<byte, string> property in additionalHandshakeProperties)
+            {
+                properties[property.Key] = property.Value;
+            }
+        }
+
+        HandshakeMessage handshakeMessage = new(properties);
 
         HandshakeMessage response = await _dotnetTestPipeClient.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(handshakeMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
 
