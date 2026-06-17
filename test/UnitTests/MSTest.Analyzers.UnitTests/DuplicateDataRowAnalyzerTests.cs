@@ -495,6 +495,8 @@ public sealed class DuplicateDataRowAnalyzerTests
     public async Task WhenArrayContainsNullElement_SameContent_Diagnostic()
     {
         // Tests the IsNull && IsNull path within a nested array element comparison.
+        // Using a typed string[] ensures both null elements share the same element type (string),
+        // so the comparer reaches the IsNull && IsNull guard instead of short-circuiting on a type mismatch.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -502,9 +504,9 @@ public sealed class DuplicateDataRowAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                [DataRow(null, 1)]
-                [[|DataRow(null, 1)|]]
-                public static void TestMethod(object x, int y)
+                [DataRow(new string[] { null })]
+                [[|DataRow(new string[] { null })|]]
+                public static void TestMethod(string[] x)
                 {
                 }
             }
@@ -517,6 +519,8 @@ public sealed class DuplicateDataRowAnalyzerTests
     public async Task WhenArrayFirstElementNullDiffersFromNonNull_NoDiagnostic()
     {
         // Tests the asymmetric IsNull || IsNull path: one null element vs one non-null element.
+        // Using a typed string[] ensures both elements share the same element type (string),
+        // so the comparer reaches the IsNull || IsNull guard instead of short-circuiting on a type mismatch.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -524,9 +528,9 @@ public sealed class DuplicateDataRowAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                [DataRow(null, 1)]
-                [DataRow(1, 1)]
-                public static void TestMethod(object x, int y)
+                [DataRow(new string[] { null })]
+                [DataRow(new string[] { "a" })]
+                public static void TestMethod(string[] x)
                 {
                 }
             }
