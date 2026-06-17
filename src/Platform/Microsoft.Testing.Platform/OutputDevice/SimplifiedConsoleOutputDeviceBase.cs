@@ -38,6 +38,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
+    private volatile bool _wasCancelled;
 
     private int _passedTests;
     private int _failedTests;
@@ -80,6 +81,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         => await _policiesService.RegisterOnAbortCallbackAsync(
             () =>
             {
+                _wasCancelled = true;
                 ConsoleLog(PlatformResources.CancellingTestSession);
                 ConsoleLog(PlatformResources.PressCtrlCAgainToForceExit);
                 return Task.CompletedTask;
@@ -180,16 +182,18 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             }
 
             int total = _skippedTests + _passedTests + _failedTests;
-            // TODO: Duplicate the logic from TerminalTestReporter.AppendTestRunSummary, or refactor it
-            // so that it's easily shareable between the two implementations.
-            string text = $"""
-                    Total tests: {total}
-                    Failed tests: {_failedTests}
-                    Passed tests: {_passedTests}
-                    Skipped tests: {_skippedTests}
-                    """;
 
-            if (_failedTests > 0)
+            // The abort callback sets _wasCancelled, but it does not cover every cancellation path
+            // (e.g. cancellations that request the session token without going through the abort
+            // callback). Fold in the token state so the verdict and routing also reflect those.
+            bool wasCancelled = _wasCancelled || cancellationToken.IsCancellationRequested;
+
+            // minimumExpectedTests is always 0 here because SimplifiedConsoleOutputDeviceBase does not
+            // receive ICommandLineOptions. The --minimum-expected-tests policy is still enforced via
+            // TestApplicationResult (exit code), but it is not surfaced in this summary.
+            string text = TestRunSummaryHelper.FormatSummaryText(total, _failedTests, _passedTests, _skippedTests, wasCancelled, minimumExpectedTests: 0);
+
+            if (TestRunSummaryHelper.IsRunFailed(total, _failedTests, _skippedTests, wasCancelled, minimumExpectedTests: 0))
             {
                 ConsoleError(text);
             }
