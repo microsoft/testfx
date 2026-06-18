@@ -544,37 +544,23 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [DataRow("private")]
+    [DataRow("protected")]
+    [DataRow("internal")]
     [TestMethod]
-    public async Task WhenTestContextPropertyHasPrivateSetter_NoDiagnostic()
+    public async Task WhenTestContextPropertyHasNonPublicSetter_NoDiagnostic(string setterAccessibility)
     {
-        // A public TestContext property named exactly "TestContext" with a private setter
-        // satisfies IsTestContextPropertyAutomaticallyAssigned (SetMethod is not null), so
-        // the runtime can still inject the value and no diagnostic should be reported.
-        string code = """
+        // A public TestContext property named exactly "TestContext" with a non-public setter
+        // satisfies IsTestContextPropertyAutomaticallyAssigned (SetMethod is not null, regardless
+        // of the setter's accessibility), so the runtime can still inject the value via reflection
+        // and no diagnostic should be reported.
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
-                public TestContext TestContext { get; private set; }
-            }
-            """;
-
-        await VerifyCS.VerifyCodeFixAsync(code, code);
-    }
-
-    [TestMethod]
-    public async Task WhenTestContextPropertyHasProtectedSetter_NoDiagnostic()
-    {
-        // Same as the private-setter case: a protected setter still satisfies the
-        // SetMethod-is-not-null check in IsTestContextPropertyAutomaticallyAssigned.
-        string code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                public TestContext TestContext { get; protected set; }
+                public TestContext TestContext { get; {{setterAccessibility}} set; }
             }
             """;
 
