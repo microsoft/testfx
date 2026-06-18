@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      netstandard2.0 is deliberate, NOT net8/9/10: this is a source-only package. The contract files are shipped as
+      contentFiles/cs/any and are compiled into the CONSUMER's compilation under the consumer's own TFM (e.g. net11
+      in dotnet/sdk), so this TargetFramework never reaches consumers. This project does not compile the contract
+      files itself (see DotnetTestProtocolContractCompile below), so the TFM only governs the empty placeholder
+      assembly; netstandard2.0 keeps it the lightest and needs no runtime packs.
+    -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <!--
+      Source-only package: it ships the 'dotnet test' wire-contract source files (ObjectFieldIds.cs + Constants.cs)
+      as contentFiles so a consumer (the dotnet/sdk 'dotnet test' implementation) compiles them into its OWN
+      assembly. This keeps a single source of truth for the protocol ids/constants instead of hand-copying them.
+
+      DotnetTestProtocolContractCompile=false makes the imported .props skip its <Compile> items: this project only
+      *packs* the files, it does not compile them. The guarantee that the shared contract compiles standalone is
+      provided by the dedicated consumer test project
+      (test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests), not by this package build.
+    -->
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DotnetTestProtocolContractCompile>false</DotnetTestProtocolContractCompile>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+    <!-- Build-only / source contribution: it must not flow as a transitive runtime dependency to consumers. -->
+    <DevelopmentDependency>true</DevelopmentDependency>
+
+    <!--
+      IsShipping=false keeps this package OUT of nuget.org and in the internal (NonShipping) feed used for cross-repo
+      dependency flow (dotnet/sdk). NOTE: the exact internal-feed shipping mechanism still needs confirmation with
+      the Arcade team (see PR discussion).
+    -->
+    <IsShipping>false</IsShipping>
+
+    <!-- NU5128: source-only package has no lib/ assembly, only contentFiles. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package shares - as compiled source - the 'dotnet test' named-pipe wire contract (serializer/field ids and handshake/session/state constants) so that the protocol has a single source of truth across the microsoft/testfx and dotnet/sdk repositories. It is an implementation detail of 'dotnet test' integration and is not intended for direct end-user consumption.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!--
+    Pulls in @(DotnetTestProtocolContractSource) - the canonical contract file list. We set
+    DotnetTestProtocolContractCompile=false above, so the .props does NOT add <Compile> items here; this project only
+    packs that same item as contentFiles, so the NuGet and the in-repo source-share can never drift.
+  -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
+
+  <ItemGroup>
+    <None Include="@(DotnetTestProtocolContractSource)"
+          Pack="true"
+          BuildAction="Compile"
+          PackagePath="contentFiles/cs/any/DotnetTestProtocol/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

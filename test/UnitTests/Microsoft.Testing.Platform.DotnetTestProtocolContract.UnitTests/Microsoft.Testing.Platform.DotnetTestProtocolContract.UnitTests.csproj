@@ -12,6 +12,16 @@
   </ItemGroup>
 
   <!--
+    [Embedded] on the shared contract types resolves to Microsoft.CodeAnalysis.EmbeddedAttribute (not a framework
+    type). This independent consumer must provide it - the platform/extensions get it from src/Polyfills, and
+    dotnet/sdk already defines it for its copied IPC transport. We include only the polyfill (not via a package
+    reference) to mirror how an external consumer would supply the attribute.
+  -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Polyfills\EmbeddedAttribute.cs" Link="Polyfills\EmbeddedAttribute.cs" />
+  </ItemGroup>
+
+  <!--
     This project intentionally does NOT reference Microsoft.Testing.Platform's protocol types directly. It compiles
     the shared 'dotnet test' wire-contract source (ObjectFieldIds + Constants) into its own assembly via the shared
     .props, proving that the contract can live in testfx and be consumed by an independent assembly (e.g. dotnet/sdk)
