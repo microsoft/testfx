@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <!--
+      Source-only package: it ships the 'dotnet test' wire-contract source files (ObjectFieldIds.cs + Constants.cs)
+      as contentFiles so a consumer (the dotnet/sdk 'dotnet test' implementation) compiles them into its OWN
+      assembly. This keeps a single source of truth for the protocol ids/constants instead of hand-copying them.
+
+      The project still compiles the two files (into a lib that is intentionally NOT packed - IncludeBuildOutput is
+      false) so we get a build-time guarantee that the shared contract compiles standalone.
+    -->
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
+
+    <!--
+      Transport/source package: consumed cross-repo (dotnet/sdk) via dependency flow, not meant to be installed by
+      end users from nuget.org. Flip to 'true' (and remove DevelopmentDependency) if public publication is desired.
+    -->
+    <IsShipping>false</IsShipping>
+
+    <!-- NU5128: source-only package has no lib/ assembly, only contentFiles. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package shares - as compiled source - the 'dotnet test' named-pipe wire contract (serializer/field ids and handshake/session/state constants) so that the protocol has a single source of truth across the microsoft/testfx and dotnet/sdk repositories. It is an implementation detail of 'dotnet test' integration and is not intended for direct end-user consumption.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!--
+    Pulls in @(DotnetTestProtocolContractSource) (the canonical contract file list) and, by default, compiles those
+    files. The package layout below packs the SAME item as contentFiles, so the NuGet and the in-repo source-share
+    can never drift.
+  -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
+
+  <ItemGroup>
+    <None Include="@(DotnetTestProtocolContractSource)"
+          Pack="true"
+          BuildAction="Compile"
+          PackagePath="contentFiles/cs/any/DotnetTestProtocol/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>
