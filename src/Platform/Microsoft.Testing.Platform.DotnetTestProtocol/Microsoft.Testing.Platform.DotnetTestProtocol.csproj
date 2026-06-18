@@ -1,6 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!--
+      netstandard2.0 is deliberate, NOT net8/9/10: this is a source-only package. The contract files are shipped as
+      contentFiles/cs/any and are compiled into the CONSUMER's compilation under the consumer's own TFM (e.g. net11
+      in dotnet/sdk), so this TargetFramework never reaches consumers. It only governs the throwaway lib build we use
+      as a "the shared source compiles standalone" guard - and netstandard2.0 makes that guard maximally portable
+      (and needs no runtime packs). Bump it only if a future addition (models/serializers) genuinely needs a newer
+      API; even then it would not change what consumers compile against.
+    -->
     <TargetFramework>netstandard2.0</TargetFramework>
 
     <!--
