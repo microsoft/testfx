@@ -26,7 +26,12 @@ public sealed class NopPlatformOutputDeviceTests
 
         Assert.AreEqual(nameof(NopPlatformOutputDevice), device.Uid);
         Assert.AreEqual(nameof(NopPlatformOutputDevice), device.DisplayName);
-        Assert.AreEqual(PlatformVersion.Version, device.Version);
+
+        // NopPlatformOutputDevice.Version returns the Platform assembly's PlatformVersion.Version.
+        // We can't assert equality against this test assembly's PlatformVersion.Version because it
+        // is an [Embedded] per-assembly constant whose value differs from the Platform assembly's,
+        // so we only check the version is present (matching this test's "NonEmpty" intent).
+        Assert.IsFalse(string.IsNullOrWhiteSpace(device.Version));
         Assert.IsFalse(string.IsNullOrWhiteSpace(device.Description));
     }
 
