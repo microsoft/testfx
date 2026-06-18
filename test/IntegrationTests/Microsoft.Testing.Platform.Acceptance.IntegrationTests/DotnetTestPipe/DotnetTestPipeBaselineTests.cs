@@ -6,9 +6,11 @@ using System.Text.RegularExpressions;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
 
 /// <summary>
-/// Baseline tests for the <c>--server dotnettestcli</c> pipe protocol that lock down today's
-/// behavior so subsequent phases (quiet output device under pipe mode, protocol 1.1.0, live log
-/// and stream forwarding) can be reviewed as targeted diffs against these assertions.
+/// Tests for the <c>--server dotnettestcli</c> pipe protocol covering the handshake and protocol
+/// version negotiation. This PR installs the no-op output device under pipe mode and bumps the
+/// advertised protocol to 1.1.0; these tests lock down that behavior (and the remaining session
+/// event / stdout baselines) so further phases such as live log and stream forwarding can be
+/// reviewed as targeted diffs against these assertions.
 /// <para>
 /// Tracks <a href="https://github.com/dotnet/sdk/issues/51615">dotnet/sdk#51615</a> and the
 /// related <a href="https://github.com/microsoft/testfx/issues/7161">microsoft/testfx#7161</a>.
