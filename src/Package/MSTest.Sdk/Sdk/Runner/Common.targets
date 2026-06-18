@@ -28,7 +28,7 @@
     <!-- MS Code Coverage -->
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != 'false' and '$(TestingExtensionsProfile)' == 'Default' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
-    <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >$(MicrosoftTestingExtensionsCodeCoverageVersion)</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <!-- MicrosoftTestingExtensionsCodeCoverageVersion is always injected by the generated Sdk.props (from Sdk.props.template). -->
   </PropertyGroup>
 
   <ItemGroup>
