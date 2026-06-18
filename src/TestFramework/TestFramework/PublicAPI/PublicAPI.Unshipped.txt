@@ -2,6 +2,20 @@
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AddValueFormatter(System.Func<System.Func<object?, string!>!, System.Func<object?, string!>!>! factory) -> System.IDisposable!
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AddValueFormatter<T>(System.Func<T, string?>! formatter) -> System.IDisposable!
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
+Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.ArchitectureConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.Architectures architectures) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.ArchitectureConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, Microsoft.VisualStudio.TestTools.UnitTesting.Architectures architectures) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.Arm = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.Arm64 = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.Armv6 = 128 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.LoongArch64 = 64 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.Ppc64le = 256 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.RiscV64 = 512 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.S390x = 32 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.Wasm = 16 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.X64 = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
+Microsoft.VisualStudio.TestTools.UnitTesting.Architectures.X86 = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.Architectures
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.AssemblyFixtureProviderAttribute(System.Type! fixtureType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.FixtureType.get -> System.Type!
@@ -14,6 +28,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberCond
 Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionMemberNames.get -> System.Collections.Generic.IReadOnlyList<string!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionType.get -> System.Type!
+override Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.IsConditionMet.get -> bool
 override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.IsConditionMet.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
