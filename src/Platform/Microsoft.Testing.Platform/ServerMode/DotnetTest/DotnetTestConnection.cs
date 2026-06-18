@@ -91,7 +91,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
 
-        string supportedProtocolVersions = ProtocolConstants.Version;
+        string supportedProtocolVersions = ProtocolConstants.SupportedVersions;
         Dictionary<byte, string> properties = new()
         {
             { HandshakeMessagePropertyNames.PID, _environment.ProcessId.ToString(CultureInfo.InvariantCulture) },

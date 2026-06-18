@@ -169,7 +169,10 @@ internal sealed partial class TestHostBuilder
             || protocolName.Length == 0
             || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase));
 
-        context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.IsJsonRpcProtocol).ConfigureAwait(false);
+        // Reuse the shared helper so the pipe-protocol detection stays in one place.
+        bool isPipeProtocol = context.CommandLineHandler.HasDotnetTestServerOption();
+
+        context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.IsJsonRpcProtocol, isPipeProtocol).ConfigureAwait(false);
 
         if (loggingState.FileLoggerProvider is not null)
         {

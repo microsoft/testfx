@@ -426,8 +426,8 @@ public sealed class ProtocolTests
     {
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
-        string[] versions = [ProtocolConstants.Version];
-        Assert.AreEqual("1.0.0", versions[0]);
+        string[] versions = [ProtocolConstants.SupportedVersions];
+        Assert.AreEqual("1.0.0;1.1.0", versions[0]);
     }
 
     private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
