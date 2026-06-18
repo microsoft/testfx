@@ -60,7 +60,7 @@
 
     <!-- Fakes -->
     <EnableMicrosoftTestingExtensionsFakes Condition=" '$(EnableMicrosoftTestingExtensionsFakes)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsFakes>
-    <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >$(MicrosoftTestingExtensionsFakesVersion)</MicrosoftTestingExtensionsFakesVersion>
+    <!-- MicrosoftTestingExtensionsFakesVersion is always injected by the generated Sdk.props (from Sdk.props.template). -->
   </PropertyGroup>
 
   <!-- Core -->
