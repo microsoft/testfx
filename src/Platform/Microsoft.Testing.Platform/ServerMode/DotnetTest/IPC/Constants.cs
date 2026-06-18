@@ -39,6 +39,28 @@ internal static class HandshakeMessagePropertyNames
     // as a help/list-tests option leaking from RunArguments into a normal run.
     // Values come from HandshakeMessageExecutionModes.
     internal const byte ExecutionMode = 10;
+
+    // Identifies the orchestration feature responsible for the orchestrator host
+    // (e.g. "retry"). Only sent by the test host orchestrator so consumers (e.g.
+    // dotnet test in the SDK) can understand why an orchestrator is participating
+    // in the run. The value is the orchestrator extension Uid.
+    internal const byte OrchestratorFeature = 11;
+}
+
+internal static class HandshakeMessageHostTypes
+{
+    // A regular (console or server) test host that actually runs tests.
+    internal const string TestHost = "TestHost";
+
+    // A test host controller process that restarts/monitors the test host.
+    internal const string TestHostController = "TestHostController";
+
+    // A test host running in server (JSON-RPC) mode.
+    internal const string ServerTestHost = "ServerTestHost";
+
+    // A test host orchestrator process (e.g. the retry orchestrator) that drives
+    // one or more test host executions.
+    internal const string TestHostOrchestrator = "TestHostOrchestrator";
 }
 
 internal static class HandshakeMessageExecutionModes

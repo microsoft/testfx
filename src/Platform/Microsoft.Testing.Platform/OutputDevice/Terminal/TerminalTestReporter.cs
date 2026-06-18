@@ -91,10 +91,12 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
         Func<bool?> showProgress = options.ShowProgress;
         ITerminal terminal;
+        bool useCursorRenderer;
         if (_options.AnsiMode == AnsiMode.SimpleAnsi)
         {
             // We are told externally that we are in CI, use simplified ANSI mode.
             terminal = new SimpleAnsiTerminal(console);
+            useCursorRenderer = false;
         }
         else
         {
@@ -110,13 +112,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
             };
 
             terminal = useAnsi ? new AnsiTerminal(console) : new NonAnsiTerminal(console);
-            if (!useAnsi)
-            {
-                showProgress = () => false;
-            }
+
+            // Only cursor-capable ANSI terminals can redraw progress in place. Anything that resolved to a
+            // non-ANSI terminal (explicit --no-ansi, or AnsiIfPossible on a console that can't do ANSI) uses
+            // the silence-driven heartbeat renderer instead, so it still gets a progress signal in CI / piped
+            // / redirected runs without spamming a fixed-cadence summary.
+            useCursorRenderer = useAnsi;
         }
 
-        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress);
+        IProgressRenderer renderer = useCursorRenderer
+            ? new CursorProgressRenderer()
+            : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch());
+
+        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer);
     }
 
     public void PrintOutOfProcessArtifacts()

@@ -93,6 +93,7 @@ When making change to resource files, you MUST:
   - Most MTP unit-test projects (and `MSTest.Analyzers.UnitTests`, `MSTest.SelfRealExamples.UnitTests`) ban `AwesomeAssertions` and require MSTest `Assert`/`StringAssert`/`CollectionAssert`.
   - The adapter unit-test projects (`MSTestAdapter.UnitTests`, `MSTestAdapter.PlatformServices.UnitTests`) ban MSTest's `Assert` family and require `AwesomeAssertions` (FluentAssertions-style API).
 - Acceptance integration tests run with assembly-level method parallelization. Classes that share a single generated mutable test asset across multiple methods must be marked `[DoNotParallelize]` to avoid races on `bin/obj` outputs.
+- When asserting on test-host output that contains a rendered test **duration** (e.g. `failed MyTest (040ms)`), NEVER hard-code `\(\d+ms\)`. The duration format grows leading parts (`(1s 040ms)`, `(2m 03s 040ms)`, …) on slower machines (often macOS, sometimes Windows), so a `\d+ms`-only pattern is a classic source of timing flakiness. Use the shared `AcceptanceAssert.DurationPattern` constant (or, where a duration only ever applies to skipped tests, the deterministic `(0ms)`) instead.
 - When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
 
 ## CLI options guidelines
@@ -149,3 +150,4 @@ How to set the Issue Type from each surface:
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
 - Do the changes when you are specifically tagged or mentioned as copilot.
 - If you are unsure, comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.
+- PRs that address a security vulnerability (e.g. a Component Governance (CG) alert or a vulnerable dependency bump) MUST avoid disclosing vulnerability details in public PR metadata. Prefer using a private security process (see [`SECURITY.md`](../SECURITY.md)) until the fix ships; if a public PR is unavoidable, use a generic title (e.g. `Update package X`) and a generic description (e.g. `Fix CG alert`) and do NOT spell out the CVE, exploit, affected versions, or attack details.

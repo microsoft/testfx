@@ -14,7 +14,13 @@ steps:
 # Because the build step is using -ci flag, restore is done in a local .packages directory.
 # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
 # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
+#
+# -p:TestingPlatformCaptureOutput=false streams each test exe's stdout to the AzDO console at
+# MessageImportance.High. Required so the silence-driven heartbeat (and per-test progress) emitted
+# by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
+# output is buffered into a per-module .log file and only surfaced on failure, so no live progress
+# is visible during long-running test sessions.
+- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
   name: Test
   displayName: Test
   condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
@@ -24,24 +30,12 @@ steps:
 #
 # --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
 # any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
-# options that makes sense in Release:
-#   --report-trx + --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM),
-#     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
-#   --report-azdo — surfaces failed tests in the AzDO UI.
-#   --report-azdo-progress — emits ##vso[task.logdetail ...;progress=...] timeline records so
-#     long-running test sessions show live progress on the AzDO timeline. No-op outside AzDO
-#     (gated on TF_BUILD; emits a warning if the option is set but TF_BUILD is not 'true').
-#   --report-azdo-summary — writes a Markdown job summary and uploads it via ##vso[task.uploadsummary]
-#     so failure context shows up on the build's summary tab. No-op outside AzDO (gated on TF_BUILD;
-#     emits a warning if the option is set but TF_BUILD is not 'true').
-#   --report-junit + --report-junit-filename "{asm}_{tfm}.xml" — JUnit XML per (assembly x TFM),
-#     resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper. Dogfoods the
-#     Microsoft.Testing.Extensions.JUnitReport extension; the .xml output is published alongside
-#     the .trx files and can be consumed by AzDO PublishTestResults@2 (testResultsFormat: 'JUnit'),
-#     Jenkins, GitLab, GitHub Actions test reporters, etc.
-#   --hangdump --hangdump-timeout 15m — captures a dump if a module hangs past 15 minutes.
-#   --diagnostic + --diagnostic-verbosity trace — produces per-host diagnostic logs;
-#     directory is published by the Arcade jobs.yml template (artifacts.publish.logs: true).
+# options that makes sense in Release. The OS-agnostic report/dump flags (TRX + CTRF + JUnit +
+# AzDO + hangdump) come from the $(_ReleaseUnitTestReportArgs) variable defined in azure-pipelines.yml
+# (the pipeline that consumes this template) so the Windows and Linux/MacOS commands stay in sync;
+# see that variable for the per-flag documentation. Only the test-module glob, --results-directory,
+# and --diagnostic-output-directory are inlined here because they differ per OS (path separators +
+# .exe vs .dll).
 # We intentionally do NOT pass:
 #   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
 #     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
@@ -50,7 +44,7 @@ steps:
 #   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
 #     Azure DevOps" steps in azure-pipelines.yml), so collecting coverage in Release would just
 #     write unused .coverage files.
-- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed --report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-azdo --report-azdo-progress --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) $(_ReleaseUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
   name: TestRelease
   displayName: Test (unit tests only)
   condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))

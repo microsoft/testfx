@@ -17,10 +17,15 @@
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
-    <!-- The report-azdo-progress and report-azdo-summary options implement ITestSessionLifetimeHandler and emit a
-         warning on the output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate them
-         on $(TF_BUILD) so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output. -->
-    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-progress --report-azdo-summary</TestingPlatformCommandLineArguments>
+    <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
+         output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
+         so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output. -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-summary</TestingPlatformCommandLineArguments>
+    <!-- Dogfood the Azure DevOps history-driven slow-test threshold enricher (issue #9140). It queries the
+         pipeline's own test history to lower the per-test 'still running' threshold and decorate slow-test
+         lines with historical p95/p99. It requires the report-azdo option (added above) and the OAuth access
+         token, and silently no-ops when TF_BUILD is not 'true' or no token is available, so gate it on $(TF_BUILD). -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history 30</TestingPlatformCommandLineArguments>
     <!-- Dogfood the JUnit report extension (Microsoft.Testing.Extensions.JUnitReport). The .xml files end up in
          $(ResultsDirectory) (Arcade default) alongside the TRX files so they are picked up by the AzDO
          PublishTestResults task and any external JUnit consumer. -->

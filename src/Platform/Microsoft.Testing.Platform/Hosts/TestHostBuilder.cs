@@ -112,11 +112,7 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
         public SystemMonitorAsyncFactory SystemMonitorAsyncFactory { get; set; } = null!;
 
-        public bool HasServerFlag { get; set; }
-
         public bool IsJsonRpcProtocol { get; set; }
-
-        public bool IsPipeProtocol { get; set; }
 
         public bool IsHelpCommand { get; set; }
 

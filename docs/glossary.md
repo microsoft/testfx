@@ -50,6 +50,10 @@ A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` used with [Condi
 
 An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically captures a process memory dump when the test host crashes. Useful for diagnosing unexpected process termination during test runs.
 
+### CtrfReport
+
+An MTP extension (`Microsoft.Testing.Extensions.CtrfReport`) that generates a [CTRF](https://github.com/ctrf-io/ctrf) (Common Test Report Format) JSON report at the end of a test run. CTRF is a vendor-neutral open standard for structured test results, consumed by GitHub Actions test-summary tools, Slack/Teams notifiers, dashboards, and other CI tooling. Enable via `--report-ctrf`; override the output filename with `--report-ctrf-filename`. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>`. Currently **experimental** — the CLI options and output format may change without notice.
+
 ## D
 
 ### DelayBackoffType
@@ -185,6 +189,18 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports tes
 ### PlannedTest
 
 A sealed class (`Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest`, currently `[Experimental("MSTESTEXP")]`) that describes a test that has been discovered and passed the active filter for the current assembly, before execution begins. Exposes the test's `FullyQualifiedTestClassName`, `TestName`, `TestDisplayName`, `AssemblyPath`, `ManagedTypeName`, `ManagedMethodName`, source file location (`DeclaringFilePath`, `DeclaringLineNumber`), `TestCategories` (from `[TestCategory]`), and `TestProperties` (from `[TestProperty]`). Instances are accessed via `TestRun.Current.PlannedTests`. Data-driven tests whose rows are resolved only at execution time (non-serializable data, `TestDataSourceUnfoldingStrategy.Fold` set via `[TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]`, `[DataSource]`) appear as a single `PlannedTest` entry rather than one per row. See also [TestRun](#testrun) and RFC 014 (`docs/RFCs/014-TestRun-Current-PlannedTests.md`).
+
+### --progress
+
+An MTP terminal-reporter command-line option that controls whether animated progress output is shown during a test run. Accepts three values:
+
+| Value | Behavior |
+| --- | --- |
+| `auto` (default) | Show progress unless the terminal cannot update in place (non-ANSI/simple terminal), or the session is a test-host controller, `--list-tests`, or server mode |
+| `on` | Same as `auto` (a dedicated heartbeat renderer for non-cursor modes is tracked separately) |
+| `off` | Suppress all progress output |
+
+Introduced in [PR #9145](https://github.com/microsoft/testfx/pull/9145) as a replacement for the former `--no-progress` flag. `--no-progress` continues to work as a deprecated alias that routes to `--progress off`; outside of CI it emits a one-per-process deprecation warning on stderr. The warning is suppressed in CI environments, where it would be invisible noise and where build infrastructure (such as the Arcade SDK test runner) passes `--no-progress` unconditionally. `--progress` always wins when both are supplied.
 
 ### PropertyBag
 

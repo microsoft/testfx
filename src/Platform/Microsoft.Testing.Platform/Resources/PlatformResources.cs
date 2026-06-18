@@ -60,6 +60,22 @@ internal static partial class PlatformResources
     internal static string @PlatformCommandLinePortOptionSingleArgument => GetResourceString("PlatformCommandLinePortOptionSingleArgument");
 
     internal static string @PlatformCommandLineTimeoutArgumentErrorMessage => GetResourceString("PlatformCommandLineTimeoutArgumentErrorMessage");
+
+    internal static string @Aborted => GetResourceString("Aborted");
+
+    internal static string @ZeroTestsRan => GetResourceString("ZeroTestsRan");
+
+    internal static string @Failed => GetResourceString("Failed");
+
+    internal static string @Passed => GetResourceString("Passed");
+
+    internal static string @TotalLowercase => GetResourceString("TotalLowercase");
+
+    internal static string @FailedLowercase => GetResourceString("FailedLowercase");
+
+    internal static string @SucceededLowercase => GetResourceString("SucceededLowercase");
+
+    internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
 #endif
 
 #endif

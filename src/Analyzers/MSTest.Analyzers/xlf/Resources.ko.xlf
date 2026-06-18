@@ -297,47 +297,47 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidDescription">
         <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
-        <target state="new">The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</target>
+        <target state="translated">'[MemberCondition]' 특성이 참조하는 멤버는 참조된 형식에 있어야 합니다. 또한 'public static'이어야 하고, 'bool'을 반환해야 하며, 메서드인 경우 매개 변수가 없어야 합니다. 이러한 규칙을 위반하면 특성은 런타임에 예외를 throw합니다. 이 분석기는 빌드 시점에 같은 문제를 알려 주므로, 오타나 리팩터링 때문에 테스트 게이팅이 조용히 깨지는 일을 막을 수 있습니다.</target>
         <note>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotFound">
         <source>'[MemberCondition]' member '{0}.{1}' cannot be found</source>
-        <target state="new">'[MemberCondition]' member '{0}.{1}' cannot be found</target>
+        <target state="translated">'[MemberCondition]' 멤버 '{0}.{1}'을(를) 찾을 수 없습니다.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotPublic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</target>
+        <target state="translated">'[MemberCondition]'에서 참조된 멤버 '{0}.{1}'은(는) 'public'이어야 합니다.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotStatic">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</target>
+        <target state="translated">'[MemberCondition]'에서 참조된 멤버 '{0}.{1}'은(는) 'static'이어야 합니다.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongKind">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</target>
+        <target state="translated">'[MemberCondition]'에서 참조된 멤버 '{0}.{1}'은(는) 속성, 필드 또는 매개 변수 없는 메서드여야 합니다.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType">
         <source>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</source>
-        <target state="new">'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</target>
+        <target state="translated">'[MemberCondition]'에서 참조된 멤버 '{0}.{1}'은(는) 'bool'을 반환해야 합니다.</target>
         <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_MethodHasParameters">
         <source>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</source>
-        <target state="new">'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</target>
+        <target state="translated">'[MemberCondition]'에서 참조된 메서드 '{0}.{1}'은(는) 매개 변수가 없어야 합니다.</target>
         <note>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable">
         <source>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</source>
-        <target state="new">'[MemberCondition]' referenced property '{0}.{1}' must have a getter</target>
+        <target state="translated">'[MemberCondition]'에서 참조된 속성 '{0}.{1}'에는 getter가 있어야 합니다.</target>
         <note>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="MemberConditionShouldBeValidTitle">
         <source>'[MemberCondition]' arguments should be valid</source>
-        <target state="new">'[MemberCondition]' arguments should be valid</target>
+        <target state="translated">'[MemberCondition]' 인수는 올바른 값이어야 합니다.</target>
         <note>{Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">

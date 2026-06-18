@@ -67,6 +67,68 @@ public sealed partial class Assert
             }
         }
 
+#if NETCOREAPP3_1_OR_GREATER
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="count">The expected item count.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, ReadOnlySpan<TItem> collection, out bool shouldAppend)
+        {
+            _actualCount = collection.Length;
+            _expectedCount = count;
+            shouldAppend = _actualCount != _expectedCount;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="count">The expected item count.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, Span<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, count, (ReadOnlySpan<TItem>)collection, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="count">The expected item count.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, ReadOnlyMemory<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, count, collection.Span, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="count">The expected item count.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, Memory<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, count, (ReadOnlyMemory<TItem>)collection, out shouldAppend)
+        {
+        }
+
+#endif
+
         internal void ComputeAssertion(string assertionName, string collectionExpression)
         {
             if (_builder is not null)
@@ -393,6 +455,142 @@ public sealed partial class Assert
     public static void HasCount(int expected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
         => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
 
+#if NETCOREAPP3_1_OR_GREATER
+
+    /// <summary>
+    /// Tests whether the span has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void HasCount<T>(int expected, ReadOnlySpan<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.HasCount");
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether the span has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount<T>(int expected, ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the span has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void HasCount<T>(int expected, Span<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.HasCount");
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether the span has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount<T>(int expected, Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(HasCount), expected, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the memory has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void HasCount<T>(int expected, ReadOnlyMemory<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.HasCount");
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether the memory has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount<T>(int expected, ReadOnlyMemory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(HasCount), expected, collection.Span, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether the memory has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void HasCount<T>(int expected, Memory<T> collection, [InterpolatedStringHandlerArgument(nameof(expected), nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.HasCount");
+        message.ComputeAssertion(nameof(HasCount), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether the memory has the expected count/length.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="expected">The expected count.</param>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void HasCount<T>(int expected, Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(HasCount), expected, collection.Span, message, collectionExpression);
+
+#endif
+
     #endregion // HasCount
 
     #region IsEmpty
@@ -459,6 +657,23 @@ public sealed partial class Assert
 
     private static void HasCount(string assertionName, int expected, IEnumerable collection, string? message, string collectionExpression)
         => HasCount(assertionName, expected, collection.Cast<object>(), message, collectionExpression);
+
+#if NETCOREAPP3_1_OR_GREATER
+    private static void HasCount<T>(string assertionName, int expected, ReadOnlySpan<T> collection, string? message, string collectionExpression)
+    {
+        // assertionName is always "HasCount" here (there are no span/memory IsEmpty overloads that call this);
+        // use a cached prefixed string instead of allocating "Assert." + assertionName on every call.
+        TelemetryCollector.TrackAssertionCall(GetTrackedAssertionName(assertionName));
+
+        int actualCount = collection.Length;
+        if (actualCount == expected)
+        {
+            return;
+        }
+
+        ReportAssertCountFailed(assertionName, expected, actualCount, message, collectionExpression);
+    }
+#endif
 
     private static string GetTrackedAssertionName(string assertionName)
         => assertionName switch

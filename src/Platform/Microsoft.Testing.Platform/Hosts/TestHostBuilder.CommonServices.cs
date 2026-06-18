@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Builder;
@@ -164,15 +164,15 @@ internal sealed partial class TestHostBuilder
         context.PoliciesService = new StopPoliciesService(context.TestApplicationCancellationTokenSource);
         serviceProvider.AddService(context.PoliciesService);
 
-        context.HasServerFlag = context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
-        context.IsJsonRpcProtocol = protocolName is null
+        bool hasServerFlag = context.CommandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? protocolName);
+        context.IsJsonRpcProtocol = hasServerFlag && (protocolName is null
             || protocolName.Length == 0
-            || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase);
+            || protocolName[0].Equals(PlatformCommandLineProvider.JsonRpcProtocolName, StringComparison.OrdinalIgnoreCase));
 
         // Reuse the shared helper so the pipe-protocol detection stays in one place.
-        context.IsPipeProtocol = context.CommandLineHandler.HasDotnetTestServerOption();
+        bool isPipeProtocol = context.CommandLineHandler.HasDotnetTestServerOption();
 
-        context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.HasServerFlag && context.IsJsonRpcProtocol, context.IsPipeProtocol).ConfigureAwait(false);
+        context.ProxyOutputDevice = await _outputDisplay.BuildAsync(serviceProvider, context.IsJsonRpcProtocol, isPipeProtocol).ConfigureAwait(false);
 
         if (loggingState.FileLoggerProvider is not null)
         {

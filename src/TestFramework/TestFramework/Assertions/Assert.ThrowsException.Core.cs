@@ -172,7 +172,6 @@ public sealed partial class Assert
             Exception actualException = state.ExceptionThrown!;
             Type actualType = actualException.GetType();
             string actualTypeName = GetDisplayTypeName(actualType, includeNamespace: false);
-            string actualTypeFullName = GetDisplayTypeName(actualType, includeNamespace: true);
 
             string summary = isStrictType
                 ? $"Expected exception of exact type {expectedTypeName} but caught {actualTypeName}."
@@ -180,10 +179,21 @@ public sealed partial class Assert
 
             string expectedTypeLabel = isStrictType ? expectedTypeFullName : $"{expectedTypeFullName} (or derived)";
 
+            // Render the full exception (type, message, inner-exception chain and stack trace) via ToString so the
+            // unexpected exception can be diagnosed without re-running under a debugger. See issue #9190.
+            // Exception.ToString() prefixes the output with Type.ToString(), which uses CLR notation for generic
+            // types (e.g. "MyException`1[System.Int32]"). Replace that leading prefix with the friendly name so it
+            // stays consistent with the "expected type:" line; for non-generic types the two notations are identical.
+            string actualExceptionText = actualException.ToString();
+            string clrTypeName = actualType.ToString();
+            if (actualExceptionText.StartsWith(clrTypeName, StringComparison.Ordinal))
+            {
+                actualExceptionText = GetDisplayTypeName(actualType, includeNamespace: true) + actualExceptionText.Substring(clrTypeName.Length);
+            }
+
             EvidenceBlock evidence = EvidenceBlock.Create()
                 .AddLine("expected type:", expectedTypeLabel)
-                .AddLine("actual type:", actualTypeFullName)
-                .AddLine("actual exception:", $"{actualTypeFullName}: {actualException.Message}");
+                .AddLine("actual exception:", actualExceptionText);
 
             message = new StructuredAssertionMessage(summary)
                 .WithUserMessage(userMessage)

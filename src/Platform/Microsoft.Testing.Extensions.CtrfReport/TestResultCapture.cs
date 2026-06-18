@@ -27,70 +27,11 @@ internal static class TestResultCapture
             return null;
         }
 
-        // Keep the O(1) state lookup above as a fast path for non-terminal messages. Terminal
-        // results collect all remaining required properties in one pass — replacing
-        // 5 × SingleOrDefault<T>() + 1 × foreach/GetEnumerator() with one zero-allocation
-        // GetStructEnumerator() pass. Singleton-typed properties use the local GetSingleOrDefaultValue
-        // helper to preserve the throw-on-duplicate invariant that SingleOrDefault<T>() provided;
-        // TestMetadataProperty is intentionally multi-valued and accumulates into a list.
-        TimingProperty? timing = null;
-        TestMethodIdentifierProperty? identifier = null;
-        StandardOutputProperty? standardOutput = null;
-        StandardErrorProperty? standardError = null;
-        TestFileLocationProperty? location = null;
-        List<KeyValuePair<string, string>>? traits = null;
-
-        PropertyBag.PropertyBagEnumerator enumerator = node.Properties.GetStructEnumerator();
-        while (enumerator.MoveNext())
-        {
-            switch (enumerator.Current)
-            {
-                case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
-                case TestMethodIdentifierProperty m: identifier = GetSingleOrDefaultValue(identifier, m); break;
-                case StandardOutputProperty so: standardOutput = GetSingleOrDefaultValue(standardOutput, so); break;
-                case StandardErrorProperty se: standardError = GetSingleOrDefaultValue(standardError, se); break;
-                case TestFileLocationProperty loc: location = GetSingleOrDefaultValue(location, loc); break;
-                case TestMetadataProperty meta:
-                    // Trait keys and values are test-controlled so we truncate them to
-                    // bound the size of the in-memory result list and generated report.
-                    traits ??= [];
-                    traits.Add(new KeyValuePair<string, string>(
-                        Truncate(meta.Key, MaxTraitFieldLength)!,
-                        Truncate(meta.Value, MaxTraitFieldLength)!));
-                    break;
-            }
-        }
-
-        static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
-            where TProperty : class, IProperty
-            => existingProperty is not null
-                ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
-                : property;
-
+        CapturedTestResultProperties properties = TestResultCaptureHelper.ExtractProperties(node.Properties, includeLocation: true);
         (string status, string? rawStatus) = ClassifyStatus(state);
-        TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
-        (string? ns, string? className, string? methodName) = GetClassAndMethodName(identifier);
-
-        string? errorMessage = state.Explanation;
-        string? stackTrace = null;
-        string? exceptionType = null;
-        Exception? exception = state switch
-        {
-            FailedTestNodeStateProperty f => f.Exception,
-            ErrorTestNodeStateProperty e => e.Exception,
-            TimeoutTestNodeStateProperty t => t.Exception,
-#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
-            CancelledTestNodeStateProperty c => c.Exception,
-#pragma warning restore CS0618, MTP0001
-            _ => null,
-        };
-
-        if (exception is not null)
-        {
-            errorMessage ??= exception.Message;
-            stackTrace = exception.StackTrace;
-            exceptionType = exception.GetType().FullName;
-        }
+        TimeSpan duration = properties.Timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
+        (string? ns, string? className, string? methodName) = GetClassAndMethodName(properties.Identifier);
+        CapturedExceptionDetails exceptionDetails = TestResultCaptureHelper.ExtractExceptionDetails(state);
 
         return new CapturedTestResult
         {
@@ -102,19 +43,19 @@ internal static class TestResultCapture
             Status = status,
             RawStatus = rawStatus,
             Duration = duration,
-            StartTime = timing?.GlobalTiming.StartTime,
-            EndTime = timing?.GlobalTiming.EndTime,
+            StartTime = properties.Timing?.GlobalTiming.StartTime,
+            EndTime = properties.Timing?.GlobalTiming.EndTime,
             Namespace = Truncate(ns, MaxIdentityFieldLength),
             ClassName = Truncate(className, MaxIdentityFieldLength),
             MethodName = Truncate(methodName, MaxIdentityFieldLength),
-            ErrorMessage = Truncate(errorMessage, MaxMessageLength),
-            ExceptionType = exceptionType,
-            StackTrace = Truncate(stackTrace, MaxStackTraceLength),
-            StandardOutput = Truncate(standardOutput?.StandardOutput, MaxStandardStreamLength),
-            StandardError = Truncate(standardError?.StandardError, MaxStandardStreamLength),
-            FilePath = Truncate(location?.FilePath, MaxIdentityFieldLength),
-            Line = location?.LineSpan.Start.Line,
-            Traits = traits,
+            ErrorMessage = Truncate(exceptionDetails.ErrorMessage, MaxMessageLength),
+            ExceptionType = exceptionDetails.ExceptionType,
+            StackTrace = Truncate(exceptionDetails.StackTrace, MaxStackTraceLength),
+            StandardOutput = Truncate(properties.StandardOutput?.StandardOutput, MaxStandardStreamLength),
+            StandardError = Truncate(properties.StandardError?.StandardError, MaxStandardStreamLength),
+            FilePath = Truncate(properties.Location?.FilePath, MaxIdentityFieldLength),
+            Line = properties.Location?.LineSpan.Start.Line,
+            Traits = properties.Traits,
         };
     }
 

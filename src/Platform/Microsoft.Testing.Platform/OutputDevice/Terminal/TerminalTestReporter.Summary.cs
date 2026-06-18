@@ -54,35 +54,12 @@ internal sealed partial class TerminalTestReporter
         // Two sibling sites mirror this decision and must stay in lockstep:
         //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
         //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
-        bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
-        bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
-        bool anyTestFailed = totalFailedTests > 0;
-        bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || WasCancelled;
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests);
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(PlatformResources.TestRunSummary);
         terminal.Append(' ');
-
-        if (WasCancelled)
-        {
-            terminal.Append(PlatformResources.Aborted);
-        }
-        else if (notEnoughTests)
-        {
-            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
-        }
-        else if (allTestsWereSkipped)
-        {
-            terminal.Append(PlatformResources.ZeroTestsRan);
-        }
-        else if (anyTestFailed)
-        {
-            terminal.Append($"{PlatformResources.Failed}!");
-        }
-        else
-        {
-            terminal.Append($"{PlatformResources.Passed}!");
-        }
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests));
 
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(" - ");

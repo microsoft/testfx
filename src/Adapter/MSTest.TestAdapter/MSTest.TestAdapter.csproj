@@ -80,6 +80,7 @@
     <NuspecProperty Include="Configuration=$(Configuration)" />
     <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
     <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
+    <NuspecProperty Include="SystemMemoryVersion=$(SystemMemoryVersion)" />
     <NuspecProperty Include="TestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))" />
   </ItemGroup>
 
