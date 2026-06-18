@@ -20,7 +20,7 @@ internal sealed class NopPlatformOutputDevice : IPlatformOutputDevice
 {
     public string Uid => nameof(NopPlatformOutputDevice);
 
-    public string Version => "1.0.0";
+    public string Version => PlatformVersion.Version;
 
     public string DisplayName => nameof(NopPlatformOutputDevice);
 

@@ -26,7 +26,7 @@ public sealed class NopPlatformOutputDeviceTests
 
         Assert.AreEqual(nameof(NopPlatformOutputDevice), device.Uid);
         Assert.AreEqual(nameof(NopPlatformOutputDevice), device.DisplayName);
-        Assert.AreEqual("1.0.0", device.Version);
+        Assert.AreEqual(PlatformVersion.Version, device.Version);
         Assert.IsFalse(string.IsNullOrWhiteSpace(device.Description));
     }
 
