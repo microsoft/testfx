@@ -5,6 +5,11 @@ using System.ComponentModel;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+/// <summary>
+/// A collection of helper classes to test various conditions within
+/// unit tests. If the condition being tested is not met, an exception
+/// is thrown.
+/// </summary>
 public sealed partial class Assert
 {
     /// <summary>
