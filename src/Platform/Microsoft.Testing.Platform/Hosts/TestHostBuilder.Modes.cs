@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Internal.Framework;
@@ -140,7 +140,7 @@ internal sealed partial class TestHostBuilder
         }
 
         PassiveNode? passiveNode = null;
-        if (context.HasServerFlag && context.IsJsonRpcProtocol)
+        if (context.IsJsonRpcProtocol)
         {
             IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(context.ServiceProvider);
             passiveNode = new PassiveNode(
@@ -214,7 +214,7 @@ internal sealed partial class TestHostBuilder
 #pragma warning restore CS0618 // Type or member is obsolete
         context.ServiceProvider.AddServices(testApplicationLifecycleCallback);
 
-        return context.HasServerFlag && context.IsJsonRpcProtocol
+        return context.IsJsonRpcProtocol
             ? await BuildServerTestHostAsync(context, testControllerConnection).ConfigureAwait(false)
             : await BuildConsoleTestHostAsync(context, testControllerConnection).ConfigureAwait(false);
     }
