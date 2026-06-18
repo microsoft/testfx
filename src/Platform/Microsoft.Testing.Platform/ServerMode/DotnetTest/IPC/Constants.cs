@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.IPC;
 
+[Embedded]
 internal static class TestStates
 {
     internal const byte Discovered = 0;
@@ -15,12 +18,14 @@ internal static class TestStates
     internal const byte InProgress = 7;
 }
 
+[Embedded]
 internal static class SessionEventTypes
 {
     internal const byte TestSessionStart = 0;
     internal const byte TestSessionEnd = 1;
 }
 
+[Embedded]
 internal static class HandshakeMessagePropertyNames
 {
     internal const byte PID = 0;
@@ -47,6 +52,7 @@ internal static class HandshakeMessagePropertyNames
     internal const byte OrchestratorFeature = 11;
 }
 
+[Embedded]
 internal static class HandshakeMessageHostTypes
 {
     // A regular (console or server) test host that actually runs tests.
@@ -63,6 +69,7 @@ internal static class HandshakeMessageHostTypes
     internal const string TestHostOrchestrator = "TestHostOrchestrator";
 }
 
+[Embedded]
 internal static class HandshakeMessageExecutionModes
 {
     // Standard test run.
@@ -75,6 +82,7 @@ internal static class HandshakeMessageExecutionModes
     internal const string Discover = "discover";
 }
 
+[Embedded]
 internal static class ProtocolConstants
 {
     internal const string Version = "1.0.0";
