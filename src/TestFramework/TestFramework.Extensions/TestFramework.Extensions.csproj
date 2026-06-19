@@ -162,14 +162,24 @@
       <_NonPublishableNuspecPath>$(_NonPublishableExtractDir)$(PackageId).nuspec</_NonPublishableNuspecPath>
       <_NonPublishableNuspecContent>$([System.IO.File]::ReadAllText($(_NonPublishableNuspecPath)))</_NonPublishableNuspecContent>
       <_NonPublishableNuspecFixed>$([System.Text.RegularExpressions.Regex]::Replace($(_NonPublishableNuspecContent), '[ \t]*&lt;dependency id="NotPublishable"[^&gt;]*/&gt;[ \t]*\r?\n', ''))</_NonPublishableNuspecFixed>
+      <!-- Did the regex actually strip the dependency? Only repackage/log when it did, so a future layout change
+           that stops surfacing the dependency does not silently rewrite the package with a misleading message. -->
+      <_NonPublishableDependencyRemoved>false</_NonPublishableDependencyRemoved>
+      <_NonPublishableDependencyRemoved Condition=" '$(_NonPublishableNuspecFixed)' != '$(_NonPublishableNuspecContent)' ">true</_NonPublishableDependencyRemoved>
     </PropertyGroup>
 
-    <_WriteTextFile Path="$(_NonPublishableNuspecPath)" Content="$(_NonPublishableNuspecFixed)" />
+    <!-- Guard against a silent regression: if a 'NotPublishable' dependency is still present after the removal
+         attempt, the nuspec format changed and the regex no longer matches. Failing here prevents shipping a
+         package with an invalid dependency. -->
+    <Error Condition=" $(_NonPublishableNuspecFixed.Contains('NotPublishable')) "
+           Text="The produced package still references a 'NotPublishable' dependency after the removal step. The nuspec format likely changed; update the regex in _RemoveNonPublishableCoreDependency." />
 
-    <Delete Files="$(_NonPublishableNupkg)" />
-    <ZipDirectory SourceDirectory="$(_NonPublishableExtractDir)" DestinationFile="$(_NonPublishableNupkg)" />
+    <_WriteTextFile Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " Path="$(_NonPublishableNuspecPath)" Content="$(_NonPublishableNuspecFixed)" />
+
+    <Delete Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " Files="$(_NonPublishableNupkg)" />
+    <ZipDirectory Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " SourceDirectory="$(_NonPublishableExtractDir)" DestinationFile="$(_NonPublishableNupkg)" />
     <RemoveDir Directories="$(_NonPublishableExtractDir)" />
-    <Message Importance="high" Text="Removed the 'NotPublishable' project dependency from $(_NonPublishableNupkg)." />
+    <Message Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " Importance="high" Text="Removed the 'NotPublishable' project dependency from $(_NonPublishableNupkg)." />
   </Target>
 
   <!--
