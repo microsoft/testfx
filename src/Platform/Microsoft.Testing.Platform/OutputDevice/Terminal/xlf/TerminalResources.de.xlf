@@ -37,6 +37,11 @@
         <target state="translated">Erwartet</target>
         <note />
       </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">Fehler</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
         <target state="translated">fehlerhaft</target>
@@ -52,6 +57,11 @@
         <target state="translated">In Bearbeitung Dateiartefakte erstellt:</target>
         <note />
       </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">Mindestens erwartete Testrichtlinienverletzung, {0} Tests wurden ausgeführt, mindestens erwartet: {1}</target>
+        <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
+      </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
         <target state="translated">und {0} weitere</target>
@@ -65,6 +75,11 @@
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">Nicht verarbeitete Dateiartefakte erstellt:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">Bestanden</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
@@ -213,6 +228,11 @@ Gültige Werte sind „All“, „Failed“ und „None“. Der Standardwert ist
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
         <target state="translated">Testlaufzusammenfassung:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">Es wurden keine Tests ausgeführt.</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">

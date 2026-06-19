@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
@@ -30,11 +30,11 @@ internal static class TestRunSummaryHelper
     internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests)
         => true switch
         {
-            _ when wasCancelled => PlatformResources.Aborted,
-            _ when totalTests < minimumExpectedTests => string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests),
-            _ when totalTests == 0 || totalTests == skippedTests => PlatformResources.ZeroTestsRan,
-            _ when failedTests > 0 => $"{PlatformResources.Failed}!",
-            _ => $"{PlatformResources.Passed}!",
+            _ when wasCancelled => TerminalResources.Aborted,
+            _ when totalTests < minimumExpectedTests => string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests),
+            _ when totalTests == 0 || totalTests == skippedTests => TerminalResources.ZeroTestsRan,
+            _ when failedTests > 0 => $"{TerminalResources.Failed}!",
+            _ => $"{TerminalResources.Passed}!",
         };
 
     /// <summary>
@@ -47,11 +47,11 @@ internal static class TestRunSummaryHelper
         string verdict = GetVerdictText(totalTests, failedTests, skippedTests, wasCancelled, minimumExpectedTests);
 
         return $"""
-            {PlatformResources.TestRunSummary} {verdict}
-              {PlatformResources.TotalLowercase}: {totalTests}
-              {PlatformResources.FailedLowercase}: {failedTests}
-              {PlatformResources.SucceededLowercase}: {passedTests}
-              {PlatformResources.SkippedLowercase}: {skippedTests}
+            {TerminalResources.TestRunSummary} {verdict}
+              {TerminalResources.TotalLowercase}: {totalTests}
+              {TerminalResources.FailedLowercase}: {failedTests}
+              {TerminalResources.SucceededLowercase}: {passedTests}
+              {TerminalResources.SkippedLowercase}: {skippedTests}
             """;
     }
 }

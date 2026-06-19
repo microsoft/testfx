@@ -136,6 +136,9 @@
   <data name="Expected" xml:space="preserve">
     <value>Expected</value>
   </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
   <data name="FailedLowercase" xml:space="preserve">
     <value>failed</value>
   </data>
@@ -146,8 +149,15 @@
   <data name="InProcessArtifactsProduced" xml:space="preserve">
     <value>In process file artifacts produced:</value>
   </data>
+  <data name="MinimumExpectedTestsPolicyViolation" xml:space="preserve">
+    <value>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</value>
+    <comment>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</comment>
+  </data>
   <data name="OutOfProcessArtifactsProduced" xml:space="preserve">
     <value>Out of process file artifacts produced:</value>
+  </data>
+  <data name="Passed" xml:space="preserve">
+    <value>Passed</value>
   </data>
   <data name="PassedLowercase" xml:space="preserve">
     <value>passed</value>
@@ -157,6 +167,9 @@
   </data>
   <data name="TotalLowercase" xml:space="preserve">
     <value>total</value>
+  </data>
+  <data name="ZeroTestsRan" xml:space="preserve">
+    <value>Zero tests ran</value>
   </data>
   <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
     <value>Console is already in batching mode.</value>

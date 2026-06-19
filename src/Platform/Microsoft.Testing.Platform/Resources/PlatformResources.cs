@@ -30,10 +30,6 @@ internal static partial class PlatformResources
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static string GetResourceString(string resourceKey) => ResourceManager.GetString(resourceKey, null)!;
 
-    internal static string @UnexpectedStateErrorMessage => GetResourceString("UnexpectedStateErrorMessage");
-
-    internal static string @UnreachableLocationErrorMessage => GetResourceString("UnreachableLocationErrorMessage");
-
     internal static string @InternalLoopAsyncDidNotExitSuccessfullyErrorMessage => GetResourceString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage");
 
 #if IS_MTP_UNIT_TESTS

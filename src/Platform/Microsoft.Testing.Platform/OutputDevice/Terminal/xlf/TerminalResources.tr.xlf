@@ -37,6 +37,11 @@
         <target state="translated">Beklenen</target>
         <note />
       </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">Başarısız</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
         <target state="translated">başarısız</target>
@@ -52,6 +57,11 @@
         <target state="translated">Üretilen işlem içi dosya yapıtları:</target>
         <note />
       </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">Beklenen minimum test ilke ihlali, yürütülen test: {0}, beklenen minimum test: {1}</target>
+        <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
+      </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
         <target state="translated">ve {0} tane daha</target>
@@ -65,6 +75,11 @@
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="translated">Üretilen işlem dışı dosya yapıtları:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">Başarılı</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
@@ -213,6 +228,11 @@ Geçerli değerler: 'All', 'Failed', 'None'. Varsayılan değer 'All' (veya bir 
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
         <target state="translated">Test çalıştırması özeti:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">Sıfır test çalıştırıldı</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">
