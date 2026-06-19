@@ -114,8 +114,7 @@ do **not** open a pull request.
 
 For each distinct referenced issue, use the GitHub tools to read its current state:
 
-- Use `get_issue` (for issues in `${{ github.repository }}`) or the appropriate cross-repo
-  read for URLs that point at another repository.
+- Use `issue_read` (method: `get`) for issues in `${{ github.repository }}` (this repo) or the appropriate cross-repo read for URLs that point at another repository.
 - Only consider an issue **eligible** when it is **closed**.
 - Prefer issues closed as **completed/resolved** (`state_reason: completed`). If an issue was
   closed as **not planned** (`state_reason: not_planned`), the underlying problem was likely
