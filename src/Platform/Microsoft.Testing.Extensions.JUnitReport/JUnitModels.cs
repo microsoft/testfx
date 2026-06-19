@@ -5,51 +5,51 @@ namespace Microsoft.Testing.Extensions.JUnitReport;
 
 internal sealed class SuiteSet
 {
-    public required string Name { get; set; }
+    public required string Name { get; init; }
 
-    public required IReadOnlyList<Suite> Suites { get; set; }
+    public required IReadOnlyList<Suite> Suites { get; init; }
 
-    public required long TotalTests { get; set; }
+    public required long TotalTests { get; init; }
 
-    public required long TotalFailures { get; set; }
+    public required long TotalFailures { get; init; }
 
-    public required long TotalErrors { get; set; }
+    public required long TotalErrors { get; init; }
 
-    public required long TotalSkipped { get; set; }
+    public required long TotalSkipped { get; init; }
 
-    public required TimeSpan TotalDuration { get; set; }
+    public required TimeSpan TotalDuration { get; init; }
 
-    public required DateTimeOffset Timestamp { get; set; }
+    public required DateTimeOffset Timestamp { get; init; }
 }
 
 internal sealed class Suite
 {
-    public required string Name { get; set; }
+    public required string Name { get; init; }
 
-    public required IReadOnlyList<TestCase> Tests { get; set; }
+    public required IReadOnlyList<TestCase> Tests { get; init; }
 
-    public required int Failures { get; set; }
+    public required int Failures { get; init; }
 
-    public required int Errors { get; set; }
+    public required int Errors { get; init; }
 
-    public required int Skipped { get; set; }
+    public required int Skipped { get; init; }
 
-    public required TimeSpan TotalDuration { get; set; }
+    public required TimeSpan TotalDuration { get; init; }
 
-    public required DateTimeOffset Timestamp { get; set; }
+    public required DateTimeOffset Timestamp { get; init; }
 }
 
 internal sealed class TestCase
 {
-    public required string ClassName { get; set; }
+    public required string ClassName { get; init; }
 
     public required string Name { get; set; }
 
-    public required string OriginalName { get; set; }
+    public required string OriginalName { get; init; }
 
-    public required string TestPath { get; set; }
+    public required string TestPath { get; init; }
 
-    public required CapturedTestResult Result { get; set; }
+    public required CapturedTestResult Result { get; init; }
 
     public required int DuplicateIndex { get; set; }
 

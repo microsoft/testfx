@@ -61,8 +61,10 @@ internal sealed class JUnitXmlWriter(
     internal static string XmlSafeText(string? value)
     {
         // Sanitizes a string so it can be safely written by XmlWriter. XML 1.0 forbids
-        // most control chars, lone surrogates, and 0xFFFE/0xFFFF; CheckCharacters is disabled,
-        // so invalid chars become U+FFFD (REPLACEMENT CHARACTER) instead of shifting offsets.
+        // most control chars, lone surrogates, and 0xFFFE/0xFFFF; CheckCharacters is
+        // disabled on the writer for throughput so all sanitization happens here. Invalid
+        // chars are replaced with U+FFFD (REPLACEMENT CHARACTER) to preserve byte-length
+        // intuition rather than silently shifting offsets.
         if (RoslynString.IsNullOrEmpty(value))
         {
             return string.Empty;
