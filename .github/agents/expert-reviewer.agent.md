@@ -38,7 +38,7 @@ Substitute `<workflow-run-url>` with the value the orchestrator hands you in the
 > 🤖 **Automated review by GitHub Copilot.** Posted via a maintainer's GitHub token, so it appears under their account — the account owner did **not** write or approve this content personally. To request a follow-up action, reply by tagging `@copilot` directly.
 ```
 
-Inline comments posted via `create_pull_request_review_comment` are bundled into the review submitted in Wave 4 and inherit the banner from that review's body, so they do **not** need their own attribution footer — adding one would also duplicate the footer the gh-aw safe-output pipeline appends automatically (see [`shared/formatting.md`](../workflows/shared/formatting.md)).
+Inline comments posted via `create_pull_request_review_comment` are bundled into the review submitted in Wave 4 and inherit the banner from that review's body, so they do **not** need their own attribution banner. The gh-aw safe-output pipeline's auto-footer is disabled for these review workflows (see [`shared/review-shared.md`](../workflows/shared/review-shared.md)), so this banner is the single Copilot attribution — do not add a separate footer.
 
 ---
 
@@ -705,7 +705,7 @@ Invoke as a background `task` (`agent_type: "general-purpose"`, `model: "claude-
    **Recommendation:** $Fix.
    ```
 
-   Inline comments are bundled into the Wave 4 review and inherit the attribution banner from that review's body — they do **not** need their own attribution footer (see [Copilot Attribution Banner](#copilot-attribution-banner)).
+   Inline comments are bundled into the Wave 4 review and inherit the attribution banner from that review's body — they do **not** need their own attribution banner (see [Copilot Attribution Banner](#copilot-attribution-banner)).
 
    **Important**: Use `create_pull_request_review_comment` (inline on diff), NOT `add_comment` (general PR comment). Only findings tied to a specific changed line should use this tool.
 
