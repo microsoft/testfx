@@ -34,6 +34,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add --progress {auto|on|off} and deprecate --no-progress in MTP terminal reporter by @Evangelink in [#9145](https://github.com/microsoft/testfx/pull/9145)
 * Add silence-driven progress heartbeat for SimpleAnsi/NoAnsi output modes by @Evangelink in [#9147](https://github.com/microsoft/testfx/pull/9147)
 * Add Azure DevOps per-assembly log groups by @Evangelink in [#9177](https://github.com/microsoft/testfx/pull/9177)
+* Add Azure DevOps history-driven slow-test threshold enricher by @Evangelink in [#9182](https://github.com/microsoft/testfx/pull/9182)
 * Handshake from the test host orchestrator in the dotnet test pipe protocol, advertising the orchestration feature (e.g. retry) by @Copilot in [#9215](https://github.com/microsoft/testfx/pull/9215)
 
 ### Fixed
@@ -70,6 +71,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Flag bootstrap-only CLI options when set in testconfig.json by @Evangelink in [#9055](https://github.com/microsoft/testfx/pull/9055)
 * Fix report file-name collision between net8.0 and net8.0-windows builds by @Evangelink in [#9121](https://github.com/microsoft/testfx/pull/9121)
 * Harden report TFM resolution for custom/non-OS platforms (browserwasm) by @Evangelink in [#9137](https://github.com/microsoft/testfx/pull/9137)
+* Fix --list-tests json output under --server mode by streaming discovered tests to the SDK over the dotnet-test pipe by @Evangelink in [#9192](https://github.com/microsoft/testfx/pull/9192)
 
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 

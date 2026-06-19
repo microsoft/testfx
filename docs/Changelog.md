@@ -45,6 +45,8 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Render BCL values with full precision in assertion failure messages by @Evangelink in [#8964](https://github.com/microsoft/testfx/pull/8964)
 * Apply DebuggerDisableUserUnhandledExceptionsAttribute to Assert.Throws helpers by @Evangelink in [#9041](https://github.com/microsoft/testfx/pull/9041)
 * Flag `Assert.AreEqual(x, x)` / `AreSame(x, x)` / `AreNotEqual(x, x)` / `AreNotSame(x, x)` by @Evangelink in [#9088](https://github.com/microsoft/testfx/pull/9088)
+* Remove redundant `actual type:` line from Assert.Throws\* failure message by @Evangelink in [#9195](https://github.com/microsoft/testfx/pull/9195)
+* Include full exception (stack trace + inner exceptions) in Assert.Throws\* failure messages by @Evangelink in [#9212](https://github.com/microsoft/testfx/pull/9212)
 
 ## <a name="4.2.3" />[4.2.3] - 2026-05-14
 
