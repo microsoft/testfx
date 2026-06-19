@@ -73,6 +73,7 @@ For deeper guidance — creating, updating, debugging, upgrading, or wrapping MC
 | [`test-improver.md`](./test-improver.md) | Daily + manual + `/test-assist` | Testing-focused assistant that improves test quality and coverage. |
 | [`repository-quality-improver.md`](./repository-quality-improver.md) | Weekday schedule + manual | Daily analysis of repository quality, rotating focus areas. Opens tracking issues like this one. |
 | [`daily-file-diet.md`](./daily-file-diet.md) | Daily + manual | Identifies oversized source files and opens actionable refactoring issues. |
+| [`unskip-closed-tests.md`](./unskip-closed-tests.md) | Weekly + manual | Finds tests skipped via `[Ignore("…#issue")]` whose tracking issue is now closed, verifies they pass, and opens a PR re-enabling them. |
 | [`duplicate-code-detector.md`](./duplicate-code-detector.md) | Schedule + manual | Identifies duplicate code patterns and suggests refactoring opportunities. |
 | [`malicious-code-scan.md`](./malicious-code-scan.md) | Schedule + manual | Reviews code changes from the last 3 days for suspicious patterns indicating malicious or agentic threats. |
 | [`markdown-linter.md`](./markdown-linter.md) | Schedule + manual + issues | Runs Markdown quality checks using Super Linter and opens issues for violations. |
