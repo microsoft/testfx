@@ -14,20 +14,35 @@ break).
 
 ## What's inside
 
-The package ships shared source files as `contentFiles/cs/any` with `BuildAction=Compile`, so the consumer compiles
-them into its **own** assembly and the `internal` types are visible without any `InternalsVisibleTo` plumbing.
+The package ships shared source as `contentFiles/cs/any` with `BuildAction=Compile`, so the consumer compiles it
+into its **own** assembly and the `internal` types are visible without any `InternalsVisibleTo` plumbing:
 
-Today it ships the `dotnet test` named-pipe **wire contract**:
+- **Wire contract** (`contentFiles/cs/any/DotnetTestProtocol/`): `ObjectFieldIds.cs` (serializer/field ids) and
+  `Constants.cs` (handshake property names, execution modes, session-event types, test states, protocol version).
+- **Terminal reporter** (`contentFiles/cs/any/TerminalReporter/`): the reporter + rendering + state types and the
+  small platform abstractions they need (`IConsole`/`IStopwatch`/`IColor`/`System*`, `RoslynString`,
+  `ApplicationStateGuard`, `StackTraceHelper`, `TargetFrameworkParser`, `TestRunSummaryHelper`).
+- **Terminal localized resources** (`build/TerminalReporter/`): `TerminalResources.resx` + `xlf/`, wired into the
+  consumer by the auto-imported `build/Microsoft.Testing.Platform.Internal.DotnetTest.props` (it generates the
+  strongly-typed `TerminalResources` accessor in the expected namespace and, where XliffTasks is present, emits
+  satellite assemblies for each language).
 
-- `ObjectFieldIds.cs` — serializer ids and per-message field ids.
-- `Constants.cs` — handshake property names, execution modes, session-event types, test states and the protocol
-  version.
+## Consuming it (plug-in requirements)
 
-It is designed to grow to host the other source shared with `dotnet test` (e.g. the terminal reporter).
+Reference the package and the source compiles into your assembly. For the terminal reporter source the consumer
+must have:
+
+- **`ImplicitUsings` enabled** — the build props supplies the extra global usings the shared source relies on
+  (`System.Text`, `System.Runtime.CompilerServices`, `System.Runtime.Versioning`, …) when implicit usings are on.
+- **A `LangVersion` that supports the `field` keyword** (preview/latest).
+- **The `Microsoft.CodeAnalysis.EmbeddedAttribute` polyfill** — dotnet/sdk already defines it (for its copied IPC
+  transport); other consumers must supply a tiny internal copy.
+- **XliffTasks** (only for localized satellites) — dotnet/sdk has it via Arcade.
+
+The wire-contract source is zero-dependency and needs none of the above.
 
 ## Scope
 
-Only the wire **contract** (ids + constants) is shared today. The message **models** and **serializers** are not
-included yet because they still depend on `TestMetadataProperty`
+The message **models** and **serializers** are not shared yet because they still depend on `TestMetadataProperty`
 (`Microsoft.Testing.Platform.Extensions.Messages`) and use a different class shape than the SDK's copy; sharing them
 requires decoupling/unifying first.
