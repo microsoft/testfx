@@ -77,7 +77,8 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
             Architecture.Ppc64le => TestArchitectures.Ppc64le,
 #if NET9_0_OR_GREATER
             // Architecture.RiscV64 was added in .NET 9 and isn't part of the net8.0 ref assembly, so both the
-            // enum member and the mapping are gated behind NET9_0_OR_GREATER. A net8.0 process can never report it.
+            // enum member and the mapping are compiled only when targeting net9.0+. When this assembly runs on an
+            // older runtime the value can't be reported; any other unknown value falls through to the throw below.
             Architecture.RiscV64 => TestArchitectures.RiscV64,
 #endif
             _ => throw new ArgumentOutOfRangeException(nameof(architecture), architecture, null),

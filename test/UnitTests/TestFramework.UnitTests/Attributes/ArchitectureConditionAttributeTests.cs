@@ -105,9 +105,12 @@ public class ArchitectureConditionAttributeTests : TestContainer
 
     // Derive the expected flag from the *name* of the current architecture rather than re-implementing the
     // integer→flag mapping, so this test doesn't silently mirror (and therefore can't validate) the production logic.
+    // Enum.GetName returns null (rather than a numeric string) for a value missing from this TFM's Architecture enum,
+    // so an unknown architecture fails fast instead of Enum.TryParse accepting a numeric string as a bogus flag.
     private static TestArchitectures GetCurrentArchitecture()
-        => Enum.TryParse(System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(), out TestArchitectures architecture)
+        => Enum.GetName(typeof(Architecture), RuntimeInformation.ProcessArchitecture) is { } name
+            && Enum.TryParse(name, out TestArchitectures architecture)
             ? architecture
-            : throw new InvalidOperationException($"Unknown process architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
+            : throw new InvalidOperationException($"Unknown process architecture: {RuntimeInformation.ProcessArchitecture}");
 }
 #endif
