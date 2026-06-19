@@ -5,6 +5,8 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 
+using static Microsoft.Testing.Platform.UnitTests.ProtocolSerializerTestHelper;
+
 namespace Microsoft.Testing.Platform.UnitTests;
 
 /// <summary>
@@ -47,6 +49,7 @@ public sealed class ProtocolEdgeCaseTests
 
         Assert.HasCount(3, actual.SuccessfulTestMessages);
         Assert.HasCount(2, actual.FailedTestMessages);
+        Assert.AreEqual("inst", actual.InstanceId);
         Assert.AreEqual("p2", actual.SuccessfulTestMessages[1].Uid);
         Assert.IsNull(actual.SuccessfulTestMessages[1].Reason);
         Assert.AreEqual(TestStates.Skipped, actual.SuccessfulTestMessages[2].State);
@@ -66,6 +69,7 @@ public sealed class ProtocolEdgeCaseTests
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
 
         Assert.HasCount(1, actual.FailedTestMessages);
+        Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsNotNull(actual.FailedTestMessages[0].Exceptions);
         Assert.IsEmpty(actual.FailedTestMessages[0].Exceptions!);
     }
@@ -98,6 +102,7 @@ public sealed class ProtocolEdgeCaseTests
         DiscoveredTestMessages actual = RoundTrip(new DiscoveredTestMessagesSerializer(), message);
 
         Assert.AreEqual("exec", actual.ExecutionId);
+        Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsEmpty(actual.DiscoveredMessages);
     }
 
@@ -109,6 +114,7 @@ public sealed class ProtocolEdgeCaseTests
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
 
         Assert.AreEqual("exec", actual.ExecutionId);
+        Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsEmpty(actual.FileArtifacts);
     }
 
@@ -127,6 +133,7 @@ public sealed class ProtocolEdgeCaseTests
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
 
         Assert.HasCount(3, actual.FileArtifacts);
+        Assert.AreEqual("inst", actual.InstanceId);
         Assert.AreEqual("/c/d.coverage", actual.FileArtifacts[1].FullPath);
         Assert.IsNull(actual.FileArtifacts[1].Description);
         Assert.AreEqual("session2", actual.FileArtifacts[2].SessionUid);
@@ -153,6 +160,7 @@ public sealed class ProtocolEdgeCaseTests
         TestInProgressMessages actual = RoundTrip(new TestInProgressMessagesSerializer(), message);
 
         Assert.HasCount(1, actual.InProgressMessages);
+        Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsNull(actual.InProgressMessages[0].Uid);
         Assert.IsNull(actual.InProgressMessages[0].DisplayName);
     }
@@ -168,24 +176,4 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("session", actual.SessionUid);
         Assert.AreEqual("exec", actual.ExecutionId);
     }
-
-    private static TMessage RoundTrip<TMessage>(object serializer, TMessage message)
-    {
-        var stream = new MemoryStream();
-        Serialize(serializer, message, stream);
-        stream.Seek(0, SeekOrigin.Begin);
-        return (TMessage)Deserialize(serializer, stream);
-    }
-
-    private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
-        => serializer.GetType()
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == nameof(Serialize) && method.GetParameters() is [{ ParameterType: var messageType }, { ParameterType: var streamType }] && messageType == typeof(TMessage) && streamType == typeof(Stream))
-            .Invoke(serializer, [message!, stream]);
-
-    private static object Deserialize(object serializer, Stream stream)
-        => serializer.GetType()
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == nameof(Deserialize) && method.GetParameters() is [{ ParameterType: var parameterType }] && parameterType == typeof(Stream))
-            .Invoke(serializer, [stream])!;
 }
