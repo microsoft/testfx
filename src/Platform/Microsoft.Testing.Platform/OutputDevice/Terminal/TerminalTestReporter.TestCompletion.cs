@@ -9,6 +9,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed partial class TerminalTestReporter
 {
     internal void TestCompleted(
+        string executionId,
         string testNodeUid,
         string displayName,
         TestOutcome outcome,
@@ -23,6 +24,7 @@ internal sealed partial class TerminalTestReporter
     {
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
+            executionId,
             testNodeUid,
             displayName,
             outcome,
@@ -36,6 +38,7 @@ internal sealed partial class TerminalTestReporter
     }
 
     private void TestCompleted(
+        string executionId,
         string testNodeUid,
         string displayName,
         TestOutcome outcome,
@@ -47,12 +50,10 @@ internal sealed partial class TerminalTestReporter
         string? standardOutput,
         string? errorOutput)
     {
-        if (_testProgressState is null)
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
         {
             throw ApplicationStateGuard.Unreachable();
         }
-
-        TestProgressState asm = _testProgressState;
 
         if (_options.ShowActiveTests)
         {

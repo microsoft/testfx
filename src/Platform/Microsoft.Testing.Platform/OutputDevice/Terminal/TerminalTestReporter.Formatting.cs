@@ -123,27 +123,27 @@ internal sealed partial class TerminalTestReporter
         terminal.ResetColor();
     }
 
-    private void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal)
+    private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, TestProgressState assemblyRun)
     {
-        terminal.AppendLink(_assembly, lineNumber: null);
-        if (_targetFramework == null && _architecture == null)
+        terminal.AppendLink(assemblyRun.Assembly, lineNumber: null);
+        if (assemblyRun.TargetFramework == null && assemblyRun.Architecture == null)
         {
             return;
         }
 
         terminal.Append(" (");
-        if (_targetFramework != null)
+        if (assemblyRun.TargetFramework != null)
         {
-            terminal.Append(_targetFramework);
-            if (_architecture != null)
+            terminal.Append(assemblyRun.TargetFramework);
+            if (assemblyRun.Architecture != null)
             {
                 terminal.Append('|');
             }
         }
 
-        if (_architecture != null)
+        if (assemblyRun.Architecture != null)
         {
-            terminal.Append(_architecture);
+            terminal.Append(assemblyRun.Architecture);
         }
 
         terminal.Append(')');

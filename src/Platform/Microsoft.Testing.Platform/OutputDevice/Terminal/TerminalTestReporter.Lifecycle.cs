@@ -8,57 +8,76 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter
 {
-    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)
+    private bool _isHelp;
+
+    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery, bool isHelp, bool isRetry)
     {
         _isDiscovery = isDiscovery;
+        _isHelp = isHelp;
         _testExecutionStartTime = testStartTime;
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
 
-    public void AssemblyRunStarted()
-        => GetOrAddAssemblyRun();
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId)
+        // instanceId: reserved for the SDK orchestrator's instanceId-based retry-counting logic (follow-up PR).
+        // It is not used by the in-process host path, which registers a single assembly per run.
+        => GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
 
-    private TestProgressState GetOrAddAssemblyRun()
+    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string executionId)
     {
-        if (_testProgressState is not null)
+        // NOTE: we intentionally do not use ConcurrentDictionary.GetOrAdd with a value factory here. GetOrAdd may
+        // invoke the factory more than once under contention and discard all but one result; that would allocate a
+        // worker slot (and bump _counter) for every losing race, leaking a fixed-size progress slot that is never
+        // RemoveWorker'd. Double-checked locking around AddWorker guarantees exactly one worker per executionId.
+        if (_assemblies.TryGetValue(executionId, out TestProgressState? result))
         {
-            return _testProgressState;
+            return result;
         }
 
         lock (_lock)
         {
-            if (_testProgressState is not null)
+            if (_assemblies.TryGetValue(executionId, out result))
             {
-                return _testProgressState;
+                return result;
             }
 
             IStopwatch sw = CreateStopwatch();
-            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), _assembly, _targetFramework, _architecture, sw, _isDiscovery);
-            int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
-            assemblyRun.SlotIndex = slotIndex;
-            _testProgressState = assemblyRun;
-            return assemblyRun;
+            result = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw, _isDiscovery);
+            int slotIndex = _terminalWithProgress.AddWorker(result);
+            result.SlotIndex = slotIndex;
+            _assemblies[executionId] = result;
+            return result;
         }
     }
 
-    internal void AssemblyRunCompleted()
+    internal void AssemblyRunCompleted(string executionId)
     {
-        TestProgressState assemblyRun = GetOrAddAssemblyRun();
-        assemblyRun.Stopwatch.Stop();
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? assemblyRun))
+        {
+            return;
+        }
 
+        assemblyRun.Stopwatch.Stop();
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
     }
 
-    public void TestExecutionCompleted(DateTimeOffset endTime)
+    public void TestExecutionCompleted(DateTimeOffset endTime, int? exitCode)
     {
         _testExecutionEndTime = endTime;
         _terminalWithProgress.StopShowingProgress();
 
-        _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
+        if (!_isHelp)
+        {
+            _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
+        }
 
-        // This is relevant for HotReload scenarios. We want the next test sessions to start
-        // on a new TestProgressState
-        _testProgressState = null;
+        // This is relevant for HotReload scenarios. We want the next test sessions to start fresh, so we reset all
+        // per-run state here (after the summary above has consumed it): the per-assembly runs, the collected
+        // artifacts, and the cancellation flag. Otherwise a later session would re-print the previous session's
+        // artifacts or stay stuck in the aborted state.
+        _assemblies.Clear();
+        _artifacts.Clear();
+        WasCancelled = false;
 
         _testExecutionStartTime = null;
         _testExecutionEndTime = null;

@@ -105,7 +105,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
 
@@ -117,29 +117,29 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
 
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
         string standardOutput = "Hello!";
         string errorOutput = "Oh no!";
 
-        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
-        terminalReporter.TestCompleted(testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
-        terminalReporter.ArtifactAdded(outOfProcess: true, testName: null, @$"{folder}artifact1.txt");
-        terminalReporter.ArtifactAdded(outOfProcess: false, testName: null, @$"{folder}artifact2.txt");
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly: assembly, targetFramework: targetFramework, architecture: architecture, executionId: "0", testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly: assembly, targetFramework: targetFramework, architecture: architecture, executionId: "0", testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
@@ -201,7 +201,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
 
@@ -213,29 +213,29 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
 
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
         string standardOutput = "Hello!";
         string errorOutput = "Oh no!";
 
-        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
-        terminalReporter.TestCompleted(testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
-        terminalReporter.ArtifactAdded(outOfProcess: true, testName: null, @$"{folder}artifact1.txt");
-        terminalReporter.ArtifactAdded(outOfProcess: false, testName: null, @$"{folder}artifact2.txt");
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly: assembly, targetFramework: targetFramework, architecture: architecture, executionId: "0", testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly: assembly, targetFramework: targetFramework, architecture: architecture, executionId: "0", testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
@@ -297,7 +297,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             // Like if we autodetect that we are in ANSI capable terminal.
@@ -308,31 +308,31 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
         string folderLink = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work/" : "mnt/work/";
         string folderLinkNoSlash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:/work" : "mnt/work";
 
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
         string standardOutput = "Hello!";
         string errorOutput = "Oh no!";
 
-        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
         // timed out + canceled + failed should all report as failed in summary
-        terminalReporter.TestCompleted(testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "TimedoutTest1", "TimedoutTest1", TestOutcome.Timeout, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "CanceledTest1", "CanceledTest1", TestOutcome.Canceled, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: "Tests failed", exception: new StackTraceException(@$"   at FailingTest() in {folder}codefile.cs:line 10"), expected: "ABC", actual: "DEF", standardOutput, errorOutput);
-        terminalReporter.ArtifactAdded(outOfProcess: true, testName: null, @$"{folder}artifact1.txt");
-        terminalReporter.ArtifactAdded(outOfProcess: false, testName: null, @$"{folder}artifact2.txt");
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.ArtifactAdded(outOfProcess: true, assembly: assembly, targetFramework: targetFramework, architecture: architecture, executionId: "0", testName: null, @$"{folder}artifact1.txt");
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly: assembly, targetFramework: targetFramework, architecture: architecture, executionId: "0", testName: null, @$"{folder}artifact2.txt");
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
@@ -395,7 +395,7 @@ public sealed class TerminalTestReporterTests
 
         var stringBuilderConsole = new StringBuilderConsole();
         var stopwatchFactory = new StopwatchFactory();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             // Like if we autodetect that we are in ANSI capable terminal.
@@ -417,30 +417,30 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
 
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
         string standardOutput = "Hello!";
         string errorOutput = "Oh no!";
 
         // Note: Add 1ms to make the order of the progress frame deterministic.
         // Otherwise all tests that run for 1m31s could show in any order.
-        terminalReporter.TestInProgress(testNodeUid: "PassedTest1", displayName: "PassedTest1");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "PassedTest1", displayName: "PassedTest1");
         stopwatchFactory.AddTime(TimeSpan.FromMilliseconds(1));
-        terminalReporter.TestInProgress(testNodeUid: "SkippedTest1", displayName: "SkippedTest1");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "SkippedTest1", displayName: "SkippedTest1");
         stopwatchFactory.AddTime(TimeSpan.FromMilliseconds(1));
-        terminalReporter.TestInProgress(testNodeUid: "InProgressTest1", displayName: "InProgressTest1");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "InProgressTest1", displayName: "InProgressTest1");
         stopwatchFactory.AddTime(TimeSpan.FromMinutes(1));
-        terminalReporter.TestInProgress(testNodeUid: "InProgressTest2", displayName: "InProgressTest2");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "InProgressTest2", displayName: "InProgressTest2");
         stopwatchFactory.AddTime(TimeSpan.FromSeconds(30));
-        terminalReporter.TestInProgress(testNodeUid: "InProgressTest3", displayName: "InProgressTest3");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "InProgressTest3", displayName: "InProgressTest3");
         stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
 
-        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
-        terminalReporter.TestCompleted(testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "SkippedTest1", "SkippedTest1", TestOutcome.Skipped, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput, errorOutput);
 
         string output = stringBuilderConsole.Output;
@@ -538,7 +538,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -549,16 +549,16 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
 
-        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
-        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+        terminalReporter.TestCompleted("0", testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "Hello!", errorOutput: "Oh no!");
 
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
@@ -576,7 +576,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -587,16 +587,16 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
 
-        terminalReporter.TestCompleted(testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+        terminalReporter.TestCompleted("0", testNodeUid: "PassedTest1", "PassedTest1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: "passed-stdout", errorOutput: "passed-stderr");
-        terminalReporter.TestCompleted(testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+        terminalReporter.TestCompleted("0", testNodeUid: "FailedTest1", "FailedTest1", TestOutcome.Fail, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: "Tests failed", exception: null, expected: null, actual: null, standardOutput: "failed-stdout", errorOutput: "failed-stderr");
 
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
@@ -829,7 +829,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -838,17 +838,17 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
 
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
 
         // Test display name with the specific control character
         string testDisplayName = $"Test{controlChar}Name";
-        terminalReporter.TestCompleted(testNodeUid: "Test1", testDisplayName, TestOutcome.Passed, TimeSpan.FromSeconds(1),
+        terminalReporter.TestCompleted("0", testNodeUid: "Test1", testDisplayName, TestOutcome.Passed, TimeSpan.FromSeconds(1),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
 
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
@@ -909,7 +909,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -918,16 +918,16 @@ public sealed class TerminalTestReporterTests
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true, isHelp: false, isRetry: false);
 
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
 
         // Test discovery with the specific control character
         string testDisplayName = $"Test{controlChar}Name";
-        terminalReporter.TestDiscovered(testDisplayName);
+        terminalReporter.TestDiscovered("0", testDisplayName);
 
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
@@ -1110,8 +1110,10 @@ public sealed class TerminalTestReporterTests
     {
         // Arrange
         string assembly = "test.dll";
+        string targetFramework = "net8.0";
+        string architecture = "x64";
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => false,
             AnsiMode = AnsiMode.NoAnsi,
@@ -1122,17 +1124,122 @@ public sealed class TerminalTestReporterTests
         DateTimeOffset endTime = DateTimeOffset.MaxValue;
 
         // Act
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true);
-        terminalReporter.AssemblyRunStarted();
-        terminalReporter.TestDiscovered("TestMethod1");
-        terminalReporter.TestDiscovered("TestMethod2");
-        terminalReporter.AssemblyRunCompleted();
-        terminalReporter.TestExecutionCompleted(endTime);
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
+        terminalReporter.TestDiscovered("0", "TestMethod1");
+        terminalReporter.TestDiscovered("0", "TestMethod2");
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string output = stringBuilderConsole.Output;
 
         // Assert - should contain information about 2 tests discovered
         Assert.IsTrue(output.Contains('2') || output.Contains("TestMethod1"), "Output should contain information about discovered tests");
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_WhenMultipleAssemblies_AggregatesCountsAndOmitsAssemblyLinkOnVerdict()
+    {
+        // Arrange — two assemblies (the dotnet test orchestrator case), each registered under its own
+        // execution id. The reporter must aggregate the per-assembly counts into a single run summary and,
+        // unlike the single-assembly (in-process) case, must NOT append a per-assembly link to the verdict
+        // line because the per-assembly identity is rendered in the progress area instead.
+        string firstAssembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\first.dll" : "/mnt/work/first.dll";
+        string secondAssembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\second.dll" : "/mnt/work/second.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => false,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+
+        // Act
+        terminalReporter.TestExecutionStarted(startTime, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+
+        terminalReporter.AssemblyRunStarted(firstAssembly, "net8.0", "x64", "exec-1", "exec-1");
+        terminalReporter.AssemblyRunStarted(secondAssembly, "net9.0", "arm64", "exec-2", "exec-2");
+
+        terminalReporter.TestCompleted("exec-1", testNodeUid: "A1", "A1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("exec-1", testNodeUid: "A2", "A2", TestOutcome.Fail, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: "boom", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("exec-2", testNodeUid: "B1", "B1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("exec-2", testNodeUid: "B2", "B2", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        terminalReporter.AssemblyRunCompleted("exec-1");
+        terminalReporter.AssemblyRunCompleted("exec-2");
+
+        // TotalTests aggregates across both assemblies (captured before TestExecutionCompleted clears state).
+        Assert.AreEqual(4, terminalReporter.TotalTests);
+
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+
+        // Assert — counts are aggregated across both assemblies.
+        Assert.Contains("  total: 4", output);
+        Assert.Contains("  failed: 1", output);
+        Assert.Contains("  succeeded: 2", output);
+        Assert.Contains("  skipped: 1", output);
+
+        // The verdict line must be link-free for multiple assemblies: unlike the single-assembly case the
+        // assembly path is never appended to the "Test run summary:" line.
+        Assert.DoesNotContain(firstAssembly, output);
+        Assert.DoesNotContain(secondAssembly, output);
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_WhenReusedAcrossSessions_DoesNotLeakArtifactsOrCancelledState()
+    {
+        // Reproduces the HotReload reuse case: the same reporter instance runs multiple sessions. After a session
+        // completes, the per-run state (artifacts, cancellation) must be reset so a later session neither re-prints
+        // the previous session's artifacts nor stays stuck in the aborted state.
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
+        string firstSessionArtifact = $"{folder}first-session-artifact.txt";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => false,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        // First session: produces an artifact and is cancelled.
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, "net8.0", "x64", "0", "0");
+        terminalReporter.TestCompleted("0", testNodeUid: "T1", "T1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly: assembly, targetFramework: "net8.0", architecture: "x64", executionId: "0", testName: null, firstSessionArtifact);
+        terminalReporter.StartCancelling();
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        // Second session on the SAME reporter: no artifacts, not cancelled.
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, "net8.0", "x64", "0", "0");
+        int outputLengthBeforeSecondSummary = stringBuilderConsole.Output.Length;
+        terminalReporter.TestCompleted("0", testNodeUid: "T2", "T2", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string secondSessionOutput = stringBuilderConsole.Output.Substring(outputLengthBeforeSecondSummary);
+
+        // The first session's artifact must not be re-printed in the second session's summary.
+        Assert.DoesNotContain(firstSessionArtifact, secondSessionOutput);
+
+        // The second session is a clean pass, so its summary must not be marked as failed/aborted.
+        Assert.DoesNotContain(TerminalResources.Aborted, secondSessionOutput);
+        Assert.Contains("  failed: 0", secondSessionOutput);
     }
 
     [TestMethod]
@@ -1185,7 +1292,7 @@ public sealed class TerminalTestReporterTests
 
         var stringBuilderConsole = new StringBuilderConsole();
         var stopwatchFactory = new StopwatchFactory();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.ForceAnsi,
@@ -1206,8 +1313,8 @@ public sealed class TerminalTestReporterTests
         terminalReporter.OnProgressStartUpdate += (sender, args) => renderGate.WaitOne();
         terminalReporter.OnProgressStopUpdate += (sender, args) => renderDone.Set();
 
-        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false);
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
 
         // Pick a starting elapsed value whose rendered form ("1s") has the same length as the value
         // we will use for the second tick ("2s"). The duration-only path only fires when the rendered
@@ -1266,7 +1373,7 @@ public sealed class TerminalTestReporterTests
         // Console with BufferWidth=4096 but WindowWidth=120, mimicking the bug scenario.
         var stringBuilderConsole = new StringBuilderConsoleWithCustomWidths(bufferWidth: 4096, windowWidth: 120);
         var stopwatchFactory = new StopwatchFactory();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.ForceAnsi,
@@ -1284,13 +1391,13 @@ public sealed class TerminalTestReporterTests
         terminalReporter.OnProgressStopUpdate += (sender, args) => stopHandle.Set();
 
         DateTimeOffset startTime = DateTimeOffset.MinValue;
-        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false);
-        terminalReporter.AssemblyRunStarted();
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
 
-        terminalReporter.TestInProgress(testNodeUid: "Test1", displayName: "Test1");
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "Test1", displayName: "Test1");
         stopwatchFactory.AddTime(TimeSpan.FromMinutes(1) + TimeSpan.FromSeconds(31));
 
-        terminalReporter.TestCompleted(testNodeUid: "Test1", "Test1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+        terminalReporter.TestCompleted("0", testNodeUid: "Test1", "Test1", TestOutcome.Passed, TimeSpan.FromSeconds(10),
             informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
 
         string output = stringBuilderConsole.Output;

@@ -36,15 +36,6 @@ internal sealed partial class TerminalTestReporter : IDisposable
         remove => _terminalWithProgress.OnProgressStopUpdate -= value;
     }
 
-    private readonly string _assembly;
-    private readonly string? _targetFramework;
-    private readonly string? _architecture;
-
-    /// <summary>
-    /// Returns whether external cancellation (e.g. Ctrl+C) has been requested. Injected as a delegate
-    /// rather than taking a concrete platform service so the reporter can be shared outside of
-    /// Microsoft.Testing.Platform (e.g. by the <c>dotnet test</c> multi-assembly orchestrator).
-    /// </summary>
     private readonly Func<bool> _isCancellationRequested;
 
     private readonly List<TestRunArtifact> _artifacts = [];
@@ -61,12 +52,20 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private readonly uint? _originalConsoleMode;
 
-    private TestProgressState? _testProgressState;
+    /// <summary>
+    /// Per-assembly run state, keyed by the caller-provided execution id. The in-process Microsoft.Testing.Platform
+    /// host registers a single assembly; the <c>dotnet test</c> orchestrator registers one entry per child test
+    /// assembly. Progress rendering already supports N workers (slots), so this only generalizes the bookkeeping.
+    /// </summary>
+    private readonly ConcurrentDictionary<string, TestProgressState> _assemblies = new();
 
     private bool _isDiscovery;
     private DateTimeOffset? _testExecutionStartTime;
 
     private DateTimeOffset? _testExecutionEndTime;
+
+    /// <summary>Gets the total number of tests across all registered assemblies.</summary>
+    public int TotalTests => _assemblies.Values.Sum(static a => a.TotalTests);
 
     private bool WasCancelled
     {
@@ -82,16 +81,10 @@ internal sealed partial class TerminalTestReporter : IDisposable
     /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
     public TerminalTestReporter(
-        string assembly,
-        string? targetFramework,
-        string? architecture,
         IConsole console,
         Func<bool> isCancellationRequested,
         TerminalTestReporterOptions options)
     {
-        _assembly = assembly;
-        _targetFramework = targetFramework;
-        _architecture = architecture;
         _isCancellationRequested = isCancellationRequested;
         _options = options;
 
@@ -168,8 +161,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         NativeMethods.RestoreConsoleMode(_originalConsoleMode);
     }
 
-    public void ArtifactAdded(bool outOfProcess, string? testName, string path)
-        => _artifacts.Add(new TestRunArtifact(outOfProcess, testName, path));
+    public void ArtifactAdded(bool outOfProcess, string? assembly, string? targetFramework, string? architecture, string? executionId, string? testName, string path)
+        => _artifacts.Add(new TestRunArtifact(outOfProcess, assembly, targetFramework, architecture, executionId, testName, path));
 
     /// <summary>
     /// Let the user know that cancellation was triggered.
