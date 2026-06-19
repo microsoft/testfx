@@ -55,9 +55,11 @@ public enum TestArchitectures
     /// </summary>
     Ppc64le = 1 << 8,
 
+#if NET9_0_OR_GREATER
     /// <summary>
     /// Represents the 64-bit RISC-V architecture.
     /// </summary>
     RiscV64 = 1 << 9,
+#endif
 }
 #endif

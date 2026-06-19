@@ -15,7 +15,11 @@ public class ArchitectureConditionAttributeTests : TestContainer
 {
     private const TestArchitectures AllArchitectures =
         TestArchitectures.X86 | TestArchitectures.X64 | TestArchitectures.Arm | TestArchitectures.Arm64 | TestArchitectures.Wasm
-        | TestArchitectures.S390x | TestArchitectures.LoongArch64 | TestArchitectures.Armv6 | TestArchitectures.Ppc64le | TestArchitectures.RiscV64;
+        | TestArchitectures.S390x | TestArchitectures.LoongArch64 | TestArchitectures.Armv6 | TestArchitectures.Ppc64le
+#if NET9_0_OR_GREATER
+        | TestArchitectures.RiscV64
+#endif
+        ;
 
     public void Constructor_SetsCorrectMode()
     {

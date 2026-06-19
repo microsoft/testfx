@@ -12,7 +12,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Arm64 = 8 -> Micr
 Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Armv6 = 128 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
 Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.LoongArch64 = 64 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
 Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Ppc64le = 256 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
-Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.RiscV64 = 512 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
 Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.S390x = 32 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
 Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Wasm = 16 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
 Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.X64 = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures

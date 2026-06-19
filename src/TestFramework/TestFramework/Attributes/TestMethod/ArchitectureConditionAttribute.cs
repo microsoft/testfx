@@ -64,21 +64,22 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
     /// <param name="architecture">The current process <see cref="Architecture"/>.</param>
     /// <returns>The matching <see cref="TestArchitectures"/> flag.</returns>
     private static TestArchitectures MapArchitecture(Architecture architecture)
-        // The integer value is matched (rather than the named enum members) because some values such as
-        // Architecture.RiscV64 don't exist in the net8.0 ref assembly (they were added in .NET 9), yet the
-        // same source must compile for every supported .NET TFM.
-        => (int)architecture switch
+        => architecture switch
         {
-            0 => TestArchitectures.X86,
-            1 => TestArchitectures.X64,
-            2 => TestArchitectures.Arm,
-            3 => TestArchitectures.Arm64,
-            4 => TestArchitectures.Wasm,
-            5 => TestArchitectures.S390x,
-            6 => TestArchitectures.LoongArch64,
-            7 => TestArchitectures.Armv6,
-            8 => TestArchitectures.Ppc64le,
-            9 => TestArchitectures.RiscV64,
+            Architecture.X86 => TestArchitectures.X86,
+            Architecture.X64 => TestArchitectures.X64,
+            Architecture.Arm => TestArchitectures.Arm,
+            Architecture.Arm64 => TestArchitectures.Arm64,
+            Architecture.Wasm => TestArchitectures.Wasm,
+            Architecture.S390x => TestArchitectures.S390x,
+            Architecture.LoongArch64 => TestArchitectures.LoongArch64,
+            Architecture.Armv6 => TestArchitectures.Armv6,
+            Architecture.Ppc64le => TestArchitectures.Ppc64le,
+#if NET9_0_OR_GREATER
+            // Architecture.RiscV64 was added in .NET 9 and isn't part of the net8.0 ref assembly, so both the
+            // enum member and the mapping are gated behind NET9_0_OR_GREATER. A net8.0 process can never report it.
+            Architecture.RiscV64 => TestArchitectures.RiscV64,
+#endif
             _ => throw new ArgumentOutOfRangeException(nameof(architecture), architecture, null),
         };
 }

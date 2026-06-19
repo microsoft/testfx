@@ -26,6 +26,9 @@
 
     <AdditionalFiles Include="PublicAPI\net\PublicAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
     <AdditionalFiles Include="PublicAPI\net\PublicAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
+
+    <AdditionalFiles Include="PublicAPI\net9.0\PublicAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+    <AdditionalFiles Include="PublicAPI\net9.0\PublicAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
   </ItemGroup>
 
   <ItemGroup>
