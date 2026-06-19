@@ -143,6 +143,11 @@
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">buildTransitive\uap10.0\</_BuildTransitiveDir>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_BuildTransitiveDir>
       <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_BuildTransitiveDir>
+
+      <!-- All TFMs share the same resx, so the localized satellites are shipped once, taken from a single TFM.
+           That source TFM must be one that is actually built on the current OS: net462 on Windows, otherwise net8.0. -->
+      <_LocalizationSourceTfm Condition=" '$(OS)' == 'Windows_NT' ">$(NetFrameworkMinimum)</_LocalizationSourceTfm>
+      <_LocalizationSourceTfm Condition=" '$(OS)' != 'Windows_NT' ">net8.0</_LocalizationSourceTfm>
     </PropertyGroup>
 
     <ItemGroup>
@@ -154,9 +159,9 @@
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.dll" PackagePath="$(_BuildTransitiveDir)" />
       <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.Extensions.dll" PackagePath="$(_BuildTransitiveDir)" />
 
-      <!-- Localized PlatformServices satellites: all TFMs share the same resx, so ship them once (from net462). -->
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)**\MSTestAdapter.PlatformServices.resources.dll" PackagePath="buildTransitive\_localization\" />
-      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)**\MSTest.TestAdapter.resources.dll" PackagePath="buildTransitive\_localization\" />
+      <!-- Localized satellites, shipped once from the OS-appropriate source TFM (see _LocalizationSourceTfm). -->
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(_LocalizationSourceTfm)' " Include="$(TargetDir)**\MSTestAdapter.PlatformServices.resources.dll" PackagePath="buildTransitive\_localization\" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(_LocalizationSourceTfm)' " Include="$(TargetDir)**\MSTest.TestAdapter.resources.dll" PackagePath="buildTransitive\_localization\" />
     </ItemGroup>
   </Target>
 
