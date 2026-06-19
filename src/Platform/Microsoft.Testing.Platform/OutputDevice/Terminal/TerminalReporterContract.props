@@ -1,0 +1,71 @@
+<Project>
+
+  <!--
+    Shared-source manifest for the Microsoft.Testing.Platform *terminal UI reporter*.
+
+    PURPOSE
+      The terminal reporter (progress rendering, summary, ANSI/non-ANSI terminals, state model) is hard-forked
+      into dotnet/sdk's 'dotnet test' implementation. This .props lets the same source files be compiled into
+      another assembly - a standalone consumer test, or (once packaged as a source NuGet) the dotnet/sdk copy -
+      so the reporter has a single source of truth instead of being duplicated by hand.
+
+    SCOPE
+      The set is the reporter + its rendering/state types + the small platform abstractions it depends on
+      (IConsole/IStopwatch/IColor/System* + RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser
+      /TestRunSummaryHelper). It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
+      command-line specific - the SDK has its own CLI) and TerminalResources.cs (the hand-written [Embedded]
+      accessor used by in-repo IVT-linked consumers; standalone consumers compile the resx instead - see below).
+
+      All the contract types are [Microsoft.CodeAnalysis.Embedded] so each consumer compiles them into its OWN
+      assembly without leaking across assembly boundaries.
+
+    USAGE
+      Import this file from any project that needs the reporter source. Microsoft.Testing.Platform itself does
+      NOT import it (it compiles these files via its default source globbing); importing it there would
+      double-include them.
+
+      - Source consumers (e.g. the standalone contract test project) get the .cs as <Compile> items (the default)
+        and must compile TerminalResources.resx themselves (EmbeddedResource GenerateSource) under IS_CORE_MTP so
+        the generated accessor + satellites are embedded in the consumer's own assembly.
+      - A future Microsoft.Testing.Platform.DotnetTestTerminal package sets TerminalReporterContractCompile=false
+        and instead packs @(TerminalReporterContractSource) + @(TerminalReporterContractResource) as contentFiles,
+        so the NuGet and the source-share never drift.
+  -->
+
+  <PropertyGroup>
+    <_TerminalContractPlatform>$(MSBuildThisFileDirectory)..\..</_TerminalContractPlatform>
+  </PropertyGroup>
+
+  <!-- The canonical list of shared reporter source (.cs). -->
+  <ItemGroup>
+    <!-- Reporter + rendering + state (terminal folder), minus the MTP-CLI options provider and the hand-written resx accessor. -->
+    <TerminalReporterContractSource Include="$(MSBuildThisFileDirectory)*.cs"
+                                    Exclude="$(MSBuildThisFileDirectory)TerminalTestReporterCommandLineOptionsProvider.cs;$(MSBuildThisFileDirectory)TerminalResources.cs" />
+
+    <!-- Small platform abstractions the reporter depends on. -->
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\RoslynString.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\ApplicationStateGuard.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\StackTraceHelper.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\IConsole.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\IStopwatch.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemConsole.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemStopwatch.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\IColor.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SystemConsoleColor.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TargetFrameworkParser.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TestRunSummaryHelper.cs" />
+  </ItemGroup>
+
+  <!-- The shared localized resource (resx + xlf) the reporter strings come from. -->
+  <ItemGroup>
+    <TerminalReporterContractResource Include="$(MSBuildThisFileDirectory)TerminalResources.resx" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TerminalReporterContractCompile)' != 'false' ">
+    <Compile Include="@(TerminalReporterContractSource)" Link="TerminalReporter\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- No Link on the resource: its manifest name / generated-accessor namespace must stay
+         Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources so the reporter source resolves it. -->
+    <EmbeddedResource Include="@(TerminalReporterContractResource)" GenerateSource="true" />
+  </ItemGroup>
+
+</Project>
