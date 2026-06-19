@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -814,8 +814,8 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => callOrder.Add("baseAsyncTestInitializeCalled1"));
         DummyTestClass.TestInitializeMethodBody = classInstance => callOrder.Add("classTestInitializeCalled");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
-        _testClassInfo.BaseTestInitializeMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
-        _testClassInfo.BaseTestInitializeMethodsQueue.Add(typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!);
+        _testClassInfo.BaseTestInitializeMethods.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestInitializeMethods.Add(typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!);
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -840,7 +840,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldNotThrowIfTestInitializeForBaseClassIsNull()
     {
-        _testClassInfo.BaseTestInitializeMethodsQueue.Add(null!);
+        _testClassInfo.BaseTestInitializeMethods.Add(null!);
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -1119,8 +1119,8 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
         DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
-        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
-        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethods.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethods.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -1140,8 +1140,8 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
         DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
-        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
-        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethods.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethods.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
 
         await _testMethodInfo.InvokeAsync(null);
         TestResult result = await _testMethodInfo.InvokeAsync(null);

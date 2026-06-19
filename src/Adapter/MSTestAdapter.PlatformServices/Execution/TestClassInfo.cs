@@ -244,11 +244,11 @@ internal sealed partial class TestClassInfo
     /// Gets a list of base-class test initialize methods, ordered nearest-derived first (i.e. direct parent at index 0,
     /// grandparent at index 1, …). Callers that need grandparent-first execution iterate in reverse.
     /// </summary>
-    public List<MethodInfo> BaseTestInitializeMethodsQueue { get; } = [];
+    public List<MethodInfo> BaseTestInitializeMethods { get; } = [];
 
     /// <summary>
     /// Gets a list of base-class test cleanup methods, ordered nearest-derived first (i.e. direct parent at index 0,
     /// grandparent at index 1, …). Callers that need parent-first execution iterate forward.
     /// </summary>
-    public List<MethodInfo> BaseTestCleanupMethodsQueue { get; } = [];
+    public List<MethodInfo> BaseTestCleanupMethods { get; } = [];
 }

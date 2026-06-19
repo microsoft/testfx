@@ -61,7 +61,7 @@ internal partial class TestMethodInfo
                     : null;
                 if (testCleanupException is null)
                 {
-                    foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethodsQueue)
+                    foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethods)
                     {
                         testCleanupMethod = baseCleanupMethod;
                         testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false);
@@ -159,7 +159,7 @@ internal partial class TestMethodInfo
 
     private bool HasCleanupsToInvoke() =>
         Parent.TestCleanupMethod is not null ||
-        Parent.BaseTestCleanupMethodsQueue is { Count: > 0 } ||
+        Parent.BaseTestCleanupMethods is { Count: > 0 } ||
         _classInstance is IDisposable ||
 #if NET6_0_OR_GREATER
         _classInstance is IAsyncDisposable ||
@@ -186,7 +186,7 @@ internal partial class TestMethodInfo
         {
             // TestInitialize methods for base classes are called in reverse order of discovery
             // Grandparent -> Parent -> Child TestClass
-            List<MethodInfo> baseTestInitializeList = Parent.BaseTestInitializeMethodsQueue;
+            List<MethodInfo> baseTestInitializeList = Parent.BaseTestInitializeMethods;
             for (int i = baseTestInitializeList.Count - 1; i >= 0; i--)
             {
                 testInitializeMethod = baseTestInitializeList[i];
