@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// An ANSI or non-ANSI terminal that is capable of rendering the messages from <see cref="TestProgressStateAwareTerminal"/>.
 /// </summary>
+[Embedded]
 internal interface ITerminal
 {
     int Width { get; }

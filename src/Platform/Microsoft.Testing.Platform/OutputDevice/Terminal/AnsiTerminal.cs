@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -10,6 +10,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// Terminal writer that is used when writing ANSI is allowed. It is capable of batching as many updates as possible and writing them at the end,
 /// because the terminal is responsible for rendering the colors and control codes.
 /// </summary>
+[Embedded]
 internal sealed class AnsiTerminal : ITerminal
 {
     /// <summary>
@@ -150,7 +151,7 @@ internal sealed class AnsiTerminal : ITerminal
     {
         if (_isBatching)
         {
-            throw new InvalidOperationException(PlatformResources.ConsoleIsAlreadyInBatchingMode);
+            throw new InvalidOperationException(TerminalResources.ConsoleIsAlreadyInBatchingMode);
         }
 
         _stringBuilder.Clear();

@@ -1,14 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
     public const string NoProgressOption = "no-progress";
@@ -28,16 +29,16 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
         : base(
             nameof(TerminalTestReporterCommandLineOptionsProvider),
             PlatformVersion.Version,
-            PlatformResources.TerminalTestReporterDisplayName,
-            PlatformResources.TerminalTestReporterDescription,
+            TerminalResources.TerminalTestReporterDisplayName,
+            TerminalResources.TerminalTestReporterDescription,
             [
-                new(NoProgressOption, PlatformResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
-                new(ProgressOption, PlatformResources.TerminalProgressOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-                new(NoAnsiOption, PlatformResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
-                new(AnsiOption, PlatformResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-                new(OutputOption, PlatformResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-                new(ShowStdoutOption, PlatformResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
-                new(ShowStderrOption, PlatformResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(NoProgressOption, TerminalResources.TerminalNoProgressOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
+                new(ProgressOption, TerminalResources.TerminalProgressOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(NoAnsiOption, TerminalResources.TerminalNoAnsiOptionDescription, ArgumentArity.Zero, isHidden: false, isBuiltIn: true),
+                new(AnsiOption, TerminalResources.TerminalAnsiOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(OutputOption, TerminalResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ShowStdoutOption, TerminalResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ShowStderrOption, TerminalResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
             ])
     {
     }
@@ -48,17 +49,17 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             NoProgressOption => ValidationResult.ValidTask,
             ProgressOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
-                : ValidationResult.InvalidTask(PlatformResources.TerminalProgressOptionInvalidArgument),
+                : ValidationResult.InvalidTask(TerminalResources.TerminalProgressOptionInvalidArgument),
             NoAnsiOption => ValidationResult.ValidTask,
             AnsiOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
-                : ValidationResult.InvalidTask(PlatformResources.TerminalAnsiOptionInvalidArgument),
+                : ValidationResult.InvalidTask(TerminalResources.TerminalAnsiOptionInvalidArgument),
             OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
                 ? ValidationResult.ValidTask
-                : ValidationResult.InvalidTask(PlatformResources.TerminalOutputOptionInvalidArgument),
+                : ValidationResult.InvalidTask(TerminalResources.TerminalOutputOptionInvalidArgument),
             ShowStdoutOption or ShowStderrOption => IsValidShowOutputArgument(arguments[0])
                 ? ValidationResult.ValidTask
-                : ValidationResult.InvalidTask(PlatformResources.TerminalShowOutputOptionInvalidArgument),
+                : ValidationResult.InvalidTask(TerminalResources.TerminalShowOutputOptionInvalidArgument),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 

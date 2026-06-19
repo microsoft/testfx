@@ -1,9 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -11,6 +10,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// Terminal test reporter that outputs test progress and is capable of writing ANSI or non-ANSI output via the given terminal.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[Embedded]
 internal sealed partial class TerminalTestReporter : IDisposable
 {
     /// <summary>
@@ -39,7 +39,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private readonly string _assembly;
     private readonly string? _targetFramework;
     private readonly string? _architecture;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+
+    /// <summary>
+    /// Returns whether external cancellation (e.g. Ctrl+C) has been requested. Injected as a delegate
+    /// rather than taking a concrete platform service so the reporter can be shared outside of
+    /// Microsoft.Testing.Platform (e.g. by the <c>dotnet test</c> multi-assembly orchestrator).
+    /// </summary>
+    private readonly Func<bool> _isCancellationRequested;
 
     private readonly List<TestRunArtifact> _artifacts = [];
 
@@ -64,7 +70,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
 
     private bool WasCancelled
     {
-        get => field || _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested;
+        get => field || _isCancellationRequested();
         set;
     }
 
@@ -80,13 +86,13 @@ internal sealed partial class TerminalTestReporter : IDisposable
         string? targetFramework,
         string? architecture,
         IConsole console,
-        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        Func<bool> isCancellationRequested,
         TerminalTestReporterOptions options)
     {
         _assembly = assembly;
         _targetFramework = targetFramework;
         _architecture = architecture;
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+        _isCancellationRequested = isCancellationRequested;
         _options = options;
 
         Func<bool?> showProgress = options.ShowProgress;
@@ -137,7 +143,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.Append(SingleIndentation);
-            terminal.AppendLine(PlatformResources.OutOfProcessArtifactsProduced);
+            terminal.AppendLine(TerminalResources.OutOfProcessArtifactsProduced);
 
             foreach (TestRunArtifact artifact in _artifacts)
             {
@@ -174,8 +180,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.AppendLine();
-            terminal.AppendLine(PlatformResources.CancellingTestSession);
-            terminal.AppendLine(PlatformResources.PressCtrlCAgainToForceExit);
+            terminal.AppendLine(TerminalResources.CancellingTestSession);
+            terminal.AppendLine(TerminalResources.PressCtrlCAgainToForceExit);
             terminal.AppendLine();
         });
     }

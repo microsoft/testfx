@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -129,10 +128,10 @@ internal sealed partial class TerminalTestReporter
         };
         string outcomeText = outcome switch
         {
-            TestOutcome.Fail or TestOutcome.Error => PlatformResources.FailedLowercase,
-            TestOutcome.Skipped => PlatformResources.SkippedLowercase,
-            TestOutcome.Canceled or TestOutcome.Timeout => $"{PlatformResources.FailedLowercase} ({PlatformResources.CancelledLowercase})",
-            TestOutcome.Passed => PlatformResources.PassedLowercase,
+            TestOutcome.Fail or TestOutcome.Error => TerminalResources.FailedLowercase,
+            TestOutcome.Skipped => TerminalResources.SkippedLowercase,
+            TestOutcome.Canceled or TestOutcome.Timeout => $"{TerminalResources.FailedLowercase} ({TerminalResources.CancelledLowercase})",
+            TestOutcome.Passed => TerminalResources.PassedLowercase,
             _ => throw new NotSupportedException(),
         };
 

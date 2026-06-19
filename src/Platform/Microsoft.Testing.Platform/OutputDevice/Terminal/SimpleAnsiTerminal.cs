@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -9,6 +10,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// Simple terminal that uses 4-bit ANSI for colors but does not move cursor and does not do other fancy stuff to stay compatible with CI systems.
 /// The colors are set on start of every line to properly color multiline strings in CI log viewers that reset color state at each newline (e.g. Azure DevOps).
 /// </summary>
+[Embedded]
 internal sealed class SimpleAnsiTerminal : SimpleTerminal
 {
     private string? _foregroundColor;

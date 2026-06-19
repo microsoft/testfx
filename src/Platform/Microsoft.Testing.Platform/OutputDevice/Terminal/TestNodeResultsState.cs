@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal sealed class TestNodeResultsState
 {
     public TestNodeResultsState(long id)
@@ -61,7 +62,7 @@ internal sealed class TestNodeResultsState
             return first;
         }
 
-        _summaryDetail.Text = string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, count);
+        _summaryDetail.Text = string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
         return _summaryDetail;
     }
 
@@ -113,9 +114,9 @@ internal sealed class TestNodeResultsState
             _summaryDetail.Text =
                 itemsToTake == 0
                     // Note: If itemsToTake is 0, then we only show two lines, the project summary and the number of running tests.
-                    ? string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, _runningTasksBuffer.Count)
+                    ? string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, _runningTasksBuffer.Count)
                     // If itemsToTake is larger, then we show the project summary, active tests, and the number of active tests that are not shown.
-                    : $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, _runningTasksBuffer.Count - itemsToTake)}";
+                    : $"... {string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_MoreTestsCount, _runningTasksBuffer.Count - itemsToTake)}";
 
             // Truncate in-place to avoid allocating a second list/array.
             if (itemsToTake < _runningTasksBuffer.Count)
