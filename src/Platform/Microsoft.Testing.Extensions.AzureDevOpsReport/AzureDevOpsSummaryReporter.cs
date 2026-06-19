@@ -19,7 +19,7 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
-    private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}.md";
+    private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}-{1}-{2}.md";
     private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MaxSlowestTests = 10;
     private const int MaxTopFailingClasses = 5;
@@ -266,7 +266,19 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
             return null;
         }
 
-        string fileName = string.Format(CultureInfo.InvariantCulture, DefaultSummaryFileNameFormat, _targetFrameworkMoniker.Value);
+        // Include the assembly name and process architecture in the default file name (matching the
+        // <asm>_<tfm>_<arch> shape used by the TRX/HTML/JUnit reports) so that multiple test assemblies
+        // that share the same target framework and TestResults directory (a common CI setup) don't all
+        // resolve to the same path and race to write it, which surfaced as
+        // "The process cannot access the file ... because it is being used by another process".
+        string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown";
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        string fileName = string.Format(
+            CultureInfo.InvariantCulture,
+            DefaultSummaryFileNameFormat,
+            ReportFileNameSanitizer.ReplaceInvalidFileNameChars(assemblyName),
+            _targetFrameworkMoniker.Value,
+            architecture);
         return Path.GetFullPath(Path.Combine(configuredTestResultsDirectory!, fileName));
     }
 

@@ -146,7 +146,7 @@ Extension options:
     --report-azdo-stackframe-filter
         Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to 16 patterns. Compiled with a 500ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.
     --report-azdo-summary
-        Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
+        Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.
     --report-azdo-upload-artifact-exclude
         Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
     --report-azdo-upload-artifact-include
@@ -435,7 +435,7 @@ Registered command line providers:
       --report-azdo-summary
         Arity: 0..1
         Hidden: False
-        Description: Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
+        Description: Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.
       --report-azdo-upload-artifact-exclude
         Arity: 0..N
         Hidden: False
