@@ -976,6 +976,33 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressState_NotifyHandshake_CountsEachNewInstanceIdAsAnAttempt()
+    {
+        var stopwatch = new StopwatchFactory.MockStopwatch(new StopwatchFactory(), TimeSpan.Zero);
+        var progressState = new TestProgressState(1, "flaky.dll", "net9.0", "x64", stopwatch, isDiscovery: false);
+
+        Assert.AreEqual(0, progressState.TryCount);
+
+        // First attempt.
+        progressState.NotifyHandshake("inst-1");
+        Assert.AreEqual(1, progressState.TryCount);
+
+        // Re-seeing the current attempt is a no-op.
+        progressState.NotifyHandshake("inst-1");
+        Assert.AreEqual(1, progressState.TryCount);
+
+        // Two more retries: TryCount accumulates across all three distinct attempts.
+        progressState.NotifyHandshake("inst-2");
+        Assert.AreEqual(2, progressState.TryCount);
+        progressState.NotifyHandshake("inst-3");
+        Assert.AreEqual(3, progressState.TryCount);
+
+        // Re-seeing the latest attempt again is still a no-op.
+        progressState.NotifyHandshake("inst-3");
+        Assert.AreEqual(3, progressState.TryCount);
+    }
+
+    [TestMethod]
     public void TestNodeResultsState_GetSingleActiveOrSummaryTask_WhenEmpty_ReturnsNull()
     {
         var state = new TestNodeResultsState(1);
