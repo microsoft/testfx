@@ -1364,7 +1364,10 @@ public sealed class TerminalTestReporterTests
     public void AssemblyRunCompleted_WhenKnownAssemblySucceeds_DoesNotPrintExecutableSummary()
     {
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole, showAssemblyStartAndComplete: false);
+        // Keep the default ShowAssemblyStartAndComplete: true so the reporter DOES print the per-assembly summary
+        // line. Otherwise a zero-exit run writes nothing at all and the DoesNotContain assertion below passes
+        // vacuously instead of verifying that the executable-summary block is specifically suppressed on success.
+        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Passing.dll" : "/repo/Passing.dll";
@@ -1373,7 +1376,11 @@ public sealed class TerminalTestReporterTests
 
         terminalReporter.AssemblyRunCompleted("exec-1", exitCode: 0, outputData: "ignored", errorData: "ignored");
 
-        // On success the executable summary (exit code + captured output) must not be printed.
+        // The per-assembly summary line is printed (proving the run produced output)...
+        string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
+        Assert.Contains("[+1/x0/?0]", assemblyLine);
+
+        // ...but on success the executable summary (exit code + captured output) must not be printed.
         Assert.DoesNotContain($"{TerminalResources.ExitCode}:", stringBuilderConsole.Output);
     }
 
@@ -1421,10 +1428,8 @@ public sealed class TerminalTestReporterTests
         var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole, showAssemblyStartAndComplete: false);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
 
-        string assemblyA = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\A.dll" : "/repo/A.dll";
-        string assemblyB = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\B.dll" : "/repo/B.dll";
-
-        // Two assemblies fail to hand-shake (their execution ids were never registered).
+        // Two assemblies fail to handshake (their execution ids were never registered). The assembly paths are not
+        // observable here: an unregistered completion is recorded with assemblyPath: string.Empty.
         terminalReporter.AssemblyRunCompleted("never-A", exitCode: 1, outputData: null, errorData: "A failed");
         terminalReporter.AssemblyRunCompleted("never-B", exitCode: 2, outputData: null, errorData: "B failed");
 
@@ -1441,7 +1446,7 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
-    public void AssemblyRunStarted_WhenRetried_IncrementsTryCountPerInstanceId()
+    public void AssemblyRunStarted_AfterRetry_RendersLatestAttemptCounts()
     {
         var stringBuilderConsole = new StringBuilderConsole();
         var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
@@ -1452,13 +1457,14 @@ public sealed class TerminalTestReporterTests
         terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "exec-1", "inst-1");
         terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "exec-1", "inst-2");
 
-        // Re-registering the same instance id must not be counted as a new attempt.
+        // Re-registering the same instance id is a no-op (not a new attempt).
         terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "exec-1", "inst-2");
 
         ReportOrchestratorTest(terminalReporter, assembly, "exec-1", "inst-2", "t-1", TestOutcome.Passed);
         terminalReporter.AssemblyRunCompleted("exec-1", exitCode: 0, outputData: null, errorData: null);
 
-        // The assembly was retried once (2 attempts), so the counts block reflects the latest attempt's single pass.
+        // The per-assembly counts block reflects the latest attempt's single pass. (The "/r" segment tracks
+        // RetriedFailedTests - tests that failed then passed on retry - which is 0 here, not the attempt count.)
         string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
         Assert.Contains("[+1/x0/?0]", assemblyLine);
     }
