@@ -59,11 +59,17 @@ internal partial class TestMethodInfo
                 testCleanupException = testCleanupMethod is not null
                     ? await InvokeCleanupMethodAsync(testCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false)
                     : null;
-                var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
-                while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
+                if (testCleanupException is null)
                 {
-                    testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = await InvokeCleanupMethodAsync(testCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false);
+                    foreach (MethodInfo baseCleanupMethod in Parent.BaseTestCleanupMethodsQueue)
+                    {
+                        testCleanupMethod = baseCleanupMethod;
+                        testCleanupException = await InvokeCleanupMethodAsync(baseCleanupMethod, _classInstance, timeoutTokenSource).ConfigureAwait(false);
+                        if (testCleanupException is not null)
+                        {
+                            break;
+                        }
+                    }
                 }
             }
             finally
@@ -180,10 +186,10 @@ internal partial class TestMethodInfo
         {
             // TestInitialize methods for base classes are called in reverse order of discovery
             // Grandparent -> Parent -> Child TestClass
-            var baseTestInitializeStack = new Stack<MethodInfo>(Parent.BaseTestInitializeMethodsQueue);
-            while (baseTestInitializeStack.Count > 0)
+            List<MethodInfo> baseTestInitializeList = Parent.BaseTestInitializeMethodsQueue;
+            for (int i = baseTestInitializeList.Count - 1; i >= 0; i--)
             {
-                testInitializeMethod = baseTestInitializeStack.Pop();
+                testInitializeMethod = baseTestInitializeList[i];
                 testInitializeException = testInitializeMethod is not null
                     ? await InvokeInitializeMethodAsync(testInitializeMethod, classInstance, timeoutTokenSource).ConfigureAwait(false)
                     : null;
