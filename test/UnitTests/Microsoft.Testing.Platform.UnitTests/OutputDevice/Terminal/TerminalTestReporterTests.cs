@@ -1256,6 +1256,55 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("[+3/x0/?1]", assemblyLine);
     }
 
+    // Ported from the dotnet/sdk TerminalTestReporterTests (dotnet/sdk#52128): in the final test-run summary, when
+    // more than one assembly ran with ShowAssembly, each assembly entry must include its own per-assembly counts in
+    // the compact bracketed form. NoAnsi is used so the assertion is on plain text (same ASCII glyph set).
+    [TestMethod]
+    public void TestExecutionCompleted_WithMultipleAssemblies_PrintsPerAssemblyCountsInSummary()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+
+            // Suppress mid-stream per-assembly lines so we assert against the final summary only.
+            ShowAssemblyStartAndComplete = false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assemblyA = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\A.Tests.dll" : "/repo/A.Tests.dll";
+        string assemblyB = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\B.Tests.dll" : "/repo/B.Tests.dll";
+
+        terminalReporter.AssemblyRunStarted(assemblyA, "net9.0", "x64", executionId: "exec-A", instanceId: "inst-A");
+        terminalReporter.AssemblyRunStarted(assemblyB, "net9.0", "x64", executionId: "exec-B", instanceId: "inst-B");
+
+        // Assembly A: 2 passed, 1 failed, 0 skipped.
+        ReportOrchestratorTest(terminalReporter, assemblyA, "exec-A", "inst-A", "a-1", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assemblyA, "exec-A", "inst-A", "a-2", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assemblyA, "exec-A", "inst-A", "a-3", TestOutcome.Fail);
+
+        // Assembly B: 5 passed, 0 failed, 2 skipped.
+        ReportOrchestratorTest(terminalReporter, assemblyB, "exec-B", "inst-B", "b-1", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assemblyB, "exec-B", "inst-B", "b-2", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assemblyB, "exec-B", "inst-B", "b-3", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assemblyB, "exec-B", "inst-B", "b-4", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assemblyB, "exec-B", "inst-B", "b-5", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assemblyB, "exec-B", "inst-B", "b-6", TestOutcome.Skipped);
+        ReportOrchestratorTest(terminalReporter, assemblyB, "exec-B", "inst-B", "b-7", TestOutcome.Skipped);
+
+        terminalReporter.AssemblyRunCompleted(executionId: "exec-A", exitCode: 1, outputData: null, errorData: null);
+        terminalReporter.AssemblyRunCompleted(executionId: "exec-B", exitCode: 0, outputData: null, errorData: null);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 1);
+
+        string output = stringBuilderConsole.Output;
+        Assert.Contains("[+2/x1/?0]", GetAssemblySummaryLine(output, assemblyA));
+        Assert.Contains("[+5/x0/?2]", GetAssemblySummaryLine(output, assemblyB));
+    }
+
     private static void ReportOrchestratorTest(TerminalTestReporter reporter, string assembly, string executionId, string instanceId, string testUid, TestOutcome outcome)
         => reporter.TestCompleted(
             assembly,
