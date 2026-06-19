@@ -71,8 +71,13 @@ internal sealed partial class TerminalTestReporter
             _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
         }
 
-        // This is relevant for HotReload scenarios. We want the next test sessions to start fresh.
+        // This is relevant for HotReload scenarios. We want the next test sessions to start fresh, so we reset all
+        // per-run state here (after the summary above has consumed it): the per-assembly runs, the collected
+        // artifacts, and the cancellation flag. Otherwise a later session would re-print the previous session's
+        // artifacts or stay stuck in the aborted state.
         _assemblies.Clear();
+        _artifacts.Clear();
+        WasCancelled = false;
 
         _testExecutionStartTime = null;
         _testExecutionEndTime = null;

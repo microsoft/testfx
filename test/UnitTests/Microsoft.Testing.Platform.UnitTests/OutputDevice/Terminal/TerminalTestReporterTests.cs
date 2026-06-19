@@ -1196,6 +1196,53 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TerminalTestReporter_WhenReusedAcrossSessions_DoesNotLeakArtifactsOrCancelledState()
+    {
+        // Reproduces the HotReload reuse case: the same reporter instance runs multiple sessions. After a session
+        // completes, the per-run state (artifacts, cancellation) must be reset so a later session neither re-prints
+        // the previous session's artifacts nor stays stuck in the aborted state.
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        string folder = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\" : "/mnt/work/";
+        string firstSessionArtifact = $"{folder}first-session-artifact.txt";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => false,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        // First session: produces an artifact and is cancelled.
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, "net8.0", "x64", "0", "0");
+        terminalReporter.TestCompleted("0", testNodeUid: "T1", "T1", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.ArtifactAdded(outOfProcess: false, assembly: assembly, targetFramework: "net8.0", architecture: "x64", executionId: "0", testName: null, firstSessionArtifact);
+        terminalReporter.StartCancelling();
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        // Second session on the SAME reporter: no artifacts, not cancelled.
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, "net8.0", "x64", "0", "0");
+        int outputLengthBeforeSecondSummary = stringBuilderConsole.Output.Length;
+        terminalReporter.TestCompleted("0", testNodeUid: "T2", "T2", TestOutcome.Passed, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string secondSessionOutput = stringBuilderConsole.Output.Substring(outputLengthBeforeSecondSummary);
+
+        // The first session's artifact must not be re-printed in the second session's summary.
+        Assert.DoesNotContain(firstSessionArtifact, secondSessionOutput);
+
+        // The second session is a clean pass, so its summary must not be marked as failed/aborted.
+        Assert.DoesNotContain(TerminalResources.Aborted, secondSessionOutput);
+        Assert.Contains("  failed: 0", secondSessionOutput);
+    }
+
+    [TestMethod]
     public void SimpleTerminal_UsesWindowWidthNotBufferWidth()
     {
         // Arrange - Create a console where BufferWidth and WindowWidth are different
