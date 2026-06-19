@@ -65,7 +65,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private DateTimeOffset? _testExecutionEndTime;
 
     /// <summary>Gets the total number of tests across all registered assemblies.</summary>
-    public int TotalTests => _assemblies.Values.Sum(a => a.TotalTests);
+    public int TotalTests => _assemblies.Values.Sum(static a => a.TotalTests);
 
     private bool WasCancelled
     {
