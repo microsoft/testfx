@@ -52,6 +52,11 @@
         <target state="translated">сбой</target>
         <note />
       </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} error(s)</source>
+        <target state="new">failed with {0} error(s)</target>
+        <note>{0} is the number of errors in an assembly summary line</note>
+      </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
         <target state="translated">Для тестирования</target>
