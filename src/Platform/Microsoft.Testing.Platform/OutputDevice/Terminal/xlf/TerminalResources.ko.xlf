@@ -37,6 +37,11 @@
         <target state="new">Expected</target>
         <note />
       </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">실패</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
         <target state="new">failed</target>
@@ -52,6 +57,11 @@
         <target state="new">In process file artifacts produced:</target>
         <note />
       </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">예상되는 최소 테스트 정책 위반, 테스트 실행 {0}, 필요한 최소 {1}</target>
+        <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
+      </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
         <target state="new">and {0} more</target>
@@ -65,6 +75,11 @@
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
         <target state="new">Out of process file artifacts produced:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">통과</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
@@ -213,6 +228,11 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
         <target state="new">Test run summary:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">테스트가 0개 실행됨</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">

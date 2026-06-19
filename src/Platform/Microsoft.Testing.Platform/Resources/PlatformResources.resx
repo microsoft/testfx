@@ -342,14 +342,6 @@
 {0}</value>
     <comment>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</comment>
   </data>
-  <data name="UnexpectedStateErrorMessage" xml:space="preserve">
-    <value>Unexpected state in file '{0}' at line '{1}'</value>
-    <comment>{0} is the source file path. {1} is the source line number.</comment>
-  </data>
-  <data name="UnreachableLocationErrorMessage" xml:space="preserve">
-    <value>This program location is thought to be unreachable. File='{0}' Line={1}</value>
-    <comment>{0} is the source file path. {1} is the source line number.</comment>
-  </data>
   <data name="RetryFailedAfterTriesErrorMessage" xml:space="preserve">
     <value>Retry failed after {0} times</value>
     <comment>{0} is the retry count.</comment>
