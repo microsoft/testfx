@@ -7,27 +7,37 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Sdk</PackageId>
-    <NuspecFile>MSTest.Sdk.nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 
       This package contains the MSTest MSBuild project SDK.
     </PackageDescription>
+    <!-- This package only ships MSBuild SDK props/targets: no lib and no dependencies. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup Label="NuGet">
-    <NuspecProperty Include="MSBuildProjectDirectory=$(MSBuildProjectDirectory)" />
-    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
-  </ItemGroup>
-
   <ItemGroup>
-    <Content Include="Sdk\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <!--
+      Pack the MSBuild SDK props/targets into the 'Sdk' folder of the package.
+      These are listed explicitly (rather than via a glob) because Sdk.props and
+      Runner.targets are generated from templates during the build (see GenerateTemplates),
+      so they may not exist yet at evaluation time. Listing them explicitly ensures they
+      are picked up at pack time once generated.
+    -->
+    <None Remove="Sdk\**\*.props;Sdk\**\*.targets" />
+    <None Include="Sdk\Sdk.props" Pack="true" PackagePath="Sdk\Sdk.props" />
+    <None Include="Sdk\Sdk.targets" Pack="true" PackagePath="Sdk\Sdk.targets" />
+    <None Include="Sdk\Features\Aspire.targets" Pack="true" PackagePath="Sdk\Features\Aspire.targets" />
+    <None Include="Sdk\Features\Playwright.targets" Pack="true" PackagePath="Sdk\Features\Playwright.targets" />
+    <None Include="Sdk\Runner\Runner.targets" Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
+    <None Include="Sdk\Runner\Common.targets" Pack="true" PackagePath="Sdk\Runner\Common.targets" />
+    <None Include="Sdk\Runner\ClassicEngine.targets" Pack="true" PackagePath="Sdk\Runner\ClassicEngine.targets" />
+    <None Include="Sdk\Runner\NativeAOT.targets" Pack="true" PackagePath="Sdk\Runner\NativeAOT.targets" />
+    <None Include="Sdk\VSTest\VSTest.targets" Pack="true" PackagePath="Sdk\VSTest\VSTest.targets" />
   </ItemGroup>
 
   <ItemGroup>

@@ -16,9 +16,12 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestAdapter.nuspec</NuspecFile>
-    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestAdapter.NonWindows.nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
+    <!--
+      This package has a fully custom layout (everything ships under buildTransitive, with cross-TFM and
+      WinUI/UWP specific assemblies and a curated set of dependencies), so the package contents and
+      dependencies are produced explicitly through MSBuild items/targets rather than the default SDK output.
+    -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestAdapter</PackageId>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
     <PackageDescription>
@@ -57,8 +60,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
+    <!-- PlatformServices is bundled into buildTransitive (see packaging target), so it must not flow as a
+         dependency: PrivateAssets="all" suppresses the dependency (and its transitive package dependencies). -->
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" PrivateAssets="all" />
+
+    <!-- Curated package dependencies. PrivateAssets="none" so all assets (including build/buildTransitive
+         targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" PrivateAssets="none" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- For .NET Framework and UWP these assemblies must be declared as package dependencies (on modern TFMs
+         they are part of the framework). They would normally flow transitively through PlatformServices, but
+         that reference is suppressed above, so they are referenced explicitly here. -->
+    <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
+    <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,14 +93,72 @@
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <ItemGroup Label="NuGet">
-    <NuspecProperty Include="ArtifactsBinDir=$(ArtifactsBinDir)" />
-    <NuspecProperty Include="Configuration=$(Configuration)" />
-    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
-    <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
-    <NuspecProperty Include="SystemMemoryVersion=$(SystemMemoryVersion)" />
-    <NuspecProperty Include="TestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'))" />
+  <!--
+    Static MSBuild assets (build/ and buildTransitive/ .props/.targets). These source files always exist so
+    they are added at evaluation time. net462/uap10.0 assets are only relevant on Windows where those TFMs build.
+  -->
+  <ItemGroup Label="Package build assets">
+    <None Include="build\net8.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net8.0\" />
+    <None Include="build\net8.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net8.0\" />
+    <None Include="build\net9.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net9.0\" />
+    <None Include="build\net9.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net9.0\" />
+
+    <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net8.0\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net9.0\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
+    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
+    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
   </ItemGroup>
+
+  <ItemGroup Label="Package build assets (Windows-only TFMs)" Condition=" '$(OS)' == 'Windows_NT' ">
+    <None Include="build\net462\MSTest.TestAdapter.props" Pack="true" PackagePath="build\net462\" />
+    <None Include="build\net462\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\net462\" />
+    <None Include="build\uap10.0\MSTest.TestAdapter.props" Pack="true" PackagePath="build\uap10.0\" />
+    <None Include="build\uap10.0\MSTest.TestAdapter.targets" Pack="true" PackagePath="build\uap10.0\" />
+
+    <None Include="buildTransitive\common\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\net462\" />
+    <None Include="buildTransitive\common\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\net462\" />
+    <None Include="buildTransitive\uwp\MSTest.TestAdapter.props" Pack="true" PackagePath="buildTransitive\uap10.0\" />
+    <None Include="buildTransitive\uwp\MSTest.TestAdapter.targets" Pack="true" PackagePath="buildTransitive\uap10.0\" />
+    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\net462\" />
+    <None Include="buildTransitive\Parallelize.targets" Pack="true" PackagePath="buildTransitive\uap10.0\" />
+  </ItemGroup>
+
+  <!--
+    Per-TFM build outputs. Everything ships under buildTransitive/<tfm>/ (nothing in lib). The TestAdapter and
+    bundled PlatformServices assemblies are taken from each TFM's output. For net462 the TestFramework
+    assemblies are bundled too (VSTest assembly resolver workaround, see issue #4426 / DevDiv 2577652), and the
+    localized PlatformServices satellites (shared across all TFMs) are shipped once under _localization.
+  -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddTestAdapterPackageFiles</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddTestAdapterPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <PropertyGroup>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">buildTransitive\net462\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == 'net8.0' ">buildTransitive\net8.0\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == 'net9.0' ">buildTransitive\net9.0\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">buildTransitive\uap10.0\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_BuildTransitiveDir>
+      <_BuildTransitiveDir Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_BuildTransitiveDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <!-- Adapter + bundled platform services for every TFM. -->
+      <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestAdapter.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Include="$(TargetDir)MSTestAdapter.PlatformServices.dll" PackagePath="$(_BuildTransitiveDir)" />
+
+      <!-- .NET Framework also bundles the TestFramework assemblies. -->
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.dll" PackagePath="$(_BuildTransitiveDir)" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)MSTest.TestFramework.Extensions.dll" PackagePath="$(_BuildTransitiveDir)" />
+
+      <!-- Localized PlatformServices satellites: all TFMs share the same resx, so ship them once (from net462). -->
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)**\MSTestAdapter.PlatformServices.resources.dll" PackagePath="buildTransitive\_localization\" />
+      <TfmSpecificPackageFile Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' " Include="$(TargetDir)**\MSTest.TestAdapter.resources.dll" PackagePath="buildTransitive\_localization\" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <None Update="buildTransitive\common\*" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
