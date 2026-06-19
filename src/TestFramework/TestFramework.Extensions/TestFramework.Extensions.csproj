@@ -55,6 +55,15 @@
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
 
+  <!-- On .NET Framework, the netstandard2.0 MSTest.Analyzers package reference (added below for the NuGet
+       dependency only) would otherwise trigger implicit netstandard facade expansion, copying assemblies such
+       as System.Runtime.InteropServices.RuntimeInformation into the output. Those facades then flow to
+       downstream projects (e.g. MSTestAdapter.PlatformServices) and conflict with the polyfills (CS0436). This
+       project does not consume the analyzer assembly, so the facades are not needed. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- The core MSTest.TestFramework assembly is bundled into lib (see the packaging target below) and must keep
          flowing transitively for downstream compilation, so it is referenced normally (not PrivateAssets="all").
@@ -63,9 +72,14 @@
     <ProjectReference Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
     <ProjectReference Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
 
-    <!-- The only package dependency: MSTest.Analyzers (all assets, including the analyzers, must flow to consumers,
-         hence PrivateAssets="none"). The package is produced by MSTest.Analyzers.Package.csproj. -->
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" />
+    <!-- The only package dependency: MSTest.Analyzers. PrivateAssets="none" so the analyzers/build assets flow to
+         consumers of this package. The analyzer package is a netstandard2.0 project that ships only analyzers (no
+         lib/runtime), and this project never consumes it at compile/run time, so ExcludeAssets="compile;runtime"
+         keeps the reference from becoming a compile-time dependency (which on .NET Framework would otherwise pull
+         in netstandard facades such as System.Runtime.InteropServices.RuntimeInformation and conflict with the
+         polyfills downstream). See also ImplicitlyExpandNETStandardFacades below. The package is produced by
+         MSTest.Analyzers.Package.csproj. -->
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" />
   </ItemGroup>
 
   <ItemGroup>
