@@ -9,13 +9,11 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 internal sealed partial class TerminalTestReporter
 {
     private bool _isHelp;
-    private bool _isRetry;
 
     public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery, bool isHelp, bool isRetry)
     {
         _isDiscovery = isDiscovery;
         _isHelp = isHelp;
-        _isRetry = isRetry;
         _testExecutionStartTime = testStartTime;
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
@@ -24,17 +22,26 @@ internal sealed partial class TerminalTestReporter
         => GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
 
     private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string executionId)
-        => _assemblies.GetOrAdd(executionId, _ =>
+    {
+        // NOTE: we intentionally do not use ConcurrentDictionary.GetOrAdd with a value factory here. GetOrAdd may
+        // invoke the factory more than once under contention and discard all but one result; that would allocate a
+        // worker slot (and bump _counter) for every losing race, leaving orphaned workers in the progress UI. Doing
+        // the get-or-add under the same lock that guards AddWorker guarantees exactly one worker per executionId.
+        lock (_lock)
         {
-            lock (_lock)
+            if (_assemblies.TryGetValue(executionId, out TestProgressState? existing))
             {
-                IStopwatch sw = CreateStopwatch();
-                var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw, _isDiscovery);
-                int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
-                assemblyRun.SlotIndex = slotIndex;
-                return assemblyRun;
+                return existing;
             }
-        });
+
+            IStopwatch sw = CreateStopwatch();
+            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw, _isDiscovery);
+            int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
+            assemblyRun.SlotIndex = slotIndex;
+            _assemblies[executionId] = assemblyRun;
+            return assemblyRun;
+        }
+    }
 
     internal void AssemblyRunCompleted(string executionId)
     {

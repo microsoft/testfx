@@ -20,7 +20,7 @@ internal sealed class TestProgressState
         IsDiscovery = isDiscovery;
     }
 
-    /// <summary>The assembly path or display name as provided by the caller (used for the summary link).</summary>
+    /// <summary>Gets the assembly path or display name as provided by the caller (used for the summary link).</summary>
     public string Assembly { get; }
 
     public string AssemblyName { get; }

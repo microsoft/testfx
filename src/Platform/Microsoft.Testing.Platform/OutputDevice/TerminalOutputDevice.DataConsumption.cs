@@ -182,52 +182,52 @@ internal sealed partial class TerminalOutputDevice
 
                     case FailedTestNodeStateProperty failedState:
                         _terminalTestReporter.TestCompleted(
-                             InProcessExecutionId,
-                             testNodeStateChanged.TestNode.Uid.Value,
-                             testNodeStateChanged.TestNode.DisplayName,
-                             TestOutcome.Fail,
-                             duration,
-                             null,
-                             failedState.Explanation,
-                             failedState.Exception,
-                             expected: failedState.Exception?.Data["assert.expected"] as string,
-                             actual: failedState.Exception?.Data["assert.actual"] as string,
-                             standardOutput,
-                             standardError);
+                            InProcessExecutionId,
+                            testNodeStateChanged.TestNode.Uid.Value,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            TestOutcome.Fail,
+                            duration,
+                            null,
+                            failedState.Explanation,
+                            failedState.Exception,
+                            expected: failedState.Exception?.Data["assert.expected"] as string,
+                            actual: failedState.Exception?.Data["assert.actual"] as string,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         _terminalTestReporter.TestCompleted(
-                             InProcessExecutionId,
-                             testNodeStateChanged.TestNode.Uid.Value,
-                             testNodeStateChanged.TestNode.DisplayName,
-                             TestOutcome.Timeout,
-                             duration,
-                             null,
-                             timeoutState.Explanation,
-                             timeoutState.Exception,
-                             expected: null,
-                             actual: null,
-                             standardOutput,
-                             standardError);
+                            InProcessExecutionId,
+                            testNodeStateChanged.TestNode.Uid.Value,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            TestOutcome.Timeout,
+                            duration,
+                            null,
+                            timeoutState.Explanation,
+                            timeoutState.Exception,
+                            expected: null,
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                     case CancelledTestNodeStateProperty cancelledState:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         _terminalTestReporter.TestCompleted(
-                             InProcessExecutionId,
-                             testNodeStateChanged.TestNode.Uid.Value,
-                             testNodeStateChanged.TestNode.DisplayName,
-                             TestOutcome.Canceled,
-                             duration,
-                             null,
-                             cancelledState.Explanation,
-                             cancelledState.Exception,
-                             expected: null,
-                             actual: null,
-                             standardOutput,
-                             standardError);
+                            InProcessExecutionId,
+                            testNodeStateChanged.TestNode.Uid.Value,
+                            testNodeStateChanged.TestNode.DisplayName,
+                            TestOutcome.Canceled,
+                            duration,
+                            null,
+                            cancelledState.Explanation,
+                            cancelledState.Exception,
+                            expected: null,
+                            actual: null,
+                            standardOutput,
+                            standardError);
                         break;
 
                     case PassedTestNodeStateProperty:
