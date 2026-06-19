@@ -31,4 +31,3 @@ Only the wire **contract** (ids + constants) is shared today. The message **mode
 included yet because they still depend on `TestMetadataProperty`
 (`Microsoft.Testing.Platform.Extensions.Messages`) and use a different class shape than the SDK's copy; sharing them
 requires decoupling/unifying first.
-
