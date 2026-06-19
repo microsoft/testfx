@@ -48,8 +48,8 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
     {
         get
         {
-            TestArchitectures? current = MapArchitecture((int)RuntimeInformation.ProcessArchitecture);
-            return current is not null && (_architectures & current.Value) != 0;
+            TestArchitectures current = MapArchitecture(RuntimeInformation.ProcessArchitecture);
+            return (_architectures & current) != 0;
         }
     }
 
@@ -59,14 +59,15 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
     public override string GroupName => "ArchitectureCondition";
 
     /// <summary>
-    /// Maps the integer value of a <c>System.Runtime.InteropServices.Architecture</c> to the matching
-    /// <see cref="TestArchitectures"/> flag. The integer value is used (rather than the named enum members) so that the
-    /// code compiles against ref assemblies that predate the newer architecture values.
+    /// Maps a <see cref="Architecture"/> value to the matching <see cref="TestArchitectures"/> flag.
     /// </summary>
-    /// <param name="value">The integer value of the <c>System.Runtime.InteropServices.Architecture</c>.</param>
-    /// <returns>The matching <see cref="TestArchitectures"/> flag, or <see langword="null"/> if the value is unknown.</returns>
-    private static TestArchitectures? MapArchitecture(int value)
-        => value switch
+    /// <param name="architecture">The current process <see cref="Architecture"/>.</param>
+    /// <returns>The matching <see cref="TestArchitectures"/> flag.</returns>
+    private static TestArchitectures MapArchitecture(Architecture architecture)
+        // The integer value is matched (rather than the named enum members) because some values such as
+        // Architecture.RiscV64 don't exist in the net8.0 ref assembly (they were added in .NET 9), yet the
+        // same source must compile for every supported .NET TFM.
+        => (int)architecture switch
         {
             0 => TestArchitectures.X86,
             1 => TestArchitectures.X64,
@@ -78,7 +79,7 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
             7 => TestArchitectures.Armv6,
             8 => TestArchitectures.Ppc64le,
             9 => TestArchitectures.RiscV64,
-            _ => null,
+            _ => throw new ArgumentOutOfRangeException(nameof(architecture), architecture, null),
         };
 }
 #endif

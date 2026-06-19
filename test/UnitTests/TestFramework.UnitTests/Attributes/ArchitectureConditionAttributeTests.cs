@@ -99,20 +99,11 @@ public class ArchitectureConditionAttributeTests : TestContainer
         attribute.IsConditionMet.Should().BeFalse();
     }
 
+    // Derive the expected flag from the *name* of the current architecture rather than re-implementing the
+    // integer→flag mapping, so this test doesn't silently mirror (and therefore can't validate) the production logic.
     private static TestArchitectures GetCurrentArchitecture()
-        => (int)System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture switch
-        {
-            0 => TestArchitectures.X86,
-            1 => TestArchitectures.X64,
-            2 => TestArchitectures.Arm,
-            3 => TestArchitectures.Arm64,
-            4 => TestArchitectures.Wasm,
-            5 => TestArchitectures.S390x,
-            6 => TestArchitectures.LoongArch64,
-            7 => TestArchitectures.Armv6,
-            8 => TestArchitectures.Ppc64le,
-            9 => TestArchitectures.RiscV64,
-            _ => default,
-        };
+        => Enum.TryParse(System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture.ToString(), out TestArchitectures architecture)
+            ? architecture
+            : throw new InvalidOperationException($"Unknown process architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
 }
 #endif
