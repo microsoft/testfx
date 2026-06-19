@@ -3,6 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#if NET
 /// <summary>
 /// This attribute is used to ignore a test class or a test method based on the current process architecture.
 /// </summary>
@@ -15,11 +16,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
 public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
 {
-#if NET462
-    // Cache the detected architecture to avoid repeated reflection calls.
-    private static readonly TestArchitectures? DetectedArchitecture = DetectCurrentArchitecture();
-#endif
-
     private readonly TestArchitectures _architectures;
 
     /// <summary>
@@ -52,11 +48,7 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
     {
         get
         {
-#if NET462
-            TestArchitectures? current = DetectedArchitecture;
-#else
             TestArchitectures? current = MapArchitecture((int)RuntimeInformation.ProcessArchitecture);
-#endif
             return current is not null && (_architectures & current.Value) != 0;
         }
     }
@@ -88,49 +80,5 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
             9 => TestArchitectures.RiscV64,
             _ => null,
         };
-
-#if NET462
-    /// <summary>
-    /// Detects the current process architecture using reflection to maintain compatibility with .NET Framework 4.6.2,
-    /// where <c>System.Runtime.InteropServices.RuntimeInformation</c> may not be present.
-    /// </summary>
-    /// <returns>
-    /// The detected process architecture, or <see langword="null"/> if it could not be determined.
-    /// </returns>
-    private static TestArchitectures? DetectCurrentArchitecture()
-    {
-        // RuntimeInformation.ProcessArchitecture is available in .NET Framework 4.7.1+.
-        // For older .NET Framework versions or environments where the API is not available, we fall back to
-        // Environment.Is64BitProcess so the attribute stays functional (at least for x86/x64).
-        Type? runtimeInformationType = Type.GetType("System.Runtime.InteropServices.RuntimeInformation, System.Runtime.InteropServices.RuntimeInformation")
-            ?? Type.GetType("System.Runtime.InteropServices.RuntimeInformation, mscorlib");
-        if (runtimeInformationType is null)
-        {
-            return GetFallbackArchitecture();
-        }
-
-        PropertyInfo? processArchitectureProperty = runtimeInformationType.GetProperty("ProcessArchitecture", BindingFlags.Public | BindingFlags.Static);
-        if (processArchitectureProperty is null)
-        {
-            return GetFallbackArchitecture();
-        }
-
-        object? processArchitecture = processArchitectureProperty.GetValue(null);
-
-        // processArchitecture is a boxed System.Runtime.InteropServices.Architecture enum. Convert via
-        // Convert.ToInt32 (the boxed value implements IConvertible) rather than an unboxing (int) cast, which
-        // would throw InvalidCastException.
-        return processArchitecture is null
-            ? GetFallbackArchitecture()
-            : MapArchitecture(Convert.ToInt32(processArchitecture, CultureInfo.InvariantCulture));
-    }
-
-    /// <summary>
-    /// Best-effort architecture detection for .NET Framework runtimes that don't expose
-    /// <c>RuntimeInformation.ProcessArchitecture</c>. Only x86 vs x64 can be distinguished here.
-    /// </summary>
-    /// <returns>The detected <see cref="TestArchitectures"/> flag.</returns>
-    private static TestArchitectures GetFallbackArchitecture()
-        => Environment.Is64BitProcess ? TestArchitectures.X64 : TestArchitectures.X86;
-#endif
 }
+#endif

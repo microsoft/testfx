@@ -3,6 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#if NET
 /// <summary>
 /// An enum that is used with <see cref="ArchitectureConditionAttribute"/> to control which process architectures a test method or test class supports or doesn't support.
 /// </summary>
@@ -59,3 +60,4 @@ public enum TestArchitectures
     /// </summary>
     RiscV64 = 1 << 9,
 }
+#endif
