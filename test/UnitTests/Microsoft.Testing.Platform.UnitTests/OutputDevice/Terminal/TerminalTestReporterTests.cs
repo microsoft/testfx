@@ -1305,6 +1305,41 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("[+5/x0/?2]", GetAssemblySummaryLine(output, assemblyB));
     }
 
+    // Ported from the dotnet/sdk TerminalTestReporterTests: when an assembly's tests were retried, the per-assembly
+    // summary appends a "/r{N}" segment so the user can tell the final counts came from retries. Attempt 1 fails the
+    // test; attempt 2 (a new instance id under the same execution id) passes it, so the final tally is 1 passed with
+    // 1 retried.
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenTestsWereRetried_ShowsRetriedCount()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky";
+
+        // Attempt 1: register the first instance and report a failure.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
+
+        // Attempt 2: a new instance id triggers a retry; the failing test now passes.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+
+        string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
+        Assert.Contains("[+1/x0/?0/r1]", assemblyLine);
+    }
+
     private static void ReportOrchestratorTest(TerminalTestReporter reporter, string assembly, string executionId, string instanceId, string testUid, TestOutcome outcome)
         => reporter.TestCompleted(
             assembly,

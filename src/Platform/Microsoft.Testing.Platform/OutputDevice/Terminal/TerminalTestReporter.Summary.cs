@@ -160,14 +160,9 @@ internal sealed partial class TerminalTestReporter
             throw ApplicationStateGuard.Unreachable();
         }
 
+        // In discovery mode TotalTests is computed from DiscoveredTests; in execution mode it is computed from the
+        // passed/skipped/failed tally as tests complete. So we only need to bump the discovered count here.
         asm.DiscoveredTests++;
-
-        if (_isDiscovery)
-        {
-            // In discovery mode we count discovered tests,
-            // but in execution mode the completion of test will increase the total tests count.
-            asm.TotalTests++;
-        }
 
         asm.DiscoveredTestDisplayNames.Add(MakeControlCharactersVisible(displayName, true));
 
