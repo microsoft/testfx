@@ -2,7 +2,7 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../TerminalResources.resx">
     <body>
-            <trans-unit id="Aborted">
+      <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">已中止</target>
         <note />
@@ -32,6 +32,11 @@
         <target state="translated">持续时间</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="translated">预期</target>
@@ -51,6 +56,11 @@
         <source>For test</source>
         <target state="translated">用于测试</target>
         <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="HandshakeFailuresHeader">
+        <source>Handshake failures:</source>
+        <target state="new">Handshake failures:</target>
+        <note />
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
