@@ -1133,20 +1133,10 @@ Os valores válidos são 'All', 'Failed', 'None'. O padrão é 'All' (ou 'Failed
 {0}</target>
         <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
       </trans-unit>
-      <trans-unit id="UnexpectedStateErrorMessage">
-        <source>Unexpected state in file '{0}' at line '{1}'</source>
-        <target state="translated">Estado inesperado no arquivo '{0}' na linha '{1}'</target>
-        <note>{0} is the source file path. {1} is the source line number.</note>
-      </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
         <target state="translated">[ServerTestHost.OnTaskSchedulerUnobservedTaskException] exceção sem tratamento: {0}</target>
         <note>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</note>
-      </trans-unit>
-      <trans-unit id="UnreachableLocationErrorMessage">
-        <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
-        <target state="translated">Este local do programa é considerado inacessível. Arquivo='{0}' Linha={1}</target>
-        <note>{0} is the source file path. {1} is the source line number.</note>
       </trans-unit>
       <trans-unit id="WaitDebuggerAttachNotSupportedInBrowserErrorMessage">
         <source>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</source>
