@@ -322,7 +322,7 @@ internal sealed partial class TypeCache
             {
                 if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
-                    classInfo.BaseTestInitializeMethodsQueue.Enqueue(methodInfo);
+                    classInfo.BaseTestInitializeMethodsQueue.Add(methodInfo);
                 }
             }
         }
@@ -342,7 +342,7 @@ internal sealed partial class TypeCache
             {
                 if (instanceMethods is not null && !instanceMethods.Contains(methodInfo.Name))
                 {
-                    classInfo.BaseTestCleanupMethodsQueue.Enqueue(methodInfo);
+                    classInfo.BaseTestCleanupMethodsQueue.Add(methodInfo);
                 }
             }
         }
