@@ -273,12 +273,16 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         // "The process cannot access the file ... because it is being used by another process".
         string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown";
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        string fileName = string.Format(
+
+        // Sanitize the whole file name (matching TRX/HTML/JUnit) so that unexpected characters in any segment
+        // - including the target framework moniker or architecture, not just the assembly name - cannot produce
+        // an invalid file name.
+        string fileName = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(string.Format(
             CultureInfo.InvariantCulture,
             DefaultSummaryFileNameFormat,
-            ReportFileNameSanitizer.ReplaceInvalidFileNameChars(assemblyName),
+            assemblyName,
             _targetFrameworkMoniker.Value,
-            architecture);
+            architecture));
         return Path.GetFullPath(Path.Combine(configuredTestResultsDirectory!, fileName));
     }
 
