@@ -308,7 +308,7 @@ The producer side (e.g., `TrxDataConsumer.cs`) also needs to start tagging its e
 
 ### 6.6 SDK orchestration flow
 
-In `src/Cli/dotnet/Commands/Test/MTP/`:
+In the dotnet/sdk repo (`src/Cli/dotnet/Commands/Test/MTP/`, not in this repo):
 
 ```csharp
 // MicrosoftTestingPlatformTestCommand.Run, in finally (before TestExecutionCompleted)
@@ -351,7 +351,7 @@ New tiny surface on `TerminalTestReporter`:
 ```csharp
 public IReadOnlyList<TestRunArtifact> SnapshotArtifacts();
 public void RemoveArtifacts(IEnumerable<string> paths);
-public void Warning(string message);  // already-ish present via _output.WriteWarning if any
+public void Warning(string message);  // surfaces a run-level warning; the reporter already emits warnings internally via _output.WriteWarning
 ```
 
 `GetAdvertisedCapabilities()` returns, per module path, the **kinds** and **legacy extensions** the app advertised in its handshake (§6.5) — not a bare extension list.
@@ -708,7 +708,9 @@ internal static class ArtifactPostProcessingPlanner
             }
 
             var elected = electedList
-                .OrderByDescending(a => items.Count(i => i.Assembly == a.ModulePath))
+                // ProducingTestModule is a module file name (e.g. "A.dll") while ModulePath is a full path,
+                // so compare on the file name to actually match the producing app.
+                .OrderByDescending(a => items.Count(i => string.Equals(i.ProducingTestModule, Path.GetFileName(a.ModulePath), StringComparison.OrdinalIgnoreCase)))
                 .ThenByDescending(a => TfmOrder(a.TargetFramework))
                 .ThenBy(a => a.ModulePath, StringComparer.Ordinal)
                 .First();
