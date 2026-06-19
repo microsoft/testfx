@@ -116,7 +116,7 @@ internal partial class TestExecutionManager
             if (usesAppDomains || Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
             {
 #pragma warning disable VSTHRD103 // Call async methods when in an async method - We cannot do right now because we are crossing app domains.
-                // TODO: When app domains support is dropped, we can finally always be calling the async version.
+                // When app domains support is dropped, we can finally always be calling the async version.
                 // In addition to app domains, if we are STA thread (e.g, because runsettings setting ExecutionApartmentState to STA), we want to preserve that.
                 // If we await, we could end up in a thread pool thread, which is not what we want.
                 // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:

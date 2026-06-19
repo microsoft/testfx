@@ -216,6 +216,11 @@ internal partial class TestExecutionManager
                         }
                         catch (OperationCanceledException) when (_testRunCancellationToken?.Canceled == true)
                         {
+                            // Expected when the test run is canceled. Swallow it so the worker exits gracefully.
+                            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+                            {
+                                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("Parallel test worker canceled for source {0}", source);
+                            }
                         }
                     }));
                 }
