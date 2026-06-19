@@ -86,9 +86,10 @@ This is an INTERNAL, source-only package: it shares - as compiled source - the p
 
     <!--
       Terminal localized resources. The resx + xlf are shipped under build/ (NOT contentFiles) so they are not
-      auto-compiled with the wrong metadata; the auto-imported build-extension props below adds the resx as an
-      <EmbeddedResource GenerateSource="true"> with a pinned ManifestResourceName, and XliffTasks (present in the
-      consumer, e.g. dotnet/sdk via Arcade) finds the sibling xlf/ to emit satellite assemblies.
+      auto-compiled with the wrong metadata; the auto-imported build-extension props below adds the resx as a
+      strongly-typed <EmbeddedResource> (Generator="MSBuild:Compile" plus StronglyTyped* metadata) with a pinned
+      ManifestResourceName, and XliffTasks (present in the consumer, e.g. dotnet/sdk via Arcade) finds the sibling
+      xlf/ to emit satellite assemblies.
     -->
     <None Include="@(TerminalReporterContractResource)"
           Pack="true"
@@ -97,7 +98,7 @@ This is an INTERNAL, source-only package: it shares - as compiled source - the p
           Pack="true"
           PackagePath="build/TerminalReporter/xlf/%(Filename)%(Extension)" />
 
-    <!-- Auto-imported build extension that wires the resx (GenerateSource + satellites) into the consumer. -->
+    <!-- Auto-imported build extension that wires the resx (strongly-typed accessor + satellites) into the consumer. -->
     <None Include="build\Microsoft.Testing.Platform.Internal.DotnetTest.props"
           Pack="true"
           PackagePath="build/Microsoft.Testing.Platform.Internal.DotnetTest.props" />
