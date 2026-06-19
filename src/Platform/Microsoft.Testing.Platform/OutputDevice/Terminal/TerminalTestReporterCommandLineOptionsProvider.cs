@@ -54,10 +54,10 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             AnsiOption => arguments.Length == 1 && CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalAnsiOptionInvalidArgument),
-            OutputOption => OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+            OutputOption => arguments.Length == 1 && (OutputOptionNormalArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase) || OutputOptionDetailedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalOutputOptionInvalidArgument),
-            ShowStdoutOption or ShowStderrOption => IsValidShowOutputArgument(arguments[0])
+            ShowStdoutOption or ShowStderrOption => arguments.Length == 1 && IsValidShowOutputArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalShowOutputOptionInvalidArgument),
             _ => throw ApplicationStateGuard.Unreachable(),
