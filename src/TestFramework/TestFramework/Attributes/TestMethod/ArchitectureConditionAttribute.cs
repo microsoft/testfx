@@ -17,17 +17,17 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
 {
 #if NET462
     // Cache the detected architecture to avoid repeated reflection calls.
-    private static readonly Architectures? DetectedArchitecture = DetectCurrentArchitecture();
+    private static readonly TestArchitectures? DetectedArchitecture = DetectCurrentArchitecture();
 #endif
 
-    private readonly Architectures _architectures;
+    private readonly TestArchitectures _architectures;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ArchitectureConditionAttribute"/> class.
     /// </summary>
     /// <param name="mode">Decides whether the architectures will be included or excluded.</param>
     /// <param name="architectures">The process architectures that this test includes/excludes.</param>
-    public ArchitectureConditionAttribute(ConditionMode mode, Architectures architectures)
+    public ArchitectureConditionAttribute(ConditionMode mode, TestArchitectures architectures)
         : base(mode)
     {
         _architectures = architectures;
@@ -40,7 +40,7 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
     /// Initializes a new instance of the <see cref="ArchitectureConditionAttribute"/> class.
     /// </summary>
     /// <param name="architectures">The process architectures that this test supports.</param>
-    public ArchitectureConditionAttribute(Architectures architectures)
+    public ArchitectureConditionAttribute(TestArchitectures architectures)
         : this(ConditionMode.Include, architectures)
     {
     }
@@ -53,9 +53,9 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
         get
         {
 #if NET462
-            Architectures? current = DetectedArchitecture;
+            TestArchitectures? current = DetectedArchitecture;
 #else
-            Architectures? current = MapArchitecture((int)RuntimeInformation.ProcessArchitecture);
+            TestArchitectures? current = MapArchitecture((int)RuntimeInformation.ProcessArchitecture);
 #endif
             return current is not null && (_architectures & current.Value) != 0;
         }
@@ -68,24 +68,24 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
 
     /// <summary>
     /// Maps the integer value of a <c>System.Runtime.InteropServices.Architecture</c> to the matching
-    /// <see cref="Architectures"/> flag. The integer value is used (rather than the named enum members) so that the
+    /// <see cref="TestArchitectures"/> flag. The integer value is used (rather than the named enum members) so that the
     /// code compiles against ref assemblies that predate the newer architecture values.
     /// </summary>
     /// <param name="value">The integer value of the <c>System.Runtime.InteropServices.Architecture</c>.</param>
-    /// <returns>The matching <see cref="Architectures"/> flag, or <see langword="null"/> if the value is unknown.</returns>
-    private static Architectures? MapArchitecture(int value)
+    /// <returns>The matching <see cref="TestArchitectures"/> flag, or <see langword="null"/> if the value is unknown.</returns>
+    private static TestArchitectures? MapArchitecture(int value)
         => value switch
         {
-            0 => Architectures.X86,
-            1 => Architectures.X64,
-            2 => Architectures.Arm,
-            3 => Architectures.Arm64,
-            4 => Architectures.Wasm,
-            5 => Architectures.S390x,
-            6 => Architectures.LoongArch64,
-            7 => Architectures.Armv6,
-            8 => Architectures.Ppc64le,
-            9 => Architectures.RiscV64,
+            0 => TestArchitectures.X86,
+            1 => TestArchitectures.X64,
+            2 => TestArchitectures.Arm,
+            3 => TestArchitectures.Arm64,
+            4 => TestArchitectures.Wasm,
+            5 => TestArchitectures.S390x,
+            6 => TestArchitectures.LoongArch64,
+            7 => TestArchitectures.Armv6,
+            8 => TestArchitectures.Ppc64le,
+            9 => TestArchitectures.RiscV64,
             _ => null,
         };
 
@@ -97,25 +97,40 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
     /// <returns>
     /// The detected process architecture, or <see langword="null"/> if it could not be determined.
     /// </returns>
-    private static Architectures? DetectCurrentArchitecture()
+    private static TestArchitectures? DetectCurrentArchitecture()
     {
         // RuntimeInformation.ProcessArchitecture is available in .NET Framework 4.7.1+.
-        // For older .NET Framework versions or environments where the API is not available, we return null.
+        // For older .NET Framework versions or environments where the API is not available, we fall back to
+        // Environment.Is64BitProcess so the attribute stays functional (at least for x86/x64).
         Type? runtimeInformationType = Type.GetType("System.Runtime.InteropServices.RuntimeInformation, System.Runtime.InteropServices.RuntimeInformation")
             ?? Type.GetType("System.Runtime.InteropServices.RuntimeInformation, mscorlib");
         if (runtimeInformationType is null)
         {
-            return null;
+            return GetFallbackArchitecture();
         }
 
         PropertyInfo? processArchitectureProperty = runtimeInformationType.GetProperty("ProcessArchitecture", BindingFlags.Public | BindingFlags.Static);
         if (processArchitectureProperty is null)
         {
-            return null;
+            return GetFallbackArchitecture();
         }
 
         object? processArchitecture = processArchitectureProperty.GetValue(null);
-        return processArchitecture is null ? null : MapArchitecture((int)processArchitecture);
+
+        // processArchitecture is a boxed System.Runtime.InteropServices.Architecture enum. Convert via
+        // Convert.ToInt32 (the boxed value implements IConvertible) rather than an unboxing (int) cast, which
+        // would throw InvalidCastException.
+        return processArchitecture is null
+            ? GetFallbackArchitecture()
+            : MapArchitecture(Convert.ToInt32(processArchitecture, CultureInfo.InvariantCulture));
     }
+
+    /// <summary>
+    /// Best-effort architecture detection for .NET Framework runtimes that don't expose
+    /// <c>RuntimeInformation.ProcessArchitecture</c>. Only x86 vs x64 can be distinguished here.
+    /// </summary>
+    /// <returns>The detected <see cref="TestArchitectures"/> flag.</returns>
+    private static TestArchitectures GetFallbackArchitecture()
+        => Environment.Is64BitProcess ? TestArchitectures.X64 : TestArchitectures.X86;
 #endif
 }

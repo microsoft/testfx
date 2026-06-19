@@ -12,15 +12,15 @@ namespace UnitTestFramework.Tests;
 /// </summary>
 public class ArchitectureConditionAttributeTests : TestContainer
 {
-    private const Architectures AllArchitectures =
-        Architectures.X86 | Architectures.X64 | Architectures.Arm | Architectures.Arm64 | Architectures.Wasm
-        | Architectures.S390x | Architectures.LoongArch64 | Architectures.Armv6 | Architectures.Ppc64le | Architectures.RiscV64;
+    private const TestArchitectures AllArchitectures =
+        TestArchitectures.X86 | TestArchitectures.X64 | TestArchitectures.Arm | TestArchitectures.Arm64 | TestArchitectures.Wasm
+        | TestArchitectures.S390x | TestArchitectures.LoongArch64 | TestArchitectures.Armv6 | TestArchitectures.Ppc64le | TestArchitectures.RiscV64;
 
     public void Constructor_SetsCorrectMode()
     {
         // Act
-        var includeAttribute = new ArchitectureConditionAttribute(ConditionMode.Include, Architectures.X64);
-        var excludeAttribute = new ArchitectureConditionAttribute(ConditionMode.Exclude, Architectures.X64);
+        var includeAttribute = new ArchitectureConditionAttribute(ConditionMode.Include, TestArchitectures.X64);
+        var excludeAttribute = new ArchitectureConditionAttribute(ConditionMode.Exclude, TestArchitectures.X64);
 
         // Assert
         includeAttribute.Mode.Should().Be(ConditionMode.Include);
@@ -30,7 +30,7 @@ public class ArchitectureConditionAttributeTests : TestContainer
     public void Constructor_SingleArgument_DefaultsToIncludeMode()
     {
         // Act
-        var attribute = new ArchitectureConditionAttribute(Architectures.X64);
+        var attribute = new ArchitectureConditionAttribute(TestArchitectures.X64);
 
         // Assert
         attribute.Mode.Should().Be(ConditionMode.Include);
@@ -39,7 +39,7 @@ public class ArchitectureConditionAttributeTests : TestContainer
     public void GroupName_ReturnsCorrectValue()
     {
         // Arrange
-        var attribute = new ArchitectureConditionAttribute(Architectures.X64);
+        var attribute = new ArchitectureConditionAttribute(TestArchitectures.X64);
 
         // Act & Assert
         attribute.GroupName.Should().Be("ArchitectureCondition");
@@ -48,30 +48,30 @@ public class ArchitectureConditionAttributeTests : TestContainer
     // A different GroupName is what makes MSTest combine the two conditions with a logical AND,
     // so an architecture requirement can be composed with an OS requirement.
     public void GroupName_DiffersFromOSCondition()
-        => new ArchitectureConditionAttribute(Architectures.X64).GroupName
+        => new ArchitectureConditionAttribute(TestArchitectures.X64).GroupName
             .Should().NotBe(new OSConditionAttribute(OperatingSystems.Windows).GroupName);
 
     public void IgnoreMessage_IncludeMode_ReturnsCorrectMessage()
     {
         // Arrange
-        var attribute = new ArchitectureConditionAttribute(ConditionMode.Include, Architectures.X64);
+        var attribute = new ArchitectureConditionAttribute(ConditionMode.Include, TestArchitectures.X64);
 
         // Act & Assert
-        attribute.IgnoreMessage.Should().Be($"Test is only supported on {Architectures.X64}");
+        attribute.IgnoreMessage.Should().Be($"Test is only supported on {TestArchitectures.X64}");
     }
 
     public void IgnoreMessage_ExcludeMode_ReturnsCorrectMessage()
     {
         // Arrange
-        var attribute = new ArchitectureConditionAttribute(ConditionMode.Exclude, Architectures.X64);
+        var attribute = new ArchitectureConditionAttribute(ConditionMode.Exclude, TestArchitectures.X64);
 
         // Act & Assert
-        attribute.IgnoreMessage.Should().Be($"Test is not supported on {Architectures.X64}");
+        attribute.IgnoreMessage.Should().Be($"Test is not supported on {TestArchitectures.X64}");
     }
 
     public void IsConditionMet_WhenAllArchitecturesIncluded_ReturnsTrue()
     {
-        // The current process architecture is necessarily one of the known architectures.
+        // The current process architecture is necessarily one of the known TestArchitectures.
         var attribute = new ArchitectureConditionAttribute(AllArchitectures);
 
         attribute.IsConditionMet.Should().BeTrue();
@@ -84,7 +84,6 @@ public class ArchitectureConditionAttributeTests : TestContainer
         attribute.IsConditionMet.Should().BeFalse();
     }
 
-#if !NETFRAMEWORK
     public void IsConditionMet_WhenCurrentArchitectureMatches_ReturnsTrue()
     {
         var attribute = new ArchitectureConditionAttribute(GetCurrentArchitecture());
@@ -99,20 +98,19 @@ public class ArchitectureConditionAttributeTests : TestContainer
         attribute.IsConditionMet.Should().BeFalse();
     }
 
-    private static Architectures GetCurrentArchitecture()
+    private static TestArchitectures GetCurrentArchitecture()
         => (int)System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture switch
         {
-            0 => Architectures.X86,
-            1 => Architectures.X64,
-            2 => Architectures.Arm,
-            3 => Architectures.Arm64,
-            4 => Architectures.Wasm,
-            5 => Architectures.S390x,
-            6 => Architectures.LoongArch64,
-            7 => Architectures.Armv6,
-            8 => Architectures.Ppc64le,
-            9 => Architectures.RiscV64,
+            0 => TestArchitectures.X86,
+            1 => TestArchitectures.X64,
+            2 => TestArchitectures.Arm,
+            3 => TestArchitectures.Arm64,
+            4 => TestArchitectures.Wasm,
+            5 => TestArchitectures.S390x,
+            6 => TestArchitectures.LoongArch64,
+            7 => TestArchitectures.Armv6,
+            8 => TestArchitectures.Ppc64le,
+            9 => TestArchitectures.RiscV64,
             _ => default,
         };
-#endif
 }
