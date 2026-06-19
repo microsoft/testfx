@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -9,6 +11,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// or <see cref="AnsiMode.ForceAnsi"/>).
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[Embedded]
 internal sealed class CursorProgressRenderer : IProgressRenderer
 {
     // We only show seconds on the screen, but we want the in-place progress to look responsive, so we

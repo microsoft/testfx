@@ -1,8 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -17,6 +17,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// A healthy fast suite emits zero heartbeat lines.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[Embedded]
 internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
 {
     private readonly TimeSpan _silenceThreshold;
@@ -111,10 +112,10 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
             }
         }
 
-        string line = string.Format(CultureInfo.CurrentCulture, PlatformResources.TerminalProgressHeartbeat, completed, failed);
+        string line = string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressHeartbeat, completed, failed);
         if (activeTest is not null)
         {
-            line += string.Format(CultureInfo.CurrentCulture, PlatformResources.TerminalProgressHeartbeatActiveSuffix, activeTest);
+            line += string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressHeartbeatActiveSuffix, activeTest);
         }
 
         terminal.AppendLine(line);
@@ -158,7 +159,7 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
                 // Report the test's actual elapsed time rather than the scheduled threshold so a delayed
                 // tick (GC pause, debugger break, CPU starvation) does not under-report the runtime.
                 string duration = HumanReadableDurationFormatter.Render(TimeSpan.FromTicks(elapsed), wrapInParentheses: false);
-                terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.TerminalProgressSlowTest, duration, BuildSlowTestDescription(item, detail)));
+                terminal.AppendLine(string.Format(CultureInfo.CurrentCulture, TerminalResources.TerminalProgressSlowTest, duration, BuildSlowTestDescription(item, detail)));
             }
         }
     }

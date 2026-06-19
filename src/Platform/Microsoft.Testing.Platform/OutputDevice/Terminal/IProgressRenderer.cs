@@ -1,5 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -19,6 +21,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// except <see cref="OnTestCompleted"/> which may be called from the message pump and MUST be thread-safe.
 /// </remarks>
 [UnsupportedOSPlatform("browser")]
+[Embedded]
 internal interface IProgressRenderer
 {
     /// <summary>

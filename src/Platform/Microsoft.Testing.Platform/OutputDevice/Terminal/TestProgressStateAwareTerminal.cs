@@ -1,12 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Terminal that updates the progress in place when progress reporting is enabled.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[Embedded]
 internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 {
     /// <summary>

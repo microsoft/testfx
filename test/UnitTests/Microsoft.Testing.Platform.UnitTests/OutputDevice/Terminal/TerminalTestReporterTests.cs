@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -105,7 +105,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
 
@@ -201,7 +201,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
 
@@ -297,7 +297,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             // Like if we autodetect that we are in ANSI capable terminal.
@@ -395,7 +395,7 @@ public sealed class TerminalTestReporterTests
 
         var stringBuilderConsole = new StringBuilderConsole();
         var stopwatchFactory = new StopwatchFactory();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             // Like if we autodetect that we are in ANSI capable terminal.
@@ -538,7 +538,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -576,7 +576,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -829,7 +829,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -909,7 +909,7 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
 
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.NoAnsi,
@@ -1111,7 +1111,7 @@ public sealed class TerminalTestReporterTests
         // Arrange
         string assembly = "test.dll";
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, "net8.0", "x64", stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => false,
             AnsiMode = AnsiMode.NoAnsi,
@@ -1185,7 +1185,7 @@ public sealed class TerminalTestReporterTests
 
         var stringBuilderConsole = new StringBuilderConsole();
         var stopwatchFactory = new StopwatchFactory();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.ForceAnsi,
@@ -1266,7 +1266,7 @@ public sealed class TerminalTestReporterTests
         // Console with BufferWidth=4096 but WindowWidth=120, mimicking the bug scenario.
         var stringBuilderConsole = new StringBuilderConsoleWithCustomWidths(bufferWidth: 4096, windowWidth: 120);
         var stopwatchFactory = new StopwatchFactory();
-        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, new CTRLPlusCCancellationTokenSource(), new TerminalTestReporterOptions
+        var terminalReporter = new TerminalTestReporter(assembly, targetFramework, architecture, stringBuilderConsole, static () => false, new TerminalTestReporterOptions
         {
             ShowPassedTests = () => true,
             AnsiMode = AnsiMode.ForceAnsi,

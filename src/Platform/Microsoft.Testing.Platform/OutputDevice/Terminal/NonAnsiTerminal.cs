@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -9,6 +10,7 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// Non-ANSI terminal that writes text using the standard Console.Foreground color capabilities to stay compatible with
 /// standard Windows command line, and other command lines that are not capable of ANSI, or when output is redirected.
 /// </summary>
+[Embedded]
 internal sealed class NonAnsiTerminal : SimpleTerminal
 {
     private readonly ConsoleColor _defaultForegroundColor;

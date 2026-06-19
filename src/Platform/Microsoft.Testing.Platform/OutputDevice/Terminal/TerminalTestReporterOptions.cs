@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
@@ -57,6 +60,7 @@ internal sealed class TerminalTestReporterOptions
     public TimeSpan SlowTestThreshold { get; init; } = TimeSpan.FromSeconds(60);
 }
 
+[Embedded]
 internal enum OutputShowMode
 {
     /// <summary>
@@ -75,6 +79,7 @@ internal enum OutputShowMode
     None,
 }
 
+[Embedded]
 internal enum AnsiMode
 {
     /// <summary>
