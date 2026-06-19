@@ -1,58 +1,74 @@
 # Perf Improver State — microsoft/testfx
 
 ## Last Updated
-2026-06-15 15:33 UTC — Run [27557150790](https://github.com/microsoft/testfx/actions/runs/27557150790)
+2026-06-17
+
+## Last Run
+- Date: 2026-06-17
+- Run ID: 27831457042
+- Tasks done: Task 4 (no open PRs), Task 5 (no new perf issues), Task 3 (new PR), Task 7 (new monthly issue)
+- Next run priority: Task 1/2 (re-scan backlog), Task 6 (measurement infra), Task 7
 
 ## Validated Commands
-- Build: `./build.sh -build -c Debug` (Linux)
-- Full build all TFMs: `./build.sh`
-- Unit tests: `artifacts/bin/Microsoft.Testing.Platform.UnitTests/Debug/net8.0/Microsoft.Testing.Platform.UnitTests`
-- Profiling: `test/Performance/MSTest.Performance.Runner` (dotnet-trace, PerfView)
-- NOTE: system dotnet is a stub; build.sh installs SDK into `.dotnet/`
 
-## Round-Robin Task History (last run)
-- 2026-06-15: Task 2 (Identify Opportunities), Task 3 (Implement), Task 7 (Monthly Summary)
-- 2026-06-10: Task 3 (Implement), Task 7 (Monthly Summary)
-- 2026-06-09: Task 3 (Implement), Task 7
-- 2026-06-08: Task 3 (Implement), Task 4 (Maintain PRs), Task 6 (Infra), Task 7
-- 2026-06-06: Task 3 (Implement), Task 7
-- 2026-06-05: Task 3 (Implement), Task 6 (Infra), Task 7
-- Next run: consider Task 4 (Maintain PRs), Task 5 (Comment on Issues)
+```sh
+# Build (Debug, all projects)
+./build.sh
 
-## Monthly Activity Issue
-- Issue #8933 closed by Evangelink 2026-06-14 (June issue)
-- New June issue created this run — number pending
+# Build + unit tests
+./build.sh -test
 
-## Work In Progress
-- **Branch**: `perf-assist/single-pass-propertybag-terminal`
-- **PR**: submitted via safeoutputs (number pending)
-- **Status**: committed; build 0 warnings/errors; 1160 tests passed
-- **Description**: single-pass PropertyBag walk in TerminalOutputDevice (5→1 traversals + 1 LINQ alloc eliminated) and SimplifiedConsoleOutputDeviceBase (2→1 traversals)
+# Pack NuGet
+./build.sh -pack
 
-## Completed Work (this month)
-- PR #9108 (perf-assist/single-pass-propertybag-azdo): single-pass PropertyBag walk in AzureDevOps extension — **MERGED 2026-06-14 by Evangelink**
-- PR #9084 (perf-assist/pool-rendered-progress-items): pool RenderedProgressItem instances — **MERGED 2026-06-14 by Evangelink**
-- PR #8970 (perf-assist/cache-ansi-cursor-sequences): cache ANSI cursor-positioning strings — **MERGED 2026-06-10 by Evangelink**
-- PR #8932: `GetLongestRunningTask()` O(n) scan — **MERGED 2026-06-09**
-- PR #8883: double-buffer frame reuse — **MERGED 2026-06-07**
-- PR #8861: `HumanReadableDurationFormatter` fast path — **MERGED 2026-06-07**
-- PR #8823: VSTestBridge single-pass message iteration — **MERGED 2026-06-05**
-- PR #8799: LINQ allocations in terminal hot path — **MERGED**
-- PR #8769: string allocations in ANSI render hot path — **MERGED**
-- PR #8739: `AnsiTerminal.SetColor` + `KnownFileExtensions` HashSet — **MERGED**
-- PR #8704: `AsynchronousMessageBus` distinct processors cache — **MERGED**
-- PR #8683: `AnsiDetector` Regex → direct string comparison — **MERGED**
+# Integration tests (needs -pack first)
+./build.sh -pack -test -integrationTest
+
+# Direct test run (single project, single TFM)
+.dotnet/dotnet run --project <path> -f net9.0 --no-build -p:TargetFrameworks=net9.0 -- --treenode-filter "*/*/ClassName/*"
+```
+
+Notes:
+- SDK is installed by build.sh into .dotnet/ (v11 preview)
+- `global.json` enforces SDK version; system `dotnet` is a stub
+- MSTestAdapter.PlatformServices.UnitTests requires `-p:TargetFrameworks=net9.0` to filter out net462/net48 TFMs
+- 24 pre-existing failures in MSTestAdapter.PlatformServices.UnitTests (deployment-path tests)
+
+## Open Work in Progress
+
+None — PR created for per-test Queue/Stack allocation fix.
 
 ## Optimization Backlog
-1. `TestNodeResultsState.GetRunningTasks()` still allocs new `List<TestDetailState>` per assembly per tick; verify still optimal
-2. `IConsole.Write(string)` forces `StringBuilder.ToString()` alloc in `StopUpdate`; needs interface change, low priority
-3. `TerminalTestReporter` — look for remaining allocs in hot path after recent merges
+
+1. [IN PR] Per-test Queue/Stack allocation in TestMethodInfo.Lifecycle.cs
+   - Branch: perf-assist/list-backed-base-method-queues
+   - Change Queue→List; foreach for cleanup, backward for-loop for init
+   - Affects every test with base-class TestInitialize/TestCleanup
+
+2. AnsiTerminal.StopUpdate() — StringBuilder.ToString() allocation
+   - Blocked: IConsole has Write(string?) only; StreamWriter.Write(StringBuilder) is NET8+, project targets netstandard2.0
+   - Low priority
+
+3. SilenceDrivenHeartbeatRenderer — allocations only on heartbeat/slow-test rare path
+   - Not hot path, low priority
+
+## Completed Work
+
+| PR | Title | Status |
+|---|---|---|
+| #9159 | perf: single-pass PropertyBag walk in TerminalOutputDevice | MERGED 2026-06-16 by Evangelink |
+| perf-assist/list-backed-base-method-queues | perf: replace per-test Queue/Stack with List index iteration | OPEN (created 2026-06-17) |
 
 ## Performance Notes
-- Render tick rate: ~2 fps (500ms `Thread.Sleep` in `TestProgressStateAwareTerminal.ThreadProc`)
-- Double-buffer pattern: `AnsiTerminal._currentFrame` + `_spareFrame` swapped each tick
-- `PropertyBag` uses singly-linked list; each `SingleOrDefault<T>()` / `OfType<T>()` is O(n) + possible LINQ heap alloc
-- `GetStructEnumerator()` is a zero-allocation struct enumerator on `PropertyBag`; use for all multi-property reads
-- `IComparer<T>` avoids closure alloc vs `Comparison<T>` lambda in `Array.Sort`
-- Unit test baseline: 1160 passed, 3 skipped, 0 failed (net8.0)
-- StyleCop: SA1214 = readonly fields before non-readonly; SA1401 = fields must be private
+
+- PropertyBag.SingleOrDefault<TestNodeStateProperty>() is O(1) — _testNodeStateProperty field fast path prevents list walk. All current callers of SingleOrDefault<TestNodeStateProperty>() are already on the fast path.
+- BaseTestInitializeMethodsQueue/BaseTestCleanupMethodsQueue: items added in parent-first order (direct parent = index 0). Cleanup iterates forward (parent-first); initialize iterates backward (grandparent-first).
+- MSTestAdapter.PlatformServices.UnitTests uses TestContainer framework + AwesomeAssertions (MSTest Assert banned).
+
+## Backlog Cursor
+
+Next areas to scan:
+- HtmlReport extension (rendering hot paths)
+- TrxReport extension (per-test string allocations)
+- Retry extension (state tracking allocations)
+- MSTest TestContext — string dictionary allocations
