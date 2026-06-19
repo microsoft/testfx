@@ -55,7 +55,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VSTestBridge/Microsoft.Testing.Extensions.VSTestBridge.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj" />
-    <Project Path="src/Platform/Microsoft.Testing.Platform.DotnetTestProtocol/Microsoft.Testing.Platform.DotnetTestProtocol.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Platform.Internal.DotnetTest/Microsoft.Testing.Platform.Internal.DotnetTest.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
   </Folder>
@@ -136,6 +136,7 @@
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.UnitTests/Microsoft.Testing.Extensions.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests/Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />

@@ -2,13 +2,18 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
 [Embedded]
 internal static class ApplicationStateGuard
 {
+    // These are internal invariant-violation diagnostics for "impossible" states; they are intentionally NOT
+    // localized (matching e.g. System.Diagnostics.UnreachableException) so that this foundational helper has no
+    // dependency on PlatformResources and can be shared as source (e.g. with dotnet/sdk's terminal reporter).
+    private const string UnexpectedStateErrorMessage = "Unexpected state in file '{0}' at line '{1}'";
+    private const string UnreachableLocationErrorMessage = "This program location is thought to be unreachable. File='{0}' Line={1}";
+
     public static void Ensure([DoesNotReturnIf(false)] bool condition, string errorMessage)
     {
         if (!condition)
@@ -23,7 +28,7 @@ internal static class ApplicationStateGuard
         {
             throw new InvalidOperationException(string.Format(
                 CultureInfo.InvariantCulture,
-                PlatformResources.UnexpectedStateErrorMessage,
+                UnexpectedStateErrorMessage,
                 path, line));
         }
     }
@@ -31,6 +36,6 @@ internal static class ApplicationStateGuard
     public static InvalidOperationException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
         => new(string.Format(
             CultureInfo.InvariantCulture,
-            PlatformResources.UnreachableLocationErrorMessage,
+            UnreachableLocationErrorMessage,
             path, line));
 }

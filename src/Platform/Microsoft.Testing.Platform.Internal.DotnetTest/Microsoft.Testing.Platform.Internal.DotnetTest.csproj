@@ -11,14 +11,19 @@
     <TargetFramework>netstandard2.0</TargetFramework>
 
     <!--
-      Source-only package: it ships the 'dotnet test' wire-contract source files (ObjectFieldIds.cs + Constants.cs)
-      as contentFiles so a consumer (the dotnet/sdk 'dotnet test' implementation) compiles them into its OWN
-      assembly. This keeps a single source of truth for the protocol ids/constants instead of hand-copying them.
+      Internal, source-only package for the 'dotnet test' <-> Microsoft.Testing.Platform integration. It ships
+      shared source files as contentFiles/cs/any so a consumer (the dotnet/sdk 'dotnet test' implementation)
+      compiles them into its OWN assembly, keeping a single source of truth instead of hand-copying.
 
-      DotnetTestProtocolContractCompile=false makes the imported .props skip its <Compile> items: this project only
-      *packs* the files, it does not compile them. The guarantee that the shared contract compiles standalone is
-      provided by the dedicated consumer test project
-      (test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests), not by this package build.
+      It currently hosts the named-pipe wire contract (ObjectFieldIds.cs + Constants.cs) and is intended to grow to
+      host the other source shared with dotnet/sdk (e.g. the terminal reporter). The name is deliberately generic
+      and carries 'Internal' so it is clearly NOT a public API / client library (see also issue #5667, closed
+      pending a real use case for a public MTP client).
+
+      *ContractCompile=false makes the imported .props skip its <Compile> items: this project only *packs* the files,
+      it does not compile them. The guarantee that each shared contract compiles standalone is provided by its
+      dedicated consumer test project (e.g.
+      test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests), not by this package build.
     -->
     <IsPackable>true</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -42,7 +47,7 @@
     <PackageDescription>
       <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
 
-This package shares - as compiled source - the 'dotnet test' named-pipe wire contract (serializer/field ids and handshake/session/state constants) so that the protocol has a single source of truth across the microsoft/testfx and dotnet/sdk repositories. It is an implementation detail of 'dotnet test' integration and is not intended for direct end-user consumption.]]>
+This is an INTERNAL, source-only package: it shares - as compiled source - the pieces of the 'dotnet test' <-> Microsoft.Testing.Platform integration that must stay a single source of truth across the microsoft/testfx and dotnet/sdk repositories (today: the named-pipe wire contract; designed to also host the terminal reporter). It is an implementation detail of 'dotnet test' integration and is NOT intended for direct end-user consumption.]]>
     </PackageDescription>
   </PropertyGroup>
 
