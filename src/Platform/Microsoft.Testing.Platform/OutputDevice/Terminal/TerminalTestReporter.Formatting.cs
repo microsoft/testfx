@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -67,10 +66,10 @@ internal sealed partial class TerminalTestReporter
 
         terminal.SetColor(TerminalColor.DarkRed);
         terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.Expected);
+        terminal.AppendLine(TerminalResources.Expected);
         AppendIndentedLine(terminal, expected, DoubleIndentation);
         terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.Actual);
+        terminal.AppendLine(TerminalResources.Actual);
         AppendIndentedLine(terminal, actual, DoubleIndentation);
         terminal.ResetColor();
     }
@@ -108,7 +107,7 @@ internal sealed partial class TerminalTestReporter
         if (hasStdOut)
         {
             terminal.Append(SingleIndentation);
-            terminal.AppendLine(PlatformResources.StandardOutput);
+            terminal.AppendLine(TerminalResources.StandardOutput);
             string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
             AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
         }
@@ -116,7 +115,7 @@ internal sealed partial class TerminalTestReporter
         if (hasStdErr)
         {
             terminal.Append(SingleIndentation);
-            terminal.AppendLine(PlatformResources.StandardError);
+            terminal.AppendLine(TerminalResources.StandardError);
             string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(errorOutput, normalizeWhitespaceCharacters: false);
             AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         }
@@ -161,7 +160,7 @@ internal sealed partial class TerminalTestReporter
         }
 
         bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
-        terminal.Append(PlatformResources.StackFrameAt);
+        terminal.Append(TerminalResources.StackFrameAt);
         terminal.Append(' ');
 
         if (weHaveFilePathAndCodeLine)
@@ -180,7 +179,7 @@ internal sealed partial class TerminalTestReporter
         }
 
         terminal.Append(' ');
-        terminal.Append(PlatformResources.StackFrameIn);
+        terminal.Append(TerminalResources.StackFrameIn);
         terminal.Append(' ');
         if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
         {

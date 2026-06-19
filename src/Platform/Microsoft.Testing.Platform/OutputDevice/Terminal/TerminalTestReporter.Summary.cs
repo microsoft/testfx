@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -21,14 +20,14 @@ internal sealed partial class TerminalTestReporter
         foreach (IGrouping<bool, TestRunArtifact> artifactGroup in artifactGroups)
         {
             terminal.Append(SingleIndentation);
-            terminal.AppendLine(artifactGroup.Key ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
+            terminal.AppendLine(artifactGroup.Key ? TerminalResources.OutOfProcessArtifactsProduced : TerminalResources.InProcessArtifactsProduced);
             foreach (TestRunArtifact artifact in artifactGroup)
             {
                 terminal.Append(DoubleIndentation);
                 terminal.Append("- ");
                 if (!RoslynString.IsNullOrWhiteSpace(artifact.TestName))
                 {
-                    terminal.Append(PlatformResources.ForTest);
+                    terminal.Append(TerminalResources.ForTest);
                     terminal.Append(" '");
                     terminal.Append(artifact.TestName);
                     terminal.Append("': ");
@@ -57,7 +56,7 @@ internal sealed partial class TerminalTestReporter
         bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests);
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
-        terminal.Append(PlatformResources.TestRunSummary);
+        terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
         terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests));
 
@@ -78,11 +77,11 @@ internal sealed partial class TerminalTestReporter
         bool colorizePassed = passed > 0 && failed == 0;
         bool colorizeSkipped = skipped > 0 && skipped == total && failed == 0;
 
-        string totalText = $"{SingleIndentation}{PlatformResources.TotalLowercase}: {total}";
-        string failedText = $"{SingleIndentation}{PlatformResources.FailedLowercase}: {failed}";
-        string passedText = $"{SingleIndentation}{PlatformResources.SucceededLowercase}: {passed}";
-        string skippedText = $"{SingleIndentation}{PlatformResources.SkippedLowercase}: {skipped}";
-        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
+        string totalText = $"{SingleIndentation}{TerminalResources.TotalLowercase}: {total}";
+        string failedText = $"{SingleIndentation}{TerminalResources.FailedLowercase}: {failed}";
+        string passedText = $"{SingleIndentation}{TerminalResources.SucceededLowercase}: {passed}";
+        string skippedText = $"{SingleIndentation}{TerminalResources.SkippedLowercase}: {skipped}";
+        string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
 
         terminal.ResetColor();
         terminal.AppendLine(totalText);
@@ -169,7 +168,7 @@ internal sealed partial class TerminalTestReporter
         terminal.AppendLine();
 
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
-        terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummarySingular, totalTests));
+        terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.TestDiscoverySummarySingular, totalTests));
 
         terminal.SetColor(TerminalColor.DarkGray);
         terminal.Append(" - ");
@@ -181,11 +180,11 @@ internal sealed partial class TerminalTestReporter
 
         if (WasCancelled)
         {
-            terminal.Append(PlatformResources.Aborted);
+            terminal.Append(TerminalResources.Aborted);
             terminal.AppendLine();
         }
 
-        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
+        string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);

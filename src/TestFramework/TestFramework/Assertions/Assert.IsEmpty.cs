@@ -246,7 +246,7 @@ public sealed partial class Assert
     [DoesNotReturn]
     private static void ReportAssertIsNotEmptyFailed(string? userMessage, string collectionExpression)
     {
-        string actualText = 0.ToString(CultureInfo.CurrentCulture);
+        string actualText = "0";
         EvidenceBlock evidence = EvidenceBlock.Create()
             .AddLine("actual count:", actualText);
 

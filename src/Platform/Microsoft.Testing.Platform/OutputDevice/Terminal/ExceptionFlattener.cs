@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal sealed class ExceptionFlattener
 {
     internal static FlatException[] Flatten(string? errorMessage, Exception? exception)
@@ -46,4 +49,5 @@ internal sealed class ExceptionFlattener
     }
 }
 
+[Embedded]
 internal sealed record FlatException(string? ErrorMessage, string? ErrorType, string? StackTrace);

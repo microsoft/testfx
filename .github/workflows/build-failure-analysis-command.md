@@ -79,7 +79,7 @@ jobs:
       # the maintainer ran `/analyze-build-failure` on. Check out the PR's
       # merge ref explicitly so we analyse the same code that the auto
       # `pull_request` workflow would build.
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
         with:
           ref: refs/pull/${{ github.event.issue.number }}/merge
 

@@ -40,7 +40,7 @@ A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappi
 
 ### ConditionBaseAttribute
 
-An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [CIConditionAttribute](#ciconditionattribute), `OSConditionAttribute`, and `IgnoreAttribute`.
+An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [CIConditionAttribute](#ciconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
 
 ### ConditionMode
 
@@ -140,6 +140,10 @@ The JSON document conforms to **schema v1**: a top-level object with `schemaVers
 
 ## M
 
+### MemberConditionAttribute
+
+An MSTest attribute (`[MemberConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the value of one or more `public static bool` members (property, field, or parameterless method) on a specified type. Accepts a [ConditionMode](#conditionmode) argument and one or more member names; when multiple names are supplied they are combined with logical AND — the condition is met only when every referenced member is `true`. Each `[MemberConditionAttribute]` instance forms its own group, so stacking multiple attributes on the same target is also combined with AND. Throws `InvalidOperationException` at test discovery time if a referenced member cannot be resolved, surfacing typos as errors rather than silent skips. The attribute is not inherited — applying it to a base class does not affect derived classes. Introduced in [PR #9071](https://github.com/microsoft/testfx/pull/9071). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
 ### MSTest
 
 Microsoft's unit testing framework for .NET. Provides attributes (`[TestClass]`, `[TestMethod]`, `[DataRow]`, etc.), assertions (`Assert`, `CollectionAssert`), and lifecycle hooks for writing and organizing tests. Packaged as `MSTest.TestFramework`, `MSTest.TestAdapter`, `MSTest.Analyzers`, and `MSTest.Sdk`.
@@ -184,6 +188,10 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports test session telemetry using the [OpenTelemetry](https://opentelemetry.io/) standard, enabling integration with distributed tracing and observability platforms.
 
+### OSConditionAttribute
+
+An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
 ## P
 
 ### PlannedTest
@@ -221,6 +229,10 @@ Request for Comments document in the `docs/RFCs/` folder. RFCs describe design d
 ### testconfig.json
 
 The per-project configuration file for Microsoft.Testing.Platform, placed at the project root and read at test startup. Supports multiple top-level sections; a key one is `environmentVariables`, which declares environment variables to set on the test host process — mirroring the `<EnvironmentVariables>` element of legacy `.runsettings` and removing the need to write a custom `ITestHostEnvironmentVariableProvider` (see `docs/microsoft.testing.platform/002-TestConfig-EnvironmentVariables.md`). When the `environmentVariables` section is present and non-empty, MTP activates the **controller process model**: the launching process becomes the controller, injects the declared variables into `ProcessStartInfo`, and spawns the actual test host as a child process.
+
+### TestContainer
+
+An abstract base class (`TestFramework.ForTestingMSTest.TestContainer`) in the internal [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) framework used to unit-test MSTest itself. Any class that inherits from `TestContainer` is treated as a test class; every `public` parameterless method on that class is treated as a test — no `[TestClass]` or `[TestMethod]` attributes are needed. The constructor runs before each test and `Dispose(bool)` runs after each test. This framework is used only in `test/UnitTests/TestFramework.UnitTests`; all other test projects in this repository use standard MSTest or MTP.
 
 ### TestNode
 

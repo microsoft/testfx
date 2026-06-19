@@ -2,7 +2,7 @@
 source: githubnext/agentics/workflows/duplicate-code-detector.md@main
 name: Duplicate Code Detector
 description: Identifies duplicate code patterns across the codebase and suggests refactoring opportunities
-max-ai-credits: 2000
+max-ai-credits: 4000
 
 on:
   workflow_dispatch:

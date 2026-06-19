@@ -103,7 +103,7 @@ jobs:
       binlog-found: ${{ steps.find-binlog.outputs.found }}
       binlog-relative-path: ${{ steps.find-binlog.outputs.relative-path }}
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
 
       - name: Build with binary log
         id: build

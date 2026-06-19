@@ -6,9 +6,11 @@ using System.Text.RegularExpressions;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.DotnetTestPipe;
 
 /// <summary>
-/// Baseline tests for the <c>--server dotnettestcli</c> pipe protocol that lock down today's
-/// behavior so subsequent phases (quiet output device under pipe mode, protocol 1.0.1, live log
-/// and stream forwarding) can be reviewed as targeted diffs against these assertions.
+/// Tests for the <c>--server dotnettestcli</c> pipe protocol covering the handshake and protocol
+/// version negotiation. This PR installs the no-op output device under pipe mode and bumps the
+/// advertised protocol to 1.1.0; these tests lock down that behavior (and the remaining session
+/// event / stdout baselines) so further phases such as live log and stream forwarding can be
+/// reviewed as targeted diffs against these assertions.
 /// <para>
 /// Tracks <a href="https://github.com/dotnet/sdk/issues/51615">dotnet/sdk#51615</a> and the
 /// related <a href="https://github.com/microsoft/testfx/issues/7161">microsoft/testfx#7161</a>.
@@ -23,12 +25,19 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
 
     public TestContext TestContext { get; set; } = null!;
 
+    // The test host (testfx) now advertises both protocol 1.0.0 and 1.1.0. The 1.1.0 bump signals
+    // that TerminalOutputDevice is no longer plugged in under the pipe protocol (see
+    // microsoft/testfx#7161 and dotnet/sdk#51615). This mirrors ProtocolConstants.SupportedVersions
+    // on the host side.
+    private const string HostAdvertisedProtocolVersions = "1.0.0;1.1.0";
+
     [TestMethod]
-    public async Task DotnetTestPipe_TestAppAdvertisesAndNegotiatesProtocolV100_Today()
+    public async Task DotnetTestPipe_TestAppAdvertises100And110_NegotiatesDownToV100WithOldSdk()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
 
+        // The fake SDK advertises only 1.0.0 (the old-SDK behavior).
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
             testHost, cancellationToken: TestContext.CancellationToken);
 
@@ -39,16 +48,36 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
             result.ReceivedHandshake.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.SupportedProtocolVersions, out string? appVersions),
             "Handshake from test app is missing SupportedProtocolVersions.");
         Assert.AreEqual(
-            FakeDotnetTestSdk.DefaultSupportedProtocolVersions,
+            HostAdvertisedProtocolVersions,
             appVersions,
-            "BASELINE: today the test app advertises only protocol 1.0.0. When this assertion " +
-            "starts failing, it means the testfx side has been bumped to 1.0.1+ and the version " +
-            "negotiation tests should take over (Phase 2 of dotnet/sdk#51615).");
+            "The test app should advertise both 1.0.0 and 1.1.0 once the TerminalOutputDevice bump landed.");
 
         Assert.AreEqual(
             FakeDotnetTestSdk.DefaultSupportedProtocolVersions,
             result.NegotiatedProtocolVersion,
-            "Fake SDK should have selected '1.0.0' from the test app's advertised list.");
+            "An old SDK that only supports 1.0.0 should negotiate down to '1.0.0'.");
+    }
+
+    [TestMethod]
+    public async Task DotnetTestPipe_TestAppNegotiatesV110WithUpToDateSdk()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        // The fake SDK advertises both versions, so negotiation should pick the highest mutually
+        // supported version: 1.1.0.
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            testHost,
+            supportedProtocolVersions: HostAdvertisedProtocolVersions,
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.IsNotNull(result.ReceivedHandshake, "Test app never sent a handshake message.");
+        Assert.IsNotNull(result.SentHandshakeReply, "Fake SDK never sent a handshake reply.");
+
+        Assert.AreEqual(
+            "1.1.0",
+            result.NegotiatedProtocolVersion,
+            "When both sides advertise 1.1.0, negotiation should select the highest mutually supported version.");
     }
 
     [TestMethod]
