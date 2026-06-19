@@ -15,10 +15,15 @@
       shared source files as contentFiles/cs/any so a consumer (the dotnet/sdk 'dotnet test' implementation)
       compiles them into its OWN assembly, keeping a single source of truth instead of hand-copying.
 
-      It currently hosts the named-pipe wire contract (ObjectFieldIds.cs + Constants.cs) and is intended to grow to
-      host the other source shared with dotnet/sdk (e.g. the terminal reporter). The name is deliberately generic
-      and carries 'Internal' so it is clearly NOT a public API / client library (see also issue #5667, closed
-      pending a real use case for a public MTP client).
+      Internal, source-only package for the 'dotnet test' <-> Microsoft.Testing.Platform integration. It ships
+      shared source files as contentFiles/cs/any so a consumer (the dotnet/sdk 'dotnet test' implementation)
+      compiles them into its OWN assembly, keeping a single source of truth instead of hand-copying.
+
+      It hosts (a) the named-pipe wire contract (ObjectFieldIds.cs + Constants.cs) and (b) the terminal reporter
+      (reporter + rendering + state + the small platform abstractions it needs) together with its localized
+      resources (TerminalResources.resx + xlf, wired up by the build-extension props this package ships - see
+      build/). The name is deliberately generic and carries 'Internal' so it is clearly NOT a public API / client
+      library (see also issue #5667, closed pending a real use case for a public MTP client).
 
       *ContractCompile=false makes the imported .props skip its <Compile> items: this project only *packs* the files,
       it does not compile them. The guarantee that each shared contract compiles standalone is provided by its
@@ -29,6 +34,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <DotnetTestProtocolContractCompile>false</DotnetTestProtocolContractCompile>
+    <TerminalReporterContractCompile>false</TerminalReporterContractCompile>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
 
     <!-- Build-only / source contribution: it must not flow as a transitive runtime dependency to consumers. -->
@@ -58,11 +64,43 @@ This is an INTERNAL, source-only package: it shares - as compiled source - the p
   -->
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
 
+  <!--
+    Pulls in @(TerminalReporterContractSource) (the reporter source + abstractions) and
+    @(TerminalReporterContractResource) (TerminalResources.resx). TerminalReporterContractCompile=false above stops
+    the .props from <Compile>-ing them here; this project only packs them.
+  -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalReporterContract.props" />
+
   <ItemGroup>
+    <!-- (a) wire contract source -->
     <None Include="@(DotnetTestProtocolContractSource)"
           Pack="true"
           BuildAction="Compile"
           PackagePath="contentFiles/cs/any/DotnetTestProtocol/%(Filename)%(Extension)" />
+
+    <!-- (b) terminal reporter source (reporter + rendering + state + abstractions), compiled by the consumer -->
+    <None Include="@(TerminalReporterContractSource)"
+          Pack="true"
+          BuildAction="Compile"
+          PackagePath="contentFiles/cs/any/TerminalReporter/%(Filename)%(Extension)" />
+
+    <!--
+      Terminal localized resources. The resx + xlf are shipped under build/ (NOT contentFiles) so they are not
+      auto-compiled with the wrong metadata; the auto-imported build-extension props below adds the resx as an
+      <EmbeddedResource GenerateSource="true"> with a pinned ManifestResourceName, and XliffTasks (present in the
+      consumer, e.g. dotnet/sdk via Arcade) finds the sibling xlf/ to emit satellite assemblies.
+    -->
+    <None Include="@(TerminalReporterContractResource)"
+          Pack="true"
+          PackagePath="build/TerminalReporter/%(Filename)%(Extension)" />
+    <None Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\xlf\*.xlf"
+          Pack="true"
+          PackagePath="build/TerminalReporter/xlf/%(Filename)%(Extension)" />
+
+    <!-- Auto-imported build extension that wires the resx (GenerateSource + satellites) into the consumer. -->
+    <None Include="build\Microsoft.Testing.Platform.Internal.DotnetTest.props"
+          Pack="true"
+          PackagePath="build/Microsoft.Testing.Platform.Internal.DotnetTest.props" />
   </ItemGroup>
 
 </Project>
