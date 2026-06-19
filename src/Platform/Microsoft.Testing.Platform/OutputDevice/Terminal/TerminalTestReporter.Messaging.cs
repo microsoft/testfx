@@ -44,15 +44,15 @@ internal sealed partial class TerminalTestReporter
         });
 
     public void TestInProgress(
+        string executionId,
         string testNodeUid,
         string displayName)
     {
-        if (_testProgressState is null)
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
-        TestProgressState asm = _testProgressState;
         if (_options.ShowActiveTests)
         {
             asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));

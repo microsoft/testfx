@@ -8,57 +8,57 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [UnsupportedOSPlatform("browser")]
 internal sealed partial class TerminalTestReporter
 {
-    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery)
+    private bool _isHelp;
+    private bool _isRetry;
+
+    public void TestExecutionStarted(DateTimeOffset testStartTime, int workerCount, bool isDiscovery, bool isHelp, bool isRetry)
     {
         _isDiscovery = isDiscovery;
+        _isHelp = isHelp;
+        _isRetry = isRetry;
         _testExecutionStartTime = testStartTime;
         _terminalWithProgress.StartShowingProgress(workerCount);
     }
 
-    public void AssemblyRunStarted()
-        => GetOrAddAssemblyRun();
+    public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId)
+        => GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
 
-    private TestProgressState GetOrAddAssemblyRun()
-    {
-        if (_testProgressState is not null)
+    private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string executionId)
+        => _assemblies.GetOrAdd(executionId, _ =>
         {
-            return _testProgressState;
-        }
-
-        lock (_lock)
-        {
-            if (_testProgressState is not null)
+            lock (_lock)
             {
-                return _testProgressState;
+                IStopwatch sw = CreateStopwatch();
+                var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), assembly, targetFramework, architecture, sw, _isDiscovery);
+                int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
+                assemblyRun.SlotIndex = slotIndex;
+                return assemblyRun;
             }
+        });
 
-            IStopwatch sw = CreateStopwatch();
-            var assemblyRun = new TestProgressState(Interlocked.Increment(ref _counter), _assembly, _targetFramework, _architecture, sw, _isDiscovery);
-            int slotIndex = _terminalWithProgress.AddWorker(assemblyRun);
-            assemblyRun.SlotIndex = slotIndex;
-            _testProgressState = assemblyRun;
-            return assemblyRun;
-        }
-    }
-
-    internal void AssemblyRunCompleted()
+    internal void AssemblyRunCompleted(string executionId)
     {
-        TestProgressState assemblyRun = GetOrAddAssemblyRun();
-        assemblyRun.Stopwatch.Stop();
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? assemblyRun))
+        {
+            return;
+        }
 
+        assemblyRun.Stopwatch.Stop();
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
     }
 
-    public void TestExecutionCompleted(DateTimeOffset endTime)
+    public void TestExecutionCompleted(DateTimeOffset endTime, int? exitCode)
     {
         _testExecutionEndTime = endTime;
         _terminalWithProgress.StopShowingProgress();
 
-        _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
+        if (!_isHelp)
+        {
+            _terminalWithProgress.WriteToTerminal(_isDiscovery ? AppendTestDiscoverySummary : AppendTestRunSummary);
+        }
 
-        // This is relevant for HotReload scenarios. We want the next test sessions to start
-        // on a new TestProgressState
-        _testProgressState = null;
+        // This is relevant for HotReload scenarios. We want the next test sessions to start fresh.
+        _assemblies.Clear();
 
         _testExecutionStartTime = null;
         _testExecutionEndTime = null;

@@ -10,6 +10,13 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 
 internal sealed partial class TerminalOutputDevice
 {
+    /// <summary>
+    /// Execution id used for the single assembly handled by an in-process Microsoft.Testing.Platform host. The
+    /// terminal reporter is now multi-assembly (one entry per <c>dotnet test</c> child assembly); in-process there
+    /// is exactly one, so a constant id is used.
+    /// </summary>
+    private const string InProcessExecutionId = "in-process";
+
     public async Task InitializeAsync()
     {
         if (_fileLoggerInformation is not null)
@@ -151,7 +158,7 @@ internal sealed partial class TerminalOutputDevice
                 : !_testHostControllerInfo.IsCurrentProcessTestHostController;
 
         // This is single exe run, don't show all the details of assemblies and their summaries.
-        _terminalTestReporter = new TerminalTestReporter(_assemblyName, _targetFramework, _shortArchitecture, _console, () => _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested, new()
+        _terminalTestReporter = new TerminalTestReporter(_console, () => _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested, new()
         {
             ShowPassedTests = showPassed,
             MinimumExpectedTests = PlatformCommandLineProvider.GetMinimumExpectedTests(_commandLineOptions),

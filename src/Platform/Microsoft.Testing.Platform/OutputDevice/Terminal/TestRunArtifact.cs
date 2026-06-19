@@ -9,4 +9,4 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// An artifact / attachment that was reported during run.
 /// </summary>
 [Embedded]
-internal sealed record TestRunArtifact(bool OutOfProcess, string? TestName, string Path);
+internal sealed record TestRunArtifact(bool OutOfProcess, string? Assembly, string? TargetFramework, string? Architecture, string? ExecutionId, string? TestName, string Path);

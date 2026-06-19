@@ -40,9 +40,12 @@ internal sealed partial class TerminalTestReporter
 
         terminal.AppendLine();
 
-        int totalTests = _testProgressState?.TotalTests ?? 0;
-        int totalFailedTests = _testProgressState?.FailedTests ?? 0;
-        int totalSkippedTests = _testProgressState?.SkippedTests ?? 0;
+        List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
+
+        int totalTests = assemblies.Sum(static a => a.TotalTests);
+        int totalFailedTests = assemblies.Sum(static a => a.FailedTests);
+        int totalSkippedTests = assemblies.Sum(static a => a.SkippedTests);
+        int totalPassedTests = assemblies.Sum(static a => a.PassedTests);
 
         // DESIGN: `allTestsWereSkipped` is intentionally treated as a failed run. Skipped tests don't count as
         // "ran", so an all-skipped (or zero-test) run is reported in red as "Zero tests ran". This is the strict
@@ -60,17 +63,23 @@ internal sealed partial class TerminalTestReporter
         terminal.Append(' ');
         terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests));
 
-        terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(" - ");
-        terminal.ResetColor();
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
+        // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
+        // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in
+        // the progress area, so we keep the run-level verdict line link-free.
+        if (assemblies.Count == 1)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append(" - ");
+            terminal.ResetColor();
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblies[0]);
+        }
 
         terminal.AppendLine();
 
-        int total = _testProgressState?.TotalTests ?? 0;
-        int failed = _testProgressState?.FailedTests ?? 0;
-        int passed = _testProgressState?.PassedTests ?? 0;
-        int skipped = _testProgressState?.SkippedTests ?? 0;
+        int total = totalTests;
+        int failed = totalFailedTests;
+        int passed = totalPassedTests;
+        int skipped = totalSkippedTests;
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
@@ -126,14 +135,13 @@ internal sealed partial class TerminalTestReporter
         terminal.AppendLine();
     }
 
-    internal void TestDiscovered(string displayName)
+    internal void TestDiscovered(string executionId, string displayName)
     {
-        if (_testProgressState is null)
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
-        TestProgressState asm = _testProgressState;
         asm.DiscoveredTests++;
 
         if (_isDiscovery)
@@ -150,13 +158,13 @@ internal sealed partial class TerminalTestReporter
 
     public void AppendTestDiscoverySummary(ITerminal terminal)
     {
-        TestProgressState? assembly = _testProgressState;
+        List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
         terminal.AppendLine();
 
-        int totalTests = assembly?.TotalTests ?? 0;
+        int totalTests = assemblies.Sum(static a => a.TotalTests);
         bool runFailed = WasCancelled || totalTests < 1;
 
-        if (assembly is not null)
+        foreach (TestProgressState assembly in assemblies)
         {
             foreach (string displayName in assembly.DiscoveredTestDisplayNames)
             {
@@ -170,10 +178,13 @@ internal sealed partial class TerminalTestReporter
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
         terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.TestDiscoverySummarySingular, totalTests));
 
-        terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(" - ");
-        terminal.ResetColor();
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
+        if (assemblies.Count == 1)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append(" - ");
+            terminal.ResetColor();
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblies[0]);
+        }
 
         terminal.ResetColor();
         terminal.AppendLine();

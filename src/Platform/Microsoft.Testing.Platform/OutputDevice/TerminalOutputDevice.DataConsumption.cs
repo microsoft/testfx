@@ -141,7 +141,11 @@ internal sealed partial class TerminalOutputDevice
                         case FileArtifactProperty fa:
                             _terminalTestReporter.ArtifactAdded(
                                 outOfProcess: _processRole != TestProcessRole.TestHost,
-                                testNodeStateChanged.TestNode.DisplayName,
+                                assembly: _assemblyName,
+                                targetFramework: _targetFramework,
+                                architecture: _shortArchitecture,
+                                executionId: InProcessExecutionId,
+                                testName: testNodeStateChanged.TestNode.DisplayName,
                                 fa.FileInfo.FullName);
                             break;
                     }
@@ -155,12 +159,14 @@ internal sealed partial class TerminalOutputDevice
                 {
                     case InProgressTestNodeStateProperty:
                         _terminalTestReporter.TestInProgress(
+                            InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName);
                         break;
 
                     case ErrorTestNodeStateProperty errorState:
                         _terminalTestReporter.TestCompleted(
+                            InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Error,
@@ -176,6 +182,7 @@ internal sealed partial class TerminalOutputDevice
 
                     case FailedTestNodeStateProperty failedState:
                         _terminalTestReporter.TestCompleted(
+                             InProcessExecutionId,
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Fail,
@@ -191,6 +198,7 @@ internal sealed partial class TerminalOutputDevice
 
                     case TimeoutTestNodeStateProperty timeoutState:
                         _terminalTestReporter.TestCompleted(
+                             InProcessExecutionId,
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Timeout,
@@ -208,6 +216,7 @@ internal sealed partial class TerminalOutputDevice
                     case CancelledTestNodeStateProperty cancelledState:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                         _terminalTestReporter.TestCompleted(
+                             InProcessExecutionId,
                              testNodeStateChanged.TestNode.Uid.Value,
                              testNodeStateChanged.TestNode.DisplayName,
                              TestOutcome.Canceled,
@@ -223,6 +232,7 @@ internal sealed partial class TerminalOutputDevice
 
                     case PassedTestNodeStateProperty:
                         _terminalTestReporter.TestCompleted(
+                            InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             outcome: TestOutcome.Passed,
@@ -238,6 +248,7 @@ internal sealed partial class TerminalOutputDevice
 
                     case SkippedTestNodeStateProperty skippedState:
                         _terminalTestReporter.TestCompleted(
+                            InProcessExecutionId,
                             testNodeStateChanged.TestNode.Uid.Value,
                             testNodeStateChanged.TestNode.DisplayName,
                             TestOutcome.Skipped,
@@ -252,7 +263,7 @@ internal sealed partial class TerminalOutputDevice
                         break;
 
                     case DiscoveredTestNodeStateProperty:
-                        _terminalTestReporter.TestDiscovered(testNodeStateChanged.TestNode.DisplayName);
+                        _terminalTestReporter.TestDiscovered(InProcessExecutionId, testNodeStateChanged.TestNode.DisplayName);
                         break;
                 }
 
@@ -262,6 +273,10 @@ internal sealed partial class TerminalOutputDevice
                 {
                     _terminalTestReporter.ArtifactAdded(
                         outOfProcess: _processRole != TestProcessRole.TestHost,
+                        assembly: _assemblyName,
+                        targetFramework: _targetFramework,
+                        architecture: _shortArchitecture,
+                        executionId: InProcessExecutionId,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }
@@ -271,6 +286,10 @@ internal sealed partial class TerminalOutputDevice
                 {
                     _terminalTestReporter.ArtifactAdded(
                         outOfProcess: _processRole != TestProcessRole.TestHost,
+                        assembly: _assemblyName,
+                        targetFramework: _targetFramework,
+                        architecture: _shortArchitecture,
+                        executionId: InProcessExecutionId,
                         testName: null,
                         artifact.FileInfo.FullName);
                 }

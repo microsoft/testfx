@@ -86,8 +86,8 @@ internal sealed partial class TerminalOutputDevice
 
         // Start test execution here, rather than in ShowBanner, because then we know
         // if we are a testHost controller or not, and if we should show progress bar.
-        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: _isListTests);
-        _terminalTestReporter.AssemblyRunStarted();
+        _terminalTestReporter.TestExecutionStarted(_clock.UtcNow, workerCount: 1, isDiscovery: _isListTests, isHelp: false, isRetry: false);
+        _terminalTestReporter.AssemblyRunStarted(_assemblyName, _targetFramework, _shortArchitecture, InProcessExecutionId, InProcessExecutionId);
         if (_logger is not null && _logger.IsEnabled(LogLevel.Trace))
         {
             await _logger.LogTraceAsync("DisplayBeforeSessionStartAsync").ConfigureAwait(false);
@@ -150,8 +150,8 @@ internal sealed partial class TerminalOutputDevice
         {
             if (_processRole == TestProcessRole.TestHost)
             {
-                _terminalTestReporter.AssemblyRunCompleted();
-                _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow);
+                _terminalTestReporter.AssemblyRunCompleted(InProcessExecutionId);
+                _terminalTestReporter.TestExecutionCompleted(_clock.UtcNow, exitCode: null);
             }
             else
             {
