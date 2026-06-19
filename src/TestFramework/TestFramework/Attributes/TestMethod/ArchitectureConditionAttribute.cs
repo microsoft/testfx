@@ -45,13 +45,7 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
     /// Gets a value indicating whether the test method or test class should be ignored.
     /// </summary>
     public override bool IsConditionMet
-    {
-        get
-        {
-            TestArchitectures current = MapArchitecture(RuntimeInformation.ProcessArchitecture);
-            return (_architectures & current) != 0;
-        }
-    }
+        => (_architectures & MapArchitecture(RuntimeInformation.ProcessArchitecture)) != 0;
 
     /// <summary>
     /// Gets the group name for this attribute.
