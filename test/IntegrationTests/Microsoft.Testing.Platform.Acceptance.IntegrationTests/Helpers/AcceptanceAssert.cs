@@ -144,7 +144,7 @@ internal static class AcceptanceAssert
         string normalizedValue = NormalizeForLocalization(value);
         Assert.IsTrue(
             normalizedOutput.Contains(normalizedValue, StringComparison.Ordinal),
-            $"Output does not contain '{value}'.{Environment.NewLine}Output:{Environment.NewLine}{testHostResult.StandardOutput}");
+            GenerateFailedAssertionMessage(testHostResult, callerMemberName, callerFilePath, callerLineNumber));
     }
 
     /// <summary>
@@ -158,7 +158,7 @@ internal static class AcceptanceAssert
         string normalizedValue = NormalizeForLocalization(value);
         Assert.IsFalse(
             normalizedOutput.Contains(normalizedValue, StringComparison.Ordinal),
-            $"Output should not contain '{value}'.{Environment.NewLine}Output:{Environment.NewLine}{testHostResult.StandardOutput}");
+            GenerateFailedAssertionMessage(testHostResult, callerMemberName, callerFilePath, callerLineNumber));
     }
 
     public static void AssertStandardErrorContains(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
