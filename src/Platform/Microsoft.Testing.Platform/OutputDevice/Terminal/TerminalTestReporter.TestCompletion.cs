@@ -25,6 +25,8 @@ internal sealed partial class TerminalTestReporter
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
             executionId,
+            // In-process host: a single attempt, so the instance id is the (fixed) execution id.
+            instanceId: executionId,
             testNodeUid,
             displayName,
             outcome,
@@ -39,9 +41,9 @@ internal sealed partial class TerminalTestReporter
 
     /// <summary>
     /// Orchestrator overload (<c>dotnet test</c>): carries the assembly/target-framework/architecture and the
-    /// per-attempt instance id that the multi-process orchestrator knows. Counting and rendering currently delegate
-    /// to the shared per-execution-id path; <paramref name="instanceId"/> (retry attribution) and the per-test
-    /// assembly link are reserved for the retry-counting follow-up.
+    /// per-attempt instance id that the multi-process orchestrator knows. The instance id drives retry attribution
+    /// in <see cref="TestProgressState"/>; assembly/tfm/arch are accepted for signature parity and the future
+    /// per-test assembly link.
     /// </summary>
     internal void TestCompleted(
         string assembly,
@@ -59,11 +61,11 @@ internal sealed partial class TerminalTestReporter
         string? actual,
         string? standardOutput,
         string? errorOutput)
-        // assembly / targetFramework / architecture / instanceId are intentionally not forwarded yet: counting and
-        // rendering still go through the shared per-execution-id path. They are reserved for the per-assembly link
-        // and instanceId-based retry attribution added in a follow-up slice (see the XML doc above). Not a bug.
+        // assembly / targetFramework / architecture are intentionally not forwarded yet: they are reserved for the
+        // per-test assembly link in a follow-up. The instance id IS forwarded — it drives retry attribution.
         => TestCompleted(
             executionId,
+            instanceId,
             testNodeUid,
             displayName,
             outcome,
@@ -77,6 +79,7 @@ internal sealed partial class TerminalTestReporter
 
     private void TestCompleted(
         string executionId,
+        string instanceId,
         string testNodeUid,
         string displayName,
         TestOutcome outcome,
@@ -104,16 +107,13 @@ internal sealed partial class TerminalTestReporter
             case TestOutcome.Timeout:
             case TestOutcome.Canceled:
             case TestOutcome.Fail:
-                asm.FailedTests++;
-                asm.TotalTests++;
+                asm.ReportFailedTest(testNodeUid, instanceId);
                 break;
             case TestOutcome.Passed:
-                asm.PassedTests++;
-                asm.TotalTests++;
+                asm.ReportPassingTest(testNodeUid, instanceId);
                 break;
             case TestOutcome.Skipped:
-                asm.SkippedTests++;
-                asm.TotalTests++;
+                asm.ReportSkippedTest(testNodeUid, instanceId);
                 break;
         }
 

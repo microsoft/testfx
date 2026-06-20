@@ -224,11 +224,20 @@ public sealed class SilenceDrivenHeartbeatRendererTests
 
     private static TestProgressState CreateAssembly(FakeClock clock, int totalTests, int failedTests, string? activeTestName)
     {
-        var asm = new TestProgressState(1, "MyAcceptance.dll", "net9.0", "x64", clock.CreateStopwatch(), isDiscovery: false)
+        var asm = new TestProgressState(1, "MyAcceptance.dll", "net9.0", "x64", clock.CreateStopwatch(), isDiscovery: false);
+
+        // Counts are now derived from reported per-test results (to support retry de-duplication), so seed them by
+        // reporting the requested number of failed + passed tests under a single attempt.
+        asm.NotifyHandshake("inst-1");
+        for (int i = 0; i < failedTests; i++)
         {
-            TotalTests = totalTests,
-            FailedTests = failedTests,
-        };
+            asm.ReportFailedTest($"fail-{i}", "inst-1");
+        }
+
+        for (int i = 0; i < totalTests - failedTests; i++)
+        {
+            asm.ReportPassingTest($"pass-{i}", "inst-1");
+        }
 
         if (activeTestName is not null)
         {
