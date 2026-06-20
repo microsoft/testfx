@@ -25,6 +25,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertNonStrictThrowsInterpolatedStringHandler<TException>
         where TException : Exception
     {
@@ -87,6 +88,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertThrowsExactlyInterpolatedStringHandler<TException>
         where TException : Exception
     {

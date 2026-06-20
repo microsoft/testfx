@@ -66,6 +66,7 @@
   <Folder Name="/src/3 - TestFramework/">
     <Project Path="src/TestFramework/TestFramework.Extensions/TestFramework.Extensions.csproj" />
     <Project Path="src/TestFramework/TestFramework/TestFramework.csproj" />
+    <Project Path="src/TestFramework/TestFramework.SourceGeneration/TestFramework.SourceGeneration.csproj" />
   </Folder>
   <Folder Name="/src/4 - Analyzers/">
     <Project Path="src/Analyzers/MSTest.Analyzers.CodeFixes/MSTest.Analyzers.CodeFixes.csproj" />

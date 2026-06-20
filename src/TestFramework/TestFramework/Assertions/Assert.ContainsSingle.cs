@@ -18,6 +18,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertSingleInterpolatedStringHandler<TItem>
     {
         private readonly StringBuilder? _builder;

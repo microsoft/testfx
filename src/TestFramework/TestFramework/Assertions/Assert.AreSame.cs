@@ -25,6 +25,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertAreSameInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
@@ -70,6 +71,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertAreNotSameInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;

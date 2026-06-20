@@ -66,4 +66,10 @@
     <Using Include="$(RootNamespace).Resources" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Emits the repetitive AppendLiteral/AppendFormatted overloads for the Assert.*InterpolatedStringHandler
+         structs (see GenerateAssertInterpolatedStringAppendMethodsAttribute). -->
+    <ProjectReference Include="..\TestFramework.SourceGeneration\TestFramework.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
 </Project>

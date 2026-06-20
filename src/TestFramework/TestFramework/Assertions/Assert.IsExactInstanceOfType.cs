@@ -24,6 +24,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertIsExactInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -69,6 +70,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;
@@ -110,6 +112,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertIsNotExactInstanceOfTypeInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -155,6 +158,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>
     {
         private readonly StringBuilder? _builder;

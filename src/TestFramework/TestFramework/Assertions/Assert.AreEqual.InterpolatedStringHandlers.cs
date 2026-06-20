@@ -23,6 +23,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods(NullableLiteralParameter = true)]
     public readonly partial struct AssertAreEqualInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
@@ -89,6 +90,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertAreNotEqualInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
@@ -147,6 +149,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertNonGenericAreEqualInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -288,6 +291,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertNonGenericAreNotEqualInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
