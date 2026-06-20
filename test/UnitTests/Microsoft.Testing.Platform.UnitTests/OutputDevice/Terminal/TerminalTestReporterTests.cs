@@ -1138,6 +1138,39 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TerminalTestReporter_WhenOrchestratorDiscoveryDisplayNameIsNull_ShouldNotAddBlankSummaryEntry()
+    {
+        // Arrange
+        string assembly = "test.dll";
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => false,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+
+        // Act
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
+        terminalReporter.TestDiscovered("0", displayName: null, uid: "uid", filePath: null, lineNumber: null);
+        terminalReporter.TestDiscovered("0", "TestMethod1", uid: "uid-1", filePath: null, lineNumber: null);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
+
+        string[] outputLines = stringBuilderConsole.Output.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+
+        // Assert
+        Assert.DoesNotContain(TerminalTestReporter.SingleIndentation, outputLines);
+        Assert.Contains($"{TerminalTestReporter.SingleIndentation}TestMethod1", outputLines);
+    }
+
+    [TestMethod]
     public void TerminalTestReporter_WhenMultipleAssemblies_AggregatesCountsAndOmitsAssemblyLinkOnVerdict()
     {
         // Arrange — two assemblies (the dotnet test orchestrator case), each registered under its own
