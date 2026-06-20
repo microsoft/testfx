@@ -542,29 +542,11 @@ public sealed partial class Assert
 #pragma warning restore CS8777 // Parameter must have a non-null value when exiting.
 
     private static bool IsExactInstanceOfTypeFailing([NotNullWhen(false)] object? value, [NotNullWhen(false)] Type? expectedType)
-        => expectedType is null || value is null || value.GetType() != expectedType;
+        => IsTypeMatchFailing(value, expectedType, exact: true);
 
     [DoesNotReturn]
     private static void ReportAssertIsExactInstanceOfTypeFailed(object? value, Type? expectedType, string? userMessage, string valueExpression)
-    {
-        StructuredAssertionMessage msg = expectedType is null
-            ? new("Cannot check type because the expected type argument is null.")
-            : new($"Expected value to be exactly of type {expectedType.Name}.");
-        msg.WithUserMessage(userMessage);
-
-        if (expectedType is not null)
-        {
-            string actualTypeText = value?.GetType().ToString() ?? "null";
-            EvidenceBlock evidence = EvidenceBlock.Create()
-                .AddLine("expected type:", expectedType.ToString())
-                .AddLine(value is null ? "actual:" : "actual type:", actualTypeText);
-            msg.WithEvidence(evidence)
-               .WithExpectedAndActual(expectedType.ToString(), actualTypeText);
-        }
-
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsExactInstanceOfType", valueExpression, "<value>"));
-        ReportAssertFailed(msg);
-    }
+        => ReportAssertTypeMatchFailed(value, expectedType, userMessage, valueExpression, exact: true);
 
     /// <summary>
     /// Tests whether the specified object is not exactly an instance of the wrong
@@ -629,29 +611,9 @@ public sealed partial class Assert
     }
 
     private static bool IsNotExactInstanceOfTypeFailing(object? value, [NotNullWhen(false)] Type? wrongType)
-        => wrongType is null ||
-            // Null is not an instance of any type.
-            (value is not null && value.GetType() == wrongType);
+        => IsTypeMismatchFailing(value, wrongType, exact: true);
 
     [DoesNotReturn]
     private static void ReportAssertIsNotExactInstanceOfTypeFailed(object? value, Type? wrongType, string? userMessage, string valueExpression)
-    {
-        StructuredAssertionMessage msg = wrongType is null
-            ? new("Cannot check type because the not-expected type argument is null.")
-            : new($"Expected value to not be exactly of type {wrongType.Name}.");
-        msg.WithUserMessage(userMessage);
-
-        if (wrongType is not null)
-        {
-            string actualTypeText = value?.GetType().ToString() ?? "null";
-            EvidenceBlock evidence = EvidenceBlock.Create()
-                .AddLine("not expected type:", wrongType.ToString())
-                .AddLine("actual type:", actualTypeText);
-            msg.WithEvidence(evidence)
-               .WithExpectedAndActual(wrongType.ToString(), actualTypeText);
-        }
-
-        msg.WithCallSiteExpression(FormatCallSiteExpression("Assert.IsNotExactInstanceOfType", valueExpression, "<value>"));
-        ReportAssertFailed(msg);
-    }
+        => ReportAssertTypeMismatchFailed(value, wrongType, userMessage, valueExpression, exact: true);
 }
