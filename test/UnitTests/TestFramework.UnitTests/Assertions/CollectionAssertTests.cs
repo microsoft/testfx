@@ -75,6 +75,49 @@ public class CollectionAssertTests : TestContainer
         _ = collection.Count; // no warning
     }
 
+    public void CollectionAssertContainsPopulatesStructuredExpectedAndActual()
+    {
+        ICollection collection = new[] { "a", "b" };
+        Action action = () => CollectionAssert.Contains(collection, "c");
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected collection to contain the specified element.");
+        ex.ExpectedText.Should().Be("\"c\"");
+        ex.Data["assert.expected"].Should().Be("\"c\"");
+        ex.Data["assert.actual"].Should().NotBeNull();
+    }
+
+    public void CollectionAssertDoesNotContainPopulatesStructuredExpectedAndActual()
+    {
+        ICollection collection = new[] { "a", "b" };
+        Action action = () => CollectionAssert.DoesNotContain(collection, "a");
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected collection to not contain the specified element.");
+        ex.ExpectedText.Should().Be("\"a\"");
+        ex.Data["assert.expected"].Should().Be("\"a\"");
+        ex.Data["assert.actual"].Should().NotBeNull();
+    }
+
+    public void CollectionAssertAllItemsAreNotNullPopulatesStructuredActual()
+    {
+        ICollection collection = new[] { "a", null };
+        Action action = () => CollectionAssert.AllItemsAreNotNull(collection);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected all items in collection to be non-null.");
+        ex.ActualText.Should().NotBeNull();
+        ex.Data["assert.actual"].Should().NotBeNull();
+    }
+
+    public void CollectionAssertAllItemsAreUniquePopulatesStructuredActual()
+    {
+        ICollection collection = new[] { "a", "a" };
+        Action action = () => CollectionAssert.AllItemsAreUnique(collection);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.Message.Should().Contain("Expected all items in collection to be distinct.");
+        ex.Message.Should().Contain("duplicate:");
+        ex.ActualText.Should().NotBeNull();
+        ex.Data["assert.actual"].Should().NotBeNull();
+    }
+
     public void CollectionAssertIsSubsetOfNullabilityPostConditions()
     {
         ICollection? collection = GetCollection();

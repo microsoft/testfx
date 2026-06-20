@@ -19,7 +19,7 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.Contains(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.Contains failed");
+            .And.Message.Should().Contain("Expected string to contain the specified substring.");
     }
 
     public void StringAssertStartsWith()
@@ -28,7 +28,7 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.StartsWith(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.StartsWith failed");
+            .And.Message.Should().Contain("Expected string to start with the specified prefix.");
     }
 
     public void StringAssertEndsWith()
@@ -37,7 +37,7 @@ public class StringAssertTests : TestContainer
         string notInString = "I'm not in the string above";
         Action action = () => StringAssert.EndsWith(actual, notInString);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.EndsWith failed");
+            .And.Message.Should().Contain("Expected string to end with the specified suffix.");
     }
 
     public void StringAssertDoesNotMatch()
@@ -46,7 +46,59 @@ public class StringAssertTests : TestContainer
         Regex doesMatch = new("quick brown fox");
         Action action = () => StringAssert.DoesNotMatch(actual, doesMatch);
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.DoesNotMatch failed");
+            .And.Message.Should().Contain("Expected string to not match the specified pattern.");
+    }
+
+    public void StringAssertContainsPopulatesStructuredExpectedAndActual()
+    {
+        string actual = "The quick brown fox jumps over the lazy dog.";
+        string notInString = "I'm not in the string above";
+        Action action = () => StringAssert.Contains(actual, notInString);
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("\"I'm not in the string above\"");
+        ex.ActualText.Should().Be("\"The quick brown fox jumps over the lazy dog.\"");
+        ex.Data["assert.expected"].Should().Be("\"I'm not in the string above\"");
+        ex.Data["assert.actual"].Should().Be("\"The quick brown fox jumps over the lazy dog.\"");
+    }
+
+    public void StringAssertStartsWithPopulatesStructuredExpectedAndActual()
+    {
+        Action action = () => StringAssert.StartsWith("hello world", "world");
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("\"world\"");
+        ex.ActualText.Should().Be("\"hello world\"");
+        ex.Data["assert.expected"].Should().Be("\"world\"");
+        ex.Data["assert.actual"].Should().Be("\"hello world\"");
+    }
+
+    public void StringAssertEndsWithPopulatesStructuredExpectedAndActual()
+    {
+        Action action = () => StringAssert.EndsWith("hello world", "hello");
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("\"hello\"");
+        ex.ActualText.Should().Be("\"hello world\"");
+        ex.Data["assert.expected"].Should().Be("\"hello\"");
+        ex.Data["assert.actual"].Should().Be("\"hello world\"");
+    }
+
+    public void StringAssertMatchesPopulatesStructuredExpectedAndActual()
+    {
+        Action action = () => StringAssert.Matches("hello", new Regex("world"));
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("\"world\"");
+        ex.ActualText.Should().Be("\"hello\"");
+        ex.Data["assert.expected"].Should().Be("\"world\"");
+        ex.Data["assert.actual"].Should().Be("\"hello\"");
+    }
+
+    public void StringAssertDoesNotMatchPopulatesStructuredExpectedAndActual()
+    {
+        Action action = () => StringAssert.DoesNotMatch("hello", new Regex("hello"));
+        AssertFailedException ex = action.Should().Throw<AssertFailedException>().Which;
+        ex.ExpectedText.Should().Be("\"hello\"");
+        ex.ActualText.Should().Be("\"hello\"");
+        ex.Data["assert.expected"].Should().Be("\"hello\"");
+        ex.Data["assert.actual"].Should().Be("\"hello\"");
     }
 
     public void StringAssertContainsIgnoreCase_DoesNotThrow()
@@ -75,7 +127,7 @@ public class StringAssertTests : TestContainer
     {
         Action action = () => StringAssert.Contains(":-{", "x");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.Contains failed");
+            .And.Message.Should().Contain("Expected string to contain the specified substring.");
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
@@ -83,7 +135,7 @@ public class StringAssertTests : TestContainer
     {
         Action action = () => StringAssert.Contains("{", "x", "message");
         action.Should().Throw<Exception>()
-            .And.Message.Should().Contain("StringAssert.Contains failed");
+            .And.Message.Should().Contain("Expected string to contain the specified substring.");
     }
 
     public void StringAssertContainsNullabilitiesPostConditions()

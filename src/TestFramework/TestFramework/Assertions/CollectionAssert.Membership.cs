@@ -62,7 +62,24 @@ public sealed partial class CollectionAssert
             }
         }
 
-        Assert.ReportAssertFailed("CollectionAssert.Contains", Assert.BuildUserMessage(message));
+        ReportContainsFailed(collection, element, Assert.BuildUserMessage(message));
+    }
+
+    [DoesNotReturn]
+    private static void ReportContainsFailed(ICollection collection, object? element, string? userMessage)
+    {
+        string expectedText = AssertionValueRenderer.RenderValue(element);
+        string collectionText = AssertionValueRenderer.RenderValue(collection);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected:", expectedText)
+            .AddLine("collection:", collectionText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.ContainsItemFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, collectionText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -111,9 +128,26 @@ public sealed partial class CollectionAssert
         {
             if (object.Equals(current, element))
             {
-                Assert.ReportAssertFailed("CollectionAssert.DoesNotContain", Assert.BuildUserMessage(message));
+                ReportDoesNotContainFailed(collection, element, Assert.BuildUserMessage(message));
             }
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportDoesNotContainFailed(ICollection collection, object? element, string? userMessage)
+    {
+        string notExpectedText = AssertionValueRenderer.RenderValue(element);
+        string collectionText = AssertionValueRenderer.RenderValue(collection);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected:", notExpectedText)
+            .AddLine("collection:", collectionText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotContainItemFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(notExpectedText, collectionText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -152,9 +186,24 @@ public sealed partial class CollectionAssert
         {
             if (current == null)
             {
-                Assert.ReportAssertFailed("CollectionAssert.AllItemsAreNotNull", Assert.BuildUserMessage(message));
+                ReportAllItemsAreNotNullFailed(collection, Assert.BuildUserMessage(message));
             }
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAllItemsAreNotNullFailed(ICollection collection, string? userMessage)
+    {
+        string collectionText = AssertionValueRenderer.RenderValue(collection);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("collection:", collectionText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreAllNotNullFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -193,8 +242,6 @@ public sealed partial class CollectionAssert
 
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection");
 
-        message = Assert.ReplaceNulls(message);
-
         bool foundNull = false;
         HashSet<object> table = [];
         foreach (object? current in collection)
@@ -208,31 +255,34 @@ public sealed partial class CollectionAssert
                 else
                 {
                     // Found a second occurrence of null.
-                    string userMessage = Assert.BuildUserMessage(message);
-                    string finalMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.AllItemsAreUniqueFailMsg,
-                        userMessage,
-                        FrameworkMessages.Common_NullInMessages);
-
-                    Assert.ReportAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
+                    ReportAllItemsAreUniqueFailed(collection, duplicate: null, Assert.BuildUserMessage(message));
                 }
             }
             else
             {
                 if (!table.Add(current))
                 {
-                    string userMessage = Assert.BuildUserMessage(message);
-                    string finalMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.AllItemsAreUniqueFailMsg,
-                        userMessage,
-                        Assert.ReplaceNulls(current));
-
-                    Assert.ReportAssertFailed("CollectionAssert.AllItemsAreUnique", finalMessage);
+                    ReportAllItemsAreUniqueFailed(collection, current, Assert.BuildUserMessage(message));
                 }
             }
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportAllItemsAreUniqueFailed(ICollection collection, object? duplicate, string? userMessage)
+    {
+        string duplicateText = AssertionValueRenderer.RenderValue(duplicate);
+        string collectionText = AssertionValueRenderer.RenderValue(collection);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("duplicate:", duplicateText)
+            .AddLine("collection:", collectionText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.AreAllDistinctFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText: null, actualText: collectionText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     #endregion
