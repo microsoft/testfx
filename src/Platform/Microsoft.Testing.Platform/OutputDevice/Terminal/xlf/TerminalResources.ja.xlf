@@ -27,10 +27,20 @@
         <target state="translated">コンソールは既にバッチ 処理モードです。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
+      <trans-unit id="DiscoveringTestsFrom">
+        <source>Discovering tests from</source>
+        <target state="new">Discovering tests from</target>
+        <note>Per-assembly banner printed by the dotnet test orchestrator before discovering tests in an assembly; followed by the assembly path/target framework/architecture.</note>
+      </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
         <target state="translated">期間</target>
         <note />
+      </trans-unit>
+      <trans-unit id="Error">
+        <source>error</source>
+        <target state="new">error</target>
+        <note>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
@@ -111,6 +121,11 @@
         <source>retried</source>
         <target state="new">retried</target>
         <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
+      </trans-unit>
+      <trans-unit id="RunningTestsFrom">
+        <source>Running tests from</source>
+        <target state="new">Running tests from</target>
+        <note>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>

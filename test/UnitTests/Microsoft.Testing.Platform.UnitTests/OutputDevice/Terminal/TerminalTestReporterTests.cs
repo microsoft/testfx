@@ -1608,6 +1608,9 @@ public sealed class TerminalTestReporterTests
 
         // 2) Summary total line carries the "(+1 retried)" suffix.
         Assert.Contains($"{TerminalResources.TotalLowercase}: 1 (+1 {TerminalResources.Retried})", output);
+
+        // The retry also surfaces in the per-assembly "(try N) Running tests from" banner.
+        Assert.Contains($"({tryTwo}) {TerminalResources.RunningTestsFrom}", output);
     }
 
     [TestMethod]
@@ -1679,6 +1682,9 @@ public sealed class TerminalTestReporterTests
         // The run verdict escalates to "Failed!" (not "Passed!") because the assembly process failed.
         Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
         Assert.DoesNotContain($"{TerminalResources.TestRunSummary} {TerminalResources.Passed}!", output);
+
+        // The summary surfaces the failed-process count on a dedicated "error: 1" line.
+        Assert.Contains($"{TerminalResources.Error}: 1", output);
     }
 
     [TestMethod]

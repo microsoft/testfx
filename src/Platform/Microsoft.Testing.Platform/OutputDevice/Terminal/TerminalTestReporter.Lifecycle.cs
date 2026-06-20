@@ -32,6 +32,27 @@ internal sealed partial class TerminalTestReporter
         // so the per-test "(try N)" annotation and the summary's "(+N retried)" suffix are shown. The in-process
         // host only ever handshakes once (TryCount stays 1), so this never trips for it.
         _isRetry |= assemblyRun.TryCount > 1;
+
+        // Orchestrator-only: print the per-assembly "Running tests from <assembly>" banner (or "Discovering tests
+        // from" in discovery mode), prefixed with "(try N)" on a retry. Gated on ShowAssembly + ShowAssemblyStartAndComplete,
+        // which the in-process host leaves off, so its output is unchanged.
+        if (_options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
+        {
+            _terminalWithProgress.WriteToTerminal(terminal =>
+            {
+                if (_isRetry)
+                {
+                    terminal.SetColor(TerminalColor.DarkGray);
+                    terminal.Append($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, assemblyRun.TryCount)}) ");
+                    terminal.ResetColor();
+                }
+
+                terminal.Append(_isDiscovery ? TerminalResources.DiscoveringTestsFrom : TerminalResources.RunningTestsFrom);
+                terminal.Append(' ');
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly, targetFramework, architecture);
+                terminal.AppendLine();
+            });
+        }
     }
 
     private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string executionId)

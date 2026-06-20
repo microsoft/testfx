@@ -41,7 +41,11 @@ internal static partial class TerminalResources
 
     internal static string @ConsoleIsAlreadyInBatchingMode => GetResourceString("ConsoleIsAlreadyInBatchingMode");
 
+    internal static string @DiscoveringTestsFrom => GetResourceString("DiscoveringTestsFrom");
+
     internal static string @DurationLowercase => GetResourceString("DurationLowercase");
+
+    internal static string @Error => GetResourceString("Error");
 
     internal static string @ExitCode => GetResourceString("ExitCode");
 
@@ -70,6 +74,8 @@ internal static partial class TerminalResources
     internal static string @PressCtrlCAgainToForceExit => GetResourceString("PressCtrlCAgainToForceExit");
 
     internal static string @Retried => GetResourceString("Retried");
+
+    internal static string @RunningTestsFrom => GetResourceString("RunningTestsFrom");
 
     internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
 

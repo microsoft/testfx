@@ -100,17 +100,31 @@ internal sealed partial class TerminalTestReporter
         int passed = totalPassedTests;
         int skipped = totalSkippedTests;
         int retried = assemblies.Sum(static a => a.RetriedFailedTests);
+
+        // Orchestrator-only: count assemblies that ended unsuccessfully without a failed test (crash / non-zero exit)
+        // plus handshake failures. These are surfaced as an "error: N" line so they aren't hidden behind a zero
+        // failed-test count. In-process leaves ShowAssembly off and never has handshake failures, so error is 0.
+        int error = (_options.ShowAssembly ? assemblies.Count(static a => !a.Success && a.FailedTests == 0) : 0) + HandshakeFailureCount;
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && failed == 0;
         bool colorizeSkipped = skipped > 0 && skipped == total && failed == 0;
 
+        string errorText = $"{SingleIndentation}{TerminalResources.Error}: {error}";
         string totalText = $"{SingleIndentation}{TerminalResources.TotalLowercase}: {total}";
         string failedText = $"{SingleIndentation}{TerminalResources.FailedLowercase}: {failed}";
         string passedText = $"{SingleIndentation}{TerminalResources.SucceededLowercase}: {passed}";
         string skippedText = $"{SingleIndentation}{TerminalResources.SkippedLowercase}: {skipped}";
         string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
+
+        if (error > 0)
+        {
+            terminal.SetColor(TerminalColor.DarkRed);
+            terminal.AppendLine(errorText);
+            terminal.ResetColor();
+            terminal.AppendLine();
+        }
 
         terminal.ResetColor();
         terminal.Append(totalText);
