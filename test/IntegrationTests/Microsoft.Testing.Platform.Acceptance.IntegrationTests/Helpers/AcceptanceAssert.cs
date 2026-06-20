@@ -133,6 +133,34 @@ internal static class AcceptanceAssert
     public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.IsFalse(testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
+    /// <summary>
+    /// Asserts that the test host output contains the given value after Unicode normalization (FormC) and
+    /// non-breaking space (U+00A0) replacement. Use this instead of <see cref="AssertOutputContains"/> when
+    /// comparing localized strings that may use different normalization forms or typographic spacing conventions.
+    /// </summary>
+    public static void AssertOutputContainsNormalized(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    {
+        string normalizedOutput = NormalizeForLocalization(testHostResult.StandardOutput);
+        string normalizedValue = NormalizeForLocalization(value);
+        Assert.IsTrue(
+            normalizedOutput.Contains(normalizedValue, StringComparison.Ordinal),
+            $"Output does not contain '{value}'.{Environment.NewLine}Output:{Environment.NewLine}{testHostResult.StandardOutput}");
+    }
+
+    /// <summary>
+    /// Asserts that the test host output does not contain the given value after Unicode normalization (FormC) and
+    /// non-breaking space (U+00A0) replacement. Use this instead of <see cref="AssertOutputDoesNotContain"/> when
+    /// comparing localized strings that may use different normalization forms or typographic spacing conventions.
+    /// </summary>
+    public static void AssertOutputDoesNotContainNormalized(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    {
+        string normalizedOutput = NormalizeForLocalization(testHostResult.StandardOutput);
+        string normalizedValue = NormalizeForLocalization(value);
+        Assert.IsFalse(
+            normalizedOutput.Contains(normalizedValue, StringComparison.Ordinal),
+            $"Output should not contain '{value}'.{Environment.NewLine}Output:{Environment.NewLine}{testHostResult.StandardOutput}");
+    }
+
     public static void AssertStandardErrorContains(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
        => Assert.Contains(value, testHostResult.StandardError, StringComparison.Ordinal, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
@@ -165,4 +193,9 @@ internal static class AcceptanceAssert
 
     private static string GenerateFailedAssertionMessage(DotnetMuxerResult dotnetMuxerResult, string? callerMemberName, string? callerFilePath, int callerLineNumber, [CallerMemberName] string? assertCallerMemberName = null)
         => $"Expression '{assertCallerMemberName}' failed for member '{callerMemberName}' at line {callerLineNumber} of file '{callerFilePath}'. Output of the dotnet muxer is:{Environment.NewLine}{dotnetMuxerResult}";
+
+    // Localized resource strings may use different Unicode normalization forms (NFC vs NFD) than C# string literals.
+    // French locale also uses non-breaking space (U+00A0) before colons per typographic convention.
+    private static string NormalizeForLocalization(string text)
+        => text.Normalize(NormalizationForm.FormC).Replace('\u00A0', ' ');
 }

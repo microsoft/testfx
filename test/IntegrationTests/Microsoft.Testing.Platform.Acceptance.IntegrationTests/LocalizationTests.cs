@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 // Temporarily disabled: OneLocBuild keeps reverting the TerminalResources.*.xlf targets to English,
@@ -12,32 +10,6 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class LocalizationTests : AcceptanceTestBase<LocalizationTests.TestAssetFixture>
 {
     private const string AssetName = "LocalizationTests";
-
-    // Localized resource strings may use different Unicode normalization forms (NFC vs NFD)
-    // than C# string literals. Normalizing both sides to FormC avoids false mismatches
-    // with the ordinal comparison used by AssertOutputContains.
-    // French locale also uses non-breaking space (U+00A0) before colons per typographic convention,
-    // so we normalize NBSP to regular space for comparison.
-    private static string NormalizeForComparison(string text)
-        => text.Normalize(NormalizationForm.FormC).Replace('\u00A0', ' ');
-
-    private static void AssertOutputContainsNormalized(TestHostResult testHostResult, string value)
-    {
-        string normalizedOutput = NormalizeForComparison(testHostResult.StandardOutput);
-        string normalizedValue = NormalizeForComparison(value);
-        Assert.IsTrue(
-            normalizedOutput.Contains(normalizedValue, StringComparison.Ordinal),
-            $"Output does not contain '{value}'.{Environment.NewLine}Output:{Environment.NewLine}{testHostResult.StandardOutput}");
-    }
-
-    private static void AssertOutputDoesNotContainNormalized(TestHostResult testHostResult, string value)
-    {
-        string normalizedOutput = NormalizeForComparison(testHostResult.StandardOutput);
-        string normalizedValue = NormalizeForComparison(value);
-        Assert.IsFalse(
-            normalizedOutput.Contains(normalizedValue, StringComparison.Ordinal),
-            $"Output should not contain '{value}'.{Environment.NewLine}Output:{Environment.NewLine}{testHostResult.StandardOutput}");
-    }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -51,17 +23,17 @@ public class LocalizationTests : AcceptanceTestBase<LocalizationTests.TestAssetF
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // Verify the summary line is in French ("Résumé de série de tests : Réussite!")
-        AssertOutputContainsNormalized(testHostResult, "Résumé de série de tests : Réussite!");
+        testHostResult.AssertOutputContainsNormalized("Résumé de série de tests : Réussite!");
 
         // Verify the count labels are in French
-        AssertOutputContainsNormalized(testHostResult, "total: 2");
-        AssertOutputContainsNormalized(testHostResult, "échec: 0");
-        AssertOutputContainsNormalized(testHostResult, "opération réussie: 2");
-        AssertOutputContainsNormalized(testHostResult, "ignoré: 0");
+        testHostResult.AssertOutputContainsNormalized("total: 2");
+        testHostResult.AssertOutputContainsNormalized("échec: 0");
+        testHostResult.AssertOutputContainsNormalized("opération réussie: 2");
+        testHostResult.AssertOutputContainsNormalized("ignoré: 0");
 
         // Verify English strings are NOT in the output
-        AssertOutputDoesNotContainNormalized(testHostResult, "Test run summary:");
-        AssertOutputDoesNotContainNormalized(testHostResult, "succeeded:");
+        testHostResult.AssertOutputDoesNotContainNormalized("Test run summary:");
+        testHostResult.AssertOutputDoesNotContainNormalized("succeeded:");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -105,8 +77,8 @@ public class LocalizationTests : AcceptanceTestBase<LocalizationTests.TestAssetF
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
         // French should win because TESTINGPLATFORM_UI_LANGUAGE has higher precedence
-        AssertOutputContainsNormalized(testHostResult, "Résumé de série de tests : Réussite!");
-        AssertOutputDoesNotContainNormalized(testHostResult, "Resumen de la serie de pruebas:");
+        testHostResult.AssertOutputContainsNormalized("Résumé de série de tests : Réussite!");
+        testHostResult.AssertOutputDoesNotContainNormalized("Resumen de la serie de pruebas:");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

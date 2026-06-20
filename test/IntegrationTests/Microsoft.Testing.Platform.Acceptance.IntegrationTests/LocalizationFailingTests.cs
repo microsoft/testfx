@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Text;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 // Temporarily disabled: OneLocBuild keeps reverting the TerminalResources.*.xlf targets to English,
@@ -12,23 +10,6 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public sealed class LocalizationFailingTests : AcceptanceTestBase<LocalizationFailingTests.TestAssetFixture>
 {
     private const string AssetName = "LocalizationTestsFailing";
-
-    // Localized resource strings may use different Unicode normalization forms (NFC vs NFD)
-    // than C# string literals. Normalizing both sides to FormC avoids false mismatches
-    // with the ordinal comparison used by AssertOutputContains.
-    // French locale also uses non-breaking space (U+00A0) before colons per typographic convention,
-    // so we normalize NBSP to regular space for comparison.
-    private static string NormalizeForComparison(string text)
-        => text.Normalize(NormalizationForm.FormC).Replace('\u00A0', ' ');
-
-    private static void AssertOutputContainsNormalized(TestHostResult testHostResult, string value)
-    {
-        string normalizedOutput = NormalizeForComparison(testHostResult.StandardOutput);
-        string normalizedValue = NormalizeForComparison(value);
-        Assert.IsTrue(
-            normalizedOutput.Contains(normalizedValue, StringComparison.Ordinal),
-            $"Output does not contain '{value}'.{Environment.NewLine}Output:{Environment.NewLine}{testHostResult.StandardOutput}");
-    }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
@@ -42,8 +23,8 @@ public sealed class LocalizationFailingTests : AcceptanceTestBase<LocalizationFa
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
 
         // Verify failure summary is in French ("Résumé de série de tests : Échec!")
-        AssertOutputContainsNormalized(testHostResult, "Résumé de série de tests : Échec!");
-        AssertOutputContainsNormalized(testHostResult, "échec: 1");
+        testHostResult.AssertOutputContainsNormalized("Résumé de série de tests : Échec!");
+        testHostResult.AssertOutputContainsNormalized("échec: 1");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
