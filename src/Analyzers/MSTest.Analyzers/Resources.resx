@@ -986,4 +986,15 @@ The type declaring these methods should also respect the following rules:
     <value>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</value>
     <comment>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</comment>
   </data>
+  <data name="RedundantTestMethodDisplayNameTitle" xml:space="preserve">
+    <value>Test method should not specify a display name equal to its name</value>
+  </data>
+  <data name="RedundantTestMethodDisplayNameMessageFormat" xml:space="preserve">
+    <value>The 'DisplayName' is the same as the test method name '{0}' and can be removed</value>
+    <comment>{0} is the test method name. {Locked="DisplayName"}</comment>
+  </data>
+  <data name="RedundantTestMethodDisplayNameDescription" xml:space="preserve">
+    <value>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</value>
+    <comment>{Locked="DisplayName"}</comment>
+  </data>
 </root>

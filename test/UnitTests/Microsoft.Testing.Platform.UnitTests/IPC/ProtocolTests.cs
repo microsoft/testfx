@@ -5,6 +5,8 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 
+using static Microsoft.Testing.Platform.UnitTests.ProtocolSerializerTestHelper;
+
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
@@ -429,16 +431,4 @@ public sealed class ProtocolTests
         string[] versions = [ProtocolConstants.SupportedVersions];
         Assert.AreEqual("1.0.0;1.1.0", versions[0]);
     }
-
-    private static void Serialize<TMessage>(object serializer, TMessage message, Stream stream)
-        => serializer.GetType()
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == nameof(Serialize) && method.GetParameters() is [{ ParameterType: var messageType }, { ParameterType: var streamType }] && messageType == typeof(TMessage) && streamType == typeof(Stream))
-            .Invoke(serializer, [message!, stream]);
-
-    private static object Deserialize(object serializer, Stream stream)
-        => serializer.GetType()
-            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            .Single(method => method.Name == nameof(Deserialize) && method.GetParameters() is [{ ParameterType: var parameterType }] && parameterType == typeof(Stream))
-            .Invoke(serializer, [stream])!;
 }

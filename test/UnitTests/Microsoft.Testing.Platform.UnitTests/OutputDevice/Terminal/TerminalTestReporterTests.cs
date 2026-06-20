@@ -1223,6 +1223,41 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("stderr", output);
     }
 
+    // Companion to the test above covering the full lifecycle: after a handshake failure, TestExecutionCompleted must
+    // re-print the failure recap in the summary and (via runFailed |= HasHandshakeFailure) mark the run as failed even
+    // though no test ever ran.
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenExecutionIdUnknown_SummaryReprintsRecapAndReportsFailure()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunCompleted("never-registered", exitCode: 1, outputData: "the out", errorData: "the err");
+
+        // The flag is observable before the run completes (the orchestrator reads it to force a non-zero exit).
+        Assert.IsTrue(terminalReporter.HasHandshakeFailure);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+
+        // The end-of-run recap header is re-printed in the summary with the captured failure context.
+        Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
+        Assert.Contains($"{TerminalResources.ExitCode}: 1", output);
+        Assert.Contains("the err", output);
+
+        // No test ran, so the run verdict is the red "Zero tests ran" (runFailed also includes HasHandshakeFailure).
+        Assert.Contains(TerminalResources.ZeroTestsRan, output);
+
+        // Per-run state is reset after completion so a subsequent session starts fresh.
+        Assert.IsFalse(terminalReporter.HasHandshakeFailure);
+    }
+
     // Ported from the dotnet/sdk TerminalTestReporterTests (dotnet/sdk#52128) to validate the orchestrator per-assembly
     // summary of the shared reporter: when an assembly completes with ShowAssembly + ShowAssemblyStartAndComplete, the
     // mid-stream summary line must include the per-assembly counts in the compact bracketed form. NoAnsi is used so the
@@ -1253,7 +1288,93 @@ public sealed class TerminalTestReporterTests
         terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
 
         string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
-        Assert.Contains("[+3/x0/?1]", assemblyLine);
+        Assert.Contains(ExpectedCounts(3, 0, 1), assemblyLine);
+    }
+
+    // Covers the three red branches of AppendAssemblyResult for the per-assembly summary line, which the happy-path
+    // oracle test above does not reach: (failed > 0) -> "failed with N error(s)", (no tests) -> "Zero tests ran",
+    // and (process failed but every test passed) -> "failed".
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenAssemblyHasFailedTests_PrintsFailedWithErrors()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Failing.dll" : "/repo/Failing.dll";
+        const string executionId = "exec-failed";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "t-pass-1", TestOutcome.Passed);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "t-fail-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 1, outputData: null, errorData: null);
+
+        string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.FailedWithErrors, 1), assemblyLine);
+        Assert.Contains(ExpectedCounts(1, 1, 0), assemblyLine);
+    }
+
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenNoTestsRanAndProcessFailed_PrintsZeroTestsRan()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Empty.dll" : "/repo/Empty.dll";
+        const string executionId = "exec-empty";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+
+        // No tests reported; the process exits non-zero.
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 1, outputData: null, errorData: null);
+
+        string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
+        Assert.Contains(TerminalResources.ZeroTestsRan, assemblyLine);
+        Assert.Contains(ExpectedCounts(0, 0, 0), assemblyLine);
+    }
+
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenProcessFailedButAllTestsPassed_PrintsFailed()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\CrashedAfterPass.dll" : "/repo/CrashedAfterPass.dll";
+        const string executionId = "exec-crash";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+
+        // All tests passed but the process exits non-zero (e.g. a crash after the run), so the assembly is not a success
+        // even though FailedTests == 0 and TotalTests > 0.
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "t-pass-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 1, outputData: null, errorData: null);
+
+        string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
+        Assert.Contains(TerminalResources.FailedLowercase, assemblyLine);
+        Assert.Contains(ExpectedCounts(1, 0, 0), assemblyLine);
     }
 
     // Ported from the dotnet/sdk TerminalTestReporterTests (dotnet/sdk#52128): in the final test-run summary, when
@@ -1301,8 +1422,8 @@ public sealed class TerminalTestReporterTests
         terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 1);
 
         string output = stringBuilderConsole.Output;
-        Assert.Contains("[+2/x1/?0]", GetAssemblySummaryLine(output, assemblyA));
-        Assert.Contains("[+5/x0/?2]", GetAssemblySummaryLine(output, assemblyB));
+        Assert.Contains(ExpectedCounts(2, 1, 0), GetAssemblySummaryLine(output, assemblyA));
+        Assert.Contains(ExpectedCounts(5, 0, 2), GetAssemblySummaryLine(output, assemblyB));
     }
 
     private static void ReportOrchestratorTest(TerminalTestReporter reporter, string assembly, string executionId, string instanceId, string testUid, TestOutcome outcome)
@@ -1324,18 +1445,16 @@ public sealed class TerminalTestReporterTests
             errorOutput: null);
 
     private static string GetAssemblySummaryLine(string output, string assemblyPath)
-    {
-        foreach (string line in output.Split('\n'))
-        {
-            if (line.Contains(assemblyPath, StringComparison.Ordinal) && line.Contains("[+", StringComparison.Ordinal))
-            {
-                return line;
-            }
-        }
+        => Array.Find(
+               output.Split('\n'),
+               line => line.Contains(assemblyPath, StringComparison.Ordinal) && line.Contains("[+", StringComparison.Ordinal))
+           ?? throw new InvalidOperationException(
+               $"Expected output to contain a per-assembly summary line for '{assemblyPath}', but it did not. Full output:{Environment.NewLine}{output}");
 
-        throw new InvalidOperationException(
-            $"Expected output to contain a per-assembly summary line for '{assemblyPath}', but it did not. Full output:{Environment.NewLine}{output}");
-    }
+    // The reporter renders the per-assembly counts with CultureInfo.CurrentCulture, so build the expected bracket the
+    // same way; this keeps the assertion correct under cultures that use non-Latin digit shapes.
+    private static string ExpectedCounts(int passed, int failed, int skipped)
+        => $"[+{passed.ToString(CultureInfo.CurrentCulture)}/x{failed.ToString(CultureInfo.CurrentCulture)}/?{skipped.ToString(CultureInfo.CurrentCulture)}]";
 
     [TestMethod]
     public void TerminalTestReporter_WhenReusedAcrossSessions_DoesNotLeakArtifactsOrCancelledState()

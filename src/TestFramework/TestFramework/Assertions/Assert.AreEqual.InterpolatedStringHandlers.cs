@@ -23,7 +23,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertAreEqualInterpolatedStringHandler<TArgument>
+    public readonly partial struct AssertAreEqualInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
         private readonly object? _expected;
@@ -76,77 +76,6 @@ public sealed partial class Assert
                 ReportAssertAreEqualFailed(_expected, _actual, _builder.ToString(), expectedExpression, actualExpression);
             }
         }
-
-        /// <summary>Appends a literal string to the interpolated message.</summary>
-        /// <param name="value">The literal string to append.</param>
-        public void AppendLiteral(string? value) => _builder!.Append(value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The character span to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     /// <summary>
@@ -160,7 +89,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertAreNotEqualInterpolatedStringHandler<TArgument>
+    public readonly partial struct AssertAreNotEqualInterpolatedStringHandler<TArgument>
     {
         private readonly StringBuilder? _builder;
         private readonly object? _notExpected;
@@ -206,77 +135,6 @@ public sealed partial class Assert
                 ReportAssertAreNotEqualFailed(_notExpected, _actual, _builder.ToString(), notExpectedExpression, actualExpression);
             }
         }
-
-        /// <summary>Appends a literal string to the interpolated message.</summary>
-        /// <param name="value">The literal string to append.</param>
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The character span to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     /// <summary>
@@ -289,7 +147,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertNonGenericAreEqualInterpolatedStringHandler
+    public readonly partial struct AssertNonGenericAreEqualInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
         private readonly Action<string, string, string>? _failAction;
@@ -418,77 +276,6 @@ public sealed partial class Assert
 
         internal void ComputeAssertion(string expectedExpression, string actualExpression)
             => _failAction?.Invoke(_builder!.ToString(), expectedExpression, actualExpression);
-
-        /// <summary>Appends a literal string to the interpolated message.</summary>
-        /// <param name="value">The literal string to append.</param>
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The character span to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 
     /// <summary>
@@ -501,7 +288,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public readonly struct AssertNonGenericAreNotEqualInterpolatedStringHandler
+    public readonly partial struct AssertNonGenericAreNotEqualInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
         private readonly Action<string, string, string>? _failAction;
@@ -630,76 +417,5 @@ public sealed partial class Assert
 
         internal void ComputeAssertion(string notExpectedExpression, string actualExpression)
             => _failAction?.Invoke(_builder!.ToString(), notExpectedExpression, actualExpression);
-
-        /// <summary>Appends a literal string to the interpolated message.</summary>
-        /// <param name="value">The literal string to append.</param>
-        public void AppendLiteral(string value) => _builder!.Append(value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted<T>(T value) => AppendFormatted(value, format: null);
-
-#if NETCOREAPP3_1_OR_GREATER
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value) => _builder!.Append(value);
-
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The character span to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(ReadOnlySpan<char> value, int alignment = 0, string? format = null) => AppendFormatted(value.ToString(), alignment, format);
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-#endif
-
-        // NOTE: All the overloads involving format and/or alignment are not super efficient.
-        // This code path is only for when an assert is failing, so that's not the common scenario
-        // and should be okay if not very optimized.
-        // A more efficient implementation that can be used for .NET 6 and later is to delegate the work to
-        // the BCL's StringBuilder.AppendInterpolatedStringHandler
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, string? format) => _builder!.AppendFormat(null, $"{{0:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        public void AppendFormatted<T>(T value, int alignment) => _builder!.AppendFormat(null, $"{{0,{alignment}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <typeparam name="T">The type of the value being appended.</typeparam>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted<T>(T value, int alignment, string? format) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        public void AppendFormatted(string? value) => _builder!.Append(value);
-
-#pragma warning disable RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(string? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-
-        /// <summary>Appends a formatted value to the interpolated message.</summary>
-        /// <param name="value">The value to append.</param>
-        /// <param name="alignment">The minimum width of the formatted value.</param>
-        /// <param name="format">The format string to use.</param>
-        public void AppendFormatted(object? value, int alignment = 0, string? format = null) => _builder!.AppendFormat(null, $"{{0,{alignment}:{format}}}", value);
-#pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
-#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
     }
 }

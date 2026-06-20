@@ -59,6 +59,9 @@ internal sealed partial class TerminalTestReporter
         string? actual,
         string? standardOutput,
         string? errorOutput)
+        // assembly / targetFramework / architecture / instanceId are intentionally not forwarded yet: counting and
+        // rendering still go through the shared per-execution-id path. They are reserved for the per-assembly link
+        // and instanceId-based retry attribution added in a follow-up slice (see the XML doc above). Not a bug.
         => TestCompleted(
             executionId,
             testNodeUid,
