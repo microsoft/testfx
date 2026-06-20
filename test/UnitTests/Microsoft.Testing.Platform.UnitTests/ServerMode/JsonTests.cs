@@ -5,6 +5,9 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.ServerMode.Json;
 
+using JsonDocument = System.Text.Json.JsonDocument;
+using JsonElement = System.Text.Json.JsonElement;
+
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -114,6 +117,56 @@ public sealed class JsonTests
 
         // Assert
         Assert.AreEqual("""[{"name":"Thomas","children":[{"name":"Ruth","children":null}]},[2],3]""", actual);
+    }
+
+    [TestMethod]
+    public async Task Serialize_ErrorMessage_EmitsJsonRpc20CompliantShape()
+    {
+        // Arrange
+        ErrorMessage errorMessage = new(
+            Id: 42,
+            ErrorCode: -32601,
+            Message: "Method not found",
+            Data: null);
+
+        // Act
+        string actual = await _json.SerializeAsync(errorMessage);
+
+        // Assert
+        // Per JSON-RPC 2.0 §5.1, "code" MUST live inside the "error" object and MUST NOT
+        // appear at the top level of the response envelope.
+        using var document = JsonDocument.Parse(actual);
+        JsonElement root = document.RootElement;
+
+        Assert.AreEqual("2.0", root.GetProperty("jsonrpc").GetString());
+        Assert.AreEqual(42, root.GetProperty("id").GetInt32());
+        Assert.IsFalse(
+            root.TryGetProperty("code", out _),
+            "Top-level 'code' must not be present; it belongs inside the 'error' object per JSON-RPC 2.0 §5.1.");
+
+        JsonElement error = root.GetProperty("error");
+        Assert.AreEqual(-32601, error.GetProperty("code").GetInt32());
+        Assert.AreEqual("Method not found", error.GetProperty("message").GetString());
+    }
+
+    [TestMethod]
+    public async Task Serialize_ErrorMessage_RoundTripsViaDeserializer()
+    {
+        // Arrange
+        ErrorMessage original = new(
+            Id: 7,
+            ErrorCode: -32000,
+            Message: "Server error",
+            Data: null);
+
+        // Act
+        string serialized = await _json.SerializeAsync(original);
+        ErrorMessage roundTripped = _json.Deserialize<ErrorMessage>(serialized.AsMemory());
+
+        // Assert
+        Assert.AreEqual(original.Id, roundTripped.Id);
+        Assert.AreEqual(original.ErrorCode, roundTripped.ErrorCode);
+        Assert.AreEqual(original.Message, roundTripped.Message);
     }
 
     [TestMethod]

@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="tr" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="CtrfReportArtifactDescription">
+        <source>CTRF (Common Test Report Format) JSON test report</source>
+        <target state="translated">CTRF (Common Test Report Format) JSON test raporu</target>
+        <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, or {Locked="JSON"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportArtifactDisplayName">
+        <source>CTRF Report</source>
+        <target state="translated">CTRF Raporu</target>
+        <note>Do not localize {Locked="CTRF"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportFileExistsAndWillBeOverwritten">
+        <source>Warning: CTRF report file '{0}' already exists and will be overwritten.</source>
+        <target state="translated">Uyarı: '{0}' CTRF rapor dosyası zaten mevcut ve üzerine yazılacak.</target>
+        <note>{0} is the {Locked="CTRF"} report file path.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameExtensionIsNotJson">
+        <source>'--report-ctrf-filename' file name argument must end with '.json' (e.g. --report-ctrf-filename myreport.ctrf.json)</source>
+        <target state="translated">'--report-ctrf-filename' dosya adı bağımsız değişkeninin sonu '.json' ile bitmelidir (örn. --report-ctrf-filename myreport.ctrf.json)</target>
+        <note>Do not localize option name {Locked="--report-ctrf-filename"}, file extension {Locked=".json"}, or example command {Locked="--report-ctrf-filename myreport.ctrf.json"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameMustNotBeEmpty">
+        <source>'--report-ctrf-filename' file name part must not be empty (e.g. --report-ctrf-filename myreport.ctrf.json)</source>
+        <target state="translated">'--report-ctrf-filename' dosya adı bölümü boş olmamalıdır (ör. --report-ctrf-filename myreport.ctrf.json)</target>
+        <note>Do not localize option name {Locked="--report-ctrf-filename"}, file extension {Locked=".json"}, or example command {Locked="--report-ctrf-filename myreport.ctrf.json"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameOptionDescription">
+        <source>The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Example: MyReport_{tfm}.ctrf.json</source>
+        <target state="translated">Oluşturulan CTRF raporunun adı. Göreli veya mutlak yol içerebilir; göreli yollar test sonuçları dizinine göre çözümlenir ve eksik dizinler oluşturulur.
+Şu yer tutucuları destekler: {pname} (test uygulaması adı), {pid} (işlem kimliği), {asm} (girdi derleme adı), {tfm} (hedef çerçeve bilinen adı), {time} (zaman damgası).
+Örnek: MyReport_{tfm}.ctrf.json</target>
+        <note>Do not localize option name {Locked="--report-ctrf-filename"}, format name {Locked="CTRF"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{time}"}, file extension {Locked=".json"}, or example file name {Locked="MyReport_{tfm}.ctrf.json"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameRelativePathMustStayUnderResultsDirectory">
+        <source>'--report-ctrf-filename' relative paths must stay under the test results directory (e.g. --report-ctrf-filename nested/myreport.ctrf.json)</source>
+        <target state="translated">'--report-ctrf-filename' göreli yolları, test sonuçları dizini altında yer almalıdır (ör. --report-ctrf-filename nested/myreport.ctrf.json)</target>
+        <note>Do not localize option name {Locked="--report-ctrf-filename"}, file extension {Locked=".json"}, or example path {Locked="nested/myreport.ctrf.json"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportFileNameRequiresCtrfReport">
+        <source>'--report-ctrf-filename' requires '--report-ctrf' to be enabled</source>
+        <target state="translated">'--report-ctrf-filename' için '--report-ctrf' etkinleştirilmiş olmalıdır</target>
+        <note>Do not localize option names {Locked="--report-ctrf-filename"}{Locked="--report-ctrf"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportGeneratorDescription">
+        <source>Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)</source>
+        <target state="translated">Geçerli test oturumu için CTRF (Common Test Report Format) JSON raporu oluşturun (https://ctrf.io)</target>
+        <note>Do not localize {Locked="CTRF"}, {Locked="Common Test Report Format"}, {Locked="JSON"}, or {Locked="https://ctrf.io"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportGeneratorDisplayName">
+        <source>CTRF report generator</source>
+        <target state="translated">CTRF rapor oluşturucusu</target>
+        <note>Do not localize {Locked="CTRF"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportIsNotValidForDiscovery">
+        <source>'--report-ctrf' cannot be enabled when using '--list-tests'</source>
+        <target state="translated">'--list-tests' kullanılırken '--report-ctrf' etkinleştirilemez</target>
+        <note>Do not localize option names {Locked="--report-ctrf"}{Locked="--list-tests"}.</note>
+      </trans-unit>
+      <trans-unit id="CtrfReportOptionDescription">
+        <source>Enable generating a CTRF (Common Test Report Format) JSON report</source>
+        <target state="translated">CTRF (Common Test Report Format) JSON raporu oluşturmayı etkinleştir</target>
+        <note>Do not localize option name {Locked="--report-ctrf"} or format names {Locked="CTRF"}{Locked="Common Test Report Format"}{Locked="JSON"}.</note>
+      </trans-unit>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>Invalid test application builder type. Expected 'TestApplicationBuilder'.</source>
+        <target state="translated">Geçersiz test uygulaması oluşturucu türü. Beklenen: 'TestApplicationBuilder'.</target>
+        <note>Do not localize {Locked="TestApplicationBuilder"}.</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -23,6 +23,8 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\NamedPipeSerializer.cs" Link="IPC\Serializers\NamedPipeSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\ObjectFieldIds.cs" Link="IPC\ObjectFieldIds.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\Constants.cs" Link="IPC\Constants.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
 
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
@@ -34,6 +36,9 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
+    <!-- The terminal reporter types are [Embedded] (hidden cross-assembly) so they can be shared as source.
+         Link the source here so the unit tests compile their own copy instead of relying on IVT. -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\*.cs" Link="OutputDevice\Terminal\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

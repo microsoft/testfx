@@ -4,7 +4,7 @@
   <PropertyGroup>
     <IsPackable>false</IsPackable>
     <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >$(MicrosoftTestingPlatformVersion)</MicrosoftTestingExtensionsCommonVersion>
-    <TestingExtensionsProfile Condition=" $(TestingExtensionsProfile) == '' ">Default</TestingExtensionsProfile>
+    <TestingExtensionsProfile Condition=" '$(TestingExtensionsProfile)' == '' ">Default</TestingExtensionsProfile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
@@ -28,7 +28,7 @@
     <!-- MS Code Coverage -->
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != 'false' and '$(TestingExtensionsProfile)' == 'Default' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
-    <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >$(MicrosoftTestingExtensionsCodeCoverageVersion)</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <!-- MicrosoftTestingExtensionsCodeCoverageVersion is always injected by the generated Sdk.props (from Sdk.props.template). -->
   </PropertyGroup>
 
   <ItemGroup>

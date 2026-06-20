@@ -94,7 +94,7 @@ if (!args.Contains("--exit-on-process-exit"))
     Environment.SetEnvironmentVariable("WaitTestHost", mutexName);
     ProcessStartInfo processStartInfo = new();
     processStartInfo.FileName = currentEntryPoint;
-    processStartInfo.Arguments = $"--exit-on-process-exit {currentPid} --no-progress --no-ansi";
+    processStartInfo.Arguments = $"--exit-on-process-exit {currentPid} --progress off --no-ansi";
     processStartInfo.UseShellExecute = false;
     var process = Process.Start(processStartInfo);
     while (!Mutex.TryOpenExisting(mutexName, out Mutex? _))

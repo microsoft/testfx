@@ -99,4 +99,25 @@ public class TrxTestResultExtractorTests
         char lastPrefixChar = truncated[suffixStart - 1];
         Assert.IsFalse(char.IsHighSurrogate(lastPrefixChar), "Truncation must not leave a dangling high surrogate.");
     }
+
+    [TestMethod]
+    public void Extract_DuplicateSingletonProperty_Throws()
+    {
+        // PropertyBag allows multiple properties of the same runtime type. The pre-refactor
+        // implementation used SingleOrDefault<T>() which throws InvalidOperationException in
+        // that case; the single-pass switch must preserve the same invariant so upstream bugs
+        // that add a singleton-typed property twice are surfaced (rather than silently keeping
+        // the first or last one and producing nondeterministic TRX output).
+        var bag = new PropertyBag(
+            new PassedTestNodeStateProperty(),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)),
+            new TimingProperty(new TimingInfo(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow, TimeSpan.Zero)));
+
+        InvalidOperationException ex = Assert.ThrowsExactly<InvalidOperationException>(() =>
+            TrxTestResultExtractor.Extract(new TestNodeUpdateMessage(
+                new SessionUid("1"),
+                new TestNode { Uid = "u", DisplayName = "d", Properties = bag })));
+
+        Assert.Contains(nameof(TimingProperty), ex.Message);
+    }
 }

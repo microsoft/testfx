@@ -9,16 +9,43 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [StackTraceHidden]
 internal static class AssertionValueRenderer
 {
+    // Cache the built-in renderer as a delegate so passing it to the formatter registry doesn't allocate
+    // on every RenderValue call.
+    private static readonly Func<object?, string> BuiltInRenderer = RenderBuiltIn;
+
     /// <summary>
     /// Renders a value as a string suitable for display in the evidence block.
     /// </summary>
+    /// <remarks>
+    /// User-registered formatters (see <see cref="Assert.AddValueFormatter{T}(Func{T, string?})"/>) are consulted
+    /// first for non-<see langword="null"/> values. <see langword="null"/> is always rendered as <c>"null"</c>
+    /// and is not exposed to user formatters, to avoid surprising <see cref="NullReferenceException"/>s
+    /// inside user code.
+    /// </remarks>
     internal static string RenderValue(object? value)
+        => value is null
+            ? "null"
+            : AssertionValueFormatterRegistry.HasFormatters
+                ? AssertionValueFormatterRegistry.Render(value, BuiltInRenderer)
+                : RenderBuiltIn(value);
+
+    private static string RenderBuiltIn(object? value)
         => value switch
         {
             null => "null",
             string s => RenderString(s),
             bool b => b ? "true" : "false",
             char c => RenderChar(c),
+            DateTime dt => dt.ToString("O", CultureInfo.InvariantCulture),
+            DateTimeOffset dto => dto.ToString("O", CultureInfo.InvariantCulture),
+            TimeSpan ts => ts.ToString("c", CultureInfo.InvariantCulture),
+#if NET6_0_OR_GREATER
+            DateOnly d => d.ToString("O", CultureInfo.InvariantCulture),
+            TimeOnly t => t.ToString("O", CultureInfo.InvariantCulture),
+#endif
+            float f => f.ToString("R", CultureInfo.InvariantCulture),
+            double d => d.ToString("R", CultureInfo.InvariantCulture),
+            decimal m => m.ToString(CultureInfo.InvariantCulture),
             IEnumerable enumerable => RenderCollection(enumerable),
             _ => RenderObject(value),
         };

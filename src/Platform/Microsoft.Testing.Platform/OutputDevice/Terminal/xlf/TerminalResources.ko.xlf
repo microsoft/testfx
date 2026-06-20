@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="ko" original="../TerminalResources.resx">
+    <body>
+      <trans-unit id="Aborted">
+        <source>Aborted</source>
+        <target state="translated">중단됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Actual">
+        <source>Actual</source>
+        <target state="translated">실제</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancelledLowercase">
+        <source>canceled</source>
+        <target state="translated">취소됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancellingTestSession">
+        <source>Canceling the test session...</source>
+        <target state="translated">테스트 세션을 취소하는 중...</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ConsoleIsAlreadyInBatchingMode">
+        <source>Console is already in batching mode.</source>
+        <target state="translated">콘솔이 이미 일괄 처리 모드에 있습니다.</target>
+        <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="DurationLowercase">
+        <source>duration</source>
+        <target state="translated">기간</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Expected">
+        <source>Expected</source>
+        <target state="translated">필요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedLowercase">
+        <source>failed</source>
+        <target state="translated">실패</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} error(s)</source>
+        <target state="new">failed with {0} error(s)</target>
+        <note>{0} is the number of errors in an assembly summary line</note>
+      </trans-unit>
+      <trans-unit id="ForTest">
+        <source>For test</source>
+        <target state="translated">테스트용</target>
+        <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="HandshakeFailuresHeader">
+        <source>Handshake failures:</source>
+        <target state="new">Handshake failures:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InProcessArtifactsProduced">
+        <source>In process file artifacts produced:</source>
+        <target state="translated">생성된 In process 파일 아티팩트:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">예상되는 최소 테스트 정책 위반, 테스트 실행 {0}, 필요한 최소 {1}</target>
+        <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_MoreTestsCount">
+        <source>and {0} more</source>
+        <target state="translated">외 {0}개</target>
+        <note>{0} is the number of additional active tests.</note>
+      </trans-unit>
+      <trans-unit id="ActiveTestsRunning_FullTestsCount">
+        <source>{0} tests running</source>
+        <target state="translated">실행 중인 테스트 {0}</target>
+        <note>{0} is the number of currently running tests.</note>
+      </trans-unit>
+      <trans-unit id="OutOfProcessArtifactsProduced">
+        <source>Out of process file artifacts produced:</source>
+        <target state="translated">생성된 Out of process 파일 아티팩트:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">통과</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassedLowercase">
+        <source>passed</source>
+        <target state="translated">통과</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PressCtrlCAgainToForceExit">
+        <source>Press Ctrl+C again to force exit.</source>
+        <target state="translated">강제 종료하려면 Ctrl+C를 한 번 더 누르세요.</target>
+        <note>{Locked="Ctrl+C"}</note>
+      </trans-unit>
+      <trans-unit id="SkippedLowercase">
+        <source>skipped</source>
+        <target state="translated">건너뜀</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StackFrameAt">
+        <source>at</source>
+        <target state="translated">위치</target>
+        <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
+      </trans-unit>
+      <trans-unit id="StackFrameIn">
+        <source>in</source>
+        <target state="translated">포함</target>
+        <note>in that is used in stack frame it is followed by file name</note>
+      </trans-unit>
+      <trans-unit id="StandardError">
+        <source>Error output</source>
+        <target state="translated">오류 출력</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StandardOutput">
+        <source>Standard output</source>
+        <target state="translated">표준 출력</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SucceededLowercase">
+        <source>succeeded</source>
+        <target state="translated">성공</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalAnsiOptionDescription">
+        <source>Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</source>
+        <target state="new">Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</target>
+        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalAnsiOptionInvalidArgument">
+        <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
+        <target state="translated">--ansi에는 값이 'auto', 'on'(또는 'true', 'enable', '1') 또는 'off'(또는 'false', 'disable', '0')인 단일 매개 변수가 필요합니다.</target>
+        <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalNoAnsiOptionDescription">
+        <source>Disable outputting ANSI escape characters to screen.</source>
+        <target state="translated">ANSI 이스케이프 문자를 화면에 출력하지 않도록 설정합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalNoProgressOptionDescription">
+        <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
+        <target state="new">[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</target>
+        <note>{Locked="--progress off"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionDescription">
+        <source>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
+        <target state="translated">테스트를 보고할 때 세부 정보 표시를 출력합니다.
+유효한 값은 'Normal', 'Detailed'입니다. 기본값은 'Normal'입니다.</target>
+        <note>{Locked="Normal"}{Locked="Detailed"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalOutputOptionInvalidArgument">
+        <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
+        <target state="translated">--output에는 값이 'Normal' 또는 'Detailed'인 단일 매개 변수가 필요합니다.</target>
+        <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeat">
+        <source>running... {0} completed, {1} failed</source>
+        <target state="new">running... {0} completed, {1} failed</target>
+        <note>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
+        <source> | active: {0}</source>
+        <target state="new"> | active: {0}</target>
+        <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressOptionDescription">
+        <source>Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+This option takes precedence over the deprecated --no-progress flag.</source>
+        <target state="new">Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+This option takes precedence over the deprecated --no-progress flag.</target>
+        <note>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressOptionInvalidArgument">
+        <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
+        <target state="new">--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalProgressSlowTest">
+        <source>[slow] still running after {0}: {1}</source>
+        <target state="new">[slow] still running after {0}: {1}</target>
+        <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowOutputOptionInvalidArgument">
+        <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
+        <target state="translated">--show-stdout 및 --show-stderr에는 값이 'All', 'Failed' 또는 'None'인 단일 매개 변수가 필요합니다.</target>
+        <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowStderrOptionDescription">
+        <source>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="translated">테스트에서 캡처한 오류 출력을 언제 표시할지 결정합니다.
+유효한 값은 'All', 'Failed', 'None'입니다. LLM/AI 에이전트 환경이 감지되면 기본값은 'All'(또는 'Failed')입니다.</target>
+        <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowStdoutOptionDescription">
+        <source>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
+        <target state="translated">테스트에서 캡처한 표준 출력을 언제 표시할지 결정합니다.
+유효한 값은 'All', 'Failed', 'None'입니다. LLM/AI 에이전트 환경이 감지되면 기본값은 'All'(또는 'Failed')입니다.</target>
+        <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDescription">
+        <source>Writes test results to terminal.</source>
+        <target state="translated">테스트 결과를 터미널에 씁니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalTestReporterDisplayName">
+        <source>Terminal test reporter</source>
+        <target state="translated">터미널 테스트 보고자</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestDiscoverySummarySingular">
+        <source>Test discovery summary: found {0} test(s)</source>
+        <target state="translated">테스트 검색 요약: {0}개의 테스트를 찾음</target>
+        <note>{0} is the number of discovered tests.</note>
+      </trans-unit>
+      <trans-unit id="TestRunSummary">
+        <source>Test run summary:</source>
+        <target state="translated">테스트 실행 요약:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">테스트가 0개 실행됨</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TotalLowercase">
+        <source>total</source>
+        <target state="translated">합계</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

@@ -46,12 +46,17 @@ This package extends Microsoft Testing Platform to produce self-contained HTML t
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameHelper.cs" Link="Helpers\ReportFileNameHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameSanitizer.cs" Link="Helpers\ReportFileNameSanitizer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CapturedTestResultBase.cs" Link="Helpers\CapturedTestResultBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestResultCaptureHelper.cs" Link="Helpers\TestResultCaptureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameValidator.cs" Link="Helpers\ReportFileNameValidator.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileWriterHelper.cs" Link="Helpers\ReportFileWriterHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineBase.cs" Link="Helpers\ReportEngineBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.cs" Link="Helpers\ReportGeneratorBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProviderRegistration.cs" Link="Helpers\ReportProviderRegistration.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />
   </ItemGroup>
 
   <ItemGroup>

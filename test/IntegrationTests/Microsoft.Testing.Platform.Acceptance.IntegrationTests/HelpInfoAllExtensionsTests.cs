@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -23,7 +23,7 @@ Options:
     --ansi
         Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
         When both --ansi and --no-ansi are provided, --ansi wins.
     --config-file
         Specifies a testconfig.json file.
@@ -63,10 +63,15 @@ Options:
     --no-ansi
         Disable outputting ANSI escape characters to screen.
     --no-progress
-        Disable reporting progress to screen.
+        [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
     --output
         Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+    --progress
+        Control whether progress is reported to screen.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+        This option takes precedence over the deprecated --no-progress flag.
     --results-directory
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
@@ -102,7 +107,7 @@ Extension options:
         Generate a dump file if the test process hangs
     --hangdump-filename
         Specify the name of the dump file.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
     --hangdump-timeout
         Specify the timeout after which the dump will be generated.
         The timeout value is specified in one of the following formats:
@@ -129,16 +134,20 @@ Extension options:
         Demote failures with an Azure DevOps flaky history of at least 25% in the selected window to warnings.
     --report-azdo-flaky-history
         Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
-    --report-azdo-progress
-        Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
     --report-azdo-quarantine-file
         Path to a text file that lists quarantined test fully qualified names or glob patterns. Matching failures are reported as warnings.
     --report-azdo-severity
         Severity to use for the reported event. Options are: error (default) and warning.
+    --report-azdo-slow-test-history
+        Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.
+    --report-azdo-slow-test-history-min-sample
+        Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to 10. Requires '--report-azdo-slow-test-history'.
+    --report-azdo-slow-test-history-multiplier
+        Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to 3. Requires '--report-azdo-slow-test-history'.
     --report-azdo-stackframe-filter
         Additional regex patterns (matched against the fully-qualified type prefix of each stack frame) that should be skipped when looking for the user's call site to annotate. Repeatable; up to 16 patterns. Compiled with a 500ms match timeout. Additive to the extension's built-in MSTest assertion-implementation prefixes.
     --report-azdo-summary
-        Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
+        Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.
     --report-azdo-upload-artifact-exclude
         Exclude files from Azure DevOps artifact upload using glob patterns relative to the test results directory.
     --report-azdo-upload-artifact-include
@@ -147,23 +156,29 @@ Extension options:
         Override the Azure DevOps artifact container name. Defaults to 'TestResults_{assemblyName}_{tfm}'.
     --report-azdo-upload-artifacts
         Upload test result files and/or add build tags to Azure DevOps. Options are: off (default), tags-only, files, and all.
+    --report-ctrf
+        Enable generating a CTRF (Common Test Report Format) JSON report
+    --report-ctrf-filename
+        The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.ctrf.json
     --report-html
         Enable generating an HTML report
     --report-html-filename
         The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.html
     --report-junit
         Enable generating a JUnit XML report
     --report-junit-filename
         The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.xml
     --report-trx
         Enable generating TRX report
     --report-trx-filename
         The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.trx
     --retry-failed-tests
         Retry failed tests the given number of times
@@ -336,7 +351,7 @@ Built-in command line providers:
         Hidden: False
         Description: Control whether ANSI escape characters are emitted.
         Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
+        'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
         When both --ansi and --no-ansi are provided, --ansi wins.
       --no-ansi
         Arity: 0
@@ -345,12 +360,19 @@ Built-in command line providers:
       --no-progress
         Arity: 0
         Hidden: False
-        Description: Disable reporting progress to screen.
+        Description: [Deprecated, use '--progress off' instead] Disable reporting progress to screen.
       --output
         Arity: 1
         Hidden: False
         Description: Output verbosity when reporting tests.
         Valid values are 'Normal', 'Detailed'. Default is 'Normal'.
+      --progress
+        Arity: 1
+        Hidden: False
+        Description: Control whether progress is reported to screen.
+        Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+        'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+        This option takes precedence over the deprecated --no-progress flag.
       --show-stderr
         Arity: 1
         Hidden: False
@@ -387,10 +409,6 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Query Azure DevOps test result history for the past N days (1-90) and annotate reported failures with flakiness context.
-      --report-azdo-progress
-        Arity: 0
-        Hidden: False
-        Description: Emit Azure DevOps timeline progress records during the test run so long-running sessions show a live progress bar on the build's timeline. Requires '--report-azdo'.
       --report-azdo-quarantine-file
         Arity: 1
         Hidden: False
@@ -399,6 +417,18 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Severity to use for the reported event. Options are: error (default) and warning.
+      --report-azdo-slow-test-history
+        Arity: 1
+        Hidden: False
+        Description: Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.
+      --report-azdo-slow-test-history-min-sample
+        Arity: 1
+        Hidden: False
+        Description: Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to 10. Requires '--report-azdo-slow-test-history'.
+      --report-azdo-slow-test-history-multiplier
+        Arity: 1
+        Hidden: False
+        Description: Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to 3. Requires '--report-azdo-slow-test-history'.
       --report-azdo-stackframe-filter
         Arity: 1..N
         Hidden: False
@@ -406,7 +436,7 @@ Registered command line providers:
       --report-azdo-summary
         Arity: 0..1
         Hidden: False
-        Description: Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.
+        Description: Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.
       --report-azdo-upload-artifact-exclude
         Arity: 0..N
         Hidden: False
@@ -457,6 +487,21 @@ Registered command line providers:
         Description: Specify the type of the dump.
         Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
         For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps
+  CtrfReportGeneratorCommandLine
+    Name: CTRF report generator
+    Version: *
+    Description: Produce a CTRF (Common Test Report Format) JSON report for the current test session (https://ctrf.io)
+    Options:
+      --report-ctrf
+        Arity: 0
+        Hidden: False
+        Description: Enable generating a CTRF (Common Test Report Format) JSON report
+      --report-ctrf-filename
+        Arity: 1
+        Hidden: False
+        Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Example: MyReport_{tfm}.ctrf.json
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *
@@ -470,7 +515,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: Specify the name of the dump file.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp). The legacy %p token (process ID) is also supported for backward compatibility.
       --hangdump-timeout
         Arity: 1
         Hidden: False
@@ -506,7 +551,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.html
   JUnitReportGeneratorCommandLine
     Name: JUnit XML report generator
@@ -521,7 +566,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: The name of the generated JUnit XML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.xml
   MSBuildCommandLineProvider
     Name: MSBuildCommandLineProvider
@@ -570,7 +615,7 @@ Registered command line providers:
         Arity: 1
         Hidden: False
         Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+        Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.trx
 Registered tools:
   TrxCompareTool
@@ -621,6 +666,7 @@ Registered tools:
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
@@ -681,6 +727,7 @@ public class DummyTestFramework : ITestFramework
                 AllExtensionsTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion));
     }
 

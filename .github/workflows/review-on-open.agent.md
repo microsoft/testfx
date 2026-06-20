@@ -1,16 +1,17 @@
 ---
-name: "Expert Code Review (on open)"
-description: "Automatically runs the expert-reviewer agent when a non-draft PR is opened."
+name: "Expert Code Review (on PR ready)"
+description: "Automatically runs the expert-reviewer agent when a PR becomes ready for review — either opened as non-draft, or transitioned from draft to ready."
 
 # Non-draft PRs trigger this workflow.
 # The `roles` setting restricts execution to users with admin, maintainer, or
 # write permissions, and fork PRs are blocked by the compiled repository_id guard.
 #
-# NOTE: Only `opened` is used here; for PRs transitioned from draft to ready,
-# use the `/review` slash command.
+# Triggers on both `opened` (PR opened as non-draft) and `ready_for_review`
+# (PR transitioned from draft to ready). The `if:` condition below filters out
+# draft PRs so the `opened` event is a no-op for drafts.
 on:
   pull_request:
-    types: [opened]
+    types: [opened, ready_for_review]
   roles: [admin, maintainer, write]
 
 # Skip draft PRs and OneLocBuild localization check-in PRs (authored by dotnet-bot)
@@ -29,7 +30,17 @@ permissions:
 imports:
   - shared/review-shared.md
 
+# The expert-reviewer agent fans out into many dimension sub-agents on
+# claude-opus-4.6, so the default 1000 AI-credit budget is too low (see #9115).
+max-ai-credits: 2000
+
+# This same fan-out means a single run can consume several thousand AI credits, so
+# raise the per-workflow 24h budget above the enterprise default to avoid skipping
+# reviews on a busy PR day (see issue #9053).
+max-daily-ai-credits: 20K
+
 safe-outputs:
+  report-failure-as-issue: false
   noop:
     report-as-issue: false
 

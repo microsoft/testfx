@@ -24,6 +24,8 @@
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " Text="Hang dump extension might not be working well under Native AOT." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' " Text="Azure DevOps report extension is not supported in NativeAOT mode." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' " Text="JUnit report extension is not supported in NativeAOT mode." />
   </Target>
 
   <!-- Core -->

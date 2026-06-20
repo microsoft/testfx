@@ -1,0 +1,293 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Aborted" xml:space="preserve">
+    <value>Aborted</value>
+  </data>
+  <data name="Actual" xml:space="preserve">
+    <value>Actual</value>
+  </data>
+  <data name="CancelledLowercase" xml:space="preserve">
+    <value>canceled</value>
+  </data>
+  <data name="CancellingTestSession" xml:space="preserve">
+    <value>Canceling the test session...</value>
+  </data>
+  <data name="PressCtrlCAgainToForceExit" xml:space="preserve">
+    <value>Press Ctrl+C again to force exit.</value>
+    <comment>{Locked="Ctrl+C"}</comment>
+  </data>
+  <data name="Expected" xml:space="preserve">
+    <value>Expected</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="FailedLowercase" xml:space="preserve">
+    <value>failed</value>
+  </data>
+  <data name="ForTest" xml:space="preserve">
+    <value>For test</value>
+    <comment>is followed by test name</comment>
+  </data>
+  <data name="InProcessArtifactsProduced" xml:space="preserve">
+    <value>In process file artifacts produced:</value>
+  </data>
+  <data name="MinimumExpectedTestsPolicyViolation" xml:space="preserve">
+    <value>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</value>
+    <comment>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</comment>
+  </data>
+  <data name="OutOfProcessArtifactsProduced" xml:space="preserve">
+    <value>Out of process file artifacts produced:</value>
+  </data>
+  <data name="Passed" xml:space="preserve">
+    <value>Passed</value>
+  </data>
+  <data name="PassedLowercase" xml:space="preserve">
+    <value>passed</value>
+  </data>
+  <data name="SkippedLowercase" xml:space="preserve">
+    <value>skipped</value>
+  </data>
+  <data name="TotalLowercase" xml:space="preserve">
+    <value>total</value>
+  </data>
+  <data name="ZeroTestsRan" xml:space="preserve">
+    <value>Zero tests ran</value>
+  </data>
+  <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
+    <value>Console is already in batching mode.</value>
+    <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
+  </data>
+  <data name="DurationLowercase" xml:space="preserve">
+    <value>duration</value>
+  </data>
+  <data name="TestRunSummary" xml:space="preserve">
+    <value>Test run summary:</value>
+  </data>
+  <data name="StackFrameAt" xml:space="preserve">
+    <value>at</value>
+    <comment>at that is used for a stack frame location in a stack trace, is followed by a class and method name</comment>
+  </data>
+  <data name="StackFrameIn" xml:space="preserve">
+    <value>in</value>
+    <comment>in that is used in stack frame it is followed by file name</comment>
+  </data>
+  <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
+    <value>Disable outputting ANSI escape characters to screen.</value>
+  </data>
+  <data name="TerminalAnsiOptionDescription" xml:space="preserve">
+    <value>Control whether ANSI escape characters are emitted.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
+When both --ansi and --no-ansi are provided, --ansi wins.</value>
+    <comment>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</comment>
+  </data>
+  <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
+    <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+    <comment>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
+  </data>
+  <data name="TerminalNoProgressOptionDescription" xml:space="preserve">
+    <value>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</value>
+    <comment>{Locked="--progress off"}</comment>
+  </data>
+  <data name="TerminalProgressOptionDescription" xml:space="preserve">
+    <value>Control whether progress is reported to screen.
+Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
+'auto' shows progress unless the terminal cannot update in place (for example with --no-ansi or in CI).
+This option takes precedence over the deprecated --no-progress flag.</value>
+    <comment>{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="--no-ansi"}{Locked="--no-progress"}</comment>
+  </data>
+  <data name="TerminalProgressOptionInvalidArgument" xml:space="preserve">
+    <value>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+    <comment>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
+  </data>
+  <data name="TerminalProgressHeartbeat" xml:space="preserve">
+    <value>running... {0} completed, {1} failed</value>
+    <comment>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</comment>
+  </data>
+  <data name="TerminalProgressHeartbeatActiveSuffix" xml:space="preserve">
+    <value> | active: {0}</value>
+    <comment>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</comment>
+  </data>
+  <data name="TerminalProgressSlowTest" xml:space="preserve">
+    <value>[slow] still running after {0}: {1}</value>
+    <comment>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</comment>
+  </data>
+  <data name="TerminalTestReporterDescription" xml:space="preserve">
+    <value>Writes test results to terminal.</value>
+  </data>
+  <data name="TerminalTestReporterDisplayName" xml:space="preserve">
+    <value>Terminal test reporter</value>
+  </data>
+  <data name="TerminalOutputOptionDescription" xml:space="preserve">
+    <value>Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
+    <comment>{Locked="Normal"}{Locked="Detailed"}</comment>
+  </data>
+  <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
+    <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
+    <comment>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</comment>
+  </data>
+  <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
+    <value>Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</value>
+    <comment>{Locked="All"}{Locked="Failed"}{Locked="None"}</comment>
+  </data>
+  <data name="TerminalShowStderrOptionDescription" xml:space="preserve">
+    <value>Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</value>
+    <comment>{Locked="All"}{Locked="Failed"}{Locked="None"}</comment>
+  </data>
+  <data name="TerminalShowOutputOptionInvalidArgument" xml:space="preserve">
+    <value>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</value>
+    <comment>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</comment>
+  </data>
+  <data name="StandardError" xml:space="preserve">
+    <value>Error output</value>
+  </data>
+  <data name="StandardOutput" xml:space="preserve">
+    <value>Standard output</value>
+  </data>
+  <data name="TestDiscoverySummarySingular" xml:space="preserve">
+    <value>Test discovery summary: found {0} test(s)</value>
+    <comment>{0} is the number of discovered tests.</comment>
+  </data>
+  <data name="ActiveTestsRunning_MoreTestsCount" xml:space="preserve">
+    <value>and {0} more</value>
+    <comment>{0} is the number of additional active tests.</comment>
+  </data>
+  <data name="ActiveTestsRunning_FullTestsCount" xml:space="preserve">
+    <value>{0} tests running</value>
+    <comment>{0} is the number of currently running tests.</comment>
+  </data>
+  <data name="SucceededLowercase" xml:space="preserve">
+    <value>succeeded</value>
+  </data>
+  <data name="HandshakeFailuresHeader" xml:space="preserve">
+    <value>Handshake failures:</value>
+  </data>
+  <data name="ExitCode" xml:space="preserve">
+    <value>Exit code</value>
+  </data>
+  <data name="FailedWithErrors" xml:space="preserve">
+    <value>failed with {0} error(s)</value>
+    <comment>{0} is the number of errors in an assembly summary line</comment>
+  </data>
+</root>

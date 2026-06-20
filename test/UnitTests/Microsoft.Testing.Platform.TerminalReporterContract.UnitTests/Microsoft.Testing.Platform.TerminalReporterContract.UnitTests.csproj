@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+    <!--
+      CS0436: this project compiles its OWN copy of the shared reporter source (incl. small abstractions like
+      IColor/SystemConsoleColor that are NOT [Embedded]), while also transitively referencing
+      Microsoft.Testing.Platform via the MSTest runner. The compiler correctly uses the locally-defined copy; the
+      conflict warning is expected and benign for an independent source consumer, so we suppress it here.
+    -->
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <!--
+    The shared terminal-reporter contract types are [Microsoft.CodeAnalysis.Embedded], which resolves to a
+    polyfill (not a framework type). The terminal source also needs the other src/Polyfills shims on down-level
+    TFMs. We compile the polyfills here (not via a package reference) to mirror how an external consumer
+    (e.g. dotnet/sdk) supplies them.
+  -->
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!--
+    This project intentionally does NOT reference Microsoft.Testing.Platform's terminal reporter types. It compiles
+    the shared terminal reporter source (reporter + rendering + state + the small platform abstractions, and the
+    TerminalResources.resx) into its own assembly via the shared .props, proving the reporter can live in testfx
+    and be consumed by an independent assembly (e.g. dotnet/sdk's 'dotnet test') with a single source of truth.
+  -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalReporterContract.props" />
+
+</Project>

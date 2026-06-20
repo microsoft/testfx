@@ -200,7 +200,7 @@ Different retry mechanisms publish attempts to MTP differently, and the engine r
   - Emits two `<property>` children per disambiguated attempt — `attempt-index` (`1`, `2`, …) and `attempt-of` (total attempts for that logical test) — so retry-aware consumers can collapse the rows back into a single logical test.
   - Emits `<property name="original-name">` on every disambiguated attempt so consumers can recover the un-suffixed display name without parsing the `[attempt N]` marker.
   - Keeps the original `<property name="uid">` value on every attempt (when present), reflecting whatever attempt-disambiguating UID the framework chose to publish.
-- **IO-collision retry on file rename** — The engine writes to a `<final>.<random>.tmp` sibling (random suffix from `Path.GetRandomFileName`) and then renames it onto the final path; if that final path already exists it falls back to `<final>_1.xml`, `<final>_2.xml`, … (5-second budget). This protects concurrent processes producing default-named reports.
+- **Atomic write via `.tmp` rename** — The engine writes to a `<final>.<random>.tmp` sibling (random suffix from `Path.GetRandomFileName`) and then renames it onto the final path with `overwrite: true`. The random `.tmp` suffix prevents concurrent processes from clobbering each other's intermediate file, and the atomic rename guarantees the final `.xml` is either fully written or absent.
 
 We deliberately do **not** emit Maven Surefire 3.x's `<rerunFailure>` / `<flakyFailure>` children: only a small fraction of consumers parse them, and they require nesting attempt outcomes inside the *last* `<testcase>` element — which the majority of parsers would then mis-count.
 
@@ -208,14 +208,13 @@ We deliberately do **not** emit Maven Surefire 3.x's `<rerunFailure>` / `<flakyF
 
 | Scenario                                   | Behavior                                                                                         |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `--report-junit` alone                     | Default name: `{user}_{machine}_{module}_{tfm}_{yyyy-MM-dd_HH_mm_ss}.xml`                          |
+| `--report-junit` alone                     | Default name: `<asm>_<tfm>_<arch>.xml`                                                            |
 | `--report-junit-filename custom.xml`       | Name overridden. Must end with `.xml`.                                                            |
 | `--report-junit-filename subdir/custom.xml`| Relative paths allowed. Must not contain `..` segments or be drive-relative.                      |
 | `--report-junit-filename /abs/path.xml`    | Fully-qualified paths allowed (Windows: `C:\foo.xml`, UNC, POSIX `/foo.xml`).                     |
-| Default name collides with existing file   | Auto-retry with `_1`, `_2`, ... suffix (5-second budget).                                         |
-| Explicit name collides with existing file  | Overwrite with a warning logged to the output device.                                             |
+| File already exists (default or explicit)  | Overwrite with a warning logged to the output device.                                             |
 
-Placeholders supported in the explicit name (via `ArtifactNamingHelper.GetStandardReplacements`): `{pname}`, `{pid}`, `{asm}`, `{tfm}`, `{time}`.
+Placeholders supported in the explicit name (via `ArtifactNamingHelper.GetStandardReplacements`): `{pname}`, `{pid}`, `{asm}`, `{tfm}`, `{arch}`, `{time}`.
 
 The file is **written to a `.tmp` sibling first, then renamed on success.** This avoids leaving a partial / corrupted `.xml` on the disk if serialization throws or the run is cancelled mid-write.
 

@@ -10,14 +10,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>Scope of the source-generated data.</b> The MSTest source generator's
-/// <c>[ModuleInitializer]</c> calls <see cref="ReflectionMetadataHook.Register"/> with only:
-/// the assembly, the <c>[TestClass]</c> types, and their <c>[TestMethod]</c>-annotated
-/// <see cref="MethodInfo"/>s. Everything else (type attributes, method attributes, assembly
-/// attributes, constructors, properties, navigation data) is intentionally <i>not</i>
-/// populated today; reads of those fields fall back to runtime reflection. The source-gen
-/// payload is therefore best understood as "type / test-method rooting + trimmer hints"
-/// rather than a full reflection replacement.
+/// <b>Scope of the source-generated data.</b> The shipping MSTest source generator's
+/// <c>[ModuleInitializer]</c> calls <see cref="ReflectionMetadataHook.Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]})"/>
+/// with only: the assembly, the <c>[TestClass]</c> types, and their <c>[TestMethod]</c>-annotated
+/// <see cref="MethodInfo"/>s. The AOT generator additionally publishes pre-materialized type-level
+/// and assembly-level attributes via the richer
+/// <see cref="ReflectionMetadataHook.Register(Assembly, Type[], IReadOnlyDictionary{Type, MethodInfo[]}, IReadOnlyDictionary{Type, Attribute[]}, object[])"/>
+/// overload. Anything still not populated (method attributes, constructors, properties, navigation
+/// data) falls back to runtime reflection, so the payload remains "type / test-method rooting +
+/// trimmer hints + materialized type/assembly attributes" rather than a full reflection replacement.
 /// </para>
 /// <para>
 /// <b>Why a fallback exists at all.</b> Each fallback in this class falls into one of three

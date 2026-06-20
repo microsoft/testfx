@@ -3,17 +3,17 @@
     "dotnet": "11.0.100-preview.5.26227.104",
     "runtimes": {
       "dotnet": [
-        "8.0.27",
-        "9.0.16",
-        "10.0.8"
+        "8.0.28",
+        "9.0.17",
+        "10.0.9"
       ],
       "dotnet/x86": [
-        "9.0.16",
-        "10.0.8"
+        "9.0.17",
+        "10.0.9"
       ],
       "aspnetcore": [
-        "9.0.16",
-        "10.0.8"
+        "9.0.17",
+        "10.0.9"
       ]
     },
     "vs": {
@@ -37,7 +37,7 @@
     "runner": "Microsoft.Testing.Platform"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.26308.8",
+    "Microsoft.DotNet.Arcade.Sdk": "11.0.0-beta.26310.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

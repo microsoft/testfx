@@ -11,22 +11,11 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
-internal sealed class HtmlReportEngine
+internal sealed class HtmlReportEngine : ReportEngineBase
 {
     private const string TemplateResourceName = "Microsoft.Testing.Extensions.HtmlReport.Templates.report-template.html";
     private const string DataPlaceholder = "/*__MTP_DATA__*/null";
     private const string GeneratorVersionPlaceholder = "__MTP_GENERATOR_VERSION__";
-
-    private readonly IFileSystem _fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
-    private readonly IEnvironment _environment;
-    private readonly ICommandLineOptions _commandLineOptions;
-    private readonly IConfiguration _configuration;
-    private readonly IClock _clock;
-    private readonly ITestFramework _testFramework;
-    private readonly DateTimeOffset _testStartTime;
-    private readonly int _exitCode;
-    private readonly CancellationToken _cancellationToken;
 
     public HtmlReportEngine(
         IFileSystem fileSystem,
@@ -39,17 +28,18 @@ internal sealed class HtmlReportEngine
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
+        : base(
+            fileSystem,
+            testApplicationModuleInfo,
+            environment,
+            commandLineOptions,
+            configuration,
+            clock,
+            testFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken)
     {
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
-        _environment = environment;
-        _commandLineOptions = commandLineOptions;
-        _configuration = configuration;
-        _clock = clock;
-        _testFramework = testFramework;
-        _testStartTime = testStartTime;
-        _exitCode = exitCode;
-        _cancellationToken = cancellationToken;
     }
 
     public Task<(string FileName, string? Warning)> GenerateReportAsync(CapturedTestResult[] results)
@@ -65,7 +55,7 @@ internal sealed class HtmlReportEngine
 
         string fileName = fileNameExplicitlyProvided
             ? ResolveHtmlFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName(finishTime);
+            : BuildDefaultFileName();
 
         string outputDirectory = _configuration.GetTestResultDirectory();
         // Path.Combine short-circuits when the second argument is rooted, so an absolute
@@ -87,68 +77,28 @@ internal sealed class HtmlReportEngine
 
         byte[] bytes = Encoding.UTF8.GetBytes(html);
 
-        return await WriteWithRetryAsync(finalPath, bytes, fileNameExplicitlyProvided).ConfigureAwait(false);
+        return await WriteAsync(finalPath, bytes).ConfigureAwait(false);
     }
 
-    private static string GetProvidedFileName(string[]? providedFileName)
-        => providedFileName is { Length: > 0 }
-            ? providedFileName[0]
-            : throw ApplicationStateGuard.Unreachable();
-
-    private async Task<(string FileName, string? Warning)> WriteWithRetryAsync(string finalPath, byte[] bytes, bool fileNameExplicitlyProvided)
+    private async Task<(string FileName, string? Warning)> WriteAsync(string finalPath, byte[] bytes)
     {
-        // Explicit file names: use FileMode.Create (overwrite). Default-generated file
-        // names: use FileMode.CreateNew but retry with disambiguating suffixes when the
-        // file already exists, so concurrent runs (or two runs within the same second
-        // sharing the result directory) don't fail with IOException.
-        if (fileNameExplicitlyProvided)
-        {
-            bool willOverwrite = _fileSystem.ExistFile(finalPath);
-            await WriteAsync(finalPath, FileMode.Create, bytes).ConfigureAwait(false);
-            return (
-                finalPath,
-                willOverwrite
-                    ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.HtmlReportFileExistsAndWillBeOverwritten, finalPath)
-                    : null);
-        }
-
-        DateTimeOffset firstTry = _clock.UtcNow;
-        string directory = Path.GetDirectoryName(finalPath) ?? string.Empty;
-        string baseName = Path.GetFileNameWithoutExtension(finalPath);
-        string extension = Path.GetExtension(finalPath);
-        string candidate = finalPath;
-        int attempt = 0;
-
-        while (true)
-        {
-            _cancellationToken.ThrowIfCancellationRequested();
-
-            try
-            {
-                await WriteAsync(candidate, FileMode.CreateNew, bytes).ConfigureAwait(false);
-                return (candidate, null);
-            }
-            catch (IOException) when (_fileSystem.ExistFile(candidate))
-            {
-                // The IOException was caused by the file already existing. Try a
-                // suffixed name. Any other IOException (disk full, permission, path
-                // too long, etc.) is not caught here and will propagate to the caller.
-                if (_clock.UtcNow - firstTry > ReportFileWriterHelper.FileWriteRetryTimeout)
-                {
-                    throw;
-                }
-
-                attempt++;
-                candidate = Path.Combine(directory, $"{baseName}_{attempt}{extension}");
-            }
-        }
+        // Always overwrite (FileMode.Create), regardless of whether the file name was explicitly
+        // provided or generated from the default <asm>_<tfm>_<arch>.html shape. Emit a warning
+        // when overwriting so users have a single, predictable rule to reason about.
+        bool willOverwrite = _fileSystem.ExistFile(finalPath);
+        await WriteFileAsync(finalPath, bytes).ConfigureAwait(false);
+        return (
+            finalPath,
+            willOverwrite
+                ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.HtmlReportFileExistsAndWillBeOverwritten, finalPath)
+                : null);
     }
 
-    private async Task WriteAsync(string path, FileMode mode, byte[] bytes)
+    private async Task WriteFileAsync(string path, byte[] bytes)
     {
         // Note that we need to dispose the IFileStream, not the inner stream.
         // IFileStream implementations will be responsible to dispose their inner stream.
-        using IFileStream stream = _fileSystem.NewFileStream(path, mode);
+        using IFileStream stream = _fileSystem.NewFileStream(path, FileMode.Create);
 #if NETCOREAPP
         await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
 #else
@@ -156,14 +106,16 @@ internal sealed class HtmlReportEngine
 #endif
     }
 
-    private string BuildDefaultFileName(DateTimeOffset finishTime)
+    private string BuildDefaultFileName()
     {
-        string user = _environment.GetEnvironmentVariable("UserName")
-            ?? _environment.GetEnvironmentVariable("USER")
-            ?? "user";
+        // Deterministic <asm>_<tfm>_<arch>.html shape — discoverable across reruns and
+        // multi-target/multi-arch matrices. A second run into the same TestResults folder
+        // overwrites the previous file (with a warning), matching the behavior of an
+        // explicitly-provided file name.
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
-        string raw = $"{user}_{_environment.MachineName}_{moduleName}_{targetFrameworkMoniker}_{finishTime:yyyy-MM-dd_HH_mm_ss}.html";
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.html";
         return ReplaceInvalidFileNameChars(raw);
     }
 

@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile;TPEXP</NoWarn>
+
+    <!--
+      IsTestingPlatformApplication is intentionally NOT set when running under
+      'dotnet test' (CI's Debug Test step on TestFx.slnx passes -p:UsingDotNetTest=true).
+      This playground intentionally contains failing, throwing and skipped tests so the
+      user can compare the produced CTRF report against xunit.v3's built-in CTRF output
+      (see ../README.md). We don't want those intentional failures to break CI's test step.
+      During a normal build the property stays true so the project still wires MTP correctly.
+    -->
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CtrfReport\Microsoft.Testing.Extensions.CtrfReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="TestingPlatformServer" />
+    <ProjectCapability Include="TestContainer" />
+  </ItemGroup>
+
+  <!-- Import the capabilities for the Microsoft.Testing.Platform -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\buildMultiTargeting\Microsoft.Testing.Platform.props" />
+</Project>

@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal abstract class SimpleTerminal : ITerminal
 {
     private object? _batchingLock;
@@ -134,7 +135,7 @@ internal abstract class SimpleTerminal : ITerminal
                 Append(')');
             }
 
-            TestDetailState? activeTest = p.TestNodeResultsState?.GetRunningTasks(1).FirstOrDefault();
+            TestDetailState? activeTest = p.TestNodeResultsState?.GetSingleActiveOrSummaryTask();
             if (!RoslynString.IsNullOrWhiteSpace(activeTest?.Text))
             {
                 Append(" - ");
@@ -171,7 +172,7 @@ internal abstract class SimpleTerminal : ITerminal
     {
         if (_isBatching)
         {
-            throw new InvalidOperationException(PlatformResources.ConsoleIsAlreadyInBatchingMode);
+            throw new InvalidOperationException(TerminalResources.ConsoleIsAlreadyInBatchingMode);
         }
 
         bool lockTaken = false;

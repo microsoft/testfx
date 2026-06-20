@@ -1,11 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal sealed class TestNodeResultsState
 {
     public TestNodeResultsState(long id)
@@ -19,25 +20,91 @@ internal sealed class TestNodeResultsState
     private readonly TestDetailState _summaryDetail;
     private readonly ConcurrentDictionary<string, TestDetailState> _testNodeProgressStates = new();
 
+    // Reusable buffer for GetRunningTasks — cleared and rebuilt each call to avoid per-tick list allocation.
+    private readonly List<TestDetailState> _runningTasksBuffer = [];
+
     public int Count => _testNodeProgressStates.Count;
 
     public void AddRunningTestNode(int id, string uid, string name, IStopwatch stopwatch) => _testNodeProgressStates[uid] = new TestDetailState(id, stopwatch, name);
 
     public void RemoveRunningTestNode(string uid) => _testNodeProgressStates.TryRemove(uid, out _);
 
-    public List<TestDetailState> GetRunningTasks(int maxCount)
+    /// <summary>
+    /// Returns the single active task to display on a one-line progress row, without allocating a list.
+    /// This preserves the prior <c>GetRunningTasks(1).FirstOrDefault()</c> semantics:
+    /// <list type="bullet">
+    /// <item><description><see langword="null"/> when there are no running tasks.</description></item>
+    /// <item><description>The single running task when there is exactly one.</description></item>
+    /// <item><description>A reusable summary detail with text like "N tests running" when there are multiple.</description></item>
+    /// </list>
+    /// </summary>
+    public TestDetailState? GetSingleActiveOrSummaryTask()
     {
-        // Build the list directly from the dictionary to avoid LINQ iterator chain allocations.
-        var sortedDetails = new List<TestDetailState>(_testNodeProgressStates.Count);
+        TestDetailState? first = null;
+        int count = 0;
         foreach (KeyValuePair<string, TestDetailState> kvp in _testNodeProgressStates)
         {
-            sortedDetails.Add(kvp.Value);
+            if (count == 0)
+            {
+                first = kvp.Value;
+            }
+
+            count++;
+        }
+
+        if (count == 0)
+        {
+            return null;
+        }
+
+        if (count == 1)
+        {
+            return first;
+        }
+
+        _summaryDetail.Text = string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, count);
+        return _summaryDetail;
+    }
+
+    /// <summary>
+    /// Returns a snapshot of currently running tasks, sorted by elapsed time descending and
+    /// truncated to <paramref name="maxCount"/> entries (the last entry becomes a "... N more
+    /// running" summary detail when truncation occurs).
+    /// </summary>
+    /// <remarks>
+    /// The returned <see cref="List{T}"/> is a cached buffer reused across calls on the same
+    /// <see cref="TestNodeResultsState"/> instance to avoid per-render-tick allocation.
+    /// Callers MUST NOT call <see cref="GetRunningTasks"/> on the same instance again before
+    /// finishing use of the previously-returned buffer — the next call on that instance will
+    /// <see cref="List{T}.Clear"/> and rebuild it in place, silently invalidating the prior
+    /// caller's view. Buffers from different instances are independent and may be held
+    /// concurrently. This type is not designed for concurrent calls on the same instance;
+    /// the production caller (<c>AnsiTerminalTestProgressFrame</c>) only invokes this from
+    /// the single-threaded render loop.
+    /// </remarks>
+    public List<TestDetailState> GetRunningTasks(int maxCount)
+    {
+        // Reuse the cached buffer to avoid allocating a new List on every render tick.
+        _runningTasksBuffer.Clear();
+
+        // Pre-size the buffer to the current snapshot size so the first calls (and any
+        // call that grows past the previous high-water mark) don't trigger multiple
+        // internal array reallocations as items are added. Capacity only grows.
+        int snapshotCount = _testNodeProgressStates.Count;
+        if (_runningTasksBuffer.Capacity < snapshotCount)
+        {
+            _runningTasksBuffer.Capacity = snapshotCount;
+        }
+
+        foreach (KeyValuePair<string, TestDetailState> kvp in _testNodeProgressStates)
+        {
+            _runningTasksBuffer.Add(kvp.Value);
         }
 
         // Sort descending by elapsed time without LINQ overhead.
-        sortedDetails.Sort(static (a, b) => (b.Stopwatch?.Elapsed ?? TimeSpan.Zero).CompareTo(a.Stopwatch?.Elapsed ?? TimeSpan.Zero));
+        _runningTasksBuffer.Sort(static (a, b) => (b.Stopwatch?.Elapsed ?? TimeSpan.Zero).CompareTo(a.Stopwatch?.Elapsed ?? TimeSpan.Zero));
 
-        bool tooManyItems = sortedDetails.Count > maxCount;
+        bool tooManyItems = _runningTasksBuffer.Count > maxCount;
 
         if (tooManyItems)
         {
@@ -47,19 +114,19 @@ internal sealed class TestNodeResultsState
             _summaryDetail.Text =
                 itemsToTake == 0
                     // Note: If itemsToTake is 0, then we only show two lines, the project summary and the number of running tests.
-                    ? string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_FullTestsCount, sortedDetails.Count)
+                    ? string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_FullTestsCount, _runningTasksBuffer.Count)
                     // If itemsToTake is larger, then we show the project summary, active tests, and the number of active tests that are not shown.
-                    : $"... {string.Format(CultureInfo.CurrentCulture, PlatformResources.ActiveTestsRunning_MoreTestsCount, sortedDetails.Count - itemsToTake)}";
+                    : $"... {string.Format(CultureInfo.CurrentCulture, TerminalResources.ActiveTestsRunning_MoreTestsCount, _runningTasksBuffer.Count - itemsToTake)}";
 
             // Truncate in-place to avoid allocating a second list/array.
-            if (itemsToTake < sortedDetails.Count)
+            if (itemsToTake < _runningTasksBuffer.Count)
             {
-                sortedDetails.RemoveRange(itemsToTake, sortedDetails.Count - itemsToTake);
+                _runningTasksBuffer.RemoveRange(itemsToTake, _runningTasksBuffer.Count - itemsToTake);
             }
 
-            sortedDetails.Add(_summaryDetail);
+            _runningTasksBuffer.Add(_summaryDetail);
         }
 
-        return sortedDetails;
+        return _runningTasksBuffer;
     }
 }

@@ -25,13 +25,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        if (collection.Contains(notExpected))
-        {
-            ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression);
-        }
-    }
+        => ContainsCore(notExpected, collection, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -48,17 +42,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
-        foreach (object? item in collection)
-        {
-            if (object.Equals(notExpected, item))
-            {
-                ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression);
-            }
-        }
-    }
+        => ContainsCore(notExpected, collection, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -77,13 +61,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain<T>(T notExpected, IEnumerable<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        if (collection.Contains(notExpected, comparer))
-        {
-            ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression, comparer);
-        }
-    }
+        => ContainsCore(notExpected, collection, comparer, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -101,18 +79,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain(object? notExpected, IEnumerable collection, IEqualityComparer comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
-        CheckParameterNotNull(comparer, "Assert.DoesNotContain", "comparer");
-        foreach (object? item in collection)
-        {
-            if (comparer.Equals(item, notExpected))
-            {
-                ReportAssertDoesNotContainItemFailed(notExpected, message, notExpectedExpression, collectionExpression, comparer);
-            }
-        }
-    }
+        => ContainsCore(notExpected, collection, comparer, "Assert.DoesNotContain", message, notExpectedExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -130,13 +97,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain<T>(Func<T, bool> predicate, IEnumerable<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        if (collection.Any(predicate))
-        {
-            ReportAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression);
-        }
-    }
+        => ContainsCore(predicate, collection, "Assert.DoesNotContain", message, predicateExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified item.
@@ -153,18 +114,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContain(Func<object?, bool> predicate, IEnumerable collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        CheckParameterNotNull(collection, "Assert.DoesNotContain", "collection");
-        CheckParameterNotNull(predicate, "Assert.DoesNotContain", "predicate");
-        foreach (object? item in collection)
-        {
-            if (predicate(item))
-            {
-                ReportAssertDoesNotContainPredicateFailed(message, predicateExpression, collectionExpression);
-            }
-        }
-    }
+        => ContainsCore(predicate, collection, "Assert.DoesNotContain", message, predicateExpression, collectionExpression, shouldContain: false);
 
     /// <summary>
     /// Tests whether the specified string does not contain the specified substring
@@ -229,19 +179,7 @@ public sealed partial class Assert
     /// or <paramref name="value"/> contains <paramref name="substring"/>.
     /// </exception>
     public static void DoesNotContain(string substring, string value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(substring))] string substringExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContain");
-        CheckParameterNotNull(value, "Assert.DoesNotContain", "value");
-        CheckParameterNotNull(substring, "Assert.DoesNotContain", "substring");
-#if NETCOREAPP
-        if (value.Contains(substring, comparisonType))
-#else
-        if (value.IndexOf(substring, comparisonType) >= 0)
-#endif
-        {
-            ReportAssertDoesNotContainSubstringFailed(substring, value, comparisonType, message, substringExpression, valueExpression);
-        }
-    }
+        => ContainsCore(substring, value, comparisonType, "Assert.DoesNotContain", message, substringExpression, valueExpression, shouldContain: false);
 
     #endregion // DoesNotContain
     [DoesNotReturn]

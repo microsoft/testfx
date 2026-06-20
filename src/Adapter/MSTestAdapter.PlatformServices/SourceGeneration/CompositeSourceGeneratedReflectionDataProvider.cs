@@ -65,8 +65,8 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
     internal override object[] GetAssemblyAttributes(Assembly assembly)
     {
         CompositeState state = Volatile.Read(ref _state);
-        return state.ProvidersByAssembly.TryGetValue(assembly, out SourceGeneratedReflectionDataProvider? provider)
-            ? provider.AssemblyAttributes
+        return state.AssemblyAttributesByAssembly.TryGetValue(assembly, out object[]? merged)
+            ? merged
             : [];
     }
 
@@ -96,6 +96,7 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             providers: [],
             providersByAssemblyName: new Dictionary<string, SourceGeneratedReflectionDataProvider>(StringComparer.OrdinalIgnoreCase),
             providersByAssembly: [],
+            assemblyAttributesByAssembly: [],
             mergedSnapshot: new SourceGeneratedReflectionDataProvider());
 #pragma warning restore IDE0028
 
@@ -103,11 +104,13 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             IReadOnlyList<SourceGeneratedReflectionDataProvider> providers,
             Dictionary<string, SourceGeneratedReflectionDataProvider> providersByAssemblyName,
             Dictionary<Assembly, SourceGeneratedReflectionDataProvider> providersByAssembly,
+            Dictionary<Assembly, object[]> assemblyAttributesByAssembly,
             SourceGeneratedReflectionDataProvider mergedSnapshot)
         {
             Providers = providers;
             ProvidersByAssemblyName = providersByAssemblyName;
             ProvidersByAssembly = providersByAssembly;
+            AssemblyAttributesByAssembly = assemblyAttributesByAssembly;
             MergedSnapshot = mergedSnapshot;
         }
 
@@ -116,6 +119,12 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
         public Dictionary<string, SourceGeneratedReflectionDataProvider> ProvidersByAssemblyName { get; }
 
         public Dictionary<Assembly, SourceGeneratedReflectionDataProvider> ProvidersByAssembly { get; }
+
+        // Cumulative per-assembly assembly-level attribute union. Unlike ProvidersByAssembly (which
+        // keeps the last provider per assembly for type/method lookups), this dictionary preserves
+        // the union of AssemblyAttributes across every Register call for the same assembly so a
+        // future re-registration doesn't silently drop attributes published by an earlier one.
+        public Dictionary<Assembly, object[]> AssemblyAttributesByAssembly { get; }
 
         public SourceGeneratedReflectionDataProvider MergedSnapshot { get; }
 
@@ -131,15 +140,32 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             byName[added.AssemblyName] = added;
 
             var byAssembly = new Dictionary<Assembly, SourceGeneratedReflectionDataProvider>(ProvidersByAssembly);
+            var attributesByAssembly = new Dictionary<Assembly, object[]>(AssemblyAttributesByAssembly);
             if (added.Assembly is { } addedAssembly)
             {
                 byAssembly[addedAssembly] = added;
+
+                if (attributesByAssembly.TryGetValue(addedAssembly, out object[]? existing) && existing.Length > 0)
+                {
+                    if (added.AssemblyAttributes.Length > 0)
+                    {
+                        object[] merged = new object[existing.Length + added.AssemblyAttributes.Length];
+                        Array.Copy(existing, 0, merged, 0, existing.Length);
+                        Array.Copy(added.AssemblyAttributes, 0, merged, existing.Length, added.AssemblyAttributes.Length);
+                        attributesByAssembly[addedAssembly] = merged;
+                    }
+                }
+                else if (added.AssemblyAttributes.Length > 0)
+                {
+                    attributesByAssembly[addedAssembly] = added.AssemblyAttributes;
+                }
             }
 
             return new CompositeState(
                 providers,
                 byName,
                 byAssembly,
+                attributesByAssembly,
                 BuildMergedSnapshot(providers));
         }
 

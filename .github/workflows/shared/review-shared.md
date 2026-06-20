@@ -18,14 +18,21 @@ tools:
   github:
     toolsets: [pull_requests, repos]
 
+# Attribution is provided by the Copilot banner the expert-reviewer prepends to
+# every comment/review body (see .github/agents/expert-reviewer.agent.md). The
+# gh-aw auto-footer is therefore disabled on every comment handler below so the
+# attribution is not duplicated (a single header is enough).
 safe-outputs:
   create-pull-request-review-comment:
     max: 30
+    footer: "none"
   submit-pull-request-review:
     max: 1
     allowed-events: [COMMENT, REQUEST_CHANGES]
+    footer: "none"
   add-comment:
     max: 5
+    footer: false
   # NOTE: Consumers must also define this explicitly until workflow import/merge
   # preserves `report-as-issue: false` in compiled lock files.
   noop:

@@ -814,8 +814,8 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.DummyAsyncTestMethodBody = () => Task.Run(() => callOrder.Add("baseAsyncTestInitializeCalled1"));
         DummyTestClass.TestInitializeMethodBody = classInstance => callOrder.Add("classTestInitializeCalled");
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod")!;
-        _testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
-        _testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!);
+        _testClassInfo.BaseTestInitializeMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestInitializeMethodsQueue.Add(typeof(DummyTestClass).GetMethod("DummyAsyncTestMethod")!);
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -840,7 +840,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldNotThrowIfTestInitializeForBaseClassIsNull()
     {
-        _testClassInfo.BaseTestInitializeMethodsQueue.Enqueue(null!);
+        _testClassInfo.BaseTestInitializeMethodsQueue.Add(null!);
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -1119,8 +1119,8 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
         DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
-        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
-        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
 
         TestResult result = await _testMethodInfo.InvokeAsync(null);
 
@@ -1140,8 +1140,8 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClassBase.BaseTestClassMethodBody = classInstance => callOrder.Add("baseTestCleanupCalled" + callOrder.Count);
         DummyTestClass.TestCleanupMethodBody = classInstance => callOrder.Add("classTestCleanupCalled");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod")!;
-        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
-        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
+        _testClassInfo.BaseTestCleanupMethodsQueue.Add(typeof(DummyTestClassBase).GetMethod("DummyBaseTestClassMethod")!);
 
         await _testMethodInfo.InvokeAsync(null);
         TestResult result = await _testMethodInfo.InvokeAsync(null);

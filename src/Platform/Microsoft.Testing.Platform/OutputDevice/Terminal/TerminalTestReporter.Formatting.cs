@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -67,10 +66,10 @@ internal sealed partial class TerminalTestReporter
 
         terminal.SetColor(TerminalColor.DarkRed);
         terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.Expected);
+        terminal.AppendLine(TerminalResources.Expected);
         AppendIndentedLine(terminal, expected, DoubleIndentation);
         terminal.Append(SingleIndentation);
-        terminal.AppendLine(PlatformResources.Actual);
+        terminal.AppendLine(TerminalResources.Actual);
         AppendIndentedLine(terminal, actual, DoubleIndentation);
         terminal.ResetColor();
     }
@@ -108,7 +107,7 @@ internal sealed partial class TerminalTestReporter
         if (hasStdOut)
         {
             terminal.Append(SingleIndentation);
-            terminal.AppendLine(PlatformResources.StandardOutput);
+            terminal.AppendLine(TerminalResources.StandardOutput);
             string? standardOutputWithoutSpecialChars = MakeControlCharactersVisible(standardOutput, normalizeWhitespaceCharacters: false);
             AppendIndentedLine(terminal, standardOutputWithoutSpecialChars, DoubleIndentation);
         }
@@ -116,7 +115,7 @@ internal sealed partial class TerminalTestReporter
         if (hasStdErr)
         {
             terminal.Append(SingleIndentation);
-            terminal.AppendLine(PlatformResources.StandardError);
+            terminal.AppendLine(TerminalResources.StandardError);
             string? standardErrorWithoutSpecialChars = MakeControlCharactersVisible(errorOutput, normalizeWhitespaceCharacters: false);
             AppendIndentedLine(terminal, standardErrorWithoutSpecialChars, DoubleIndentation);
         }
@@ -124,27 +123,30 @@ internal sealed partial class TerminalTestReporter
         terminal.ResetColor();
     }
 
-    private void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal)
+    private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, TestProgressState assemblyRun)
+        => AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);
+
+    private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
     {
-        terminal.AppendLink(_assembly, lineNumber: null);
-        if (_targetFramework == null && _architecture == null)
+        terminal.AppendLink(assembly, lineNumber: null);
+        if (targetFramework == null && architecture == null)
         {
             return;
         }
 
         terminal.Append(" (");
-        if (_targetFramework != null)
+        if (targetFramework != null)
         {
-            terminal.Append(_targetFramework);
-            if (_architecture != null)
+            terminal.Append(targetFramework);
+            if (architecture != null)
             {
                 terminal.Append('|');
             }
         }
 
-        if (_architecture != null)
+        if (architecture != null)
         {
-            terminal.Append(_architecture);
+            terminal.Append(architecture);
         }
 
         terminal.Append(')');
@@ -161,7 +163,7 @@ internal sealed partial class TerminalTestReporter
         }
 
         bool weHaveFilePathAndCodeLine = !RoslynString.IsNullOrWhiteSpace(match.Groups["code"].Value);
-        terminal.Append(PlatformResources.StackFrameAt);
+        terminal.Append(TerminalResources.StackFrameAt);
         terminal.Append(' ');
 
         if (weHaveFilePathAndCodeLine)
@@ -180,7 +182,7 @@ internal sealed partial class TerminalTestReporter
         }
 
         terminal.Append(' ');
-        terminal.Append(PlatformResources.StackFrameIn);
+        terminal.Append(TerminalResources.StackFrameIn);
         terminal.Append(' ');
         if (!RoslynString.IsNullOrWhiteSpace(match.Groups["file"].Value))
         {
@@ -238,5 +240,89 @@ internal sealed partial class TerminalTestReporter
         {
             terminal.ResetColor();
         }
+    }
+
+    /// <summary>
+    /// Renders the per-assembly summary line (link + result + compact counts + duration). Used by the
+    /// <c>dotnet test</c> orchestrator (<see cref="TerminalTestReporterOptions.ShowAssembly"/>); the in-process
+    /// host renders a single run-level summary instead.
+    /// </summary>
+    private static void AppendAssemblySummary(TestProgressState assemblyRun, ITerminal terminal)
+    {
+        terminal.ResetColor();
+
+        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun);
+        terminal.Append(' ');
+        AppendAssemblyResult(terminal, assemblyRun);
+        terminal.Append(' ');
+        AppendAssemblyTestCounts(terminal, assemblyRun);
+        terminal.Append(' ');
+        AppendLongDuration(terminal, assemblyRun.Stopwatch.Elapsed);
+        terminal.AppendLine();
+    }
+
+    private static void AppendAssemblyResult(ITerminal terminal, TestProgressState state)
+    {
+        if (!state.Success)
+        {
+            terminal.SetColor(TerminalColor.DarkRed);
+
+            // If the assembly failed, we print one of three red strings.
+            string text = (state.FailedTests > 0, state.TotalTests == 0) switch
+            {
+                (true, _) => string.Format(CultureInfo.CurrentCulture, TerminalResources.FailedWithErrors, state.FailedTests),
+                (false, true) => TerminalResources.ZeroTestsRan,
+                (false, false) => TerminalResources.FailedLowercase,
+            };
+            terminal.Append(text);
+            terminal.ResetColor();
+        }
+        else
+        {
+            terminal.SetColor(TerminalColor.DarkGreen);
+            terminal.Append(TerminalResources.PassedLowercase);
+            terminal.ResetColor();
+        }
+    }
+
+    /// <summary>
+    /// Renders a compact, per-assembly counts block that mirrors the in-progress indicator. Full-ANSI terminals get
+    /// "[✓P/xF/↓S]" (with optional "/rR"); simple terminals (NoAnsi / SimpleAnsi / CI) get the ASCII "[+P/xF/?S]"
+    /// form so logs stay font- and encoding-friendly.
+    /// </summary>
+    private static void AppendAssemblyTestCounts(ITerminal terminal, TestProgressState assemblyRun)
+    {
+        int failed = assemblyRun.FailedTests;
+        int passed = assemblyRun.PassedTests;
+        int skipped = assemblyRun.SkippedTests;
+        int retried = assemblyRun.RetriedFailedTests;
+
+        bool unicode = terminal is AnsiTerminal;
+        char passedGlyph = unicode ? '✓' : '+';
+        char skippedGlyph = unicode ? '↓' : '?';
+
+        terminal.Append('[');
+
+        AppendGlyphCount(terminal, passedGlyph, passed, TerminalColor.DarkGreen);
+        terminal.Append('/');
+        AppendGlyphCount(terminal, 'x', failed, TerminalColor.DarkRed);
+        terminal.Append('/');
+        AppendGlyphCount(terminal, skippedGlyph, skipped, TerminalColor.DarkYellow);
+
+        if (retried > 0)
+        {
+            terminal.Append('/');
+            AppendGlyphCount(terminal, 'r', retried, TerminalColor.Gray);
+        }
+
+        terminal.Append(']');
+    }
+
+    private static void AppendGlyphCount(ITerminal terminal, char glyph, int count, TerminalColor color)
+    {
+        terminal.SetColor(color);
+        terminal.Append(glyph);
+        terminal.Append(count.ToString(CultureInfo.CurrentCulture));
+        terminal.ResetColor();
     }
 }

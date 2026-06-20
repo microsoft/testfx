@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- C# source generators have to target netstandard2.0. -->
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <!-- Do not include the generator as a lib dependency of the consuming project. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <RootNamespace>MSTest.TestFramework.SourceGeneration</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <!-- Internal build-time generator; not shipped as its own package. -->
+    <IsShipping>false</IsShipping>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" VersionOverride="$(MicrosoftCodeAnalysisVersionForSourceGen)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

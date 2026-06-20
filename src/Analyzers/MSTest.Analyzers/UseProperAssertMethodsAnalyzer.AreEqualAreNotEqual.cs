@@ -15,7 +15,7 @@ namespace MSTest.Analyzers;
 
 public sealed partial class UseProperAssertMethodsAnalyzer
 {
-    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
+    private static void AnalyzeAreEqualOrAreNotEqualInvocation(OperationAnalysisContext context, IOperation expectedArgument, bool isAreEqualInvocation, INamedTypeSymbol assertTypeSymbol, INamedTypeSymbol objectTypeSymbol, INamedTypeSymbol? enumerableTypeSymbol)
     {
         // Check for collection count patterns: collection.Count/Length == 0 or collection.Count/Length == X
         if (isAreEqualInvocation &&
@@ -61,6 +61,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             CountCheckStatus countStatus = RecognizeCountCheck(
                 expectedArgument,
                 actualArgumentValue,
+                assertTypeSymbol,
                 objectTypeSymbol,
                 enumerableTypeSymbol,
                 out SyntaxNode? nodeToBeReplaced1,
@@ -119,6 +120,7 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             CountCheckStatus notEqualCountStatus = RecognizeCountCheck(
                 expectedArgument,
                 actualArgumentValueNotEqual,
+                assertTypeSymbol,
                 objectTypeSymbol,
                 enumerableTypeSymbol,
                 out SyntaxNode? nodeToBeReplacedNE1,

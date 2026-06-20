@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -118,8 +118,7 @@ internal sealed partial class ServerTestHost
             _testFrameworkManager,
             _testSessionManager,
             new MessageBusProxy(),
-            method == JsonRpcMethods.TestingDiscoverTests,
-            true)).ConfigureAwait(false);
+            method == JsonRpcMethods.TestingDiscoverTests)).ConfigureAwait(false);
 
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;

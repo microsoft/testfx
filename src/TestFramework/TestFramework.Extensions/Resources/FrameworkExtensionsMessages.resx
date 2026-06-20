@@ -119,12 +119,10 @@
   </resheader>
   <data name="ArgumentXMustDeriveFromClassY" xml:space="preserve">
     <value>Type '{0}' is not assignable to '{1}'.</value>
-    <comment>
-      - {0} argument name like "applicationType"
-      - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
-    </comment>
+    <comment>{0} is the argument name, for example {Locked="applicationType"}. {1} is the fully qualified class name, for example {Locked="Microsoft.UI.Xaml.Application"}.</comment>
   </data>
   <data name="AsyncUITestMethodWithNoDispatcherQueue" xml:space="preserve">
     <value>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</value>
+    <comment>Do not localize API names {Locked="UITestMethodAttribute.DispatcherQueue"}{Locked="UITestMethodAttribute"}, the product name {Locked="WinUI"}, or the C# keyword {Locked="null"}.</comment>
   </data>
 </root>

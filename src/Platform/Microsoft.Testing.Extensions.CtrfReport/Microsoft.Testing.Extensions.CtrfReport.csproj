@@ -1,0 +1,85 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
+    <VersionPrefix>$(MicrosoftTestingExtensionsCtrfReportVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
+  </PropertyGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This package extends Microsoft Testing Platform to produce test reports in the Common Test Report Format (CTRF, https://ctrf.io).]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!-- NuGet package layout -->
+  <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <TfmSpecificPackageFile Include="buildTransitive/**">
+      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+    <TfmSpecificPackageFile Include="build/**">
+      <PackagePath>build/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs" Link="Helpers\ApplicationStateGuard.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Services\ArtifactNamingHelper.cs" Link="Services\ArtifactNamingHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineBase.cs" Link="Helpers\ReportEngineBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.cs" Link="Helpers\ReportGeneratorBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProviderRegistration.cs" Link="Helpers\ReportProviderRegistration.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameValidator.cs" Link="Helpers\ReportFileNameValidator.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\CapturedTestResultBase.cs" Link="Helpers\CapturedTestResultBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestResultCaptureHelper.cs" Link="Helpers\TestResultCaptureHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- NOTE: SDK already adds Linux, macOS, and Windows. -->
+    <!-- See https://github.com/dotnet/sdk/blob/cb459ebc2d9374b2bc5ce944cc633a6e79ed8275/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.SupportedPlatforms.props -->
+    <SupportedPlatform Include="android" />
+    <SupportedPlatform Include="ios" />
+    <SupportedPlatform Include="browser" />
+    <SupportedPlatform Include="tvos" />
+    <SupportedPlatform Include="wasi" />
+  </ItemGroup>
+
+</Project>

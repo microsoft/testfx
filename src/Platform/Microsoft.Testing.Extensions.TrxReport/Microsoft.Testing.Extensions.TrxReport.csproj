@@ -16,6 +16,7 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\NamedPipeSerializer.cs" Link="IPC\Serializers\NamedPipeSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Serializers\VoidResponseSerializer.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\IPC\Models\VoidResponse.cs" Link="IPC\Serializers\VoidResponseSerializer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\IPC\ObjectFieldIds.cs" Link="IPC\ObjectFieldIds.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Resources\PlatformResources.cs" Link="Resources\PlatformResources.cs" />
 
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
@@ -29,8 +30,10 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameHelper.cs" Link="Helpers\ReportFileNameHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameSanitizer.cs" Link="Helpers\ReportFileNameSanitizer.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameValidator.cs" Link="Helpers\ReportFileNameValidator.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileWriterHelper.cs" Link="Helpers\ReportFileWriterHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\PipeNameEnvironmentVariableProviderBase.cs" Link="Helpers\PipeNameEnvironmentVariableProviderBase.cs" />
   </ItemGroup>
 

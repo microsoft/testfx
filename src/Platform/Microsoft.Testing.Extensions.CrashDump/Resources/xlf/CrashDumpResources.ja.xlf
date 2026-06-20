@@ -5,12 +5,12 @@
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
         <target state="translated">予期されたクラッシュ ダンプ ファイル '{0}' が見つかりませんでした。'*.dmp' パターンに一致するすべてのファイルが結果フォルダーにコピーされます</target>
-        <note />
+        <note>0 is the expected crash dump file path. Do not localize file pattern {Locked="*.dmp"}.</note>
       </trans-unit>
       <trans-unit id="CannotFindExpectedCrashReportFile">
         <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
         <target state="translated">予期されたクラッシュ レポート ファイル '{0}' が見つかりませんでした。'{1}' パターンに一致するすべてのファイルが結果フォルダーにコピーされます</target>
-        <note />
+        <note>{0} is the expected crash report file path. {1} is the crash report file search pattern.</note>
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
@@ -25,7 +25,7 @@
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
         <target state="translated">[net6.0+ のみ] テストの実行プロセスが予期せずクラッシュしたときにクラッシュ ダンプ ファイルを生成する</target>
-        <note />
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
@@ -36,42 +36,42 @@
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
         <target state="needs-review-translation">ダンプ ファイルの名前を指定する</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
         <target state="translated">環境変数 '{0}' は '{1}' に設定する必要がありますが、値は '{2}' です</target>
-        <note />
+        <note>{0} is the environment variable name. {1} is the expected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
         <target state="translated">クラッシュ ダンプ機能は .NET (Core) でのみ使用できます</target>
-        <note />
+        <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
         <target state="translated">[net6.0+ のみ] テスト プロセスがクラッシュした場合にダンプ ファイルを生成する</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
         <target state="translated">PID '{0}' のテスト ホスト プロセスがクラッシュしましたが、予期される診断成果物は生成されませんでした</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
         <target state="translated">PID '{0}' のテスト ホスト プロセスがクラッシュしました。ダンプ ファイルとクラッシュ レポートが生成されました</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">PID '{0}' のテスト ホスト プロセスがクラッシュしました。ダンプ ファイルが生成されました</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
         <target state="translated">PID '{0}' のテスト ホスト プロセスがクラッシュしました。クラッシュ レポートが生成されました</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
@@ -86,7 +86,7 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">クラッシュ シーケンス ファイル '{0}' を読み取ることができませんでした: {1}</target>
-        <note />
+        <note>{0} is the crash sequence file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -100,22 +100,22 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">ダンプの型を指定します。
 有効な値は、'Mini'、'Heap'、'Triage'、または 'Full' です。既定の型は 'Full' です。
 詳細については、https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps を参照してください</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
         <target state="translated">'{0}' は有効なダンプの種類ではありません。有効なオプションは、'Mini'、'Heap'、'Triage'、'Full' です</target>
-        <note />
+        <note>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
         <target state="translated">'--crashdump-type' には、引数として 1 つのダンプの型が必要です (例: '--crashdump-type Heap')</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"} or example command {Locked="--crashdump-type Heap"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
         <target state="translated">'--crash-report' と '--crash-report-if-supported' は相互に排他的です。サポートされていないプラットフォームではサイレントにスキップされるクラッシュ レポートをベストエフォートで有効にするには、 '--crash-report-if-supported' を使用します。オプションを受け入れられない場合にフェイル ファストするには、'--crash-report' を使用します。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
@@ -130,51 +130,51 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
         <target state="translated">'--crash-report-if-supported' は指定されましたが、このランタイムでは無視されます: .NET Framework testhost は、ランタイム ベースのクラッシュ ダンプ/クラッシュ レポート メカニズムをサポートしていません。クラッシュ レポート ファイルは生成されません。</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"} or runtime name {Locked=".NET Framework"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
         <target state="translated">'--crash-report-if-supported' が指定されましたが、このプラットフォームでは無視されます: .NET ランタイムは、Windows 上の基盤となる 'DOTNET_EnableCrashReport' および 'DOTNET_EnableCrashReportOnly' 環境変数を無視します (https://github.com/dotnet/runtime/issues/80191 を参照)。クラッシュ レポート ファイルは生成されません。</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
         <target state="translated">'--crash-report' と同じですが、クラッシュ レポートの生成がサポートされていないプラットフォームでは、情報メッセージを表示してサイレントに無視されます。このオプションを使用すると、Windows を含む CI マトリックスで同じコマンド ラインを維持できます。'--crash-report' とは相互に排他的です。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
         <target state="translated">Windows では、.NET ランタイムがこのプラットフォーム上の基盤となrる 'DOTNET_EnableCrashReport' および 'DOTNET_EnableCrashReportOnly' 環境変数を無視するため、'--crash-report' はサポートされていません。https://github.com/dotnet/runtime/issues/80191 を参照してください。Windows ではオプションをサイレントにスキップするには '--crash-report-if-supported' を、代わりにクラッシュ ダンプ ファイルを生成するには '--crashdump' を使用します。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
-        <target state="translated">[Linux/macOS のみ] テスト プロセスがクラッシュしたときに JSON クラッシュ レポートを生成します。'--crashdump' と組み合わせて、ダンプ ファイルも生成できます。単独で使用する場合は .NET 7 以降、'--crashdump' と組み合わせる場合は .NET 6 以降が必要です。このランタイム要件はツールでは強制されません。サポートされていないランタイムではクラッシュ レポートは出力されません。.NET ランタイムの制限により、Windows ではサポートされません (dotnet/runtime#80191); Windows でオプションをサイレントにスキップするには '--crash-report-if-supported' を使用します。</target>
-        <note />
+        <target state="translated">[Linux/macOS のみ] テスト プロセスがクラッシュしたときに JSON クラッシュ レポートを生成します。'--crashdump' と組み合わせて、ダンプ ファイルも生成できます。単独で使用する場合は .NET 7+、'--crashdump' と組み合わせる場合は .NET 6+ が必要です。このランタイム要件はツールでは強制されません。サポートされていないランタイムではクラッシュ レポートは出力されません。.NET ランタイムの制限により、Windows ではサポートされません (dotnet/runtime#80191); Windows でオプションをサイレントにスキップするには '--crash-report-if-supported' を使用します。</target>
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, platforms {Locked="Linux"}{Locked="macOS"}{Locked="Windows"}, format name {Locked="JSON"}, runtime name {Locked=".NET"}, target framework versions {Locked=".NET 7+"}{Locked=".NET 6+"}, or issue reference {Locked="dotnet/runtime#80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="translated">テスト セッション中に開始および終了したテストを一覧表示するシーケンス ファイルを、クラッシュ ダンプまたはクラッシュ レポートと共に生成するかどうかを制御します。
-このファイルを使用すると、ダンプを調べなくても、クラッシュ時に実行されていたテストを特定できます。
-有効な値は、'on' (既定値; 'true'、'enable'、'1' も指定可能)、または 'off' ('false'、'disable'、'0' も指定可能) です。</target>
-        <note />
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--crash-sequence には、値 'on' (または 'true'、'enable'、'1')、あるいは 'off' (または 'false'、'disable'、'0') の単一のパラメーターが必要です。</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
         <target state="translated">クラッシュ ダンプ パラメーターを 1 つまたは複数指定していますが、クラッシュ ダンプを有効にしていません。コマンド ラインに --crashdump または --crash-report を追加してください。</target>
-        <note />
+        <note>Do not localize option names {Locked="--crashdump"}{Locked="--crash-report"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">型 '{0}' の要求はサポートされていません</target>
-        <note />
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
     </body>
   </file>

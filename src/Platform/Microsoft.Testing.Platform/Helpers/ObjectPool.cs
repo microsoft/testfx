@@ -13,7 +13,16 @@
 // #define DETECT_LEAKS  //for now always enable DETECT_LEAKS in debug.
 // #endif
 
+// This file is linked into two projects with different namespace expectations:
+//   IS_CORE_MTP defined        → Microsoft.Testing.Platform (defined in Microsoft.Testing.Platform.csproj)
+//   IS_CORE_MTP not defined    → MSTest.Analyzers, which already imports Analyzer.Utilities.PooledObjects
+//                                (via PooledHashSet.cs, ArrayBuilder.cs, WellKnownTypeProvider.cs, etc.)
+// The sibling linked file RoslynHashCode.cs uses a single fixed namespace because callers can simply add a using.
+#if IS_CORE_MTP
 namespace Microsoft.Testing.Platform.Helpers;
+#else
+namespace Analyzer.Utilities.PooledObjects;
+#endif
 
 /// <summary>
 /// Generic implementation of object pooling pattern with predefined pool size limit. The main

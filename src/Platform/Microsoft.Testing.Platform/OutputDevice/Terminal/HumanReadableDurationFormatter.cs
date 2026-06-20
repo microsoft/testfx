@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal static class HumanReadableDurationFormatter
 {
     public static void Append(ITerminal terminal, TimeSpan duration, bool wrapInParentheses = true)

@@ -21,10 +21,6 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     ITestSessionLifetimeHandler,
     IAsyncInitializableExtension
 {
-#pragma warning disable SA1310 // Field names should not contain underscore
-    private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
-#pragma warning restore SA1310 // Field names should not contain underscore
-
     private readonly IConsole _console;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
@@ -42,6 +38,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
     private bool _firstCallTo_OnSessionStartingAsync = true;
     private bool _bannerDisplayed;
+    private volatile bool _wasCancelled;
 
     private int _passedTests;
     private int _failedTests;
@@ -74,7 +71,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
 
         _assemblyName = testApplicationModuleInfo.GetDisplayName();
 
-        if (environment.GetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
+        if (environment.GetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER) is not null)
         {
             _bannerDisplayed = true;
         }
@@ -84,6 +81,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         => await _policiesService.RegisterOnAbortCallbackAsync(
             () =>
             {
+                _wasCancelled = true;
                 ConsoleLog(PlatformResources.CancellingTestSession);
                 ConsoleLog(PlatformResources.PressCtrlCAgainToForceExit);
                 return Task.CompletedTask;
@@ -127,7 +125,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             }
 
             // skip the banner for the children processes
-            _environment.SetEnvironmentVariable(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
+            _environment.SetEnvironmentVariable(OutputDeviceBannerHelper.TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER, "1");
 
             _bannerDisplayed = true;
 
@@ -137,33 +135,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
                 return;
             }
 
-            StringBuilder stringBuilder = new();
-            stringBuilder.Append(_platformInformation.Name);
-
-            if (_platformInformation.Version is { } version)
-            {
-                stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
-                if (_platformInformation.CommitHash is { } commitHash)
-                {
-                    stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
-                }
-            }
-
-            if (_platformInformation.BuildDate is { } buildDate)
-            {
-                stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime:d})");
-            }
-
-            if (_runtimeFeature.IsDynamicCodeSupported)
-            {
-                stringBuilder.Append(" [");
-                stringBuilder.Append(_longArchitecture);
-                stringBuilder.Append(" - ");
-                stringBuilder.Append(_runtimeFramework);
-                stringBuilder.Append(']');
-            }
-
-            ConsoleLog(stringBuilder.ToString());
+            ConsoleLog(OutputDeviceBannerHelper.BuildBannerText(_platformInformation, _runtimeFeature, _longArchitecture, _runtimeFramework));
         }
     }
 
@@ -210,16 +182,18 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             }
 
             int total = _skippedTests + _passedTests + _failedTests;
-            // TODO: Duplicate the logic from TerminalTestReporter.AppendTestRunSummary, or refactor it
-            // so that it's easily shareable between the two implementations.
-            string text = $"""
-                    Total tests: {total}
-                    Failed tests: {_failedTests}
-                    Passed tests: {_passedTests}
-                    Skipped tests: {_skippedTests}
-                    """;
 
-            if (_failedTests > 0)
+            // The abort callback sets _wasCancelled, but it does not cover every cancellation path
+            // (e.g. cancellations that request the session token without going through the abort
+            // callback). Fold in the token state so the verdict and routing also reflect those.
+            bool wasCancelled = _wasCancelled || cancellationToken.IsCancellationRequested;
+
+            // minimumExpectedTests is always 0 here because SimplifiedConsoleOutputDeviceBase does not
+            // receive ICommandLineOptions. The --minimum-expected-tests policy is still enforced via
+            // TestApplicationResult (exit code), but it is not surfaced in this summary.
+            string text = TestRunSummaryHelper.FormatSummaryText(total, _failedTests, _passedTests, _skippedTests, wasCancelled, minimumExpectedTests: 0);
+
+            if (TestRunSummaryHelper.IsRunFailed(total, _failedTests, _skippedTests, wasCancelled, minimumExpectedTests: 0))
             {
                 ConsoleError(text);
             }
@@ -324,9 +298,24 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         {
             case TestNodeUpdateMessage testNodeStateChanged:
 
-                TimeSpan? duration = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>()?.GlobalTiming.Duration;
+                // Single-pass collection: replaces SingleOrDefault<TimingProperty>() + SingleOrDefault<TestNodeStateProperty>()
+                // with one zero-allocation GetStructEnumerator() walk. Note: TestNodeStateProperty was already O(1) via direct
+                // field access, so the win here is code-path simplification and consistency with the established single-pass pattern.
+                TimingProperty? timingProp = null;
+                TestNodeStateProperty? nodeStateProp = null;
+                PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
+                while (enumerator.MoveNext())
+                {
+                    switch (enumerator.Current)
+                    {
+                        case TimingProperty t: timingProp = t; break;
+                        case TestNodeStateProperty s: nodeStateProp = s; break;
+                    }
+                }
 
-                switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+                TimeSpan? duration = timingProp?.GlobalTiming.Duration;
+
+                switch (nodeStateProp)
                 {
                     case InProgressTestNodeStateProperty:
                         break;

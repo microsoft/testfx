@@ -11,6 +11,23 @@ namespace Microsoft.Testing.Platform.CommandLine;
 
 internal static class CommandLineOptionsValidator
 {
+    // Options whose values are read directly from CommandLineParseResult during platform
+    // bootstrap, before IConfiguration (and therefore testconfig.json) is built. Setting them
+    // under "commandLineOptions" in testconfig.json would silently have no effect — fail fast
+    // with a clear error instead. Keep this list in sync with the call sites that pull values
+    // out of CommandLineParseResult before configuration is built (see TestApplication.cs and
+    // JsonConfigurationProvider.cs).
+    private static readonly HashSet<string> BootstrapOnlyOptions = new(
+        [
+            PlatformCommandLineProvider.ConfigFileOptionKey,
+            PlatformCommandLineProvider.DiagnosticOptionKey,
+            PlatformCommandLineProvider.DiagnosticOutputDirectoryOptionKey,
+            PlatformCommandLineProvider.DiagnosticOutputFilePrefixOptionKey,
+            PlatformCommandLineProvider.DiagnosticVerbosityOptionKey,
+            PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey,
+        ],
+        StringComparer.OrdinalIgnoreCase);
+
     public static async Task<ValidationResult> ValidateAsync(
         CommandLineParseResult commandLineParseResult,
         IEnumerable<ICommandLineOptionsProvider> systemCommandLineOptionsProviders,
@@ -50,6 +67,11 @@ internal static class CommandLineOptionsValidator
         if (ValidateNoUnknownOptions(commandLineParseResult, jsonCommandLineOptions, extensionOptionsByProvider, systemOptionsByProvider) is { IsValid: false } result4)
         {
             return AddCommandLine(commandLineParseResult, result4);
+        }
+
+        if (ValidateNoBootstrapOnlyOptionsInJson(jsonCommandLineOptions) is { IsValid: false } resultBootstrap)
+        {
+            return AddCommandLine(commandLineParseResult, resultBootstrap);
         }
 
         // Option names from the platform side are unique (validated above) and lookups against this
@@ -248,6 +270,32 @@ internal static class CommandLineOptionsValidator
                     stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
                 }
             }
+        }
+
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToTrimmedString())
+            : ValidationResult.Valid();
+    }
+
+    private static ValidationResult ValidateNoBootstrapOnlyOptionsInJson(
+        IReadOnlyList<JsonCommandLineOptionEntry>? jsonCommandLineOptions)
+    {
+        if (jsonCommandLineOptions is not { Count: > 0 })
+        {
+            return ValidationResult.Valid();
+        }
+
+        StringBuilder? stringBuilder = null;
+        foreach (JsonCommandLineOptionEntry entry in jsonCommandLineOptions)
+        {
+            if (!BootstrapOnlyOptions.Contains(entry.OptionName))
+            {
+                continue;
+            }
+
+            stringBuilder ??= new();
+            string innerError = string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionIsBootstrapOnlyErrorMessage, entry.OptionName);
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonCommandLineOptionsValidationErrorPrefix, innerError));
         }
 
         return stringBuilder?.Length > 0

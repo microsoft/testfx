@@ -175,4 +175,80 @@ public sealed class UseConditionBaseWithTestClassAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenNonTestClassHasMultipleConditionAttributes_SingleDiagnostic()
+    {
+        // The analyzer uses FirstOrDefault, so only one diagnostic fires (for the first found
+        // ConditionBase attribute), regardless of how many condition attributes are present.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [OSCondition(OperatingSystems.Windows)]
+            [CICondition(ConditionMode.Include)]
+            public class {|#0:MyClass|}
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("OSConditionAttribute"));
+    }
+
+    [TestMethod]
+    public async Task WhenAbstractNonTestClassHasConditionAttribute_Diagnostic()
+    {
+        // This analyzer has no abstract-class exemption (unlike some other analyzers);
+        // an abstract class that is not a TestClass should still fire the diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [OSCondition(OperatingSystems.Windows)]
+            public abstract class {|#0:MyAbstractClass|}
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("OSConditionAttribute"));
+    }
+
+    [TestMethod]
+    public async Task WhenTwoLevelDerivedConditionAttributeOnNonTestClass_Diagnostic()
+    {
+        // The Inherits() check is recursive: an attribute that is a 2nd-level subclass of
+        // ConditionBaseAttribute should still trigger the diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class Level1ConditionAttribute : ConditionBaseAttribute
+            {
+                public Level1ConditionAttribute() : base(ConditionMode.Include) { }
+                public override string GroupName => nameof(Level1ConditionAttribute);
+                public override bool IsConditionMet => true;
+            }
+
+            public class Level2ConditionAttribute : Level1ConditionAttribute
+            {
+                public override string GroupName => nameof(Level2ConditionAttribute);
+            }
+
+            [Level2Condition]
+            public class {|#0:MyClass|}
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic()
+                .WithLocation(0)
+                .WithArguments("Level2ConditionAttribute"));
+    }
 }

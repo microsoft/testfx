@@ -1,8 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -21,14 +20,14 @@ internal sealed partial class TerminalTestReporter
         foreach (IGrouping<bool, TestRunArtifact> artifactGroup in artifactGroups)
         {
             terminal.Append(SingleIndentation);
-            terminal.AppendLine(artifactGroup.Key ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
+            terminal.AppendLine(artifactGroup.Key ? TerminalResources.OutOfProcessArtifactsProduced : TerminalResources.InProcessArtifactsProduced);
             foreach (TestRunArtifact artifact in artifactGroup)
             {
                 terminal.Append(DoubleIndentation);
                 terminal.Append("- ");
                 if (!RoslynString.IsNullOrWhiteSpace(artifact.TestName))
                 {
-                    terminal.Append(PlatformResources.ForTest);
+                    terminal.Append(TerminalResources.ForTest);
                     terminal.Append(" '");
                     terminal.Append(artifact.TestName);
                     terminal.Append("': ");
@@ -41,9 +40,12 @@ internal sealed partial class TerminalTestReporter
 
         terminal.AppendLine();
 
-        int totalTests = _testProgressState?.TotalTests ?? 0;
-        int totalFailedTests = _testProgressState?.FailedTests ?? 0;
-        int totalSkippedTests = _testProgressState?.SkippedTests ?? 0;
+        List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
+
+        int totalTests = assemblies.Sum(static a => a.TotalTests);
+        int totalFailedTests = assemblies.Sum(static a => a.FailedTests);
+        int totalSkippedTests = assemblies.Sum(static a => a.SkippedTests);
+        int totalPassedTests = assemblies.Sum(static a => a.PassedTests);
 
         // DESIGN: `allTestsWereSkipped` is intentionally treated as a failed run. Skipped tests don't count as
         // "ran", so an all-skipped (or zero-test) run is reported in red as "Zero tests ran". This is the strict
@@ -54,58 +56,55 @@ internal sealed partial class TerminalTestReporter
         // Two sibling sites mirror this decision and must stay in lockstep:
         //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
         //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
-        bool notEnoughTests = totalTests < _options.MinimumExpectedTests;
-        bool allTestsWereSkipped = totalTests == 0 || totalTests == totalSkippedTests;
-        bool anyTestFailed = totalFailedTests > 0;
-        bool runFailed = anyTestFailed || notEnoughTests || allTestsWereSkipped || WasCancelled;
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
-        terminal.Append(PlatformResources.TestRunSummary);
+        terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests));
 
-        if (WasCancelled)
+        // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
+        // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in
+        // the progress area, so we keep the run-level verdict line link-free.
+        if (assemblies.Count == 1)
         {
-            terminal.Append(PlatformResources.Aborted);
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append(" - ");
+            terminal.ResetColor();
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblies[0]);
         }
-        else if (notEnoughTests)
-        {
-            terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, totalTests, _options.MinimumExpectedTests));
-        }
-        else if (allTestsWereSkipped)
-        {
-            terminal.Append(PlatformResources.ZeroTestsRan);
-        }
-        else if (anyTestFailed)
-        {
-            terminal.Append($"{PlatformResources.Failed}!");
-        }
-        else
-        {
-            terminal.Append($"{PlatformResources.Passed}!");
-        }
-
-        terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(" - ");
-        terminal.ResetColor();
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
 
         terminal.AppendLine();
 
-        int total = _testProgressState?.TotalTests ?? 0;
-        int failed = _testProgressState?.FailedTests ?? 0;
-        int passed = _testProgressState?.PassedTests ?? 0;
-        int skipped = _testProgressState?.SkippedTests ?? 0;
+        // For the dotnet test orchestrator (ShowAssembly) running more than one assembly, list each assembly with
+        // its own result + compact counts under the run-level verdict. Additive: the in-process host leaves
+        // ShowAssembly off, so this block never runs and its summary stays byte-identical.
+        if (_options.ShowAssembly && assemblies.Count > 1)
+        {
+            foreach (TestProgressState assemblyRun in assemblies)
+            {
+                terminal.Append(SingleIndentation);
+                AppendAssemblySummary(assemblyRun, terminal);
+            }
+
+            terminal.AppendLine();
+        }
+
+        int total = totalTests;
+        int failed = totalFailedTests;
+        int passed = totalPassedTests;
+        int skipped = totalSkippedTests;
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && failed == 0;
         bool colorizeSkipped = skipped > 0 && skipped == total && failed == 0;
 
-        string totalText = $"{SingleIndentation}{PlatformResources.TotalLowercase}: {total}";
-        string failedText = $"{SingleIndentation}{PlatformResources.FailedLowercase}: {failed}";
-        string passedText = $"{SingleIndentation}{PlatformResources.SucceededLowercase}: {passed}";
-        string skippedText = $"{SingleIndentation}{PlatformResources.SkippedLowercase}: {skipped}";
-        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
+        string totalText = $"{SingleIndentation}{TerminalResources.TotalLowercase}: {total}";
+        string failedText = $"{SingleIndentation}{TerminalResources.FailedLowercase}: {failed}";
+        string passedText = $"{SingleIndentation}{TerminalResources.SucceededLowercase}: {passed}";
+        string skippedText = $"{SingleIndentation}{TerminalResources.SkippedLowercase}: {skipped}";
+        string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
 
         terminal.ResetColor();
         terminal.AppendLine(totalText);
@@ -148,24 +147,22 @@ internal sealed partial class TerminalTestReporter
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
+
+        // Re-print any handshake failures (orchestrator-only) at the very end so they aren't lost above the summary.
+        // No-op for the in-process host, which never reports handshake failures.
+        AppendHandshakeFailureRecap(terminal);
     }
 
-    internal void TestDiscovered(string displayName)
+    internal void TestDiscovered(string executionId, string displayName)
     {
-        if (_testProgressState is null)
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
-        TestProgressState asm = _testProgressState;
+        // In discovery mode TotalTests is computed from DiscoveredTests; in execution mode it is computed from the
+        // passed/skipped/failed tally as tests complete. So we only need to bump the discovered count here.
         asm.DiscoveredTests++;
-
-        if (_isDiscovery)
-        {
-            // In discovery mode we count discovered tests,
-            // but in execution mode the completion of test will increase the total tests count.
-            asm.TotalTests++;
-        }
 
         asm.DiscoveredTestDisplayNames.Add(MakeControlCharactersVisible(displayName, true));
 
@@ -174,13 +171,13 @@ internal sealed partial class TerminalTestReporter
 
     public void AppendTestDiscoverySummary(ITerminal terminal)
     {
-        TestProgressState? assembly = _testProgressState;
+        List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
         terminal.AppendLine();
 
-        int totalTests = assembly?.TotalTests ?? 0;
+        int totalTests = assemblies.Sum(static a => a.TotalTests);
         bool runFailed = WasCancelled || totalTests < 1;
 
-        if (assembly is not null)
+        foreach (TestProgressState assembly in assemblies)
         {
             foreach (string displayName in assembly.DiscoveredTestDisplayNames)
             {
@@ -192,23 +189,26 @@ internal sealed partial class TerminalTestReporter
         terminal.AppendLine();
 
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
-        terminal.Append(string.Format(CultureInfo.CurrentCulture, PlatformResources.TestDiscoverySummarySingular, totalTests));
+        terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.TestDiscoverySummarySingular, totalTests));
 
-        terminal.SetColor(TerminalColor.DarkGray);
-        terminal.Append(" - ");
-        terminal.ResetColor();
-        AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal);
+        if (assemblies.Count == 1)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append(" - ");
+            terminal.ResetColor();
+            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblies[0]);
+        }
 
         terminal.ResetColor();
         terminal.AppendLine();
 
         if (WasCancelled)
         {
-            terminal.Append(PlatformResources.Aborted);
+            terminal.Append(TerminalResources.Aborted);
             terminal.AppendLine();
         }
 
-        string durationText = $"{SingleIndentation}{PlatformResources.DurationLowercase}: ";
+        string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);

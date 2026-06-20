@@ -119,125 +119,167 @@
   </resheader>
   <data name="RemoveClassCleanupBehaviorArgumentFix" xml:space="preserve">
     <value>Remove 'ClassCleanupBehavior' argument</value>
+    <comment>{Locked="ClassCleanupBehavior"}</comment>
   </data>
   <data name="FixSignatureCodeFix" xml:space="preserve">
     <value>Fix signature</value>
   </data>
   <data name="FixAssertionArgsOrder" xml:space="preserve">
     <value>Fix actual/expected arguments order</value>
+    <comment>{Locked="actual"}{Locked="expected"}</comment>
   </data>
   <data name="AddTestClassFix" xml:space="preserve">
     <value>Add '[TestClass]'</value>
+    <comment>{Locked="[TestClass]"}</comment>
   </data>
   <data name="ChangeStructToClassAndAddTestClassFix" xml:space="preserve">
     <value>Change to 'class' and add '[TestClass]'</value>
+    <comment>{Locked="[TestClass]"}{Locked="class"}</comment>
   </data>
   <data name="TestMethodShouldBeValidFix" xml:space="preserve">
     <value>Fix test method signature</value>
   </data>
   <data name="UseAttributeOnTestMethodFix" xml:space="preserve">
     <value>Add '[TestMethod]'</value>
+    <comment>{Locked="[TestMethod]"}</comment>
   </data>
   <data name="TestClassShouldBeValidFix" xml:space="preserve">
     <value>Fix test class signature</value>
+    <comment>{Locked="class"}</comment>
   </data>
   <data name="TestContextShouldBeValidFix" xml:space="preserve">
     <value>Fix test context</value>
   </data>
   <data name="AddTestMethodAttributeFix" xml:space="preserve">
     <value>Add '[TestMethod]'</value>
+    <comment>{Locked="[TestMethod]"}</comment>
   </data>
   <data name="ChangeMethodAccessibilityToPrivateFix" xml:space="preserve">
     <value>Change method accessibility to 'private'</value>
+    <comment>{Locked="private"}</comment>
   </data>
   <data name="ReplaceWithFailAssertionFix" xml:space="preserve">
     <value>Replace the assertion with 'Assert.Fail()'</value>
+    <comment>{Locked="Assert.Fail"}</comment>
   </data>
   <data name="ReplaceWithTestCleanuFix" xml:space="preserve">
     <value>Replace 'Dispose' with a TestCleanup method</value>
+    <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
   </data>
   <data name="ReplaceWithConstructorFix" xml:space="preserve">
     <value>Replace TestInitialize method with constructor</value>
+    <comment>{Locked="TestInitialize"}</comment>
   </data>
   <data name="ReplaceWithDisposeFix" xml:space="preserve">
     <value>Replace TestCleanup with Dispose method</value>
+    <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
   </data>
   <data name="ReplaceWithTestInitializeFix" xml:space="preserve">
     <value>Replace constructor with TestInitialize method</value>
+    <comment>{Locked="TestInitialize"}</comment>
   </data>
   <data name="UseProperAssertMethodsFix" xml:space="preserve">
     <value>Use '{0}'</value>
+    <comment>{0} is the replacement assert method name.</comment>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessFix" xml:space="preserve">
     <value>Move conditional access in assertion to separate 'Assert.IsNotNull' check</value>
+    <comment>{Locked="Assert.IsNotNull"}</comment>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesFix" xml:space="preserve">
     <value>Use '{0}'</value>
+    <comment>{0} is the replacement assert method name.</comment>
   </data>
   <data name="ReplaceDataTestMethodWithTestMethodTitle" xml:space="preserve">
     <value>Replace 'DataTestMethod' with 'TestMethod'</value>
+    <comment>{Locked="DataTestMethod"}{Locked="TestMethod"}</comment>
   </data>
   <data name="UseCooperativeCancellationForTimeoutFix" xml:space="preserve">
     <value>Use 'CooperativeCancellation = true'</value>
+    <comment>{Locked="CooperativeCancellation = true"}{Locked="true"}</comment>
   </data>
   <data name="StringAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'StringAssert'</value>
+    <comment>{0} is the replacement Assert method name. {Locked="StringAssert"}{Locked="Assert"}</comment>
   </data>
   <data name="CollectionAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'CollectionAssert'</value>
+    <comment>{0} is the replacement Assert method name. {Locked="CollectionAssert"}{Locked="Assert"}</comment>
   </data>
   <data name="PassCancellationTokenFix" xml:space="preserve">
     <value>Pass 'TestContext.CancellationToken' argument to method call</value>
+    <comment>{Locked="TestContext.CancellationToken"}</comment>
   </data>
   <data name="RemoveDynamicDataSourceTypeFix" xml:space="preserve">
     <value>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</value>
+    <comment>{Locked="DynamicDataSourceType"}{Locked="AutoDetect"}</comment>
   </data>
   <data name="UseDisplayNamePropertyInsteadOfStringArgumentFix" xml:space="preserve">
     <value>Use 'DisplayName' property instead of string argument</value>
+    <comment>{Locked="DisplayName"}</comment>
   </data>
   <data name="AddCallerInfoParametersFix" xml:space="preserve">
     <value>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</value>
+    <comment>{Locked="[CallerLineNumber]"}{Locked="[CallerFilePath]"}</comment>
   </data>
   <data name="AvoidOutParameterOnAssertIsInstanceOfTypeFix" xml:space="preserve">
     <value>Use assignment instead of 'out' parameter</value>
+    <comment>{Locked="out"}</comment>
   </data>
   <data name="UseContainsKeyInsteadOfContainsFix" xml:space="preserve">
     <value>Use 'ContainsKey' instead of 'Contains'</value>
+    <comment>{Locked="ContainsKey"}{Locked="Contains"}</comment>
   </data>
   <data name="TransformExecuteToExecuteAsyncFix" xml:space="preserve">
     <value>Transform 'Execute' override to 'ExecuteAsync'</value>
+    <comment>{Locked="ExecuteAsync"}{Locked="Execute"}</comment>
   </data>
   <data name="UseCancellationTokenPropertyFix" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead</value>
+    <comment>{Locked="TestContext.CancellationToken"}</comment>
   </data>
   <data name="UseOSConditionAttributeInsteadOfRuntimeCheckFix" xml:space="preserve">
     <value>Use '[OSCondition]' attribute</value>
+    <comment>{Locked="[OSCondition]"}</comment>
   </data>
   <data name="AvoidOutRefTestMethodParametersFix" xml:space="preserve">
     <value>Remove 'out' and 'ref' modifiers</value>
+    <comment>{Locked="out"}{Locked="ref"}</comment>
   </data>
   <data name="AvoidUsingAssertsInAsyncVoidContextFix" xml:space="preserve">
     <value>Change return type to 'Task'</value>
+    <comment>{Locked="Task"}</comment>
   </data>
   <data name="RemoveDuplicateDataRowFix" xml:space="preserve">
     <value>Remove duplicate 'DataRow'</value>
+    <comment>{Locked="DataRow"}</comment>
   </data>
   <data name="UseMSTestDescriptionAttributeInsteadFix" xml:space="preserve">
     <value>Use MSTest 'Description' attribute instead</value>
+    <comment>{Locked="Description"}{Locked="MSTest"}</comment>
   </data>
   <data name="RemoveDuplicateTestMethodAttributeFix" xml:space="preserve">
     <value>Remove duplicate TestMethod attribute</value>
+    <comment>{Locked="TestMethod"}</comment>
   </data>
   <data name="UseAsyncAssertionFix" xml:space="preserve">
     <value>Use async assertion</value>
+    <comment>{Locked="async"}</comment>
   </data>
   <data name="AvoidAssertAreEqualOnCollectionsOrderedFix" xml:space="preserve">
     <value>Use ordered, element-wise comparison ('Assert.{0}')</value>
+    <comment>{0} is the replacement Assert method name. {Locked="Assert"}</comment>
   </data>
   <data name="AvoidAssertAreEqualOnCollectionsEquivalentFix" xml:space="preserve">
     <value>Use deep structural comparison ('Assert.{0}')</value>
+    <comment>{0} is the replacement Assert method name. {Locked="Assert"}</comment>
   </data>
   <data name="AddIgnoreJustificationFix" xml:space="preserve">
     <value>Add a placeholder justification to '[Ignore]'</value>
+    <comment>{Locked="[Ignore]"}</comment>
+  </data>
+  <data name="RemoveRedundantTestMethodDisplayNameFix" xml:space="preserve">
+    <value>Remove redundant 'DisplayName'</value>
+    <comment>{Locked="DisplayName"}</comment>
   </data>
 </root>
