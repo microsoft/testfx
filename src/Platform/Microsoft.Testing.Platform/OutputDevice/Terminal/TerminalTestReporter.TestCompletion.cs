@@ -37,6 +37,44 @@ internal sealed partial class TerminalTestReporter
             errorOutput);
     }
 
+    /// <summary>
+    /// Orchestrator overload (<c>dotnet test</c>): carries the assembly/target-framework/architecture and the
+    /// per-attempt instance id that the multi-process orchestrator knows. Counting and rendering currently delegate
+    /// to the shared per-execution-id path; <paramref name="instanceId"/> (retry attribution) and the per-test
+    /// assembly link are reserved for the retry-counting follow-up.
+    /// </summary>
+    internal void TestCompleted(
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        string executionId,
+        string instanceId,
+        string testNodeUid,
+        string displayName,
+        string? informativeMessage,
+        TestOutcome outcome,
+        TimeSpan? duration,
+        FlatException[]? exceptions,
+        string? expected,
+        string? actual,
+        string? standardOutput,
+        string? errorOutput)
+        // assembly / targetFramework / architecture / instanceId are intentionally not forwarded yet: counting and
+        // rendering still go through the shared per-execution-id path. They are reserved for the per-assembly link
+        // and instanceId-based retry attribution added in a follow-up slice (see the XML doc above). Not a bug.
+        => TestCompleted(
+            executionId,
+            testNodeUid,
+            displayName,
+            outcome,
+            duration,
+            informativeMessage,
+            exceptions ?? [],
+            expected,
+            actual,
+            standardOutput,
+            errorOutput);
+
     private void TestCompleted(
         string executionId,
         string testNodeUid,

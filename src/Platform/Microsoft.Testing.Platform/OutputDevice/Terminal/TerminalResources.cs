@@ -51,6 +51,8 @@ internal static partial class TerminalResources
 
     internal static string @FailedLowercase => GetResourceString("FailedLowercase");
 
+    internal static string @FailedWithErrors => GetResourceString("FailedWithErrors");
+
     internal static string @ForTest => GetResourceString("ForTest");
 
     internal static string @HandshakeFailuresHeader => GetResourceString("HandshakeFailuresHeader");

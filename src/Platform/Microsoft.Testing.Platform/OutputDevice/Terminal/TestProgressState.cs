@@ -39,6 +39,8 @@ internal sealed class TestProgressState
 
     public int SkippedTests { get; internal set; }
 
+    public int RetriedFailedTests { get; internal set; }
+
     public int TotalTests { get; internal set; }
 
     public TestNodeResultsState? TestNodeResultsState { get; internal set; }

@@ -286,4 +286,8 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
   <data name="ExitCode" xml:space="preserve">
     <value>Exit code</value>
   </data>
+  <data name="FailedWithErrors" xml:space="preserve">
+    <value>failed with {0} error(s)</value>
+    <comment>{0} is the number of errors in an assembly summary line</comment>
+  </data>
 </root>

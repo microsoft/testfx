@@ -2,7 +2,7 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../TerminalResources.resx">
     <body>
-            <trans-unit id="Aborted">
+      <trans-unit id="Aborted">
         <source>Aborted</source>
         <target state="translated">Anulado</target>
         <note />
@@ -51,6 +51,11 @@
         <source>failed</source>
         <target state="translated">con errores</target>
         <note />
+      </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} error(s)</source>
+        <target state="new">failed with {0} error(s)</target>
+        <note>{0} is the number of errors in an assembly summary line</note>
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>

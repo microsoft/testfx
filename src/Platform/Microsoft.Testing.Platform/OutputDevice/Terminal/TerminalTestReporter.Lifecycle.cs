@@ -79,6 +79,11 @@ internal sealed partial class TerminalTestReporter
         assemblyRun.Stopwatch.Stop();
         _terminalWithProgress.RemoveWorker(assemblyRun.SlotIndex);
 
+        if (!_isHelp && !_isDiscovery && _options.ShowAssembly && _options.ShowAssemblyStartAndComplete)
+        {
+            _terminalWithProgress.WriteToTerminal(terminal => AppendAssemblySummary(assemblyRun, terminal));
+        }
+
         if (exitCode == 0)
         {
             // Report nothing on success; we don't want to report on test-discovery etc.
