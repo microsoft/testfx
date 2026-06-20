@@ -153,6 +153,14 @@ internal sealed partial class TerminalTestReporter
         AppendHandshakeFailureRecap(terminal);
     }
 
+    /// <summary>
+    /// Orchestrator overload (<c>dotnet test</c>): the multi-process orchestrator also knows each discovered test's
+    /// uid, file path and line number. The shared discovery summary currently lists display names only, so those are
+    /// accepted for signature parity and the overload delegates to the core method.
+    /// </summary>
+    internal void TestDiscovered(string executionId, string? displayName, string? uid, string? filePath, int? lineNumber)
+        => TestDiscovered(executionId, displayName ?? string.Empty);
+
     internal void TestDiscovered(string executionId, string displayName)
     {
         if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
