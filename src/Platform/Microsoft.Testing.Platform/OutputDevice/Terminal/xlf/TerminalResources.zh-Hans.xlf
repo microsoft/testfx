@@ -27,6 +27,21 @@
         <target state="translated">控制台已处于批处理模式。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
+      <trans-unit id="DiscoveredTestsInAssembly">
+        <source>Discovered {0} tests in assembly</source>
+        <target state="new">Discovered {0} tests in assembly</target>
+        <note>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</note>
+      </trans-unit>
+      <trans-unit id="DiscoveredTestsSummary">
+        <source>Discovered {0} tests in {1} assemblies.</source>
+        <target state="new">Discovered {0} tests in {1} assemblies.</target>
+        <note>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</note>
+      </trans-unit>
+      <trans-unit id="DiscoveredTestsSummarySingular">
+        <source>Discovered {0} tests.</source>
+        <target state="new">Discovered {0} tests.</target>
+        <note>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</note>
+      </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
         <source>Discovering tests from</source>
         <target state="new">Discovering tests from</target>

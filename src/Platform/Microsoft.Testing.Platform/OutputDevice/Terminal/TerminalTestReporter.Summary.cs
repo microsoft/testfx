@@ -237,6 +237,42 @@ internal sealed partial class TerminalTestReporter
         int totalTests = assemblies.Sum(static a => a.TotalTests);
         bool runFailed = WasCancelled || totalTests < 1;
 
+        if (_options.ShowAssembly)
+        {
+            // Orchestrator (dotnet test): a per-assembly "Discovered N tests in assembly - <link>" header followed by
+            // the discovered test names, then a run-level total ("Discovered N tests." / "... in N assemblies.").
+            foreach (TestProgressState assembly in assemblies)
+            {
+                terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, assembly.DiscoveredTestDisplayNames.Count));
+                terminal.Append(" - ");
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly);
+                terminal.AppendLine();
+                foreach (string displayName in assembly.DiscoveredTestDisplayNames)
+                {
+                    terminal.Append(SingleIndentation);
+                    terminal.AppendLine(displayName);
+                }
+
+                terminal.AppendLine();
+            }
+
+            terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
+            terminal.AppendLine(assemblies.Count <= 1
+                ? string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummarySingular, totalTests)
+                : string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummary, totalTests, assemblies.Count));
+            terminal.ResetColor();
+            terminal.AppendLine();
+
+            if (WasCancelled)
+            {
+                terminal.Append(TerminalResources.Aborted);
+                terminal.AppendLine();
+            }
+
+            return;
+        }
+
+        // In-process host: the single "Test discovery summary: found N test(s)" format (unchanged shipping output).
         foreach (TestProgressState assembly in assemblies)
         {
             foreach (string displayName in assembly.DiscoveredTestDisplayNames)

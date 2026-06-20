@@ -41,6 +41,12 @@ internal static partial class TerminalResources
 
     internal static string @ConsoleIsAlreadyInBatchingMode => GetResourceString("ConsoleIsAlreadyInBatchingMode");
 
+    internal static string @DiscoveredTestsInAssembly => GetResourceString("DiscoveredTestsInAssembly");
+
+    internal static string @DiscoveredTestsSummary => GetResourceString("DiscoveredTestsSummary");
+
+    internal static string @DiscoveredTestsSummarySingular => GetResourceString("DiscoveredTestsSummarySingular");
+
     internal static string @DiscoveringTestsFrom => GetResourceString("DiscoveringTestsFrom");
 
     internal static string @DurationLowercase => GetResourceString("DurationLowercase");

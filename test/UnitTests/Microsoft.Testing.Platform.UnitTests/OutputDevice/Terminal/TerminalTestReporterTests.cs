@@ -1613,6 +1613,46 @@ public sealed class TerminalTestReporterTests
         Assert.Contains($"({tryTwo}) {TerminalResources.RunningTestsFrom}", output);
     }
 
+    // Orchestrator discovery (dotnet test --list-tests across N assemblies): each assembly gets a
+    // "Discovered N tests in assembly - <link>" header with its test names listed, and the run ends with a
+    // "Discovered M tests in K assemblies." total. The in-process host (ShowAssembly off) keeps its own
+    // "Test discovery summary: found N test(s)" format, covered by the existing discovery tests.
+    [TestMethod]
+    public void AppendTestDiscoverySummary_ForOrchestrator_PrintsPerAssemblyDiscoveredCountsAndTotal()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: true, isHelp: false, isRetry: false);
+
+        string assemblyA = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\A.Tests.dll" : "/repo/A.Tests.dll";
+        string assemblyB = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\B.Tests.dll" : "/repo/B.Tests.dll";
+
+        terminalReporter.AssemblyRunStarted(assemblyA, "net9.0", "x64", executionId: "exec-A", instanceId: "inst-A");
+        terminalReporter.AssemblyRunStarted(assemblyB, "net9.0", "x64", executionId: "exec-B", instanceId: "inst-B");
+
+        terminalReporter.TestDiscovered("exec-A", "A.Test1");
+        terminalReporter.TestDiscovered("exec-A", "A.Test2");
+        terminalReporter.TestDiscovered("exec-B", "B.Test1");
+
+        terminalReporter.AssemblyRunCompleted("exec-A");
+        terminalReporter.AssemblyRunCompleted("exec-B");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        // Per-assembly discovered-count headers and the listed test names.
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, 2), output);
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, 1), output);
+        Assert.Contains("A.Test1", output);
+        Assert.Contains("B.Test1", output);
+
+        // Run-level total across both assemblies.
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummary, 3, 2), output);
+
+        // The in-process-only "Test discovery summary: found N test(s)" wording must NOT appear for the orchestrator.
+        Assert.DoesNotContain(string.Format(CultureInfo.CurrentCulture, TerminalResources.TestDiscoverySummarySingular, 3), output);
+    }
+
     [TestMethod]
     public void AssemblyRunCompleted_WhenKnownAssemblyFails_PrintsExecutableSummary()
     {

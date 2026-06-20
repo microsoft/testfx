@@ -310,4 +310,16 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <value>error</value>
     <comment>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</comment>
   </data>
+  <data name="DiscoveredTestsInAssembly" xml:space="preserve">
+    <value>Discovered {0} tests in assembly</value>
+    <comment>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</comment>
+  </data>
+  <data name="DiscoveredTestsSummarySingular" xml:space="preserve">
+    <value>Discovered {0} tests.</value>
+    <comment>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</comment>
+  </data>
+  <data name="DiscoveredTestsSummary" xml:space="preserve">
+    <value>Discovered {0} tests in {1} assemblies.</value>
+    <comment>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</comment>
+  </data>
 </root>
