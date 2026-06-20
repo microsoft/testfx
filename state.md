@@ -1,74 +1,86 @@
 # Perf Improver State — microsoft/testfx
 
 ## Last Updated
-2026-06-17
-
-## Last Run
-- Date: 2026-06-17
-- Run ID: 27831457042
-- Tasks done: Task 4 (no open PRs), Task 5 (no new perf issues), Task 3 (new PR), Task 7 (new monthly issue)
-- Next run priority: Task 1/2 (re-scan backlog), Task 6 (measurement infra), Task 7
+2026-06-20 (run 27873665540)
 
 ## Validated Commands
 
 ```sh
-# Build (Debug, all projects)
+# Build all (Debug, with StyleCop/analyzers as errors)
 ./build.sh
 
 # Build + unit tests
 ./build.sh -test
 
-# Pack NuGet
+# Pack NuGets (required before acceptance tests)
 ./build.sh -pack
 
-# Integration tests (needs -pack first)
+# Acceptance integration tests (needs pack first)
 ./build.sh -pack -test -integrationTest
 
-# Direct test run (single project, single TFM)
-.dotnet/dotnet run --project <path> -f net9.0 --no-build -p:TargetFrameworks=net9.0 -- --treenode-filter "*/*/ClassName/*"
+# Run single MTP/Extension test project
+.dotnet/dotnet run --project <path> -f net9.0 --no-build
+  -- --treenode-filter "/*/*/*/ClassName/MethodName"
 ```
 
 Notes:
-- SDK is installed by build.sh into .dotnet/ (v11 preview)
-- `global.json` enforces SDK version; system `dotnet` is a stub
-- MSTestAdapter.PlatformServices.UnitTests requires `-p:TargetFrameworks=net9.0` to filter out net462/net48 TFMs
-- 24 pre-existing failures in MSTestAdapter.PlatformServices.UnitTests (deployment-path tests)
+- StyleCop and Roslyn analyzers are treated as errors
+- `CancelledTestNodeStateProperty` is `[Obsolete]` → wrap in `#pragma warning disable CS0618, MTP0001`
+- Put `#pragma restore` on same line as or after `)` to avoid SA1009
+- `--filter-uid` and `--treenode-filter` are both available on MTP-based test hosts
+- 24 pre-existing failures in MSTestAdapter.PlatformServices.UnitTests are deployment-path tests unrelated to our changes
 
-## Open Work in Progress
+## Task Round-Robin (last run per task)
 
-None — PR created for per-test Queue/Stack allocation fix.
+- Task 1 (Discover commands): 2026-06-15
+- Task 2 (Identify opportunities): 2026-06-20
+- Task 3 (Implement improvements): 2026-06-20
+- Task 4 (Maintain PRs): 2026-06-17
+- Task 5 (Comment on issues): 2026-06-17
+- Task 6 (Measurement infra): not run yet ← PRIORITY
+- Task 7 (Monthly summary): 2026-06-20
 
-## Optimization Backlog
+**Next run priority**: Task 6 (Measurement infra), Task 4/5 (maintain PR / comment)
 
-1. [IN PR] Per-test Queue/Stack allocation in TestMethodInfo.Lifecycle.cs
-   - Branch: perf-assist/list-backed-base-method-queues
-   - Change Queue→List; foreach for cleanup, backward for-loop for init
-   - Affects every test with base-class TestInitialize/TestCleanup
+## Monthly Activity Issue
 
-2. AnsiTerminal.StopUpdate() — StringBuilder.ToString() allocation
-   - Blocked: IConsole has Write(string?) only; StreamWriter.Write(StringBuilder) is NET8+, project targets netstandard2.0
-   - Low priority
+- Issue #9258 open: "[perf-improver] Monthly Activity 2026-06"
+- Updated: 2026-06-20
+- No maintainer instructions found in comments
 
-3. SilenceDrivenHeartbeatRenderer — allocations only on heartbeat/slow-test rare path
-   - Not hot path, low priority
+## Open PRs (ours)
+
+- PR created this run (2026-06-20): "Replace Array.IndexOf(GetType()) with 'is' pattern matching in hot paths"
+  branch: perf-assist/is-pattern-replace-array-indexof
+  Files: TestApplicationResult.cs, AbortForMaxFailedTestsExtension.cs, RetryDataConsumer.cs
 
 ## Completed Work
 
-| PR | Title | Status |
+| Date | PR | Description |
 |---|---|---|
-| #9159 | perf: single-pass PropertyBag walk in TerminalOutputDevice | MERGED 2026-06-16 by Evangelink |
-| perf-assist/list-backed-base-method-queues | perf: replace per-test Queue/Stack with List index iteration | OPEN (created 2026-06-17) |
+| 2026-06-16 | #9159 (merged) | Single-pass PropertyBag walk in TerminalOutputDevice |
+| 2026-06-19 | #9257 (merged) | Replace per-test Queue/Stack with List in TestMethodInfo lifecycle |
+| 2026-06-20 | (new, open) | Replace Array.IndexOf(GetType()) with 'is' patterns in hot paths |
+
+## Backlog (prioritized)
+
+1. **[Done ✅]** Single-pass PropertyBag walk — PR #9159 merged
+2. **[Done ✅]** Eliminate Queue/Stack per-test alloc in TestMethodInfo — PR #9257 merged
+3. **[In PR]** Replace Array.IndexOf(GetType()) with `is` pattern in TestApplicationResult, AbortForMaxFailedTests, RetryDataConsumer
+4. `TrxTestResultExtractor.MapOutcome` + `TestResultCaptureHelper.ClassifyOutcome`: switch catch-all `_ when Array.IndexOf(...)` — can add explicit `CancelledTestNodeStateProperty` arm; low impact (only on failed tests)
+5. `AnsiTerminal.StopUpdate()` — StringBuilder.ToString() allocation on every flush; blocked on netstandard2.0 target (StreamWriter.Write(StringBuilder) is NET8+ only)
+6. `SilenceDrivenHeartbeatRenderer` — allocations only on rare heartbeat paths; not hot
+
+## Checked-off Items (by maintainer)
+
+None yet
 
 ## Performance Notes
 
-- PropertyBag.SingleOrDefault<TestNodeStateProperty>() is O(1) — _testNodeStateProperty field fast path prevents list walk. All current callers of SingleOrDefault<TestNodeStateProperty>() are already on the fast path.
-- BaseTestInitializeMethodsQueue/BaseTestCleanupMethodsQueue: items added in parent-first order (direct parent = index 0). Cleanup iterates forward (parent-first); initialize iterates backward (grandparent-first).
-- MSTestAdapter.PlatformServices.UnitTests uses TestContainer framework + AwesomeAssertions (MSTest Assert banned).
-
-## Backlog Cursor
-
-Next areas to scan:
-- HtmlReport extension (rendering hot paths)
-- TrxReport extension (per-test string allocations)
-- Retry extension (state tracking allocations)
-- MSTest TestContext — string dictionary allocations
+- `TestNodePropertiesCategories.WellKnownTestNodeXxx` arrays hold `Type` objects and are used by Array.IndexOf → O(n) scan + GetType() call per invocation
+- `ConsumeAsync` in TestApplicationResult fires for EVERY test node update including InProgress
+- `CancelledTestNodeStateProperty` is obsolete (`[Obsolete]`) — must use pragma wrapper
+- SA1009: closing `)` must not be on its own line preceded by space; put `)` at end of last condition line or use local bool variable
+- HangDump pattern: put `#pragma disable` before the line with `CancelledTestNodeStateProperty` in the `is` chain, then `#pragma restore` on the next line; works as long as `)` follows on a different line with more conditions
+- PropertyBag `SingleOrDefault()` already has O(1) `_testNodeStateProperty` fast-path for single-state nodes
+- TestMethodInfo.RunTestAsync uses index iteration not queue/stack since PR #9257
