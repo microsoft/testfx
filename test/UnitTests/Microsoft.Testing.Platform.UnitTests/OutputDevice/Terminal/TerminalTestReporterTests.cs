@@ -1284,8 +1284,10 @@ public sealed class TerminalTestReporterTests
         Assert.Contains($"{TerminalResources.ExitCode}: 1", output);
         Assert.Contains("the err", output);
 
-        // No test ran, so the run verdict is the red "Zero tests ran" (runFailed also includes HasHandshakeFailure).
-        Assert.Contains(TerminalResources.ZeroTestsRan, output);
+        // The summary verdict escalates to "Failed!" rather than the benign "Zero tests ran": a handshake failure
+        // must not be masked as an empty run (dotnet/sdk#51608). The per-assembly immediate-failure context above
+        // still legitimately says "Zero tests ran" (the assembly really did register zero tests).
+        Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
 
         // Per-run state is reset after completion so a subsequent session starts fresh.
         Assert.IsFalse(terminalReporter.HasHandshakeFailure);
@@ -1561,6 +1563,10 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
         Assert.Contains("A failed", output);
         Assert.Contains("B failed", output);
+
+        // With every assembly failing to handshake and zero tests, the summary verdict is "Failed!", not the
+        // benign "Zero tests ran" (dotnet/sdk#51608).
+        Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
     }
 
     [TestMethod]

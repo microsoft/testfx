@@ -61,7 +61,7 @@ internal sealed partial class TerminalTestReporter
 
         terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
-        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests));
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure));
 
         // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
         // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in

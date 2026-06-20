@@ -27,13 +27,20 @@ internal static class TestRunSummaryHelper
     /// <summary>
     /// Computes the verdict string for the test run.
     /// </summary>
-    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests)
+    /// <remarks>
+    /// When <paramref name="hasHandshakeFailures"/> is <see langword="true"/> (multi-assembly orchestrator only), at
+    /// least one assembly failed to hand-shake. Such a failure must surface as "Failed!" and must NOT be masked by the
+    /// benign "Zero tests ran" wording, even though the failing assembly contributed zero tests. In-process callers
+    /// never have handshake failures and pass <see langword="false"/>, so their verdict is unchanged.
+    /// </remarks>
+    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false)
         => true switch
         {
             _ when wasCancelled => TerminalResources.Aborted,
             _ when totalTests < minimumExpectedTests => string.Format(CultureInfo.CurrentCulture, TerminalResources.MinimumExpectedTestsPolicyViolation, totalTests, minimumExpectedTests),
-            _ when totalTests == 0 || totalTests == skippedTests => TerminalResources.ZeroTestsRan,
             _ when failedTests > 0 => $"{TerminalResources.Failed}!",
+            _ when hasHandshakeFailures => $"{TerminalResources.Failed}!",
+            _ when totalTests == 0 || totalTests == skippedTests => TerminalResources.ZeroTestsRan,
             _ => $"{TerminalResources.Passed}!",
         };
 
