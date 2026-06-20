@@ -75,7 +75,7 @@ public class CollectionAssertTests : TestContainer
         _ = collection.Count; // no warning
     }
 
-    public void CollectionAssertContainsPopulatesStructuredExpectedAndActual()
+    public void CollectionAssertContainsPopulatesStructuredExpectedWithoutActual()
     {
         ICollection collection = new[] { "a", "b" };
         Action action = () => CollectionAssert.Contains(collection, "c");
@@ -83,10 +83,11 @@ public class CollectionAssertTests : TestContainer
         ex.Message.Should().Contain("Expected collection to contain the specified element.");
         ex.ExpectedText.Should().Be("\"c\"");
         ex.Data["assert.expected"].Should().Be("\"c\"");
-        ex.Data["assert.actual"].Should().NotBeNull();
+        ex.ActualText.Should().BeNull();
+        ex.Data.Contains("assert.actual").Should().BeFalse();
     }
 
-    public void CollectionAssertDoesNotContainPopulatesStructuredExpectedAndActual()
+    public void CollectionAssertDoesNotContainPopulatesStructuredExpectedWithoutActual()
     {
         ICollection collection = new[] { "a", "b" };
         Action action = () => CollectionAssert.DoesNotContain(collection, "a");
@@ -94,7 +95,8 @@ public class CollectionAssertTests : TestContainer
         ex.Message.Should().Contain("Expected collection to not contain the specified element.");
         ex.ExpectedText.Should().Be("\"a\"");
         ex.Data["assert.expected"].Should().Be("\"a\"");
-        ex.Data["assert.actual"].Should().NotBeNull();
+        ex.ActualText.Should().BeNull();
+        ex.Data.Contains("assert.actual").Should().BeFalse();
     }
 
     public void CollectionAssertAllItemsAreNotNullPopulatesStructuredActual()

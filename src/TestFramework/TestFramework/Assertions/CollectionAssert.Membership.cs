@@ -77,7 +77,7 @@ public sealed partial class CollectionAssert
         StructuredAssertionMessage structured = new(FrameworkMessages.ContainsItemFailedSummary);
         structured.WithUserMessage(userMessage);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(expectedText, collectionText);
+        structured.WithExpectedAndActual(expectedText, null);
 
         Assert.ReportAssertFailed(structured);
     }
@@ -145,7 +145,7 @@ public sealed partial class CollectionAssert
         StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotContainItemFailedSummary);
         structured.WithUserMessage(userMessage);
         structured.WithEvidence(evidence);
-        structured.WithExpectedAndActual(notExpectedText, collectionText);
+        structured.WithExpectedAndActual(notExpectedText, null);
 
         Assert.ReportAssertFailed(structured);
     }
