@@ -2,34 +2,34 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../TerminalResources.resx">
     <body>
-            <trans-unit id="Aborted">
+      <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="translated">Abgebrochen</target>
+        <target state="new">Aborted</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="translated">Aktuell</target>
+        <target state="new">Actual</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="translated">Abgebrochen</target>
+        <target state="new">canceled</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="translated">Die Testsitzung wird abgebrochen...</target>
+        <target state="new">Canceling the test session...</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
-        <target state="translated">Die Konsole befindet sich bereits im Batchmodus.</target>
+        <target state="new">Console is already in batching mode.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="translated">Dauer</target>
+        <target state="new">duration</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -39,22 +39,22 @@
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="translated">Erwartet</target>
+        <target state="new">Expected</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="translated">Fehler</target>
+        <target state="new">Failed</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="translated">fehlerhaft</target>
+        <target state="new">failed</target>
         <note />
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="translated">Für Test</target>
+        <target state="new">For test</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="HandshakeFailuresHeader">
@@ -64,72 +64,72 @@
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="translated">In Bearbeitung Dateiartefakte erstellt:</target>
+        <target state="new">In process file artifacts produced:</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="translated">Mindestens erwartete Testrichtlinienverletzung, {0} Tests wurden ausgeführt, mindestens erwartet: {1}</target>
+        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
         <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="translated">und {0} weitere</target>
+        <target state="new">and {0} more</target>
         <note>{0} is the number of additional active tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="translated">{0} ausgeführten Tests</target>
+        <target state="new">{0} tests running</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="translated">Nicht verarbeitete Dateiartefakte erstellt:</target>
+        <target state="new">Out of process file artifacts produced:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="translated">Bestanden</target>
+        <target state="new">Passed</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="translated">erfolgreich</target>
+        <target state="new">passed</target>
         <note />
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="translated">Drücken Sie erneut Ctrl+C, um das Beenden zu erzwingen.</target>
+        <target state="new">Press Ctrl+C again to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="translated">übersprungen</target>
+        <target state="new">skipped</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
-        <target state="translated">um</target>
+        <target state="new">at</target>
         <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
       </trans-unit>
       <trans-unit id="StackFrameIn">
         <source>in</source>
-        <target state="translated">in</target>
+        <target state="new">in</target>
         <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="translated">Fehlerausgabe</target>
+        <target state="new">Error output</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="translated">Standardausgabe</target>
+        <target state="new">Standard output</target>
         <note />
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="translated">erfolgreich</target>
+        <target state="new">succeeded</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionDescription">
@@ -145,12 +145,12 @@ When both --ansi and --no-ansi are provided, --ansi wins.</target>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="translated">--ansi erwartet einen einzelnen Parameter mit dem Wert „auto“, „on“ (oder „true“, „enable“,„1“) oder „off“ (oder „false“, „disable“, „0“).</target>
+        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
         <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="translated">Deaktivieren Sie die Ausgabe von ANSI-Escape-Zeichen auf dem Bildschirm.</target>
+        <target state="new">Disable outputting ANSI escape characters to screen.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
@@ -161,13 +161,13 @@ When both --ansi and --no-ansi are provided, --ansi wins.</target>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="translated">Ausgabeausführlichkeit beim Melden von Tests.
-Gültige Werte sind „Normal“, „Detailed“. Der Standardwert ist „Normal“.</target>
+        <target state="new">Output verbosity when reporting tests.
+Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
         <note>{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="translated">„--output“ erwartet einen einzelnen Parameter mit dem Wert „Normal“ oder „Detailed“.</target>
+        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
@@ -203,51 +203,51 @@ This option takes precedence over the deprecated --no-progress flag.</target>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="translated">Die Optionen --show-stdout und --show-stderr erwarten einen einzelnen Parameter mit dem Wert „All“, „Failed“ oder „None“.</target>
+        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">Legt fest, wann die erfasste Fehlerausgabe eines Tests angezeigt werden soll.
-Gültige Werte sind „All“, „Failed“ und „None“. Der Standardwert ist „All“ (oder „Failed“, wenn eine LLM-/KI-Agent-Umgebung erkannt wird).</target>
+        <target state="new">Determines when to show captured error output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="translated">Legt fest, wann die erfasste Standardausgabe eines Tests angezeigt werden soll.
-Gültige Werte sind „All“, „Failed“ und „None“. Der Standardwert ist „All“ (oder „Failed“, wenn eine LLM-/KI-Agent-Umgebung erkannt wird).</target>
+        <target state="new">Determines when to show captured standard output of a test.
+Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="translated">Schreibt Testergebnisse in das Terminal.</target>
+        <target state="new">Writes test results to terminal.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="translated">Terminaltest-Reporter</target>
+        <target state="new">Terminal test reporter</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="translated">Zusammenfassung der Testermittlung: {0} Test(s) gefunden</target>
+        <target state="new">Test discovery summary: found {0} test(s)</target>
         <note>{0} is the number of discovered tests.</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
-        <target state="translated">Testlaufzusammenfassung:</target>
+        <target state="new">Test run summary:</target>
         <note />
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="translated">Es wurden keine Tests ausgeführt.</target>
+        <target state="new">Zero tests ran</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="translated">gesamt</target>
+        <target state="new">total</target>
         <note />
       </trans-unit>
     </body>
