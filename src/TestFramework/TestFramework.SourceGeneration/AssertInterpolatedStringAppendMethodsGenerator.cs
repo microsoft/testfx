@@ -26,7 +26,7 @@ public sealed class AssertInterpolatedStringAppendMethodsGenerator : IIncrementa
     {
         IncrementalValuesProvider<HandlerInfo> handlers = context.SyntaxProvider.ForAttributeWithMetadataName(
             MarkerAttributeMetadataName,
-            predicate: static (node, _) => node is StructDeclarationSyntax,
+            predicate: static (node, _) => node is StructDeclarationSyntax { Parent: ClassDeclarationSyntax or StructDeclarationSyntax },
             transform: static (ctx, _) => GetHandlerInfo(ctx));
 
         context.RegisterSourceOutput(handlers, static (spc, handler) => Emit(spc, handler));

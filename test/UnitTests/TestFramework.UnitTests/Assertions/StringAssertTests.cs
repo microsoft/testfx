@@ -59,6 +59,7 @@ public class StringAssertTests : TestContainer
         ex.ActualText.Should().Be("\"The quick brown fox jumps over the lazy dog.\"");
         ex.Data["assert.expected"].Should().Be("\"I'm not in the string above\"");
         ex.Data["assert.actual"].Should().Be("\"The quick brown fox jumps over the lazy dog.\"");
+        ex.Message.Should().MatchRegex(@"comparison:\s+Ordinal");
     }
 
     public void StringAssertStartsWithPopulatesStructuredExpectedAndActual()
@@ -69,6 +70,7 @@ public class StringAssertTests : TestContainer
         ex.ActualText.Should().Be("\"hello world\"");
         ex.Data["assert.expected"].Should().Be("\"world\"");
         ex.Data["assert.actual"].Should().Be("\"hello world\"");
+        ex.Message.Should().MatchRegex(@"comparison:\s+Ordinal");
     }
 
     public void StringAssertEndsWithPopulatesStructuredExpectedAndActual()
@@ -79,6 +81,7 @@ public class StringAssertTests : TestContainer
         ex.ActualText.Should().Be("\"hello world\"");
         ex.Data["assert.expected"].Should().Be("\"hello\"");
         ex.Data["assert.actual"].Should().Be("\"hello world\"");
+        ex.Message.Should().MatchRegex(@"comparison:\s+Ordinal");
     }
 
     public void StringAssertMatchesPopulatesStructuredExpectedAndActual()
