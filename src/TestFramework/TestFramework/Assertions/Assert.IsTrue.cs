@@ -28,6 +28,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertIsTrueInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
@@ -69,6 +70,7 @@ public sealed partial class Assert
     [StackTraceHidden]
     [InterpolatedStringHandler]
     [EditorBrowsable(EditorBrowsableState.Never)]
+    [GenerateAssertInterpolatedStringAppendMethods]
     public readonly partial struct AssertIsFalseInterpolatedStringHandler
     {
         private readonly StringBuilder? _builder;
