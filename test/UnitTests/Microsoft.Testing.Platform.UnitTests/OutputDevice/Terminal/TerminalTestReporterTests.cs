@@ -1396,18 +1396,11 @@ public sealed class TerminalTestReporterTests
             errorOutput: null);
 
     private static string GetAssemblySummaryLine(string output, string assemblyPath)
-    {
-        foreach (string line in output.Split('\n'))
-        {
-            if (line.Contains(assemblyPath, StringComparison.Ordinal) && line.Contains("[+", StringComparison.Ordinal))
-            {
-                return line;
-            }
-        }
-
-        throw new InvalidOperationException(
-            $"Expected output to contain a per-assembly summary line for '{assemblyPath}', but it did not. Full output:{Environment.NewLine}{output}");
-    }
+        => Array.Find(
+               output.Split('\n'),
+               line => line.Contains(assemblyPath, StringComparison.Ordinal) && line.Contains("[+", StringComparison.Ordinal))
+           ?? throw new InvalidOperationException(
+               $"Expected output to contain a per-assembly summary line for '{assemblyPath}', but it did not. Full output:{Environment.NewLine}{output}");
 
     // The reporter renders the per-assembly counts with CultureInfo.CurrentCulture, so build the expected bracket the
     // same way; this keeps the assertion correct under cultures that use non-Latin digit shapes.
