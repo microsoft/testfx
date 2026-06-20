@@ -1563,6 +1563,53 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(ExpectedCounts(1, 0, 0, retried: 1), assemblyLine);
     }
 
+    // Companion to the test above driving the FULL lifecycle to validate the two retry-specific renderings the
+    // dotnet/sdk orchestrator acceptance test RunTestProjectWithWithRetryFeature_ShouldSucceed asserts:
+    //   1) each per-test result line is annotated with "(try N)" so retried attempts are distinguishable, and
+    //   2) the run summary's total line is suffixed with "(+N retried)".
+    // The in-process host never retries (isRetry stays false, TryCount stays 1), so neither rendering appears there.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenTestsWereRetried_AnnotatesTryNumberAndSummaryRetriedCount()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky";
+
+        // Attempt 1 fails the test...
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
+
+        // ...attempt 2 (new instance id) retries and passes it.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        // 1) Per-test "(try N)" annotation: the failing first attempt is "(try 1)", the passing retry is "(try 2)".
+        string tryOne = string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 1);
+        string tryTwo = string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 2);
+        Assert.Contains($"({tryOne})", output);
+        Assert.Contains($"({tryTwo})", output);
+        Assert.DoesNotContain($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 3)})", output);
+
+        // 2) Summary total line carries the "(+1 retried)" suffix.
+        Assert.Contains($"{TerminalResources.TotalLowercase}: 1 (+1 {TerminalResources.Retried})", output);
+    }
+
     [TestMethod]
     public void AssemblyRunCompleted_WhenKnownAssemblyFails_PrintsExecutableSummary()
     {
@@ -1606,6 +1653,32 @@ public sealed class TerminalTestReporterTests
 
         // ...but on success the executable summary (exit code + captured output) must not be printed.
         Assert.DoesNotContain($"{TerminalResources.ExitCode}:", stringBuilderConsole.Output);
+    }
+
+    // Drives the dotnet/sdk acceptance scenario RunMTPProjectThatCrashesWithExitCodeNonZero_ShouldFail_WithSameExitCode:
+    // an assembly whose tests all pass but whose process exits non-zero (a crash / explicit non-zero exit) is a run
+    // failure. The run-summary verdict must escalate to "Failed!" even though failed-test count is zero — but only
+    // AFTER the zero-tests branch, so a legitimately empty project is unaffected (covered separately).
+    [TestMethod]
+    public void TestExecutionCompleted_WhenAssemblyExitsNonZeroButTestsPassed_ReportsFailedVerdict()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Crashy.dll" : "/repo/Crashy.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "exec-1", "inst-1");
+        ReportOrchestratorTest(terminalReporter, assembly, "exec-1", "inst-1", "t-1", TestOutcome.Passed);
+
+        // The process exits 47 even though the single test passed -> Success is false.
+        terminalReporter.AssemblyRunCompleted("exec-1", exitCode: 47, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 47);
+
+        string output = stringBuilderConsole.Output;
+
+        // The run verdict escalates to "Failed!" (not "Passed!") because the assembly process failed.
+        Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
+        Assert.DoesNotContain($"{TerminalResources.TestRunSummary} {TerminalResources.Passed}!", output);
     }
 
     [TestMethod]

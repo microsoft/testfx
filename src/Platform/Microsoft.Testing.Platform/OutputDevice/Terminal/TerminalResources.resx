@@ -290,4 +290,12 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <value>failed with {0} error(s)</value>
     <comment>{0} is the number of errors in an assembly summary line</comment>
   </data>
+  <data name="Try" xml:space="preserve">
+    <value>try {0}</value>
+    <comment>number or tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</comment>
+  </data>
+  <data name="Retried" xml:space="preserve">
+    <value>retried</value>
+    <comment>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</comment>
+  </data>
 </root>

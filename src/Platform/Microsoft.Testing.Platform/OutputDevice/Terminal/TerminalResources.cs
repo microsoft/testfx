@@ -69,6 +69,8 @@ internal static partial class TerminalResources
 
     internal static string @PressCtrlCAgainToForceExit => GetResourceString("PressCtrlCAgainToForceExit");
 
+    internal static string @Retried => GetResourceString("Retried");
+
     internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
 
     internal static string @StackFrameAt => GetResourceString("StackFrameAt");
@@ -118,6 +120,8 @@ internal static partial class TerminalResources
     internal static string @TestRunSummary => GetResourceString("TestRunSummary");
 
     internal static string @TotalLowercase => GetResourceString("TotalLowercase");
+
+    internal static string @Try => GetResourceString("Try");
 
     internal static string @ZeroTestsRan => GetResourceString("ZeroTestsRan");
 

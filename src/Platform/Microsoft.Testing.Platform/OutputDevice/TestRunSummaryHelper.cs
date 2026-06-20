@@ -28,12 +28,18 @@ internal static class TestRunSummaryHelper
     /// Computes the verdict string for the test run.
     /// </summary>
     /// <remarks>
-    /// When <paramref name="hasHandshakeFailures"/> is <see langword="true"/> (multi-assembly orchestrator only), at
-    /// least one assembly failed to hand-shake. Such a failure must surface as "Failed!" and must NOT be masked by the
-    /// benign "Zero tests ran" wording, even though the failing assembly contributed zero tests. In-process callers
-    /// never have handshake failures and pass <see langword="false"/>, so their verdict is unchanged.
+    /// The two orchestrator-only flags surface non-test failures that must not be masked by the test-count wording:
+    /// <list type="bullet">
+    /// <item><paramref name="hasHandshakeFailures"/>: at least one assembly failed to hand-shake. This escalates to
+    /// "Failed!" ahead of the "Zero tests ran" branch (a handshake failure is not a benign empty run).</item>
+    /// <item><paramref name="hasFailedAssemblies"/>: at least one assembly process ended unsuccessfully (e.g. crashed
+    /// or returned a non-zero exit code) even though its tests passed. This escalates to "Failed!" but only AFTER the
+    /// "Zero tests ran" branch, so a project that legitimately contains zero tests (which exits non-zero by design)
+    /// is still reported as "Zero tests ran" rather than a failure.</item>
+    /// </list>
+    /// In-process callers never have either condition and pass <see langword="false"/>, so their verdict is unchanged.
     /// </remarks>
-    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false)
+    internal static string GetVerdictText(int totalTests, int failedTests, int skippedTests, bool wasCancelled, int minimumExpectedTests, bool hasHandshakeFailures = false, bool hasFailedAssemblies = false)
         => true switch
         {
             _ when wasCancelled => TerminalResources.Aborted,
@@ -41,6 +47,7 @@ internal static class TestRunSummaryHelper
             _ when failedTests > 0 => $"{TerminalResources.Failed}!",
             _ when hasHandshakeFailures => $"{TerminalResources.Failed}!",
             _ when totalTests == 0 || totalTests == skippedTests => TerminalResources.ZeroTestsRan,
+            _ when hasFailedAssemblies => $"{TerminalResources.Failed}!",
             _ => $"{TerminalResources.Passed}!",
         };
 

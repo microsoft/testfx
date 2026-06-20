@@ -107,6 +107,11 @@
         <target state="translated">Presione Ctrl+C de nuevo para forzar la salida.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
+      <trans-unit id="Retried">
+        <source>retried</source>
+        <target state="new">retried</target>
+        <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
+      </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
         <target state="translated">omitido</target>
@@ -244,6 +249,11 @@ Los valores válidos son "All", "Failed", "None". El valor predeterminado es "Al
         <source>Test run summary:</source>
         <target state="translated">Resumen de la serie de pruebas:</target>
         <note />
+      </trans-unit>
+      <trans-unit id="Try">
+        <source>try {0}</source>
+        <target state="new">try {0}</target>
+        <note>number or tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>

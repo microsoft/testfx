@@ -56,12 +56,17 @@ internal sealed partial class TerminalTestReporter
         // Two sibling sites mirror this decision and must stay in lockstep:
         //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
         //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
-        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure;
+        // Orchestrator-only: an assembly whose process ended unsuccessfully (crash / non-zero exit) with no failed
+        // tests is still a run failure. Gated on ShowAssembly (the orchestrator marker): the in-process host leaves
+        // ShowAssembly off and never sets Success, so this stays false and its verdict/color are unchanged.
+        bool hasFailedAssemblies = _options.ShowAssembly && assemblies.Any(static a => !a.Success);
+
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure || hasFailedAssemblies;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
-        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure));
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies));
 
         // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
         // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in
@@ -94,6 +99,7 @@ internal sealed partial class TerminalTestReporter
         int failed = totalFailedTests;
         int passed = totalPassedTests;
         int skipped = totalSkippedTests;
+        int retried = assemblies.Sum(static a => a.RetriedFailedTests);
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
@@ -107,7 +113,19 @@ internal sealed partial class TerminalTestReporter
         string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
 
         terminal.ResetColor();
-        terminal.AppendLine(totalText);
+        terminal.Append(totalText);
+
+        // Orchestrator-only: when failed tests were retried, append "(+N retried)" after the total so the headline
+        // count (which reflects the final attempt) is reconciled with the extra retried executions. retried is 0 for
+        // the in-process host, so the total line stays byte-identical there.
+        if (retried > 0)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append($" (+{retried} {TerminalResources.Retried})");
+            terminal.ResetColor();
+        }
+
+        terminal.AppendLine();
         if (colorizeFailed)
         {
             terminal.SetColor(TerminalColor.DarkRed);

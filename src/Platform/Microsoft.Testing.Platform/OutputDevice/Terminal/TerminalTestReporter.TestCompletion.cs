@@ -121,8 +121,12 @@ internal sealed partial class TerminalTestReporter
         _terminalWithProgress.NotifyTestCompleted();
         if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
+            // Capture the attempt number (1-based) at completion time so the per-test "(try N)" annotation reflects
+            // the retry attempt this result belongs to.
+            int attempt = asm.TryCount;
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
+                attempt,
                 displayName,
                 outcome,
                 duration,
@@ -143,6 +147,7 @@ internal sealed partial class TerminalTestReporter
 
     private void RenderTestCompleted(
         ITerminal terminal,
+        int attempt,
         string displayName,
         TestOutcome outcome,
         TimeSpan? duration,
@@ -176,6 +181,16 @@ internal sealed partial class TerminalTestReporter
 
         terminal.SetColor(color);
         terminal.Append(outcomeText);
+
+        // Orchestrator-only: annotate which retry attempt this result belongs to (e.g. "failed (try 2)") so retried
+        // results are not mistaken for duplicates. _isRetry is only ever set for the dotnet test orchestrator; the
+        // in-process host leaves it false, so its per-test lines are unchanged.
+        if (_isRetry)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append($" ({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, attempt)})");
+        }
+
         terminal.ResetColor();
         terminal.Append(' ');
         terminal.Append(MakeControlCharactersVisible(displayName, true));
