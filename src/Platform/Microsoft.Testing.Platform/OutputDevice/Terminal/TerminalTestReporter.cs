@@ -78,6 +78,15 @@ internal sealed partial class TerminalTestReporter : IDisposable
     private int _counter;
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class for orchestrator callers that
+    /// drive cancellation out-of-band (via <see cref="StartCancelling"/>) rather than through a cancellation token.
+    /// </summary>
+    public TerminalTestReporter(IConsole console, TerminalTestReporterOptions options)
+        : this(console, static () => false, options)
+    {
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal and manual refresh for testing.
     /// </summary>
     public TerminalTestReporter(

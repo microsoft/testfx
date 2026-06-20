@@ -124,26 +124,29 @@ internal sealed partial class TerminalTestReporter
     }
 
     private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, TestProgressState assemblyRun)
+        => AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyRun.Assembly, assemblyRun.TargetFramework, assemblyRun.Architecture);
+
+    private static void AppendAssemblyLinkTargetFrameworkAndArchitecture(ITerminal terminal, string assembly, string? targetFramework, string? architecture)
     {
-        terminal.AppendLink(assemblyRun.Assembly, lineNumber: null);
-        if (assemblyRun.TargetFramework == null && assemblyRun.Architecture == null)
+        terminal.AppendLink(assembly, lineNumber: null);
+        if (targetFramework == null && architecture == null)
         {
             return;
         }
 
         terminal.Append(" (");
-        if (assemblyRun.TargetFramework != null)
+        if (targetFramework != null)
         {
-            terminal.Append(assemblyRun.TargetFramework);
-            if (assemblyRun.Architecture != null)
+            terminal.Append(targetFramework);
+            if (architecture != null)
             {
                 terminal.Append('|');
             }
         }
 
-        if (assemblyRun.Architecture != null)
+        if (architecture != null)
         {
-            terminal.Append(assemblyRun.Architecture);
+            terminal.Append(architecture);
         }
 
         terminal.Append(')');

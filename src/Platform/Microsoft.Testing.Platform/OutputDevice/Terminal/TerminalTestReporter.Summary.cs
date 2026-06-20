@@ -56,7 +56,7 @@ internal sealed partial class TerminalTestReporter
         // Two sibling sites mirror this decision and must stay in lockstep:
         //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
         //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
-        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests);
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(TerminalResources.TestRunSummary);
@@ -133,6 +133,10 @@ internal sealed partial class TerminalTestReporter
         terminal.Append(durationText);
         AppendLongDuration(terminal, runDuration, wrapInParentheses: false, colorize: false);
         terminal.AppendLine();
+
+        // Re-print any handshake failures (orchestrator-only) at the very end so they aren't lost above the summary.
+        // No-op for the in-process host, which never reports handshake failures.
+        AppendHandshakeFailureRecap(terminal);
     }
 
     internal void TestDiscovered(string executionId, string displayName)

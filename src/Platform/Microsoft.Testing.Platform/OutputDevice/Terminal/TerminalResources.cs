@@ -43,6 +43,8 @@ internal static partial class TerminalResources
 
     internal static string @DurationLowercase => GetResourceString("DurationLowercase");
 
+    internal static string @ExitCode => GetResourceString("ExitCode");
+
     internal static string @Expected => GetResourceString("Expected");
 
     internal static string @Failed => GetResourceString("Failed");
@@ -50,6 +52,8 @@ internal static partial class TerminalResources
     internal static string @FailedLowercase => GetResourceString("FailedLowercase");
 
     internal static string @ForTest => GetResourceString("ForTest");
+
+    internal static string @HandshakeFailuresHeader => GetResourceString("HandshakeFailuresHeader");
 
     internal static string @InProcessArtifactsProduced => GetResourceString("InProcessArtifactsProduced");
 
