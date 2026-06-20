@@ -19,9 +19,12 @@ internal sealed partial class TerminalTestReporter
     }
 
     public void AssemblyRunStarted(string assembly, string? targetFramework, string? architecture, string executionId, string instanceId)
-        // instanceId: reserved for the SDK orchestrator's instanceId-based retry-counting logic (follow-up PR).
-        // It is not used by the in-process host path, which registers a single assembly per run.
-        => GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+    {
+        // Each (re-)start registers its instance id as a retry attempt; the first attempt is the normal run. The
+        // in-process host starts a single assembly with a single fixed instance id (one attempt).
+        TestProgressState assemblyRun = GetOrAddAssemblyRun(assembly, targetFramework, architecture, executionId);
+        assemblyRun.NotifyHandshake(instanceId);
+    }
 
     private TestProgressState GetOrAddAssemblyRun(string assembly, string? targetFramework, string? architecture, string executionId)
     {
