@@ -14,7 +14,7 @@ internal sealed class TestProgressState
     // THREADING: this type is intentionally not internally synchronized. Each TestProgressState instance is owned by
     // a single executionId; the reporter looks it up from a ConcurrentDictionary (_assemblies), but the Microsoft
     // Testing Platform message pipeline delivers events for a given executionId on a single consumer, so the mutating
-    // members below (the dictionary/list and the Passed/Skipped/Failed/Retried/TryCount counters) are only ever
+    // members below (the dictionaries and the Passed/Skipped/Failed/Retried/TryCount counters) are only ever
     // touched by one thread at a time for a given instance. Do not call these members concurrently for the same
     // assembly without adding synchronization.
 
@@ -22,9 +22,10 @@ internal sealed class TestProgressState
     // uid under a new instance id) replace rather than double-count the earlier attempt's result.
     private readonly Dictionary<string, TestNodeInfoEntry> _testUidToResults = [];
 
-    // Ordered list of instance ids seen for this assembly. Each new instance id is a retry attempt. In most runs
-    // there is exactly one (no retry).
-    private readonly List<string> _orderedInstanceIds = [];
+    // Maps each instance id seen for this assembly to its 1-based attempt number. Each new instance id is a retry
+    // attempt; the highest attempt number always equals TryCount. In most runs there is exactly one (no retry).
+    // This lookup is O(1) because GetAttemptNumberFromInstanceId is called for every reported test result.
+    private readonly Dictionary<string, int> _instanceIdToAttemptNumber = [];
 
     public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery)
     {
@@ -95,13 +96,14 @@ internal sealed class TestProgressState
     /// </summary>
     internal void NotifyHandshake(string instanceId)
     {
-        int index = _orderedInstanceIds.IndexOf(instanceId);
-        if (index < 0)
+        if (!_instanceIdToAttemptNumber.TryGetValue(instanceId, out int attemptNumber))
         {
-            _orderedInstanceIds.Add(instanceId);
+            // A previously unseen instance id is a new attempt; attempt numbers are 1-based and the latest always
+            // equals TryCount.
             TryCount++;
+            _instanceIdToAttemptNumber[instanceId] = TryCount;
         }
-        else if (index != _orderedInstanceIds.Count - 1)
+        else if (attemptNumber != TryCount)
         {
             // We received a handshake for an instance id that is not the most recent one — unexpected ordering.
             throw ApplicationStateGuard.Unreachable();
@@ -147,14 +149,7 @@ internal sealed class TestProgressState
     }
 
     private int GetAttemptNumberFromInstanceId(string instanceId)
-    {
-        int index = _orderedInstanceIds.IndexOf(instanceId);
-        if (index < 0)
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
-        // Attempt numbers are 1-based.
-        return index + 1;
-    }
+        => _instanceIdToAttemptNumber.TryGetValue(instanceId, out int attemptNumber)
+            ? attemptNumber
+            : throw ApplicationStateGuard.Unreachable();
 }
