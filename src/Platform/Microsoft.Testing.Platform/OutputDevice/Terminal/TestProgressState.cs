@@ -39,7 +39,6 @@ internal sealed class TestProgressState
 
     public int SkippedTests { get; internal set; }
 
-    /// <summary>Gets the number of tests whose final result came from a retry (orchestrator retry runs); rendered as the "/r{N}" segment.</summary>
     public int RetriedFailedTests { get; internal set; }
 
     public int TotalTests { get; internal set; }
