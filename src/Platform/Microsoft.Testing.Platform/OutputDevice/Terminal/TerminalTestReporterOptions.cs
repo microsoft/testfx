@@ -32,15 +32,15 @@ internal sealed class TerminalTestReporterOptions
     public bool ShowActiveTests { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether per-assembly identity (the "Running tests from ..." banner and the
-    /// per-assembly summary line with its compact counts) should be rendered. Used by the <c>dotnet test</c>
-    /// orchestrator which runs multiple assemblies; the in-process host leaves this off.
+    /// Gets a value indicating whether per-assembly summary lines (with the compact pass/fail/skip counts) should be
+    /// rendered. Used by the <c>dotnet test</c> orchestrator which runs multiple assemblies; the in-process host
+    /// leaves this off.
     /// </summary>
     public bool ShowAssembly { get; init; }
 
     /// <summary>
-    /// Gets a value indicating whether, when <see cref="ShowAssembly"/> is set, the mid-stream per-assembly
-    /// start and completion lines should be printed (in addition to the per-assembly entries in the final summary).
+    /// Gets a value indicating whether, when <see cref="ShowAssembly"/> is set, the per-assembly summary line is
+    /// printed mid-stream as each assembly completes.
     /// </summary>
     public bool ShowAssemblyStartAndComplete { get; init; }
 

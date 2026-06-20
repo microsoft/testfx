@@ -11,6 +11,13 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [Embedded]
 internal sealed class TestProgressState
 {
+    // THREADING: this type is intentionally not internally synchronized. Each TestProgressState instance is owned by
+    // a single executionId; the reporter looks it up from a ConcurrentDictionary (_assemblies), but the Microsoft
+    // Testing Platform message pipeline delivers events for a given executionId on a single consumer, so the mutating
+    // members below (the dictionary/list and the Passed/Skipped/Failed/Retried/TryCount counters) are only ever
+    // touched by one thread at a time for a given instance. Do not call these members concurrently for the same
+    // assembly without adding synchronization.
+
     // Tracks the per-test-node tally and the attempt it belongs to, so retries (which re-report the same test node
     // uid under a new instance id) replace rather than double-count the earlier attempt's result.
     private readonly Dictionary<string, TestNodeInfoEntry> _testUidToResults = [];

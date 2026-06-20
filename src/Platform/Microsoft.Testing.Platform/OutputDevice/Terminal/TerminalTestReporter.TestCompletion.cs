@@ -61,6 +61,8 @@ internal sealed partial class TerminalTestReporter
         string? actual,
         string? standardOutput,
         string? errorOutput)
+        // assembly / targetFramework / architecture are intentionally not forwarded yet: they are reserved for the
+        // per-test assembly link in a follow-up. The instance id IS forwarded — it drives retry attribution.
         => TestCompleted(
             executionId,
             instanceId,

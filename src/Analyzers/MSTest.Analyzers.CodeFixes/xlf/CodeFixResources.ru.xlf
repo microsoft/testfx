@@ -107,6 +107,11 @@
         <target state="translated">Удалите параметр "DynamicDataSourceType", чтобы использовать значение по умолчанию "AutoDetect"</target>
         <note>{Locked="DynamicDataSourceType"}{Locked="AutoDetect"}</note>
       </trans-unit>
+      <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">
+        <source>Remove redundant 'DisplayName'</source>
+        <target state="new">Remove redundant 'DisplayName'</target>
+        <note>{Locked="DisplayName"}</note>
+      </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
         <source>Replace 'DataTestMethod' with 'TestMethod'</source>
         <target state="translated">Заменить "DataTestMethod" на "TestMethod"</target>

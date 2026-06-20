@@ -278,4 +278,8 @@
     <value>Add a placeholder justification to '[Ignore]'</value>
     <comment>{Locked="[Ignore]"}</comment>
   </data>
+  <data name="RemoveRedundantTestMethodDisplayNameFix" xml:space="preserve">
+    <value>Remove redundant 'DisplayName'</value>
+    <comment>{Locked="DisplayName"}</comment>
+  </data>
 </root>
