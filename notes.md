@@ -30,11 +30,16 @@
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
+3. **Analyzer edge cases (ongoing)** — Continue with suppressors and analyzers with few tests. Next candidates:
+   - `RedundantTestMethodDisplayNameAnalyzer` (6 tests) — custom derived attribute case untested
+   - `UseAsyncSuffixTestFixtureMethodSuppressor` (3 tests) — non-async fixture method not tested
+   - `UseAsyncSuffixTestMethodSuppressor` (5 tests) — custom attribute derived from TestMethodAttribute not tested
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-20 | Task 3 (UnusedParameterSuppressor MSTEST0047 edge cases: TestMethod+TestContext not suppressed, AssemblyInitialize+non-TestContext not suppressed), Task 7 (Monthly Issue Jun) |
 | 2026-06-19 | Task 3 (AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases: enum/struct/nullable), Task 4 (verify open PRs), Task 7 (Monthly Issue Jun) |
 | 2026-06-17 | Task 3 (TestContextShouldBeValidAnalyzer MSTEST0005 edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-16 | Task 3 (DuplicateDataRowAnalyzer MSTEST0042 edge cases), Task 7 (Monthly Issue Jun) |
@@ -58,11 +63,12 @@
 
 ## Last Run
 
-2026-06-19 23:15 UTC
+2026-06-20 23:21 UTC
 
 ## Completed Work
 
-- PR (pending) for AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases (2026-06-19) — enum/struct/nullable types; 7 tests pass
+- PR (pending) for UnusedParameterSuppressor MSTEST0047 edge cases (2026-06-20) — [TestMethod]+TestContext and [AssemblyInitialize]+non-TestContext boundary tests; 8 tests pass
+- PR (merged) for AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases — enum/struct/nullable types; in main branch
 - PR #9223 merged (TestContextShouldBeValidAnalyzer MSTEST0005 edge cases) — merged 2026-06-18
 - PR #9199 merged (DuplicateDataRowAnalyzer MSTEST0042 edge cases) — merged 2026-06-17
 - PR #9164 merged (MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases) — merged 2026-06-16
