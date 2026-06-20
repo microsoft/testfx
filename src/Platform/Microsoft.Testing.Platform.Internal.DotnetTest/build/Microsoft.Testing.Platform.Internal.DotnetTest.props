@@ -5,24 +5,22 @@
     (NuGet imports build/<PackageId>.props). It wires the terminal reporter's localized resources - shipped by this
     package under build/TerminalReporter/ - into the consumer's own compilation:
 
-      * The resx is added as a strongly-typed <EmbeddedResource> (Generator="MSBuild:Compile" plus the
-        StronglyTyped* metadata) so the consumer's build generates the `TerminalResources` accessor and embeds
-        the strings into the consumer assembly. This does not depend on Arcade's GenerateSource pipeline.
-      * StronglyTypedNamespace/StronglyTypedClassName pin the generated accessor to
-        Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources - the type the shared reporter source
-        expects - regardless of the consumer's RootNamespace, and ManifestResourceName keeps the embedded
-        manifest name in sync so the runtime ResourceManager lookup resolves the same resource set.
-      * The sibling xlf/ folder lets XliffTasks emit satellite assemblies for each language. This requires the
-        consumer to have XliffTasks; dotnet/sdk (the intended consumer) has it via Arcade.
+      * The resx is added as an <EmbeddedResource GenerateSource="true"> using the Arcade/XliffTasks convention
+        (dotnet/sdk, the intended consumer, provides both): the consumer's build generates the `TerminalResources`
+        strongly-typed accessor (embedding the strings into the consumer assembly, with the accessor's
+        ResourceManager bound to the consumer assembly) AND lets XliffTasks emit per-language satellites from the
+        sibling xlf/ folder. We intentionally do NOT use the manual Generator="MSBuild:Compile" + StronglyTyped*
+        metadata here: that path collides with XliffTasks (the per-culture resx XliffTasks generates inherit the
+        StronglyTyped metadata, so GenerateResource sees multiple sources for one strongly-typed class -> MSB3573).
+      * Namespace pins the generated accessor to Microsoft.Testing.Platform.OutputDevice.Terminal (the namespace the
+        shared reporter source expects) regardless of the consumer's RootNamespace; the class name defaults to the
+        resx file name (TerminalResources), so the manifest name resolves to
+        Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources.
   -->
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)TerminalReporter\TerminalResources.resx"
-                      Generator="MSBuild:Compile"
-                      StronglyTypedFileName="$(IntermediateOutputPath)TerminalResources.g.cs"
-                      StronglyTypedLanguage="C#"
-                      StronglyTypedNamespace="Microsoft.Testing.Platform.OutputDevice.Terminal"
-                      StronglyTypedClassName="TerminalResources"
-                      ManifestResourceName="Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources"
+                      GenerateSource="true"
+                      Namespace="Microsoft.Testing.Platform.OutputDevice.Terminal"
                       Link="TerminalReporter\TerminalResources.resx" />
   </ItemGroup>
 

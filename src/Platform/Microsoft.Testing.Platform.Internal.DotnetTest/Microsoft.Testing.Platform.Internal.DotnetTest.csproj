@@ -85,6 +85,16 @@ This is an INTERNAL, source-only package: it shares - as compiled source - the p
           PackagePath="contentFiles/cs/any/TerminalReporter/%(Filename)%(Extension)" />
 
     <!--
+      EmbeddedAttribute polyfill: the shared source marks its types [Microsoft.CodeAnalysis.Embedded]; that attribute
+      is not present in a vanilla consumer (e.g. dotnet/sdk's dotnet.csproj), so ship the trivial polyfill as source.
+      It is 'internal sealed partial' so it merges harmlessly if the consumer ever defines its own.
+    -->
+    <None Include="$(RepoRoot)src\Polyfills\EmbeddedAttribute.cs"
+          Pack="true"
+          BuildAction="Compile"
+          PackagePath="contentFiles/cs/any/TerminalReporter/EmbeddedAttribute.cs" />
+
+    <!--
       Terminal localized resources. The resx + xlf are shipped under build/ (NOT contentFiles) so they are not
       auto-compiled with the wrong metadata; the auto-imported build-extension props below adds the resx as a
       strongly-typed <EmbeddedResource> (Generator="MSBuild:Compile" plus StronglyTyped* metadata) with a pinned
