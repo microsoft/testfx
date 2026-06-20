@@ -76,6 +76,20 @@ internal sealed partial class TerminalTestReporter
 
         terminal.AppendLine();
 
+        // For the dotnet test orchestrator (ShowAssembly) running more than one assembly, list each assembly with
+        // its own result + compact counts under the run-level verdict. Additive: the in-process host leaves
+        // ShowAssembly off, so this block never runs and its summary stays byte-identical.
+        if (_options.ShowAssembly && assemblies.Count > 1)
+        {
+            foreach (TestProgressState assemblyRun in assemblies)
+            {
+                terminal.Append(SingleIndentation);
+                AppendAssemblySummary(assemblyRun, terminal);
+            }
+
+            terminal.AppendLine();
+        }
+
         int total = totalTests;
         int failed = totalFailedTests;
         int passed = totalPassedTests;
