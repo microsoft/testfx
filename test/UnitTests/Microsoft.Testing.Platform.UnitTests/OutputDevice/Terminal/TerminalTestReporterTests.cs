@@ -1195,6 +1195,69 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain(secondAssembly, output);
     }
 
+    // Ported from the dotnet/sdk TerminalTestReporterTests (regression for dotnet/sdk#51608) to validate the
+    // orchestrator handshake-failure surface of the shared reporter: if a child test host process exits before a
+    // session was ever started (so the execution id is never registered), the orchestrator overload of
+    // AssemblyRunCompleted must not throw — it must surface the exit as a handshake failure and render the
+    // actionable context (exit code + captured stdout/stderr) instead.
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenExecutionIdUnknown_DoesNotThrowAndReportsHandshakeFailure()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.SimpleAnsi,
+            ShowProgress = () => false,
+        });
+
+        // Must not throw even though "never-registered" was never passed to AssemblyRunStarted.
+        terminalReporter.AssemblyRunCompleted(executionId: "never-registered", exitCode: 1, outputData: "stdout", errorData: "stderr");
+
+        Assert.IsTrue(terminalReporter.HasHandshakeFailure);
+
+        // Validate the rendered UI state: the immediate failure context is printed.
+        string output = stringBuilderConsole.Output;
+        Assert.Contains(TerminalResources.ZeroTestsRan, output);
+        Assert.Contains($"{TerminalResources.ExitCode}: 1", output);
+        Assert.Contains("stdout", output);
+        Assert.Contains("stderr", output);
+    }
+
+    // Companion to the test above covering the full lifecycle: after a handshake failure, TestExecutionCompleted must
+    // re-print the failure recap in the summary and (via runFailed |= HasHandshakeFailure) mark the run as failed even
+    // though no test ever ran.
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenExecutionIdUnknown_SummaryReprintsRecapAndReportsFailure()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunCompleted("never-registered", exitCode: 1, outputData: "the out", errorData: "the err");
+
+        // The flag is observable before the run completes (the orchestrator reads it to force a non-zero exit).
+        Assert.IsTrue(terminalReporter.HasHandshakeFailure);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+
+        // The end-of-run recap header is re-printed in the summary with the captured failure context.
+        Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
+        Assert.Contains($"{TerminalResources.ExitCode}: 1", output);
+        Assert.Contains("the err", output);
+
+        // No test ran, so the run verdict is the red "Zero tests ran" (runFailed also includes HasHandshakeFailure).
+        Assert.Contains(TerminalResources.ZeroTestsRan, output);
+
+        // Per-run state is reset after completion so a subsequent session starts fresh.
+        Assert.IsFalse(terminalReporter.HasHandshakeFailure);
+    }
+
     [TestMethod]
     public void TerminalTestReporter_WhenReusedAcrossSessions_DoesNotLeakArtifactsOrCancelledState()
     {

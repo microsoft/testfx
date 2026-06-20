@@ -52,4 +52,7 @@ internal sealed class TestProgressState
     public List<string> DiscoveredTestDisplayNames { get; internal set; } = [];
 
     public bool IsDiscovery { get; }
+
+    /// <summary>Gets or sets a value indicating whether the assembly run completed successfully (set by the orchestrator on completion).</summary>
+    public bool Success { get; internal set; }
 }

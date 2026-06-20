@@ -641,6 +641,22 @@ public partial class AssertTests : TestContainer
         action.Should().Throw<AssertFailedException>().WithMessage("*Expected string to contain the specified substring.*Missing substring*expected substring: \"lazy\"*actual:*\"The quick brown fox\"*Assert.Contains(substring, value)*");
     }
 
+    /// <summary>
+    /// Tests the string Contains overload with StringComparison and message when substring is present.
+    /// </summary>
+    public void Contains_StringWithComparisonAndMessage_SubstringPresent_DoesNotThrow()
+    {
+        // Arrange
+        string value = "The quick brown fox";
+        string substring = "BROWN";
+
+        // Act
+        Action action = () => Assert.Contains(substring, value, StringComparison.OrdinalIgnoreCase, "Substring found");
+
+        // Assert
+        action.Should().NotThrow<AssertFailedException>();
+    }
+
     public void Contains_HashSetWithCustomComparer_ItemExists_DoesNotThrow()
     {
         var collection = new HashSet<string>(AlwaysTrueEqualityComparer.Instance) { "1" };
