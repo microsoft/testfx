@@ -1288,7 +1288,7 @@ public sealed class TerminalTestReporterTests
         terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
 
         string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
-        Assert.Contains("[+3/x0/?1]", assemblyLine);
+        Assert.Contains(ExpectedCounts(3, 0, 1), assemblyLine);
     }
 
     // Covers the three red branches of AppendAssemblyResult for the per-assembly summary line, which the happy-path
@@ -1319,7 +1319,7 @@ public sealed class TerminalTestReporterTests
 
         string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
         Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.FailedWithErrors, 1), assemblyLine);
-        Assert.Contains("[+1/x1/?0]", assemblyLine);
+        Assert.Contains(ExpectedCounts(1, 1, 0), assemblyLine);
     }
 
     [TestMethod]
@@ -1345,7 +1345,7 @@ public sealed class TerminalTestReporterTests
 
         string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
         Assert.Contains(TerminalResources.ZeroTestsRan, assemblyLine);
-        Assert.Contains("[+0/x0/?0]", assemblyLine);
+        Assert.Contains(ExpectedCounts(0, 0, 0), assemblyLine);
     }
 
     [TestMethod]
@@ -1374,7 +1374,7 @@ public sealed class TerminalTestReporterTests
 
         string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
         Assert.Contains(TerminalResources.FailedLowercase, assemblyLine);
-        Assert.Contains("[+1/x0/?0]", assemblyLine);
+        Assert.Contains(ExpectedCounts(1, 0, 0), assemblyLine);
     }
 
     private static void ReportOrchestratorTest(TerminalTestReporter reporter, string assembly, string executionId, string instanceId, string testUid, TestOutcome outcome)
@@ -1408,6 +1408,11 @@ public sealed class TerminalTestReporterTests
         throw new InvalidOperationException(
             $"Expected output to contain a per-assembly summary line for '{assemblyPath}', but it did not. Full output:{Environment.NewLine}{output}");
     }
+
+    // The reporter renders the per-assembly counts with CultureInfo.CurrentCulture, so build the expected bracket the
+    // same way; this keeps the assertion correct under cultures that use non-Latin digit shapes.
+    private static string ExpectedCounts(int passed, int failed, int skipped)
+        => $"[+{passed.ToString(CultureInfo.CurrentCulture)}/x{failed.ToString(CultureInfo.CurrentCulture)}/?{skipped.ToString(CultureInfo.CurrentCulture)}]";
 
     [TestMethod]
     public void TerminalTestReporter_WhenReusedAcrossSessions_DoesNotLeakArtifactsOrCancelledState()
