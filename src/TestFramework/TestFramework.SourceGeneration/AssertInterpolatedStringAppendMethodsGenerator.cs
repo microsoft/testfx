@@ -69,10 +69,45 @@ public sealed class AssertInterpolatedStringAppendMethodsGenerator : IIncrementa
 
         return new HandlerInfo(
             structSymbol.ContainingNamespace.ToDisplayString(),
-            containingType.Name,
+            GetContainingTypeDeclaration(containingType),
             structSymbol.Name,
             typeParameters,
             nullableLiteralParameter);
+    }
+
+    private static string GetContainingTypeDeclaration(INamedTypeSymbol containingType)
+    {
+        // Emit the same accessibility and modifiers as the user-authored partial so the generated partial
+        // never conflicts with it. Assert is declared as 'public sealed partial class Assert'.
+        var builder = new StringBuilder();
+        builder.Append(containingType.DeclaredAccessibility switch
+        {
+            Accessibility.Public => "public ",
+            Accessibility.Internal => "internal ",
+            Accessibility.Protected => "protected ",
+            Accessibility.ProtectedOrInternal => "protected internal ",
+            Accessibility.ProtectedAndInternal => "private protected ",
+            Accessibility.Private => "private ",
+            _ => string.Empty,
+        });
+
+        if (containingType.IsStatic)
+        {
+            builder.Append("static ");
+        }
+        else if (containingType.IsSealed)
+        {
+            builder.Append("sealed ");
+        }
+        else if (containingType.IsAbstract)
+        {
+            builder.Append("abstract ");
+        }
+
+        builder.Append("partial ");
+        builder.Append(containingType.IsReferenceType ? "class " : "struct ");
+        builder.Append(containingType.Name);
+        return builder.ToString();
     }
 
     private static void Emit(SourceProductionContext context, HandlerInfo handler)
@@ -93,7 +128,7 @@ public sealed class AssertInterpolatedStringAppendMethodsGenerator : IIncrementa
         builder.AppendLine();
         builder.AppendLine($"namespace {handler.Namespace};");
         builder.AppendLine();
-        builder.AppendLine($"partial class {handler.ContainingTypeName}");
+        builder.AppendLine(handler.ContainingTypeDeclaration);
         builder.AppendLine("{");
         builder.AppendLine($"    public readonly partial struct {handler.StructName}{handler.TypeParameters}");
         builder.AppendLine("    {");
@@ -126,10 +161,10 @@ public sealed class AssertInterpolatedStringAppendMethodsGenerator : IIncrementa
 
     private readonly struct HandlerInfo
     {
-        public HandlerInfo(string @namespace, string containingTypeName, string structName, string typeParameters, bool nullableLiteralParameter)
+        public HandlerInfo(string @namespace, string containingTypeDeclaration, string structName, string typeParameters, bool nullableLiteralParameter)
         {
             Namespace = @namespace;
-            ContainingTypeName = containingTypeName;
+            ContainingTypeDeclaration = containingTypeDeclaration;
             StructName = structName;
             TypeParameters = typeParameters;
             NullableLiteralParameter = nullableLiteralParameter;
@@ -137,7 +172,7 @@ public sealed class AssertInterpolatedStringAppendMethodsGenerator : IIncrementa
 
         public string Namespace { get; }
 
-        public string ContainingTypeName { get; }
+        public string ContainingTypeDeclaration { get; }
 
         public string StructName { get; }
 
