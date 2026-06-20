@@ -1138,7 +1138,7 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
-    public void TerminalTestReporter_WhenOrchestratorDiscoveryDisplayNameIsNull_ShouldNotAddBlankSummaryEntry()
+    public void TerminalTestReporter_WhenOrchestratorDiscoveryDisplayNameIsNull_CountsTestAndFallsBackToUid()
     {
         // Arrange
         string assembly = "test.dll";
@@ -1158,16 +1158,83 @@ public sealed class TerminalTestReporterTests
         // Act
         terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true, isHelp: false, isRetry: false);
         terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
-        terminalReporter.TestDiscovered("0", displayName: null, uid: "uid", filePath: null, lineNumber: null);
+
+        // No display name and no uid: counted, but must not add a blank indented entry.
+        terminalReporter.TestDiscovered("0", displayName: null, uid: null, filePath: null, lineNumber: null);
+        // No display name but a uid: the uid is used as the listed name.
+        terminalReporter.TestDiscovered("0", displayName: null, uid: "uid-fallback", filePath: null, lineNumber: null);
+        // Normal display name.
         terminalReporter.TestDiscovered("0", "TestMethod1", uid: "uid-1", filePath: null, lineNumber: null);
+
+        // Assert - every discovered test is counted (even the unnamed one). TotalTests is computed from
+        // DiscoveredTests in discovery mode and is cleared by TestExecutionCompleted, so assert it before that.
+        Assert.AreEqual(3, terminalReporter.TotalTests);
+
         terminalReporter.AssemblyRunCompleted("0");
         terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
 
         string[] outputLines = stringBuilderConsole.Output.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
 
-        // Assert
+        // Assert - no blank indented entry for the unnamed test, but the uid fallback and display name are listed.
         Assert.DoesNotContain(TerminalTestReporter.SingleIndentation, outputLines);
+        Assert.Contains($"{TerminalTestReporter.SingleIndentation}uid-fallback", outputLines);
         Assert.Contains($"{TerminalTestReporter.SingleIndentation}TestMethod1", outputLines);
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_OrchestratorTestInProgress_TracksActiveTestLikeCoreOverload()
+    {
+        // The orchestrator (dotnet test) TestInProgress overload carries extra assembly/target-framework/architecture
+        // and per-attempt instance metadata for call-site parity, but must track the active test exactly like the core
+        // (executionId, uid, displayName) overload. Verify the orchestrator-driven test surfaces in the active-test
+        // progress frame: its display name only appears in the output if it was registered as a running test.
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var stopwatchFactory = new StopwatchFactory();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.ForceAnsi,
+            ShowActiveTests = true,
+            ShowProgress = () => true,
+        })
+        {
+            CreateStopwatch = stopwatchFactory.CreateStopwatch,
+        };
+
+        var startHandle = new AutoResetEvent(initialState: false);
+        var stopHandle = new AutoResetEvent(initialState: false);
+
+        // Disable the timer updates so the captured output is deterministic.
+        terminalReporter.OnProgressStartUpdate += (sender, args) => startHandle.WaitOne();
+        terminalReporter.OnProgressStopUpdate += (sender, args) => stopHandle.Set();
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
+
+        // A core-overload active test we will complete to trigger a progress redraw.
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "Trigger", displayName: "Trigger");
+        stopwatchFactory.AddTime(TimeSpan.FromMilliseconds(1));
+
+        // The orchestrator overload (extra assembly/targetFramework/architecture/instanceId args). This test is never
+        // completed, so its name can only appear in the output via the active-test progress frame.
+        terminalReporter.TestInProgress(assembly, targetFramework, architecture, executionId: "0", instanceId: "0", testNodeUid: "OrchestratorActive1", displayName: "OrchestratorActive1");
+        stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+
+        // Completing the trigger test redraws the progress frame, which lists the still-active orchestrator test.
+        terminalReporter.TestCompleted("0", testNodeUid: "Trigger", "Trigger", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        string output = stringBuilderConsole.Output;
+        startHandle.Set();
+        stopHandle.WaitOne();
+
+        // The orchestrator-driven test is registered as active and therefore rendered in the progress frame.
+        Assert.Contains("OrchestratorActive1", output);
     }
 
     [TestMethod]

@@ -14,14 +14,17 @@
         StronglyTyped metadata, so GenerateResource sees multiple sources for one strongly-typed class -> MSB3573).
       * Namespace pins the generated accessor to Microsoft.Testing.Platform.OutputDevice.Terminal (the namespace the
         shared reporter source expects) regardless of the consumer's RootNamespace; the class name defaults to the
-        resx file name (TerminalResources), so the manifest name resolves to
-        Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources.
+        resx file name (TerminalResources). ManifestResourceName pins the embedded resource name to
+        Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources so the generated accessor's ResourceManager
+        resolves it. We deliberately do NOT set Link: the resx lives outside the consumer's project cone (it ships in
+        this package), and a Link would feed into the derived manifest resource name / accessor binding, which is
+        exactly what TerminalReporterContract.props avoids for the same reason.
   -->
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)TerminalReporter\TerminalResources.resx"
                       GenerateSource="true"
                       Namespace="Microsoft.Testing.Platform.OutputDevice.Terminal"
-                      Link="TerminalReporter\TerminalResources.resx" />
+                      ManifestResourceName="Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources" />
   </ItemGroup>
 
   <!--

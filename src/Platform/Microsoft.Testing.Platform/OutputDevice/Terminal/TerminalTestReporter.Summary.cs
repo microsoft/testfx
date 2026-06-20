@@ -156,15 +156,29 @@ internal sealed partial class TerminalTestReporter
     /// <summary>
     /// Orchestrator overload (<c>dotnet test</c>): the multi-process orchestrator also knows each discovered test's
     /// uid, file path and line number. The shared discovery summary currently lists display names only, so those are
-    /// accepted for signature parity and the overload delegates to the core method when <paramref name="displayName"/>
-    /// is known.
+    /// accepted for signature parity. When <paramref name="displayName"/> is missing the <paramref name="uid"/> is used
+    /// as the listed name; when neither is available the test is still counted (so the discovery total stays correct)
+    /// but no blank entry is added to the summary.
     /// </summary>
     internal void TestDiscovered(string executionId, string? displayName, string? uid, string? filePath, int? lineNumber)
     {
-        if (displayName is not null)
+        // Prefer the display name, fall back to the uid so the discovered test is still listed by something.
+        string? name = displayName ?? uid;
+        if (name is not null)
         {
-            TestDiscovered(executionId, displayName);
+            TestDiscovered(executionId, name);
+            return;
         }
+
+        // No name available at all: still increment the discovered count so the discovery summary total stays
+        // correct (in discovery mode TotalTests is computed from DiscoveredTests), but avoid adding a blank entry.
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        asm.DiscoveredTests++;
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
 
     internal void TestDiscovered(string executionId, string displayName)
