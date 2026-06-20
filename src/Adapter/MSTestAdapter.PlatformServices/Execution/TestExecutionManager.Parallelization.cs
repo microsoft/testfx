@@ -148,10 +148,21 @@ internal partial class TestExecutionManager
 
             // Create test sets for execution, we can execute them in parallel based on parallel settings
             // Parallel and not parallel sets.
-            IEnumerable<IGrouping<bool, TestCase>> testSets = testsToRun.GroupBy(t => t.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false));
-
-            IGrouping<bool, TestCase>? parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
-            IGrouping<bool, TestCase>? nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
+            // Single-pass partition: enumerate testsToRun once via GroupBy (lazy GroupBy evaluated twice
+            // — once per FirstOrDefault — caused 2 full passes over testsToRun).
+            IEnumerable<TestCase>? parallelizableTestSet = null;
+            IEnumerable<TestCase>? nonParallelizableTestSet = null;
+            foreach (IGrouping<bool, TestCase> group in testsToRun.GroupBy(t => t.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false)))
+            {
+                if (group.Key)
+                {
+                    nonParallelizableTestSet = group;
+                }
+                else
+                {
+                    parallelizableTestSet = group;
+                }
+            }
 
             if (parallelizableTestSet != null)
             {
