@@ -1621,7 +1621,7 @@ public sealed class TerminalTestReporterTests
     public void AppendTestDiscoverySummary_ForOrchestrator_PrintsPerAssemblyDiscoveredCountsAndTotal()
     {
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: true, isHelp: false, isRetry: false);
 
         string assemblyA = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\A.Tests.dll" : "/repo/A.Tests.dll";
@@ -1657,7 +1657,7 @@ public sealed class TerminalTestReporterTests
     public void AssemblyRunCompleted_WhenKnownAssemblyFails_PrintsExecutableSummary()
     {
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Failing.dll" : "/repo/Failing.dll";
@@ -1681,7 +1681,7 @@ public sealed class TerminalTestReporterTests
         // Keep the default ShowAssemblyStartAndComplete: true so the reporter DOES print the per-assembly summary
         // line. Otherwise a zero-exit run writes nothing at all and the DoesNotContain assertion below passes
         // vacuously instead of verifying that the executable-summary block is specifically suppressed on success.
-        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Passing.dll" : "/repo/Passing.dll";
@@ -1706,7 +1706,7 @@ public sealed class TerminalTestReporterTests
     public void TestExecutionCompleted_WhenAssemblyExitsNonZeroButTestsPassed_ReportsFailedVerdict()
     {
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
 
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Crashy.dll" : "/repo/Crashy.dll";
@@ -1731,7 +1731,7 @@ public sealed class TerminalTestReporterTests
     public void TestExecutionCompleted_WhenHandshakeFailures_PrintsRecapAndFailsRun()
     {
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole, showAssemblyStartAndComplete: false);
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole, showAssemblyStartAndComplete: false);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
 
         // Two assemblies fail to handshake (their execution ids were never registered). The assembly paths are not
@@ -1759,7 +1759,7 @@ public sealed class TerminalTestReporterTests
     public void AssemblyRunStarted_AfterRetry_RendersLatestAttemptCounts()
     {
         var stringBuilderConsole = new StringBuilderConsole();
-        var terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
         terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
 
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.dll" : "/repo/Flaky.dll";
