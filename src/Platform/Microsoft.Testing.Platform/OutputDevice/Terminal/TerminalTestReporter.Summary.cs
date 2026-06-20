@@ -11,7 +11,7 @@ internal sealed partial class TerminalTestReporter
     private void AppendTestRunSummary(ITerminal terminal)
     {
         IEnumerable<IGrouping<bool, TestRunArtifact>> artifactGroups = _artifacts.GroupBy(a => a.OutOfProcess);
-        if (artifactGroups.Any())
+        if (_artifacts.Count > 0)
         {
             // Add extra empty line when we will be writing any artifacts, to split it from previous output.
             terminal.AppendLine();
