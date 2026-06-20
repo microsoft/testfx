@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -67,8 +66,12 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             return;
         }
 
-        if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, testNodeStateProperty.GetType()) != -1 &&
-            ++_failCount >= _maxFailedTests.Value &&
+        if (testNodeStateProperty is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
+                or TimeoutTestNodeStateProperty
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+                or CancelledTestNodeStateProperty
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+            && ++_failCount >= _maxFailedTests.Value &&
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)
         {
