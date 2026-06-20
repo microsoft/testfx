@@ -16,6 +16,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public sealed partial class Assert
 {
+    // Keep the compiler-facing handler overloads in sync with the related handlers in Assert.IsNull.cs.
+
     /// <summary>
     /// Provides an interpolated string handler used by <c>Assert.IsTrue</c> overloads
     /// that only allocates and formats the message when the assertion is failing.
