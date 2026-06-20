@@ -12,18 +12,28 @@ internal sealed partial class TerminalTestReporter
     private readonly object _handshakeFailuresLock = new();
 #endif
     private readonly List<HandshakeFailureRecord> _handshakeFailures = [];
-    private int _handshakeFailuresCount;
 
     /// <summary>
-    /// Gets a value indicating whether any assembly failed to hand-shake (e.g. a child test host process
-    /// exited before it could start a session). Used by the <c>dotnet test</c> orchestrator to surface a
-    /// non-success exit even when no test result was ever reported.
+    /// Gets a value indicating whether any assembly failed to handshake (e.g. a child test host process exited
+    /// before it could start a session). Used by the <c>dotnet test</c> orchestrator to surface a non-success exit
+    /// even when no test result was ever reported.
     /// </summary>
-    public bool HasHandshakeFailure => _handshakeFailuresCount > 0;
+    public bool HasHandshakeFailure
+    {
+        get
+        {
+            // Read the count under the same lock that guards every mutation of the list, so the flag and the list
+            // are always observed in a consistent state (see HandshakeFailure / the reset in TestExecutionCompleted).
+            lock (_handshakeFailuresLock)
+            {
+                return _handshakeFailures.Count > 0;
+            }
+        }
+    }
 
     /// <summary>
     /// Report that an assembly failed to produce a usable handshake. This is an orchestrator-only path (the
-    /// in-process host always hand-shakes); it records the failure so <see cref="HasHandshakeFailure"/> flips and
+    /// in-process host always handshakes); it records the failure so <see cref="HasHandshakeFailure"/> flips and
     /// the failure is re-printed in the end-of-run recap, and prints the immediate failure context.
     /// </summary>
     internal void HandshakeFailure(string assemblyPath, string? targetFramework, int exitCode, string outputData, string errorData, bool reportEvenWhenHelp = false)
@@ -37,7 +47,6 @@ internal sealed partial class TerminalTestReporter
             return;
         }
 
-        Interlocked.Increment(ref _handshakeFailuresCount);
         lock (_handshakeFailuresLock)
         {
             _handshakeFailures.Add(new HandshakeFailureRecord(assemblyPath, targetFramework, exitCode, outputData, errorData));
@@ -46,8 +55,15 @@ internal sealed partial class TerminalTestReporter
         _terminalWithProgress.WriteToTerminal(terminal =>
         {
             terminal.ResetColor();
-            AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyPath, targetFramework, architecture: null);
-            terminal.Append(' ');
+
+            // assemblyPath can be empty on the defensive "unknown execution id" path, where AppendLink would emit
+            // nothing; skip the link (and its trailing space) so we don't render a blank, unactionable prefix.
+            if (!RoslynString.IsNullOrEmpty(assemblyPath))
+            {
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assemblyPath, targetFramework, architecture: null);
+                terminal.Append(' ');
+            }
+
             terminal.SetColor(TerminalColor.DarkRed);
             terminal.Append(TerminalResources.ZeroTestsRan);
             terminal.ResetColor();

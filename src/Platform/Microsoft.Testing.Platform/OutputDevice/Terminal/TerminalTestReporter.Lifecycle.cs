@@ -115,8 +115,6 @@ internal sealed partial class TerminalTestReporter
             _handshakeFailures.Clear();
         }
 
-        _handshakeFailuresCount = 0;
-
         _testExecutionStartTime = null;
         _testExecutionEndTime = null;
     }

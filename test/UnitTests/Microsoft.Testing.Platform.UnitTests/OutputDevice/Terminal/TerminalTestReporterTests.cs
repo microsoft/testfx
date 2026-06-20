@@ -1223,6 +1223,41 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("stderr", output);
     }
 
+    // Companion to the test above covering the full lifecycle: after a handshake failure, TestExecutionCompleted must
+    // re-print the failure recap in the summary and (via runFailed |= HasHandshakeFailure) mark the run as failed even
+    // though no test ever ran.
+    [TestMethod]
+    public void AssemblyRunCompleted_WhenExecutionIdUnknown_SummaryReprintsRecapAndReportsFailure()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunCompleted("never-registered", exitCode: 1, outputData: "the out", errorData: "the err");
+
+        // The flag is observable before the run completes (the orchestrator reads it to force a non-zero exit).
+        Assert.IsTrue(terminalReporter.HasHandshakeFailure);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+
+        // The end-of-run recap header is re-printed in the summary with the captured failure context.
+        Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
+        Assert.Contains($"{TerminalResources.ExitCode}: 1", output);
+        Assert.Contains("the err", output);
+
+        // No test ran, so the run verdict is the red "Zero tests ran" (runFailed also includes HasHandshakeFailure).
+        Assert.Contains(TerminalResources.ZeroTestsRan, output);
+
+        // Per-run state is reset after completion so a subsequent session starts fresh.
+        Assert.IsFalse(terminalReporter.HasHandshakeFailure);
+    }
+
     // Ported from the dotnet/sdk TerminalTestReporterTests (dotnet/sdk#52128) to validate the orchestrator per-assembly
     // summary of the shared reporter: when an assembly completes with ShowAssembly + ShowAssemblyStartAndComplete, the
     // mid-stream summary line must include the per-assembly counts in the compact bracketed form. NoAnsi is used so the
