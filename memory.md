@@ -1,7 +1,7 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Last Updated
-2026-06-20
+2026-06-21
 
 ## Build/Test Commands
 - Build: `./build.sh` (Linux/macOS), `.\build.cmd` (Windows)
@@ -22,6 +22,7 @@
 - 2026-06-16: Task 2 (scan), Task 3 (AzureDevOpsReporter defer GetTestName), Task 7
 - 2026-06-19: Task 2 (scan MSTest core, Adapter, Platform), Task 3 (single-pass GroupBy in TestExecutionManager.Parallelization), Task 4 (verified #9196 merged), Task 7
 - 2026-06-20: Task 3 (TerminalTestReporter.Summary.cs GroupBy.Any() fix), Task 4 (confirmed #9274 merged), Task 7
+- 2026-06-21: Task 2 (scan for new opportunities), Task 3 (CommandLineParseResult IsOptionSet/TryGetOptionArgumentList optimization), Task 7
 
 ## Completed Work
 - PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED 2026-05-31)
@@ -40,9 +41,10 @@
 - PR #9162: perf: single-pass PropertyBag walk in DiscoveredTestsJsonSerializer (MERGED 2026-06-16)
 - PR #9196: perf: defer GetTestName() to failure branches and avoid OfType<> alloc in AzureDevOpsReporter (MERGED 2026-06-19)
 - PR #9274: perf: single-pass GroupBy partition in TestExecutionManager parallelization (MERGED 2026-06-20)
-- PR (branch efficiency/avoid-groupby-any-in-summary): perf: avoid GroupBy lazy evaluation for empty-check in AppendTestRunSummary (SUBMITTED 2026-06-20, pending merge)
-  - Replace artifactGroups.Any() with _artifacts.Count > 0 in TerminalTestReporter.Summary.cs
-  - _artifacts is List<TestRunArtifact>; .Count is O(1) vs GroupBy iterator + first pass traversal
+- PR #9300: perf: avoid GroupBy lazy evaluation for empty-check in AppendTestRunSummary (MERGED 2026-06-21)
+- PR (branch efficiency/fix-parseoption-hot-loops): perf: hoist Trim and single-pass loop in CommandLineParseResult hot methods (SUBMITTED 2026-06-21, pending merge)
+  - IsOptionSet: hoist optionName.Trim(OptionPrefix) outside lambda — was called N times per invocation, now called once
+  - TryGetOptionArgumentList: replace lazy Where+Any+SelectMany double-enumeration with single foreach — avoids 2nd full pass over Options on every option-found call
 
 ## Optimisation Backlog
 | Priority | Focus Area | Opportunity | Estimated Impact |
@@ -65,13 +67,14 @@
 - CtrfReport, HtmlReport, JUnitReport, TrxTestResultExtractor, OTel, MSBuildConsumer, AzureDevOpsSummaryReporter, AzureDevOpsTestResultsPublisher.ResultFactory, DiscoveredTestsJsonSerializer, TerminalOutputDevice, SimplifiedConsoleOutputDeviceBase: all now use single-pass GetStructEnumerator()
 - RetryDataConsumer: only 1 SingleOrDefault → no multi-walk to optimize
 - VSTestBridge ObjectModelConverters: mostly PropertyBag.Add() calls, not reads; not a hot-path read scenario
-- Backlog is very sparse; new scan (2026-06-20) found only low-priority items remaining
+- Backlog is very sparse; new scan (2026-06-21) found only low-priority items remaining
 - TestExecutionManager.Parallelization.cs: GroupBy fix reduces 2 full passes to 1 (merged #9274)
-- TerminalTestReporter.Summary.cs: artifactGroups.Any() → _artifacts.Count > 0 fix (submitted 2026-06-20)
+- TerminalTestReporter.Summary.cs: artifactGroups.Any() → _artifacts.Count > 0 fix (merged #9300)
 - 4x Sum() calls on assemblies in Summary.cs could be 1-pass foreach; LOW priority, end-of-run, small list
 - ITerminal interface has no ReadOnlySpan<char>/int overloads; int.ToString() allocations in render loop cannot be avoided without interface changes
 - MSTestAdapter tests (UseInternalTestFramework=true) not run by MTP runner in CI; covered separately
-- Another perf-focused workflow ("perf-improver") is also active in this repo (PR #9299: replace Array.IndexOf with is pattern)
+- Another perf-focused workflow ("perf-improver") is also active in this repo (PR #9299: replace Array.IndexOf with is pattern, PR #9311: extend perf runner to Linux/macOS)
+- CommandLineParseResult: IsOptionSet was O(N) Trim calls, now 1; TryGetOptionArgumentList was 2-pass, now 1-pass (submitted 2026-06-21)
 
 ## Monthly Activity Issue
 - 2026-06 issue: #9197 (open)
