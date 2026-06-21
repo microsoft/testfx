@@ -31,14 +31,13 @@
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **Analyzer edge cases (ongoing)** — Continue with suppressors and analyzers with few tests. Next candidates:
-   - `RedundantTestMethodDisplayNameAnalyzer` (6 tests) — custom derived attribute case untested
-   - `UseAsyncSuffixTestFixtureMethodSuppressor` (3 tests) — non-async fixture method not tested
-   - `UseAsyncSuffixTestMethodSuppressor` (5 tests) — custom attribute derived from TestMethodAttribute not tested
+   - Any remaining analyzers with very few tests
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-21 | Task 3 (RedundantTestMethodDisplayNameAnalyzer custom-derived attribute + UseAsyncSuffix suppressors negative boundary cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-20 | Task 3 (UnusedParameterSuppressor MSTEST0047 edge cases: TestMethod+TestContext not suppressed, AssemblyInitialize+non-TestContext not suppressed), Task 7 (Monthly Issue Jun) |
 | 2026-06-19 | Task 3 (AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases: enum/struct/nullable), Task 4 (verify open PRs), Task 7 (Monthly Issue Jun) |
 | 2026-06-17 | Task 3 (TestContextShouldBeValidAnalyzer MSTEST0005 edge cases), Task 7 (Monthly Issue Jun) |
@@ -63,11 +62,12 @@
 
 ## Last Run
 
-2026-06-20 23:21 UTC
+2026-06-21 23:22 UTC
 
 ## Completed Work
 
-- PR (pending) for UnusedParameterSuppressor MSTEST0047 edge cases (2026-06-20) — [TestMethod]+TestContext and [AssemblyInitialize]+non-TestContext boundary tests; 8 tests pass
+- PR (pending) for async-suffix suppressors + redundant display name edge cases (2026-06-21) — custom derived attribute coverage (MSTEST0071, MSTEST0027) and negative-boundary tests (MSTEST0027, MSTEST0028)
+- PR #9301 merged (UnusedParameterSuppressor MSTEST0047 edge cases) — merged 2026-06-21 by Evangelink
 - PR (merged) for AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases — enum/struct/nullable types; in main branch
 - PR #9223 merged (TestContextShouldBeValidAnalyzer MSTEST0005 edge cases) — merged 2026-06-18
 - PR #9199 merged (DuplicateDataRowAnalyzer MSTEST0042 edge cases) — merged 2026-06-17
