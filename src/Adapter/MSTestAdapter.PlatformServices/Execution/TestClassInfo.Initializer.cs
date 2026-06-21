@@ -167,11 +167,16 @@ internal sealed partial class TestClassInfo
 
             DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
 
+            var initializeErrorResult = new TestResult
+            {
+                Outcome = UnitTestOutcome.Error,
+                IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
+            };
             return await StaThreadHelper.RunOnStaThreadIfNeededAsync(
                 needsSta: ClassAttribute is STATestClassAttribute,
                 action: DoRunAsync,
                 threadName: "MSTest STATestClass ClassInitialize",
-                defaultResult: new TestResult { Outcome = UnitTestOutcome.Error, IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete" }).ConfigureAwait(false);
+                defaultResult: initializeErrorResult).ConfigureAwait(false);
         }
         finally
         {

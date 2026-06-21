@@ -39,11 +39,12 @@ internal static class StaThreadHelper
             {
                 entryPointThread.Join();
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is ThreadStateException or ThreadInterruptedException)
             {
                 if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
                 {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                        $"Failed to join STA thread '{threadName}': {ex}");
                 }
 
                 return defaultResult;
