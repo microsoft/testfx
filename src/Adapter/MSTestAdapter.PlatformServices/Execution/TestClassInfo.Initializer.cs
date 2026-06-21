@@ -167,58 +167,11 @@ internal sealed partial class TestClassInfo
 
             DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
 
-            bool isSTATestClass = ClassAttribute is STATestClassAttribute;
-            bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            if (isSTATestClass
-                && isWindowsOS
-                && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
-            {
-                var result = new TestResult
-                {
-                    Outcome = UnitTestOutcome.Error,
-                    IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
-                };
-
-                Thread entryPointThread = new(() => result = DoRunAsync().GetAwaiter().GetResult())
-                {
-                    Name = "MSTest STATestClass ClassInitialize",
-                };
-
-                entryPointThread.SetApartmentState(ApartmentState.STA);
-                entryPointThread.Start();
-
-                try
-                {
-                    entryPointThread.Join();
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
-                    {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
-                    }
-
-                    return new TestResult
-                    {
-                        TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
-                        Outcome = UnitTestOutcome.Error,
-                    };
-                }
-            }
-            else
-            {
-                // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-                if (!isWindowsOS && isSTATestClass)
-                {
-                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-                    {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
-                    }
-                }
-
-                return await DoRunAsync().ConfigureAwait(false);
-            }
+            return await StaThreadHelper.RunOnStaThreadIfNeededAsync(
+                needsSta: ClassAttribute is STATestClassAttribute,
+                action: DoRunAsync,
+                threadName: "MSTest STATestClass ClassInitialize",
+                defaultResult: new TestResult { Outcome = UnitTestOutcome.Error, IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete" }).ConfigureAwait(false);
         }
         finally
         {
