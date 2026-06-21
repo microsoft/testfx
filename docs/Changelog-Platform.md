@@ -72,6 +72,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Fix report file-name collision between net8.0 and net8.0-windows builds by @Evangelink in [#9121](https://github.com/microsoft/testfx/pull/9121)
 * Harden report TFM resolution for custom/non-OS platforms (browserwasm) by @Evangelink in [#9137](https://github.com/microsoft/testfx/pull/9137)
 * Fix --list-tests json output under --server mode by streaming discovered tests to the SDK over the dotnet-test pipe by @Evangelink in [#9192](https://github.com/microsoft/testfx/pull/9192)
+* Make AzureDevOps summary report file name unique per assembly by @Evangelink in [#9264](https://github.com/microsoft/testfx/pull/9264)
 
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 
