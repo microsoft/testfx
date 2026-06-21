@@ -34,6 +34,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add Assert.AddValueFormatter for customizing assertion failure rendering by @Evangelink in [#9148](https://github.com/microsoft/testfx/pull/9148)
 * Add Span\<T> and Memory\<T> overloads to Assert.HasCount and extend MSTEST0037 coverage by @Evangelink in [#9176](https://github.com/microsoft/testfx/pull/9176)
 * Add [ArchitectureConditionAttribute] to gate tests by process architecture by @Evangelink in [#9233](https://github.com/microsoft/testfx/pull/9233)
+* Add MSTEST0071 analyzer and code fix for redundant test method display name by @Evangelink in [#9272](https://github.com/microsoft/testfx/pull/9272)
 
 ### Fixed
 
