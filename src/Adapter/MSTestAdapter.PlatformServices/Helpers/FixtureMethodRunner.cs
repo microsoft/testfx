@@ -66,7 +66,25 @@ internal static class FixtureMethodRunner
             : RunWithTimeoutAndCancellationWithThreadPool(action, executionContext, cancellationTokenSource, timeoutInfo.Value.Timeout, methodInfo, methodCanceledMessageFormat, methodTimedOutMessageFormat);
     }
 
-    private static async SynchronizationContextPreservingTask<TestFailedException?> RunWithCooperativeCancellationAsync(Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+    /// <summary>
+    /// Runs an action with cooperative cancellation timeout handling.
+    /// </summary>
+    /// <typeparam name="T">The return type of the action.</typeparam>
+    /// <param name="cancellationTokenSource">The parent cancellation token source to cancel when timeout occurs.</param>
+    /// <param name="timeout">The timeout in milliseconds.</param>
+    /// <param name="action">The action to run. Receives the timeout <see cref="CancellationTokenSource"/>.</param>
+    /// <param name="onAlreadyCancelled">Called when the timeout token is already cancelled before the action starts.</param>
+    /// <param name="onCancelled">
+    /// Called when an <see cref="OperationCanceledException"/> is caught.
+    /// The <see langword="bool"/> parameter is <see langword="true"/> if the cancellation was caused by a timeout,
+    /// <see langword="false"/> if it was caused by user cancellation.
+    /// </param>
+    internal static async Task<T> RunWithCooperativeCancellationAsync<T>(
+        CancellationTokenSource cancellationTokenSource,
+        int timeout,
+        Func<CancellationTokenSource, Task<T>> action,
+        Func<T> onAlreadyCancelled,
+        Func<bool, T> onCancelled)
     {
         CancellationTokenSource? timeoutTokenSource = null;
         try
@@ -75,39 +93,18 @@ internal static class FixtureMethodRunner
             timeoutTokenSource.Token.Register(cancellationTokenSource.Cancel);
             if (timeoutTokenSource.Token.IsCancellationRequested)
             {
-                return new(
-                    UnitTestOutcome.Timeout,
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        methodTimedOutMessageFormat,
-                        methodInfo.DeclaringType!.FullName,
-                        methodInfo.Name,
-                        timeout));
+                return onAlreadyCancelled();
             }
 
             try
             {
-                await ExecutionContextHelpers.RunOnContextAsync(executionContext, action).ConfigureAwait(false);
-                return null;
+                return await action(timeoutTokenSource).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
             {
                 // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext
                 // instances are not well defined so we have to handle the exception entirely.
-                return new(
-                    UnitTestOutcome.Timeout,
-                    timeoutTokenSource.Token.IsCancellationRequested
-                        ? string.Format(
-                            CultureInfo.InvariantCulture,
-                            methodTimedOutMessageFormat,
-                            methodInfo.DeclaringType!.FullName,
-                            methodInfo.Name,
-                            timeout)
-                        : string.Format(
-                            CultureInfo.InvariantCulture,
-                            methodCanceledMessageFormat,
-                            methodInfo.DeclaringType!.FullName,
-                            methodInfo.Name));
+                return onCancelled(timeoutTokenSource.Token.IsCancellationRequested);
             }
         }
         finally
@@ -115,6 +112,22 @@ internal static class FixtureMethodRunner
             timeoutTokenSource?.Dispose();
         }
     }
+
+    private static async SynchronizationContextPreservingTask<TestFailedException?> RunWithCooperativeCancellationAsync(Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo, string methodCanceledMessageFormat, string methodTimedOutMessageFormat)
+        => await RunWithCooperativeCancellationAsync<TestFailedException?>(
+            cancellationTokenSource,
+            timeout,
+            async _ =>
+            {
+                await ExecutionContextHelpers.RunOnContextAsync(executionContext, action).ConfigureAwait(false);
+                return null;
+            },
+            () => new(
+                UnitTestOutcome.Timeout,
+                string.Format(CultureInfo.InvariantCulture, methodTimedOutMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name, timeout)),
+            isTimeout => isTimeout
+                ? new(UnitTestOutcome.Timeout, string.Format(CultureInfo.InvariantCulture, methodTimedOutMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name, timeout))
+                : new(UnitTestOutcome.Timeout, string.Format(CultureInfo.InvariantCulture, methodCanceledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name))).ConfigureAwait(false);
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
         Func<SynchronizationContextPreservingTask> action, ExecutionContext? executionContext, CancellationTokenSource cancellationTokenSource, int timeout, MethodInfo methodInfo,
