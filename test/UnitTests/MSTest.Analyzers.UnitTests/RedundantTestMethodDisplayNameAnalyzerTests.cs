@@ -164,4 +164,40 @@ public sealed class RedundantTestMethodDisplayNameAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenCustomDerivedAttributeDisplayNameEqualsMethodName_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [[|CustomTestMethod(DisplayName = "MyTestMethod")|]]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class CustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [CustomTestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

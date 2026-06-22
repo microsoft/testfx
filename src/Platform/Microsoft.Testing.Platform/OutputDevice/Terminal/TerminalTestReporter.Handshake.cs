@@ -32,6 +32,20 @@ internal sealed partial class TerminalTestReporter
     }
 
     /// <summary>
+    /// Gets the number of assemblies that failed to handshake. Counted toward the run summary's "error" line.
+    /// </summary>
+    private int HandshakeFailureCount
+    {
+        get
+        {
+            lock (_handshakeFailuresLock)
+            {
+                return _handshakeFailures.Count;
+            }
+        }
+    }
+
+    /// <summary>
     /// Report that an assembly failed to produce a usable handshake. This is an orchestrator-only path (the
     /// in-process host always handshakes); it records the failure so <see cref="HasHandshakeFailure"/> flips and
     /// the failure is re-printed in the end-of-run recap, and prints the immediate failure context.

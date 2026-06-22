@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+
+using AdapterApplicationStateGuard = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.ApplicationStateGuard;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -29,7 +30,7 @@ internal sealed class ClassCleanupManager
         {
             if (!_remainingTestCountsByClass.TryGetValue(testMethod.FullClassName, out int remainingCount))
             {
-                throw ApplicationStateGuard.Unreachable();
+                throw AdapterApplicationStateGuard.Unreachable();
             }
 
             remainingCount--;
@@ -47,7 +48,7 @@ internal sealed class ClassCleanupManager
             {
                 // We failed to remove the class, or we are incorrectly marking the class as complete while there are remaining tests.
                 // This should never happen.
-                throw ApplicationStateGuard.Unreachable();
+                throw AdapterApplicationStateGuard.Unreachable();
             }
         }
     }

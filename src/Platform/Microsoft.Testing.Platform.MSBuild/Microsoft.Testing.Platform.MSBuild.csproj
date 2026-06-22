@@ -21,6 +21,7 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\ExitCodes.cs" Link="Helpers\ExitCodes.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeoutHelper.cs" Link="Helpers\TimeoutHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\TimeSpanParser.cs" Link="Helpers\TimeSpanParser.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\StackTraceRegexPatternFactory.cs" Link="Helpers\StackTraceRegexPatternFactory.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\StringBuilderExtensions.cs" Link="Helpers\StringBuilderExtensions.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\IEnvironment.cs" Link="Helpers\System\IEnvironment.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\System\SystemEnvironment.cs" Link="Helpers\System\SystemEnvironment.cs" />

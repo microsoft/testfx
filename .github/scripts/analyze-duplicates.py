@@ -77,7 +77,7 @@ def analyze_with_llm(findings_context: str, model: str) -> str:
     from openai import OpenAI
 
     client = OpenAI(
-        base_url="https://models.inference.ai.azure.com",
+        base_url="https://models.github.ai/inference",
         api_key=os.environ["GITHUB_TOKEN"],
     )
 
