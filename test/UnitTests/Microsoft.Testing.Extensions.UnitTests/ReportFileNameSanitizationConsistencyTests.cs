@@ -20,17 +20,17 @@ public class ReportFileNameSanitizationConsistencyTests
 
     // HtmlReport and JUnitReport delegate sanitization to the shared ReportFileNameSanitizer via
     // ReportEngineBase.BuildDefaultFileName — get that shared type from each engine's assembly.
-    private static readonly MethodInfo HtmlSanitizeMethod =
-        typeof(HtmlReportEngine).Assembly
-            .GetType(ReportFileNameSanitizerTypeName)
-            ?.GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
-        ?? throw new InvalidOperationException("Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars from HtmlReport assembly.");
+    private static readonly MethodInfo HtmlSanitizeMethod = GetSanitizerMethod(typeof(HtmlReportEngine).Assembly, "HtmlReport");
 
-    private static readonly MethodInfo JUnitSanitizeMethod =
-        typeof(JUnitReportEngine).Assembly
-            .GetType(ReportFileNameSanitizerTypeName)
-            ?.GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
-        ?? throw new InvalidOperationException("Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars from JUnitReport assembly.");
+    private static readonly MethodInfo JUnitSanitizeMethod = GetSanitizerMethod(typeof(JUnitReportEngine).Assembly, "JUnitReport");
+
+    private static MethodInfo GetSanitizerMethod(Assembly assembly, string assemblyAlias)
+    {
+        Type? sanitizerType = assembly.GetType(ReportFileNameSanitizerTypeName);
+        return sanitizerType?.GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException(
+                $"Could not resolve {ReportFileNameSanitizerTypeName}.ReplaceInvalidFileNameChars from {assemblyAlias} assembly.");
+    }
 
     [TestMethod]
     [DynamicData(nameof(GetSanitizationInputs))]
