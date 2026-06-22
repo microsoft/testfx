@@ -280,7 +280,7 @@
       ]
     },
     {
-      "id": "source-gen-equatable-array",
+      "id": "shared-equatable-array",
       "local_path": "src/Analyzers/Shared/EquatableArray.cs",
       "notes": "Value-equality wrapper over ImmutableArray<T> for incremental source generator caching, ported from ComputeSharp. Shared across the MSTest source generators (#9118).",
       "sources": [
