@@ -40,6 +40,14 @@ permissions:
 imports:
   - shared/grade-tests-shared.md
 
+# This workflow fires automatically on every PR open / reopen / ready-for-review
+# and on every push (`synchronize`) that touches `test/**`. On a busy weekend the
+# per-workflow 24h AI-credit usage aggregated across all those runs crossed the
+# enterprise default of 5K, tripping the daily guardrail and failing every
+# subsequent activation (see issues #9086 and #9053). Raise the daily budget so a
+# busy day of PR pushes does not skip grading.
+max-daily-ai-credits: 20K
+
 safe-outputs:
   report-failure-as-issue: false
   messages:

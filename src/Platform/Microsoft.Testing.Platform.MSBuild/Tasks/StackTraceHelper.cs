@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.MSBuild;
 
 internal static class StackTraceHelper
@@ -58,15 +60,19 @@ internal static class StackTraceHelper
         file = null;
         place = null;
 
-        if (match.Success)
+        bool hasLocation = match.Success && match.Groups["file"].Success && match.Groups["line"].Success;
+        if (hasLocation)
         {
             // get the exact info from stack frame.
-            place = match.Groups["code"].Value;
+            Group code = match.Groups["code"];
+            Group codeWithoutLocation = match.Groups["code1"];
+            place = code.Success ? code.Value : codeWithoutLocation.Value;
+
             file = match.Groups["file"].Value;
             _ = int.TryParse(match.Groups["line"].Value, out line);
         }
 
-        return match.Success;
+        return hasLocation;
     }
 
     [MemberNotNull(nameof(s_regex))]
@@ -79,8 +85,8 @@ internal static class StackTraceHelper
 
         // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
         s_regex = new Regex(
-            Microsoft.Testing.Platform.Helpers.StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
+            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
             RegexOptions.Compiled,
-            Microsoft.Testing.Platform.Helpers.StackTraceRegexHelper.MatchTimeout);
+            StackTraceRegexHelper.MatchTimeout);
     }
 }

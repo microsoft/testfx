@@ -17,13 +17,16 @@ public sealed class RetryTests : AcceptanceTestBase<RetryTests.TestAssetFixture>
         TestHostResult testHostResult = await testHost.ExecuteAsync("--settings my.runsettings", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
-        testHostResult.AssertOutputContains("""
-            TestMethod1 executed 1 time.
-            TestMethod2 executed 2 times.
-            TestMethod3 executed 3 times.
-            TestMethod4 executed 4 times.
-            TestMethod5 executed 4 times.
-            """);
+
+        // The "executed N times." lines are written directly to stdout by ClassCleanup (CaptureTraceOutput
+        // is false in my.runsettings), so the live terminal reporter can interleave its own "failed ..."
+        // lines between them. Assert each line individually instead of as a single contiguous block to avoid
+        // depending on the ordering of two concurrent stdout writers.
+        testHostResult.AssertOutputContains("TestMethod1 executed 1 time.");
+        testHostResult.AssertOutputContains("TestMethod2 executed 2 times.");
+        testHostResult.AssertOutputContains("TestMethod3 executed 3 times.");
+        testHostResult.AssertOutputContains("TestMethod4 executed 4 times.");
+        testHostResult.AssertOutputContains("TestMethod5 executed 4 times.");
 
         testHostResult.AssertOutputContains("failed TestMethod5");
         testHostResult.AssertOutputMatchesRegex(
@@ -161,11 +164,13 @@ public sealed class ClassLevelRetryTests : AcceptanceTestBase<ClassLevelRetryTes
         // ClassLevelOnly is decorated only by class-level [Retry(3)] => 4 total runs.
         // MethodLevelOverride overrides the class-level [Retry(3)] with method-level [Retry(1)] => 2 total runs.
         // PassingMethod also has class-level retry but passes on first attempt => 1 total run.
-        testHostResult.AssertOutputContains("""
-            ClassLevelOnly executed 4 times.
-            MethodLevelOverride executed 2 times.
-            PassingMethod executed 1 time.
-            """);
+        // These "executed N times." lines are written directly to stdout by ClassCleanup (CaptureTraceOutput
+        // is false in my.runsettings), so the live terminal reporter can interleave its own "failed ..."
+        // lines between them. Assert each line individually instead of as a single contiguous block to avoid
+        // depending on the ordering of two concurrent stdout writers.
+        testHostResult.AssertOutputContains("ClassLevelOnly executed 4 times.");
+        testHostResult.AssertOutputContains("MethodLevelOverride executed 2 times.");
+        testHostResult.AssertOutputContains("PassingMethod executed 1 time.");
         testHostResult.AssertOutputContainsSummary(failed: 2, passed: 1, skipped: 0);
     }
 
