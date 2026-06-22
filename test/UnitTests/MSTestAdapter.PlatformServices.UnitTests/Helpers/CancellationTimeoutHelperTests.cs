@@ -47,7 +47,7 @@ public class CancellationTimeoutHelperTests : TestContainer
         string result = await CancellationTimeoutHelper.RunWithCooperativeCancellationAsync(
             async _ =>
             {
-                outerCancellationTokenSource.Cancel();
+                outerCancellationTokenSource.CancelAfter(1);
                 await Task.Delay(Timeout.Infinite, outerCancellationTokenSource.Token);
                 return "unexpected";
             },
@@ -114,8 +114,6 @@ public class CancellationTimeoutHelperTests : TestContainer
     {
         using CancellationTokenSource outerCancellationTokenSource = new();
         using CancellationTokenSource unrelatedCancellationTokenSource = new();
-        unrelatedCancellationTokenSource.Cancel();
-
         Func<Task> action = async () => await CancellationTimeoutHelper.RunWithCooperativeCancellationAsync(
             _ => ThrowUnrelatedOperationCanceledExceptionAsync(unrelatedCancellationTokenSource.Token),
             outerCancellationTokenSource,
