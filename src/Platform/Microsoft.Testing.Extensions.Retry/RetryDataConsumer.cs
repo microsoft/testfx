@@ -47,8 +47,9 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         }
 
         if (nodeState is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
+            or TimeoutTestNodeStateProperty
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            or TimeoutTestNodeStateProperty or CancelledTestNodeStateProperty)
+            or CancelledTestNodeStateProperty)
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         {
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
@@ -57,8 +58,9 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
         }
 
         if (nodeState is PassedTestNodeStateProperty or FailedTestNodeStateProperty or ErrorTestNodeStateProperty
+            or TimeoutTestNodeStateProperty
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            or TimeoutTestNodeStateProperty or CancelledTestNodeStateProperty)
+            or CancelledTestNodeStateProperty)
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         {
             _totalTests++;

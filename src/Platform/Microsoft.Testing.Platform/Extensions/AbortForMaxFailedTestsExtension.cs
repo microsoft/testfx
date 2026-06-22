@@ -57,8 +57,11 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         var node = (TestNodeUpdateMessage)value;
 
         // If we are called, the extension is enabled, which means both _maxFailedTests and capability are not null.
-        RoslynDebug.Assert(_maxFailedTests is not null);
-        RoslynDebug.Assert(_capability is not null);
+        // Guard defensively so we are a no-op (rather than throwing) if invoked while effectively disabled.
+        if (_maxFailedTests is not { } maxFailedTests || _capability is not { } capability)
+        {
+            return;
+        }
 
         TestNodeStateProperty? testNodeStateProperty = node.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (testNodeStateProperty is null)
@@ -71,12 +74,12 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
                 or CancelledTestNodeStateProperty
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-            && ++_failCount >= _maxFailedTests.Value &&
+            && ++_failCount >= maxFailedTests &&
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)
         {
-            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(maxFailedTests, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
     }
 }
