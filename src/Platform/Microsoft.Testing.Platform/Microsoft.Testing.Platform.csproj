@@ -91,6 +91,7 @@ This package provides the core platform and the .NET implementation of the proto
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\StackTraceRegexHelper.cs" Link="Helpers\StackTraceRegexHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>
