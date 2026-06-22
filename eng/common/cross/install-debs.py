@@ -15,7 +15,7 @@ import tempfile
 import zstandard
 
 from collections import deque
-from functools import cmp_to_key
+
 
 async def download_file(session, url, dest_path, max_retries=3, retry_delay=2, timeout=60, checksum=None):
     """Asynchronous file download with retries."""
