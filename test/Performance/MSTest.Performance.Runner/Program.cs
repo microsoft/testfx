@@ -47,7 +47,8 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
-        pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTrace", [OSPlatform.Windows], parametersBag =>
+        // dotnet-trace is a cross-platform CLI tool; no Windows-only restriction needed.
+        pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTrace", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
@@ -79,11 +80,24 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
-        pipelineRunner.AddPipeline("Default", "Scenario1_PlainProcess", [OSPlatform.Windows], parametersBag =>
+        // PlainProcess records wall-clock time, CPU time, and processor count via the standard
+        // Process API — all cross-platform. Register it for all major OS platforms so contributors
+        // on Linux and macOS can capture baseline timing data without needing Windows tools.
+        pipelineRunner.AddPipeline("Default", "Scenario1_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new PlainProcess("Scenario1_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        // Class-level variant: tests run in parallel at the class level rather than per-method.
+        // Useful for comparing parallelism-strategy overhead vs. MethodLevel on the same hardware.
+        pipelineRunner.AddPipeline("Default", "Scenario1_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new PlainProcess("Scenario1_ClassLevel_PlainProcess.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
