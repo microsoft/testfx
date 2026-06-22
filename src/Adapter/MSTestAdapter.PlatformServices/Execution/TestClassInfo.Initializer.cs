@@ -185,11 +185,12 @@ internal sealed partial class TestClassInfo
                     entryPointThread.Join();
                     return Task.CompletedTask;
                 },
-                ex =>
+                (thread, ex) =>
                 {
                     if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
                     {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                            $"Failed to join STA thread '{thread.Name}': {ex}");
                     }
 
                     return new TestResult

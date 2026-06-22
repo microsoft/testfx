@@ -225,7 +225,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             },
             () => 0,
             entryPointThread => Task.Run(entryPointThread.Join, _cancellationToken),
-            ex =>
+            (_, ex) =>
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
                 return 0;

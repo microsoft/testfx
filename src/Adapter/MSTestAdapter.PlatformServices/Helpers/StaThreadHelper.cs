@@ -14,7 +14,7 @@ internal static class StaThreadHelper
         Func<Task<T>> action,
         Func<T> threadResultFactory,
         Func<Thread, Task> waitForThreadAsync,
-        Func<Exception, T> exceptionHandler,
+        Func<Thread, Exception, T> exceptionHandler,
         Action warningHandler)
     {
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
@@ -43,7 +43,7 @@ internal static class StaThreadHelper
             }
             catch (Exception ex)
             {
-                return exceptionHandler(ex);
+                return exceptionHandler(entryPointThread, ex);
             }
         }
 
