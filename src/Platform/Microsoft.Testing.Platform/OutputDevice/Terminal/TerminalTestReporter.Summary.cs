@@ -42,10 +42,33 @@ internal sealed partial class TerminalTestReporter
 
         List<TestProgressState> assemblies = [.. _assemblies.Values.OrderBy(static a => a.Id)];
 
-        int totalTests = assemblies.Sum(static a => a.TotalTests);
-        int totalFailedTests = assemblies.Sum(static a => a.FailedTests);
-        int totalSkippedTests = assemblies.Sum(static a => a.SkippedTests);
-        int totalPassedTests = assemblies.Sum(static a => a.PassedTests);
+        // Single-pass aggregation: compute all summary counters in one foreach instead of
+        // 7 separate LINQ calls (Sum×5, Any×1, Count×1), saving 6 extra O(N) passes and
+        // 6 LINQ enumerator allocations per test run.
+        int totalTests = 0;
+        int totalFailedTests = 0;
+        int totalSkippedTests = 0;
+        int totalPassedTests = 0;
+        int totalRetried = 0;
+        bool anyAssemblyFailed = false;
+        int failedAssembliesWithoutFailedTests = 0;
+
+        foreach (TestProgressState assembly in assemblies)
+        {
+            totalTests += assembly.TotalTests;
+            totalFailedTests += assembly.FailedTests;
+            totalSkippedTests += assembly.SkippedTests;
+            totalPassedTests += assembly.PassedTests;
+            totalRetried += assembly.RetriedFailedTests;
+            if (!assembly.Success)
+            {
+                anyAssemblyFailed = true;
+                if (assembly.FailedTests == 0)
+                {
+                    failedAssembliesWithoutFailedTests++;
+                }
+            }
+        }
 
         // DESIGN: `allTestsWereSkipped` is intentionally treated as a failed run. Skipped tests don't count as
         // "ran", so an all-skipped (or zero-test) run is reported in red as "Zero tests ran". This is the strict
@@ -59,7 +82,7 @@ internal sealed partial class TerminalTestReporter
         // Orchestrator-only: an assembly whose process ended unsuccessfully (crash / non-zero exit) with no failed
         // tests is still a run failure. Gated on ShowAssembly (the orchestrator marker): the in-process host leaves
         // ShowAssembly off and never sets Success, so this stays false and its verdict/color are unchanged.
-        bool hasFailedAssemblies = _options.ShowAssembly && assemblies.Any(static a => !a.Success);
+        bool hasFailedAssemblies = _options.ShowAssembly && anyAssemblyFailed;
 
         bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure || hasFailedAssemblies;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
@@ -99,12 +122,12 @@ internal sealed partial class TerminalTestReporter
         int failed = totalFailedTests;
         int passed = totalPassedTests;
         int skipped = totalSkippedTests;
-        int retried = assemblies.Sum(static a => a.RetriedFailedTests);
+        int retried = totalRetried;
 
         // Orchestrator-only: count assemblies that ended unsuccessfully without a failed test (crash / non-zero exit)
         // plus handshake failures. These are surfaced as an "error: N" line so they aren't hidden behind a zero
         // failed-test count. In-process leaves ShowAssembly off and never has handshake failures, so error is 0.
-        int error = (_options.ShowAssembly ? assemblies.Count(static a => !a.Success && a.FailedTests == 0) : 0) + HandshakeFailureCount;
+        int error = (_options.ShowAssembly ? failedAssembliesWithoutFailedTests : 0) + HandshakeFailureCount;
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
