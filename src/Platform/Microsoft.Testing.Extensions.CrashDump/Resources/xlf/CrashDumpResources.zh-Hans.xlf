@@ -33,8 +33,9 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpFileNameOptionDescription">
-        <source>Specify the name of the dump file</source>
-        <target state="translated">指定转储文件的名称</target>
+        <source>Specify the name of the dump file.
+Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
+        <target state="needs-review-translation">指定转储文件的名称</target>
         <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">

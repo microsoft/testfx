@@ -274,7 +274,39 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // want the banner to reflect that the testhost dump is, technically, present on disk.
         testhostDumpProduced = generateDump && (testhostDumpProduced || File.Exists(expectedDumpFile));
         bool dumpArtifactProduced = generateDump && (testhostDumpProduced || publishedAnyDump);
-        bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);
+
+        // The crash report file is written as "<dump file name>.crashreport.json" beside the dump.
+        // The dump file name pattern can contain runtime placeholders besides "%p" (e.g. "%e" when
+        // the user picks the {pname} token, "%h" or "%t" when configured directly). A plain
+        // File.Exists check on `expectedCrashReportFile` would miss those reports, so we apply the
+        // same testhost-dump-name regex to the prefix of each "*.crashreport.json" file in the dump
+        // directory: this preserves the literal-`%p`-baked PID match while expanding any remaining
+        // placeholders as wildcards, mirroring the dump-publication logic above.
+        List<string>? crashReportFiles = null;
+        bool matchedCrashReportFile = false;
+        if (generateCrashReport && Directory.Exists(dumpDirectory))
+        {
+            foreach (string crashReportFile in Directory.EnumerateFiles(dumpDirectory, CrashReportFileSearchPattern))
+            {
+                string crashReportFileName = Path.GetFileName(crashReportFile);
+                if (!crashReportFileName.EndsWith(CrashReportFileExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                crashReportFiles ??= [];
+                crashReportFiles.Add(crashReportFile);
+
+                string dumpFileNamePart = crashReportFileName.Substring(0, crashReportFileName.Length - CrashReportFileExtension.Length);
+                if (testhostDumpRegex.IsMatch(dumpFileNamePart))
+                {
+                    matchedCrashReportFile = true;
+                }
+            }
+        }
+
+        bool expectedCrashReportFileExists = File.Exists(expectedCrashReportFile);
+        bool crashReportArtifactProduced = expectedCrashReportFileExists || matchedCrashReportFile;
 
         // Inspect the disk before emitting the crash banner so the message reflects
         // what was actually produced, not what was requested. The runtime may fail
@@ -314,9 +346,16 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         if (generateCrashReport)
         {
-            if (crashReportArtifactProduced)
+            if (expectedCrashReportFileExists)
             {
                 await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+            }
+            else if (matchedCrashReportFile)
+            {
+                foreach (string crashReportFile in crashReportFiles!)
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+                }
             }
             else
             {
