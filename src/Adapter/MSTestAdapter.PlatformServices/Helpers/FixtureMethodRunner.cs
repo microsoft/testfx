@@ -100,10 +100,12 @@ internal static class FixtureMethodRunner
             {
                 return await action(timeoutTokenSource).ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token))
+            catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(cancellationTokenSource.Token)
+                || ex.IsOperationCanceledExceptionFromToken(timeoutTokenSource.Token))
             {
-                // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext
-                // instances are not well defined so we have to handle the exception entirely.
+                // The action may cooperatively cancel using either the parent cancellation token (cancelled by the
+                // timeout registration above) or the timeout token source it receives, so both are treated as a
+                // timeout/cancellation here. Any other OperationCanceledException is surfaced as a regular failure.
                 return onCancelled(timeoutTokenSource.Token.IsCancellationRequested);
             }
         }
