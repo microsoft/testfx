@@ -27,35 +27,10 @@
         <target state="new">Console is already in batching mode.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
-      <trans-unit id="DiscoveredTestsInAssembly">
-        <source>Discovered {0} tests in assembly</source>
-        <target state="new">Discovered {0} tests in assembly</target>
-        <note>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</note>
-      </trans-unit>
-      <trans-unit id="DiscoveredTestsSummary">
-        <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="new">Discovered {0} tests in {1} assemblies.</target>
-        <note>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</note>
-      </trans-unit>
-      <trans-unit id="DiscoveredTestsSummarySingular">
-        <source>Discovered {0} tests.</source>
-        <target state="new">Discovered {0} tests.</target>
-        <note>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</note>
-      </trans-unit>
-      <trans-unit id="DiscoveringTestsFrom">
-        <source>Discovering tests from</source>
-        <target state="new">Discovering tests from</target>
-        <note>Per-assembly banner printed by the dotnet test orchestrator before discovering tests in an assembly; followed by the assembly path/target framework/architecture.</note>
-      </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
         <target state="new">duration</target>
         <note />
-      </trans-unit>
-      <trans-unit id="Error">
-        <source>error</source>
-        <target state="new">error</target>
-        <note>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
@@ -131,16 +106,6 @@
         <source>Press Ctrl+C again to force exit.</source>
         <target state="new">Press Ctrl+C again to force exit.</target>
         <note>{Locked="Ctrl+C"}</note>
-      </trans-unit>
-      <trans-unit id="Retried">
-        <source>retried</source>
-        <target state="new">retried</target>
-        <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
-      </trans-unit>
-      <trans-unit id="RunningTestsFrom">
-        <source>Running tests from</source>
-        <target state="new">Running tests from</target>
-        <note>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
@@ -279,11 +244,6 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
         <source>Test run summary:</source>
         <target state="new">Test run summary:</target>
         <note />
-      </trans-unit>
-      <trans-unit id="Try">
-        <source>try {0}</source>
-        <target state="new">try {0}</target>
-        <note>number or tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
