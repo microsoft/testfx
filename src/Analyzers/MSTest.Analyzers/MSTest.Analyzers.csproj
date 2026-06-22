@@ -19,8 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Microsoft.CodeAnalysis.Common is the Roslyn API, provided by the compiler host at analysis time. It must
+         not flow to consumers (directly or transitively via the MSTest.TestFramework package's analyzer
+         dependency), otherwise it forces Microsoft.CodeAnalysis.* onto downstream projects and breaks ones that
+         pin an older Roslyn (NU1608). Microsoft.CodeAnalysis.Analyzers is intentionally left at the default flow:
+         pinning it via PrivateAssets changes which version downstream analyzer projects resolve and reintroduces
+         RS-rule false positives (e.g. RS1024), so only the API package is made private. -->
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
