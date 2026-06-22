@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -55,25 +56,8 @@ internal partial class TestExecutionManager
         if (MSTestSettings.RunConfigurationSettings.ExecutionApartmentState == ApartmentState.STA
             && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            TaskCompletionSource<int> tcs = new();
-            Thread entryPointThread = new(() =>
-            {
-                try
-                {
-                    // This is best we can do to execute in STA thread.
-                    Task task = taskGetter();
-                    task.GetAwaiter().GetResult();
-                    tcs.SetResult(0);
-                }
-                catch (Exception ex)
-                {
-                    tcs.SetException(ex);
-                }
-            });
-
-            entryPointThread.SetApartmentState(ApartmentState.STA);
-            entryPointThread.Start();
-            return tcs.Task;
+            // This is best we can do to execute in STA thread.
+            return StaThreadHelper.RunOnStaThreadAsync(taskGetter);
         }
         else
         {

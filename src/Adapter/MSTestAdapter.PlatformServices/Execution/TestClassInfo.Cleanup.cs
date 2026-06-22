@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -130,48 +131,35 @@ internal sealed partial class TestClassInfo
             return null;
         }
 
-        bool isSTATestClass = ClassAttribute is STATestClassAttribute;
-        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (isSTATestClass
-            && isWindowsOS
-            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
-        {
-            TestResult? result = null;
-            var entryPointThread = new Thread(() => result = DoRunAsync().GetAwaiter().GetResult())
-            {
-                Name = "MSTest STATestClass ClassCleanup",
-            };
-
-            entryPointThread.SetApartmentState(ApartmentState.STA);
-            entryPointThread.Start();
-
-            try
+        ApartmentState? requestedApartmentState = ClassAttribute is STATestClassAttribute
+            ? ApartmentState.STA
+            : null;
+        return await StaThreadHelper.RunOnApartmentThreadIfNeededAsync<TestResult?>(
+            requestedApartmentState,
+            "MSTest STATestClass ClassCleanup",
+            DoRunAsync,
+            null,
+            entryPointThread =>
             {
                 entryPointThread.Join();
-            }
-            catch (Exception ex)
+                return Task.CompletedTask;
+            },
+            ex =>
             {
                 if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
                 }
-            }
 
-            return result;
-        }
-        else
-        {
-            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!isWindowsOS && isSTATestClass)
+                return null;
+            },
+            () =>
             {
                 if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
                 }
-            }
-
-            return await DoRunAsync().ConfigureAwait(false);
-        }
+            }).ConfigureAwait(false);
 
         // Local functions
         async Task<TestResult?> DoRunAsync()
