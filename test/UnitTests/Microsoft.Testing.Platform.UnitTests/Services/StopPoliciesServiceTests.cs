@@ -103,8 +103,12 @@ public sealed class StopPoliciesServiceTests : IDisposable
                 ProcessRole = processRole,
             };
 
-            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so asserting on the
+            // generic type parameter would compare against this test assembly's copy and fail due to type identity
+            // mismatch across assemblies. Assert on the full type name instead.
+            Exception exception = await Assert.ThrowsAsync<Exception>(
                 () => service.RegisterOnMaxFailedTestsCallbackAsync((_, _) => Task.CompletedTask));
+            Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
         }
     }
 

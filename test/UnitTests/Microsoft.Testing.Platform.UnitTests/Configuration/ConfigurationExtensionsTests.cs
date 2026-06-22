@@ -43,6 +43,10 @@ public sealed class ConfigurationExtensionsTests
             .Returns(value: null);
 
         // This should never happen in practice. We always have AggregatedConfiguration which will ensure non-null values.
-        Assert.ThrowsExactly<InvalidOperationException>(() => GetActualValueFromConfiguration(configuration.Object, key));
+        // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so asserting on the generic
+        // type parameter would compare against this test assembly's copy and fail due to type identity mismatch across
+        // assemblies. Assert on the full type name instead.
+        Exception exception = Assert.Throws<Exception>(() => GetActualValueFromConfiguration(configuration.Object, key));
+        Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
     }
 }

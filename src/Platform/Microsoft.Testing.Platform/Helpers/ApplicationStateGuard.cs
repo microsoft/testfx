@@ -33,7 +33,7 @@ internal static class ApplicationStateGuard
         }
     }
 
-    public static InvalidOperationException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
+    public static UnreachableException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
         => new(string.Format(
             CultureInfo.InvariantCulture,
             UnreachableLocationErrorMessage,
