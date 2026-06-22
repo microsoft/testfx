@@ -78,8 +78,10 @@
          keeps the reference from becoming a compile-time dependency (which on .NET Framework would otherwise pull
          in netstandard facades such as System.Runtime.InteropServices.RuntimeInformation and conflict with the
          polyfills downstream). See also ImplicitlyExpandNETStandardFacades below. The package is produced by
-         MSTest.Analyzers.Package.csproj. -->
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" />
+         MSTest.Analyzers.Package.csproj. ReferenceOutputAssembly="false" keeps the analyzer assembly out of this
+         project's compilation graph (it is purely a NuGet dependency) while PrivateAssets="none" still surfaces it
+         as a package dependency for consumers. -->
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -137,7 +139,7 @@
     invalid (there is no "NotPublishable" package). The post-pack target below rewrites the produced package's
     manifest to drop that single dependency, using only built-in MSBuild tasks so it works on all platforms.
   -->
-  <UsingTask TaskName="_WriteTextFile" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask TaskName="_WriteTextFile" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$([System.IO.Path]::Combine('$(MSBuildToolsPath)', 'Microsoft.Build.Tasks.Core.dll'))">
     <ParameterGroup>
       <Path ParameterType="System.String" Required="true" />
       <Content ParameterType="System.String" Required="true" />

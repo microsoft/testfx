@@ -68,7 +68,12 @@
          targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
-    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" PrivateAssets="none" />
+    <!-- On Windows the package depends on MSTest.TestFramework, matching the historical MSTest.TestAdapter.nuspec.
+         The historical MSTest.TestAdapter.NonWindows.nuspec did NOT declare this dependency, so on non-Windows builds
+         we keep the compile-time reference but suppress the package dependency via PrivateAssets="all" to keep the
+         produced non-Windows package's dependency graph identical to the previous nuspec-based output. -->
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" Condition=" '$(OS)' == 'Windows_NT' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" Condition=" '$(OS)' != 'Windows_NT' " PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
