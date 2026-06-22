@@ -243,7 +243,7 @@ internal sealed partial class TerminalTestReporter
             // the discovered test names, then a run-level total ("Discovered N tests." / "... in N assemblies.").
             foreach (TestProgressState assembly in assemblies)
             {
-                terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, assembly.DiscoveredTestDisplayNames.Count));
+                terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, assembly.DiscoveredTests));
                 terminal.Append(" - ");
                 AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly);
                 terminal.AppendLine();

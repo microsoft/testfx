@@ -33,9 +33,10 @@ internal static class TestRunSummaryHelper
     /// <item><paramref name="hasHandshakeFailures"/>: at least one assembly failed to hand-shake. This escalates to
     /// "Failed!" ahead of the "Zero tests ran" branch (a handshake failure is not a benign empty run).</item>
     /// <item><paramref name="hasFailedAssemblies"/>: at least one assembly process ended unsuccessfully (e.g. crashed
-    /// or returned a non-zero exit code) even though its tests passed. This escalates to "Failed!" but only AFTER the
-    /// "Zero tests ran" branch, so a project that legitimately contains zero tests (which exits non-zero by design)
-    /// is still reported as "Zero tests ran" rather than a failure.</item>
+    /// or returned a non-zero exit code) even though its tests passed. This escalates the verdict wording to "Failed!"
+    /// but only AFTER the "Zero tests ran" branch, so a project that legitimately contains zero tests (which exits
+    /// non-zero by design) keeps the "Zero tests ran" wording rather than "Failed!". Note this only affects the displayed
+    /// verdict text: <see cref="IsRunFailed"/> still treats a zero-test run as a failed run.</item>
     /// </list>
     /// In-process callers never have either condition and pass <see langword="false"/>, so their verdict is unchanged.
     /// </remarks>
