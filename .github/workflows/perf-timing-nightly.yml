@@ -29,7 +29,7 @@ jobs:
 
       - name: Build packages
         shell: pwsh
-        run: .\build.cmd -pack
+        run: .\build.cmd -pack -c Release
 
       - name: Run PlainProcess timing pipeline
         shell: pwsh
@@ -38,29 +38,24 @@ jobs:
         run: |
           $startTime = (Get-Date).ToUniversalTime().AddMinutes(-5).ToString("O")
           "PERF_TIMING_STARTED=$startTime" >> $env:GITHUB_ENV
-          & "$env:GITHUB_WORKSPACE\.dotnet\dotnet.exe" run --project test\Performance\MSTest.Performance.Runner -c Debug -- execute --pipelineNameFilter "*PlainProcess*"
+          & "$env:GITHUB_WORKSPACE\.dotnet\dotnet.exe" run --project test\Performance\MSTest.Performance.Runner -c Release -- execute --pipelineNameFilter "*PlainProcess*"
 
       - name: Stage Result.json files
         shell: pwsh
         run: |
+          $ErrorActionPreference = 'Stop'
           $stagingDirectory = Join-Path $env:GITHUB_WORKSPACE "artifacts\perf-results"
           New-Item -ItemType Directory -Path $stagingDirectory -Force | Out-Null
 
-          $started = [DateTimeOffset]::Parse($env:PERF_TIMING_STARTED).UtcDateTime
-          $roots = @(
-            $env:GITHUB_WORKSPACE
-            $env:RUNNER_TEMP
-            [System.IO.Path]::GetTempPath()
-          ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path $_) } | Select-Object -Unique
+          $startTime = [DateTimeOffset]::Parse($env:PERF_TIMING_STARTED).UtcDateTime
+          $resultRoot = Join-Path $env:GITHUB_WORKSPACE "artifacts\tmp\Release\testsuite"
+          $results = @(
+            Get-ChildItem -Path $resultRoot -Filter Result.json -Recurse -File -ErrorAction SilentlyContinue |
+              Where-Object { $_.LastWriteTimeUtc -ge $startTime }
+          )
 
-          $results = foreach ($root in $roots) {
-            Get-ChildItem -Path $root -Filter Result.json -Recurse -File -ErrorAction SilentlyContinue |
-              Where-Object { $_.LastWriteTimeUtc -ge $started }
-          }
-
-          $results = @($results | Sort-Object FullName -Unique)
           if ($results.Count -eq 0) {
-            Write-Host "::error::No Result.json files were found under the workspace, runner temp, or system temp paths after the PlainProcess run."
+            Write-Host "::error::No Result.json files were found under '$resultRoot' after the PlainProcess run."
             exit 1
           }
 
