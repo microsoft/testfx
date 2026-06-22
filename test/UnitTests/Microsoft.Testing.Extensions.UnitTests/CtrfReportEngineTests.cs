@@ -18,6 +18,9 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class CtrfReportEngineTests
 {
+    // Mirrors TestResultCaptureHelper.MaxStandardStreamLength. It cannot reference that constant
+    // directly: TestResultCaptureHelper is linked into every report extension assembly
+    // (HtmlReport, JUnitReport, CtrfReport), so an unqualified reference is ambiguous (CS0433).
     private const int MaxStandardStreamLength = 32 * 1024;
 
     private readonly Mock<IEnvironment> _environmentMock = new();

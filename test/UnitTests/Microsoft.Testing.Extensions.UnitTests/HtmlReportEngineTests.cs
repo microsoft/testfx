@@ -16,6 +16,10 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class HtmlReportEngineTests
 {
+    // These mirror the limits in the shared TestResultCaptureHelper. They cannot reference
+    // TestResultCaptureHelper.* directly: that type is linked into every report extension
+    // assembly (HtmlReport, JUnitReport, CtrfReport), so an unqualified reference is ambiguous
+    // (CS0433: "type exists in both ...").
     private const int MaxStandardStreamLength = 32 * 1024;
     private const int MaxIdentityFieldLength = 4 * 1024;
     private const int MaxTraitFieldLength = 1024;
