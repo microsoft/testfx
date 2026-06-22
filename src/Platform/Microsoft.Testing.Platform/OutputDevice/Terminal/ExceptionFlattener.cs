@@ -28,7 +28,7 @@ internal sealed class ExceptionFlattener
         IEnumerable<Exception?> aggregateExceptions = exception switch
         {
             AggregateException aggregate => aggregate.Flatten().InnerExceptions,
-            _ => [exception?.InnerException],
+            _ => new Exception?[] { exception?.InnerException },
         };
 
         foreach (Exception? aggregate in aggregateExceptions)

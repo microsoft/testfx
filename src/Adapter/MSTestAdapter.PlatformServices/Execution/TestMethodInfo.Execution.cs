@@ -290,46 +290,26 @@ internal partial class TestMethodInfo
 
         if (TimeoutInfo.CooperativeCancellation)
         {
-            CancellationTokenSource? timeoutTokenSource = null;
-            try
-            {
-                timeoutTokenSource = new(TimeoutInfo.Timeout);
-                timeoutTokenSource.Token.Register(TestContext.Context.CancellationTokenSource.Cancel);
-                if (timeoutTokenSource.Token.IsCancellationRequested)
+            return await FixtureMethodRunner.RunWithCooperativeCancellationAsync<TestResult>(
+                TestContext.Context.CancellationTokenSource,
+                TimeoutInfo.Timeout,
+                timeoutCts => ExecuteInternalAsync(arguments, timeoutCts),
+                () => new()
                 {
-                    return new()
-                    {
-                        Outcome = UnitTestOutcome.Timeout,
-                        TestFailureException = new TestFailedException(
-                            UnitTestOutcome.Timeout,
-                            string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)),
-                    };
-                }
-
-                try
+                    Outcome = UnitTestOutcome.Timeout,
+                    TestFailureException = new TestFailedException(
+                        UnitTestOutcome.Timeout,
+                        string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)),
+                },
+                isTimeout => new()
                 {
-                    return await ExecuteInternalAsync(arguments, timeoutTokenSource).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException)
-                {
-                    // Ideally we would like to check that the token of the exception matches cancellationTokenSource but TestContext
-                    // instances are not well defined so we have to handle the exception entirely.
-                    return new()
-                    {
-                        Outcome = UnitTestOutcome.Timeout,
-                        TestFailureException = new TestFailedException(
-                            UnitTestOutcome.Timeout,
-                            timeoutTokenSource.Token.IsCancellationRequested
-                                ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)
-                                : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName)),
-                    };
-                }
-            }
-            finally
-            {
-                timeoutTokenSource?.Dispose();
-                timeoutTokenSource = null;
-            }
+                    Outcome = UnitTestOutcome.Timeout,
+                    TestFailureException = new TestFailedException(
+                        UnitTestOutcome.Timeout,
+                        isTimeout
+                            ? string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)
+                            : string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName)),
+                }).ConfigureAwait(false);
         }
 
         TestResult? result = null;

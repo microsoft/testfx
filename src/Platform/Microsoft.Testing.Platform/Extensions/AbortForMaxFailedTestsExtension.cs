@@ -4,7 +4,6 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -58,8 +57,11 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
         var node = (TestNodeUpdateMessage)value;
 
         // If we are called, the extension is enabled, which means both _maxFailedTests and capability are not null.
-        RoslynDebug.Assert(_maxFailedTests is not null);
-        RoslynDebug.Assert(_capability is not null);
+        // Guard defensively so we are a no-op (rather than throwing) if invoked while effectively disabled.
+        if (_maxFailedTests is not { } maxFailedTests || _capability is not { } capability)
+        {
+            return;
+        }
 
         TestNodeStateProperty? testNodeStateProperty = node.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (testNodeStateProperty is null)
@@ -67,13 +69,17 @@ internal sealed class AbortForMaxFailedTestsExtension : IDataConsumer
             return;
         }
 
-        if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, testNodeStateProperty.GetType()) != -1 &&
-            ++_failCount >= _maxFailedTests.Value &&
+        if (testNodeStateProperty is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
+                or TimeoutTestNodeStateProperty
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+                or CancelledTestNodeStateProperty
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
+            && ++_failCount >= maxFailedTests &&
             // If already triggered, don't do it again.
             !_policiesService.IsMaxFailedTestsTriggered)
         {
-            await _capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
-            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(_maxFailedTests.Value, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await capability.StopTestExecutionAsync(_testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
+            await _policiesService.ExecuteMaxFailedTestsCallbacksAsync(maxFailedTests, _testApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
         }
     }
 }

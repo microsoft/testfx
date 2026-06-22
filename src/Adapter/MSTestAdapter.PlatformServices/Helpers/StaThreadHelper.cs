@@ -3,6 +3,9 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 
+/// <summary>
+/// Helper for running async operations on a Windows apartment thread when required.
+/// </summary>
 internal static class StaThreadHelper
 {
     internal static async Task<T> RunOnApartmentThreadIfNeededAsync<T>(

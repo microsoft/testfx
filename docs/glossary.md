@@ -4,6 +4,17 @@ This glossary defines key terms and concepts used throughout the MSTest and Micr
 
 ## A
 
+### ArchitectureConditionAttribute
+
+An MSTest attribute (`[ArchitectureConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current process architecture. Available only on .NET (not .NET Framework). Accepts a [ConditionMode](#conditionmode) argument and a [TestArchitectures](#testarchitectures) flags value; the single-argument overload defaults to `ConditionMode.Include`. Detection uses `RuntimeInformation.ProcessArchitecture`. The attribute is not inherited — applying it to a base class does not affect derived classes. Because its `GroupName` (`"ArchitectureCondition"`) differs from that of [OSConditionAttribute](#osconditionattribute) (`"OSCondition"`), the two compose with logical AND, making it easy to gate a test on both OS and architecture:
+
+```csharp
+[TestMethod, OSCondition(OperatingSystems.Windows), ArchitectureCondition(TestArchitectures.X64)]
+public void RunsOnlyOnWindowsX64() { }
+```
+
+Introduced in [PR #9233](https://github.com/microsoft/testfx/pull/9233). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
 ### AwesomeAssertions
 
 A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in some unit and integration test suites in this repository. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. Assertion policy in this repository varies by project: some `BannedSymbols.txt` files require `AwesomeAssertions` instead of the built-in MSTest `Assert`, `CollectionAssert`, and `StringAssert` types, while others ban `AwesomeAssertions`.
@@ -40,7 +51,7 @@ A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappi
 
 ### ConditionBaseAttribute
 
-An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [CIConditionAttribute](#ciconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
+An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [ArchitectureConditionAttribute](#architectureconditionattribute), [CIConditionAttribute](#ciconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
 
 ### ConditionMode
 
@@ -225,6 +236,10 @@ An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-ru
 Request for Comments document in the `docs/RFCs/` folder. RFCs describe design decisions, proposed features, and implementation details for MSTest and MTP.
 
 ## T
+
+### TestArchitectures
+
+A `[Flags]` public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that specifies one or more processor architectures used with [ArchitectureConditionAttribute](#architectureconditionattribute). Available only on .NET (not .NET Framework). Flag values: `X86`, `X64`, `Arm`, `Arm64`, `Wasm`, `S390x`, `LoongArch64`, `Armv6`, `Ppc64le`, and (on .NET 9+) `RiscV64`. Values may be combined with bitwise OR to target multiple architectures (e.g. `TestArchitectures.X64 | TestArchitectures.Arm64`). The enum is named `TestArchitectures` rather than `Architecture` to avoid clashing with `System.Runtime.InteropServices.Architecture`, following the same pluralised `[Flags]`-enum pattern as `OperatingSystems`. Introduced in [PR #9233](https://github.com/microsoft/testfx/pull/9233).
 
 ### testconfig.json
 

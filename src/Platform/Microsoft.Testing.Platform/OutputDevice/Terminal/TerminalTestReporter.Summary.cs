@@ -56,12 +56,17 @@ internal sealed partial class TerminalTestReporter
         // Two sibling sites mirror this decision and must stay in lockstep:
         //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
         //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
-        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure;
+        // Orchestrator-only: an assembly whose process ended unsuccessfully (crash / non-zero exit) with no failed
+        // tests is still a run failure. Gated on ShowAssembly (the orchestrator marker): the in-process host leaves
+        // ShowAssembly off and never sets Success, so this stays false and its verdict/color are unchanged.
+        bool hasFailedAssemblies = _options.ShowAssembly && assemblies.Any(static a => !a.Success);
+
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure || hasFailedAssemblies;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
-        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests));
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies));
 
         // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
         // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in
@@ -94,20 +99,47 @@ internal sealed partial class TerminalTestReporter
         int failed = totalFailedTests;
         int passed = totalPassedTests;
         int skipped = totalSkippedTests;
+        int retried = assemblies.Sum(static a => a.RetriedFailedTests);
+
+        // Orchestrator-only: count assemblies that ended unsuccessfully without a failed test (crash / non-zero exit)
+        // plus handshake failures. These are surfaced as an "error: N" line so they aren't hidden behind a zero
+        // failed-test count. In-process leaves ShowAssembly off and never has handshake failures, so error is 0.
+        int error = (_options.ShowAssembly ? assemblies.Count(static a => !a.Success && a.FailedTests == 0) : 0) + HandshakeFailureCount;
         TimeSpan runDuration = _testExecutionStartTime != null && _testExecutionEndTime != null ? (_testExecutionEndTime - _testExecutionStartTime).Value : TimeSpan.Zero;
 
         bool colorizeFailed = failed > 0;
         bool colorizePassed = passed > 0 && failed == 0;
         bool colorizeSkipped = skipped > 0 && skipped == total && failed == 0;
 
+        string errorText = $"{SingleIndentation}{TerminalResources.Error}: {error}";
         string totalText = $"{SingleIndentation}{TerminalResources.TotalLowercase}: {total}";
         string failedText = $"{SingleIndentation}{TerminalResources.FailedLowercase}: {failed}";
         string passedText = $"{SingleIndentation}{TerminalResources.SucceededLowercase}: {passed}";
         string skippedText = $"{SingleIndentation}{TerminalResources.SkippedLowercase}: {skipped}";
         string durationText = $"{SingleIndentation}{TerminalResources.DurationLowercase}: ";
 
+        if (error > 0)
+        {
+            terminal.SetColor(TerminalColor.DarkRed);
+            terminal.AppendLine(errorText);
+            terminal.ResetColor();
+            terminal.AppendLine();
+        }
+
         terminal.ResetColor();
-        terminal.AppendLine(totalText);
+        terminal.Append(totalText);
+
+        // Orchestrator-only: when failed tests were retried, append "(+N retried)" after the total so the headline
+        // count (which reflects the final attempt) is reconciled with the extra retried executions. retried is 0 for
+        // the in-process host, so the total line stays byte-identical there.
+        if (retried > 0)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append($" (+{retried} {TerminalResources.Retried})");
+            terminal.ResetColor();
+        }
+
+        terminal.AppendLine();
         if (colorizeFailed)
         {
             terminal.SetColor(TerminalColor.DarkRed);
@@ -153,6 +185,34 @@ internal sealed partial class TerminalTestReporter
         AppendHandshakeFailureRecap(terminal);
     }
 
+    /// <summary>
+    /// Orchestrator overload (<c>dotnet test</c>): the multi-process orchestrator also knows each discovered test's
+    /// uid, file path and line number. The shared discovery summary currently lists display names only, so those are
+    /// accepted for signature parity. When <paramref name="displayName"/> is missing the <paramref name="uid"/> is used
+    /// as the listed name; when neither is available the test is still counted (so the discovery total stays correct)
+    /// but no blank entry is added to the summary.
+    /// </summary>
+    internal void TestDiscovered(string executionId, string? displayName, string? uid, string? filePath, int? lineNumber)
+    {
+        // Prefer the display name, fall back to the uid so the discovered test is still listed by something.
+        string? name = displayName ?? uid;
+        if (name is not null)
+        {
+            TestDiscovered(executionId, name);
+            return;
+        }
+
+        // No name available at all: still increment the discovered count so the discovery summary total stays
+        // correct (in discovery mode TotalTests is computed from DiscoveredTests), but avoid adding a blank entry.
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
+        {
+            throw ApplicationStateGuard.Unreachable();
+        }
+
+        asm.DiscoveredTests++;
+        _terminalWithProgress.UpdateWorker(asm.SlotIndex);
+    }
+
     internal void TestDiscovered(string executionId, string displayName)
     {
         if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
@@ -177,6 +237,42 @@ internal sealed partial class TerminalTestReporter
         int totalTests = assemblies.Sum(static a => a.TotalTests);
         bool runFailed = WasCancelled || totalTests < 1;
 
+        if (_options.ShowAssembly)
+        {
+            // Orchestrator (dotnet test): a per-assembly "Discovered N tests in assembly - <link>" header followed by
+            // the discovered test names, then a run-level total ("Discovered N tests." / "... in N assemblies.").
+            foreach (TestProgressState assembly in assemblies)
+            {
+                terminal.Append(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, assembly.DiscoveredTests));
+                terminal.Append(" - ");
+                AppendAssemblyLinkTargetFrameworkAndArchitecture(terminal, assembly);
+                terminal.AppendLine();
+                foreach (string displayName in assembly.DiscoveredTestDisplayNames)
+                {
+                    terminal.Append(SingleIndentation);
+                    terminal.AppendLine(displayName);
+                }
+
+                terminal.AppendLine();
+            }
+
+            terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
+            terminal.AppendLine(assemblies.Count <= 1
+                ? string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummarySingular, totalTests)
+                : string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummary, totalTests, assemblies.Count));
+            terminal.ResetColor();
+            terminal.AppendLine();
+
+            if (WasCancelled)
+            {
+                terminal.Append(TerminalResources.Aborted);
+                terminal.AppendLine();
+            }
+
+            return;
+        }
+
+        // In-process host: the single "Test discovery summary: found N test(s)" format (unchanged shipping output).
         foreach (TestProgressState assembly in assemblies)
         {
             foreach (string displayName in assembly.DiscoveredTestDisplayNames)
