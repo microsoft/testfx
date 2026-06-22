@@ -20,8 +20,12 @@ public sealed class ApplicationStateGuardTests
     [TestMethod]
     public void Unreachable_ReturnsUnreachableException()
     {
-        UnreachableException exception = ApplicationStateGuard.Unreachable();
+        // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so binding to the type
+        // directly would compare against this test assembly's copy and fail due to type identity mismatch across
+        // assemblies. Assert on the full type name instead.
+        Exception exception = ApplicationStateGuard.Unreachable();
 
+        Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
         Assert.Contains("thought to be unreachable", exception.Message);
     }
 }
