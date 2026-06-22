@@ -129,7 +129,7 @@ internal static class TestResultCaptureHelper
 
     /// <summary>
     /// Applies the common guard check (null/Discovered/InProgress state) and extracts all
-    /// base-class properties for a terminal test node. Returns <see langword="null"/> when
+    /// shared properties for a terminal test node. Returns <see langword="null"/> when
     /// the node should not produce a captured result; otherwise returns a
     /// <see cref="TryCaptureResult"/> containing pre-truncated common fields plus the raw
     /// <see cref="TestNodeStateProperty"/> and <see cref="CapturedTestResultProperties"/>

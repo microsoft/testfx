@@ -66,9 +66,11 @@ internal abstract class ReportEngineBase
     /// </summary>
     /// <param name="extension">
     /// File extension without a leading dot (e.g. <c>html</c>, <c>xml</c>).
-    /// The value is passed directly into the file name and then sanitized by
-    /// <see cref="ReportFileNameSanitizer.ReplaceInvalidFileNameChars"/>; callers are
-    /// responsible for supplying a well-formed extension string.
+    /// Must not contain path separators or other characters that are invalid in a file name.
+    /// The full raw file name is sanitized by
+    /// <see cref="ReportFileNameSanitizer.ReplaceInvalidFileNameChars"/> before being returned,
+    /// but callers are responsible for supplying a value that is itself a plain alphanumeric
+    /// extension token (no dot prefix, no path characters).
     /// </param>
     protected string BuildDefaultFileName(string extension)
     {
