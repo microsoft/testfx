@@ -41,7 +41,7 @@ public sealed class TestResultCaptureHelperTests
     private static (string? ClassName, string? MethodName) InvokeGetClassAndMethodName(TestMethodIdentifierProperty? identifier)
         => ((string?, string?))GetClassAndMethodNameMethod.Invoke(null, [identifier])!;
 
-    // TryCaptureCore returns a nullable internal record struct (TryCaptureResult?); reflection
+    // TryCaptureCore returns a nullable internal record struct (CapturedTestResultCoreData?); reflection
     // boxes a present value to the struct instance and a missing value to null. Fields are read
     // back through the boxed instance's properties so the test stays decoupled from the type.
     private static object? InvokeTryCaptureCore(TestNode node, bool includeLocation = false)

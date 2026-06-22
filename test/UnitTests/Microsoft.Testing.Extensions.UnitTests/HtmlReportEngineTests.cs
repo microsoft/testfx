@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 using Microsoft.Testing.Extensions.HtmlReport;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -16,9 +18,18 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class HtmlReportEngineTests
 {
-    private const int MaxStandardStreamLength = 32 * 1024;
-    private const int MaxIdentityFieldLength = 4 * 1024;
-    private const int MaxTraitFieldLength = 1024;
+    private static readonly Type CaptureHelperType = typeof(HtmlReportEngine).Assembly
+        .GetType("Microsoft.Testing.Extensions.TestResultCaptureHelper", throwOnError: true)!;
+
+    // Bound to the production constants (resolved via reflection from the HtmlReport assembly, since the
+    // linked TestResultCaptureHelper type is ambiguous across extension assemblies) so the tests stay
+    // aligned if the shared truncation limits change.
+    private static readonly int MaxStandardStreamLength = GetCaptureHelperConstant(nameof(MaxStandardStreamLength));
+    private static readonly int MaxIdentityFieldLength = GetCaptureHelperConstant(nameof(MaxIdentityFieldLength));
+    private static readonly int MaxTraitFieldLength = GetCaptureHelperConstant(nameof(MaxTraitFieldLength));
+
+    private static int GetCaptureHelperConstant(string name)
+        => (int)CaptureHelperType.GetField(name, BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
 
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
