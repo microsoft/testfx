@@ -16,7 +16,12 @@ internal static class CancellationTimeoutHelper
     {
         using CancellationTokenSource timeoutTokenSource = new(timeout);
         using CancellationTokenRegistration registration = timeoutTokenSource.Token.Register(outerCancellationTokenSource.Cancel);
-        if (timeoutTokenSource.Token.IsCancellationRequested)
+
+        // A timeout of 0 means "no time to run", so fail immediately without invoking the action. We can't rely on
+        // timeoutTokenSource.Token.IsCancellationRequested here: new CancellationTokenSource(0) schedules the
+        // cancellation on a timer rather than cancelling synchronously, so the token may not be cancelled yet at
+        // this point (a race that intermittently let the action run).
+        if (timeout == 0 || timeoutTokenSource.Token.IsCancellationRequested)
         {
             return failureFactory(true);
         }

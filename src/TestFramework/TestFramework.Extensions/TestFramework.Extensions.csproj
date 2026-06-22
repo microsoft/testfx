@@ -74,14 +74,15 @@
 
     <!-- The only package dependency: MSTest.Analyzers. PrivateAssets="none" so the analyzers/build assets flow to
          consumers of this package. The analyzer package is a netstandard2.0 project that ships only analyzers (no
-         lib/runtime), and this project never consumes it at compile/run time, so ExcludeAssets="compile;runtime"
-         keeps the reference from becoming a compile-time dependency (which on .NET Framework would otherwise pull
-         in netstandard facades such as System.Runtime.InteropServices.RuntimeInformation and conflict with the
-         polyfills downstream). See also ImplicitlyExpandNETStandardFacades below. The package is produced by
-         MSTest.Analyzers.Package.csproj. ReferenceOutputAssembly="false" keeps the analyzer assembly out of this
-         project's compilation graph (it is purely a NuGet dependency) while PrivateAssets="none" still surfaces it
-         as a package dependency for consumers. -->
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" ReferenceOutputAssembly="false" />
+         lib/runtime), so ExcludeAssets="compile;runtime" keeps the reference from becoming a compile-time
+         dependency (which on .NET Framework would otherwise pull in netstandard facades such as
+         System.Runtime.InteropServices.RuntimeInformation and conflict with the polyfills downstream). See also
+         ImplicitlyExpandNETStandardFacades below. The package is produced by MSTest.Analyzers.Package.csproj.
+         NOTE: do NOT add ReferenceOutputAssembly="false" here. NuGet pack omits the generated package dependency
+         for project references that don't reference the output assembly, which silently drops the MSTest.Analyzers
+         dependency and stops analyzers from flowing to consumers (the analyzer package has IncludeBuildOutput=false,
+         so there is no real assembly to reference anyway). -->
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" />
   </ItemGroup>
 
   <ItemGroup>
