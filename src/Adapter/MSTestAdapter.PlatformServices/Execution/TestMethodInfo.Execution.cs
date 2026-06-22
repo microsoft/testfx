@@ -291,7 +291,7 @@ internal partial class TestMethodInfo
 
         if (TimeoutInfo.CooperativeCancellation)
         {
-async SynchronizationContextPreservingTask<TestResult> ExecuteWithTimeoutTokenAsync(CancellationTokenSource timeoutTokenSource)
+            async SynchronizationContextPreservingTask<TestResult> ExecuteWithTimeoutTokenAsync(CancellationTokenSource timeoutTokenSource)
                 => await ExecuteInternalAsync(arguments, timeoutTokenSource).ConfigureAwait(false);
 
             return await CancellationTimeoutHelper.RunWithCooperativeCancellationAsync<TestResult>(

@@ -25,10 +25,13 @@ internal static class CancellationTimeoutHelper
         {
             return await action(timeoutTokenSource).ConfigureAwait(false);
         }
+
+        // Only OCEs originating from outerCancellationTokenSource.Token are converted to
+        // Timeout/Cancelled results. Unrelated OCEs (e.g. from user cleanup code that captures
+        // an independent token) are intentionally allowed to propagate; ExecuteInternalAsync
+        // handles OCEs from user test code internally.
         catch (Exception ex) when (ex.IsOperationCanceledExceptionFromToken(outerCancellationTokenSource.Token))
         {
-            // Timeout cancellation is propagated through the outer cancellation token source, so only cancellations
-            // that originate from that token are converted into timeout/cancelled failures.
             return failureFactory(timeoutTokenSource.Token.IsCancellationRequested);
         }
     }
