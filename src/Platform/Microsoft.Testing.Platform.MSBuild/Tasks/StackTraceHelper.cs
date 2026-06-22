@@ -15,7 +15,7 @@ internal static class StackTraceHelper
         place = null;
         lineNumber = 0;
 
-        if (errorStackTrace == null)
+        if (errorStackTrace is null)
         {
             return false;
         }
@@ -43,7 +43,18 @@ internal static class StackTraceHelper
         InitializeRegex();
 
         // stack frame looks like this '   at Program.<Main>$(String[] args) in S:\t\ConsoleApp81\ConsoleApp81\Program.cs:line 9'
-        Match match = s_regex.Match(stackFrame);
+        Match match;
+        try
+        {
+            match = s_regex.Match(stackFrame);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            line = 0;
+            file = null;
+            place = null;
+            return false;
+        }
 
         line = 0;
         file = null;
@@ -67,11 +78,15 @@ internal static class StackTraceHelper
     [MemberNotNull(nameof(s_regex))]
     private static void InitializeRegex()
     {
-        if (s_regex != null)
+        if (s_regex is not null)
         {
             return;
         }
 
-        s_regex = new Regex(StackTraceRegexPatternFactory.CreateFramePattern(), RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
+        // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
+        s_regex = new Regex(
+            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
+            RegexOptions.Compiled,
+            StackTraceRegexHelper.MatchTimeout);
     }
 }
