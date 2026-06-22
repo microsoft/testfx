@@ -26,7 +26,9 @@ internal static class TestResultCapture
             // session-wide result list and generated HTML within a predictable budget.
             Uid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
             DisplayName = TestResultCaptureHelper.Truncate(node.DisplayName, TestResultCaptureHelper.MaxIdentityFieldLength)!,
-            Outcome = ClassifyOutcome(core.State),
+            // HTML does not special-case cancellation — it falls through to the shared
+            // helper which maps it to "failed", unlike JUnit which maps it to "cancelled".
+            Outcome = TestResultCaptureHelper.ClassifyOutcome(core.State),
             Duration = core.Duration,
             StartTime = core.Properties.Timing?.GlobalTiming.StartTime,
             EndTime = core.Properties.Timing?.GlobalTiming.EndTime,
@@ -40,10 +42,4 @@ internal static class TestResultCapture
             Traits = core.Properties.Traits,
         };
     }
-
-    private static string ClassifyOutcome(TestNodeStateProperty state)
-        // Cancellation is intentionally handled in report-specific wrappers. HTML has
-        // historically let cancellation fall through to the failed outcome category, so
-        // this wrapper simply delegates to the shared helper with no special-casing.
-        => TestResultCaptureHelper.ClassifyOutcome(state);
 }

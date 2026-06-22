@@ -63,7 +63,7 @@ internal sealed class JUnitReportEngine : ReportEngineBase
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? ResolveXmlFileName(GetProvidedFileName(providedFileName))
+            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
             : BuildDefaultFileName("xml");
 
         string outputDirectory = _configuration.GetTestResultDirectory();
@@ -109,13 +109,6 @@ internal sealed class JUnitReportEngine : ReportEngineBase
             willOverwrite
                 ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.JUnitReportFileExistsAndWillBeOverwritten, finalPath)
                 : null);
-    }
-
-    private string ResolveXmlFileName(string template)
-    {
-        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
 
 #pragma warning disable IDE0051 // Accessed by unit tests through reflection.
