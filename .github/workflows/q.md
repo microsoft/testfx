@@ -1,12 +1,15 @@
 ---
 description: |
   Intelligent assistant that answers questions, analyzes repositories, and can create PRs for workflow optimizations.
-  An expert system that improves, optimizes, and fixes agentic workflows by investigating performance, 
+  An expert system that improves, optimizes, and fixes agentic workflows by investigating performance,
   identifying missing tools, and detecting inefficiencies.
 
 on:
   slash_command:
     name: q
+    # Route through agentic_commands.yml and only wake on /q *comments* (not issue/PR/discussion bodies).
+    events: [issue_comment, pull_request_comment, discussion_comment]
+    strategy: centralized
   reaction: rocket
 
 permissions:
@@ -18,11 +21,13 @@ permissions:
 network: defaults
 
 safe-outputs:
+  noop:
+    report-as-issue: false
   add-comment:
     max: 1
   create-pull-request:
     title-prefix: "[q] "
-    labels: [automation, workflow-optimization]
+    labels: [type/automation, area/infrastructure]
     draft: false
     if-no-changes: "ignore"
 
@@ -238,7 +243,7 @@ Create a pull request with your improvements:
 
 2. **Create Pull Request**:
    - Use the `create-pull-request` tool which is configured in the workflow frontmatter
-   - The PR will be created with the prefix "[q]" and labeled with "automation, workflow-optimization"
+   - The PR will be created with the prefix "[q]" and labeled with "type/automation, area/infrastructure"
    - The system will automatically skip PR creation if there are no file changes
 
 3. **Create Focused Changes**: Make minimal, surgical modifications
