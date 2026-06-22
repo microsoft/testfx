@@ -31,13 +31,18 @@ internal static class StackTraceRegexPatternFactory
                 inString = (string?)getResourceStringMethod.Invoke(null, [InResourceKey]);
             }
         }
-        catch
+        catch (Exception ex) when (ex is AmbiguousMatchException
+            or TargetInvocationException
+            or TargetParameterCountException
+            or MethodAccessException
+            or InvalidOperationException
+            or NotSupportedException)
         {
             // If we fail, populate the defaults below.
         }
 
-        atString = atString == null || atString == AtResourceKey ? "at" : atString;
-        inString = inString == null || inString == InResourceKey ? "in {0}:line {1}" : inString;
+        atString = atString is null or AtResourceKey ? "at" : atString;
+        inString = inString is null or InResourceKey ? "in {0}:line {1}" : inString;
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
         return @$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$";

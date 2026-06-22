@@ -72,6 +72,6 @@ internal static class StackTraceHelper
             return;
         }
 
-        s_regex = new Regex(StackTraceRegexPatternFactory.CreateFramePattern(), RegexOptions.Compiled, matchTimeout: TimeSpan.FromSeconds(1));
+        s_regex = new Regex(StackTraceRegexPatternFactory.CreateFramePattern(), RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeout: TimeSpan.FromSeconds(1));
     }
 }
