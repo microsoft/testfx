@@ -155,17 +155,7 @@ internal sealed partial class TerminalTestReporter
     internal /* for testing */ static void AppendStackFrame(ITerminal terminal, string stackTraceLine)
     {
         terminal.Append(DoubleIndentation);
-        Match match;
-        try
-        {
-            match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            terminal.AppendLine(stackTraceLine);
-            return;
-        }
-
+        Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
         if (!match.Success)
         {
             terminal.AppendLine(stackTraceLine);

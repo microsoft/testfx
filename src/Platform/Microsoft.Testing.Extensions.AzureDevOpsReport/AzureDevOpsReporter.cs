@@ -503,16 +503,7 @@ internal sealed class AzureDevOpsReporter :
 
     private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
     {
-        Match match;
-        try
-        {
-            match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
-        }
-        catch (RegexMatchTimeoutException)
-        {
-            return null;
-        }
-
+        Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
         if (!match.Success)
         {
             return null;

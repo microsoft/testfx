@@ -80,7 +80,7 @@ internal static class StackTraceHelper
         // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
         s_regex = new Regex(
             Microsoft.Testing.Platform.Helpers.StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
-            RegexOptions.Compiled | RegexOptions.ExplicitCapture,
+            RegexOptions.Compiled,
             Microsoft.Testing.Platform.Helpers.StackTraceRegexHelper.MatchTimeout);
     }
 }
