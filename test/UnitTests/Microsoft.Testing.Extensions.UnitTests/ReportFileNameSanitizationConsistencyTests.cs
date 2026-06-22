@@ -12,6 +12,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class ReportFileNameSanitizationConsistencyTests
 {
+    private const string ReportFileNameSanitizerTypeName = "Microsoft.Testing.Extensions.ReportFileNameSanitizer";
+
     private static readonly MethodInfo TrxSanitizeMethod =
         typeof(TrxReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve TrxReportEngine.ReplaceInvalidFileNameChars.");
@@ -20,13 +22,13 @@ public class ReportFileNameSanitizationConsistencyTests
     // ReportEngineBase.BuildDefaultFileName — get that shared type from each engine's assembly.
     private static readonly MethodInfo HtmlSanitizeMethod =
         typeof(HtmlReportEngine).Assembly
-            .GetType("Microsoft.Testing.Extensions.ReportFileNameSanitizer")
+            .GetType(ReportFileNameSanitizerTypeName)
             ?.GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars from HtmlReport assembly.");
 
     private static readonly MethodInfo JUnitSanitizeMethod =
         typeof(JUnitReportEngine).Assembly
-            .GetType("Microsoft.Testing.Extensions.ReportFileNameSanitizer")
+            .GetType(ReportFileNameSanitizerTypeName)
             ?.GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars from JUnitReport assembly.");
 

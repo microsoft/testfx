@@ -64,6 +64,7 @@ internal abstract class ReportEngineBase
     /// A second run into the same TestResults folder overwrites the previous file
     /// (with a warning), matching the behaviour of an explicitly-provided file name.
     /// </summary>
+    /// <param name="extension">File extension without a leading dot (e.g. <c>html</c>, <c>xml</c>).</param>
     protected string BuildDefaultFileName(string extension)
     {
         string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());

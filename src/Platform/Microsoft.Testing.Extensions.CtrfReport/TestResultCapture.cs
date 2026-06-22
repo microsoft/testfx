@@ -28,9 +28,6 @@ internal static class TestResultCapture
         // a single ClassName string, so we decompose the identifier here instead of
         // using the pre-combined ClassName from TryCaptureResult.
         TestMethodIdentifierProperty? identifier = core.Properties.Identifier;
-        string? ns = identifier is not null && !RoslynString.IsNullOrEmpty(identifier.Namespace)
-            ? identifier.Namespace
-            : null;
 
         return new CapturedTestResult
         {
@@ -44,7 +41,9 @@ internal static class TestResultCapture
             Duration = core.Duration,
             StartTime = core.StartTime,
             EndTime = core.EndTime,
-            Namespace = TestResultCaptureHelper.Truncate(ns, TestResultCaptureHelper.MaxIdentityFieldLength),
+            Namespace = TestResultCaptureHelper.Truncate(
+                identifier is not null && !RoslynString.IsNullOrEmpty(identifier.Namespace) ? identifier.Namespace : null,
+                TestResultCaptureHelper.MaxIdentityFieldLength),
             ClassName = TestResultCaptureHelper.Truncate(identifier?.TypeName, TestResultCaptureHelper.MaxIdentityFieldLength),
             MethodName = core.MethodName,
             ErrorMessage = core.ErrorMessage,
