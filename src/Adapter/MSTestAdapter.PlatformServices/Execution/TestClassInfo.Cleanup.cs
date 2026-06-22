@@ -138,7 +138,7 @@ internal sealed partial class TestClassInfo
             requestedApartmentState,
             "MSTest STATestClass ClassCleanup",
             DoRunAsync,
-            null,
+            () => null,
             entryPointThread =>
             {
                 entryPointThread.Join();

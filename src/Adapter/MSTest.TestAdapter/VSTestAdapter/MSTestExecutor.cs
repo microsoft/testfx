@@ -223,7 +223,7 @@ internal sealed class MSTestExecutor : ITestExecutor
                 await DoRunTestsAsync().ConfigureAwait(false);
                 return 0;
             },
-            0,
+            () => 0,
             entryPointThread => Task.Run(entryPointThread.Join, _cancellationToken),
             ex =>
             {

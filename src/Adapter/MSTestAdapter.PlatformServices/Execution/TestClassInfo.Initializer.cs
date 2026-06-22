@@ -175,7 +175,7 @@ internal sealed partial class TestClassInfo
                 requestedApartmentState,
                 "MSTest STATestClass ClassInitialize",
                 DoRunAsync,
-                new TestResult
+                () => new TestResult
                 {
                     Outcome = UnitTestOutcome.Error,
                     IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",

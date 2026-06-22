@@ -9,7 +9,7 @@ internal static class StaThreadHelper
         ApartmentState? requestedApartmentState,
         string threadName,
         Func<Task<T>> action,
-        T threadResult,
+        Func<T> threadResultFactory,
         Func<Thread, Task> waitForThreadAsync,
         Func<Exception, T> exceptionHandler,
         Action warningHandler)
@@ -19,7 +19,13 @@ internal static class StaThreadHelper
             && requestedApartmentState is not null
             && Thread.CurrentThread.GetApartmentState() != requestedApartmentState)
         {
-            Thread entryPointThread = new(() => threadResult = action().GetAwaiter().GetResult())
+            T threadResult = default!;
+            bool hasThreadResult = false;
+            Thread entryPointThread = new(() =>
+            {
+                threadResult = action().GetAwaiter().GetResult();
+                hasThreadResult = true;
+            })
             {
                 Name = threadName,
             };
@@ -30,7 +36,7 @@ internal static class StaThreadHelper
             try
             {
                 await waitForThreadAsync(entryPointThread).ConfigureAwait(false);
-                return threadResult;
+                return hasThreadResult ? threadResult : threadResultFactory();
             }
             catch (Exception ex)
             {
