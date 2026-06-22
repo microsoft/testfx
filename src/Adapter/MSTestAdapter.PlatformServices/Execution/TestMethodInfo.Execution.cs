@@ -8,6 +8,7 @@ using System.Runtime.Remoting.Messaging;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -290,17 +291,13 @@ internal partial class TestMethodInfo
 
         if (TimeoutInfo.CooperativeCancellation)
         {
-            return await FixtureMethodRunner.RunWithCooperativeCancellationAsync<TestResult>(
+            async SynchronizationContextPreservingTask<TestResult> ExecuteWithTimeoutTokenAsync(CancellationTokenSource timeoutTokenSource)
+                => await ExecuteInternalAsync(arguments, timeoutTokenSource).ConfigureAwait(false);
+
+            return await CancellationTimeoutHelper.RunWithCooperativeCancellationAsync<TestResult>(
+                ExecuteWithTimeoutTokenAsync,
                 TestContext.Context.CancellationTokenSource,
                 TimeoutInfo.Timeout,
-                timeoutCts => ExecuteInternalAsync(arguments, timeoutCts),
-                () => new()
-                {
-                    Outcome = UnitTestOutcome.Timeout,
-                    TestFailureException = new TestFailedException(
-                        UnitTestOutcome.Timeout,
-                        string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName, TimeoutInfo.Timeout)),
-                },
                 isTimeout => new()
                 {
                     Outcome = UnitTestOutcome.Timeout,
