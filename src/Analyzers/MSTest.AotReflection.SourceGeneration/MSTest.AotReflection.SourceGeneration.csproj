@@ -48,7 +48,7 @@ This package is experimental and non-shipping; do not take a dependency on it in
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Package the generator in the analyzer directory of the nuget package -->
+    <!-- Package the generator in the analyzer directory of the NuGet package -->
     <None Include="$(OutputPath)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
