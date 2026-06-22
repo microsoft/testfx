@@ -5,17 +5,27 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal static class StackTraceRegexHelper
 {
+    // Only the MSBuild caller applies this timeout (the Platform caller runs the regex with no timeout because the
+    // pattern is linear). Note that Regex.Match measures wall-clock elapsed time, not CPU time, so a match can be
+    // blamed for time spent in a GC pause, thread-pool starvation or a debugger stop. 1 second is chosen as a generous
+    // upper bound that should never be reached by the linear pattern under normal conditions while still bounding the
+    // worst case. Do not remove the RegexMatchTimeoutException catch in the MSBuild caller assuming "this never fires".
     internal const int MatchTimeoutMilliseconds = 1_000;
 
-    internal static TimeSpan MatchTimeout => TimeSpan.FromMilliseconds(MatchTimeoutMilliseconds);
+    internal static readonly TimeSpan MatchTimeout = TimeSpan.FromMilliseconds(MatchTimeoutMilliseconds);
 
     internal static string CreateFrameRegexPattern(bool matchFramesWithoutLocation)
     {
         (string atString, string inPattern) = GetLocalizedStackFrameRegexParts();
 
+        // atString comes from a localized resource (e.g. "at", "bei", "à") so it must be escaped in case a locale ever
+        // produces a regex metacharacter. inPattern is deliberately built from regex fragments ((?<file>.+), (?<line>\d+))
+        // and must NOT be escaped.
+        string escapedAt = Regex.Escape(atString);
+
         return matchFramesWithoutLocation
-            ? @$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$"
-            : @$"^   {atString} (?<code>.+) {inPattern}$";
+            ? @$"^   {escapedAt} ((?<code>.+) {inPattern}|(?<code1>.+))$"
+            : @$"^   {escapedAt} (?<code>.+) {inPattern}$";
     }
 
     private static (string AtString, string InPattern) GetLocalizedStackFrameRegexParts()
@@ -44,9 +54,14 @@ internal static class StackTraceRegexHelper
                 inString = (string?)getResourceStringMethod.Invoke(null, [inResourceName]);
             }
         }
-        catch
+        catch (Exception ex) when (ex is AmbiguousMatchException
+            or TargetInvocationException
+            or TargetParameterCountException
+            or MemberAccessException
+            or InvalidOperationException
+            or NotSupportedException)
         {
-            // If we fail, populate the defaults below.
+            // If reflection lookup/invocation fails, populate the defaults below.
         }
 
         atString = atString is null || atString == atResourceName ? "at" : atString;
