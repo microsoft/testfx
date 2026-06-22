@@ -290,4 +290,36 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <value>failed with {0} error(s)</value>
     <comment>{0} is the number of errors in an assembly summary line</comment>
   </data>
+  <data name="Try" xml:space="preserve">
+    <value>try {0}</value>
+    <comment>number or tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</comment>
+  </data>
+  <data name="Retried" xml:space="preserve">
+    <value>retried</value>
+    <comment>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</comment>
+  </data>
+  <data name="RunningTestsFrom" xml:space="preserve">
+    <value>Running tests from</value>
+    <comment>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</comment>
+  </data>
+  <data name="DiscoveringTestsFrom" xml:space="preserve">
+    <value>Discovering tests from</value>
+    <comment>Per-assembly banner printed by the dotnet test orchestrator before discovering tests in an assembly; followed by the assembly path/target framework/architecture.</comment>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>error</value>
+    <comment>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</comment>
+  </data>
+  <data name="DiscoveredTestsInAssembly" xml:space="preserve">
+    <value>Discovered {0} tests in assembly</value>
+    <comment>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</comment>
+  </data>
+  <data name="DiscoveredTestsSummarySingular" xml:space="preserve">
+    <value>Discovered {0} tests.</value>
+    <comment>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</comment>
+  </data>
+  <data name="DiscoveredTestsSummary" xml:space="preserve">
+    <value>Discovered {0} tests in {1} assemblies.</value>
+    <comment>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</comment>
+  </data>
 </root>
