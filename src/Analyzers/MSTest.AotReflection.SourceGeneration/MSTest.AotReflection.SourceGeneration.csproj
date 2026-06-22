@@ -8,20 +8,22 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <RootNamespace>MSTest.AotReflection.SourceGeneration</RootNamespace>
-    <IsPackable>false</IsPackable>
-    <!-- PoC project — not shipped, not signed. -->
+    <!-- PoC project — packable for local experimentation but not shipped, not signed. -->
+    <IsPackable>true</IsPackable>
     <IsShipping>false</IsShipping>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
+  <!-- NuGet properties -->
   <PropertyGroup>
-    <Description>
-      PoC source generator that emits the metadata MSTest's IReflectionOperations would normally
-      produce via runtime reflection (attributes, declared members, instance factories, method
-      invokers). The eventual goal is to wire this output into the MSTest adapter so it can run
-      tests under NativeAOT without performing any runtime reflection. Tracked by
-      https://github.com/microsoft/testfx/issues/1837.
-    </Description>
+    <PackageDescription>
+      <![CDATA[PoC source generator that emits the metadata MSTest's IReflectionOperations would normally
+produce via runtime reflection (attributes, declared members, instance factories, method invokers).
+The eventual goal is to wire this output into the MSTest adapter so it can run tests under NativeAOT
+without performing any runtime reflection. Tracked by https://github.com/microsoft/testfx/issues/1837.
+
+This package is experimental and non-shipping; do not take a dependency on it in production code.]]>
+    </PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
@@ -43,15 +45,11 @@
     <Compile Include="..\Shared\SymbolAccessibilityHelper.cs" Link="Shared\SymbolAccessibilityHelper.cs" />
     <Compile Include="..\MSTest.SourceGeneration\Helpers\Constants.cs" Link="Helpers\Constants.cs" />
     <Compile Include="..\MSTest.SourceGeneration\Helpers\IndentedStringBuilder.cs" Link="Helpers\IndentedStringBuilder.cs" />
+  </ItemGroup>
 
-    <!-- Share the shipping generator's proven runtime-wiring source (ModuleInitializer + Register +
-         DynamicDependency rooting) so a project that references ONLY this AOT package is fully
-         functional today, on top of the reflection-free registry this generator also emits. This is
-         intentionally shared source (not a fork) so the wiring cannot drift from MSTest.SourceGeneration
-         until the reflection-free execution path is wired up and the two generators are consolidated. -->
-    <Compile Include="..\MSTest.SourceGeneration\Generators\ReflectionMetadataGenerator.cs" Link="Generators\ReflectionMetadataGenerator.cs" />
-    <Compile Include="..\MSTest.SourceGeneration\Emitters\ReflectionMetadataEmitter.cs" Link="Emitters\ReflectionMetadataEmitter.cs" />
-    <Compile Include="..\MSTest.SourceGeneration\Models\TestAssemblyMetadata.cs" Link="Models\TestAssemblyMetadata.cs" />
+  <ItemGroup>
+    <!-- Package the generator in the analyzer directory of the NuGet package -->
+    <None Include="$(OutputPath)\netstandard2.0\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
 </Project>
