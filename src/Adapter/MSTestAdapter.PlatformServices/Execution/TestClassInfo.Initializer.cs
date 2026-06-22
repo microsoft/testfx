@@ -176,7 +176,12 @@ internal sealed partial class TestClassInfo
                 needsSta: ClassAttribute is STATestClassAttribute,
                 action: DoRunAsync,
                 threadName: "MSTest STATestClass ClassInitialize",
-                defaultResult: initializeErrorResult).ConfigureAwait(false);
+                defaultResult: initializeErrorResult,
+                onJoinFailure: ex => new TestResult
+                {
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                    Outcome = UnitTestOutcome.Error,
+                }).ConfigureAwait(false);
         }
         finally
         {

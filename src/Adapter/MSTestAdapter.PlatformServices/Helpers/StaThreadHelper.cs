@@ -14,6 +14,15 @@ internal static class StaThreadHelper
     /// an STA thread. Otherwise, awaits <paramref name="action"/> on the calling thread.
     /// </summary>
     /// <typeparam name="TResult">The return type of <paramref name="action"/>.</typeparam>
+    /// <param name="needsSta">Whether the action needs to run on an STA thread.</param>
+    /// <param name="action">The asynchronous action to run.</param>
+    /// <param name="threadName">The name to assign to the STA thread, when one is created.</param>
+    /// <param name="defaultResult">The result returned when the STA thread does not complete normally.</param>
+    /// <param name="onJoinFailure">
+    /// Optional factory invoked when joining the STA thread throws (e.g. the calling thread is interrupted),
+    /// allowing callers to surface the failure details. When <see langword="null"/>, <paramref name="defaultResult"/>
+    /// is returned on a join failure.
+    /// </param>
     /// <remarks>
     /// If <paramref name="needsSta"/> is <see langword="true"/> but the OS is not Windows, a warning
     /// is logged and <paramref name="action"/> is awaited on the calling thread.
@@ -22,7 +31,8 @@ internal static class StaThreadHelper
         bool needsSta,
         Func<Task<TResult>> action,
         string threadName,
-        TResult defaultResult)
+        TResult defaultResult,
+        Func<Exception, TResult>? onJoinFailure = null)
     {
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         if (needsSta && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
@@ -47,7 +57,7 @@ internal static class StaThreadHelper
                         $"Failed to join STA thread '{threadName}': {ex}");
                 }
 
-                return defaultResult;
+                return onJoinFailure is not null ? onJoinFailure(ex) : defaultResult;
             }
 
             return result;
