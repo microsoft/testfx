@@ -9,8 +9,11 @@
     <AssemblyName>MSTest.TestFramework</AssemblyName>
     <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
 
-    <!-- TestFramework.Extensions.csproj is what we actually package as "MSTest.TestFramework". -->
-    <!-- Without changing PackageId here, NuGet will view this as a circular reference -->
+    <!-- TestFramework.Extensions.csproj is what we actually package as "MSTest.TestFramework", and it bundles
+         this assembly into its lib folder. This project is never packed on its own (IsPackable=false) and uses a
+         distinct PackageId so it is not seen as a circular/self reference. Because Extensions references it
+         directly, NuGet would still surface it as a package dependency, so TestFramework.Extensions.csproj
+         removes this "NotPublishable" dependency from the produced package (see _RemoveNonPublishableCoreDependency). -->
     <PackageId>NotPublishable</PackageId>
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);EXCLUDE_RANGE_INDEX_POLYFILL;EXCLUDE_OS_POLYFILL</DefineConstants>

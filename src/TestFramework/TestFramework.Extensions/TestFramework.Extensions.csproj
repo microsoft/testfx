@@ -11,9 +11,12 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestFramework.nuspec</NuspecFile>
-    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestFramework.NonWindows.nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
+    <!--
+      This package has a non-standard layout (the Extensions assembly goes to buildTransitive for
+      modern TFMs, and there are WinUI/UWP specific assets), so the package contents are produced
+      manually through MSBuild items/targets rather than the default SDK build output.
+    -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestFramework</PackageId>
     <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
     <PackageDescription>
@@ -28,7 +31,7 @@
       - UWP 10.0.16299
       - UWP 10.0.17763 with .NET 9+
     </PackageDescription>
-    <NoWarn>$(NoWarn);NU5100</NoWarn>
+    <NoWarn>$(NoWarn);NU5100;NU5128</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -52,13 +55,38 @@
     <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
   </PropertyGroup>
 
+  <!-- On .NET Framework, the netstandard2.0 MSTest.Analyzers package reference (added below for the NuGet
+       dependency only) would otherwise trigger implicit netstandard facade expansion, copying assemblies such
+       as System.Runtime.InteropServices.RuntimeInformation into the output. Those facades then flow to
+       downstream projects (e.g. MSTestAdapter.PlatformServices) and conflict with the polyfills (CS0436). This
+       project does not consume the analyzer assembly, so the facades are not needed. -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
+    <ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
+  </PropertyGroup>
+
   <ItemGroup>
+    <!-- The core MSTest.TestFramework assembly is bundled into lib (see the packaging target below) and must keep
+         flowing transitively for downstream compilation, so it is referenced normally (not PrivateAssets="all").
+         NuGet therefore surfaces it as a package dependency on "NotPublishable"; the _RemoveNonPublishableCoreDependency
+         target below strips that invalid dependency from the produced package. -->
     <ProjectReference Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" SetTargetFramework="TargetFramework=netstandard2.0" Private="True" />
     <ProjectReference Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
+
+    <!-- The only package dependency: MSTest.Analyzers. PrivateAssets="none" so the analyzers/build assets flow to
+         consumers of this package. The analyzer package is a netstandard2.0 project that ships only analyzers (no
+         lib/runtime), and this project never consumes it at compile/run time, so ExcludeAssets="compile;runtime"
+         keeps the reference from becoming a compile-time dependency (which on .NET Framework would otherwise pull
+         in netstandard facades such as System.Runtime.InteropServices.RuntimeInformation and conflict with the
+         polyfills downstream). See also ImplicitlyExpandNETStandardFacades below. The package is produced by
+         MSTest.Analyzers.Package.csproj. ReferenceOutputAssembly="false" keeps the analyzer assembly out of this
+         project's compilation graph (it is purely a NuGet dependency) while PrivateAssets="none" still surfaces it
+         as a package dependency for consumers. -->
+    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj" PrivateAssets="none" ExcludeAssets="compile;runtime" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" />
+    <!-- WinUI dependency must not flow to consumers of the package. -->
+    <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,10 +107,126 @@
     <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
-  <ItemGroup Label="NuGet">
-    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
-    <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
+  <!--
+    Static MSBuild assets (build/ and buildTransitive/ .targets files). These source files always exist,
+    so they are added at evaluation time. A single source file is mapped to several package folders where
+    needed (e.g. the "others" transitive targets are reused for netstandard2.0, net462 and uap10.0).
+    The net462/uap10.0 assets are only relevant on Windows, where those target frameworks are built.
+  -->
+  <ItemGroup Label="Package build assets">
+    <None Include="build\netstandard2.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\netstandard2.0\" />
+    <None Include="build\net8.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net8.0\" />
+    <None Include="build\net9.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net9.0\" />
+
+    <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\netstandard2.0\" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net8.0\" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net9.0\" />
   </ItemGroup>
+
+  <ItemGroup Label="Package build assets (Windows-only TFMs)" Condition=" '$(OS)' == 'Windows_NT' ">
+    <None Include="build\net462\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net462\" />
+    <None Include="build\uap10.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\uap10.0\" />
+
+    <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net462\" />
+    <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\uap10.0\" />
+  </ItemGroup>
+
+  <!--
+    The core MSTest.TestFramework assembly is produced by a project whose PackageId is "NotPublishable"
+    (to avoid a circular/self reference). It is bundled into lib and must keep flowing transitively for the
+    compilation of downstream projects (e.g. MSTestAdapter.PlatformServices), so it cannot be marked
+    PrivateAssets="all". Because it is referenced directly, NuGet surfaces it as a package dependency, which is
+    invalid (there is no "NotPublishable" package). The post-pack target below rewrites the produced package's
+    manifest to drop that single dependency, using only built-in MSBuild tasks so it works on all platforms.
+  -->
+  <UsingTask TaskName="_WriteTextFile" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$([System.IO.Path]::Combine('$(MSBuildToolsPath)', 'Microsoft.Build.Tasks.Core.dll'))">
+    <ParameterGroup>
+      <Path ParameterType="System.String" Required="true" />
+      <Content ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        System.IO.File.WriteAllText(Path, Content);
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="_RemoveNonPublishableCoreDependency" AfterTargets="Pack" Condition=" '$(IsPackable)' == 'true' ">
+    <PropertyGroup>
+      <_NonPublishableNupkg>$(PackageOutputPath)$(PackageId).$(PackageVersion).nupkg</_NonPublishableNupkg>
+      <_NonPublishableExtractDir>$(BaseIntermediateOutputPath)nupkgfix\</_NonPublishableExtractDir>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(_NonPublishableExtractDir)" />
+    <Unzip SourceFiles="$(_NonPublishableNupkg)" DestinationFolder="$(_NonPublishableExtractDir)" />
+
+    <PropertyGroup>
+      <_NonPublishableNuspecPath>$(_NonPublishableExtractDir)$(PackageId).nuspec</_NonPublishableNuspecPath>
+      <_NonPublishableNuspecContent>$([System.IO.File]::ReadAllText($(_NonPublishableNuspecPath)))</_NonPublishableNuspecContent>
+      <_NonPublishableNuspecFixed>$([System.Text.RegularExpressions.Regex]::Replace($(_NonPublishableNuspecContent), '[ \t]*&lt;dependency id="NotPublishable"[^&gt;]*/&gt;[ \t]*\r?\n', ''))</_NonPublishableNuspecFixed>
+      <!-- Did the regex actually strip the dependency? Only repackage/log when it did, so a future layout change
+           that stops surfacing the dependency does not silently rewrite the package with a misleading message. -->
+      <_NonPublishableDependencyRemoved>false</_NonPublishableDependencyRemoved>
+      <_NonPublishableDependencyRemoved Condition=" '$(_NonPublishableNuspecFixed)' != '$(_NonPublishableNuspecContent)' ">true</_NonPublishableDependencyRemoved>
+    </PropertyGroup>
+
+    <!-- Guard against a silent regression: if a 'NotPublishable' dependency is still present after the removal
+         attempt, the nuspec format changed and the regex no longer matches. Failing here prevents shipping a
+         package with an invalid dependency. -->
+    <Error Condition=" $(_NonPublishableNuspecFixed.Contains('NotPublishable')) "
+           Text="The produced package still references a 'NotPublishable' dependency after the removal step. The nuspec format likely changed; update the regex in _RemoveNonPublishableCoreDependency." />
+
+    <_WriteTextFile Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " Path="$(_NonPublishableNuspecPath)" Content="$(_NonPublishableNuspecFixed)" />
+
+    <Delete Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " Files="$(_NonPublishableNupkg)" />
+    <ZipDirectory Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " SourceDirectory="$(_NonPublishableExtractDir)" DestinationFile="$(_NonPublishableNupkg)" />
+    <RemoveDir Directories="$(_NonPublishableExtractDir)" />
+    <Message Condition=" '$(_NonPublishableDependencyRemoved)' == 'true' " Importance="high" Text="Removed the 'NotPublishable' project dependency from $(_NonPublishableNupkg)." />
+  </Target>
+
+  <!--
+    Per-TFM build outputs (assemblies, xml docs and localized satellites). Collected at pack time so that
+    the outputs (including the bundled core MSTest.TestFramework assembly copied from the project reference)
+    exist. Placement differs per TFM:
+      - core MSTest.TestFramework.dll/.xml/resources -> lib/<tfm> (except the WinUI/UWP only passes)
+      - MSTest.TestFramework.Extensions.dll/.xml     -> lib/<tfm> for netstandard2.0/net462/uap10.0
+                                                     -> buildTransitive/<tfm> for net8.0/net9.0
+                                                     -> buildTransitive/net8.0/winui (WinUI pass)
+                                                     -> buildTransitive/net9.0/uwp   (ModernUwp pass)
+  -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddTestFrameworkPackageFiles</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <Target Name="_AddTestFrameworkPackageFiles" DependsOnTargets="BuildOnlySettings;ResolveReferences">
+    <PropertyGroup>
+      <!-- Map the build TFM to the package folder name. -->
+      <_PackageTfm Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">uap10.0</_PackageTfm>
+      <_PackageTfm Condition=" '$(_PackageTfm)' == '' ">$(TargetFramework)</_PackageTfm>
+
+      <!-- Destination of the Extensions assembly and whether the core assembly is bundled in lib for this TFM. -->
+      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' ">lib\$(_PackageTfm)\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == 'net8.0' OR '$(TargetFramework)' == 'net9.0' ">buildTransitive\$(TargetFramework)\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">buildTransitive\net8.0\winui\</_ExtensionsPackagePath>
+      <_ExtensionsPackagePath Condition=" '$(TargetFramework)' == '$(ModernUwpMinimum)' ">buildTransitive\net9.0\uwp\</_ExtensionsPackagePath>
+
+      <!-- The core assembly is bundled in lib for every TFM except the WinUI/UWP-only passes. -->
+      <_BundleCoreAssembly>true</_BundleCoreAssembly>
+      <_BundleCoreAssembly Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' ">false</_BundleCoreAssembly>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <!-- Extensions assembly + xml doc. -->
+      <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestFramework.Extensions.dll" PackagePath="$(_ExtensionsPackagePath)" />
+      <TfmSpecificPackageFile Include="$(TargetDir)MSTest.TestFramework.Extensions.xml" PackagePath="$(_ExtensionsPackagePath)" />
+
+      <!-- Core assembly + xml doc + localized satellites (only the core resources are shipped). -->
+      <_CoreResourceFile Include="$(TargetDir)**\MSTest.TestFramework.resources.dll" />
+      <TfmSpecificPackageFile Condition=" '$(_BundleCoreAssembly)' == 'true' " Include="$(TargetDir)MSTest.TestFramework.dll" PackagePath="lib\$(_PackageTfm)\" />
+      <TfmSpecificPackageFile Condition=" '$(_BundleCoreAssembly)' == 'true' " Include="$(TargetDir)MSTest.TestFramework.xml" PackagePath="lib\$(_PackageTfm)\" />
+      <TfmSpecificPackageFile Condition=" '$(_BundleCoreAssembly)' == 'true' " Include="@(_CoreResourceFile)" PackagePath="lib\$(_PackageTfm)\" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <Using Include="Polyfills" />
