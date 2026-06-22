@@ -7,8 +7,8 @@ internal static class StackTraceRegexPatternFactory
 {
     internal static string CreateFramePattern()
     {
-        const string AtResourceName = "Word_At";
-        const string InResourceName = "StackTrace_InFileLineNumber";
+        const string AtResourceKey = "Word_At";
+        const string InResourceKey = "StackTrace_InFileLineNumber";
 
         string? atString = null;
         string? inString = null;
@@ -25,10 +25,10 @@ internal static class StackTraceRegexPatternFactory
             if (getResourceStringMethod is not null)
             {
                 // <value>at</value>
-                atString = (string?)getResourceStringMethod.Invoke(null, [AtResourceName]);
+                atString = (string?)getResourceStringMethod.Invoke(null, [AtResourceKey]);
 
                 // <value>in {0}:line {1}</value>
-                inString = (string?)getResourceStringMethod.Invoke(null, [InResourceName]);
+                inString = (string?)getResourceStringMethod.Invoke(null, [InResourceKey]);
             }
         }
         catch
@@ -36,8 +36,8 @@ internal static class StackTraceRegexPatternFactory
             // If we fail, populate the defaults below.
         }
 
-        atString = atString is null or AtResourceName ? "at" : atString;
-        inString = inString is null or InResourceName ? "in {0}:line {1}" : inString;
+        atString = atString == null || atString == AtResourceKey ? "at" : atString;
+        inString = inString == null || inString == InResourceKey ? "in {0}:line {1}" : inString;
 
         string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
         return @$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$";

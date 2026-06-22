@@ -49,11 +49,14 @@ internal static class StackTraceHelper
         file = null;
         place = null;
 
-        bool hasLocation = match.Groups["file"].Success && match.Groups["line"].Success;
+        bool hasLocation = match.Success && match.Groups["file"].Success && match.Groups["line"].Success;
         if (hasLocation)
         {
             // get the exact info from stack frame.
-            place = match.Groups["code"].Success ? match.Groups["code"].Value : match.Groups["code1"].Value;
+            Group code = match.Groups["code"];
+            Group codeWithoutLocation = match.Groups["code1"];
+            place = code.Success ? code.Value : codeWithoutLocation.Value;
+
             file = match.Groups["file"].Value;
             _ = int.TryParse(match.Groups["line"].Value, out line);
         }

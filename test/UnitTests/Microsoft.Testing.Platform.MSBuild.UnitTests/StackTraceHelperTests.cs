@@ -9,9 +9,9 @@ public sealed class StackTraceHelperTests
     [TestMethod]
     public void TryFindLocationFromStackFrame_WhenLocationExists_ReturnsLocation()
     {
-        const string StackTrace = "   at Program.Main() in /repo/Program.cs:line 42";
+        const string stackTrace = "   at Program.Main() in /repo/Program.cs:line 42";
 
-        bool foundLocation = StackTraceHelper.TryFindLocationFromStackFrame(StackTrace, out string? file, out int lineNumber, out string? place);
+        bool foundLocation = StackTraceHelper.TryFindLocationFromStackFrame(stackTrace, out string? file, out int lineNumber, out string? place);
 
         Assert.IsTrue(foundLocation);
         Assert.AreEqual("/repo/Program.cs", file);
@@ -22,9 +22,9 @@ public sealed class StackTraceHelperTests
     [TestMethod]
     public void TryFindLocationFromStackFrame_WhenLocationIsMissing_ReturnsFalse()
     {
-        const string StackTrace = "   at Program.Main()";
+        const string stackTrace = "   at Program.Main()";
 
-        bool foundLocation = StackTraceHelper.TryFindLocationFromStackFrame(StackTrace, out string? file, out int lineNumber, out string? place);
+        bool foundLocation = StackTraceHelper.TryFindLocationFromStackFrame(stackTrace, out string? file, out int lineNumber, out string? place);
 
         Assert.IsFalse(foundLocation);
         Assert.IsNull(file);
