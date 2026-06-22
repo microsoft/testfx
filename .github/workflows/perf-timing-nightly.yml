@@ -1,0 +1,80 @@
+name: Perf timing nightly
+
+# Phase 1 for microsoft/testfx#9312: artifact-only perf timing collection.
+# This workflow does not gate PRs and only uploads PlainProcess Result.json
+# files for trend tracking. PlainProcess is Windows-only until #9311 merges;
+# once that lands, this job can move to Linux for better reproducibility.
+
+on:
+  schedule:
+    # Nightly at 06:00 UTC, avoiding existing scheduled workflow slots.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: perf-timing-nightly
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    name: Collect PlainProcess timing
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Build packages
+        shell: pwsh
+        run: .\build.cmd -pack
+
+      - name: Run PlainProcess timing pipeline
+        shell: pwsh
+        env:
+          Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup: '0'
+        run: |
+          $startTime = (Get-Date).ToUniversalTime().AddMinutes(-5).ToString("O")
+          "PERF_TIMING_STARTED=$startTime" >> $env:GITHUB_ENV
+          & "$env:GITHUB_WORKSPACE\.dotnet\dotnet.exe" run --project test\Performance\MSTest.Performance.Runner -c Debug -- execute --pipelineNameFilter "*PlainProcess*"
+
+      - name: Stage Result.json files
+        shell: pwsh
+        run: |
+          $stagingDirectory = Join-Path $env:GITHUB_WORKSPACE "artifacts\perf-results"
+          New-Item -ItemType Directory -Path $stagingDirectory -Force | Out-Null
+
+          $started = [DateTimeOffset]::Parse($env:PERF_TIMING_STARTED).UtcDateTime
+          $roots = @(
+            $env:GITHUB_WORKSPACE
+            $env:RUNNER_TEMP
+            [System.IO.Path]::GetTempPath()
+          ) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path $_) } | Select-Object -Unique
+
+          $results = foreach ($root in $roots) {
+            Get-ChildItem -Path $root -Filter Result.json -Recurse -File -ErrorAction SilentlyContinue |
+              Where-Object { $_.LastWriteTimeUtc -ge $started }
+          }
+
+          $results = @($results | Sort-Object FullName -Unique)
+          if ($results.Count -eq 0) {
+            Write-Host "::error::No Result.json files were found under the workspace, runner temp, or system temp paths after the PlainProcess run."
+            exit 1
+          }
+
+          for ($i = 0; $i -lt $results.Count; $i++) {
+            $destinationDirectory = Join-Path $stagingDirectory ("result-{0:D3}" -f ($i + 1))
+            New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
+            Copy-Item -Path $results[$i].FullName -Destination (Join-Path $destinationDirectory "Result.json") -Force
+            Write-Host "Staged '$($results[$i].FullName)'"
+          }
+
+      - name: Upload Result.json
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-timing-result-json
+          path: artifacts\perf-results\
+          if-no-files-found: error
+          retention-days: 90
