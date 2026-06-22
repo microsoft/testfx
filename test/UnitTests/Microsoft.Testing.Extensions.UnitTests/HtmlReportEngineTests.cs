@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias HtmlReportExtension;
+
 using Microsoft.Testing.Extensions.HtmlReport;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -11,18 +13,16 @@ using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
+using HtmlTestResultCaptureHelper = HtmlReportExtension::Microsoft.Testing.Extensions.TestResultCaptureHelper;
+
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
 public class HtmlReportEngineTests
 {
-    // These mirror the limits in the shared TestResultCaptureHelper. They cannot reference
-    // TestResultCaptureHelper.* directly: that type is linked into every report extension
-    // assembly (HtmlReport, JUnitReport, CtrfReport), so an unqualified reference is ambiguous
-    // (CS0433: "type exists in both ...").
-    private const int MaxStandardStreamLength = 32 * 1024;
-    private const int MaxIdentityFieldLength = 4 * 1024;
-    private const int MaxTraitFieldLength = 1024;
+    private const int MaxStandardStreamLength = HtmlTestResultCaptureHelper.MaxStandardStreamLength;
+    private const int MaxIdentityFieldLength = HtmlTestResultCaptureHelper.MaxIdentityFieldLength;
+    private const int MaxTraitFieldLength = HtmlTestResultCaptureHelper.MaxTraitFieldLength;
 
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();

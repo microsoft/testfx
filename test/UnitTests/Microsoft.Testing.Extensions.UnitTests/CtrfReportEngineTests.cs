@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+extern alias HtmlReportExtension;
+
 using System.Text.Json;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -13,15 +15,14 @@ using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
+using HtmlTestResultCaptureHelper = HtmlReportExtension::Microsoft.Testing.Extensions.TestResultCaptureHelper;
+
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
 public class CtrfReportEngineTests
 {
-    // Mirrors TestResultCaptureHelper.MaxStandardStreamLength. It cannot reference that constant
-    // directly: TestResultCaptureHelper is linked into every report extension assembly
-    // (HtmlReport, JUnitReport, CtrfReport), so an unqualified reference is ambiguous (CS0433).
-    private const int MaxStandardStreamLength = 32 * 1024;
+    private const int MaxStandardStreamLength = HtmlTestResultCaptureHelper.MaxStandardStreamLength;
 
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
