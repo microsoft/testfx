@@ -107,17 +107,11 @@ internal sealed class HtmlReportEngine : ReportEngineBase
     }
 
     private string BuildDefaultFileName()
-    {
         // Deterministic <asm>_<tfm>_<arch>.html shape — discoverable across reruns and
         // multi-target/multi-arch matrices. A second run into the same TestResults folder
         // overwrites the previous file (with a warning), matching the behavior of an
         // explicitly-provided file name.
-        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
-        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.html";
-        return ReplaceInvalidFileNameChars(raw);
-    }
+        => BuildDefaultFileName("html");
 
     private string ResolveHtmlFileName(string template)
     {
@@ -125,9 +119,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
         return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
-
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 
     private static string LoadTemplate()
     {

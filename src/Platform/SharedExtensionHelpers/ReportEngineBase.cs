@@ -57,4 +57,19 @@ internal abstract class ReportEngineBase
         => providedFileName is { Length: > 0 }
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
+
+    /// <summary>
+    /// Builds the default report file name using the deterministic
+    /// <c>&lt;asm&gt;_&lt;tfm&gt;_&lt;arch&gt;.&lt;extension&gt;</c> shape.
+    /// A second run into the same TestResults folder overwrites the previous file
+    /// (with a warning), matching the behaviour of an explicitly-provided file name.
+    /// </summary>
+    protected string BuildDefaultFileName(string extension)
+    {
+        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.{extension}";
+        return ReportFileNameSanitizer.ReplaceInvalidFileNameChars(raw);
+    }
 }

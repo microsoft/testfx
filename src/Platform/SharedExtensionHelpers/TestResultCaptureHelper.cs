@@ -126,6 +126,45 @@ internal static class TestResultCaptureHelper
         return value.Substring(0, cut)
             + $"\n…[truncated, original length: {value.Length.ToString(CultureInfo.InvariantCulture)}]";
     }
+
+    /// <summary>
+    /// Applies the common guard check (null/Discovered/InProgress state) and extracts all
+    /// base-class properties for a terminal test node. Returns <see langword="null"/> when
+    /// the node should not produce a captured result; otherwise returns a
+    /// <see cref="TryCaptureResult"/> containing pre-truncated common fields plus the raw
+    /// <see cref="TestNodeStateProperty"/> and <see cref="CapturedTestResultProperties"/>
+    /// for format-specific post-processing.
+    /// </summary>
+    internal static TryCaptureResult? TryCaptureCore(TestNode node, bool includeLocation = false)
+    {
+        TestNodeStateProperty? state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+        {
+            return null;
+        }
+
+        CapturedTestResultProperties properties = ExtractProperties(node.Properties, includeLocation);
+        TimeSpan duration = properties.Timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
+        (string? className, string? methodName) = GetClassAndMethodName(properties.Identifier);
+        CapturedExceptionDetails exceptionDetails = ExtractExceptionDetails(state);
+
+        return new TryCaptureResult(
+            Uid: Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
+            DisplayName: Truncate(node.DisplayName, MaxIdentityFieldLength)!,
+            Duration: duration,
+            StartTime: properties.Timing?.GlobalTiming.StartTime,
+            EndTime: properties.Timing?.GlobalTiming.EndTime,
+            ClassName: Truncate(className, MaxIdentityFieldLength),
+            MethodName: Truncate(methodName, MaxIdentityFieldLength),
+            ErrorMessage: Truncate(exceptionDetails.ErrorMessage, MaxMessageLength),
+            ExceptionType: exceptionDetails.ExceptionType,
+            StackTrace: Truncate(exceptionDetails.StackTrace, MaxStackTraceLength),
+            StandardOutput: Truncate(properties.StandardOutput?.StandardOutput, MaxStandardStreamLength),
+            StandardError: Truncate(properties.StandardError?.StandardError, MaxStandardStreamLength),
+            Traits: properties.Traits,
+            State: state,
+            Properties: properties);
+    }
 }
 
 internal readonly record struct CapturedTestResultProperties(
@@ -140,3 +179,27 @@ internal readonly record struct CapturedExceptionDetails(
     string? ErrorMessage,
     string? StackTrace,
     string? ExceptionType);
+
+/// <summary>
+/// The pre-computed common output of <see cref="TestResultCaptureHelper.TryCaptureCore"/>.
+/// All variable-length text fields are already truncated to their per-type budget.
+/// The <see cref="State"/> and <see cref="Properties"/> members are the raw platform objects
+/// retained so that each report format can perform its own outcome classification and
+/// extract format-specific extras (location, UID parent chain, …) without a second pass.
+/// </summary>
+internal readonly record struct TryCaptureResult(
+    string Uid,
+    string DisplayName,
+    TimeSpan Duration,
+    DateTimeOffset? StartTime,
+    DateTimeOffset? EndTime,
+    string? ClassName,
+    string? MethodName,
+    string? ErrorMessage,
+    string? ExceptionType,
+    string? StackTrace,
+    string? StandardOutput,
+    string? StandardError,
+    IReadOnlyList<KeyValuePair<string, string>>? Traits,
+    TestNodeStateProperty State,
+    CapturedTestResultProperties Properties);

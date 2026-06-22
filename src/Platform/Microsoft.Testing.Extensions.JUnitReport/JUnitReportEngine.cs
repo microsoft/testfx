@@ -112,17 +112,11 @@ internal sealed class JUnitReportEngine : ReportEngineBase
     }
 
     private string BuildDefaultFileName()
-    {
         // Deterministic <asm>_<tfm>_<arch>.xml shape — discoverable across reruns and
         // multi-target/multi-arch matrices. A second run into the same TestResults folder
         // overwrites the previous file (with a warning), matching the behavior of an
         // explicitly-provided file name.
-        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
-        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.xml";
-        return ReplaceInvalidFileNameChars(raw);
-    }
+        => BuildDefaultFileName("xml");
 
     private string ResolveXmlFileName(string template)
     {
@@ -130,7 +124,4 @@ internal sealed class JUnitReportEngine : ReportEngineBase
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
         return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
-
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 }

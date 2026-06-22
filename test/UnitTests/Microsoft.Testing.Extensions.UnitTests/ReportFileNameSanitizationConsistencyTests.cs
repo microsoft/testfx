@@ -16,13 +16,19 @@ public class ReportFileNameSanitizationConsistencyTests
         typeof(TrxReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve TrxReportEngine.ReplaceInvalidFileNameChars.");
 
+    // HtmlReport and JUnitReport delegate sanitization to the shared ReportFileNameSanitizer via
+    // ReportEngineBase.BuildDefaultFileName — get that shared type from each engine's assembly.
     private static readonly MethodInfo HtmlSanitizeMethod =
-        typeof(HtmlReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
-        ?? throw new InvalidOperationException("Could not resolve HtmlReportEngine.ReplaceInvalidFileNameChars.");
+        typeof(HtmlReportEngine).Assembly
+            .GetType("Microsoft.Testing.Extensions.ReportFileNameSanitizer")
+            ?.GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars from HtmlReport assembly.");
 
     private static readonly MethodInfo JUnitSanitizeMethod =
-        typeof(JUnitReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
-        ?? throw new InvalidOperationException("Could not resolve JUnitReportEngine.ReplaceInvalidFileNameChars.");
+        typeof(JUnitReportEngine).Assembly
+            .GetType("Microsoft.Testing.Extensions.ReportFileNameSanitizer")
+            ?.GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars from JUnitReport assembly.");
 
     [TestMethod]
     [DynamicData(nameof(GetSanitizationInputs))]

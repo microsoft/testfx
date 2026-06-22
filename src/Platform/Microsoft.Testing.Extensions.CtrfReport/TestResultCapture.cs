@@ -13,49 +13,48 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 // stdout/stderr/stack traces) in memory for the whole session.
 internal static class TestResultCapture
 {
-    internal const int MaxStandardStreamLength = TestResultCaptureHelper.MaxStandardStreamLength;
-    internal const int MaxStackTraceLength = TestResultCaptureHelper.MaxStackTraceLength;
-    internal const int MaxMessageLength = TestResultCaptureHelper.MaxMessageLength;
-    internal const int MaxIdentityFieldLength = TestResultCaptureHelper.MaxIdentityFieldLength;
-    internal const int MaxTraitFieldLength = TestResultCaptureHelper.MaxTraitFieldLength;
-
     public static CapturedTestResult? TryCapture(TestNode node)
     {
-        TestNodeStateProperty? state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
-        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+        TryCaptureResult? coreResult = TestResultCaptureHelper.TryCaptureCore(node, includeLocation: true);
+        if (coreResult is null)
         {
             return null;
         }
 
-        CapturedTestResultProperties properties = TestResultCaptureHelper.ExtractProperties(node.Properties, includeLocation: true);
-        (string status, string? rawStatus) = ClassifyStatus(state);
-        TimeSpan duration = properties.Timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
-        (string? ns, string? className, string? methodName) = GetClassAndMethodName(properties.Identifier);
-        CapturedExceptionDetails exceptionDetails = TestResultCaptureHelper.ExtractExceptionDetails(state);
+        TryCaptureResult core = coreResult.Value;
+        (string status, string? rawStatus) = ClassifyStatus(core.State);
+
+        // CTRF keeps Namespace and TypeName separate rather than combining them into
+        // a single ClassName string, so we decompose the identifier here instead of
+        // using the pre-combined ClassName from TryCaptureResult.
+        TestMethodIdentifierProperty? identifier = core.Properties.Identifier;
+        string? ns = identifier is not null && !RoslynString.IsNullOrEmpty(identifier.Namespace)
+            ? identifier.Namespace
+            : null;
 
         return new CapturedTestResult
         {
             // Identity fields are test-controlled and can be unbounded (e.g. very long
             // UIDs/display names from generated data), so we also cap them to keep the
             // session-wide result list and generated report within a predictable budget.
-            Uid = Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
-            DisplayName = Truncate(node.DisplayName, MaxIdentityFieldLength)!,
+            Uid = core.Uid,
+            DisplayName = core.DisplayName,
             Status = status,
             RawStatus = rawStatus,
-            Duration = duration,
-            StartTime = properties.Timing?.GlobalTiming.StartTime,
-            EndTime = properties.Timing?.GlobalTiming.EndTime,
-            Namespace = Truncate(ns, MaxIdentityFieldLength),
-            ClassName = Truncate(className, MaxIdentityFieldLength),
-            MethodName = Truncate(methodName, MaxIdentityFieldLength),
-            ErrorMessage = Truncate(exceptionDetails.ErrorMessage, MaxMessageLength),
-            ExceptionType = exceptionDetails.ExceptionType,
-            StackTrace = Truncate(exceptionDetails.StackTrace, MaxStackTraceLength),
-            StandardOutput = Truncate(properties.StandardOutput?.StandardOutput, MaxStandardStreamLength),
-            StandardError = Truncate(properties.StandardError?.StandardError, MaxStandardStreamLength),
-            FilePath = Truncate(properties.Location?.FilePath, MaxIdentityFieldLength),
-            Line = properties.Location?.LineSpan.Start.Line,
-            Traits = properties.Traits,
+            Duration = core.Duration,
+            StartTime = core.StartTime,
+            EndTime = core.EndTime,
+            Namespace = TestResultCaptureHelper.Truncate(ns, TestResultCaptureHelper.MaxIdentityFieldLength),
+            ClassName = TestResultCaptureHelper.Truncate(identifier?.TypeName, TestResultCaptureHelper.MaxIdentityFieldLength),
+            MethodName = core.MethodName,
+            ErrorMessage = core.ErrorMessage,
+            ExceptionType = core.ExceptionType,
+            StackTrace = core.StackTrace,
+            StandardOutput = core.StandardOutput,
+            StandardError = core.StandardError,
+            FilePath = TestResultCaptureHelper.Truncate(core.Properties.Location?.FilePath, TestResultCaptureHelper.MaxIdentityFieldLength),
+            Line = core.Properties.Location?.LineSpan.Start.Line,
+            Traits = core.Traits,
         };
     }
 
@@ -77,18 +76,4 @@ internal static class TestResultCapture
                 => ("failed", null),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
-
-    private static (string? Namespace, string? ClassName, string? MethodName) GetClassAndMethodName(TestMethodIdentifierProperty? identifier)
-    {
-        if (identifier is null)
-        {
-            return (null, null, null);
-        }
-
-        string? ns = RoslynString.IsNullOrEmpty(identifier.Namespace) ? null : identifier.Namespace;
-        return (ns, identifier.TypeName, identifier.MethodName);
-    }
-
-    internal static string? Truncate(string? value, int maxLength)
-        => TestResultCaptureHelper.Truncate(value, maxLength);
 }

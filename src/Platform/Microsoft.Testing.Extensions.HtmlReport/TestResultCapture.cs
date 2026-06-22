@@ -10,54 +10,37 @@ namespace Microsoft.Testing.Extensions.HtmlReport;
 // stdout/stderr/stack traces) in memory for the whole session.
 internal static class TestResultCapture
 {
-    internal const int MaxStandardStreamLength = TestResultCaptureHelper.MaxStandardStreamLength;
-    internal const int MaxStackTraceLength = TestResultCaptureHelper.MaxStackTraceLength;
-    internal const int MaxMessageLength = TestResultCaptureHelper.MaxMessageLength;
-    internal const int MaxIdentityFieldLength = TestResultCaptureHelper.MaxIdentityFieldLength;
-    internal const int MaxTraitFieldLength = TestResultCaptureHelper.MaxTraitFieldLength;
-
     public static CapturedTestResult? TryCapture(TestNode node)
     {
-        TestNodeStateProperty? state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
-        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+        TryCaptureResult? coreResult = TestResultCaptureHelper.TryCaptureCore(node);
+        if (coreResult is null)
         {
             return null;
         }
 
-        CapturedTestResultProperties properties = TestResultCaptureHelper.ExtractProperties(node.Properties);
-        string outcome = ClassifyOutcome(state);
-        TimeSpan duration = properties.Timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
-        (string? className, string? methodName) = TestResultCaptureHelper.GetClassAndMethodName(properties.Identifier);
-        CapturedExceptionDetails exceptionDetails = TestResultCaptureHelper.ExtractExceptionDetails(state);
-
+        TryCaptureResult core = coreResult.Value;
         return new CapturedTestResult
         {
             // Identity fields are test-controlled and can be unbounded (e.g. very long
             // UIDs/display names from generated data), so we also cap them to keep the
             // session-wide result list and generated HTML within a predictable budget.
-            Uid = Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
-            DisplayName = Truncate(node.DisplayName, MaxIdentityFieldLength)!,
-            Outcome = outcome,
-            Duration = duration,
-            StartTime = properties.Timing?.GlobalTiming.StartTime,
-            EndTime = properties.Timing?.GlobalTiming.EndTime,
-            ClassName = Truncate(className, MaxIdentityFieldLength),
-            MethodName = Truncate(methodName, MaxIdentityFieldLength),
-            ErrorMessage = Truncate(exceptionDetails.ErrorMessage, MaxMessageLength),
-            ExceptionType = exceptionDetails.ExceptionType,
-            StackTrace = Truncate(exceptionDetails.StackTrace, MaxStackTraceLength),
-            StandardOutput = Truncate(properties.StandardOutput?.StandardOutput, MaxStandardStreamLength),
-            StandardError = Truncate(properties.StandardError?.StandardError, MaxStandardStreamLength),
-            Traits = properties.Traits,
+            Uid = core.Uid,
+            DisplayName = core.DisplayName,
+            // Cancellation is intentionally handled in report-specific wrappers. HTML has
+            // historically let cancellation fall through to the failed outcome category, so
+            // this simply delegates to the shared helper with no special-casing.
+            Outcome = TestResultCaptureHelper.ClassifyOutcome(core.State),
+            Duration = core.Duration,
+            StartTime = core.StartTime,
+            EndTime = core.EndTime,
+            ClassName = core.ClassName,
+            MethodName = core.MethodName,
+            ErrorMessage = core.ErrorMessage,
+            ExceptionType = core.ExceptionType,
+            StackTrace = core.StackTrace,
+            StandardOutput = core.StandardOutput,
+            StandardError = core.StandardError,
+            Traits = core.Traits,
         };
     }
-
-    private static string ClassifyOutcome(TestNodeStateProperty state)
-        // Cancellation is intentionally handled in report-specific wrappers. HTML has
-        // historically let cancellation fall through to the failed outcome category, so
-        // this wrapper simply delegates to the shared helper with no special-casing.
-        => TestResultCaptureHelper.ClassifyOutcome(state);
-
-    internal static string? Truncate(string? value, int maxLength)
-        => TestResultCaptureHelper.Truncate(value, maxLength);
 }
