@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -214,41 +215,24 @@ internal sealed class MSTestExecutor : ITestExecutor
     {
         ApartmentState? requestedApartmentState = MSTestSettings.RunConfigurationSettings.ExecutionApartmentState;
 
-        // If we are on Windows and the requested apartment state is different from the current apartment state,
-        // then run the tests in a new thread.
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            && requestedApartmentState is not null
-            && Thread.CurrentThread.GetApartmentState() != requestedApartmentState)
-        {
-            Thread entryPointThread = new(() => DoRunTestsAsync().GetAwaiter().GetResult())
+        await StaThreadHelper.RunOnApartmentThreadIfNeededAsync(
+            requestedApartmentState,
+            "MSTest Entry Point",
+            async () =>
             {
-                Name = "MSTest Entry Point",
-            };
-
-            entryPointThread.SetApartmentState(requestedApartmentState.Value);
-            entryPointThread.Start();
-
-            try
-            {
-                var threadTask = Task.Run(entryPointThread.Join, _cancellationToken);
-                await threadTask.ConfigureAwait(false);
-            }
-            catch (Exception ex)
+                await DoRunTestsAsync().ConfigureAwait(false);
+                return 0;
+            },
+            () => 0,
+            entryPointThread => Task.Run(entryPointThread.Join, _cancellationToken),
+            (_, ex) =>
             {
                 frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
-            }
-        }
-        else
-        {
-            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                && requestedApartmentState is ApartmentState.STA)
-            {
-                frameworkHandle.SendMessage(TestMessageLevel.Warning, Resource.STAIsOnlySupportedOnWindowsWarning);
-            }
-
-            await DoRunTestsAsync().ConfigureAwait(false);
-        }
+                return 0;
+            },
+            () => frameworkHandle.SendMessage(
+                TestMessageLevel.Warning,
+                Resource.STAIsOnlySupportedOnWindowsWarning)).ConfigureAwait(false);
 
         // Local functions
         async Task DoRunTestsAsync()

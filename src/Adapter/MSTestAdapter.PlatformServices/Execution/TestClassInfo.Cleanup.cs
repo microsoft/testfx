@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -130,11 +131,36 @@ internal sealed partial class TestClassInfo
             return null;
         }
 
-        return await StaThreadHelper.RunOnStaThreadIfNeededAsync(
-            needsSta: ClassAttribute is STATestClassAttribute,
-            action: DoRunAsync,
-            threadName: "MSTest STATestClass ClassCleanup",
-            defaultResult: null).ConfigureAwait(false);
+        ApartmentState? requestedApartmentState = ClassAttribute is STATestClassAttribute
+            ? ApartmentState.STA
+            : null;
+        return await StaThreadHelper.RunOnApartmentThreadIfNeededAsync<TestResult?>(
+            requestedApartmentState,
+            "MSTest STATestClass ClassCleanup",
+            DoRunAsync,
+            () => null,
+            entryPointThread =>
+            {
+                entryPointThread.Join();
+                return Task.CompletedTask;
+            },
+            (thread, ex) =>
+            {
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                        $"Failed to join STA thread '{thread.Name}': {ex}");
+                }
+
+                return null;
+            },
+            () =>
+            {
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                }
+            }).ConfigureAwait(false);
 
         // Local functions
         async Task<TestResult?> DoRunAsync()

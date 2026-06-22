@@ -1,74 +1,80 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 
 /// <summary>
-/// Helper for running async operations on a Windows STA thread when required.
+/// Helper for running async operations on a Windows apartment thread when required.
 /// </summary>
 internal static class StaThreadHelper
 {
-    /// <summary>
-    /// Runs <paramref name="action"/> on a new Windows STA thread if <paramref name="needsSta"/>
-    /// is <see langword="true"/>, the current OS is Windows, and the current thread is not already
-    /// an STA thread. Otherwise, awaits <paramref name="action"/> on the calling thread.
-    /// </summary>
-    /// <typeparam name="TResult">The return type of <paramref name="action"/>.</typeparam>
-    /// <param name="needsSta">Whether the action needs to run on an STA thread.</param>
-    /// <param name="action">The asynchronous action to run.</param>
-    /// <param name="threadName">The name to assign to the STA thread, when one is created.</param>
-    /// <param name="defaultResult">The result returned when the STA thread does not complete normally.</param>
-    /// <param name="onJoinFailure">
-    /// Optional factory invoked when joining the STA thread throws (e.g. the calling thread is interrupted),
-    /// allowing callers to surface the failure details. When <see langword="null"/>, <paramref name="defaultResult"/>
-    /// is returned on a join failure.
-    /// </param>
-    /// <remarks>
-    /// If <paramref name="needsSta"/> is <see langword="true"/> but the OS is not Windows, a warning
-    /// is logged and <paramref name="action"/> is awaited on the calling thread.
-    /// </remarks>
-    internal static async Task<TResult> RunOnStaThreadIfNeededAsync<TResult>(
-        bool needsSta,
-        Func<Task<TResult>> action,
+    internal static async Task<T> RunOnApartmentThreadIfNeededAsync<T>(
+        ApartmentState? requestedApartmentState,
         string threadName,
-        TResult defaultResult,
-        Func<Exception, TResult>? onJoinFailure = null)
+        Func<Task<T>> action,
+        Func<T> threadResultFactory,
+        Func<Thread, Task> waitForThreadAsync,
+        Func<Thread, Exception, T> exceptionHandler,
+        Action warningHandler)
     {
         bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (needsSta && isWindowsOS && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
+        if (isWindowsOS
+            && requestedApartmentState is not null
+            && Thread.CurrentThread.GetApartmentState() != requestedApartmentState)
         {
-            TResult result = defaultResult;
-            Thread entryPointThread = new(() => result = action().GetAwaiter().GetResult())
+            T threadResult = default!;
+            bool hasThreadResult = false;
+            Thread entryPointThread = new(() =>
+            {
+                threadResult = action().GetAwaiter().GetResult();
+                hasThreadResult = true;
+            })
             {
                 Name = threadName,
             };
-            entryPointThread.SetApartmentState(ApartmentState.STA);
+
+            entryPointThread.SetApartmentState(requestedApartmentState.Value);
             entryPointThread.Start();
 
             try
             {
-                entryPointThread.Join();
+                await waitForThreadAsync(entryPointThread).ConfigureAwait(false);
+                return hasThreadResult ? threadResult : threadResultFactory();
             }
-            catch (Exception ex) when (ex is ThreadStateException or ThreadInterruptedException)
+            catch (Exception ex)
             {
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
-                        $"Failed to join STA thread '{threadName}': {ex}");
-                }
-
-                return onJoinFailure is not null ? onJoinFailure(ex) : defaultResult;
+                return exceptionHandler(entryPointThread, ex);
             }
-
-            return result;
         }
 
-        if (!isWindowsOS && needsSta
-            && PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+        if (!isWindowsOS && requestedApartmentState is ApartmentState.STA)
         {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
+            warningHandler();
         }
 
         return await action().ConfigureAwait(false);
+    }
+
+    [SupportedOSPlatform("windows")]
+    internal static Task RunOnStaThreadAsync(Func<Task> action)
+    {
+        TaskCompletionSource<int> tcs = new();
+        Thread entryPointThread = new(() =>
+        {
+            try
+            {
+                Task task = action();
+                task.GetAwaiter().GetResult();
+                tcs.SetResult(0);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+
+        entryPointThread.SetApartmentState(ApartmentState.STA);
+        entryPointThread.Start();
+        return tcs.Task;
     }
 }

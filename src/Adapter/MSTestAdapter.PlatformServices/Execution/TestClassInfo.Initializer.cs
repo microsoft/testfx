@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -167,20 +168,43 @@ internal sealed partial class TestClassInfo
 
             DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
 
-            var initializeErrorResult = new TestResult
-            {
-                Outcome = UnitTestOutcome.Error,
-                IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
-            };
-            return await StaThreadHelper.RunOnStaThreadIfNeededAsync(
-                needsSta: ClassAttribute is STATestClassAttribute,
-                action: DoRunAsync,
-                threadName: "MSTest STATestClass ClassInitialize",
-                defaultResult: initializeErrorResult,
-                onJoinFailure: ex => new TestResult
+            ApartmentState? requestedApartmentState = ClassAttribute is STATestClassAttribute
+                ? ApartmentState.STA
+                : null;
+            return await StaThreadHelper.RunOnApartmentThreadIfNeededAsync(
+                requestedApartmentState,
+                "MSTest STATestClass ClassInitialize",
+                DoRunAsync,
+                () => new TestResult
                 {
-                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                     Outcome = UnitTestOutcome.Error,
+                    IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
+                },
+                entryPointThread =>
+                {
+                    entryPointThread.Join();
+                    return Task.CompletedTask;
+                },
+                (thread, ex) =>
+                {
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                            $"Failed to join STA thread '{thread.Name}': {ex}");
+                    }
+
+                    return new TestResult
+                    {
+                        TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
+                        Outcome = UnitTestOutcome.Error,
+                    };
+                },
+                () =>
+                {
+                    if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
+                    }
                 }).ConfigureAwait(false);
         }
         finally
