@@ -32,6 +32,11 @@
         <target state="new">duration</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCode">
+        <source>Exit code</source>
+        <target state="new">Exit code</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
         <target state="new">Expected</target>
@@ -47,10 +52,20 @@
         <target state="new">failed</target>
         <note />
       </trans-unit>
+      <trans-unit id="FailedWithErrors">
+        <source>failed with {0} error(s)</source>
+        <target state="new">failed with {0} error(s)</target>
+        <note>{0} is the number of errors in an assembly summary line</note>
+      </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
         <target state="new">For test</target>
         <note>is followed by test name</note>
+      </trans-unit>
+      <trans-unit id="HandshakeFailuresHeader">
+        <source>Handshake failures:</source>
+        <target state="new">Handshake failures:</target>
+        <note />
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>

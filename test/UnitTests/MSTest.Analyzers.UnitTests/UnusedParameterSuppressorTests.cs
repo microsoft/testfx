@@ -250,6 +250,96 @@ public sealed class UnusedParameterSuppressorTests
         }.RunAsync();
     }
 
+    [TestMethod]
+    public async Task TestMethodWithUnusedTestContext_DiagnosticIsNotSuppressed()
+    {
+        // [TestMethod] is not in the suppressor's fixture-attribute list, so even a TestContext
+        // parameter should not be suppressed.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class SomeClass
+            {
+                [TestMethod]
+                public void TestMethod(TestContext {|#0:context|})
+                {
+                }
+            }
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+
+        // Verify issue is still reported with suppressor (not suppressed)
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("context")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task AssemblyInitializeWithUnusedNonTestContextParameter_DiagnosticIsNotSuppressed()
+    {
+        // The suppressor only suppresses TestContext parameters; a non-TestContext parameter in a
+        // fixture method (e.g. [AssemblyInitialize]) should not be suppressed.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class SomeClass
+            {
+                [AssemblyInitialize]
+                public static void Initialize(string {|#0:message|})
+                {
+                }
+            }
+            """;
+
+        // Verify issue is reported without suppressor
+        await new VerifyCS.Test
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("message")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+
+        // Verify issue is still reported with suppressor (not suppressed)
+        await new TestWithSuppressor
+        {
+            TestState = { Sources = { code } },
+            ExpectedDiagnostics =
+            {
+                VerifyCS.Diagnostic(WarnForUnusedParameters.Rule)
+                    .WithLocation(0)
+                    .WithArguments("message")
+                    .WithIsSuppressed(false),
+            },
+        }.RunAsync();
+    }
+
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1038:Compiler extensions should be implemented in assemblies with compiler-provided references", Justification = "For suppression test only.")]
     [SuppressMessage("MicrosoftCodeAnalysisCorrectness", "RS1036:Specify analyzer banned API enforcement setting", Justification = "For suppression test only.")]

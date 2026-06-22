@@ -25,6 +25,8 @@ internal sealed partial class TerminalTestReporter
         FlatException[] flatExceptions = ExceptionFlattener.Flatten(errorMessage, exception);
         TestCompleted(
             executionId,
+            // In-process host: a single attempt, so the instance id is the (fixed) execution id.
+            instanceId: executionId,
             testNodeUid,
             displayName,
             outcome,
@@ -37,8 +39,47 @@ internal sealed partial class TerminalTestReporter
             errorOutput);
     }
 
+    /// <summary>
+    /// Orchestrator overload (<c>dotnet test</c>): carries the assembly/target-framework/architecture and the
+    /// per-attempt instance id that the multi-process orchestrator knows. The instance id drives retry attribution
+    /// in <see cref="TestProgressState"/>; assembly/tfm/arch are accepted for signature parity and the future
+    /// per-test assembly link.
+    /// </summary>
+    internal void TestCompleted(
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        string executionId,
+        string instanceId,
+        string testNodeUid,
+        string displayName,
+        string? informativeMessage,
+        TestOutcome outcome,
+        TimeSpan? duration,
+        FlatException[]? exceptions,
+        string? expected,
+        string? actual,
+        string? standardOutput,
+        string? errorOutput)
+        // assembly / targetFramework / architecture are intentionally not forwarded yet: they are reserved for the
+        // per-test assembly link in a follow-up. The instance id IS forwarded — it drives retry attribution.
+        => TestCompleted(
+            executionId,
+            instanceId,
+            testNodeUid,
+            displayName,
+            outcome,
+            duration,
+            informativeMessage,
+            exceptions ?? [],
+            expected,
+            actual,
+            standardOutput,
+            errorOutput);
+
     private void TestCompleted(
         string executionId,
+        string instanceId,
         string testNodeUid,
         string displayName,
         TestOutcome outcome,
@@ -66,16 +107,13 @@ internal sealed partial class TerminalTestReporter
             case TestOutcome.Timeout:
             case TestOutcome.Canceled:
             case TestOutcome.Fail:
-                asm.FailedTests++;
-                asm.TotalTests++;
+                asm.ReportFailedTest(testNodeUid, instanceId);
                 break;
             case TestOutcome.Passed:
-                asm.PassedTests++;
-                asm.TotalTests++;
+                asm.ReportPassingTest(testNodeUid, instanceId);
                 break;
             case TestOutcome.Skipped:
-                asm.SkippedTests++;
-                asm.TotalTests++;
+                asm.ReportSkippedTest(testNodeUid, instanceId);
                 break;
         }
 
@@ -83,8 +121,12 @@ internal sealed partial class TerminalTestReporter
         _terminalWithProgress.NotifyTestCompleted();
         if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
+            // Capture the attempt number (1-based) at completion time so the per-test "(try N)" annotation reflects
+            // the retry attempt this result belongs to.
+            int attempt = asm.TryCount;
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
+                attempt,
                 displayName,
                 outcome,
                 duration,
@@ -105,6 +147,7 @@ internal sealed partial class TerminalTestReporter
 
     private void RenderTestCompleted(
         ITerminal terminal,
+        int attempt,
         string displayName,
         TestOutcome outcome,
         TimeSpan? duration,
@@ -138,6 +181,16 @@ internal sealed partial class TerminalTestReporter
 
         terminal.SetColor(color);
         terminal.Append(outcomeText);
+
+        // Orchestrator-only: annotate which retry attempt this result belongs to (e.g. "failed (try 2)") so retried
+        // results are not mistaken for duplicates. _isRetry is only ever set for the dotnet test orchestrator; the
+        // in-process host leaves it false, so its per-test lines are unchanged.
+        if (_isRetry)
+        {
+            terminal.SetColor(TerminalColor.DarkGray);
+            terminal.Append($" ({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, attempt)})");
+        }
+
         terminal.ResetColor();
         terminal.Append(' ');
         terminal.Append(MakeControlCharactersVisible(displayName, true));

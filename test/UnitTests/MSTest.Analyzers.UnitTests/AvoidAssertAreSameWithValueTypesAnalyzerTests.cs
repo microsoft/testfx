@@ -256,4 +256,134 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenValueTypeIsEnum_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    [|Assert.AreSame(DayOfWeek.Monday, DayOfWeek.Tuesday)|];
+                    [|Assert.AreNotSame(DayOfWeek.Monday, DayOfWeek.Tuesday)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(DayOfWeek.Monday, DayOfWeek.Tuesday);
+                    Assert.AreNotEqual(DayOfWeek.Monday, DayOfWeek.Tuesday);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenValueTypeIsCustomStruct_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var a = new MyPoint(1, 2);
+                    var b = new MyPoint(3, 4);
+                    [|Assert.AreSame(a, b)|];
+                    [|Assert.AreNotSame(a, b)|];
+                }
+            }
+
+            public readonly struct MyPoint(int x, int y)
+            {
+                public int X { get; } = x;
+                public int Y { get; } = y;
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var a = new MyPoint(1, 2);
+                    var b = new MyPoint(3, 4);
+                    Assert.AreEqual(a, b);
+                    Assert.AreNotEqual(a, b);
+                }
+            }
+
+            public readonly struct MyPoint(int x, int y)
+            {
+                public int X { get; } = x;
+                public int Y { get; } = y;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenValueTypeIsNullableInt_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int? a = 1;
+                    int? b = 2;
+                    [|Assert.AreSame(a, b)|];
+                    [|Assert.AreNotSame(a, b)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int? a = 1;
+                    int? b = 2;
+                    Assert.AreEqual(a, b);
+                    Assert.AreNotEqual(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

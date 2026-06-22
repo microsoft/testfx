@@ -31,6 +31,7 @@
       "src\\Platform\\Microsoft.Testing.Platform.MSBuild\\Microsoft.Testing.Platform.MSBuild.csproj",
       "src\\Platform\\Microsoft.Testing.Platform\\Microsoft.Testing.Platform.csproj",
       "src\\TestFramework\\TestFramework.Extensions\\TestFramework.Extensions.csproj",
+      "src\\TestFramework\\TestFramework.SourceGeneration\\TestFramework.SourceGeneration.csproj",
       "src\\TestFramework\\TestFramework\\TestFramework.csproj",
       "test\\IntegrationTests\\MSTest.Acceptance.IntegrationTests\\MSTest.Acceptance.IntegrationTests.csproj",
       "test\\IntegrationTests\\Microsoft.Testing.Platform.Acceptance.IntegrationTests\\Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj",

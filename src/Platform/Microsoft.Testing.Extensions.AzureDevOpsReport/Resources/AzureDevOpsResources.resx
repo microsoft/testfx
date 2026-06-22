@@ -326,8 +326,8 @@
     <comment>{0} is the maximum pattern count. {Locked="--report-azdo-stackframe-filter"}</comment>
   </data>
   <data name="SummaryOptionDescription" xml:space="preserve">
-    <value>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{tfm}.md'). Requires '--report-azdo'.</value>
-    <comment>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{tfm}.md"}{Locked="--report-azdo"}</comment>
+    <value>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</value>
+    <comment>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="SummaryRequiresTfBuildWarning" xml:space="preserve">
     <value>Azure DevOps job summary was requested, but TF_BUILD is not set to 'true'; skipping summary emission.</value>
