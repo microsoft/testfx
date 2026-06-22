@@ -62,15 +62,15 @@ internal abstract class ReportEngineBase
     /// Builds the default report file name using the deterministic
     /// <c>&lt;asm&gt;_&lt;tfm&gt;_&lt;arch&gt;.&lt;extension&gt;</c> shape.
     /// A second run into the same TestResults folder overwrites the previous file
-    /// (with a warning), matching the behaviour of an explicitly-provided file name.
+    /// (with a warning), matching the behavior of an explicitly-provided file name.
     /// </summary>
     /// <param name="extension">
-    /// File extension without a leading dot (e.g. <c>html</c>, <c>xml</c>).
-    /// Must not contain path separators or other characters that are invalid in a file name.
-    /// The full raw file name is sanitized by
-    /// <see cref="ReportFileNameSanitizer.ReplaceInvalidFileNameChars"/> before being returned,
-    /// but callers are responsible for supplying a value that is itself a plain alphanumeric
-    /// extension token (no dot prefix, no path characters).
+    /// File extension without a leading dot (e.g. <c>html</c>, <c>xml</c>), appended after the
+    /// <c>&lt;asm&gt;_&lt;tfm&gt;_&lt;arch&gt;</c> stem. Callers are expected to pass a plain
+    /// extension token, but the value is not strictly validated: the full raw file name is passed
+    /// through <see cref="ReportFileNameSanitizer.ReplaceInvalidFileNameChars"/> before being
+    /// returned, so any path separators or other characters that are invalid in a file name are
+    /// replaced rather than rejected.
     /// </param>
     protected string BuildDefaultFileName(string extension)
     {
