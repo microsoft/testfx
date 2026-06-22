@@ -1138,6 +1138,106 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TerminalTestReporter_WhenOrchestratorDiscoveryDisplayNameIsNull_CountsTestAndFallsBackToUid()
+    {
+        // Arrange
+        string assembly = "test.dll";
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => false,
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        DateTimeOffset endTime = DateTimeOffset.MaxValue;
+
+        // Act
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: true, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
+
+        // No display name and no uid: counted, but must not add a blank indented entry.
+        terminalReporter.TestDiscovered("0", displayName: null, uid: null, filePath: null, lineNumber: null);
+        // No display name but a uid: the uid is used as the listed name.
+        terminalReporter.TestDiscovered("0", displayName: null, uid: "uid-fallback", filePath: null, lineNumber: null);
+        // Normal display name.
+        terminalReporter.TestDiscovered("0", "TestMethod1", uid: "uid-1", filePath: null, lineNumber: null);
+
+        // Assert - every discovered test is counted (even the unnamed one). TotalTests is computed from
+        // DiscoveredTests in discovery mode and is cleared by TestExecutionCompleted, so assert it before that.
+        Assert.AreEqual(3, terminalReporter.TotalTests);
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(endTime, exitCode: null);
+
+        string[] outputLines = stringBuilderConsole.Output.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+
+        // Assert - no blank indented entry for the unnamed test, but the uid fallback and display name are listed.
+        Assert.DoesNotContain(TerminalTestReporter.SingleIndentation, outputLines);
+        Assert.Contains($"{TerminalTestReporter.SingleIndentation}uid-fallback", outputLines);
+        Assert.Contains($"{TerminalTestReporter.SingleIndentation}TestMethod1", outputLines);
+    }
+
+    [TestMethod]
+    public void TerminalTestReporter_OrchestratorTestInProgress_TracksActiveTestLikeCoreOverload()
+    {
+        // The orchestrator (dotnet test) TestInProgress overload carries extra assembly/target-framework/architecture
+        // and per-attempt instance metadata for call-site parity, but must track the active test exactly like the core
+        // (executionId, uid, displayName) overload. Verify the orchestrator-driven test surfaces in the active-test
+        // progress frame: its display name only appears in the output if it was registered as a running test.
+        string targetFramework = "net8.0";
+        string architecture = "x64";
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+
+        var stringBuilderConsole = new StringBuilderConsole();
+        var stopwatchFactory = new StopwatchFactory();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = AnsiMode.ForceAnsi,
+            ShowActiveTests = true,
+            ShowProgress = () => true,
+        })
+        {
+            CreateStopwatch = stopwatchFactory.CreateStopwatch,
+        };
+
+        var startHandle = new AutoResetEvent(initialState: false);
+        var stopHandle = new AutoResetEvent(initialState: false);
+
+        // Disable the timer updates so the captured output is deterministic.
+        terminalReporter.OnProgressStartUpdate += (sender, args) => startHandle.WaitOne();
+        terminalReporter.OnProgressStopUpdate += (sender, args) => stopHandle.Set();
+
+        DateTimeOffset startTime = DateTimeOffset.MinValue;
+        terminalReporter.TestExecutionStarted(startTime, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        terminalReporter.AssemblyRunStarted(assembly, targetFramework, architecture, "0", "0");
+
+        // A core-overload active test we will complete to trigger a progress redraw.
+        terminalReporter.TestInProgress(executionId: "0", testNodeUid: "Trigger", displayName: "Trigger");
+        stopwatchFactory.AddTime(TimeSpan.FromMilliseconds(1));
+
+        // The orchestrator overload (extra assembly/targetFramework/architecture/instanceId args). This test is never
+        // completed, so its name can only appear in the output via the active-test progress frame.
+        terminalReporter.TestInProgress(assembly, targetFramework, architecture, executionId: "0", instanceId: "0", testNodeUid: "OrchestratorActive1", displayName: "OrchestratorActive1");
+        stopwatchFactory.AddTime(TimeSpan.FromSeconds(1));
+
+        // Completing the trigger test redraws the progress frame, which lists the still-active orchestrator test.
+        terminalReporter.TestCompleted("0", testNodeUid: "Trigger", "Trigger", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        string output = stringBuilderConsole.Output;
+        startHandle.Set();
+        stopHandle.WaitOne();
+
+        // The orchestrator-driven test is registered as active and therefore rendered in the progress frame.
+        Assert.Contains("OrchestratorActive1", output);
+    }
+
+    [TestMethod]
     public void TerminalTestReporter_WhenMultipleAssemblies_AggregatesCountsAndOmitsAssemblyLinkOnVerdict()
     {
         // Arrange — two assemblies (the dotnet test orchestrator case), each registered under its own
@@ -1251,8 +1351,10 @@ public sealed class TerminalTestReporterTests
         Assert.Contains($"{TerminalResources.ExitCode}: 1", output);
         Assert.Contains("the err", output);
 
-        // No test ran, so the run verdict is the red "Zero tests ran" (runFailed also includes HasHandshakeFailure).
-        Assert.Contains(TerminalResources.ZeroTestsRan, output);
+        // The summary verdict escalates to "Failed!" rather than the benign "Zero tests ran": a handshake failure
+        // must not be masked as an empty run (dotnet/sdk#51608). The per-assembly immediate-failure context above
+        // still legitimately says "Zero tests ran" (the assembly really did register zero tests).
+        Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
 
         // Per-run state is reset after completion so a subsequent session starts fresh.
         Assert.IsFalse(terminalReporter.HasHandshakeFailure);
@@ -1461,6 +1563,96 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(ExpectedCounts(1, 0, 0, retried: 1), assemblyLine);
     }
 
+    // Companion to the test above driving the FULL lifecycle to validate the two retry-specific renderings the
+    // dotnet/sdk orchestrator acceptance test RunTestProjectWithWithRetryFeature_ShouldSucceed asserts:
+    //   1) each per-test result line is annotated with "(try N)" so retried attempts are distinguishable, and
+    //   2) the run summary's total line is suffixed with "(+N retried)".
+    // The in-process host never retries (isRetry stays false, TryCount stays 1), so neither rendering appears there.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenTestsWereRetried_AnnotatesTryNumberAndSummaryRetriedCount()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowPassedTests = () => true,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = true,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky";
+
+        // Attempt 1 fails the test...
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
+
+        // ...attempt 2 (new instance id) retries and passes it.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        // 1) Per-test "(try N)" annotation: the failing first attempt is "(try 1)", the passing retry is "(try 2)".
+        string tryOne = string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 1);
+        string tryTwo = string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 2);
+        Assert.Contains($"({tryOne})", output);
+        Assert.Contains($"({tryTwo})", output);
+        Assert.DoesNotContain($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 3)})", output);
+
+        // 2) Summary total line carries the "(+1 retried)" suffix.
+        Assert.Contains($"{TerminalResources.TotalLowercase}: 1 (+1 {TerminalResources.Retried})", output);
+
+        // The retry also surfaces in the per-assembly "(try N) Running tests from" banner.
+        Assert.Contains($"({tryTwo}) {TerminalResources.RunningTestsFrom}", output);
+    }
+
+    // Orchestrator discovery (dotnet test --list-tests across N assemblies): each assembly gets a
+    // "Discovered N tests in assembly - <link>" header with its test names listed, and the run ends with a
+    // "Discovered M tests in K assemblies." total. The in-process host (ShowAssembly off) keeps its own
+    // "Test discovery summary: found N test(s)" format, covered by the existing discovery tests.
+    [TestMethod]
+    public void AppendTestDiscoverySummary_ForOrchestrator_PrintsPerAssemblyDiscoveredCountsAndTotal()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: true, isHelp: false, isRetry: false);
+
+        string assemblyA = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\A.Tests.dll" : "/repo/A.Tests.dll";
+        string assemblyB = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\B.Tests.dll" : "/repo/B.Tests.dll";
+
+        terminalReporter.AssemblyRunStarted(assemblyA, "net9.0", "x64", executionId: "exec-A", instanceId: "inst-A");
+        terminalReporter.AssemblyRunStarted(assemblyB, "net9.0", "x64", executionId: "exec-B", instanceId: "inst-B");
+
+        terminalReporter.TestDiscovered("exec-A", "A.Test1");
+        terminalReporter.TestDiscovered("exec-A", "A.Test2");
+        terminalReporter.TestDiscovered("exec-B", "B.Test1");
+
+        terminalReporter.AssemblyRunCompleted("exec-A");
+        terminalReporter.AssemblyRunCompleted("exec-B");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+
+        // Per-assembly discovered-count headers and the listed test names.
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, 2), output);
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsInAssembly, 1), output);
+        Assert.Contains("A.Test1", output);
+        Assert.Contains("B.Test1", output);
+
+        // Run-level total across both assemblies.
+        Assert.Contains(string.Format(CultureInfo.CurrentCulture, TerminalResources.DiscoveredTestsSummary, 3, 2), output);
+
+        // The in-process-only "Test discovery summary: found N test(s)" wording must NOT appear for the orchestrator.
+        Assert.DoesNotContain(string.Format(CultureInfo.CurrentCulture, TerminalResources.TestDiscoverySummarySingular, 3), output);
+    }
+
     [TestMethod]
     public void AssemblyRunCompleted_WhenKnownAssemblyFails_PrintsExecutableSummary()
     {
@@ -1506,6 +1698,35 @@ public sealed class TerminalTestReporterTests
         Assert.DoesNotContain($"{TerminalResources.ExitCode}:", stringBuilderConsole.Output);
     }
 
+    // Drives the dotnet/sdk acceptance scenario RunMTPProjectThatCrashesWithExitCodeNonZero_ShouldFail_WithSameExitCode:
+    // an assembly whose tests all pass but whose process exits non-zero (a crash / explicit non-zero exit) is a run
+    // failure. The run-summary verdict must escalate to "Failed!" even though failed-test count is zero — but only
+    // AFTER the zero-tests branch, so a legitimately empty project is unaffected (covered separately).
+    [TestMethod]
+    public void TestExecutionCompleted_WhenAssemblyExitsNonZeroButTestsPassed_ReportsFailedVerdict()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Crashy.dll" : "/repo/Crashy.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "exec-1", "inst-1");
+        ReportOrchestratorTest(terminalReporter, assembly, "exec-1", "inst-1", "t-1", TestOutcome.Passed);
+
+        // The process exits 47 even though the single test passed -> Success is false.
+        terminalReporter.AssemblyRunCompleted("exec-1", exitCode: 47, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 47);
+
+        string output = stringBuilderConsole.Output;
+
+        // The run verdict escalates to "Failed!" (not "Passed!") because the assembly process failed.
+        Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
+        Assert.DoesNotContain($"{TerminalResources.TestRunSummary} {TerminalResources.Passed}!", output);
+
+        // The summary surfaces the failed-process count on a dedicated "error: 1" line.
+        Assert.Contains($"{TerminalResources.Error}: 1", output);
+    }
+
     [TestMethod]
     public void TestExecutionCompleted_WhenHandshakeFailures_PrintsRecapAndFailsRun()
     {
@@ -1528,6 +1749,10 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(TerminalResources.HandshakeFailuresHeader, output);
         Assert.Contains("A failed", output);
         Assert.Contains("B failed", output);
+
+        // With every assembly failing to handshake and zero tests, the summary verdict is "Failed!", not the
+        // benign "Zero tests ran" (dotnet/sdk#51608).
+        Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
     }
 
     [TestMethod]

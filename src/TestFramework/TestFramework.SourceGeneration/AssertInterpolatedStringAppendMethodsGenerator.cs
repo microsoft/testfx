@@ -26,7 +26,7 @@ public sealed class AssertInterpolatedStringAppendMethodsGenerator : IIncrementa
     {
         IncrementalValuesProvider<HandlerInfo> handlers = context.SyntaxProvider.ForAttributeWithMetadataName(
             MarkerAttributeMetadataName,
-            predicate: static (node, _) => node is StructDeclarationSyntax,
+            predicate: static (node, _) => node is StructDeclarationSyntax { Parent: ClassDeclarationSyntax or StructDeclarationSyntax },
             transform: static (ctx, _) => GetHandlerInfo(ctx));
 
         context.RegisterSourceOutput(handlers, static (spc, handler) => Emit(spc, handler));
@@ -36,17 +36,8 @@ public sealed class AssertInterpolatedStringAppendMethodsGenerator : IIncrementa
     {
         var structSymbol = (INamedTypeSymbol)context.TargetSymbol;
 
-        bool nullableLiteralParameter = false;
-        foreach (AttributeData attribute in context.Attributes)
-        {
-            foreach (KeyValuePair<string, TypedConstant> namedArgument in attribute.NamedArguments)
-            {
-                if (namedArgument.Key == "NullableLiteralParameter" && namedArgument.Value.Value is true)
-                {
-                    nullableLiteralParameter = true;
-                }
-            }
-        }
+        bool nullableLiteralParameter = context.Attributes.Any(attribute => attribute.NamedArguments.Any(namedArgument =>
+            namedArgument.Key == "NullableLiteralParameter" && namedArgument.Value.Value is true));
 
         INamedTypeSymbol containingType = structSymbol.ContainingType;
         string typeParameters = string.Empty;
