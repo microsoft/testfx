@@ -1,80 +1,67 @@
 # Efficiency Improver Memory — microsoft/testfx
 
-## Last Updated
-2026-06-21
+## Tasks Last Run
+- Task 2 (Identify Opportunities): 2026-06-22
+- Task 3 (Implement Improvement): 2026-06-22
+- Task 4 (Maintain PRs): 2026-06-22
+- Task 5 (Comment on Issues): 2026-06-10
+- Task 6 (Measurement Infrastructure): 2026-06-08
+- Task 7 (Monthly Summary): 2026-06-22
 
-## Build/Test Commands
-- Build: `./build.sh` (Linux/macOS), `.\build.cmd` (Windows)
-- Test: `./build.sh -test`
-- Build + Pack: `./build.sh -pack`
-- Build + Pack + Acceptance Tests: `./build.sh -pack -test -integrationTest`
-- Local dotnet SDK: `.dotnet/dotnet` (auto-installed by build.sh)
-- NOTE: `--no-restore` flag is broken (MSBuild unknown switch); always run with full restore
-- NOTE: Build requires full restore even for single project (Arcade SDK tasks needed)
-- NOTE: `--treenode-filter` not available on Microsoft.Testing.Platform.UnitTests (extension not registered); run all tests and verify none fail
-- NOTE: Only .NET 11.0 preview runtime is available in this environment; build succeeds but test runner needs net8.0/net9.0
-- NOTE: MSTestAdapter.PlatformServices.UnitTests uses internal test framework (UseInternalTestFramework=true); not run by MTP runner, run via separate CI pass
-- NOTE: global.json requires dotnet 11.0.100-preview SDK; environment only has 8.x/9.x/10.x; build requires ./build.sh bootstrapping
+## Backlog Cursor
+- Last scanned: `src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/TerminalTestReporter.Summary.cs`
+- Next scan area: `src/Adapter/` and `src/TestFramework/` for any remaining inefficiencies
 
-## Tasks Last Run (round-robin cursor)
-- 2026-06-10: Task 3 (JUnitReport TestResultCapture single-pass), Task 7
-- 2026-06-15: Task 3 (DiscoveredTestsJsonSerializer single-pass), Task 7
-- 2026-06-16: Task 2 (scan), Task 3 (AzureDevOpsReporter defer GetTestName), Task 7
-- 2026-06-19: Task 2 (scan MSTest core, Adapter, Platform), Task 3 (single-pass GroupBy in TestExecutionManager.Parallelization), Task 4 (verified #9196 merged), Task 7
-- 2026-06-20: Task 3 (TerminalTestReporter.Summary.cs GroupBy.Any() fix), Task 4 (confirmed #9274 merged), Task 7
-- 2026-06-21: Task 2 (scan for new opportunities), Task 3 (CommandLineParseResult IsOptionSet/TryGetOptionArgumentList optimization), Task 7
+## Validated Commands
 
-## Completed Work
-- PR #8692: perf: reduce redundant UTF-8 string encoding in IPC BaseSerializer (MERGED 2026-05-31)
-- PR #8705: perf: avoid double IEnumerable enumeration in DynamicDataShouldBeValidAnalyzer (MERGED 2026-05-31)
-- PR #8720: perf: encode JSON body once in TcpMessageHandler.WriteRequestAsync (MERGED 2026-06-01)
-- PR #8743: perf: single-pass TRX message partitioning in TrxReportEngine (MERGED 2026-06-02)
-- PR #8806: perf: single-pass TestNode property serialization in SerializerUtilities (MERGED 2026-06-04)
-- PR #8834: perf: cache newline+color string in SimpleAnsiTerminal (MERGED 2026-06-05)
-- PR #8866: perf: cache ExecutionId + single-pass property scan in DotnetTestDataConsumer (MERGED 2026-06-07)
-- PR #8884: perf: SingleOrDefault instead of OfType().FirstOrDefault() in AzureDevOps report (MERGED 2026-06-07)
-- PR #8908: perf: SingleOrDefault instead of OfType().Select() for stdout/stderr in OpenTelemetryResultHandler (MERGED 2026-06-08)
-- PR #8938: perf: single-pass PropertyBag walk in OpenTelemetryResultHandler.HandleTestResult (MERGED 2026-06-09)
-- PR #8975: perf: single-pass PropertyBag walk in TrxTestResultExtractor (MERGED 2026-06-10)
-- PR #9018: perf: single-pass PropertyBag walk in JUnitReport TestResultCapture (MERGED 2026-06-11)
-- PR #9159: perf: single-pass PropertyBag walk in TerminalOutputDevice and SimplifiedConsoleOutputDeviceBase (MERGED 2026-06-16)
-- PR #9162: perf: single-pass PropertyBag walk in DiscoveredTestsJsonSerializer (MERGED 2026-06-16)
-- PR #9196: perf: defer GetTestName() to failure branches and avoid OfType<> alloc in AzureDevOpsReporter (MERGED 2026-06-19)
-- PR #9274: perf: single-pass GroupBy partition in TestExecutionManager parallelization (MERGED 2026-06-20)
-- PR #9300: perf: avoid GroupBy lazy evaluation for empty-check in AppendTestRunSummary (MERGED 2026-06-21)
-- PR (branch efficiency/fix-parseoption-hot-loops): perf: hoist Trim and single-pass loop in CommandLineParseResult hot methods (SUBMITTED 2026-06-21, pending merge)
-  - IsOptionSet: hoist optionName.Trim(OptionPrefix) outside lambda — was called N times per invocation, now called once
-  - TryGetOptionArgumentList: replace lazy Where+Any+SelectMany double-enumeration with single foreach — avoids 2nd full pass over Options on every option-found call
+| Command | Purpose |
+|---------|---------|
+| `./build.sh` | Full restore + build |
+| `./build.sh -test` | Run unit tests |
+| `./build.sh -pack` | Build + produce NuGets |
+| `./build.sh -pack -test -integrationTest` | Full pipeline incl. acceptance tests |
 
-## Optimisation Backlog
-| Priority | Focus Area | Opportunity | Estimated Impact |
-|----------|------------|-------------|------------------|
-| LOW | Code-Level | `TerminalTestReporter.Summary.cs:45-48` — 4 separate Sum() calls on `assemblies` (TotalTests, FailedTests, SkippedTests, PassedTests); single foreach would do one pass. End-of-run, assemblies usually small. | LOW (end-of-run, small list) |
-| LOW | Code-Level | `ToolsTestHost.cs:55` — `GroupBy().Where(Count()>1)` at startup only | Negligible |
-
-## Efficiency Notes
-- Platform uses ArrayPool<byte> in NETCOREAPP path (good)
-- IPC uses named pipes / TCP for inter-process communication
-- Serializers are hot path for test result delivery
-- Build requires arcade toolset; can't build individual projects without full restore first (Arcade MSBuild tasks required)
-- TreeNodeFilter uses compiled Regex (already optimized)
-- No BenchmarkDotNet benchmarks in repo; performance tests use PerfView
-- TcpMessageHandler is server mode only (--server flag, IDE-driven test runs)
-- PropertyBag.GetStructEnumerator() returns internal struct (zero alloc); accessible within Microsoft.Testing.Platform and all report extensions (TrxReport, JUnitReport, CtrfReport, HtmlReport, AzureDevOpsReport, MSBuild, OTel) via direct project reference
-- PropertyBag.OfType<T>() allocates TProperty[] even for single-element results; use SingleOrDefault<T>() or GetStructEnumerator() depending on need
-- Hot-path PropertyBag optimization series is substantially complete across all report generators
-- AzureDevOpsReporter: GetTestName() was called eagerly for every test; now only called for 4 failure-state types (2026-06-16)
-- CtrfReport, HtmlReport, JUnitReport, TrxTestResultExtractor, OTel, MSBuildConsumer, AzureDevOpsSummaryReporter, AzureDevOpsTestResultsPublisher.ResultFactory, DiscoveredTestsJsonSerializer, TerminalOutputDevice, SimplifiedConsoleOutputDeviceBase: all now use single-pass GetStructEnumerator()
-- RetryDataConsumer: only 1 SingleOrDefault → no multi-walk to optimize
-- VSTestBridge ObjectModelConverters: mostly PropertyBag.Add() calls, not reads; not a hot-path read scenario
-- Backlog is very sparse; new scan (2026-06-21) found only low-priority items remaining
-- TestExecutionManager.Parallelization.cs: GroupBy fix reduces 2 full passes to 1 (merged #9274)
-- TerminalTestReporter.Summary.cs: artifactGroups.Any() → _artifacts.Count > 0 fix (merged #9300)
-- 4x Sum() calls on assemblies in Summary.cs could be 1-pass foreach; LOW priority, end-of-run, small list
-- ITerminal interface has no ReadOnlySpan<char>/int overloads; int.ToString() allocations in render loop cannot be avoided without interface changes
-- MSTestAdapter tests (UseInternalTestFramework=true) not run by MTP runner in CI; covered separately
-- Another perf-focused workflow ("perf-improver") is also active in this repo (PR #9299: replace Array.IndexOf with is pattern, PR #9311: extend perf runner to Linux/macOS)
-- CommandLineParseResult: IsOptionSet was O(N) Trim calls, now 1; TryGetOptionArgumentList was 2-pass, now 1-pass (submitted 2026-06-21)
+Notes:
+- SDK: `.dotnet/dotnet` (Arcade-provisioned). `/usr/bin/dotnet` is non-functional for SDK commands.
+- `--no-restore` flag is broken; always use full restore.
+- MSTestAdapter internal tests not run by MTP runner; handled by CI separately.
+- Build environment for this agent: no `.dotnet/` bootstrapped; PRs validated via GitHub Actions CI.
 
 ## Monthly Activity Issue
-- 2026-06 issue: #9197 (open)
+- Issue #9197: `[efficiency-improver] Monthly Activity 2026-06` (open)
+- Label: `efficiency`
+- Last updated: 2026-06-22
+
+## Work in Progress
+- PR branch `efficiency/single-pass-summary-aggregation` (submitted 2026-06-22, no PR number yet from safe-outputs tool)
+  - Change: `AppendTestRunSummary` in `TerminalTestReporter.Summary.cs` — replaced 7 LINQ calls (Sum×5, Any×1, Count×1) with single `foreach`
+  - Proxy metric: LINQ enumerator allocation count + iteration count
+
+## Completed Work (PRs merged or applied)
+- CommandLineParseResult.IsOptionSet + TryGetOptionArgumentList: hoisted Trim(), single-pass foreach
+  - Branch `efficiency/fix-parseoption-hot-loops` was never pushed but changes ARE in main already
+- PR #9300: replace `artifactGroups.Any()` with `_artifacts.Count > 0` in `AppendTestRunSummary`
+- PR #9274: single-pass GroupBy partition in `TestExecutionManager.Parallelization.cs`
+- PR #9196: defer `GetTestName()` + avoid `OfType<>` in `AzureDevOpsReporter`
+- PR #9162: single-pass PropertyBag walk in `DiscoveredTestsJsonSerializer`
+- PR #9159: single-pass PropertyBag walk in `TerminalOutputDevice` + `SimplifiedConsoleOutputDeviceBase`
+- PR #9018: single-pass PropertyBag walk in `JUnitReport TestResultCapture`
+- Earlier PRs #8692–#8975: UTF-8 encoding, IPC serialization, TRX/OTel/TrxReport/AzureDevOps/SerializerUtilities PropertyBag walks, AnsiTerminal string caching (all merged)
+
+## Efficiency Notes (Key Insights)
+- PropertyBag hot-path series COMPLETE: all OfType<T>() → GetStructEnumerator() conversions done across all report extensions
+- TestResultCaptureHelper.cs (shared core from #9330) already uses GetStructEnumerator — no changes needed
+- perf-improver workflow (#9258) is a separate bot; recent PRs: #9299 (Array.IndexOf → is pattern), #9311 (cross-platform perf runner), #9348 (avoid redundant TestNodeUid alloc). Avoid duplicating.
+- `TerminalTestReporter.TotalTests` property (line 68 of TerminalTestReporter.cs) calls `_assemblies.Values.Sum()` on every access, but is rarely called from outside — low priority.
+- `GroupBy().Where(Count()>1)` in `ToolsTestHost.cs:55` runs only once at startup — negligible.
+
+## Optimisation Backlog
+
+| Priority | Focus Area | Opportunity | Notes |
+|----------|------------|-------------|-------|
+| LOW | Code-Level | `TerminalTestReporter.cs:68` TotalTests prop calls `Sum()` on every access | Rare caller, negligible |
+| LOW | Code-Level | `ToolsTestHost.cs:55` GroupBy at startup | Startup only, negligible |
+
+## Round-Robin Task Schedule
+- Next run should prioritize: Task 5 (Comment on efficiency issues) + Task 6 (Measurement infrastructure)
+- Task 3 is stalled pending backlog replenishment — primary backlog items exhausted
