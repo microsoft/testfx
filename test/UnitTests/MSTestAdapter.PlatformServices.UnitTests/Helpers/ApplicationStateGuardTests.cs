@@ -20,7 +20,10 @@ public class ApplicationStateGuardTests : TestContainer
     {
         Exception exception = ApplicationStateGuard.Unreachable();
 
-        exception.Should().BeOfType<UnreachableException>();
+        // UnreachableException is an internal, per-assembly polyfill on non-NETCOREAPP TFMs, so asserting on the
+        // generic type parameter would compare against this test assembly's copy and fail due to type identity
+        // mismatch across assemblies. Assert on the full type name instead.
+        exception.GetType().FullName.Should().Be("System.Diagnostics.UnreachableException");
         exception.Message.Should().Contain("thought to be unreachable");
     }
 }
