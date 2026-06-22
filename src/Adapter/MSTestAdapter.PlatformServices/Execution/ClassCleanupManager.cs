@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -29,7 +28,7 @@ internal sealed class ClassCleanupManager
         {
             if (!_remainingTestCountsByClass.TryGetValue(testMethod.FullClassName, out int remainingCount))
             {
-                throw ApplicationStateGuard.Unreachable();
+                throw Microsoft.VisualStudio.TestPlatform.MSTestAdapter.ApplicationStateGuard.Unreachable();
             }
 
             remainingCount--;
@@ -47,7 +46,7 @@ internal sealed class ClassCleanupManager
             {
                 // We failed to remove the class, or we are incorrectly marking the class as complete while there are remaining tests.
                 // This should never happen.
-                throw ApplicationStateGuard.Unreachable();
+                throw Microsoft.VisualStudio.TestPlatform.MSTestAdapter.ApplicationStateGuard.Unreachable();
             }
         }
     }

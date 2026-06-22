@@ -43,6 +43,6 @@ public sealed class ConfigurationExtensionsTests
             .Returns(value: null);
 
         // This should never happen in practice. We always have AggregatedConfiguration which will ensure non-null values.
-        Assert.ThrowsExactly<InvalidOperationException>(() => GetActualValueFromConfiguration(configuration.Object, key));
+        Assert.ThrowsExactly<UnreachableException>(() => GetActualValueFromConfiguration(configuration.Object, key));
     }
 }
