@@ -212,4 +212,129 @@ public sealed class UseCancellationTokenPropertyAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenUsingCancellationTokenSourceInTestInitialize_ShouldReportDiagnostic()
+    {
+        const string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestInitialize]
+                public async Task MyTestInitialize()
+                {
+                    await SomeAsyncOperation([|TestContext.CancellationTokenSource|].Token);
+                }
+
+                private static Task SomeAsyncOperation(CancellationToken cancellationToken)
+                    => Task.CompletedTask;
+            }
+            """;
+
+        const string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestInitialize]
+                public async Task MyTestInitialize()
+                {
+                    await SomeAsyncOperation(TestContext.CancellationToken);
+                }
+
+                private static Task SomeAsyncOperation(CancellationToken cancellationToken)
+                    => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenCustomClassHasCancellationTokenSourceProperty_ShouldNotReportDiagnostic()
+    {
+        const string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; set; }
+
+                [TestMethod]
+                public async Task MyTest()
+                {
+                    var myCtx = new MyContext();
+                    await SomeAsyncOperation(myCtx.CancellationTokenSource.Token);
+                }
+
+                private static Task SomeAsyncOperation(CancellationToken cancellationToken)
+                    => Task.CompletedTask;
+            }
+
+            public class MyContext
+            {
+                public CancellationTokenSource CancellationTokenSource { get; } = new();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingCancellationTokenSourceOnParameterInAssemblyInitialize_ShouldReportDiagnostic()
+    {
+        const string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static async Task MyAssemblyInitialize(TestContext testContext)
+                {
+                    await SomeAsyncOperation([|testContext.CancellationTokenSource|].Token);
+                }
+
+                private static Task SomeAsyncOperation(CancellationToken cancellationToken)
+                    => Task.CompletedTask;
+            }
+            """;
+
+        const string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static async Task MyAssemblyInitialize(TestContext testContext)
+                {
+                    await SomeAsyncOperation(testContext.CancellationToken);
+                }
+
+                private static Task SomeAsyncOperation(CancellationToken cancellationToken)
+                    => Task.CompletedTask;
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
