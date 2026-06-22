@@ -22,7 +22,6 @@ public sealed class ApplicationStateGuardTests
     {
         UnreachableException exception = ApplicationStateGuard.Unreachable();
 
-        Assert.AreEqual(typeof(UnreachableException), exception.GetType());
         Assert.Contains("thought to be unreachable", exception.Message);
     }
 }
