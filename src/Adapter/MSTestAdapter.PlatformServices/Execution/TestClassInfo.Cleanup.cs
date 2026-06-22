@@ -130,48 +130,11 @@ internal sealed partial class TestClassInfo
             return null;
         }
 
-        bool isSTATestClass = ClassAttribute is STATestClassAttribute;
-        bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (isSTATestClass
-            && isWindowsOS
-            && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
-        {
-            TestResult? result = null;
-            var entryPointThread = new Thread(() => result = DoRunAsync().GetAwaiter().GetResult())
-            {
-                Name = "MSTest STATestClass ClassCleanup",
-            };
-
-            entryPointThread.SetApartmentState(ApartmentState.STA);
-            entryPointThread.Start();
-
-            try
-            {
-                entryPointThread.Join();
-            }
-            catch (Exception ex)
-            {
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
-                }
-            }
-
-            return result;
-        }
-        else
-        {
-            // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-            if (!isWindowsOS && isSTATestClass)
-            {
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
-                }
-            }
-
-            return await DoRunAsync().ConfigureAwait(false);
-        }
+        return await StaThreadHelper.RunOnStaThreadIfNeededAsync(
+            needsSta: ClassAttribute is STATestClassAttribute,
+            action: DoRunAsync,
+            threadName: "MSTest STATestClass ClassCleanup",
+            defaultResult: null).ConfigureAwait(false);
 
         // Local functions
         async Task<TestResult?> DoRunAsync()

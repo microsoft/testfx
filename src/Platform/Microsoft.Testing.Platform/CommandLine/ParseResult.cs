@@ -133,7 +133,19 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     /// <param name="optionName">The name of the option.</param>
     /// <returns>Returns <c>true</c> if the option is set; <c>false</c> otherwise.</returns>
     public bool IsOptionSet(string optionName)
-        => Options.Any(o => o.Name.Equals(optionName.Trim(OptionPrefix), StringComparison.OrdinalIgnoreCase));
+    {
+        // Hoist Trim() outside the loop to avoid re-allocating the trimmed string for every element.
+        string trimmedName = optionName.Trim(OptionPrefix);
+        foreach (CommandLineParseOption option in Options)
+        {
+            if (option.Name.Equals(trimmedName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     /// <summary>
     /// Gets the argument list for the specified option.
@@ -144,10 +156,21 @@ public sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
     {
         optionName = optionName.Trim(OptionPrefix);
-        IEnumerable<CommandLineParseOption> result = Options.Where(x => x.Name == optionName);
-        if (result.Any())
+
+        // Single pass over Options: collect arguments from all matching entries without
+        // double-enumerating the lazy Where/SelectMany chain (which would re-scan Options twice).
+        List<string>? args = null;
+        foreach (CommandLineParseOption option in Options)
         {
-            arguments = [.. result.SelectMany(x => x.Arguments)];
+            if (option.Name == optionName)
+            {
+                (args ??= []).AddRange(option.Arguments);
+            }
+        }
+
+        if (args is not null)
+        {
+            arguments = [.. args];
             return true;
         }
 
