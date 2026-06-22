@@ -13,6 +13,12 @@ on:
     security-events: read
   steps:
     - id: check
+      # continue-on-error so a "no open alerts" result (grep exits 1) gates the
+      # agent off via check_result without failing the pre_activation job — the
+      # job outputs read steps.check.outcome, not the job's success.
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: gh api /repos/${{ github.repository }}/dependabot/alerts?state=open --jq 'length > 0' | grep -q 'true'
       # exits 0 (outcome: success) if there are open alerts, 1 (outcome: failure) if not
 
