@@ -10,12 +10,6 @@ namespace Microsoft.Testing.Extensions.JUnitReport;
 // stdout/stderr/stack traces) in memory for the whole session.
 internal static class TestResultCapture
 {
-    internal const int MaxStandardStreamLength = TestResultCaptureHelper.MaxStandardStreamLength;
-    internal const int MaxStackTraceLength = TestResultCaptureHelper.MaxStackTraceLength;
-    internal const int MaxMessageLength = TestResultCaptureHelper.MaxMessageLength;
-    internal const int MaxIdentityFieldLength = TestResultCaptureHelper.MaxIdentityFieldLength;
-    internal const int MaxTraitFieldLength = TestResultCaptureHelper.MaxTraitFieldLength;
-
     // The display name of a test node is also captured for non-terminal (Discovered /
     // InProgress) messages so that the engine can reconstruct the parent chain for
     // every terminal test. This DTO is intentionally tiny because every node in the
@@ -26,27 +20,22 @@ internal static class TestResultCapture
         => new(
             // Display names are test-controlled and may be very long, so cap them to
             // bound the size of the parent-chain dictionary and the generated XML.
-            Truncate(update.TestNode.DisplayName, MaxIdentityFieldLength)!,
+            TestResultCaptureHelper.Truncate(update.TestNode.DisplayName, TestResultCaptureHelper.MaxIdentityFieldLength)!,
             // The parent UID is also test-controlled. Cap it to the same identity
             // budget used everywhere else; lookups against `_parentChain` (also
             // keyed by a truncated UID) stay consistent.
-            Truncate(update.ParentTestNodeUid?.Value, MaxIdentityFieldLength));
+            TestResultCaptureHelper.Truncate(update.ParentTestNodeUid?.Value, TestResultCaptureHelper.MaxIdentityFieldLength));
 
     public static CapturedTestResult? TryCapture(TestNodeUpdateMessage update)
     {
         TestNode node = update.TestNode;
-        TestNodeStateProperty? state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
-        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+        CapturedTestResultCoreData? coreData = TestResultCaptureHelper.TryCaptureCore(node);
+        if (!coreData.HasValue)
         {
             return null;
         }
 
-        CapturedTestResultProperties properties = TestResultCaptureHelper.ExtractProperties(node.Properties);
-        string outcome = ClassifyOutcome(state);
-        TimeSpan duration = properties.Timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
-        (string? className, string? methodName) = TestResultCaptureHelper.GetClassAndMethodName(properties.Identifier);
-        CapturedExceptionDetails exceptionDetails = TestResultCaptureHelper.ExtractExceptionDetails(state);
-
+        CapturedTestResultCoreData core = coreData.GetValueOrDefault();
         return new CapturedTestResult
         {
             // Identity fields are test-controlled and can be unbounded (e.g. very long
@@ -55,22 +44,22 @@ internal static class TestResultCapture
             // RawUid and ParentRawUid are used as keys/edges in the parent-chain
             // dictionary, so they must be capped with the same budget on both sides
             // to keep lookups consistent.
-            Uid = Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
-            RawUid = Truncate(node.Uid.Value, MaxIdentityFieldLength)!,
-            ParentRawUid = Truncate(update.ParentTestNodeUid?.Value, MaxIdentityFieldLength),
-            DisplayName = Truncate(node.DisplayName, MaxIdentityFieldLength)!,
-            Outcome = outcome,
-            Duration = duration,
-            StartTime = properties.Timing?.GlobalTiming.StartTime,
-            EndTime = properties.Timing?.GlobalTiming.EndTime,
-            ClassName = Truncate(className, MaxIdentityFieldLength),
-            MethodName = Truncate(methodName, MaxIdentityFieldLength),
-            ErrorMessage = Truncate(exceptionDetails.ErrorMessage, MaxMessageLength),
-            ExceptionType = exceptionDetails.ExceptionType,
-            StackTrace = Truncate(exceptionDetails.StackTrace, MaxStackTraceLength),
-            StandardOutput = Truncate(properties.StandardOutput?.StandardOutput, MaxStandardStreamLength),
-            StandardError = Truncate(properties.StandardError?.StandardError, MaxStandardStreamLength),
-            Traits = properties.Traits,
+            Uid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+            RawUid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+            ParentRawUid = TestResultCaptureHelper.Truncate(update.ParentTestNodeUid?.Value, TestResultCaptureHelper.MaxIdentityFieldLength),
+            DisplayName = TestResultCaptureHelper.Truncate(node.DisplayName, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+            Outcome = ClassifyOutcome(core.State),
+            Duration = core.Duration,
+            StartTime = core.Properties.Timing?.GlobalTiming.StartTime,
+            EndTime = core.Properties.Timing?.GlobalTiming.EndTime,
+            ClassName = TestResultCaptureHelper.Truncate(core.ClassName, TestResultCaptureHelper.MaxIdentityFieldLength),
+            MethodName = TestResultCaptureHelper.Truncate(core.MethodName, TestResultCaptureHelper.MaxIdentityFieldLength),
+            ErrorMessage = TestResultCaptureHelper.Truncate(core.ExceptionDetails.ErrorMessage, TestResultCaptureHelper.MaxMessageLength),
+            ExceptionType = core.ExceptionDetails.ExceptionType,
+            StackTrace = TestResultCaptureHelper.Truncate(core.ExceptionDetails.StackTrace, TestResultCaptureHelper.MaxStackTraceLength),
+            StandardOutput = TestResultCaptureHelper.Truncate(core.Properties.StandardOutput?.StandardOutput, TestResultCaptureHelper.MaxStandardStreamLength),
+            StandardError = TestResultCaptureHelper.Truncate(core.Properties.StandardError?.StandardError, TestResultCaptureHelper.MaxStandardStreamLength),
+            Traits = core.Properties.Traits,
         };
     }
 
@@ -89,7 +78,4 @@ internal static class TestResultCapture
 
         return TestResultCaptureHelper.ClassifyOutcome(state);
     }
-
-    internal static string? Truncate(string? value, int maxLength)
-        => TestResultCaptureHelper.Truncate(value, maxLength);
 }

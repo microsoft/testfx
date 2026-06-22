@@ -18,6 +18,8 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class CtrfReportEngineTests
 {
+    private const int MaxStandardStreamLength = 32 * 1024;
+
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -117,7 +119,7 @@ public class CtrfReportEngineTests
     [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
-        string huge = new('a', TestResultCapture.MaxStandardStreamLength + 7);
+        string huge = new('a', MaxStandardStreamLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(huge));
@@ -127,9 +129,9 @@ public class CtrfReportEngineTests
 
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.StandardOutput);
-        Assert.StartsWith(new string('a', TestResultCapture.MaxStandardStreamLength), result.StandardOutput!);
+        Assert.StartsWith(new string('a', MaxStandardStreamLength), result.StandardOutput!);
         Assert.Contains("[truncated, original length:", result.StandardOutput);
-        Assert.Contains((TestResultCapture.MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
+        Assert.Contains((MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
     }
 
     [TestMethod]

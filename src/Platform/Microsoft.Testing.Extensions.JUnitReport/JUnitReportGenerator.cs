@@ -17,7 +17,7 @@ namespace Microsoft.Testing.Extensions.JUnitReport;
 internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGenerator, CapturedTestResult>
 {
     // Parent chain for ALL TestNodeUpdateMessages (including Discovered / InProgress).
-    // Keyed by the TestNodeUid value after truncation to TestResultCapture.MaxIdentityFieldLength
+    // Keyed by the TestNodeUid value after truncation to TestResultCaptureHelper.MaxIdentityFieldLength
     // so it matches the capped RawUid / ParentRawUid keys used everywhere else in capture
     // (see TestResultCapture.GetParentChainEntry / TryCapture). The engine uses this to
     // reconstruct the testpath of every test case in the report.
@@ -79,7 +79,7 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         // truncate it to a fixed identity budget before using it as a dictionary
         // key. Capture-side `RawUid`/`ParentRawUid` values are truncated to the
         // same budget so cross-lookups remain consistent.
-        string rawUid = TestResultCapture.Truncate(update.TestNode.Uid.Value, TestResultCapture.MaxIdentityFieldLength)!;
+        string rawUid = TestResultCaptureHelper.Truncate(update.TestNode.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!;
         _parentChain[rawUid] = TestResultCapture.GetParentChainEntry(update);
 
         base.OnTestNodeUpdate(update);

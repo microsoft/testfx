@@ -64,7 +64,7 @@ internal sealed class JUnitReportEngine : ReportEngineBase
 
         string fileName = fileNameExplicitlyProvided
             ? ResolveXmlFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName();
+            : BuildDefaultFileName("xml");
 
         string outputDirectory = _configuration.GetTestResultDirectory();
         // Path.Combine short-circuits when the second argument is rooted, so an absolute
@@ -111,19 +111,6 @@ internal sealed class JUnitReportEngine : ReportEngineBase
                 : null);
     }
 
-    private string BuildDefaultFileName()
-    {
-        // Deterministic <asm>_<tfm>_<arch>.xml shape — discoverable across reruns and
-        // multi-target/multi-arch matrices. A second run into the same TestResults folder
-        // overwrites the previous file (with a warning), matching the behavior of an
-        // explicitly-provided file name.
-        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
-        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.xml";
-        return ReplaceInvalidFileNameChars(raw);
-    }
-
     private string ResolveXmlFileName(string template)
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
@@ -131,6 +118,8 @@ internal sealed class JUnitReportEngine : ReportEngineBase
         return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
 
+#pragma warning disable IDE0051 // Accessed by unit tests through reflection.
     private static string ReplaceInvalidFileNameChars(string fileName)
         => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
+#pragma warning restore IDE0051
 }

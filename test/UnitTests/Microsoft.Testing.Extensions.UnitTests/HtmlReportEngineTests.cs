@@ -16,6 +16,10 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class HtmlReportEngineTests
 {
+    private const int MaxStandardStreamLength = 32 * 1024;
+    private const int MaxIdentityFieldLength = 4 * 1024;
+    private const int MaxTraitFieldLength = 1024;
+
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -110,7 +114,7 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
-        string huge = new('a', TestResultCapture.MaxStandardStreamLength + 7);
+        string huge = new('a', MaxStandardStreamLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(huge));
@@ -120,15 +124,15 @@ public class HtmlReportEngineTests
 
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.StandardOutput);
-        Assert.StartsWith(new string('a', TestResultCapture.MaxStandardStreamLength), result.StandardOutput!);
+        Assert.StartsWith(new string('a', MaxStandardStreamLength), result.StandardOutput!);
         Assert.Contains("[truncated, original length:", result.StandardOutput);
-        Assert.Contains((TestResultCapture.MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
+        Assert.Contains((MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
     }
 
     [TestMethod]
     public void TestResultCapture_Does_Not_Truncate_When_Exactly_At_MaxLength()
     {
-        string atMax = new('a', TestResultCapture.MaxStandardStreamLength);
+        string atMax = new('a', MaxStandardStreamLength);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(atMax));
@@ -144,7 +148,7 @@ public class HtmlReportEngineTests
     {
         // Build a string whose (maxLength-1)-th char is the high surrogate of a pair.
         // After truncation the high surrogate must be dropped so the result is valid UTF-16.
-        string prefix = new('a', TestResultCapture.MaxStandardStreamLength - 1);
+        string prefix = new('a', MaxStandardStreamLength - 1);
         const string surrogatePair = "\uD83D\uDE00"; // 😀 — high surrogate at index maxLength-1
         string input = prefix + surrogatePair + new string('z', 10);
 
@@ -170,7 +174,7 @@ public class HtmlReportEngineTests
 
         // Confirm we backed off exactly one char over the high surrogate.
         Assert.AreEqual(
-            TestResultCapture.MaxStandardStreamLength - 1,
+            MaxStandardStreamLength - 1,
             newlineIdx,
             "Prefix should be maxLength-1 chars (backed off over the high surrogate).");
     }
@@ -574,7 +578,7 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_TruncatesIdentityFields_AtBoundary()
     {
-        string huge = new('a', TestResultCapture.MaxIdentityFieldLength + 7);
+        string huge = new('a', MaxIdentityFieldLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new TestMethodIdentifierProperty("asm", "n", "t", huge, 0, [], "void"));
@@ -592,8 +596,8 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_TruncatesTraitKeysAndValues_AtBoundary()
     {
-        string hugeKey = new('k', TestResultCapture.MaxTraitFieldLength + 3);
-        string hugeValue = new('v', TestResultCapture.MaxTraitFieldLength + 5);
+        string hugeKey = new('k', MaxTraitFieldLength + 3);
+        string hugeValue = new('v', MaxTraitFieldLength + 5);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new TestMetadataProperty(hugeKey, hugeValue));
