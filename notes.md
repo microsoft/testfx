@@ -25,18 +25,21 @@
 - **Static classes in Roslyn**: Static classes are NOT abstract (`IsAbstract=false`); they have `IsStatic=true`. The `UseDeploymentItem` analyzer's abstract-class early return does NOT apply to static classes.
 - **Nullable annotation (CS8632)**: In analyzer test code strings, avoid `object?` — use `object` instead, or add `#nullable enable` at top of test code string. The test harness doesn't enable nullable by default.
 - **ManagedMethod/ManagedType**: Listed in TestContextPropertyUsageAnalyzer restriction sets but these properties do NOT exist on the actual TestContext class — those entries are dead code in the restriction sets.
+- **VerifyCodeFixAsync for "no fix" case**: Do NOT use `VerifyCodeFixAsync(code, sameCode)` when the fixer returns without registering a fix — the framework checks the fixed state still has 0 diagnostics, causing failure. Use `VerifyAnalyzerAsync(code, explicit DiagnosticResult)` or restructure the test to use a fixable scenario.
 
 ## Testing Opportunities Backlog
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
-3. **Analyzer edge cases (ongoing)** — Continue with suppressors and analyzers with few tests. Next candidates:
-   - Any remaining analyzers with very few tests
+3. **Analyzer edge cases (ongoing)** — Continue with analyzers with few tests. Next candidates:
+   - `UseCooperativeCancellationForTimeoutAnalyzerTests` (33 tests) — possible additional fixture method scenarios
+   - `UseParallelizeAttributeAnalyzerTests` (5 tests) — may have edge cases around attribute duplication
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-22 | Task 3 (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases: TestInitialize method, non-TestContext symbol, parameter receiver), Task 7 (Monthly Issue Jun) |
 | 2026-06-21 | Task 3 (RedundantTestMethodDisplayNameAnalyzer custom-derived attribute + UseAsyncSuffix suppressors negative boundary cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-20 | Task 3 (UnusedParameterSuppressor MSTEST0047 edge cases: TestMethod+TestContext not suppressed, AssemblyInitialize+non-TestContext not suppressed), Task 7 (Monthly Issue Jun) |
 | 2026-06-19 | Task 3 (AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases: enum/struct/nullable), Task 4 (verify open PRs), Task 7 (Monthly Issue Jun) |
@@ -62,11 +65,12 @@
 
 ## Last Run
 
-2026-06-21 23:22 UTC
+2026-06-22 23:22 UTC
 
 ## Completed Work
 
-- PR (pending) for async-suffix suppressors + redundant display name edge cases (2026-06-21) — custom derived attribute coverage (MSTEST0071, MSTEST0027) and negative-boundary tests (MSTEST0027, MSTEST0028)
+- PR (pending) for UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases (2026-06-22) — TestInitialize, non-TestContext symbol, AssemblyInitialize parameter
+- PR #9314 merged (async-suffix suppressors + redundant display name edge cases) — merged 2026-06-22 by Evangelink
 - PR #9301 merged (UnusedParameterSuppressor MSTEST0047 edge cases) — merged 2026-06-21 by Evangelink
 - PR (merged) for AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases — enum/struct/nullable types; in main branch
 - PR #9223 merged (TestContextShouldBeValidAnalyzer MSTEST0005 edge cases) — merged 2026-06-18
