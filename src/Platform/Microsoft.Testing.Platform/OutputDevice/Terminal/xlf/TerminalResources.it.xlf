@@ -283,7 +283,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
       <trans-unit id="Try">
         <source>try {0}</source>
         <target state="new">try {0}</target>
-        <note>number or tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
+        <note>number of tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>

@@ -16,6 +16,22 @@ internal static class TestResultCaptureHelper
     internal const int MaxIdentityFieldLength = 4 * 1024;
     internal const int MaxTraitFieldLength = 1024;
 
+    internal static CapturedTestResultCoreData? TryCaptureCore(TestNode node, bool includeLocation = false)
+    {
+        TestNodeStateProperty? state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
+        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
+        {
+            return null;
+        }
+
+        CapturedTestResultProperties properties = ExtractProperties(node.Properties, includeLocation);
+        TimeSpan duration = properties.Timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
+        (string? className, string? methodName) = GetClassAndMethodName(properties.Identifier);
+        CapturedExceptionDetails exceptionDetails = ExtractExceptionDetails(state);
+
+        return new CapturedTestResultCoreData(state, properties, duration, className, methodName, exceptionDetails);
+    }
+
     internal static CapturedTestResultProperties ExtractProperties(PropertyBag propertyBag, bool includeLocation = false)
     {
         TimingProperty? timing = null;
@@ -140,3 +156,11 @@ internal readonly record struct CapturedExceptionDetails(
     string? ErrorMessage,
     string? StackTrace,
     string? ExceptionType);
+
+internal readonly record struct CapturedTestResultCoreData(
+    TestNodeStateProperty State,
+    CapturedTestResultProperties Properties,
+    TimeSpan Duration,
+    string? ClassName,
+    string? MethodName,
+    CapturedExceptionDetails ExceptionDetails);

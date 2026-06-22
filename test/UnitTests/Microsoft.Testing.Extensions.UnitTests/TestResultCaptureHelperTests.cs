@@ -28,6 +28,10 @@ public sealed class TestResultCaptureHelperTests
         HelperType.GetMethod("GetClassAndMethodName", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve TestResultCaptureHelper.GetClassAndMethodName.");
 
+    private static readonly MethodInfo TryCaptureCoreMethod =
+        HelperType.GetMethod("TryCaptureCore", BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("Could not resolve TestResultCaptureHelper.TryCaptureCore.");
+
     private static string? InvokeTruncate(string? value, int maxLength)
         => (string?)TruncateMethod.Invoke(null, [value, maxLength]);
 
@@ -36,6 +40,15 @@ public sealed class TestResultCaptureHelperTests
 
     private static (string? ClassName, string? MethodName) InvokeGetClassAndMethodName(TestMethodIdentifierProperty? identifier)
         => ((string?, string?))GetClassAndMethodNameMethod.Invoke(null, [identifier])!;
+
+    // TryCaptureCore returns a nullable internal record struct (CapturedTestResultCoreData?); reflection
+    // boxes a present value to the struct instance and a missing value to null. Fields are read
+    // back through the boxed instance's properties so the test stays decoupled from the type.
+    private static object? InvokeTryCaptureCore(TestNode node, bool includeLocation = false)
+        => TryCaptureCoreMethod.Invoke(null, [node, includeLocation]);
+
+    private static object? GetMember(object instance, string propertyName)
+        => instance.GetType().GetProperty(propertyName)!.GetValue(instance);
 
     [TestMethod]
     public void Truncate_NullValue_ReturnsNull()
@@ -132,5 +145,97 @@ public sealed class TestResultCaptureHelperTests
         (string? className, string? methodName) = InvokeGetClassAndMethodName(identifier);
         Assert.AreEqual("MyType", className);
         Assert.AreEqual("MyMethod", methodName);
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_NoState_ReturnsNull()
+    {
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new() };
+        Assert.IsNull(InvokeTryCaptureCore(node));
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_DiscoveredState_ReturnsNull()
+    {
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) };
+        Assert.IsNull(InvokeTryCaptureCore(node));
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_InProgressState_ReturnsNull()
+    {
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(InProgressTestNodeStateProperty.CachedInstance) };
+        Assert.IsNull(InvokeTryCaptureCore(node));
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_TerminalState_ReturnsCoreData()
+    {
+        var identifier = new TestMethodIdentifierProperty(
+            assemblyFullName: "MyAsm",
+            @namespace: "My.Ns",
+            typeName: "MyType",
+            methodName: "MyMethod",
+            methodArity: 0,
+            parameterTypeFullNames: [],
+            returnTypeFullName: "System.Void");
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(identifier);
+        TestNode node = new() { Uid = "the-uid", DisplayName = "The display name", Properties = bag };
+
+        object? result = InvokeTryCaptureCore(node);
+
+        Assert.IsNotNull(result);
+        Assert.IsInstanceOfType<PassedTestNodeStateProperty>(GetMember(result, "State"));
+        Assert.AreEqual(TimeSpan.Zero, GetMember(result, "Duration"));
+        Assert.AreEqual("My.Ns.MyType", GetMember(result, "ClassName"));
+        Assert.AreEqual("MyMethod", GetMember(result, "MethodName"));
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_FailedStateWithException_PopulatesExceptionDetails()
+    {
+        var exception = new InvalidOperationException("boom");
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = new(new FailedTestNodeStateProperty(exception)) };
+
+        object? result = InvokeTryCaptureCore(node);
+
+        Assert.IsNotNull(result);
+        object? exceptionDetails = GetMember(result, "ExceptionDetails");
+        Assert.IsNotNull(exceptionDetails);
+        Assert.AreEqual("boom", GetMember(exceptionDetails, "ErrorMessage"));
+        Assert.AreEqual(typeof(InvalidOperationException).FullName, GetMember(exceptionDetails, "ExceptionType"));
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_IncludeLocationTrue_PopulatesLocation()
+    {
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new TestFileLocationProperty("Some.cs", new LinePositionSpan(new LinePosition(1, 0), new LinePosition(2, 0))));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        object? result = InvokeTryCaptureCore(node, includeLocation: true);
+
+        Assert.IsNotNull(result);
+        object? properties = GetMember(result, "Properties");
+        Assert.IsNotNull(properties);
+        object? location = GetMember(properties, "Location");
+        Assert.IsNotNull(location);
+        Assert.AreEqual("Some.cs", GetMember(location, "FilePath"));
+    }
+
+    [TestMethod]
+    public void TryCaptureCore_IncludeLocationFalse_DoesNotPopulateLocation()
+    {
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new TestFileLocationProperty("Some.cs", new LinePositionSpan(new LinePosition(1, 0), new LinePosition(2, 0))));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        object? result = InvokeTryCaptureCore(node, includeLocation: false);
+
+        Assert.IsNotNull(result);
+        object? properties = GetMember(result, "Properties");
+        Assert.IsNotNull(properties);
+        Assert.IsNull(GetMember(properties, "Location"));
     }
 }
