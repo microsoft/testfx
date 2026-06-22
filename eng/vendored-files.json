@@ -17,24 +17,9 @@
       ]
     },
     {
-      "id": "source-gen-system-polyfills",
-      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SystemPolyfills.cs",
-      "notes": "Nullable attribute polyfills for source generator. Only NotNullWhenAttribute is mirrored locally; combined with a locally-defined IsExternalInit shim. Originally referenced retired dotnet/coreclr@60f1e626 -- successor file lives in dotnet/runtime with the same content.",
-      "sources": [
-        {
-          "repo": "dotnet/runtime",
-          "ref": "main",
-          "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
-          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
-          "baseline_blob_sha": "78908b119ae07e92f7e89fe507eb0fc69b21fa99",
-          "scope": "NotNullWhenAttribute only; combined with locally-defined IsExternalInit"
-        }
-      ]
-    },
-    {
-      "id": "source-gen-symbol-visibility",
-      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SymbolVisibility.cs",
-      "notes": "Verbatim copy with namespace adjustment. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk.",
+      "id": "analyzers-symbol-visibility",
+      "local_path": "src/Analyzers/MSTest.Analyzers/RoslynAnalyzerHelpers/SymbolVisibility.cs",
+      "notes": "Verbatim copy with namespace adjustment. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk. The former MSTest.SourceGeneration copy was removed (#8586) in favor of a locally-authored SymbolAccessibilityHelper; this analyzers copy of the same upstream file remains the tracked vendored source.",
       "sources": [
         {
           "repo": "dotnet/sdk",
@@ -296,8 +281,8 @@
     },
     {
       "id": "source-gen-equatable-array",
-      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/EquatableArray{T}.cs",
-      "notes": "Value-equality wrapper over ImmutableArray<T> for incremental source generator caching, ported from ComputeSharp.",
+      "local_path": "src/Analyzers/Shared/EquatableArray.cs",
+      "notes": "Value-equality wrapper over ImmutableArray<T> for incremental source generator caching, ported from ComputeSharp. Shared across the MSTest source generators (#9118).",
       "sources": [
         {
           "repo": "Sergio0694/ComputeSharp",
