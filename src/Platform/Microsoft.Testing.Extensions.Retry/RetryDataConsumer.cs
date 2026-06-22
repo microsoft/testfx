@@ -9,7 +9,6 @@ using Microsoft.Testing.Platform.Extensions.RetryFailedTests.Serializers;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Policy;
@@ -47,14 +46,22 @@ internal sealed class RetryDataConsumer : IDataConsumer, ITestSessionLifetimeHan
             return;
         }
 
-        if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, nodeState.GetType()) != -1)
+        if (nodeState is FailedTestNodeStateProperty or ErrorTestNodeStateProperty
+            or TimeoutTestNodeStateProperty
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+            or CancelledTestNodeStateProperty)
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         {
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks is not null);
             ApplicationStateGuard.Ensure(_retryFailedTestsLifecycleCallbacks.Client is not null);
             await _retryFailedTestsLifecycleCallbacks.Client.RequestReplyAsync<FailedTestRequest, VoidResponse>(new FailedTestRequest(testNodeUpdateMessage.TestNode.Uid), cancellationToken).ConfigureAwait(false);
         }
 
-        if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeProperties, nodeState.GetType()) != -1)
+        if (nodeState is PassedTestNodeStateProperty or FailedTestNodeStateProperty or ErrorTestNodeStateProperty
+            or TimeoutTestNodeStateProperty
+#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
+            or CancelledTestNodeStateProperty)
+#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
         {
             _totalTests++;
         }
