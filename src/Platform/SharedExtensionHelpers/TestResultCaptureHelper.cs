@@ -135,6 +135,12 @@ internal static class TestResultCaptureHelper
     /// <see cref="TestNodeStateProperty"/> and <see cref="CapturedTestResultProperties"/>
     /// for format-specific post-processing.
     /// </summary>
+    /// <param name="node">The test node to capture.</param>
+    /// <param name="includeLocation">
+    /// Pass <see langword="true"/> to also populate <see cref="CapturedTestResultProperties.Location"/>
+    /// (file path and line span). Only needed by report formats that emit source location
+    /// (e.g. CTRF). Defaults to <see langword="false"/>.
+    /// </param>
     internal static TryCaptureResult? TryCaptureCore(TestNode node, bool includeLocation = false)
     {
         TestNodeStateProperty? state = node.Properties.SingleOrDefault<TestNodeStateProperty>();
