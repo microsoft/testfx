@@ -103,7 +103,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
                 ProcessRole = processRole,
             };
 
-            await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            await Assert.ThrowsExactlyAsync<UnreachableException>(
                 () => service.RegisterOnMaxFailedTestsCallbackAsync((_, _) => Task.CompletedTask));
         }
     }
