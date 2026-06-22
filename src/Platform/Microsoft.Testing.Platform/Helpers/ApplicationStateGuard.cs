@@ -1,6 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+/* This is the canonical ApplicationStateGuard implementation.
+ * Simplified copies live in other projects (Adapter, Analyzers, TestFramework); keep them in sync when changing behavior here. */
+
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.Helpers;

@@ -47,6 +47,6 @@ public sealed class ConfigurationExtensionsTests
         // type parameter would compare against this test assembly's copy and fail due to type identity mismatch across
         // assemblies. Assert on the full type name instead.
         Exception exception = Assert.Throws<Exception>(() => GetActualValueFromConfiguration(configuration.Object, key));
-        Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
+        Assert.AreEqual(typeof(global::System.Diagnostics.UnreachableException).FullName, exception.GetType().FullName);
     }
 }

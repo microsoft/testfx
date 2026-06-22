@@ -108,7 +108,7 @@ public sealed class StopPoliciesServiceTests : IDisposable
             // mismatch across assemblies. Assert on the full type name instead.
             Exception exception = await Assert.ThrowsAsync<Exception>(
                 () => service.RegisterOnMaxFailedTestsCallbackAsync((_, _) => Task.CompletedTask));
-            Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
+            Assert.AreEqual(typeof(global::System.Diagnostics.UnreachableException).FullName, exception.GetType().FullName);
         }
     }
 

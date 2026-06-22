@@ -25,7 +25,7 @@ public sealed class ApplicationStateGuardTests
         // assemblies. Assert on the full type name instead.
         Exception exception = ApplicationStateGuard.Unreachable();
 
-        Assert.AreEqual("System.Diagnostics.UnreachableException", exception.GetType().FullName);
+        Assert.AreEqual(typeof(global::System.Diagnostics.UnreachableException).FullName, exception.GetType().FullName);
         Assert.Contains("thought to be unreachable", exception.Message);
     }
 }

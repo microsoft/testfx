@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+/* This file is intentionally copied across layered projects; keep it in sync with the canonical copy at
+ * src\Platform\Microsoft.Testing.Platform\Helpers\ApplicationStateGuard.cs. */
+
 namespace MSTest.Analyzers.Helpers;
 
 internal static class ApplicationStateGuard
