@@ -60,7 +60,11 @@
          AddOpenTelemetryProvider with AddTestingPlatformInstrumentation, exercising the platform's
          OpenTelemetryResultHandler pipeline end-to-end in CI. -->
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseMSTestFromSource)' == 'true'" />
+    <!-- When consuming MSTest from source, also reference Microsoft.Testing.Platform.MSBuild from source so its
+         version matches the one that flows transitively through the MSTest.TestAdapter project reference. Using the
+         NuGet package here pins the older flowed-in version and produces an NU1605 downgrade against the locally
+         built project (see https://github.com/microsoft/testfx/pull/9259). -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition="'$(UseMSTestFromSource)' == 'true'" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
 
