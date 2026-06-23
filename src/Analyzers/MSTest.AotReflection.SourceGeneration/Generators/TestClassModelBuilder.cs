@@ -101,6 +101,17 @@ internal static class TestClassModelBuilder
                             break;
                         }
 
+                        // MSTest only ever instantiates a test class through a parameterless ctor or a
+                        // single-TestContext ctor (the adapter's TypeCache prefers the TestContext ctor and
+                        // otherwise takes the parameterless one). Registering any other shape would be dead
+                        // — and, because the runtime matches invokers by argument type, an extra compatible
+                        // overload (e.g. ctor(object)) could be picked over the intended one. Only emit the
+                        // two supported shapes so the type-level lookup stays unambiguous.
+                        if (!IsSupportedTestClassConstructor(ctor))
+                        {
+                            break;
+                        }
+
                         ctors.Add(new TestConstructorModel(BuildParameters(ctor)));
                         break;
                 }
@@ -484,6 +495,18 @@ internal static class TestClassModelBuilder
     }
 
     private readonly record struct AttributeUsageMetadata(bool Inherited, bool AllowMultiple);
+
+    private static bool IsSupportedTestClassConstructor(IMethodSymbol constructor)
+    {
+        ImmutableArray<IParameterSymbol> parameters = constructor.Parameters;
+        if (parameters.Length == 0)
+        {
+            return true;
+        }
+
+        return parameters.Length == 1
+            && parameters[0].Type.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext";
+    }
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {

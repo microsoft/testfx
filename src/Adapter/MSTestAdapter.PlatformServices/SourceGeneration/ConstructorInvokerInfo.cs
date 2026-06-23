@@ -25,8 +25,8 @@ public readonly struct ConstructorInvokerInfo
     /// <param name="invoker">A delegate that constructs the instance from an argument array.</param>
     public ConstructorInvokerInfo(Type[] parameterTypes, Func<object?[]?, object> invoker)
     {
-        ParameterTypes = parameterTypes;
-        Invoker = invoker;
+        ParameterTypes = parameterTypes ?? throw new ArgumentNullException(nameof(parameterTypes));
+        Invoker = invoker ?? throw new ArgumentNullException(nameof(invoker));
     }
 
     /// <summary>

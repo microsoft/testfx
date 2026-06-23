@@ -275,6 +275,49 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_RegistersOnlySupportedConstructorShapes()
+    {
+        // MSTest only instantiates a test class via a parameterless or single-TestContext ctor. An
+        // additional ctor(object) (or any other shape) must NOT be registered: it is never selected by
+        // the adapter, and registering it could let the runtime's argument-type matching pick it over
+        // the intended ctor.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext { }
+            }
+
+            namespace Sample
+            {
+                [TestClass]
+                public class CtorTests
+                {
+                    public CtorTests() { }
+                    public CtorTests(TestContext context) { }
+                    public CtorTests(object anything) { }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        // Parameterless and single-TestContext ctors are registered.
+        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
+        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests((global::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext)args![0]!),");
+
+        // The unsupported ctor(object) is not registered.
+        registry.Should().NotContain("new global::Sample.CtorTests((object)args![0]!)");
+    }
+
+    [TestMethod]
     public void Generator_EmitsParameterTypes_ForMethodWithParameters()
     {
         const string userCode = """

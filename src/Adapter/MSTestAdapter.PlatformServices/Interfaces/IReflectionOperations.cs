@@ -48,8 +48,10 @@ internal interface IReflectionOperations
     /// Gets a delegate that invokes <paramref name="method"/> directly (without
     /// <c>MethodInfo.Invoke</c>), or <see langword="null"/> when no source-generated invoker is
     /// available and the caller must fall back to reflection.
-    /// The delegate returns the method's raw result: a <see cref="Task"/>/<c>ValueTask</c> for
-    /// async methods, the return value for sync methods, or <see langword="null"/> for <c>void</c>.
+    /// The source-generated delegate returns a non-null <see cref="Task"/> representing the method's
+    /// completion: <c>void</c> / synchronous methods yield <see cref="Task.CompletedTask"/>, a
+    /// <see cref="System.Threading.Tasks.ValueTask"/> is converted to a <see cref="Task"/>, and any
+    /// return value is discarded.
     /// </summary>
     /// <param name="method">The test or fixture method to invoke.</param>
     /// <returns>An invoker delegate, or <see langword="null"/> in reflection mode.</returns>

@@ -96,9 +96,11 @@ internal class SourceGeneratedReflectionDataProvider
     /// <summary>
     /// Gets the delegate-based invokers for test methods and fixtures, keyed by the
     /// <see cref="MethodInfo"/> the adapter holds. Each delegate calls the method directly
-    /// (no <c>MethodInfo.Invoke</c>) and returns the method's raw result (a <see cref="Task"/>/
-    /// <see cref="System.Threading.Tasks.ValueTask"/> for async methods, the return value for
-    /// sync methods, or <see langword="null"/> for <c>void</c>).
+    /// (no <c>MethodInfo.Invoke</c>) and returns a non-null <see cref="Task"/> representing the
+    /// method's completion. The source generator normalizes every shape to a <see cref="Task"/> at
+    /// generation time — <c>void</c> / synchronous methods return <see cref="Task.CompletedTask"/>,
+    /// a <see cref="System.Threading.Tasks.ValueTask"/> is converted with <c>AsTask()</c>, and any
+    /// return value is discarded — so callers can simply await the result.
     /// </summary>
     public Dictionary<MethodInfo, Func<object?, object?[]?, object?>> TypeMethodInvokers { get; init; } = [];
 
