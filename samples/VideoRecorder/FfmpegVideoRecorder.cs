@@ -266,10 +266,6 @@ internal sealed class FfmpegVideoRecorder : IVideoRecorder
         return errors.Length > 0 ? string.Join(" | ", errors) : lines[lines.Length - 1];
     }
 
-    // Resolves the screen rectangle of the current process's window so gdigrab can capture just
-    // that region. Returns false when there is no usable visible window (headless runs, or
-    // terminals like Windows Terminal whose visible window is not owned by this process), in
-    // which case the caller falls back to full-screen capture.
     // Resolves the screen rectangle of the window to capture so gdigrab can record just that
     // region. Candidates are tried in order: the process main window (a GUI app under test owns
     // it), then the foreground window (the terminal you launched from — this is what makes
@@ -474,10 +470,13 @@ internal sealed class FfmpegVideoRecorder : IVideoRecorder
             return process.HasExited;
         }
 #else
-        // On .NET Framework the token only prevents the wait task from starting; once
-        // WaitForExit is blocking it cannot be interrupted, so a cancelled stop still waits up to
-        // the timeout. That bound is acceptable here.
-        return await Task.Run(() => process.WaitForExit((int)timeout.TotalMilliseconds), cancellationToken).ConfigureAwait(false);
+        // On .NET Framework, WaitForExit can't be interrupted once it's blocking, so the token
+        // can't shorten the wait anyway. Intentionally don't pass it to Task.Run: a token that is
+        // already cancelled would make Task.Run return a cancelled task and throw
+        // OperationCanceledException, which would break the best-effort stop on a cancelled run.
+        // The timeout bounds the wait.
+        _ = cancellationToken;
+        return await Task.Run(() => process.WaitForExit((int)timeout.TotalMilliseconds)).ConfigureAwait(false);
 #endif
     }
 

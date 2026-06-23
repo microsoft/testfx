@@ -46,7 +46,7 @@ testApplicationBuilder.AddVideoRecorderProvider(options =>
     options.FrameRate = 15;
     options.Format = VideoRecorderFormat.Mp4H264;           // or WebMVp9 (royalty-free)
     options.PersistMode = VideoRecorderPersistenceMode.OnFailure; // or Always
-    options.CaptureCurrentProcessWindow = false;                  // true = capture only this process's window (Windows)
+    options.Source = VideoCaptureSource.Screen;                  // or VideoCaptureSource.Window (capture only this process's window; Windows)
     // options.OutputDirectory = ...;                       // defaults to <TestResults>/VideoRecordings
     // options.InputArgumentsOverride = ...;                // capture a window/region instead of the full screen
     // options.ExtraRecorderArguments = "-vf scale=1280:-1"; // extra args for the underlying recorder (ffmpeg)
@@ -65,7 +65,7 @@ screenshots — under the same `--capture-` umbrella (e.g. `--capture-screenshot
 | Option | Values | Description |
 | --- | --- | --- |
 | `--capture-video` | *(none)*, `on-failure`, `always` | Enables screen recording for the run. The optional argument controls retention: `on-failure` (**default** — keep the video only if at least one test fails) or `always`. |
-| `--capture-video-window` | *(flag)* | Capture only the **current process window** instead of the full screen. Windows only (uses `gdigrab title=`); falls back to full-screen capture elsewhere. Requires `--capture-video`. |
+| `--capture-video-source` | `screen` (default), `window` | What to capture: the full screen, or only the current process window (Windows; falls back to full screen elsewhere). Requires `--capture-video`. |
 | `--capture-video-args` | any string | Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires `--capture-video`. |
 
 Examples:
@@ -78,12 +78,11 @@ yourtests --capture-video
 yourtests --capture-video always
 
 # Record only the current process window (e.g. your terminal) instead of the whole screen
-yourtests --capture-video always --capture-video-window
+yourtests --capture-video always --capture-video-source window
 
-# Record and pass extra recorder args. NOTE: because the value starts with '-', you must use the
-# '=' (or ':') delimiter form so MTP binds it to the option instead of parsing it as a new option.
-yourtests --capture-video "--capture-video-args=-vf scale=1280:-1"
-# (equivalently, quote just the value:  --capture-video-args="-vf scale=1280:-1")
+# Record and pass extra recorder args. NOTE: because the value starts with '-', use the '=' (or ':')
+# delimiter form so MTP binds it to the option instead of parsing it as a new option.
+yourtests --capture-video --capture-video-args="-vf scale=1280:-1"
 ```
 
 > **Window capture** records the screen rectangle of a window resolved in this order: the process
@@ -100,9 +99,6 @@ yourtests --capture-video "--capture-video-args=-vf scale=1280:-1"
 
 > Retention is decided at **session** granularity: if any test in the run fails, all recordings
 > produced during the run are kept; if every test passes, they are all discarded.
-
-> The `on-failure` mode decides at **session** granularity: if any test in the run fails, all
-> recordings produced during the run are kept; if every test passes, they are all discarded.
 
 ## A note on ffmpeg licensing / codecs
 
