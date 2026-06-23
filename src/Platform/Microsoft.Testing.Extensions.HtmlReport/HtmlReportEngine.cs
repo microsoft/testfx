@@ -54,7 +54,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? ResolveReportFileName(GetProvidedFileName(providedFileName))
+            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
             : BuildDefaultFileName("html");
 
         string outputDirectory = _configuration.GetTestResultDirectory();

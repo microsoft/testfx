@@ -58,7 +58,7 @@ internal abstract class ReportEngineBase
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
 
-    protected string ResolveReportFileName(string template)
+    protected string ResolveProvidedFileName(string template)
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);

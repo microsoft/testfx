@@ -63,7 +63,7 @@ internal sealed class JUnitReportEngine : ReportEngineBase
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? ResolveReportFileName(GetProvidedFileName(providedFileName))
+            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
             : BuildDefaultFileName("xml");
 
         string outputDirectory = _configuration.GetTestResultDirectory();
