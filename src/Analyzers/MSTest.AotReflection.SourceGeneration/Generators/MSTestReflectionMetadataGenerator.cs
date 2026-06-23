@@ -26,13 +26,27 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Emit the support types (TestClassReflectionInfo, TestMethodReflectionInfo, …) once
-        // per compilation. They live in the consuming assembly so this PoC has no runtime
-        // dependency on a separate package.
-        context.RegisterPostInitializationOutput(static ctx =>
+        // MSTestSourceGenMode selects which generator emits. This (reflection-free) generator only
+        // emits when the consumer opts in via <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>;
+        // otherwise the default rooting generator emits and this one stays fully silent so the
+        // assembly is never registered twice.
+        IncrementalValueProvider<bool> reflectionFree = context.AnalyzerConfigOptionsProvider
+            .Select(static (provider, _) => SourceGenModeHelper.IsReflectionFree(provider.GlobalOptions));
+
+        // Emit the support types (TestClassReflectionInfo, TestMethodReflectionInfo, …) once per
+        // compilation, gated on reflection-free mode. They live in the consuming assembly so this has
+        // no runtime dependency on a separate package.
+        context.RegisterImplementationSourceOutput(reflectionFree, static (ctx, isReflectionFree) =>
+        {
+            if (!isReflectionFree)
+            {
+                return;
+            }
+
             ctx.AddSource(
                 "MSTestReflectionMetadata.SupportTypes.g.cs",
-                SourceText.From(MetadataRegistryEmitter.EmitSupportTypes(), Encoding.UTF8)));
+                SourceText.From(MetadataRegistryEmitter.EmitSupportTypes(), Encoding.UTF8));
+        });
 
         IncrementalValuesProvider<TestClassTransformResult> rawResults = context.SyntaxProvider
             .ForAttributeWithMetadataName(
@@ -43,10 +57,14 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
                 predicate: static (node, _) => node is TypeDeclarationSyntax,
                 transform: static (ctx, ct) => BuildResult(ctx, ct));
 
-        // Surface every collected DiagnosticInfo as a real Diagnostic. Empty arrays produce
-        // no work, so this branch is allocation-free for clean compilations.
+        // Surface every collected DiagnosticInfo as a real Diagnostic — but only in reflection-free
+        // mode, since the unsupported-shape diagnostics describe this generator's limitations. In
+        // rooting mode those shapes are handled by runtime reflection, so the warnings would be noise.
         IncrementalValuesProvider<DiagnosticInfo> diagnostics = rawResults
-            .SelectMany(static (result, _) => result.Diagnostics.AsImmutableArray());
+            .SelectMany(static (result, _) => result.Diagnostics.AsImmutableArray())
+            .Combine(reflectionFree)
+            .Where(static pair => pair.Right)
+            .Select(static (pair, _) => pair.Left);
 
         context.RegisterSourceOutput(diagnostics, static (ctx, info) =>
             ctx.ReportDiagnostic(info.ToDiagnostic()));
@@ -63,17 +81,23 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
             {
                 ct.ThrowIfCancellationRequested();
                 return new AssemblyMetadataModel(
-                    TestClassModelBuilder.BuildAttributes(c.Assembly.GetAttributes()));
+                    TestClassModelBuilder.BuildAttributes(c.Assembly.GetAttributes(), c.Assembly));
             });
 
-        IncrementalValueProvider<(string? AssemblyName, AssemblyMetadataModel Metadata, ImmutableArray<TestClassModel> Classes)> combined =
+        IncrementalValueProvider<(string? AssemblyName, AssemblyMetadataModel Metadata, ImmutableArray<TestClassModel> Classes, bool ReflectionFree)> combined =
             context.CompilationProvider.Select(static (c, _) => c.AssemblyName)
                 .Combine(assemblyMetadata)
                 .Combine(testClasses.Collect())
-                .Select(static (tuple, _) => (tuple.Left.Left, tuple.Left.Right, tuple.Right));
+                .Combine(reflectionFree)
+                .Select(static (tuple, _) => (tuple.Left.Left.Left, tuple.Left.Left.Right, tuple.Left.Right, tuple.Right));
 
         context.RegisterImplementationSourceOutput(combined, static (ctx, payload) =>
         {
+            if (!payload.ReflectionFree)
+            {
+                return;
+            }
+
             string assemblyName = payload.AssemblyName ?? "Unknown";
             string source = MetadataRegistryEmitter.EmitRegistry(assemblyName, payload.Metadata, payload.Classes);
             ctx.AddSource("MSTestReflectionMetadata.Registry.g.cs", SourceText.From(source, Encoding.UTF8));
@@ -81,15 +105,15 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
 
         // Emit the [ModuleInitializer] that registers this assembly with the adapter. Without it,
         // referencing this generator would emit metadata that nothing consumes. We skip emission
-        // when there are no test classes — there is nothing to register.
+        // when reflection-free mode is off, or when there are no test classes — nothing to register.
         context.RegisterImplementationSourceOutput(combined, static (ctx, payload) =>
         {
-            if (payload.Classes.IsDefaultOrEmpty)
+            if (!payload.ReflectionFree || payload.Classes.IsDefaultOrEmpty)
             {
                 return;
             }
 
-            string source = RuntimeRegistrationEmitter.Emit(payload.Metadata, payload.Classes);
+            string source = RuntimeRegistrationEmitter.Emit(payload.Classes);
             ctx.AddSource("MSTestReflectionMetadata.Registration.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }

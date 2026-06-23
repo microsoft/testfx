@@ -44,12 +44,28 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
 
         IncrementalValueProvider<ImmutableArray<TestClassMetadata?>> collected = testClasses.Collect();
 
-        IncrementalValueProvider<(string? AssemblyName, ImmutableArray<TestClassMetadata?> Classes)> source =
+        // MSTestSourceGenMode selects which generator emits. This (rooting) generator is the default;
+        // when the consumer opts into ReflectionFree, the reflection-free generator emits instead and
+        // this one stays silent so the assembly is never registered twice.
+        IncrementalValueProvider<bool> reflectionFree = context.AnalyzerConfigOptionsProvider
+            .Select(static (provider, _) => SourceGenModeHelper.IsReflectionFree(provider.GlobalOptions));
+
+        IncrementalValueProvider<(string? AssemblyName, ImmutableArray<TestClassMetadata?> Classes, bool ReflectionFree)> source =
             context.CompilationProvider
                 .Select(static (compilation, _) => compilation.AssemblyName)
-                .Combine(collected);
+                .Combine(collected)
+                .Combine(reflectionFree)
+                .Select(static (tuple, _) => (tuple.Left.Left, tuple.Left.Right, tuple.Right));
 
-        context.RegisterImplementationSourceOutput(source, EmitMetadata);
+        context.RegisterImplementationSourceOutput(source, static (ctx, payload) =>
+        {
+            if (payload.ReflectionFree)
+            {
+                return;
+            }
+
+            EmitMetadata(ctx, (payload.AssemblyName, payload.Classes));
+        });
     }
 
     private static TestClassMetadata? BuildTestClass(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)

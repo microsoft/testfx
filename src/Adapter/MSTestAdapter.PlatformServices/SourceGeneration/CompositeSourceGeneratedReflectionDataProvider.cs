@@ -186,6 +186,8 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             var typeConstructors = new Dictionary<Type, ConstructorInfo[]>();
             var typePropertiesByName = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
             var typeConstructorsInvoker = new Dictionary<Type, ConstructorInvoker[]>();
+            var typeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();
+            var typePropertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();
 
             foreach (SourceGeneratedReflectionDataProvider provider in providers)
             {
@@ -199,6 +201,8 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
                 MergeInto(typeConstructors, provider.TypeConstructors);
                 MergeInto(typePropertiesByName, provider.TypePropertiesByName);
                 MergeInto(typeConstructorsInvoker, provider.TypeConstructorsInvoker);
+                MergeInto(typeMethodInvokers, provider.TypeMethodInvokers);
+                MergeInto(typePropertySetters, provider.TypePropertySetters);
             }
 
             return new SourceGeneratedReflectionDataProvider
@@ -213,6 +217,8 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
                 TypeConstructors = typeConstructors,
                 TypePropertiesByName = typePropertiesByName,
                 TypeConstructorsInvoker = typeConstructorsInvoker,
+                TypeMethodInvokers = typeMethodInvokers,
+                TypePropertySetters = typePropertySetters,
             };
         }
 
