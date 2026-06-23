@@ -22,18 +22,19 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         AssemblyCleanup,
     }
 
+    // Cross-products every inconclusive lifecycle step with the metadata modes under test
+    // (reflection and, unless globally disabled, source generation) so the same expectations
+    // validate both metadata paths.
+    public static IEnumerable<object[]> LifecycleAndMetadataModes { get; }
+        = (from lifecycle in Enum.GetValues<Lifecycle>()
+           from mode in MetadataModesToRun
+           select new object[] { lifecycle, mode }).ToArray();
+
     [TestMethod]
-    [DataRow(Lifecycle.Constructor)]
-    [DataRow(Lifecycle.AssemblyInitialize)]
-    [DataRow(Lifecycle.ClassInitialize)]
-    [DataRow(Lifecycle.TestInitialize)]
-    [DataRow(Lifecycle.TestMethod)]
-    [DataRow(Lifecycle.TestCleanup)]
-    [DataRow(Lifecycle.ClassCleanup)]
-    [DataRow(Lifecycle.AssemblyCleanup)]
-    public async Task TestOutcomeShouldBeRespectedCorrectly(Lifecycle inconclusiveStep)
+    [DynamicData(nameof(LifecycleAndMetadataModes))]
+    public async Task TestOutcomeShouldBeRespectedCorrectly(Lifecycle inconclusiveStep, MetadataMode metadataMode)
     {
-        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent);
+        var testHost = TestHost.LocateFrom(AssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent, metadataMode: metadataMode);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--settings my.runsettings",
             environmentVariables: new Dictionary<string, string?>

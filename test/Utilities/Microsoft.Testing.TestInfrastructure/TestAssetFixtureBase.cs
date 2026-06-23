@@ -23,6 +23,27 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     private readonly TempDirectory _tempDirectory = new();
     private bool _disposedValue;
 
+    /// <summary>
+    /// Gets a value indicating whether the <see cref="MetadataMode.SourceGeneration"/> build variant
+    /// of the asset was produced. It is <see langword="false"/> when the fixture opts out via
+    /// <see cref="SkipSourceGenVariant"/> or when the variant is globally disabled.
+    /// </summary>
+    public bool SourceGenVariantBuilt { get; private set; }
+
+    /// <summary>
+    /// Gets the result of the <see cref="MetadataMode.SourceGeneration"/> build, or <see langword="null"/>
+    /// when the variant was not built. Useful for diagnostics when a source-gen build fails.
+    /// </summary>
+    public DotnetMuxerResult? SourceGenBuildResult { get; private set; }
+
+    /// <summary>
+    /// Override and return <see langword="true"/> to skip the <see cref="MetadataMode.SourceGeneration"/>
+    /// build variant for assets that cannot run under source generation (for example VSTest-host assets,
+    /// NativeAOT/Trim/Aspire/Playwright/ServerMode assets, or assets that rely on source-generator gaps
+    /// such as inherited <c>[TestClass]</c>, generic test methods, or cross-assembly reflection).
+    /// </summary>
+    protected virtual bool SkipSourceGenVariant => false;
+
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
@@ -35,6 +56,20 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: assetName, cancellationToken: cancellationToken);
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
+
+        // Default-on: build a second variant with MSTest.SourceGeneration injected, into an isolated
+        // bin/SourceGen + obj/SourceGen output, so the same behavioral assertions also validate the
+        // source-generated metadata path. Only attempt it when the reflection build succeeded.
+        if (!SkipSourceGenVariant && !AcceptanceSourceGen.IsGloballyDisabled && result.ExitCode == 0)
+        {
+            string sourceGenArgs = await AcceptanceSourceGen.PrepareBuildArgumentsAsync(testAsset.TargetAssetPath);
+            DotnetMuxerResult sourceGenResult = await DotnetCli.RunAsync(
+                $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
+                callerMemberName: $"{assetName}_SourceGen",
+                cancellationToken: cancellationToken);
+            SourceGenBuildResult = sourceGenResult;
+            SourceGenVariantBuilt = sourceGenResult.ExitCode == 0;
+        }
     }
 
     /// <summary>

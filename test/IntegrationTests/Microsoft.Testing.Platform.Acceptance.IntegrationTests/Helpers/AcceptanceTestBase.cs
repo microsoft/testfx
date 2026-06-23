@@ -114,6 +114,43 @@ public abstract class AcceptanceTestBase
         }
     }
 
+    /// <summary>
+    /// Gets the metadata modes each acceptance assertion should run against. By default both the
+    /// runtime reflection path and the <c>MSTest.SourceGeneration</c> path are exercised; the
+    /// source-gen mode is dropped when globally disabled via the kill-switch.
+    /// </summary>
+    internal static MetadataMode[] MetadataModesToRun { get; }
+        = AcceptanceSourceGen.IsGloballyDisabled
+            ? [MetadataMode.Reflection]
+            : [MetadataMode.Reflection, MetadataMode.SourceGeneration];
+
+    /// <summary>
+    /// DynamicData source: every <see cref="TargetFrameworks.All"/> TFM combined with every applicable
+    /// <see cref="MetadataModesToRun"/> mode. Source generation is .NET-only, so .NET Framework TFMs
+    /// (net4x) are paired with <see cref="MetadataMode.Reflection"/> only.
+    /// </summary>
+    public static IEnumerable<object[]> AllTfmsAndMetadataModes { get; }
+        = (from tfm in TargetFrameworks.All
+           from mode in MetadataModesToRun
+           where mode == MetadataMode.Reflection || TargetFrameworks.Net.Contains(tfm)
+           select new object[] { tfm, mode }).ToArray();
+
+    /// <summary>
+    /// DynamicData source: every .NET (non-.NET Framework) TFM combined with every
+    /// <see cref="MetadataModesToRun"/> mode.
+    /// </summary>
+    public static IEnumerable<object[]> NetTfmsAndMetadataModes { get; }
+        = (from tfm in TargetFrameworks.Net
+           from mode in MetadataModesToRun
+           select new object[] { tfm, mode }).ToArray();
+
+    /// <summary>
+    /// DynamicData source: every <see cref="MetadataModesToRun"/> mode, for tests that are not
+    /// parameterized by TFM (they typically run against <see cref="TargetFrameworks.NetCurrent"/>).
+    /// </summary>
+    public static IEnumerable<object[]> MetadataModes { get; }
+        = MetadataModesToRun.Select(mode => new object[] { mode }).ToArray();
+
     // https://github.com/NuGet/NuGet.Client/blob/c5934bdcbc578eec1e2921f49e6a5d53481c5099/test/NuGet.Core.FuncTests/Msbuild.Integration.Test/MsbuildIntegrationTestFixture.cs#L65-L94
     private protected static async Task<string> FindMsbuildWithVsWhereAsync(CancellationToken cancellationToken)
     {

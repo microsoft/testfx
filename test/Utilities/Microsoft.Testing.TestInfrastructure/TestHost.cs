@@ -121,10 +121,16 @@ public sealed class TestHost
         string tfm,
         string rid = "",
         Verb verb = Verb.build,
-        BuildConfiguration buildConfiguration = BuildConfiguration.Release)
+        BuildConfiguration buildConfiguration = BuildConfiguration.Release,
+        MetadataMode metadataMode = MetadataMode.Reflection)
     {
         string moduleName = $"{testHostModuleNameWithoutExtension}{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty)}";
-        string expectedRootPath = Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm);
+
+        // The source-generation build variant is redirected to bin/SourceGen (see AcceptanceSourceGen),
+        // so it never overwrites the default reflection build under bin.
+        string expectedRootPath = metadataMode == MetadataMode.SourceGeneration
+            ? Path.Combine(rootFolder, "bin", AcceptanceSourceGen.OutputSubFolder, buildConfiguration.ToString(), tfm)
+            : Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm);
         string[] executables = Directory.GetFiles(expectedRootPath, moduleName, SearchOption.AllDirectories);
         string? expectedPath = executables.SingleOrDefault(p => p.Contains(rid) && p.Contains(verb == Verb.publish ? "publish" : string.Empty));
 
