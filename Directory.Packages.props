@@ -27,7 +27,7 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>18.4.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.58.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.60.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
     <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
          opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public

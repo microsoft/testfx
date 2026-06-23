@@ -16,13 +16,6 @@ internal sealed partial class CtrfReportEngine
         return ReplaceInvalidFileNameChars(raw);
     }
 
-    private string ResolveJsonFileName(string template)
-    {
-        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
-    }
-
     // CTRF `osPlatform` is the short Node-style platform identifier (e.g. "win32",
     // "linux", "darwin"). The full descriptive OS string belongs in `osVersion`.
     private static string GetCtrfOsPlatform()
@@ -51,7 +44,4 @@ internal sealed partial class CtrfReportEngine
 
         return "unknown";
     }
-
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 }
