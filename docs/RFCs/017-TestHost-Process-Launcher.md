@@ -9,7 +9,7 @@
 
 Introduce **`ITestHostProcessLauncher`**: a public, experimental Microsoft.Testing.Platform (MTP) extension point that lets an extension control **how** the out-of-process test host is launched, instead of the platform always doing `Process.Start`. The platform still owns everything around the launch — argument/environment preparation, the controller↔host IPC pipe, PID tracking, `ITestHostProcessLifetimeHandler` callbacks, and exit-code reconciliation — and simply delegates the single "create the process" step to the registered launcher.
 
-The motivating scenario is testing **packaged WinUI/MSIX applications**, which cannot be started with `Process.Start` and must be activated by AUMID (see [#2784](https://github.com/microsoft/testfx/issues/2784)). But the abstraction is deliberately generic: the same hook enables launching the test host under a debugger, elevated, inside a container, or on a remote machine.
+The motivating scenario is testing **WinUI applications** (see [#2784](https://github.com/microsoft/testfx/issues/2784)): **packaged/MSIX** apps in particular cannot be started with `Process.Start` and must be activated by AUMID, while unpackaged WinUI apps similarly benefit from a custom launch step. (#2784's title calls out the *unpackaged* case specifically; this launcher is the generic hook that serves both packaged and unpackaged WinUI scenarios.) But the abstraction is deliberately generic: the same hook enables launching the test host under a debugger, elevated, inside a container, or on a remote machine.
 
 ## Motivation
 
@@ -168,12 +168,12 @@ internal sealed class WinUiAppxLauncher(IServiceProvider sp) : ITestHostProcessL
     public string Description => "Deploys and AUMID-activates a packaged WinUI test app.";
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task<ITestHostProcessHandle> LaunchTestHostProcessAsync(
+    public Task<ITestHostProcessHandle> LaunchTestHostProcessAsync(
         TestHostProcessLaunchContext context, CancellationToken cancellationToken)
     {
         // 1. Parse the .appxrecipe / AppxManifest.xml next to context.FileName to get the AUMID
         //    and (in Developer Mode) register the loose layout:
-        //    await new PackageManager().RegisterPackageByUriAsync(manifestUri, options);
+        //    new PackageManager().RegisterPackageByUriAsync(manifestUri, options);
         string aumid = AppxManifest.ResolveAumid(context.FileName);
 
         // 2. Activate, passing the SAME args the platform prepared.
@@ -183,7 +183,7 @@ internal sealed class WinUiAppxLauncher(IServiceProvider sp) : ITestHostProcessL
 
         // 3. Wrap the returned PID. The app inherits context.EnvironmentVariables
         //    (incl. the MONITORTOHOST pipe name) via its activation/launch profile.
-        return new ProcessIdHandle((int)pid);
+        return Task.FromResult<ITestHostProcessHandle>(new ProcessIdHandle((int)pid));
     }
 }
 ```
@@ -260,7 +260,9 @@ public Task<ITestHostProcessHandle> LaunchTestHostProcessAsync(
 public Task<ITestHostProcessHandle> LaunchTestHostProcessAsync(
     TestHostProcessLaunchContext context, CancellationToken cancellationToken)
 {
-    string env = string.Join(' ', context.EnvironmentVariables.Select(kv => $"{kv.Key}={Quote(kv.Value)}"));
+    string env = string.Join(' ', context.EnvironmentVariables
+        .Where(kv => kv.Value is not null)
+        .Select(kv => $"{kv.Key}={Quote(kv.Value!)}")); // values are nullable; skip unset vars
     string remoteCmd = $"{env} {Quote(context.FileName)} {string.Join(' ', context.Arguments.Select(Quote))}";
 
     var psi = new ProcessStartInfo("ssh") { UseShellExecute = false };
@@ -275,7 +277,7 @@ public Task<ITestHostProcessHandle> LaunchTestHostProcessAsync(
 
 ### Reuse `ITestHostExecutionOrchestrator`
 
-MTP already ships an experimental `ITestHostExecutionOrchestrator` (`ITestHostOrchestratorManager.AddTestHostOrchestrator`). It was rejected as the vehicle because it sits **above** the controller: `OrchestrateTestHostExecutionAsync` runs in `TestHostOchestratorHost` and replaces the *entire* execution, returning only an exit code. An implementation would have to re-create everything `TestHostControllersTestHost` provides — environment-variable providers, the `MONITORTOHOST` IPC/PID handshake, and the `ITestHostProcessLifetimeHandler` fan-out that **hang dump and crash dump depend on**. That is the wrong granularity for "launch the process differently." The orchestrator remains the right tool for whole-run concerns (e.g. retry/repeat that re-runs the host).
+MTP already ships an experimental `ITestHostExecutionOrchestrator` (`ITestHostOrchestratorManager.AddTestHostOrchestrator`). It was rejected as the vehicle because it sits **above** the controller: `OrchestrateTestHostExecutionAsync` runs in `TestHostOrchestratorHost` and replaces the *entire* execution, returning only an exit code. An implementation would have to re-create everything `TestHostControllersTestHost` provides — environment-variable providers, the `MONITORTOHOST` IPC/PID handshake, and the `ITestHostProcessLifetimeHandler` fan-out that **hang dump and crash dump depend on**. That is the wrong granularity for "launch the process differently." The orchestrator remains the right tool for whole-run concerns (e.g. retry/repeat that re-runs the host).
 
 ### Make the internal `IProcessHandler` replaceable via DI
 
