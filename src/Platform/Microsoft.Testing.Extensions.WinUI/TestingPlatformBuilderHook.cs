@@ -3,18 +3,18 @@
 
 using Microsoft.Testing.Platform.Builder;
 
-namespace Microsoft.Testing.Extensions.AppDeployment;
+namespace Microsoft.Testing.Extensions.WinUI;
 
 /// <summary>
-/// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder to add application deployment support.
+/// This class is used by Microsoft.Testing.Platform.MSBuild to hook into the Testing Platform Builder to add WinUI test host deployment support.
 /// </summary>
 public static class TestingPlatformBuilderHook
 {
     /// <summary>
-    /// Adds application deployment support to the Testing Platform Builder.
+    /// Adds WinUI test host deployment support to the Testing Platform Builder.
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     /// <param name="_">The command line arguments.</param>
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] _)
-        => testApplicationBuilder.AddAppDeployment();
+        => testApplicationBuilder.AddWinUIDeployment();
 }

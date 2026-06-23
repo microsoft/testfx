@@ -3,17 +3,17 @@
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
-namespace Microsoft.Testing.Extensions.AppDeployment;
+namespace Microsoft.Testing.Extensions.WinUI;
 
 /// <summary>
-/// An <see cref="ITestHostHandle"/> over a deployed test host process that deliberately hides the
-/// underlying process id, modelling a launch where no local, query-able PID is available.
+/// An <see cref="ITestHostHandle"/> over a deployed WinUI test host process that deliberately hides
+/// the underlying process id, modelling a launch where no local, query-able PID is available.
 /// </summary>
-internal sealed class DeployedTestHostHandle : ITestHostHandle, IDisposable
+internal sealed class WinUITestHostHandle : ITestHostHandle, IDisposable
 {
     private readonly Process _process;
 
-    public DeployedTestHostHandle(Process process)
+    public WinUITestHostHandle(Process process)
     {
         _process = process;
         _process.EnableRaisingEvents = true;
@@ -22,7 +22,8 @@ internal sealed class DeployedTestHostHandle : ITestHostHandle, IDisposable
 
     public event EventHandler? Exited;
 
-    // Intentionally null: the platform must not depend on a local process id (container/remote/AUMID).
+    // Intentionally null: the platform must not depend on a local process id. A packaged-WinUI
+    // implementation could surface the AUMID-activated PID here instead.
     public int? ProcessId => null;
 
     public int ExitCode => _process.ExitCode;

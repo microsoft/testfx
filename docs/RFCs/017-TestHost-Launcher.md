@@ -76,8 +76,9 @@ RFC adds the *minimal* hook at exactly the launch site.
 - Remote **device deployment/bootstrapping** of the Windows App SDK framework + agent (VSTest's
   `Microsoft.UniversalApps.Deployment` has no public redistributable; out of scope — local launch
   only).
-- Shipping the WinUI package/deploy extension itself. This RFC only adds the platform hook; the
-  package/deploy extension is a separate deliverable that consumes it.
+- Shipping a *complete* packaged WinUI / MSIX deployment story. This RFC adds the platform hook; a
+  reference consumer (`Microsoft.Testing.Extensions.WinUI`) implements the unpackaged
+  deploy-and-launch path, while packaged AUMID activation remains a separate follow-up.
 - Changing the in-process (single-process, `ConsoleTestHost`) execution path.
 
 ## Detailed design

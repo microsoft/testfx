@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\..\buildMultiTargeting\Microsoft.Testing.Extensions.WinUI.props" />
+</Project>

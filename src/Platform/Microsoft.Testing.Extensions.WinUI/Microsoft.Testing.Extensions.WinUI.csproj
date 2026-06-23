@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- The application deployment launcher uses modern Process APIs (ArgumentList, WaitForExitAsync,
+    <RootNamespace>Microsoft.Testing.Extensions.WinUI</RootNamespace>
+    <!-- The WinUI launcher uses modern Process APIs (ArgumentList, WaitForExitAsync,
          Kill(entireProcessTree)) and targets runtime hosts, so it ships only for .NET. -->
     <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
     <!-- Cancel default license (MIT) and set license as packaged license file -->
@@ -16,7 +17,7 @@
     <PackageDescription>
       <![CDATA[This package provides extensions to Microsoft Testing Platform intended to extend base functionalities.
 
-This package extends Microsoft Testing Platform to deploy and launch the test host through a custom mechanism instead of starting it in place.]]>
+This package extends Microsoft Testing Platform to deploy and launch a WinUI test host through a custom mechanism instead of starting it in place.]]>
     </PackageDescription>
   </PropertyGroup>
 

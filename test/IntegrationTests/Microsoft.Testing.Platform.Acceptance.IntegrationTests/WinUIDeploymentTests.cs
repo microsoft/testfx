@@ -4,13 +4,14 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class AppDeploymentTests : AcceptanceTestBase<AppDeploymentTests.TestAssetFixture>
+public sealed class WinUIDeploymentTests : AcceptanceTestBase<WinUIDeploymentTests.TestAssetFixture>
 {
-    private const string AssetName = "AppDeploymentTest";
+    private const string AssetName = "WinUIDeploymentTest";
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    public async Task AppDeployment_DeploysAndLaunchesTestHost_WithoutLocalPid(string currentTfm)
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "WinUI is a Windows-only scenario.")]
+    public async Task WinUIDeployment_DeploysAndLaunchesTestHost_WithoutLocalPid(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
@@ -22,7 +23,7 @@ public sealed class AppDeploymentTests : AcceptanceTestBase<AppDeploymentTests.T
 
         // The launcher leaves a breadcrumb pointing at the isolated deployment directory it created
         // and launched from.
-        string markerPath = Path.Combine(testHost.DirectoryName, "AppDeployment.txt");
+        string markerPath = Path.Combine(testHost.DirectoryName, "WinUIDeployment.txt");
         Assert.IsTrue(File.Exists(markerPath), $"Expected deployment marker at '{markerPath}'.");
 
         string deploymentDirectory = File.ReadAllText(markerPath);
@@ -33,7 +34,7 @@ public sealed class AppDeploymentTests : AcceptanceTestBase<AppDeploymentTests.T
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
-#file AppDeploymentTest.csproj
+#file WinUIDeploymentTest.csproj
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -45,7 +46,7 @@ public sealed class AppDeploymentTests : AcceptanceTestBase<AppDeploymentTests.T
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-    <PackageReference Include="Microsoft.Testing.Extensions.AppDeployment" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.WinUI" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
@@ -66,7 +67,7 @@ public class Startup
     {
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
-        testApplicationBuilder.AddAppDeployment();
+        testApplicationBuilder.AddWinUIDeployment();
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
         return await app.RunAsync();
     }
