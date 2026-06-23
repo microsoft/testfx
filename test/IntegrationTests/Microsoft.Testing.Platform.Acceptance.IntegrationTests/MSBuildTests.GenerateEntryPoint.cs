@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Combinatorial.MSTest;
+
 using SL = Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -10,9 +12,9 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
 {
     private const string AssetName = "MSBuildTests";
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    [CombinatorialData]
     [TestMethod]
-    public async Task When_GenerateTestingPlatformEntryPoint_IsFalse_NoEntryPointInjected(string tfm, BuildConfiguration compilationMode, Verb verb)
+    public async Task When_GenerateTestingPlatformEntryPoint_IsFalse_NoEntryPointInjected([AllTargetFrameworks] string tfm, BuildConfiguration compilationMode, Verb verb)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             nameof(GenerateCSharpEntryPointAndVerifyTheCacheUsage),
@@ -42,9 +44,9 @@ public class MSBuildTests_EntryPoint : AcceptanceTestBase<NopAssetFixture>
         compilationResult.AssertExitCodeIsNot(0);
     }
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    [CombinatorialData]
     [TestMethod]
-    public async Task GenerateCSharpEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
+    public async Task GenerateCSharpEntryPointAndVerifyTheCacheUsage([AllTargetFrameworks] string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPointAsync(nameof(GenerateCSharpEntryPointAndVerifyTheCacheUsage), CSharpSourceCode, "cs", tfm, compilationMode, verb,
             @"Entrypoint source:
 '//------------------------------------------------------------------------------
@@ -70,9 +72,9 @@ namespace MSBuildTests
     }
 }'", "Csc");
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    [CombinatorialData]
     [TestMethod]
-    public async Task GenerateVBEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
+    public async Task GenerateVBEntryPointAndVerifyTheCacheUsage([AllTargetFrameworks] string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPointAsync(nameof(GenerateVBEntryPointAndVerifyTheCacheUsage), VBSourceCode, "vb", tfm, compilationMode, verb,
             @"Entrypoint source:
 ''------------------------------------------------------------------------------
@@ -98,9 +100,9 @@ Module MicrosoftTestingPlatformEntryPoint
 
 End Module'", "Vbc");
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    [CombinatorialData]
     [TestMethod]
-    public async Task GenerateFSharpEntryPointAndVerifyTheCacheUsage(string tfm, BuildConfiguration compilationMode, Verb verb)
+    public async Task GenerateFSharpEntryPointAndVerifyTheCacheUsage([AllTargetFrameworks] string tfm, BuildConfiguration compilationMode, Verb verb)
         => await GenerateAndVerifyLanguageSpecificEntryPointAsync(nameof(GenerateFSharpEntryPointAndVerifyTheCacheUsage), FSharpSourceCode, "fs", tfm, compilationMode, verb,
             @"Entrypoint source:
 '//------------------------------------------------------------------------------
