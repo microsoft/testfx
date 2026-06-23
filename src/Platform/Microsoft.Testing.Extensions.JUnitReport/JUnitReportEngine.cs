@@ -117,9 +117,4 @@ internal sealed class JUnitReportEngine : ReportEngineBase
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
         return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
-
-#pragma warning disable IDE0051 // Accessed by unit tests through reflection.
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
-#pragma warning restore IDE0051
 }

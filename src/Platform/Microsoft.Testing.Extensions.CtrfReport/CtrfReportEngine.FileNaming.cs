@@ -51,7 +51,4 @@ internal sealed partial class CtrfReportEngine
 
         return "unknown";
     }
-
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 }

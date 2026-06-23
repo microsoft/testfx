@@ -58,6 +58,9 @@ internal abstract class ReportEngineBase
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
 
+    protected static string ReplaceInvalidFileNameChars(string fileName)
+        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
+
     protected string BuildDefaultFileName(string extension)
     {
         // Deterministic <asm>_<tfm>_<arch>.<extension> shape — discoverable across
