@@ -41,11 +41,33 @@ public class ExecutableConditionAttributeTests : TestContainer
         => new ExecutableConditionAttribute("docker").Executable.Should().Be("docker");
 
     public void GroupName_IncludesExecutable()
-        => new ExecutableConditionAttribute("docker").GroupName.Should().Be("ExecutableCondition:docker");
+        => new ExecutableConditionAttribute("docker").GroupName.Should().Be("ExecutableCondition:presence\0docker\0Include");
 
     public void GroupName_IncludesArguments()
         => new ExecutableConditionAttribute("docker", "version").GroupName
-            .Should().Be("ExecutableCondition:docker version");
+            .Should().Be("ExecutableCondition:run\0docker\0version\0Include");
+
+    // A presence check for an executable literally named "foo bar" must not collide with running "foo" with the
+    // argument "bar"; the null-character separator keeps the two distinct.
+    public void GroupName_PresenceAndRunDoNotCollide()
+        => new ExecutableConditionAttribute("foo bar").GroupName
+            .Should().NotBe(new ExecutableConditionAttribute("foo", "bar").GroupName);
+
+    // Include and Exclude for the same command must NOT share a GroupName, otherwise the two would land in the same
+    // OR group and silently cancel each other out instead of being AND-ed.
+    public void GroupName_DiffersByMode()
+        => new ExecutableConditionAttribute(ConditionMode.Include, "docker").GroupName
+            .Should().NotBe(new ExecutableConditionAttribute(ConditionMode.Exclude, "docker").GroupName);
+
+    // The attribute must be immutable: mutating the array the caller passed must not change Arguments.
+    public void Arguments_AreCopiedFromConstructorArray()
+    {
+        string[] args = ["version", "--format"];
+        var attribute = new ExecutableConditionAttribute("docker", args);
+        args[0] = "mutated";
+
+        attribute.Arguments.Should().Equal("version", "--format");
+    }
 
     public void Arguments_DefaultsToEmpty()
         => new ExecutableConditionAttribute("docker").Arguments.Should().BeEmpty();
@@ -167,10 +189,11 @@ public class ExecutableConditionAttributeTests : TestContainer
     {
         bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        // A command that sleeps well beyond the (very short) timeout, so the condition must give up and report false.
+        // Invoke ping/sleep directly (no shell wrapper) so killing the root process reliably stops the long-running
+        // command even on TFMs where only the root process can be killed (no entire-process-tree kill).
         ExecutableConditionAttribute attribute = isWindows
-            ? new ExecutableConditionAttribute("cmd", "/c", "ping", "-n", "30", "127.0.0.1") { TimeoutSeconds = 1 }
-            : new ExecutableConditionAttribute("sh", "-c", "sleep 30") { TimeoutSeconds = 1 };
+            ? new ExecutableConditionAttribute("ping", "-n", "30", "127.0.0.1") { TimeoutSeconds = 1 }
+            : new ExecutableConditionAttribute("sleep", "30") { TimeoutSeconds = 1 };
 
         attribute.IsConditionMet.Should().BeFalse();
     }

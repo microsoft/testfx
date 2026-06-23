@@ -24,7 +24,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 ///     When <see cref="Arguments"/> are supplied, the condition runs <c>executable arguments</c> and is met only when
 ///     the process exits with code <c>0</c> within <see cref="TimeoutSeconds"/>. For example,
 ///     <c>[ExecutableCondition("docker", "version")]</c> verifies that the Docker CLI actually responds. The process
-///     output is redirected and discarded, and the process tree is terminated if it exceeds the timeout.
+///     output is redirected and discarded, and the process (together with its child process tree, where the runtime
+///     supports it) is terminated if it exceeds the timeout.
 ///     </description>
 ///   </item>
 /// </list>
@@ -119,7 +120,13 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
         : base(mode)
     {
         Executable = executable ?? throw new ArgumentNullException(nameof(executable));
-        _arguments = arguments ?? throw new ArgumentNullException(nameof(arguments));
+
+        // Clone so a caller mutating the array they passed (params arrays are caller-owned) can't change this
+        // attribute's GroupName / cache key / IgnoreMessage after construction.
+        _arguments = arguments is null
+            ? throw new ArgumentNullException(nameof(arguments))
+            : (string[])arguments.Clone();
+        Arguments = Array.AsReadOnly(_arguments);
 
         string predicate = _arguments.Length == 0
             ? $"executable '{executable}' is available on PATH"
@@ -138,7 +145,7 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
     /// Gets the arguments passed to the executable. When empty, only the presence of the executable on <c>PATH</c> is
     /// checked; otherwise the executable is run with these arguments and must exit with code 0.
     /// </summary>
-    public IReadOnlyList<string> Arguments => _arguments;
+    public IReadOnlyList<string> Arguments { get; }
 
     /// <summary>
     /// Gets or sets the maximum number of seconds to wait for the executable to exit when <see cref="Arguments"/> are
@@ -148,16 +155,32 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
 
     /// <inheritdoc />
     public override bool IsConditionMet
-        => ResultCache.GetOrAdd(GroupName, _ => Evaluate());
+        => ResultCache.GetOrAdd(CacheKey, _ => Evaluate());
 
     /// <summary>
-    /// Gets the group name for this attribute. Each command forms its own group so that requiring several different
-    /// commands is combined with a logical AND.
+    /// Gets the group name for this attribute. Each command -- combined with <see cref="ConditionBaseAttribute.Mode"/>
+    /// -- forms its own group, so requiring several different commands is combined with a logical AND, while the same
+    /// command with opposite modes does not silently cancel out (mirroring <see cref="MemberConditionAttribute"/>).
     /// </summary>
+    /// <remarks>
+    /// The two evaluation modes are prefixed (<c>presence</c> vs <c>run</c>) and segments are separated with the null
+    /// character, which can't appear in an executable name or argument. This keeps the presence check for an executable
+    /// literally named <c>"foo bar"</c> distinct from running <c>foo</c> with argument <c>bar</c>.
+    /// <see cref="TimeoutSeconds"/> is intentionally excluded so the same command with different timeouts still groups
+    /// together (logical OR); it is instead part of <see cref="CacheKey"/> so a different timeout re-evaluates.
+    /// </remarks>
     public override string GroupName
         => _arguments.Length == 0
-            ? $"ExecutableCondition:{Executable}"
-            : $"ExecutableCondition:{Executable} {string.Join(" ", _arguments)}";
+            ? $"ExecutableCondition:presence\0{Executable}\0{Mode}"
+            : $"ExecutableCondition:run\0{Executable}\0{string.Join("\0", _arguments)}\0{Mode}";
+
+    // Key for the cached probe RESULT. Independent of Mode (whether the tool exists / the command succeeds doesn't
+    // depend on include vs exclude), but includes TimeoutSeconds because a stricter timeout can legitimately fail a
+    // command a looser one would pass. Uses '\0' as the separator so presence/run and arguments can never collide.
+    private string CacheKey
+        => _arguments.Length == 0
+            ? $"ExecutableCondition:presence\0{Executable}"
+            : $"ExecutableCondition:run\0{Executable}\0{string.Join("\0", _arguments)}\0{TimeoutSeconds}";
 
     private static bool IsWindows =>
 #if NET462
@@ -206,7 +229,9 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
-            int timeoutMilliseconds = TimeoutSeconds <= 0 ? Timeout.Infinite : TimeoutSeconds * 1000;
+            int timeoutMilliseconds = TimeoutSeconds <= 0
+                ? Timeout.Infinite
+                : (int)Math.Min((long)TimeoutSeconds * 1000, int.MaxValue);
             if (!process.WaitForExit(timeoutMilliseconds))
             {
                 try
@@ -216,10 +241,13 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
 #else
                     process.Kill();
 #endif
+
+                    // Best effort: give the kill a moment to take effect so the timed-out process doesn't linger.
+                    process.WaitForExit(5000);
                 }
-                catch
+                catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
                 {
-                    // Best effort: nothing more we can do if the process can't be terminated.
+                    // Nothing more we can do if the process can't be terminated (already exited, OS refused, etc.).
                 }
 
                 return false;
@@ -227,9 +255,9 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
 
             return process.ExitCode == 0;
         }
-        catch
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException or UnauthorizedAccessException or NotSupportedException or ObjectDisposedException)
         {
-            // A missing executable, permission issue, or any other failure means the condition isn't met.
+            // A missing executable, permission issue, or similar operational failure means the condition isn't met.
             return false;
         }
     }
@@ -286,17 +314,7 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
     }
 
     private static bool MatchesAnyExtension(string path, string[] extensions)
-    {
-        foreach (string extension in extensions)
-        {
-            if (File.Exists(path + extension))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => extensions.Any(extension => File.Exists(path + extension));
 
     private static string[] GetExecutableExtensions(string executable, bool isWindows)
     {
@@ -307,13 +325,13 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
         }
 
         string? pathExt = Environment.GetEnvironmentVariable("PATHEXT");
-        if (string.IsNullOrEmpty(pathExt))
+        if (pathExt is null || pathExt.Length == 0)
         {
             return [string.Empty, ".exe", ".cmd", ".bat", ".com"];
         }
 
         // PATHEXT entries already include the leading dot, for example ".COM;.EXE;.BAT".
-        string[] parts = pathExt!.Split([Path.PathSeparator], StringSplitOptions.RemoveEmptyEntries);
+        string[] parts = pathExt.Split([Path.PathSeparator], StringSplitOptions.RemoveEmptyEntries);
         string[] result = new string[parts.Length + 1];
 
         // Keep an empty extension first so an exact match (for example when a full file name was passed) still wins.
