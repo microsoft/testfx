@@ -99,6 +99,9 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
+    <!-- Third-party (community) package that brings xUnit.Combinatorial-style [CombinatorialData] support to
+         MSTest. Used by the acceptance tests to replace bespoke build-matrix DynamicData helpers. -->
+    <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
     <PackageVersion Include="Moq" Version="4.20.72" />

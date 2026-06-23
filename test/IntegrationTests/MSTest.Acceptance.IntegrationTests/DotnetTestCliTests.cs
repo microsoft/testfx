@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Combinatorial.MSTest;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -12,8 +14,8 @@ public class DotnetTestCliTests : AcceptanceTestBase<NopAssetFixture>
     private const string AssetName = "MSTestProject";
 
     [TestMethod]
-    [DynamicData(nameof(GetBuildMatrixTfmBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async Task DotnetTest_Should_Execute_Tests(string tfm, BuildConfiguration buildConfiguration)
+    [CombinatorialData]
+    public async Task DotnetTest_Should_Execute_Tests([AllTargetFrameworks] string tfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,

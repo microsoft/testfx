@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Combinatorial.MSTest;
+
 using SL = Microsoft.Build.Logging.StructuredLogger;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -10,9 +12,9 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
 {
     private const string AssetName = "MSBuildTests";
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    [CombinatorialData]
     [TestMethod]
-    public async Task Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered(string tfm, BuildConfiguration compilationMode, Verb verb)
+    public async Task Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered([AllTargetFrameworks] string tfm, BuildConfiguration compilationMode, Verb verb)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             nameof(Microsoft_Testing_Platform_Extensions_ShouldBe_Correctly_Registered),

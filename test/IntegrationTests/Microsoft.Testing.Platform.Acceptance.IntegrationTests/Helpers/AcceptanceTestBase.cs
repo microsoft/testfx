@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Combinatorial.MSTest;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 public abstract class AcceptanceTestBase
@@ -70,20 +72,6 @@ public abstract class AcceptanceTestBase
 
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
-    }
-
-    internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)> GetBuildMatrixTfmBuildVerbConfiguration()
-    {
-        foreach (string tfm in TargetFrameworks.All)
-        {
-            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
-            {
-                foreach (Verb verb in Enum.GetValues<Verb>())
-                {
-                    yield return new(tfm, compilationMode, verb);
-                }
-            }
-        }
     }
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
@@ -218,4 +206,16 @@ public class UnitTest1
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
     public static void ClassCleanup()
         => AssetFixture.Dispose();
+}
+
+/// <summary>
+/// A <see cref="ICombinatorialValuesProvider"/> that yields every target framework in
+/// <see cref="TargetFrameworks.All"/> (the OS-dependent set, which includes .NET Framework on Windows).
+/// Apply it to a <see langword="string"/> parameter of a <c>[CombinatorialData]</c> test method to combine
+/// over all target frameworks without hand-writing a bespoke build-matrix data source.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+public sealed class AllTargetFrameworksAttribute : Attribute, ICombinatorialValuesProvider
+{
+    public object?[] GetValues(ParameterInfo parameter) => [.. TargetFrameworks.All];
 }
