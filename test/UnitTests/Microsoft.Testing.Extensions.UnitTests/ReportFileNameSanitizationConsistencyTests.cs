@@ -15,8 +15,9 @@ public class ReportFileNameSanitizationConsistencyTests
     // CS0433 ambiguity when using the type name directly. Use the TrxReport assembly as the
     // unambiguous anchor to retrieve the shared sanitizer method via reflection.
     private static readonly MethodInfo SanitizeMethod =
-        typeof(TrxReportEngine).Assembly
-            .GetType("Microsoft.Testing.Extensions.ReportFileNameSanitizer")!
+        (typeof(TrxReportEngine).Assembly
+            .GetType("Microsoft.Testing.Extensions.ReportFileNameSanitizer")
+            ?? throw new InvalidOperationException("Could not find type ReportFileNameSanitizer in TrxReport assembly."))
             .GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars.");
 
@@ -27,8 +28,7 @@ public class ReportFileNameSanitizationConsistencyTests
         // All report engines (Trx, Html, JUnit, Ctrf) delegate to the shared
         // ReportFileNameSanitizer.ReplaceInvalidFileNameChars. Verify it handles
         // edge-case file names without throwing and returns a non-empty result.
-        string sanitized = (string)(SanitizeMethod.Invoke(null, [fileName])
-            ?? throw new InvalidOperationException("Sanitizer returned null."));
+        string? sanitized = (string?)SanitizeMethod.Invoke(null, [fileName]);
 
         Assert.IsNotNull(sanitized);
         Assert.AreNotEqual(0, sanitized.Length, $"Sanitized file name for '{fileName}' must not be empty.");
