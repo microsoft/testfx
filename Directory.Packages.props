@@ -12,7 +12,9 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-    <AspireHostingTestingVersion>13.2.1</AspireHostingTestingVersion>
+    <!-- AspireHostingTestingVersion is intentionally NOT defined here. It is derived from the
+         Aspire.Hosting.Testing PackageVersion (declared with a literal version near the bottom of
+         this file) so that Dependabot can keep it up to date. See the comment there. -->
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
@@ -133,15 +135,17 @@
     direct PackageReference, so a property-based version silently stops receiving updates.
     See dependabot/dependabot-core#5812 and dependabot/dependabot-core#7183.
 
-    The literal version is then surfaced as the MicrosoftPlaywrightVersion property below, which
-    is the single source of truth that flows into the MSTest.Sdk template (see MSTest.Sdk.csproj)
-    and is consumed by the shipped SDK. This keeps a single version to update (by Dependabot or by
-    hand) while remaining Dependabot-discoverable.
+    Each literal version is then surfaced as the matching *Version property below, which is the
+    single source of truth that flows into the MSTest.Sdk template (see MSTest.Sdk.csproj) and is
+    consumed by the shipped SDK. This keeps a single version to update (by Dependabot or by hand)
+    while remaining Dependabot-discoverable.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.2.1" />
     <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.60.0" />
   </ItemGroup>
   <PropertyGroup>
+    <AspireHostingTestingVersion>@(PackageVersion->WithMetadataValue('Identity', 'Aspire.Hosting.Testing')->'%(Version)')</AspireHostingTestingVersion>
     <MicrosoftPlaywrightVersion>@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Playwright.MSTest.v4')->'%(Version)')</MicrosoftPlaywrightVersion>
   </PropertyGroup>
 </Project>
