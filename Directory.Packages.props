@@ -27,7 +27,9 @@
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>18.4.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.58.0</MicrosoftPlaywrightVersion>
+    <!-- MicrosoftPlaywrightVersion is intentionally NOT defined here. It is derived from the
+         Microsoft.Playwright.MSTest.v4 PackageVersion (declared with a literal version near the
+         bottom of this file) so that Dependabot can keep it up to date. See the comment there. -->
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
     <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
          opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public
@@ -122,10 +124,24 @@
     <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
   </ItemGroup>
   <!--
-    Declare below packages that we will be referenced through MSTest.Sdk but don't have direct reference.
-    This allows dependabot to suggest updates.
+    Declare below packages that are referenced through MSTest.Sdk but don't have a direct
+    PackageReference in this repo.
+
+    The version MUST be a literal here (not an MSBuild property such as
+    $(MicrosoftPlaywrightVersion)): Dependabot does not update a Central Package Management
+    PackageVersion whose Version is an MSBuild property interpolation when the package has no
+    direct PackageReference, so a property-based version silently stops receiving updates.
+    See dependabot-core #5812 / #7183.
+
+    The literal version is then surfaced as the MicrosoftPlaywrightVersion property below, which
+    is the single source of truth that flows into the MSTest.Sdk template (see MSTest.Sdk.csproj)
+    and is consumed by the shipped SDK. This keeps a single version to update (by Dependabot or by
+    hand) while remaining Dependabot-discoverable.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="$(MicrosoftPlaywrightVersion)" />
+    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.60.0" />
   </ItemGroup>
+  <PropertyGroup>
+    <MicrosoftPlaywrightVersion>@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Playwright.MSTest.v4')->'%(Version)')</MicrosoftPlaywrightVersion>
+  </PropertyGroup>
 </Project>
