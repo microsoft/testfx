@@ -3,21 +3,21 @@
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
-namespace Microsoft.Testing.Extensions.Msix;
+namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// An <see cref="ITestHostLauncher"/> for Msix-packaged test applications (UWP and packaged WinUI):
-/// it deploys the test host's loose layout into an isolated directory and launches it from there,
-/// instead of starting the test host in place.
+/// An <see cref="ITestHostLauncher"/> for packaged Windows test applications (UWP and packaged
+/// WinUI): it deploys the test host's loose layout into an isolated directory and launches it from
+/// there, instead of starting the test host in place.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Msix-packaged apps — produced by both UWP and packaged WinUI projects — cannot be started with a
-/// plain <c>Process.Start</c> from the build output. They share the same launch mechanism: the loose
-/// layout is registered with the <c>PackageManager</c> and the app is activated by Application User
-/// Model ID (AUMID) via <c>IApplicationActivationManager</c>. That mechanism is the reason VSTest's
-/// <c>UwpTestHostRuntimeProvider</c> exists (it serves both UWP and WinUI); see
-/// https://github.com/microsoft/testfx/issues/2784.
+/// Packaged Windows apps — produced by both UWP and packaged WinUI projects, and shipped as MSIX —
+/// cannot be started with a plain <c>Process.Start</c> from the build output. They share the same
+/// launch mechanism: the loose layout is registered with the <c>PackageManager</c> and the app is
+/// activated by Application User Model ID (AUMID) via <c>IApplicationActivationManager</c>. That
+/// mechanism is the reason VSTest's <c>UwpTestHostRuntimeProvider</c> exists (it serves both UWP and
+/// WinUI); see https://github.com/microsoft/testfx/issues/2784.
 /// </para>
 /// <para>
 /// This reference implementation performs the deploy-and-launch step (stage the loose layout, then
@@ -31,15 +31,15 @@ namespace Microsoft.Testing.Extensions.Msix;
 /// deploy-and-create step and returns an <see cref="ITestHostHandle"/> the platform monitors.
 /// </para>
 /// </remarks>
-internal sealed class MsixTestHostLauncher : ITestHostLauncher
+internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 {
-    public string Uid => nameof(MsixTestHostLauncher);
+    public string Uid => nameof(PackagedAppTestHostLauncher);
 
     public string Version => "1.0.0";
 
-    public string DisplayName => "Msix test host launcher";
+    public string DisplayName => "Packaged app test host launcher";
 
-    public string Description => "Deploys an Msix-packaged (UWP/WinUI) test host to an isolated directory and launches it from there.";
+    public string Description => "Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.";
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -50,7 +50,7 @@ internal sealed class MsixTestHostLauncher : ITestHostLauncher
 
         // 1. Deploy the app's loose layout into an isolated directory. For packaged UWP/WinUI this is
         //    also where the layout would be registered via PackageManager.RegisterPackageByUriAsync.
-        string deploymentDirectory = Path.Combine(Path.GetTempPath(), "MTPMsixDeployment", Guid.NewGuid().ToString("N"));
+        string deploymentDirectory = Path.Combine(Path.GetTempPath(), "MTPPackagedAppDeployment", Guid.NewGuid().ToString("N"));
         CopyDirectory(sourceDirectory, deploymentDirectory);
 
         // 2. Launch the deployed test host, forwarding the platform-prepared arguments and
@@ -75,17 +75,17 @@ internal sealed class MsixTestHostLauncher : ITestHostLauncher
         }
 
         Process process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException($"Failed to start deployed Msix test host '{deployedFileName}'.");
+            ?? throw new InvalidOperationException($"Failed to start deployed packaged-app test host '{deployedFileName}'.");
 
         // Leave a breadcrumb next to the original app so the deployment is observable by callers/tests.
-        File.WriteAllText(Path.Combine(sourceDirectory, "MsixDeployment.txt"), deploymentDirectory);
+        File.WriteAllText(Path.Combine(sourceDirectory, "PackagedAppDeployment.txt"), deploymentDirectory);
 
         // 3. Return a handle that deliberately does NOT surface the underlying process id, validating
         //    that the platform relies purely on the lifecycle contract
         //    (WaitForExitAsync/ExitCode/HasExited/Exited/Terminate) and the IPC PID handshake. This
         //    matches launch mechanisms where no local, query-able PID is available (e.g. an
         //    AppContainer-sandboxed AUMID activation surfaced through a broker).
-        return Task.FromResult<ITestHostHandle>(new MsixTestHostHandle(process));
+        return Task.FromResult<ITestHostHandle>(new PackagedAppTestHostHandle(process));
     }
 
     private static void CopyDirectory(string sourceDirectory, string destinationDirectory)

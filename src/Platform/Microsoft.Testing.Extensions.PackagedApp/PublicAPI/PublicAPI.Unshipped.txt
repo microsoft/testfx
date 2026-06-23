@@ -1,0 +1,5 @@
+#nullable enable
+Microsoft.Testing.Extensions.PackagedApp.TestingPlatformBuilderHook
+Microsoft.Testing.Extensions.PackagedAppExtensions
+static Microsoft.Testing.Extensions.PackagedApp.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
+static Microsoft.Testing.Extensions.PackagedAppExtensions.AddPackagedAppDeployment(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

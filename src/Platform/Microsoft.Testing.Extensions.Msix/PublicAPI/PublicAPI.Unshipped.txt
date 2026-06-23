@@ -1,5 +1,0 @@
-#nullable enable
-Microsoft.Testing.Extensions.Msix.TestingPlatformBuilderHook
-Microsoft.Testing.Extensions.MsixExtensions
-static Microsoft.Testing.Extensions.Msix.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
-static Microsoft.Testing.Extensions.MsixExtensions.AddMsixDeployment(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

@@ -4,14 +4,14 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class MsixDeploymentTests : AcceptanceTestBase<MsixDeploymentTests.TestAssetFixture>
+public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppDeploymentTests.TestAssetFixture>
 {
-    private const string AssetName = "MsixDeploymentTest";
+    private const string AssetName = "PackagedAppDeploymentTest";
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Msix packaging (UWP/WinUI) is a Windows-only scenario.")]
-    public async Task MsixDeployment_DeploysAndLaunchesTestHost_WithoutLocalPid(string currentTfm)
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Packaged Windows apps (UWP/WinUI) are a Windows-only scenario.")]
+    public async Task PackagedAppDeployment_DeploysAndLaunchesTestHost_WithoutLocalPid(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
@@ -23,7 +23,7 @@ public sealed class MsixDeploymentTests : AcceptanceTestBase<MsixDeploymentTests
 
         // The launcher leaves a breadcrumb pointing at the isolated deployment directory it created
         // and launched from.
-        string markerPath = Path.Combine(testHost.DirectoryName, "MsixDeployment.txt");
+        string markerPath = Path.Combine(testHost.DirectoryName, "PackagedAppDeployment.txt");
         Assert.IsTrue(File.Exists(markerPath), $"Expected deployment marker at '{markerPath}'.");
 
         string deploymentDirectory = File.ReadAllText(markerPath);
@@ -34,7 +34,7 @@ public sealed class MsixDeploymentTests : AcceptanceTestBase<MsixDeploymentTests
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
-#file MsixDeploymentTest.csproj
+#file PackagedAppDeploymentTest.csproj
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -46,7 +46,7 @@ public sealed class MsixDeploymentTests : AcceptanceTestBase<MsixDeploymentTests
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-    <PackageReference Include="Microsoft.Testing.Extensions.Msix" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
@@ -67,7 +67,7 @@ public class Startup
     {
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
-        testApplicationBuilder.AddMsixDeployment();
+        testApplicationBuilder.AddPackagedAppDeployment();
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
         return await app.RunAsync();
     }

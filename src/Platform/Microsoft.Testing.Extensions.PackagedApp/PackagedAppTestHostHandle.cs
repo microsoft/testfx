@@ -3,18 +3,18 @@
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
-namespace Microsoft.Testing.Extensions.Msix;
+namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// An <see cref="ITestHostHandle"/> over a deployed Msix (UWP/WinUI) test host process that
-/// deliberately hides the underlying process id, modelling a launch where no local, query-able PID
-/// is available.
+/// An <see cref="ITestHostHandle"/> over a deployed packaged Windows (UWP/WinUI) test host process
+/// that deliberately hides the underlying process id, modelling a launch where no local, query-able
+/// PID is available.
 /// </summary>
-internal sealed class MsixTestHostHandle : ITestHostHandle, IDisposable
+internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
 {
     private readonly Process _process;
 
-    public MsixTestHostHandle(Process process)
+    public PackagedAppTestHostHandle(Process process)
     {
         _process = process;
         _process.EnableRaisingEvents = true;
