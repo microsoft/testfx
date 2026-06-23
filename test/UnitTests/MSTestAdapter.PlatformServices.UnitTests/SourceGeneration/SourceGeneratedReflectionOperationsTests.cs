@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Threading.Tasks;
+
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration;
@@ -20,7 +22,15 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
     public void GetTestMethodInvoker_ReturnsRegisteredDelegate_AndInvokesWithoutReflection()
     {
         MethodInfo add = typeof(Sample).GetMethod(nameof(Sample.Add))!;
-        Func<object?, object?[]?, object?> invoker = static (instance, args) => ((Sample)instance!).Add((int)args![0]!, (int)args![1]!);
+
+        // Mirrors the source-generated contract: the invoker calls the method directly and returns a
+        // non-null Task representing completion; the return value is discarded (the method's effect is
+        // observed via state instead).
+        Func<object?, object?[]?, object?> invoker = static (instance, args) =>
+        {
+            ((Sample)instance!).Add((int)args![0]!, (int)args![1]!);
+            return Task.CompletedTask;
+        };
 
         var provider = new SourceGeneratedReflectionDataProvider
         {
@@ -29,7 +39,12 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         var operations = new SourceGeneratedReflectionOperations(provider);
 
         operations.GetTestMethodInvoker(add).Should().BeSameAs(invoker);
-        operations.GetTestMethodInvoker(add)!(new Sample(), [2, 3]).Should().Be(5);
+
+        var sample = new Sample();
+        object? result = operations.GetTestMethodInvoker(add)!(sample, [2, 3]);
+        result.Should().BeAssignableTo<Task>();
+        ((Task)result!).IsCompleted.Should().BeTrue();
+        sample.LastSum.Should().Be(5);
     }
 
     public void GetTestMethodInvoker_ReturnsNull_WhenMethodNotRegistered()
@@ -133,6 +148,12 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
 
         public string? Value { get; set; }
 
-        public int Add(int first, int second) => first + second;
+        public int LastSum { get; private set; }
+
+        public int Add(int first, int second)
+        {
+            LastSum = first + second;
+            return LastSum;
+        }
     }
 }

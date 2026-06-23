@@ -106,8 +106,10 @@ public static class ReflectionMetadataHook
     /// <param name="assemblyAttributes">Pre-inflated assembly-level attribute instances.</param>
     /// <param name="methodInvokers">
     /// A map from each test/fixture <see cref="MethodInfo"/> to a delegate that invokes it directly.
-    /// The delegate returns the method's raw result (a <see cref="Task"/>/<c>ValueTask</c> for async
-    /// methods, the return value for sync methods, or <see langword="null"/> for <c>void</c>).
+    /// The delegate returns a non-null <see cref="Task"/> representing the method's completion: the
+    /// source generator normalizes every shape to a <see cref="Task"/> (<c>void</c>/synchronous yield
+    /// <see cref="Task.CompletedTask"/>, a <c>ValueTask</c> is converted to a <see cref="Task"/>, and
+    /// any return value is discarded).
     /// </param>
     /// <param name="constructorInvokers">
     /// A map from each test class to its constructor invokers. Each entry pairs the constructor's
