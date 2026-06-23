@@ -9,6 +9,7 @@ namespace Microsoft.Testing.Platform.TestHostControllers;
 internal sealed class TestHostControllerConfiguration(ITestHostEnvironmentVariableProvider[] environmentVariableProviders,
     ITestHostProcessLifetimeHandler[] lifetimeHandlers,
     IDataConsumer[] dataConsumer,
+    ITestHostLauncher? testHostLauncher,
     bool requireProcessRestart)
 {
     public ITestHostEnvironmentVariableProvider[] EnvironmentVariableProviders { get; } = environmentVariableProviders;
@@ -16,6 +17,8 @@ internal sealed class TestHostControllerConfiguration(ITestHostEnvironmentVariab
     public ITestHostProcessLifetimeHandler[] LifetimeHandlers { get; } = lifetimeHandlers;
 
     public IDataConsumer[] DataConsumer { get; } = dataConsumer;
+
+    public ITestHostLauncher? TestHostLauncher { get; } = testHostLauncher;
 
     public bool RequireProcessRestart { get; } = requireProcessRestart;
 }

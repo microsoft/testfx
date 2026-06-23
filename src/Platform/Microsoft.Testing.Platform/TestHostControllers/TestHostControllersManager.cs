@@ -16,8 +16,10 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
     private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _environmentVariableProviderFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostProcessLifetimeHandler>> _lifetimeHandlerFactories = [];
+    private readonly List<Func<IServiceProvider, ITestHostLauncher>> _testHostLauncherFactories = [];
     private readonly List<ICompositeExtensionFactory> _environmentVariableProviderCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _lifetimeHandlerCompositeFactories = [];
+    private readonly List<ICompositeExtensionFactory> _testHostLauncherCompositeFactories = [];
     private readonly List<ICompositeExtensionFactory> _alreadyBuiltServices = [];
     private readonly List<ICompositeExtensionFactory> _dataConsumersCompositeServiceFactories = [];
 
@@ -96,6 +98,38 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         }
 
         _lifetimeHandlerCompositeFactories.Add(compositeServiceFactory);
+        _factoryOrdering.Add(compositeServiceFactory);
+    }
+
+    [UnsupportedOSPlatform("browser")]
+    public void AddTestHostLauncher(Func<IServiceProvider, ITestHostLauncher> testHostLauncherFactory)
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
+        _ = testHostLauncherFactory ?? throw new ArgumentNullException(nameof(testHostLauncherFactory));
+        _testHostLauncherFactories.Add(testHostLauncherFactory);
+        _factoryOrdering.Add(testHostLauncherFactory);
+    }
+
+    [UnsupportedOSPlatform("browser")]
+    public void AddTestHostLauncher<T>(CompositeExtensionFactory<T> compositeServiceFactory)
+        where T : class, ITestHostLauncher
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+            throw new PlatformNotSupportedException(PlatformResources.TestHostControllerProcessRestartNotSupportedOnWebAssembly);
+        }
+
+        _ = compositeServiceFactory ?? throw new ArgumentNullException(nameof(compositeServiceFactory));
+        if (_testHostLauncherCompositeFactories.Contains(compositeServiceFactory))
+        {
+            throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
+        }
+
+        _testHostLauncherCompositeFactories.Add(compositeServiceFactory);
         _factoryOrdering.Add(compositeServiceFactory);
     }
 
@@ -279,10 +313,84 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         }
 
         bool requireProcessRestart = environmentVariableProviders.Count > 0 || lifetimeHandlers.Count > 0 || dataConsumers.Count > 0;
+
+        ITestHostLauncher? testHostLauncher = await BuildTestHostLauncherAsync(serviceProvider).ConfigureAwait(false);
+        if (testHostLauncher is not null)
+        {
+            // A custom launcher only makes sense when the out-of-process test host is started, so we
+            // force the controller (process restart) host even when no other controller extension is present.
+            requireProcessRestart = true;
+        }
+
         return new TestHostControllerConfiguration(
             [.. environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostEnvironmentVariableProvider)],
             [.. lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostProcessLifetimeHandler)],
             [.. dataConsumers.OrderBy(x => x.RegistrationOrder).Select(x => x.Consumer)],
+            testHostLauncher,
             requireProcessRestart);
+    }
+
+    private async Task<ITestHostLauncher?> BuildTestHostLauncherAsync(ServiceProvider serviceProvider)
+    {
+        List<ITestHostLauncher> launchers = [];
+
+        foreach (Func<IServiceProvider, ITestHostLauncher> testHostLauncherFactory in _testHostLauncherFactories)
+        {
+            ITestHostLauncher launcher = testHostLauncherFactory(serviceProvider);
+
+            // Check if we have already extensions of the same type with same id registered
+            launchers.ValidateUniqueExtension(launcher);
+
+            // We initialize only if enabled
+            if (await launcher.IsEnabledAsync().ConfigureAwait(false))
+            {
+                await launcher.TryInitializeAsync().ConfigureAwait(false);
+                launchers.Add(launcher);
+                serviceProvider.TryAddService(launcher);
+            }
+        }
+
+        foreach (ICompositeExtensionFactory compositeServiceFactory in _testHostLauncherCompositeFactories)
+        {
+            // Get the singleton
+            var extension = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
+            bool isEnabledAsync = await extension.IsEnabledAsync().ConfigureAwait(false);
+
+            // Check if we have already built the singleton for this composite factory
+            if (!_alreadyBuiltServices.Contains(compositeServiceFactory))
+            {
+                launchers.ValidateUniqueExtension(extension);
+
+                // We initialize only if enabled
+                if (isEnabledAsync)
+                {
+                    await extension.TryInitializeAsync().ConfigureAwait(false);
+                }
+
+                // Add to the list of shared singletons
+                _alreadyBuiltServices.Add(compositeServiceFactory);
+            }
+
+            // We register the extension only if enabled
+            if (isEnabledAsync)
+            {
+                if (extension is ITestHostLauncher testHostLauncher)
+                {
+                    launchers.Add(testHostLauncher);
+                    serviceProvider.TryAddService(testHostLauncher);
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionDoesNotImplementGivenInterfaceErrorMessage, extension.GetType(), typeof(ITestHostLauncher)));
+                }
+            }
+        }
+
+        return launchers.Count switch
+        {
+            0 => null,
+            1 => launchers[0],
+            _ => throw new InvalidOperationException(PlatformResources.OnlyOneTestHostLauncherSupported),
+        };
     }
 }

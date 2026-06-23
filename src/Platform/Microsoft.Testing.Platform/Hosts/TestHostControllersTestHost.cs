@@ -246,18 +246,23 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPid} '{testHostProcessStartupTime}'").ConfigureAwait(false);
             await _logger.LogDebugAsync($"Starting test host process '{processStartInfo.FileName}' with args '{processStartInfo.Arguments}'").ConfigureAwait(false);
-            using IProcess testHostProcess = process.Start(processStartInfo);
+
+            ITestHostLauncher? testHostLauncher = _testHostsInformation.TestHostLauncher;
+            using IProcess testHostProcess = testHostLauncher is null
+                ? process.Start(processStartInfo)
+                : await LaunchUsingCustomLauncherAsync(testHostLauncher, processStartInfo, partialCommandLine, cancellationToken).ConfigureAwait(false);
 
             int? testHostProcessId = null;
             try
             {
                 testHostProcessId = testHostProcess.Id;
             }
-            catch (InvalidOperationException ex) when (testHostProcess.HasExited)
+            catch (InvalidOperationException ex) when (testHostProcess.HasExited || testHostLauncher is not null)
             {
                 // Access PID can throw InvalidOperationException if the process has already exited:
                 // System.InvalidOperationException: No process is associated with this object.
-                await _logger.LogDebugAsync($"Unable to obtain test host PID; process had already exited (ExitCode: {testHostProcess.ExitCode}). {ex.GetType().FullName}: {ex.Message}").ConfigureAwait(false);
+                // A custom launcher may also legitimately not expose a local PID (e.g. container/remote).
+                await _logger.LogDebugAsync($"Unable to obtain test host PID; process had already exited or does not expose a PID (HasExited: {testHostProcess.HasExited}). {ex.GetType().FullName}: {ex.Message}").ConfigureAwait(false);
             }
 
             testHostProcess.Exited += (_, _) =>
@@ -395,6 +400,29 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
         }
 
         return exitCode;
+    }
+
+    [UnsupportedOSPlatform("browser")]
+    private async Task<IProcess> LaunchUsingCustomLauncherAsync(
+        ITestHostLauncher testHostLauncher,
+        ProcessStartInfo processStartInfo,
+        IReadOnlyList<string> arguments,
+        CancellationToken cancellationToken)
+    {
+#pragma warning disable IDE0028 // Collection initialization can be simplified — populated from a runtime loop.
+        Dictionary<string, string?> environmentVariables = new(StringComparer.Ordinal);
+#pragma warning restore IDE0028
+        foreach (string key in processStartInfo.EnvironmentVariables.Keys)
+        {
+            environmentVariables[key] = processStartInfo.EnvironmentVariables[key];
+        }
+
+        string? workingDirectory = RoslynString.IsNullOrEmpty(processStartInfo.WorkingDirectory) ? null : processStartInfo.WorkingDirectory;
+        TestHostLaunchContext context = new(processStartInfo.FileName, arguments, environmentVariables, workingDirectory);
+
+        await _logger.LogDebugAsync($"Delegating test host launch to '{testHostLauncher.DisplayName}' (UID: {testHostLauncher.Uid})").ConfigureAwait(false);
+        ITestHostHandle handle = await testHostLauncher.LaunchTestHostAsync(context, cancellationToken).ConfigureAwait(false);
+        return new TestHostHandleToProcessAdapter(handle);
     }
 
     private async Task DisposeServicesAsync()
