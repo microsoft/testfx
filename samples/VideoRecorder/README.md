@@ -6,6 +6,8 @@ start/stop **screen recording** while they run. Recording is performed by an ext
 Each produced video is attached to the test session as a file artifact.
 
 This is a local sample (not a shipping package) wired into the `Playground` sample.
+See [DESIGN.md](DESIGN.md) for the engine choice, alternatives considered (Playwright,
+Windows.Graphics.Capture, Game Bar), and the licensing rationale.
 
 ![A frame from a recording produced by the extension (window-capture mode targeting a test-pattern window).](docs/demo-recording.png)
 
