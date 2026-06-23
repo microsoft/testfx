@@ -58,6 +58,13 @@ internal abstract class ReportEngineBase
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
 
+    protected string ResolveReportFileName(string template)
+    {
+        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+        return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
+    }
+
     protected string BuildDefaultFileName(string extension)
     {
         // Deterministic <asm>_<tfm>_<arch>.<extension> shape — discoverable across

@@ -54,7 +54,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? ResolveHtmlFileName(GetProvidedFileName(providedFileName))
+            ? ResolveReportFileName(GetProvidedFileName(providedFileName))
             : BuildDefaultFileName("html");
 
         string outputDirectory = _configuration.GetTestResultDirectory();
@@ -104,13 +104,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 #else
         await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
 #endif
-    }
-
-    private string ResolveHtmlFileName(string template)
-    {
-        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        return ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
     }
 
 #pragma warning disable IDE0051 // Accessed by unit tests through reflection.

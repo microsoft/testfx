@@ -53,7 +53,7 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
             out string[]? providedFileName);
 
         string fileName = fileNameExplicitlyProvided
-            ? ResolveJsonFileName(GetProvidedFileName(providedFileName))
+            ? ResolveReportFileName(GetProvidedFileName(providedFileName))
             : BuildDefaultFileName(finishTime);
 
         string outputDirectory = _configuration.GetTestResultDirectory();
