@@ -1,12 +1,12 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Tasks Last Run
-- Task 2 (Identify Opportunities): 2026-06-22
-- Task 3 (Implement Improvement): 2026-06-22
-- Task 4 (Maintain PRs): 2026-06-22
+- Task 2 (Identify Opportunities): 2026-06-23
+- Task 3 (Implement Improvement): 2026-06-23
+- Task 4 (Maintain PRs): 2026-06-23
 - Task 5 (Comment on Issues): 2026-06-10
 - Task 6 (Measurement Infrastructure): 2026-06-08
-- Task 7 (Monthly Summary): 2026-06-22
+- Task 7 (Monthly Summary): 2026-06-23
 
 ## Backlog Cursor
 - Last scanned: `src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/TerminalTestReporter.Summary.cs`
@@ -33,11 +33,12 @@ Notes:
 - Last updated: 2026-06-22
 
 ## Work in Progress
-- PR branch `efficiency/single-pass-summary-aggregation` (submitted 2026-06-22, no PR number yet from safe-outputs tool)
-  - Change: `AppendTestRunSummary` in `TerminalTestReporter.Summary.cs` — replaced 7 LINQ calls (Sum×5, Any×1, Count×1) with single `foreach`
-  - Proxy metric: LINQ enumerator allocation count + iteration count
+- PR branch `efficiency/single-pass-dotnet-test-consumer` (submitted 2026-06-23, #aw_pr_dtc)
+  - Change: `DotnetTestDataConsumer.cs` — extended GetStructEnumerator walk to collect FileArtifactProperty and TestMetadataProperty, removing 2 extra OfType<T>() passes
+  - Proxy metric: PropertyBag linked-list iteration count (2–3× → 1× per test update)
 
 ## Completed Work (PRs merged or applied)
+- PR #9353: single-pass aggregation in AppendTestRunSummary (TerminalTestReporter.Summary.cs) — merged
 - CommandLineParseResult.IsOptionSet + TryGetOptionArgumentList: hoisted Trim(), single-pass foreach
   - Branch `efficiency/fix-parseoption-hot-loops` was never pushed but changes ARE in main already
 - PR #9300: replace `artifactGroups.Any()` with `_artifacts.Count > 0` in `AppendTestRunSummary`
@@ -64,4 +65,5 @@ Notes:
 
 ## Round-Robin Task Schedule
 - Next run should prioritize: Task 5 (Comment on efficiency issues) + Task 6 (Measurement infrastructure)
-- Task 3 is stalled pending backlog replenishment — primary backlog items exhausted
+- Task 3: WIP PR pending CI validation (#aw_pr_dtc). If merged, scan src/Adapter/ and src/TestFramework/ for next opportunity.
+- DotnetTestDataConsumer PropertyBag series: FileArtifactProperty+TestMetadataProperty added to single pass (2026-06-23). All 5 property types now collected in one walk.
