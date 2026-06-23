@@ -33,12 +33,14 @@
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **Analyzer edge cases (ongoing)** — Continue with analyzers with few tests. Next candidates:
    - `UseCooperativeCancellationForTimeoutAnalyzerTests` (33 tests) — possible additional fixture method scenarios
-   - `UseParallelizeAttributeAnalyzerTests` (5 tests) — may have edge cases around attribute duplication
+   - `UseParallelizeAttributeAnalyzerTests` (7 tests) — well covered
+   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — similar to PreferTestCleanupOverDispose but opposite direction
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-23 | Task 3 (PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-22 | Task 3 (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases: TestInitialize method, non-TestContext symbol, parameter receiver), Task 7 (Monthly Issue Jun) |
 | 2026-06-21 | Task 3 (RedundantTestMethodDisplayNameAnalyzer custom-derived attribute + UseAsyncSuffix suppressors negative boundary cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-20 | Task 3 (UnusedParameterSuppressor MSTEST0047 edge cases: TestMethod+TestContext not suppressed, AssemblyInitialize+non-TestContext not suppressed), Task 7 (Monthly Issue Jun) |
@@ -65,11 +67,12 @@
 
 ## Last Run
 
-2026-06-22 23:22 UTC
+2026-06-23 23:20 UTC
 
 ## Completed Work
 
-- PR (pending) for UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases (2026-06-22) — TestInitialize, non-TestContext symbol, AssemblyInitialize parameter
+- PR (pending) for PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases (2026-06-23) — full dispose pattern, Dispose+TestCleanup coexistence, static constructor
+- PR #9355 merged (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases) — merged 2026-06-23 by Evangelink
 - PR #9314 merged (async-suffix suppressors + redundant display name edge cases) — merged 2026-06-22 by Evangelink
 - PR #9301 merged (UnusedParameterSuppressor MSTEST0047 edge cases) — merged 2026-06-21 by Evangelink
 - PR (merged) for AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases — enum/struct/nullable types; in main branch
