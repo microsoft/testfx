@@ -34,7 +34,15 @@ public sealed class AsynchronousMessageBusTests
         await Assert.ThrowsAsync<InvalidOperationException>(proxy.DrainDataAsync);
     }
 
+    // This test relies on the background consumer tasks (started via ITask.Run) ping-ponging
+    // messages between the two consumers so the drain keeps observing newly received payloads and
+    // ultimately surfaces the publisher/consumer loop. On .NET Framework, under the assembly's
+    // method-level parallelism (many concurrent test methods competing for the slowly-growing
+    // ThreadPool), those background tasks can be starved long enough that the drain finishes its
+    // attempts without seeing the loop, making the test intermittently fail (see #6892). Running it
+    // non-parallel removes that contention and keeps the loop detection deterministic.
     [TestMethod]
+    [DoNotParallelize]
     public async Task DrainDataAsync_Loop_ShouldFail()
     {
         using MessageBusProxy proxy = new();
