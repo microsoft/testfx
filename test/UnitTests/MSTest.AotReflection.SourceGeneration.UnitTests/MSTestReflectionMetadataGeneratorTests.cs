@@ -331,6 +331,50 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_OmitsInaccessibleAttribute_AndStillCompiles()
+    {
+        // [Mark] resolves to Outer.MarkAttribute, which is private to Outer. It is validly applied to
+        // Inner (nested in Outer, so it can see Outer's private members), but the generated registry —
+        // a top-level type in a different namespace — cannot reference it. Emitting
+        // `new global::Sample.Outer.MarkAttribute()` would fail with CS0122, so the safener must omit
+        // it while still materializing the accessible [TestCategory] on the same class.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class MarkAttribute : System.Attribute { }
+
+                    [TestClass]
+                    [Mark]
+                    [TestCategory("Smoke")]
+                    public class Inner
+                    {
+                        [TestMethod]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        // The emitted registry must compile — no CS0122 from referencing the private attribute.
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty("the safener must omit attributes the generated code cannot reference");
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+        string registry = GetRegistry(result);
+
+        // Accessible attribute is still materialized; the inaccessible one is omitted.
+        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute");
+        registry.Should().NotContain("MarkAttribute");
+    }
+
+    [TestMethod]
     public void Generator_CapturesClassLevelAttributes()
     {
         const string userCode = """

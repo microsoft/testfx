@@ -42,6 +42,11 @@ internal static class TestClassModelBuilder
 
         string leafFqn = typeSymbol.ToDisplayString(FullyQualifiedFormat);
 
+        // Generated registration lives in the leaf type's (the compilation's) assembly, so attribute
+        // materializability is judged from there — even for members inherited from a base type in
+        // another assembly.
+        IAssemblySymbol consumingAssembly = typeSymbol.ContainingAssembly;
+
         for (INamedTypeSymbol? current = typeSymbol;
              current is not null && current.SpecialType != SpecialType.System_Object;
              current = current.BaseType)
@@ -73,7 +78,7 @@ internal static class TestClassModelBuilder
                         string key = BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
-                            TestMethodModel model = BuildMethod(method);
+                            TestMethodModel model = BuildMethod(method, consumingAssembly);
                             methodsByKey[key] = model;
                             methods.Add(model);
                         }
@@ -83,7 +88,7 @@ internal static class TestClassModelBuilder
                         when !property.IsIndexer && IsAccessibleFromConsumer(property):
                         if (!propertiesByName.ContainsKey(property.Name))
                         {
-                            TestPropertyModel model = BuildProperty(property);
+                            TestPropertyModel model = BuildProperty(property, consumingAssembly);
                             propertiesByName[property.Name] = model;
                             properties.Add(model);
                         }
@@ -113,7 +118,7 @@ internal static class TestClassModelBuilder
             Constructors: new EquatableArray<TestConstructorModel>(ctors.ToImmutable()),
             Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
-            Attributes: BuildAttributes(typeSymbol.GetAttributes()),
+            Attributes: BuildAttributes(typeSymbol.GetAttributes(), consumingAssembly),
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
     }
 
@@ -245,7 +250,7 @@ internal static class TestClassModelBuilder
         return sb.ToString();
     }
 
-    private static TestMethodModel BuildMethod(IMethodSymbol method)
+    private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
     {
         ITypeSymbol returnType = method.ReturnType;
         string returnTypeFqn = returnType.ToDisplayString(FullyQualifiedFormat);
@@ -269,7 +274,7 @@ internal static class TestClassModelBuilder
             ReturnsVoid: returnsVoid,
             IsTestMethod: IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
-            Attributes: BuildAttributes(inheritedAttributes),
+            Attributes: BuildAttributes(inheritedAttributes, consumingAssembly),
             DataRows: BuildDataRows(inheritedAttributes));
     }
 
@@ -328,7 +333,7 @@ internal static class TestClassModelBuilder
         return new EquatableArray<DataRowModel>(builder.ToImmutable());
     }
 
-    private static TestPropertyModel BuildProperty(IPropertySymbol property)
+    private static TestPropertyModel BuildProperty(IPropertySymbol property, IAssemblySymbol consumingAssembly)
         => new(
             Name: property.Name,
             FullyQualifiedType: property.Type.ToDisplayString(FullyQualifiedFormat),
@@ -347,7 +352,7 @@ internal static class TestClassModelBuilder
             // object initializer, so emitting `instance.Prop = value` would not compile (CS8852);
             // treat it as non-settable so the adapter falls back to reflection (PropertyInfo.SetValue).
             HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public, IsInitOnly: false },
-            Attributes: BuildAttributes(CollectInheritedAttributes(property)));
+            Attributes: BuildAttributes(CollectInheritedAttributes(property), consumingAssembly));
 
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
     // overridden-member chain, honor AttributeUsageAttribute.Inherited, and keep only the
@@ -498,17 +503,28 @@ internal static class TestClassModelBuilder
     }
 
     public static EquatableArray<AttributeApplicationModel> BuildAttributes(
-        ImmutableArray<AttributeData> attributes)
+        ImmutableArray<AttributeData> attributes,
+        IAssemblySymbol consumingAssembly)
         => attributes.IsDefaultOrEmpty
             ? EquatableArray<AttributeApplicationModel>.Empty
             : attributes
-                .Select(BuildAttribute)
+                .Select(attribute => BuildAttribute(attribute, consumingAssembly))
                 .WhereNotNull()
                 .ToEquatableArray();
 
-    private static AttributeApplicationModel? BuildAttribute(AttributeData attribute)
+    private static AttributeApplicationModel? BuildAttribute(AttributeData attribute, IAssemblySymbol consumingAssembly)
     {
         if (attribute.AttributeClass is not { } attributeClass)
+        {
+            return null;
+        }
+
+        // Safener: only materialize attributes the generated code can actually reconstruct with
+        // `new T(...)`. Anything that would not compile from the consuming assembly (inaccessible
+        // attribute type or constructor, or an argument referencing an inaccessible type) is omitted
+        // so the adapter falls back to runtime reflection for it. Omission is always safe; emitting
+        // an un-compilable expression would break the build.
+        if (!IsAttributeMaterializable(attribute, attributeClass, consumingAssembly))
         {
             return null;
         }
@@ -521,6 +537,121 @@ internal static class TestClassModelBuilder
             ConstructorArguments: ctorArgs.ToEquatableArray(),
             NamedArguments: namedArgs.ToEquatableArray());
     }
+
+    private static bool IsAttributeMaterializable(AttributeData attribute, INamedTypeSymbol attributeClass, IAssemblySymbol consumingAssembly)
+    {
+        // The attribute type (and every enclosing type) must be referenceable.
+        if (!IsTypeReferenceableFrom(attributeClass, consumingAssembly))
+        {
+            return false;
+        }
+
+        // The constructor the generated `new T(...)` would bind to must be callable. A null
+        // AttributeConstructor (Roslyn could not resolve it) is treated as not materializable.
+        if (attribute.AttributeConstructor is not { } constructor
+            || !IsMemberAccessibleFrom(constructor.DeclaredAccessibility, constructor.ContainingType, consumingAssembly))
+        {
+            return false;
+        }
+
+        // Every argument type the emitter writes out (enum casts, typeof targets, typed nulls,
+        // and nested array element types) must also be referenceable.
+        foreach (TypedConstant argument in attribute.ConstructorArguments)
+        {
+            if (!AreArgumentTypesReferenceable(argument, consumingAssembly))
+            {
+                return false;
+            }
+        }
+
+        foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
+        {
+            if (!AreArgumentTypesReferenceable(named.Value, consumingAssembly))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool AreArgumentTypesReferenceable(TypedConstant constant, IAssemblySymbol consumingAssembly)
+    {
+        switch (constant.Kind)
+        {
+            case TypedConstantKind.Array:
+                foreach (TypedConstant element in constant.Values)
+                {
+                    if (!AreArgumentTypesReferenceable(element, consumingAssembly))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+
+            case TypedConstantKind.Type:
+                // typeof(X): the target type must be referenceable. Non-named targets (arrays,
+                // type parameters) are conservatively rejected.
+                return constant.Value is null
+                    || (constant.Value is INamedTypeSymbol typeofTarget && IsTypeReferenceableFrom(typeofTarget, consumingAssembly));
+
+            default:
+                // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type
+                // must be referenceable. Untyped values (Type is null) are plain literals.
+                return constant.Type is not INamedTypeSymbol namedType
+                    || IsTypeReferenceableFrom(namedType, consumingAssembly);
+        }
+    }
+
+    private static bool IsTypeReferenceableFrom(INamedTypeSymbol type, IAssemblySymbol consumingAssembly)
+    {
+        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.IsFileLocal)
+            {
+                return false;
+            }
+
+            if (!IsMemberAccessibleFrom(current.DeclaredAccessibility, current.ContainingAssembly, consumingAssembly))
+            {
+                return false;
+            }
+        }
+
+        // Also require every generic type argument to be referenceable (e.g. a closed generic
+        // attribute type argument that is itself inaccessible).
+        foreach (ITypeSymbol typeArgument in type.TypeArguments)
+        {
+            if (typeArgument is INamedTypeSymbol namedArgument && !IsTypeReferenceableFrom(namedArgument, consumingAssembly))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool IsMemberAccessibleFrom(Accessibility accessibility, INamedTypeSymbol containingType, IAssemblySymbol consumingAssembly)
+        => IsMemberAccessibleFrom(accessibility, containingType.ContainingAssembly, consumingAssembly);
+
+    private static bool IsMemberAccessibleFrom(Accessibility accessibility, IAssemblySymbol? declaringAssembly, IAssemblySymbol consumingAssembly)
+        => accessibility switch
+        {
+            Accessibility.Public => true,
+
+            // Generated code lives in the consuming assembly, so internal / protected-internal members
+            // are reachable only when declared in that same assembly (we do not rely on InternalsVisibleTo).
+            Accessibility.Internal or Accessibility.ProtectedOrInternal =>
+                declaringAssembly is not null && SymbolEqualityComparer.Default.Equals(declaringAssembly, consumingAssembly),
+
+            // NotApplicable shows up for compiler-synthesized symbols in well-formed source; treat as reachable.
+            Accessibility.NotApplicable => true,
+
+            // Private, Protected, and ProtectedAndInternal ("private protected") are never reachable
+            // from the generated (non-derived) call site.
+            _ => false,
+        };
 
     private static TypedConstantModel ToModel(TypedConstant constant)
         => constant switch
