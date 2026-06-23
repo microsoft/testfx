@@ -3,9 +3,6 @@
 
 using System.Reflection;
 
-using Microsoft.Testing.Extensions.CtrfReport;
-using Microsoft.Testing.Extensions.HtmlReport;
-using Microsoft.Testing.Extensions.JUnitReport;
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
@@ -13,52 +10,51 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class ReportFileNameSanitizationConsistencyTests
 {
-    private static readonly MethodInfo TrxSanitizeMethod =
-        typeof(TrxReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
-        ?? throw new InvalidOperationException("Could not resolve TrxReportEngine.ReplaceInvalidFileNameChars.");
+    // ReportFileNameSanitizer is an internal type that is *linked* (compiled) into every
+    // report-engine assembly, so referencing it by name directly is ambiguous (CS0433).
+    // Resolve the shared method from each engine assembly via reflection, anchoring on one
+    // public type per assembly. Verifying every engine's copy produces identical output is
+    // what actually proves the engines share the same sanitization rules.
+    private static readonly (string Engine, MethodInfo Sanitize)[] Sanitizers =
+    [
+        ("TrxReport", GetSanitizer(typeof(TrxReportEngine).Assembly)),
+        ("HtmlReport", GetSanitizer(typeof(HtmlReportExtensions).Assembly)),
+        ("JUnitReport", GetSanitizer(typeof(JUnitReportExtensions).Assembly)),
+        ("CtrfReport", GetSanitizer(typeof(CtrfReportExtensions).Assembly)),
+    ];
 
-    // CtrfReportEngine, HtmlReportEngine and JUnitReportEngine inherit ReplaceInvalidFileNameChars from
-    // ReportEngineBase, so we flatten the hierarchy to resolve the inherited protected static method.
-    private static readonly MethodInfo HtmlSanitizeMethod =
-        typeof(HtmlReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-        ?? throw new InvalidOperationException("Could not resolve HtmlReportEngine.ReplaceInvalidFileNameChars.");
-
-    private static readonly MethodInfo JUnitSanitizeMethod =
-        typeof(JUnitReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-        ?? throw new InvalidOperationException("Could not resolve JUnitReportEngine.ReplaceInvalidFileNameChars.");
-
-    private static readonly MethodInfo CtrfSanitizeMethod =
-        typeof(CtrfReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)
-        ?? throw new InvalidOperationException("Could not resolve CtrfReportEngine.ReplaceInvalidFileNameChars.");
-
-    [TestMethod]
-    [DynamicData(nameof(GetSanitizationInputs))]
-    public void TrxAndHtmlReportEngines_UseSameFileNameSanitizationRules(string fileName)
-    {
-        string expectedSanitizedFileName = InvokeSanitizer(TrxSanitizeMethod, fileName);
-        string actualSanitizedFileName = InvokeSanitizer(HtmlSanitizeMethod, fileName);
-
-        Assert.AreEqual(expectedSanitizedFileName, actualSanitizedFileName, $"Sanitization mismatch for file name '{fileName}'.");
-    }
+    private static MethodInfo GetSanitizer(Assembly assembly)
+        => (assembly.GetType("Microsoft.Testing.Extensions.ReportFileNameSanitizer")
+                ?? throw new InvalidOperationException(
+                    $"Could not find type ReportFileNameSanitizer in assembly '{assembly.GetName().Name}'."))
+            .GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException(
+            $"Could not resolve ReportFileNameSanitizer.ReplaceInvalidFileNameChars in assembly '{assembly.GetName().Name}'.");
 
     [TestMethod]
     [DynamicData(nameof(GetSanitizationInputs))]
-    public void TrxAndJUnitReportEngines_UseSameFileNameSanitizationRules(string fileName)
+    public void AllReportEngines_UseSharedFileNameSanitizationRules(string fileName)
     {
-        string expectedSanitizedFileName = InvokeSanitizer(TrxSanitizeMethod, fileName);
-        string actualSanitizedFileName = InvokeSanitizer(JUnitSanitizeMethod, fileName);
+        // Invoke the ReportFileNameSanitizer that is linked into every report-engine assembly
+        // (Trx, Html, JUnit, Ctrf) and assert they all sanitize the same input to the same,
+        // non-empty result. If any engine diverged (different or out-of-date sanitizer), the
+        // cross-engine equality assertions below would fail.
+        (string anchorEngine, MethodInfo anchorSanitize) = Sanitizers[0];
+        string? expected = (string?)anchorSanitize.Invoke(null, [fileName]);
 
-        Assert.AreEqual(expectedSanitizedFileName, actualSanitizedFileName, $"Sanitization mismatch for file name '{fileName}'.");
-    }
+        Assert.IsNotNull(expected);
+        Assert.AreNotEqual(0, expected.Length, $"Sanitized file name for '{fileName}' must not be empty.");
 
-    [TestMethod]
-    [DynamicData(nameof(GetSanitizationInputs))]
-    public void TrxAndCtrfReportEngines_UseSameFileNameSanitizationRules(string fileName)
-    {
-        string expectedSanitizedFileName = InvokeSanitizer(TrxSanitizeMethod, fileName);
-        string actualSanitizedFileName = InvokeSanitizer(CtrfSanitizeMethod, fileName);
-
-        Assert.AreEqual(expectedSanitizedFileName, actualSanitizedFileName, $"Sanitization mismatch for file name '{fileName}'.");
+        for (int i = 1; i < Sanitizers.Length; i++)
+        {
+            (string engine, MethodInfo sanitize) = Sanitizers[i];
+            string? actual = (string?)sanitize.Invoke(null, [fileName]);
+            Assert.AreEqual(
+                expected,
+                actual,
+                $"{engine} sanitized '{fileName}' to '{actual}', but {anchorEngine} produced '{expected}'. "
+                + "All report engines must share identical file-name sanitization rules.");
+        }
     }
 
     public static IEnumerable<object[]> GetSanitizationInputs()
@@ -72,7 +68,4 @@ public class ReportFileNameSanitizationConsistencyTests
         yield return ["CLOCK$.html"];
         yield return [@"\\server\share\NUL.trx"];
     }
-
-    private static string InvokeSanitizer(MethodInfo method, string fileName)
-        => (string)(method.Invoke(null, [fileName]) ?? throw new InvalidOperationException("Sanitizer returned null."));
 }

@@ -58,6 +58,9 @@ internal abstract class ReportEngineBase
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
 
+    protected static string ReplaceInvalidFileNameChars(string fileName)
+        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
+
     protected string ResolveProvidedFileName(string template)
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
@@ -77,7 +80,4 @@ internal abstract class ReportEngineBase
         string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.{extension}";
         return ReplaceInvalidFileNameChars(raw);
     }
-
-    protected static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 }

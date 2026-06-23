@@ -114,7 +114,7 @@ internal sealed partial class TrxReportEngine
             "TestSettings",
             new XAttribute("name", "default"),
             new XAttribute("id", Guid.NewGuid()));
-        string runDeploymentRoot = ReplaceInvalidFileNameChars(testRunName);
+        string runDeploymentRoot = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(testRunName);
         testSettings.Add(new XElement("Deployment", new XAttribute("runDeploymentRoot", runDeploymentRoot)));
         testRun.Add(testSettings);
         return runDeploymentRoot;
