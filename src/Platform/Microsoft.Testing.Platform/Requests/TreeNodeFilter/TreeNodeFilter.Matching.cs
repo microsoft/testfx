@@ -28,14 +28,21 @@ public sealed partial class TreeNodeFilter
 
             if (currentFragmentIndex >= _filters.Count)
             {
-                // Note: The regex for ** is .*.*, so we match against such a value expression.
+                // An empty filter has no segments, so it cannot match any node. Guard here so that the
+                // _filters[^1] access below never throws (e.g. when an empty filter is provided via RPC).
+                if (_filters.Count == 0)
+                {
+                    return false;
+                }
+
+                // Note: The regex for ** is AllNodesBelowRegexString (.*.*), so we match against such a value expression.
                 FilterExpression lastFilter = _filters[^1];
                 if (lastFilter is ValueAndPropertyExpression valueAndPropertyExpression)
                 {
                     lastFilter = valueAndPropertyExpression.Value;
                 }
 
-                return currentFragmentIndex > 0 && lastFilter is ValueExpression { Value: ".*.*" };
+                return currentFragmentIndex > 0 && lastFilter is ValueExpression { Value: AllNodesBelowRegexString };
             }
 
             if (!MatchFilterPattern(
