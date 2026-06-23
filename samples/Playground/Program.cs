@@ -40,6 +40,9 @@ public class Program
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
             testApplicationBuilder.AddCrashDumpProvider();
 
+            // Add the video recorder service so tests can record the screen via VideoRecorder.Current.
+            testApplicationBuilder.AddVideoRecorderProvider();
+
             // Add Chat client provider
             // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
 
