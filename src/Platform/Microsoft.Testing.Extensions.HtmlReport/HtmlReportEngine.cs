@@ -106,11 +106,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 #endif
     }
 
-#pragma warning disable IDE0051 // Accessed by unit tests through reflection.
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
-#pragma warning restore IDE0051
-
     private static string LoadTemplate()
     {
         Assembly assembly = typeof(HtmlReportEngine).Assembly;
