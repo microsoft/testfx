@@ -123,9 +123,12 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
 
         // Clone so a caller mutating the array they passed (params arrays are caller-owned) can't change this
         // attribute's GroupName / cache key / IgnoreMessage after construction.
-        _arguments = arguments is null
-            ? throw new ArgumentNullException(nameof(arguments))
-            : (string[])arguments.Clone();
+        if (arguments is null)
+        {
+            throw new ArgumentNullException(nameof(arguments));
+        }
+
+        _arguments = (string[])arguments.Clone();
         Arguments = Array.AsReadOnly(_arguments);
 
         string predicate = _arguments.Length == 0
@@ -325,19 +328,16 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
         }
 
         string? pathExt = Environment.GetEnvironmentVariable("PATHEXT");
-        if (pathExt is null || pathExt.Length == 0)
+        if (string.IsNullOrEmpty(pathExt))
         {
             return [string.Empty, ".exe", ".cmd", ".bat", ".com"];
         }
 
         // PATHEXT entries already include the leading dot, for example ".COM;.EXE;.BAT".
         string[] parts = pathExt.Split([Path.PathSeparator], StringSplitOptions.RemoveEmptyEntries);
-        string[] result = new string[parts.Length + 1];
 
         // Keep an empty extension first so an exact match (for example when a full file name was passed) still wins.
-        result[0] = string.Empty;
-        Array.Copy(parts, 0, result, 1, parts.Length);
-        return result;
+        return [string.Empty, ..parts];
     }
 
 #if !NET
