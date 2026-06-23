@@ -270,7 +270,12 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
             await _logger.LogDebugAsync($"Started test host process '{testHostProcessId}' HasExited: {testHostProcess.HasExited}").ConfigureAwait(false);
 
-            if (testHostProcess.HasExited || testHostProcessId is null)
+            // Note: we intentionally gate on HasExited only and not on 'testHostProcessId is null'.
+            // A custom ITestHostLauncher may legitimately not expose a local PID (e.g. container,
+            // remote, or AUMID-activated apps); the real test host PID still arrives via the IPC
+            // handshake (_testHostPID). For the default Process.Start path, a null PID always
+            // coincides with HasExited == true, so behavior is unchanged there.
+            if (testHostProcess.HasExited)
             {
                 await _logger.LogDebugAsync("Test host process exited prematurely").ConfigureAwait(false);
             }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="4D48AEBF-3531-4EBF-AAF0-435D56A5FD00">
+      <DisplayName>Microsoft.Testing.Extensions.AppDeployment</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.AppDeployment.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>

@@ -184,8 +184,9 @@ public interface ITestHostControllersManager
    `ProcessStartInfo` and `await launcher.LaunchTestHostAsync(...)`. Otherwise keep the default
    `process.Start`. The returned `ITestHostHandle` is adapted to the internal `IProcess` monitoring
    contract — which only uses `Id` / `Exited` / `WaitForExitAsync` / `ExitCode` / `HasExited` /
-   `Kill`. Because `ProcessId` is optional, the PID-access path tolerates a `null` PID for
-   container/remote launchers.
+   `Kill`. Because `ProcessId` is optional, the premature-exit check is gated on `HasExited` only
+   (not on PID availability), so a launcher that returns no PID (container/remote/AUMID) is
+   monitored purely through the handle lifecycle and the IPC PID handshake.
 2. **Force the controller host.** A launcher makes `RequireProcessRestart` `true` when one is
    registered (computed in `TestHostControllersManager.BuildAsync`, checked in
    `TestHostBuilder.Modes.cs`); without this, a run with *only* a launcher (no dump/lifetime
