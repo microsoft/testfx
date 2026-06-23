@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="D573A73A-43ED-4481-B100-28B695B8A54F">
+      <DisplayName>Microsoft.Testing.Extensions.Msix</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.Msix.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>

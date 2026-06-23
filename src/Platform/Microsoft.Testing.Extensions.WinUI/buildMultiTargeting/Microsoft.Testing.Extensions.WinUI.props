@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<Project>
-  <ItemGroup>
-    <TestingPlatformBuilderHook Include="F7404E01-0F73-46B0-AC14-2E03993998BA">
-      <DisplayName>Microsoft.Testing.Extensions.WinUI</DisplayName>
-      <TypeFullName>Microsoft.Testing.Extensions.WinUI.TestingPlatformBuilderHook</TypeFullName>
-    </TestingPlatformBuilderHook>
-  </ItemGroup>
-</Project>

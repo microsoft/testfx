@@ -48,13 +48,13 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.JUnitReport/Microsoft.Testing.Extensions.JUnitReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Logging/Microsoft.Testing.Extensions.Logging.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.Msix/Microsoft.Testing.Extensions.Msix.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VSTestBridge/Microsoft.Testing.Extensions.VSTestBridge.csproj" />
-    <Project Path="src/Platform/Microsoft.Testing.Extensions.WinUI/Microsoft.Testing.Extensions.WinUI.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.Internal.DotnetTest/Microsoft.Testing.Platform.Internal.DotnetTest.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />

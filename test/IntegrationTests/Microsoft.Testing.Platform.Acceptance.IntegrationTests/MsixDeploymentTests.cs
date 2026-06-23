@@ -4,14 +4,14 @@
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
-public sealed class WinUIDeploymentTests : AcceptanceTestBase<WinUIDeploymentTests.TestAssetFixture>
+public sealed class MsixDeploymentTests : AcceptanceTestBase<MsixDeploymentTests.TestAssetFixture>
 {
-    private const string AssetName = "WinUIDeploymentTest";
+    private const string AssetName = "MsixDeploymentTest";
 
     [DynamicData(nameof(TargetFrameworks.NetForDynamicData), typeof(TargetFrameworks))]
     [TestMethod]
-    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "WinUI is a Windows-only scenario.")]
-    public async Task WinUIDeployment_DeploysAndLaunchesTestHost_WithoutLocalPid(string currentTfm)
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Msix packaging (UWP/WinUI) is a Windows-only scenario.")]
+    public async Task MsixDeployment_DeploysAndLaunchesTestHost_WithoutLocalPid(string currentTfm)
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
@@ -23,7 +23,7 @@ public sealed class WinUIDeploymentTests : AcceptanceTestBase<WinUIDeploymentTes
 
         // The launcher leaves a breadcrumb pointing at the isolated deployment directory it created
         // and launched from.
-        string markerPath = Path.Combine(testHost.DirectoryName, "WinUIDeployment.txt");
+        string markerPath = Path.Combine(testHost.DirectoryName, "MsixDeployment.txt");
         Assert.IsTrue(File.Exists(markerPath), $"Expected deployment marker at '{markerPath}'.");
 
         string deploymentDirectory = File.ReadAllText(markerPath);
@@ -34,7 +34,7 @@ public sealed class WinUIDeploymentTests : AcceptanceTestBase<WinUIDeploymentTes
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
         private const string Sources = """
-#file WinUIDeploymentTest.csproj
+#file MsixDeploymentTest.csproj
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -46,7 +46,7 @@ public sealed class WinUIDeploymentTests : AcceptanceTestBase<WinUIDeploymentTes
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-    <PackageReference Include="Microsoft.Testing.Extensions.WinUI" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Msix" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
@@ -67,7 +67,7 @@ public class Startup
     {
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestFramework());
-        testApplicationBuilder.AddWinUIDeployment();
+        testApplicationBuilder.AddMsixDeployment();
         using ITestApplication app = await testApplicationBuilder.BuildAsync();
         return await app.RunAsync();
     }

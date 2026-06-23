@@ -20,11 +20,13 @@ the host on a remote machine. To make this explicit, the launcher returns an `IT
 exposes only the lifecycle the platform needs (`WaitForExitAsync`, `ExitCode`, `HasExited`,
 `Exited`, `Terminate`); a process id is *optional* and used purely for diagnostics.
 
-The motivating scenario is **packaging and deployment of WinUI applications** (see
-[#2784](https://github.com/microsoft/testfx/issues/2784)): packaged/MSIX apps cannot be started with
-`Process.Start` and must be deployed and then activated by AUMID, while unpackaged WinUI apps
-similarly benefit from a custom deploy + launch step. The same hook also enables launching the test
-host under a debugger, elevated, inside a container, or on a remote machine.
+The motivating scenario is **packaging and deployment of Msix-packaged applications — both UWP and
+WinUI** (see [#2784](https://github.com/microsoft/testfx/issues/2784)): packaged/Msix apps cannot be
+started with `Process.Start` and must be deployed and then activated by AUMID. UWP and packaged WinUI
+share this exact mechanism, which is why VSTest exposes a single `UwpTestHostRuntimeProvider` for
+both; unpackaged apps similarly benefit from a custom deploy + launch step. The same hook also
+enables launching the test host under a debugger, elevated, inside a container, or on a remote
+machine.
 
 ## Motivation
 
@@ -44,7 +46,7 @@ way to tear it down (`Kill`) — plus the child connecting back on the named pip
 injected via an environment variable. **`Process.Start` is the only assumption that does not hold
 universally.** Several real scenarios need a different launch mechanism:
 
-- **Packaged WinUI/MSIX**: a packaged app must be deployed (in Developer Mode, register the loose
+- **Packaged WinUI/Msix**: a packaged app must be deployed (in Developer Mode, register the loose
   layout) and then activated by Application User Model ID (AUMID) via `IApplicationActivationManager`,
   not started from an executable path. This is the blocker behind
   [#2784](https://github.com/microsoft/testfx/issues/2784) and the reason VSTest's
@@ -76,9 +78,9 @@ RFC adds the *minimal* hook at exactly the launch site.
 - Remote **device deployment/bootstrapping** of the Windows App SDK framework + agent (VSTest's
   `Microsoft.UniversalApps.Deployment` has no public redistributable; out of scope — local launch
   only).
-- Shipping a *complete* packaged WinUI / MSIX deployment story. This RFC adds the platform hook; a
-  reference consumer (`Microsoft.Testing.Extensions.WinUI`) implements the unpackaged
-  deploy-and-launch path, while packaged AUMID activation remains a separate follow-up.
+- Shipping a *complete* packaged UWP/WinUI (Msix) deployment story. This RFC adds the platform hook;
+  a reference consumer (`Microsoft.Testing.Extensions.Msix`) implements the deploy-and-launch path,
+  while packaged AUMID activation remains a separate follow-up.
 - Changing the in-process (single-process, `ConsoleTestHost`) execution path.
 
 ## Detailed design
@@ -218,7 +220,7 @@ All examples assume the extension is registered on the builder, e.g. from a `…
 builder.TestHostControllers.AddTestHostLauncher(sp => new MyLauncher(sp));
 ```
 
-### 1. Packaged WinUI / MSIX (the motivating case)
+### 1. Packaged WinUI / Msix (the motivating case)
 
 Deploy the loose layout (Developer Mode) and activate the packaged app by AUMID instead of starting
 an exe. The activated app self-hosts MTP (as the `MSTestRunnerWinUI` sample already does) and
