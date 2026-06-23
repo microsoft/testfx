@@ -27,17 +27,9 @@ An MTP struct (`ArgumentArity.cs`) that defines the minimum and maximum number o
 
 A shared static helper compiled into MTP extensions via file linking (no NuGet service registration or InternalsVisibleTo required) that provides template-based naming for test artifact files (dump files, report files, etc.). Templates are strings containing `{placeholder}` tokens (case-sensitive, lowercase): `{pname}` (process name), `{pid}` (process ID), `{asm}` (entry-assembly name), `{tfm}` (target framework moniker, best-effort runtime detection), `{arch}` (process architecture), and `{time}` (high-precision UTC timestamp). Custom per-call overrides can replace default placeholder values via a `Dictionary<string, string>`. Used directly by the [HangDump](#hangdump) and [CrashDump](#crashdump) extensions, and indirectly by the report extensions ([HtmlReport](#htmlreport), [JUnitReport](#junitreport), and [TrxReport](#trxreport)) via the shared `ReportFileNameHelper`. The legacy `%p` pattern is not handled here; it is substituted by the [HangDump](#hangdump) extension as a separate post-processing step for backward compatibility. The [CrashDump](#crashdump) consumer passes the .NET runtime's `%e` and `%p` placeholders as the `processName` and `processId` arguments so `{pname}` and `{pid}` resolve to `%e` and `%p` respectively — those are then expanded by the runtime's `createdump` at crash-write time (the testhost PID is not yet known when the environment variables are configured).
 
-### AzureDevOpsReport
-
-An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
-
-### AzureFoundry
-
-An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. It reads Azure OpenAI connection settings from environment variables and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
-
 ### AssemblyFixtureProviderAttribute
 
-An MSTest assembly-level attribute (`[AssemblyFixtureProvider(typeof(T))]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that enables cross-assembly assembly fixtures. When applied to a library assembly, it causes any `[AssemblyInitialize]` and `[AssemblyCleanup]` methods on the specified `FixtureType` to be discovered and executed once per consuming test assembly that loads the library at runtime. This allows shared test infrastructure (e.g., database setup, container lifecycle) to be co-located in a test-helper library rather than repeated across every test project. Local `[AssemblyInitialize]`/`[AssemblyCleanup]` declarations always take precedence over provider-contributed ones; the attribute may be applied multiple times on the same assembly to expose multiple fixture types; and it can also be applied on the consuming test assembly to opt into fixtures from a third-party library. Introduced in [PR #8677](https://github.com/microsoft/testfx/pull/8677).
+An MSTest assembly-level attribute (`[assembly: AssemblyFixtureProvider(typeof(T))]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that enables cross-assembly assembly fixtures. When applied to a library assembly, it causes any `[AssemblyInitialize]` and `[AssemblyCleanup]` methods on the specified `FixtureType` to be discovered and executed once per consuming test assembly that loads the library at runtime. This allows shared test infrastructure (e.g., database setup, container lifecycle) to be co-located in a test-helper library rather than repeated across every test project. Local `[AssemblyInitialize]`/`[AssemblyCleanup]` declarations always take precedence over provider-contributed ones; the attribute may be applied multiple times on the same assembly to expose multiple fixture types; and it can also be applied on the consuming test assembly to opt into fixtures from a third-party library. Introduced in [PR #8677](https://github.com/microsoft/testfx/pull/8677).
 
 ### Assert.Scope (soft assertions)
 
@@ -49,10 +41,18 @@ using (Assert.Scope())
     Assert.AreEqual(1, actual.X);  // collected, execution continues
     Assert.AreEqual(2, actual.Y);  // collected, execution continues
 }
-// Dispose() throws a single AssertFailedException containing both failures
+// Dispose() throws a single AssertFailedException containing all failures
 ```
 
-See [RFC 011](docs/RFCs/011-Soft-Assertions-Nullability-Design.md) for the nullability-annotation design decisions.
+See `docs/RFCs/011-Soft-Assertions-Nullability-Design.md` for the nullability-annotation design decisions.
+
+### AzureDevOpsReport
+
+An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
+
+### AzureFoundry
+
+An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. It reads Azure OpenAI connection settings from environment variables and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
 
 ## C
 
@@ -208,7 +208,7 @@ A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility
 
 ### Microsoft.Testing.Extensions.Logging
 
-An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See [RFC 013](docs/RFCs/013-Microsoft-Extensions-Bridges.md) for the design.
+An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See `docs/RFCs/013-Microsoft-Extensions-Bridges.md` for the design.
 
 ## N
 
