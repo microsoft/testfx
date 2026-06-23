@@ -131,7 +131,7 @@
     $(MicrosoftPlaywrightVersion)): Dependabot does not update a Central Package Management
     PackageVersion whose Version is an MSBuild property interpolation when the package has no
     direct PackageReference, so a property-based version silently stops receiving updates.
-    See dependabot-core #5812 / #7183.
+    See dependabot/dependabot-core#5812 and dependabot/dependabot-core#7183.
 
     The literal version is then surfaced as the MicrosoftPlaywrightVersion property below, which
     is the single source of truth that flows into the MSTest.Sdk template (see MSTest.Sdk.csproj)
