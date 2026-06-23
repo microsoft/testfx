@@ -93,6 +93,13 @@ internal sealed class ReflectionOperations : MarshalByRefObject, IReflectionOper
     public object? CreateInstance(Type type, object?[] parameters)
         => Activator.CreateInstance(type, parameters);
 
+    // Reflection mode never has source-generated invokers; callers fall back to reflection.
+    public Func<object?, object?[]?, object?>? GetTestMethodInvoker(MethodInfo method) => null;
+
+    public Func<object?[]?, object>? GetConstructorInvoker(Type type) => null;
+
+    public Action<object?, object?>? GetPropertySetter(PropertyInfo property) => null;
+
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>

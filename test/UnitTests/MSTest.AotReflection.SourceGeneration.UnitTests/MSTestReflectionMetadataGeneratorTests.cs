@@ -76,10 +76,18 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     private const string RuntimeHookStub = """
         namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration
         {
+            public readonly struct ConstructorInvokerInfo
+            {
+                public ConstructorInvokerInfo(System.Type[] parameterTypes, System.Func<object[], object> invoker) { ParameterTypes = parameterTypes; Invoker = invoker; }
+                public System.Type[] ParameterTypes { get; }
+                public System.Func<object[], object> Invoker { get; }
+            }
+
             public static class ReflectionMetadataHook
             {
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
             }
         }
         """;
@@ -378,6 +386,82 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("HasPublicSetter = true");
         registry.Should().Contain("Get = static instance => instance is null ? null : (object?)((global::Sample.PropTests)instance).Context,");
         registry.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext)value!,");
+    }
+
+    [TestMethod]
+    public void Generator_NonPublicSetter_IsNotPubliclySettable_AndNotRegistered()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class PropTests
+                {
+                    [TestContext]
+                    public TestContext? Context { get; private set; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        // A non-public setter is not callable from the generated code, so the registry emits a
+        // throwing setter (never a direct assignment) and reports HasPublicSetter = false.
+        registry.Should().Contain("HasPublicSetter = false");
+        registry.Should().Contain("Property 'Context' has no public setter.");
+        registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
+
+        // The module initializer gates setter registration on HasPublicSetter, so this property's
+        // (throwing) setter is never published; the adapter falls back to PropertyInfo.SetValue.
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+        registration.Should().Contain("if (property.HasPublicSetter)");
+    }
+
+    [TestMethod]
+    public void Generator_InitOnlySetter_IsNotPubliclySettable_AndDoesNotEmitAssignment()
+    {
+        // An init-only setter has public accessibility but cannot be assigned outside an object
+        // initializer; emitting `instance.Prop = value` would not compile (CS8852). The generator
+        // must treat it as non-settable.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class PropTests
+                {
+                    [TestContext]
+                    public TestContext? Context { get; init; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        registry.Should().Contain("HasPublicSetter = false");
+        registry.Should().Contain("Property 'Context' has no public setter.");
+        registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
     }
 
     [TestMethod]
@@ -2162,14 +2246,26 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         registration.Should().Contain("[ModuleInitializer]");
         registration.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]");
-        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes);");
 
-        // Type-level attributes are materialized into the registration (reflection-free), and only
-        // [TestMethod]-annotated methods are registered for the assembly.
-        registration.Should().Contain("[typeof(global::Sample.MyTests)] = new Attribute[] {");
-        registration.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"Smoke\")");
-        registration.Should().Contain("\"Test1\"");
-        registration.Should().NotContain("\"NotATest\"");
+        // The initializer consumes the MSTestReflectionMetadata registry (no more dead code) and
+        // publishes the delegate-based invokers via the richer Register overload so the adapter
+        // executes tests without runtime reflection.
+        registration.Should().Contain("global::MSTest.SourceGenerated.MSTestReflectionMetadata.TestClasses");
+        registration.Should().Contain("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();");
+        registration.Should().Contain("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();");
+        registration.Should().Contain("methodInvokers[methodInfo] = method.Invoke;");
+        registration.Should().Contain("constructorInvokers[type] = constructors;");
+        registration.Should().Contain("propertySetters[propertyInfo] = property.Set;");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodInvokers, constructorInvokers, propertySetters);");
+
+        // Only [TestMethod]-annotated methods become test roots; the registry's IsTestMethod flag
+        // drives that filtering at module-load time.
+        registration.Should().Contain("if (method.IsTestMethod)");
+        registration.Should().Contain("testMethodRoots.Add(methodInfo);");
+
+        // The initializer resolves the reflection objects it keys on at startup.
+        registration.Should().Contain("private static MethodInfo? ResolveMethod(");
+        registration.Should().Contain("private static PropertyInfo? ResolveProperty(");
 
         // The generator run itself should produce no diagnostics. This guards against future
         // generator changes that emit warnings/errors going unnoticed because the emitted code

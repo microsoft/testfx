@@ -49,6 +49,8 @@ internal static class MetadataRegistryEmitter
             using (sb.Block("internal sealed class TestMethodReflectionInfo"))
             {
                 sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("/// <summary>True when this method is a <c>[TestMethod]</c> (used to populate the test-method roots); false for fixtures and other registered methods.</summary>");
+                sb.AppendLine("public bool IsTestMethod { get; set; }");
                 sb.AppendLine("public bool IsStatic { get; set; }");
                 sb.AppendLine("public bool ReturnsTask { get; set; }");
                 sb.AppendLine("public bool ReturnsValueTask { get; set; }");
@@ -217,6 +219,7 @@ internal static class MetadataRegistryEmitter
                 using (sb.Block(null))
                 {
                     sb.AppendLine($"Name = \"{Escape(method.Name)}\",");
+                    sb.AppendLine($"IsTestMethod = {Bool(method.IsTestMethod)},");
                     sb.AppendLine($"IsStatic = {Bool(method.IsStatic)},");
                     sb.AppendLine($"ReturnsTask = {Bool(method.ReturnsTask)},");
                     sb.AppendLine($"ReturnsValueTask = {Bool(method.ReturnsValueTask)},");

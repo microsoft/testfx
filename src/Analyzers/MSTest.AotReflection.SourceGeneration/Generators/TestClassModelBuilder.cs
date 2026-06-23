@@ -343,7 +343,10 @@ internal static class TestClassModelBuilder
                 or Accessibility.Internal
                 or Accessibility.ProtectedOrInternal,
             },
-            HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public },
+            // An init-only setter has public DeclaredAccessibility but cannot be assigned outside an
+            // object initializer, so emitting `instance.Prop = value` would not compile (CS8852);
+            // treat it as non-settable so the adapter falls back to reflection (PropertyInfo.SetValue).
+            HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public, IsInitOnly: false },
             Attributes: BuildAttributes(CollectInheritedAttributes(property)));
 
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the

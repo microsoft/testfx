@@ -89,7 +89,7 @@ internal sealed class MSTestReflectionMetadataGenerator : IIncrementalGenerator
                 return;
             }
 
-            string source = RuntimeRegistrationEmitter.Emit(payload.Metadata, payload.Classes);
+            string source = RuntimeRegistrationEmitter.Emit(payload.Classes);
             ctx.AddSource("MSTestReflectionMetadata.Registration.g.cs", SourceText.From(source, Encoding.UTF8));
         });
     }

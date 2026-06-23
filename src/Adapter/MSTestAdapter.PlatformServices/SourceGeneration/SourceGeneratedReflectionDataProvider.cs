@@ -94,6 +94,22 @@ internal class SourceGeneratedReflectionDataProvider
     public Dictionary<Type, ConstructorInvoker[]> TypeConstructorsInvoker { get; init; } = [];
 
     /// <summary>
+    /// Gets the delegate-based invokers for test methods and fixtures, keyed by the
+    /// <see cref="MethodInfo"/> the adapter holds. Each delegate calls the method directly
+    /// (no <c>MethodInfo.Invoke</c>) and returns the method's raw result (a <see cref="Task"/>/
+    /// <see cref="System.Threading.Tasks.ValueTask"/> for async methods, the return value for
+    /// sync methods, or <see langword="null"/> for <c>void</c>).
+    /// </summary>
+    public Dictionary<MethodInfo, Func<object?, object?[]?, object?>> TypeMethodInvokers { get; init; } = [];
+
+    /// <summary>
+    /// Gets the delegate-based property setters, keyed by the <see cref="PropertyInfo"/> the
+    /// adapter holds (today: the <c>TestContext</c> property). Each delegate assigns the value
+    /// directly instead of calling <see cref="PropertyInfo.SetValue(object, object)"/>.
+    /// </summary>
+    public Dictionary<PropertyInfo, Action<object?, object?>> TypePropertySetters { get; init; } = [];
+
+    /// <summary>
     /// Returns the snapshot of merged metadata that callers should read. Single-assembly
     /// providers return themselves; the composite returns its currently-published snapshot
     /// (so readers always see a consistent point-in-time view even when another assembly is
@@ -183,6 +199,6 @@ internal class SourceGeneratedReflectionDataProvider
     {
         public Type[] Parameters { get; init; } = [];
 
-        public Func<object?[], object> Invoker { get; init; } = null!;
+        public Func<object?[]?, object> Invoker { get; init; } = null!;
     }
 }
