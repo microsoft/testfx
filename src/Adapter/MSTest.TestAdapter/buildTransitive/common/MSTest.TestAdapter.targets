@@ -35,7 +35,16 @@
 
   <ItemGroup>
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
+    <!-- Selects which MSTest source-generation strategy emits when a source generator is referenced:
+         'Rooting' (default) registers types/methods and roots members for trimming/AOT while the
+         adapter reflects the rest; 'ReflectionFree' additionally materializes attributes and emits
+         delegate-based invokers so the adapter runs without runtime reflection. -->
+    <CompilerVisibleProperty Include="MSTestSourceGenMode" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <MSTestSourceGenMode Condition=" '$(MSTestSourceGenMode)' == '' ">Rooting</MSTestSourceGenMode>
+  </PropertyGroup>
 
   <Target Name="GetMSTestV2CultureHierarchy">
     <!--

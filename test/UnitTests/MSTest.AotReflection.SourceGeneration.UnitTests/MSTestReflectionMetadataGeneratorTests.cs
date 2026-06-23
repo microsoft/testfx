@@ -5,6 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 using MSTest.AotReflection.SourceGeneration.Generators;
 
@@ -724,7 +725,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
             additionalTexts: null,
             parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
-            optionsProvider: null,
+            optionsProvider: ReflectionFreeOptionsProvider.Instance,
             driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
 
         GeneratorDriver firstDriver = driver.RunGenerators(compilation);
@@ -778,9 +779,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             """;
 
         CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
-        GeneratorDriver driver = CSharpGeneratorDriver
-            .Create(new MSTestReflectionMetadataGenerator())
-            .WithUpdatedParseOptions((CSharpParseOptions)compilation.SyntaxTrees.First().Options);
+        GeneratorDriver driver = CreateDriver(compilation);
 
         // Track step output cache reasons.
         driver = driver.RunGenerators(compilation);
@@ -2235,7 +2234,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // and the registration also publishes pre-materialized type-level attributes so the adapter
         // serves them without runtime reflection.
         CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MSTestReflectionMetadataGenerator());
+        GeneratorDriver driver = CreateDriver(compilation);
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
 
         GeneratorRunResult result = driver.GetRunResult().Results[0];
@@ -2278,6 +2277,43 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         errors.Should().BeEmpty("the emitted module initializer must compile against the adapter's ReflectionMetadataHook");
     }
 
+    [TestMethod]
+    public void Generator_EmitsNothing_InRootingMode()
+    {
+        // The reflection-free generator must stay completely silent unless the consumer opts in via
+        // <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>. In the default rooting mode the
+        // separate rooting generator owns emission, so this generator emits no sources at all —
+        // otherwise the assembly would be registered twice.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+
+        // No options provider => MSTestSourceGenMode is unset => defaults to rooting.
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: null,
+            driverOptions: default);
+        driver = driver.RunGenerators(compilation);
+
+        GeneratorRunResult result = driver.GetRunResult().Results[0];
+        result.Diagnostics.Should().BeEmpty();
+        result.GeneratedSources.Should().BeEmpty("the reflection-free generator must not emit in rooting mode");
+    }
+
     private static string GetRegistry(GeneratorRunResult result)
         => result.GeneratedSources
             .Single(s => s.HintName == "MSTestReflectionMetadata.Registry.g.cs")
@@ -2287,7 +2323,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     private static GeneratorRunResult RunGenerator(params string[] sources)
     {
         CSharpCompilation compilation = CreateCompilation(sources);
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MSTestReflectionMetadataGenerator());
+        GeneratorDriver driver = CreateDriver(compilation);
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
         return driver.GetRunResult().Results[0];
     }
@@ -2295,10 +2331,21 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     private static Compilation RunGeneratorAndGetCompilation(params string[] sources)
     {
         CSharpCompilation compilation = CreateCompilation(sources);
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MSTestReflectionMetadataGenerator());
+        GeneratorDriver driver = CreateDriver(compilation);
         driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
         return outputCompilation;
     }
+
+    // Drives the generator in ReflectionFree mode (the mode under test). Without the
+    // MSTestSourceGenMode=ReflectionFree option the generator stays silent (rooting is the default),
+    // so the test harness always opts in.
+    private static GeneratorDriver CreateDriver(CSharpCompilation compilation, bool trackIncrementalGeneratorSteps = false)
+        => CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: ReflectionFreeOptionsProvider.Instance,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps));
 
     private static CSharpCompilation CreateCompilation(params string[] sources)
     {
@@ -2322,5 +2369,36 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             trees,
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    /// <summary>
+    /// An <see cref="AnalyzerConfigOptionsProvider"/> whose global options report
+    /// <c>build_property.MSTestSourceGenMode = ReflectionFree</c>, so the generator under test emits
+    /// its reflection-free output instead of staying silent (rooting is the default mode).
+    /// </summary>
+    private sealed class ReflectionFreeOptionsProvider : AnalyzerConfigOptionsProvider
+    {
+        public static readonly ReflectionFreeOptionsProvider Instance = new();
+
+        public override AnalyzerConfigOptions GlobalOptions { get; } = new ReflectionFreeOptions();
+
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => GlobalOptions;
+
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => GlobalOptions;
+
+        private sealed class ReflectionFreeOptions : AnalyzerConfigOptions
+        {
+            public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value)
+            {
+                if (key == "build_property.MSTestSourceGenMode")
+                {
+                    value = "ReflectionFree";
+                    return true;
+                }
+
+                value = null;
+                return false;
+            }
+        }
     }
 }
