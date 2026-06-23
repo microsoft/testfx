@@ -16,6 +16,17 @@ Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionM
 Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionType.get -> System.Type!
 override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.GroupName.get -> string!
 override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.IsConditionMet.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.Arguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, string! executable) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, string! executable, params string![]! arguments) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(string! executable) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(string! executable, params string![]! arguments) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.Executable.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.TimeoutSeconds.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.TimeoutSeconds.set -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.IsConditionMet.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InOrder = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
