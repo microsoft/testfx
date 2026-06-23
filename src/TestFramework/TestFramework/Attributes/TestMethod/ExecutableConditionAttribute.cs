@@ -337,7 +337,7 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
         string[] parts = pathExt.Split([Path.PathSeparator], StringSplitOptions.RemoveEmptyEntries);
 
         // Keep an empty extension first so an exact match (for example when a full file name was passed) still wins.
-        return [string.Empty, ..parts];
+        return [string.Empty, .. parts];
     }
 
 #if !NET
