@@ -22,13 +22,14 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         // Need open connection to get Connection.Provider.
         DebugEx.Assert(IsOpen(), "The connection must be open!");
 
-        // Fill m_isMSSql.
-        _isMSSql = Connection != null && IsMSSql(Connection.Provider);
+        _isMSSql = Connection != null && IsMSSql(GetProviderNameForMSSqlDetection());
     }
 
     public new OleDbCommandBuilder CommandBuilder => (OleDbCommandBuilder)base.CommandBuilder;
 
     public new OleDbConnection Connection => (OleDbConnection)base.Connection;
+
+    protected override string? GetProviderNameForMSSqlDetection() => Connection.Provider;
 
     /// <summary>
     /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
@@ -54,39 +55,16 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         return [data];
     }
 
-    protected override string QuoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.QuoteIdentifier(identifier, Connection);
-    }
-
-    protected override string UnquoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.UnquoteIdentifier(identifier, Connection);
-    }
-
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {
         OleDbConnectionStringBuilder oleDbBuilder = [with(connectionString)];
 
-        string fileName = oleDbBuilder.DataSource;
-
-        if (StringEx.IsNullOrEmpty(fileName))
-        {
-            return connectionString;
-        }
-        else
-        {
-            // Fix-up magic file paths
-            string? fixedFilePath = FixPath(fileName, dataFolders);
-            if (fixedFilePath != null)
-            {
-                oleDbBuilder.DataSource = fixedFilePath;
-            }
-
-            return oleDbBuilder.ConnectionString;
-        }
+        return FixConnectionStringFilePath(
+            oleDbBuilder,
+            connectionString,
+            () => oleDbBuilder.DataSource,
+            fixedFilePath => oleDbBuilder.DataSource = fixedFilePath,
+            dataFolders);
     }
 }
 

@@ -16,7 +16,7 @@ The first bridge delivered with this RFC is `Microsoft.Testing.Extensions.Loggin
 MTP today ships its own slim implementations of:
 
 | Concern | MTP namespace | Equivalent in BCL ecosystem |
-|---|---|---|
+| --- | --- | --- |
 | Logging | `Microsoft.Testing.Platform.Logging` | `Microsoft.Extensions.Logging` |
 | Configuration | `Microsoft.Testing.Platform.Configurations` | `Microsoft.Extensions.Configuration` |
 | Service location | `Microsoft.Testing.Platform.Services.ServiceProvider` | `Microsoft.Extensions.DependencyInjection` |
@@ -44,7 +44,7 @@ The current "homegrown core + opt-in bridge extensions" pattern satisfies both c
 ## Phasing
 
 | Phase | Package | Status |
-|---|---|---|
+| --- | --- | --- |
 | 1 | `Microsoft.Testing.Extensions.Logging` | This RFC |
 | 2 | `Microsoft.Testing.Extensions.Configuration` | Future |
 | 3 | `Microsoft.Testing.Extensions.DependencyInjection` | Future |
@@ -113,7 +113,7 @@ Microsoft.Extensions.Logging.LoggerFactory → user's MEL providers
 ### Semantic mapping
 
 | MTP concept | Mapped MEL concept | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `LogLevel.Trace…Critical/None` (0..6) | `Microsoft.Extensions.Logging.LogLevel.Trace…Critical/None` | Same numeric values; mapped via explicit `switch` for safety/AOT |
 | `ILogger.Log<TState>(level, state, ex, formatter)` | `ILogger.Log<TState>(level, EventId.None, state, ex, formatter)` | `EventId` defaults to `None` |
 | `ILogger.LogAsync<TState>(...)` | Synchronous `Log` + `Task.CompletedTask` | MEL has no async API |

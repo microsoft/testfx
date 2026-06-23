@@ -119,5 +119,6 @@
   </resheader>
   <data name="EnvironmentVariableNotSet" xml:space="preserve">
     <value>Environment variable '{0}' is not set.</value>
+    <comment>{0} is the environment variable name.</comment>
   </data>
 </root>

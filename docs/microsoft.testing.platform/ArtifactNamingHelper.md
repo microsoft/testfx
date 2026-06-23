@@ -15,11 +15,12 @@ Resolves to: `MyTests_12345_2025-09-22_13-49-34.0000000_hang.dmp`
 ## Available Placeholders
 
 | Placeholder | Description | Example |
-|-------------|-------------|---------|
+| --- | --- | --- |
 | `{pname}` | Name of the process | `MyTests` |
 | `{pid}` | Process ID | `12345` |
 | `{asm}` | Assembly name (entry assembly, or `unknown` if unavailable) | `MyTests` |
 | `{tfm}` | Target framework moniker (best-effort, detected at runtime — may differ from the build-time TFM, e.g. a `net462` assembly running on .NET Framework 4.8 reports `net481`) | `net9.0`, `net8.0` |
+| `{arch}` | Process architecture (lowercased value of `RuntimeInformation.ProcessArchitecture`) | `x64`, `x86`, `arm64` |
 | `{time}` | Timestamp (high precision) | `2025-09-22_13-49-34.0000000` |
 
 ## Backward Compatibility

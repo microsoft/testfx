@@ -14,8 +14,10 @@ public abstract class AcceptanceTestBase
 
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine.");
+        MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
         MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
+        MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
+        MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
     }
 
     internal static string RID { get; }
@@ -29,13 +31,17 @@ public abstract class AcceptanceTestBase
 
     public static string MSTestVersion { get; private set; }
 
-    public static string MSTestEngineVersion { get; private set; }
+    public static string MSTestSourceGenerationVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsCtrfReportVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsJUnitReportVersion { get; private set; }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {

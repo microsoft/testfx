@@ -5,6 +5,37 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class WellKnownEnvironmentVariables
 {
+    /// <summary>
+    /// Environment variables that the Microsoft.Testing.Platform LLM detector inspects.
+    /// Keep in sync with <c>LLMEnvironmentDetector</c>.
+    /// </summary>
+    public static readonly IReadOnlyList<string> LLMEnvironmentVariables =
+    [
+        "CLAUDECODE",
+        "CLAUDE_CODE_ENTRYPOINT",
+        "CURSOR_EDITOR",
+        "CURSOR_AI",
+        "GEMINI_CLI",
+        "GITHUB_COPILOT_CLI_MODE",
+        "GH_COPILOT_WORKING_DIRECTORY",
+        "COPILOT_CLI",
+        "CODEX_CLI",
+        "CODEX_SANDBOX",
+        "OR_APP_NAME",
+        "AMP_HOME",
+        "QWEN_CODE",
+        "DROID_CLI",
+        "OPENCODE_AI",
+        "ZED_ENVIRONMENT",
+        "ZED_TERM",
+        "KIMI_CLI",
+        "GOOSE_TERMINAL",
+        "CLINE_TASK_ID",
+        "ROO_CODE_TASK_ID",
+        "WINDSURF_SESSION",
+        "AGENT_CLI",
+    ];
+
     public static readonly string[] ToSkipEnvironmentVariables =
     [
         // Skip dotnet root, we redefine it below.
@@ -41,6 +72,10 @@ public static class WellKnownEnvironmentVariables
         "DOTNET_NOLOGO",
         "TESTINGPLATFORM_NOBANNER",
 
+        // Azure DevOps output device opt-out. Tests inject this explicitly when needed, so we
+        // keep the parent process value from bleeding into child test hosts.
+        "TESTINGPLATFORM_AZDO_OUTPUT",
+
         // Diagnostics
         "TESTINGPLATFORM_DIAGNOSTIC",
 
@@ -49,6 +84,19 @@ public static class WellKnownEnvironmentVariables
         "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY",
 
         // Isolate from the skip banner in case of parent, children tests
-        "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER"
+        "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER",
+
+        // The de-facto cross-tool NO_COLOR convention (https://no-color.org). MTP honors any non-empty
+        // value as "disable ANSI". We filter it out so acceptance tests that rely on ANSI output are not
+        // affected when contributors / CI happen to have NO_COLOR set in their shell. Tests that need
+        // to exercise NO_COLOR behavior must set the variable explicitly.
+        "NO_COLOR",
+
+        // LLM / AI agent CLI environment variables - keep in sync with
+        // src/Platform/Microsoft.Testing.Platform/Helpers/LLMEnvironmentDetector.cs.
+        // We filter these out so acceptance tests are not affected by the ambient
+        // shell the developer (or CI) happens to be running them from. Tests that
+        // need to exercise LLM-aware behavior must set the relevant variable explicitly.
+        .. LLMEnvironmentVariables,
     ];
 }

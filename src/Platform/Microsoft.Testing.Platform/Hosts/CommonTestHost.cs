@@ -5,6 +5,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -18,6 +19,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 /// This represents either a test host (console or server), or a test host controller.
 /// This doesn't represent an orchestrator host.
 /// </summary>
+[StackTraceHidden]
 internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 {
     public ServiceProvider ServiceProvider => serviceProvider;
@@ -110,15 +112,17 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     protected virtual string HostType
         => this switch
         {
-            ConsoleTestHost => "TestHost",
-            TestHostControllersTestHost => "TestHostController",
-            ServerTestHost => "ServerTestHost",
+            ConsoleTestHost => HandshakeMessageHostTypes.TestHost,
+            TestHostControllersTestHost => HandshakeMessageHostTypes.TestHostController,
+            ServerTestHost => HandshakeMessageHostTypes.ServerTestHost,
             _ => throw new InvalidOperationException($"Unknown host type '{GetType().FullName}'"),
         };
 
     private string GetHostType()
     {
-        // For now, we don't  inherit TestHostOrchestratorHost from CommonHost one so we don't connect when we orchestrate
+        // TestHostOrchestratorHost does not inherit from CommonHost, so the orchestrator handshake is
+        // performed there directly (see TestHostOrchestratorHost.RunAsync) rather than going through
+        // this path. This method only covers the test host and test host controller roles.
         string hostType = HostType;
         return hostType;
     }
@@ -250,6 +254,8 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             return;
         }
 
+        IShutdownProgressReporter? shutdownProgressReporter = serviceProvider.GetService<IShutdownProgressReporter>();
+
         // First, we call OnTestSessionFinishingAsync on all non-consumers.
         bool hasNonDataConsumers = false;
         foreach (ITestSessionLifetimeHandler testSessionLifetimeHandler in testSessionLifetimeHandlersContainer.TestSessionLifetimeHandlers)
@@ -272,6 +278,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             hasNonDataConsumers = true;
 
             using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
+            using (shutdownProgressReporter?.Track(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.DisplayName, nameof(ITestSessionLifetimeHandler.OnTestSessionFinishingAsync)))
             {
                 await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
             }
@@ -294,6 +301,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
             }
 
             using (otelService?.StartActivity(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.ToOTelTags()))
+            using (shutdownProgressReporter?.Track(testSessionLifetimeHandler.Uid, testSessionLifetimeHandler.DisplayName, nameof(ITestSessionLifetimeHandler.OnTestSessionFinishingAsync)))
             {
                 await testSessionLifetimeHandler.OnTestSessionFinishingAsync(testSessionContext).ConfigureAwait(false);
             }

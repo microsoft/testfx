@@ -72,6 +72,77 @@ public class SomeClass
         await VerifySingleSuppressionAsync(code, isSuppressed: true);
     }
 
+    [TestMethod]
+    public async Task TestContextPropertyOnClassWithDerivedTestClassAttribute_DiagnosticIsSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[AttributeUsage(AttributeTargets.Class)]
+public class DerivedTestClassAttribute : TestClassAttribute { }
+
+[DerivedTestClass]
+public class SomeClass
+{
+    public TestContext {|#0:TestContext|} { get; set; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, isSuppressed: true);
+    }
+
+    [TestMethod]
+    public async Task TestContextPropertyWithWrongTypeName_DiagnosticIsNotSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+public class MyCustomContext { }
+
+[TestClass]
+public class SomeClass
+{
+    public MyCustomContext {|#0:TestContext|} { get; set; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, isSuppressed: false);
+    }
+
+    [TestMethod]
+    public async Task TestContextPropertyWithWrongPropertyName_DiagnosticIsNotSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public TestContext {|#0:MyContext|} { get; set; }
+}
+";
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+        };
+
+        test.ExpectedDiagnostics.Add(DiagnosticResult.CompilerError("CS8618")
+            .WithLocation(0)
+            .WithOptions(DiagnosticOptions.IgnoreAdditionalLocations)
+            .WithArguments("property", "MyContext")
+            .WithIsSuppressed(false));
+
+        await test.RunAsync();
+    }
+
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)
         => VerifyDiagnosticsAsync(source, [(0, isSuppressed)]);
 

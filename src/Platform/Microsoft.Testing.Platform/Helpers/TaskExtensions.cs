@@ -6,9 +6,11 @@ namespace Microsoft.Testing.Platform.Helpers;
 // The idea was taken from https://github.com/dotnet/aspnetcore/blob/main/src/Shared/TaskExtensions.cs
 internal static class TaskExtensions
 {
-#if !NETCOREAPP
-    private const uint MaxSupportedTimeout = 0xfffffffe;
+    // CancellationTokenSource.CancelAfter / Timer.Change cap at this many milliseconds
+    // (~49.7 days). This matches the runtime's internal Timer.MaxSupportedTimeout constant.
+    public const long MaxSupportedTimeoutMs = 0xfffffffe;
 
+#if !NETCOREAPP
     public static Task WaitAsync(this Task target, CancellationToken cancellationToken) =>
         target.WaitAsync(Timeout.InfiniteTimeSpan, cancellationToken);
 
@@ -23,7 +25,7 @@ internal static class TaskExtensions
         CancellationToken cancellationToken)
     {
         long milliseconds = (long)timeout.TotalMilliseconds;
-        if (milliseconds is < -1 or > MaxSupportedTimeout)
+        if (milliseconds is < -1 or > MaxSupportedTimeoutMs)
         {
             throw new ArgumentOutOfRangeException(nameof(timeout));
         }

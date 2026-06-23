@@ -17,6 +17,10 @@
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
+    <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers pinned to a daily build (5.5.x).
+         The last stable release (3.3.4, 2022) lacks newer RS0017/RS0026/RS0036 fixes that testfx's
+         public-API surface tracking depends on. Promote back to the next stable 5.x once one ships.
+         Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.5.0-2.26224.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
@@ -25,8 +29,18 @@
     <MicrosoftNETTestSdkVersion>18.4.0</MicrosoftNETTestSdkVersion>
     <MicrosoftPlaywrightVersion>1.58.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
+    <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
+         opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public
+         stable release on nuget.org. Promote when the internal feed ships a non-preview version.
+         Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
+    <!-- System.Memory flows in transitively (via System.Reflection.Metadata / System.Collections.Immutable)
+         at 4.5.5, whose .NETFramework assembly version is 4.0.1.2. We pin it explicitly to 4.6.3
+         (assembly 4.0.5.0) so the .NETFramework adapter assemblies reference 4.0.5.0. Hosts that unify
+         System.Memory to 4.0.5.0 (e.g. Visual Studio) and run the adapter without applying a binding
+         redirect (the VSTest test host uses its own config) cannot otherwise load the 4.0.1.2 reference. -->
+    <SystemMemoryVersion>4.6.3</SystemMemoryVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.24423.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
@@ -57,15 +71,15 @@
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="18.8.0-preview-26264-09" />
+    <PackageVersion Include="Microsoft.TestPlatform.Filter.Source" Version="18.8.0-preview-26276-01" />
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
     <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
-    <PackageVersion Include="System.Text.Json" Version="8.0.5" />
+    <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.8" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
-    <PackageVersion Include="Codecov" Version="1.12.3" />
     <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
     <PackageVersion Include="NUnit" Version="4.6.0" />
@@ -89,11 +103,23 @@
     <PackageVersion Include="Polly" Version="8.6.6" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
     <PackageVersion Include="StreamJsonRpc" Version="2.24.84" />
-    <!-- This comes transitively via StreamJsonRpc, but we want to upgrade it to fix a security vulnerability -->
-    <PackageVersion Include="Nerdbank.MessagePack" Version="1.1.62" />
+    <!--
+      Nerdbank.MessagePack and MessagePack both come transitively via StreamJsonRpc, but we pin them
+      here to pick up versions that fix security vulnerabilities in the transitive versions shipped
+      by StreamJsonRpc.
+
+      IMPORTANT: Central Package Management only pins the version when a project actually declares a
+      <PackageReference> for the package. Any project that references StreamJsonRpc (directly or via
+      a ProjectReference chain) must ALSO add explicit <PackageReference Include="Nerdbank.MessagePack" />
+      AND <PackageReference Include="MessagePack" /> entries, otherwise the transitive (vulnerable)
+      versions get restored. See PR #9120 / #9124 for context.
+    -->
+    <PackageVersion Include="Nerdbank.MessagePack" Version="1.2.4" />
+    <PackageVersion Include="MessagePack" Version="3.1.7" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="9.0.4" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
   </ItemGroup>
   <!--
     Declare below packages that we will be referenced through MSTest.Sdk but don't have direct reference.

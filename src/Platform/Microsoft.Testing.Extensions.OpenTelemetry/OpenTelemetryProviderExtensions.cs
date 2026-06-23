@@ -17,15 +17,24 @@ namespace Microsoft.Testing.Extensions;
 public static class OpenTelemetryProviderExtensions
 {
     /// <summary>
-    /// Adds OpenTelemetry tracing and metrics providers to the application builder, allowing customization of tracing
-    /// and metrics configuration.
+    /// Registers OpenTelemetry tracing and metrics providers whose lifetime is managed by the Microsoft Testing Platform.
     /// </summary>
-    /// <remarks>This method enables distributed tracing and metrics collection for the application. To
-    /// customize telemetry behavior, provide configuration delegates for tracing and/or metrics. If no delegates are
-    /// supplied, default OpenTelemetry settings are used.</remarks>
+    /// <remarks>The providers are created with empty configuration. Callers are responsible for wiring everything
+    /// the providers should observe and export, including:
+    /// <list type="bullet">
+    /// <item><description>The Microsoft Testing Platform instrumentation, via
+    /// <see cref="AddTestingPlatformInstrumentation(TracerProviderBuilder)"/> and
+    /// <see cref="AddTestingPlatformInstrumentation(MeterProviderBuilder)"/>. Without these, no MTP activities or
+    /// metrics are collected even if exporters are registered.</description></item>
+    /// <item><description>Any additional activity sources, meters, or instrumentation libraries the caller wants.</description></item>
+    /// <item><description>At least one exporter (for example, <c>AddOtlpExporter</c> or <c>AddConsoleExporter</c>);
+    /// without an exporter, collected telemetry is not emitted anywhere.</description></item>
+    /// </list>
+    /// No defaults are applied — this method does not pick instrumentation or exporters on the caller's behalf because
+    /// the right choice depends on the target observability backend.</remarks>
     /// <param name="builder">The application builder to which the OpenTelemetry providers will be added. Cannot be null.</param>
-    /// <param name="withTracing">An optional delegate to configure the tracing provider. If null, default tracing configuration is applied.</param>
-    /// <param name="withMetrics">An optional delegate to configure the metrics provider. If null, default metrics configuration is applied.</param>
+    /// <param name="withTracing">An optional delegate to configure the tracing provider (sources, instrumentation, exporters).</param>
+    /// <param name="withMetrics">An optional delegate to configure the metrics provider (meters, instrumentation, exporters).</param>
     public static void AddOpenTelemetryProvider(this ITestApplicationBuilder builder, Action<TracerProviderBuilder>? withTracing = null, Action<MeterProviderBuilder>? withMetrics = null)
         => ((TestApplicationBuilder)builder).Telemetry.AddOpenTelemetryProvider(serviceProvider =>
         {
@@ -37,9 +46,10 @@ public static class OpenTelemetryProviderExtensions
     /// Enables instrumentation for the Microsoft Testing Platform by adding its activity source to the specified tracer
     /// provider builder.
     /// </summary>
-    /// <remarks>Use this method to collect telemetry from components that emit activities under the
-    /// "Microsoft.Testing.Platform" source. This is typically required to enable distributed tracing for operations
-    /// performed by the Microsoft Testing Platform.</remarks>
+    /// <remarks>Call this method from the <c>withTracing</c> delegate of
+    /// <see cref="AddOpenTelemetryProvider(ITestApplicationBuilder, Action{TracerProviderBuilder}?, Action{MeterProviderBuilder}?)"/>,
+    /// or on any <see cref="TracerProviderBuilder"/> configured outside that helper, to collect activities emitted under
+    /// the <c>Microsoft.Testing.Platform</c> source.</remarks>
     /// <param name="builder">The tracer provider builder to which the Microsoft Testing Platform activity source will be added.</param>
     /// <returns>The tracer provider builder with the Microsoft Testing Platform activity source configured for instrumentation.</returns>
     public static TracerProviderBuilder AddTestingPlatformInstrumentation(this TracerProviderBuilder builder)
@@ -49,9 +59,10 @@ public static class OpenTelemetryProviderExtensions
     /// Adds instrumentation for the Microsoft Testing Platform to the specified <see cref="MeterProviderBuilder"/>
     /// instance.
     /// </summary>
-    /// <remarks>Use this method to enable collection of metrics emitted by the Microsoft Testing Platform.
-    /// This is typically required when monitoring or analyzing test execution within applications that utilize the
-    /// platform.</remarks>
+    /// <remarks>Call this method from the <c>withMetrics</c> delegate of
+    /// <see cref="AddOpenTelemetryProvider(ITestApplicationBuilder, Action{TracerProviderBuilder}?, Action{MeterProviderBuilder}?)"/>,
+    /// or on any <see cref="MeterProviderBuilder"/> configured outside that helper, to collect metrics emitted under
+    /// the <c>Microsoft.Testing.Platform</c> meter.</remarks>
     /// <param name="builder">The <see cref="MeterProviderBuilder"/> to which the Microsoft Testing Platform instrumentation will be added.</param>
     /// <returns>The same <see cref="MeterProviderBuilder"/> instance, configured to include metrics from the Microsoft Testing
     /// Platform.</returns>

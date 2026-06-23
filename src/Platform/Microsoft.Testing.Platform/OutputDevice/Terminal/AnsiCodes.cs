@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// A collection of standard ANSI/VT100 control codes.
 /// </summary>
+[Embedded]
 internal static class AnsiCodes
 {
     /// <summary>
@@ -90,12 +93,24 @@ internal static class AnsiCodes
     public const string EraseInDisplay = "J";
 
     /// <summary>
+    /// Shortcut for <see cref="CSI"/> + <see cref="EraseInDisplay"/> — clears from cursor to end of screen.
+    /// Prefer this constant over inline string interpolation to avoid per-call heap allocation.
+    /// </summary>
+    public const string CsiEraseInDisplay = CSI + EraseInDisplay;
+
+    /// <summary>
     /// Clears everything from cursor to the end of the current line.
     /// </summary>
     /// <remarks>
     /// Print <see cref="CSI"/><see cref="EraseInLine"/> to clear.
     /// </remarks>
     public const string EraseInLine = "K";
+
+    /// <summary>
+    /// Shortcut for <see cref="CSI"/> + <see cref="EraseInLine"/> — clears from cursor to end of current line.
+    /// Prefer this constant over inline string interpolation to avoid per-call heap allocation.
+    /// </summary>
+    public const string CsiEraseInLine = CSI + EraseInLine;
 
     /// <summary>
     /// Hides the cursor.
@@ -126,6 +141,32 @@ internal static class AnsiCodes
     /// <see href="https://iterm2.com/documentation-escape-codes.html">iTerm2 proprietary escape codes.</see>
     /// </remarks>
     public const string RemoveBusySpinner = $"{Esc}]9;4;0;{Esc}\\";
+
+    /// <summary>
+    /// Returns the pre-computed ANSI escape sequence that switches the foreground to <paramref name="color"/>.
+    /// Callers should prefer this over building the string inline to avoid per-call heap allocation.
+    /// </summary>
+    public static string GetSetColorEscapeCode(TerminalColor color) => color switch
+    {
+        TerminalColor.Black => "\x1b[30m",
+        TerminalColor.DarkRed => "\x1b[31m",
+        TerminalColor.DarkGreen => "\x1b[32m",
+        TerminalColor.DarkYellow => "\x1b[33m",
+        TerminalColor.DarkBlue => "\x1b[34m",
+        TerminalColor.DarkMagenta => "\x1b[35m",
+        TerminalColor.DarkCyan => "\x1b[36m",
+        TerminalColor.Gray => "\x1b[37m",
+        TerminalColor.Default => "\x1b[39m",
+        TerminalColor.DarkGray => "\x1b[90m",
+        TerminalColor.Red => "\x1b[91m",
+        TerminalColor.Green => "\x1b[92m",
+        TerminalColor.Yellow => "\x1b[93m",
+        TerminalColor.Blue => "\x1b[94m",
+        TerminalColor.Magenta => "\x1b[95m",
+        TerminalColor.Cyan => "\x1b[96m",
+        TerminalColor.White => "\x1b[97m",
+        _ => $"{CSI}{(int)color}{SetColor}",
+    };
 
     public static string Colorize(string? s, TerminalColor color)
         => RoslynString.IsNullOrWhiteSpace(s) ? s ?? string.Empty : $"{CSI}{(int)color}{SetColor}{s}{SetDefaultColor}";

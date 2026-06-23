@@ -5,7 +5,7 @@
       <trans-unit id="MSBuildExtensionsDescription">
         <source>Extension used to pass parameters from MSBuild node and the hosts</source>
         <target state="translated">Erweiterung, die zum Übergeben von Parametern vom MSBuild-Knoten und den Hosts verwendet wird.</target>
-        <note />
+        <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
     </body>
   </file>

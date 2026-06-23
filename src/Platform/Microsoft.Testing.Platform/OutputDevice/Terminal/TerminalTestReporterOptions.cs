@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal sealed class TerminalTestReporterOptions
 {
     /// <summary>
@@ -29,6 +32,19 @@ internal sealed class TerminalTestReporterOptions
     public bool ShowActiveTests { get; init; }
 
     /// <summary>
+    /// Gets a value indicating whether per-assembly summary lines (with the compact pass/fail/skip counts) should be
+    /// rendered. Used by the <c>dotnet test</c> orchestrator which runs multiple assemblies; the in-process host
+    /// leaves this off.
+    /// </summary>
+    public bool ShowAssembly { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether, when <see cref="ShowAssembly"/> is set, the per-assembly summary line is
+    /// printed mid-stream as each assembly completes.
+    /// </summary>
+    public bool ShowAssemblyStartAndComplete { get; init; }
+
+    /// <summary>
     /// Gets a value indicating the ANSI mode.
     /// </summary>
     public AnsiMode AnsiMode { get; init; }
@@ -42,8 +58,22 @@ internal sealed class TerminalTestReporterOptions
     /// Gets a value indicating when to show standard error output.
     /// </summary>
     public OutputShowMode ShowStderr { get; init; } = OutputShowMode.All;
+
+    /// <summary>
+    /// Gets the silence threshold for the non-cursor heartbeat renderer (E1). When no test completes for this
+    /// duration, a single heartbeat line is emitted. <see cref="TimeSpan.Zero"/> disables the silence heartbeat.
+    /// </summary>
+    public TimeSpan HeartbeatSilenceThreshold { get; init; } = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Gets the per-test threshold for the non-cursor heartbeat renderer (E2). When a single test exceeds this
+    /// duration, a single "[slow]" line is emitted (with exponential backoff). <see cref="TimeSpan.Zero"/>
+    /// disables slow-test surfacing.
+    /// </summary>
+    public TimeSpan SlowTestThreshold { get; init; } = TimeSpan.FromSeconds(60);
 }
 
+[Embedded]
 internal enum OutputShowMode
 {
     /// <summary>
@@ -62,6 +92,7 @@ internal enum OutputShowMode
     None,
 }
 
+[Embedded]
 internal enum AnsiMode
 {
     /// <summary>

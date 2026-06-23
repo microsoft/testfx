@@ -1,8 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
+[Embedded]
 internal static class HumanReadableDurationFormatter
 {
     public static void Append(ITerminal terminal, TimeSpan duration, bool wrapInParentheses = true)
@@ -61,6 +64,23 @@ internal static class HumanReadableDurationFormatter
         {
             return string.Empty;
         }
+
+#if NET8_0_OR_GREATER
+        // Fast path for the common non-negative progress-frame case: duration < 1 hour with no milliseconds.
+        if (!showMilliseconds && duration.Value.Ticks >= 0 && duration.Value.Days == 0 && duration.Value.Hours == 0)
+        {
+            int seconds = duration.Value.Seconds;
+            int minutes = duration.Value.Minutes;
+
+            return (wrapInParentheses, minutes) switch
+            {
+                (true, 0) => string.Create(CultureInfo.InvariantCulture, $"({seconds}s)"),
+                (true, _) => string.Create(CultureInfo.InvariantCulture, $"({minutes}m {seconds:D2}s)"),
+                (false, 0) => string.Create(CultureInfo.InvariantCulture, $"{seconds}s"),
+                _ => string.Create(CultureInfo.InvariantCulture, $"{minutes}m {seconds:D2}s"),
+            };
+        }
+#endif
 
         bool hasParentValue = false;
 

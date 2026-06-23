@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -10,31 +10,16 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// Terminal writer that is used when writing ANSI is allowed. It is capable of batching as many updates as possible and writing them at the end,
 /// because the terminal is responsible for rendering the colors and control codes.
 /// </summary>
+[Embedded]
 internal sealed class AnsiTerminal : ITerminal
 {
     /// <summary>
     /// File extensions that we will link to directly, all other files
     /// are linked to their directory, to avoid opening dlls, or executables.
     /// </summary>
-    private static readonly string[] KnownFileExtensions =
-    [
-        // code files
-        ".cs",
-        ".vb",
-        ".fs",
-        // logs
-        ".log",
-        ".txt",
-        // reports
-        ".coverage",
-        ".ctrf",
-        ".html",
-        ".junit",
-        ".nunit",
-        ".trx",
-        ".xml",
-        ".xunit"
-    ];
+    private static readonly HashSet<string> KnownFileExtensions = new HashSet<string>(
+        [".cs", ".vb", ".fs", ".log", ".txt", ".coverage", ".ctrf", ".html", ".junit", ".nunit", ".trx", ".xml", ".xunit"],
+        StringComparer.Ordinal);
 
     private readonly IConsole _console;
     private readonly string? _baseDirectory;
@@ -42,6 +27,7 @@ internal sealed class AnsiTerminal : ITerminal
     private readonly StringBuilder _stringBuilder = new();
     private bool _isBatching;
     private AnsiTerminalTestProgressFrame _currentFrame = new(0, 0);
+    private AnsiTerminalTestProgressFrame _spareFrame = new(0, 0);
 
     public AnsiTerminal(IConsole console)
     {
@@ -113,7 +99,7 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void SetColor(TerminalColor color)
     {
-        string setColor = $"{AnsiCodes.CSI}{(int)color}{AnsiCodes.SetColor}";
+        string setColor = AnsiCodes.GetSetColorEscapeCode(color);
         if (_isBatching)
         {
             _stringBuilder.Append(setColor);
@@ -165,7 +151,7 @@ internal sealed class AnsiTerminal : ITerminal
     {
         if (_isBatching)
         {
-            throw new InvalidOperationException(PlatformResources.ConsoleIsAlreadyInBatchingMode);
+            throw new InvalidOperationException(TerminalResources.ConsoleIsAlreadyInBatchingMode);
         }
 
         _stringBuilder.Clear();
@@ -245,14 +231,13 @@ internal sealed class AnsiTerminal : ITerminal
 
     public void MoveCursorUp(int lineCount)
     {
-        string moveCursor = $"{AnsiCodes.CSI}{lineCount}{AnsiCodes.MoveUpToLineStart}";
         if (_isBatching)
         {
-            _stringBuilder.AppendLine(moveCursor);
+            _stringBuilder.Append(AnsiCodes.CSI).Append(lineCount).Append(AnsiCodes.MoveUpToLineStart).AppendLine();
         }
         else
         {
-            _console.WriteLine(moveCursor);
+            _console.WriteLine($"{AnsiCodes.CSI}{lineCount}{AnsiCodes.MoveUpToLineStart}");
         }
     }
 
@@ -274,22 +259,24 @@ internal sealed class AnsiTerminal : ITerminal
     /// </summary>
     public void EraseProgress()
     {
-        if (_currentFrame.RenderedLines == null || _currentFrame.RenderedLines.Count == 0)
+        if (_currentFrame.RenderedLinesCount == 0)
         {
             return;
         }
 
-        AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLines.Count + 2}{AnsiCodes.MoveUpToLineStart}");
-        Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
+        AppendLine($"{AnsiCodes.CSI}{_currentFrame.RenderedLinesCount + 2}{AnsiCodes.MoveUpToLineStart}");
+        Append(AnsiCodes.CsiEraseInDisplay);
         _currentFrame.Clear();
     }
 
     public void RenderProgress(TestProgressState?[] progress)
     {
-        AnsiTerminalTestProgressFrame newFrame = new(Width, Height);
-        newFrame.Render(_currentFrame, progress, terminal: this);
-
-        _currentFrame = newFrame;
+        // Reuse the spare frame instead of allocating a new one every tick.
+        AnsiTerminalTestProgressFrame nextFrame = _spareFrame;
+        nextFrame.Reset(Width, Height);
+        nextFrame.Render(_currentFrame, progress, terminal: this);
+        _spareFrame = _currentFrame;
+        _currentFrame = nextFrame;
     }
 
     public void StartBusyIndicator()

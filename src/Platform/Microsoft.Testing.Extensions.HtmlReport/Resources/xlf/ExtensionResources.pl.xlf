@@ -5,71 +5,71 @@
       <trans-unit id="HtmlReportArtifactDescription">
         <source>Self-contained HTML test report</source>
         <target state="translated">Samodzielny raport testowy HTML</target>
-        <note />
+        <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportArtifactDisplayName">
         <source>HTML Report</source>
         <target state="translated">Raport HTML</target>
-        <note />
+        <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileExistsAndWillBeOverwritten">
         <source>Warning: HTML report file '{0}' already exists and will be overwritten.</source>
         <target state="translated">Ostrzeżenie: plik raportu HTML „{0}” już istnieje i zostanie zastąpiony.</target>
-        <note />
+        <note>{0} is the {Locked="HTML"} report file path.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameExtensionIsNotHtml">
         <source>'--report-html-filename' file name argument must end with '.html' (e.g. --report-html-filename myreport.html)</source>
         <target state="translated">Argument nazwy pliku „--report-html-filename” musi kończyć się ciągiem „.html” (np. --report-html-filename myreport.html)</target>
-        <note />
+        <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameMustNotBeEmpty">
         <source>'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</source>
-        <target state="new">'--report-html-filename' file name part must not be empty (e.g. --report-html-filename myreport.html)</target>
-        <note />
+        <target state="translated">Część nazwy pliku „--report-html-filename” nie może być pusta (np. --report-html-filename myreport.html)</target>
+        <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example command {Locked="--report-html-filename myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameOptionDescription">
         <source>The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
+Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
 Example: MyReport_{tfm}.html</source>
-        <target state="new">The name of the generated HTML report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
-Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
-Example: MyReport_{tfm}.html</target>
-        <note />
+        <target state="translated">Nazwa wygenerowanego raportu HTML. Może zawierać ścieżkę względną lub bezwzględną; ścieżki względne są rozpoznawane względem katalogu wyników testów, a brakujące katalogi są tworzone.
+Obsługuje następujące symbole zastępcze: {pname} (nazwa aplikacji testowej), {pid} (identyfikator procesu), {asm} (nazwa zestawu wejściowego), {tfm} (moniker platformy docelowej), {arch} ()architektura procesu, {time} (sygnatura czasowa).
+Przykład: MyReport_{tfm}.html</target>
+        <note>Do not localize option name {Locked="--report-html-filename"}, format name {Locked="HTML"}, placeholder tokens {Locked="{pname}"}{Locked="{pid}"}{Locked="{asm}"}{Locked="{tfm}"}{Locked="{arch}"}{Locked="{time}"}, file extension {Locked=".html"}, or example file name {Locked="MyReport_{tfm}.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRelativePathMustStayUnderResultsDirectory">
         <source>'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</source>
-        <target state="new">'--report-html-filename' relative paths must stay under the test results directory (e.g. --report-html-filename nested/myreport.html)</target>
-        <note />
+        <target state="translated">Ścieżki względne w opcji „--report-html-filename” muszą znajdować się w katalogu wyników testów (np. --report-html-filename nested/myreport.html)</target>
+        <note>Do not localize option name {Locked="--report-html-filename"}, file extension {Locked=".html"}, or example path {Locked="nested/myreport.html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportFileNameRequiresHtmlReport">
         <source>'--report-html-filename' requires '--report-html' to be enabled</source>
         <target state="translated">Element „--report-html-filename” wymaga włączenia parametru „--report-html”</target>
-        <note />
+        <note>Do not localize option names {Locked="--report-html-filename"}{Locked="--report-html"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDescription">
         <source>Produce a self-contained HTML report for the current test session</source>
         <target state="translated">Tworzenie samodzielnego raportu HTML dla bieżącej sesji testowej</target>
-        <note />
+        <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportGeneratorDisplayName">
         <source>HTML report generator</source>
         <target state="translated">Generator raportów HTML</target>
-        <note />
+        <note>Do not localize {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportIsNotValidForDiscovery">
         <source>'--report-html' cannot be enabled when using '--list-tests'</source>
         <target state="translated">Nie można włączyć opcji „--report-html” w przypadku używania polecenia „--list-tests”</target>
-        <note />
+        <note>Do not localize option names {Locked="--report-html"}{Locked="--list-tests"}.</note>
       </trans-unit>
       <trans-unit id="HtmlReportOptionDescription">
         <source>Enable generating an HTML report</source>
         <target state="translated">Włącz generowanie raportu HTML</target>
-        <note />
+        <note>Do not localize option name {Locked="--report-html"} or format name {Locked="HTML"}.</note>
       </trans-unit>
       <trans-unit id="InvalidTestApplicationBuilderType">
         <source>HTML report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</source>
         <target state="translated">Generator raportów HTML działa tylko z konstruktorami typu „Microsoft.Testing.Platform.Builder.TestApplicationBuilder”</target>
-        <note />
+        <note>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</note>
       </trans-unit>
     </body>
   </file>

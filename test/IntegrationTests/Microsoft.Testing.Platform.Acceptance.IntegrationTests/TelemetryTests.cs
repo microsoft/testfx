@@ -15,7 +15,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
     public async Task Telemetry_ByDefault_TelemetryIsEnabled(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false, cancellationToken: TestContext.CancellationToken);
@@ -37,7 +37,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
     public async Task Telemetry_WhenOptingOutTelemetry_WithEnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -46,7 +46,8 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false, TestContext.CancellationToken);
+            disableTelemetry: false,
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
@@ -65,7 +66,7 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
     public async Task Telemetry_WhenOptingOutTelemetry_With_DOTNET_CLI_EnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -74,7 +75,8 @@ public class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAssetFixture
             {
                 { EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1" },
             },
-            disableTelemetry: false, TestContext.CancellationToken);
+            disableTelemetry: false,
+            cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
 
@@ -109,6 +111,17 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         using var reader = new StreamReader(path);
         string content = await reader.ReadToEndAsync();
         return (Regex.IsMatch(content, pattern), content);
+    }
+
+    // Build a regex matching the deterministic default diagnostic file name shape:
+    // "<asset-name>_<tfm>_<arch>_<yyMMddHHmmssfff>.diag". The arch token is taken from the
+    // current process (the testhost runs on the same machine, so its ProcessArchitecture matches).
+    private static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string tfm)
+    {
+        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+        const string FileNamePlaceholder = "__DIAG_FILENAME__";
+        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
+        return combinedPath.Replace(FileNamePlaceholder, $@"{AssetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

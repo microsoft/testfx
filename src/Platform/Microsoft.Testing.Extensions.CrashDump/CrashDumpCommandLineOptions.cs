@@ -11,6 +11,7 @@ internal static class CrashDumpCommandLineOptions
 {
     public const string CrashDumpOptionName = "crashdump";
     public const string CrashReportOptionName = "crash-report";
+    public const string CrashReportIfSupportedOptionName = "crash-report-if-supported";
     public const string CrashDumpFileNameOptionName = "crashdump-filename";
     public const string CrashDumpTypeOptionName = "crashdump-type";
     public const string CrashSequenceOptionName = "crash-sequence";

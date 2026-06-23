@@ -38,6 +38,7 @@ public sealed class TestHost
         string? command = null,
         Dictionary<string, string?>? environmentVariables = null,
         bool disableTelemetry = true,
+        bool disableAzureDevOpsOutput = true,
         CancellationToken cancellationToken = default)
     {
         await s_maxOutstandingExecutions_semaphore.WaitAsync(cancellationToken);
@@ -53,6 +54,15 @@ public sealed class TestHost
             if (disableTelemetry)
             {
                 environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+            }
+
+            if (disableAzureDevOpsOutput)
+            {
+                // Acceptance tests assert against literal stdout content and many of them run on Azure DevOps
+                // (where TF_BUILD=true is set). Without this opt-out the child test host would emit
+                // ##vso[task.logissue type=...] logging commands for every warning/error/exception, which
+                // breaks index-based line assertions.
+                environmentVariables.TryAdd("TESTINGPLATFORM_AZDO_OUTPUT", "off");
             }
 
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
@@ -81,7 +91,7 @@ public sealed class TestHost
             // Disable ANSI rendering so tests have easier time parsing the output.
             // Disable progress so tests don't mix progress with overall progress, and with test process output.
             int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-                $"{FullName} --no-ansi --no-progress {finalArguments}",
+                $"{FullName} --no-ansi --progress off {finalArguments}",
                 environmentVariables: environmentVariables,
                 workingDirectory: null,
                 cleanDefaultEnvironmentVariableIfCustomAreProvided: true,

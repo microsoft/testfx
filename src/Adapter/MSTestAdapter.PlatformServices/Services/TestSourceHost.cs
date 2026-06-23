@@ -18,6 +18,9 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
+#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -110,21 +113,32 @@ internal class TestSourceHost : ITestSourceHost
     public void SetupHost()
     {
 #if NET && !WINDOWS_UWP
-        List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);
+        // When the runtime does not support dynamic code generation
+        // (RuntimeFeature.IsDynamicCodeSupported is false — Native AOT, Mono iOS AOT,
+        // Blazor WebAssembly AOT, ...), the host cannot load assemblies through
+        // reflection-style fallbacks, so the AssemblyResolver (which hooks
+        // AssemblyLoadContext.Resolving to load assemblies on demand) can never
+        // contribute anything useful. Skip its creation entirely; this also lets the
+        // trimmer drop GetResolutionPaths and the resolver itself from the published
+        // binary.
+        if (RuntimeFeature.IsDynamicCodeSupported)
+        {
+            List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);
 
-        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
-        {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(',', resolutionPaths));
-        }
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(',', resolutionPaths));
+            }
 
-        var assemblyResolver = new AssemblyResolver(resolutionPaths);
-        if (TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(assemblyResolver, Path.GetDirectoryName(_sourceFileName)!))
-        {
-            _parentDomainAssemblyResolver = assemblyResolver;
-        }
-        else
-        {
-            assemblyResolver.Dispose();
+            var assemblyResolver = new AssemblyResolver(resolutionPaths);
+            if (TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(assemblyResolver, Path.GetDirectoryName(_sourceFileName)!))
+            {
+                _parentDomainAssemblyResolver = assemblyResolver;
+            }
+            else
+            {
+                assemblyResolver.Dispose();
+            }
         }
 #elif NETFRAMEWORK
         List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
@@ -272,7 +286,7 @@ internal class TestSourceHost : ITestSourceHost
 #if WIN_UI
             if (StringEx.IsNullOrEmpty(dirName))
             {
-                dirName = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!;
+                dirName = AssemblyFileLocator.GetDirectoryOrAppContextBase(typeof(TestSourceHost).Assembly);
             }
 
             Directory.SetCurrentDirectory(dirName);
@@ -326,8 +340,8 @@ internal class TestSourceHost : ITestSourceHost
         //    there would be a mismatch of platform service assemblies during discovery.
         DebugEx.Assert(_targetFrameworkVersion is not null, "Target framework version is null.");
         return _targetFrameworkVersion.Contains(EngineConstants.DotNetFrameWorkStringPrefix)
-            ? Path.GetDirectoryName(_sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)
-            : Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
+            ? Path.GetDirectoryName(_sourceFileName) ?? AssemblyFileLocator.GetDirectoryOrAppContextBase(typeof(TestSourceHost).Assembly)
+            : AssemblyFileLocator.GetDirectoryOrAppContextBase(typeof(TestSourceHost).Assembly);
     }
 
     internal string GetTargetFrameworkVersionString(string sourceFileName)
@@ -378,27 +392,23 @@ internal class TestSourceHost : ITestSourceHost
 #endif
         }
 
-        // We check for the empty path, and in single file mode, or on source gen mode we don't allow
-        // loading dependencies than from the current folder, which is what the default loader handles by itself.
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
-        if (!string.IsNullOrEmpty(typeof(TestSourceHost).Assembly.Location))
+        // AssemblyFileLocator.TryGetLocation returns null when Assembly.Location is empty
+        // (single-file / Native AOT). In those scenarios we don't add the adapter or test platform
+        // directories to the resolution paths and rely on the default loader resolving dependencies
+        // from the current folder, which is what it handles by itself in single-file mode.
+        string? adapterDirectory = Path.GetDirectoryName(AssemblyFileLocator.TryGetLocation(typeof(TestSourceHost).Assembly));
+        if (!string.IsNullOrEmpty(adapterDirectory) && !resolutionPaths.Contains(adapterDirectory))
         {
             // Adding adapter folder to resolution paths
-            if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!))
-            {
-                resolutionPaths.Add(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!);
-            }
+            resolutionPaths.Add(adapterDirectory);
         }
 
-        if (!string.IsNullOrEmpty(typeof(AssemblyHelper).Assembly.Location))
+        string? testPlatformDirectory = Path.GetDirectoryName(AssemblyFileLocator.TryGetLocation(typeof(AssemblyHelper).Assembly));
+        if (!string.IsNullOrEmpty(testPlatformDirectory) && !resolutionPaths.Contains(testPlatformDirectory))
         {
             // Adding TestPlatform folder to resolution paths
-            if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!))
-            {
-                resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!);
-            }
+            resolutionPaths.Add(testPlatformDirectory);
         }
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
 
         return resolutionPaths;
     }

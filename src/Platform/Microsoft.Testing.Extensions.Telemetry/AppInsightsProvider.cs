@@ -246,6 +246,25 @@ internal sealed partial class AppInsightsProvider :
         {
             // This is expected when the test application is shutting down or if flush timeout.
         }
+        finally
+        {
+            // Single best-effort flush at end-of-loop so all queued events ship in one network
+            // round-trip rather than one per event. Per-event flushing previously serialized the
+            // ingest loop on the AppInsights ingestion call and, on slow Linux CI networks, could
+            // exhaust the 3-second Dispose timeout before later payloads (e.g. mstest sessionexit)
+            // were even read from the channel.
+            try
+            {
+                _client?.Flush();
+            }
+            catch (Exception ex)
+            {
+                if (_logger.IsEnabled(LogLevel.Error))
+                {
+                    await _logger.LogErrorAsync("Error during telemetry flush.", ex).ConfigureAwait(false);
+                }
+            }
+        }
     }
 
     private static double ToUnixTimeNanoseconds(DateTimeOffset value) =>

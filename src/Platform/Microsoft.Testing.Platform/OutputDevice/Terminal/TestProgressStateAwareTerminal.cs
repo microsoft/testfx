@@ -1,12 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Terminal that updates the progress in place when progress reporting is enabled.
 /// </summary>
 [UnsupportedOSPlatform("browser")]
+[Embedded]
 internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 {
     /// <summary>
@@ -20,6 +23,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
+    private readonly IProgressRenderer _renderer;
 
     /// <summary>
     /// A cancellation token to signal the rendering thread that it should exit.
@@ -48,11 +52,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         try
         {
-            // When writing to ANSI, we update the progress in place and it should look responsive so we
-            // update every half second, because we only show seconds on the screen, so it is good enough.
-            // When writing to non-ANSI, we never show progress as the output can get long and messy.
-            const int AnsiUpdateCadenceInMs = 500;
-            while (!cancellationTokenSource.Token.WaitHandle.WaitOne(AnsiUpdateCadenceInMs))
+            // The renderer chooses the cadence: cursor renderers want a responsive sub-second redraw,
+            // while the silence-driven heartbeat only needs second-level granularity.
+            int updateCadenceInMs = (int)_renderer.TickInterval.TotalMilliseconds;
+            while (!cancellationTokenSource.Token.WaitHandle.WaitOne(updateCadenceInMs))
             {
                 // Note: OnProgressStartUpdate is invoked outside the lock to avoid a deadlock where
                 // a test subscriber blocks the event handler (e.g. with WaitOne) while the lock is held,
@@ -63,7 +66,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                     _terminal.StartUpdate();
                     try
                     {
-                        _terminal.RenderProgress(_progressItems);
+                        _renderer.OnTick(_terminal, _progressItems);
                     }
                     finally
                     {
@@ -95,10 +98,11 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
     }
 
-    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress)
+    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, IProgressRenderer renderer)
     {
         _terminal = terminal;
         _showProgress = showProgress;
+        _renderer = renderer;
     }
 
     public int AddWorker(TestProgressState testWorker)
@@ -135,6 +139,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         _cts = cancellationTokenSource;
 
         _terminal.StartBusyIndicator();
+        _renderer.OnStart();
         // If we crash unexpectedly without completing this thread we don't want it to keep the process running.
         _refresher = new Thread(() => ThreadProc(cancellationTokenSource)) { IsBackground = true };
         _refresher.Start();
@@ -194,9 +199,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 try
                 {
                     _terminal.StartUpdate();
-                    _terminal.EraseProgress();
-                    write(_terminal);
-                    _terminal.RenderProgress(_progressItems);
+                    _renderer.OnWrite(_terminal, _progressItems, write);
                 }
                 finally
                 {
@@ -240,6 +243,14 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
             TestProgressState? progress = _progressItems[slotIndex];
             progress?.Version = _counter;
+        }
+    }
+
+    internal void NotifyTestCompleted()
+    {
+        if (GetShowProgress())
+        {
+            _renderer.OnTestCompleted();
         }
     }
 

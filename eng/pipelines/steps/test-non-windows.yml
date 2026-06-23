@@ -1,0 +1,73 @@
+# Test + publish steps shared by the Linux and macOS jobs in azure-pipelines.yml.
+#
+# Assumes the consuming job declares:
+#   - the matrix variable `_BuildConfig` (Debug or Release)
+#   - the job-level environment variables from eng/pipelines/variables/test-env-vars.yml
+parameters:
+- name: osName
+  type: string
+  values:
+  - Linux
+  - MacOS
+
+steps:
+# Because the build step is using -ci flag, restore is done in a local .packages directory.
+# We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
+# Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
+#
+# -p:TestingPlatformCaptureOutput=false streams each test exe's stdout to the AzDO console at
+# MessageImportance.High. Required so the silence-driven heartbeat (and per-test progress) emitted
+# by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
+# output is buffered into a per-module .log file and only surfaced on failure, so no live progress
+# is visible during long-running test sessions.
+- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
+  name: Test
+  displayName: Test
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+
+# Integration tests are redundant in Release—they spawn child processes that already cover
+# both Debug and Release configurations. Use --test-modules to run only unit tests.
+#
+# --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
+# any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
+# options that makes sense in Release. The OS-agnostic report/dump flags (TRX + CTRF + JUnit +
+# AzDO + hangdump) come from the $(_ReleaseUnitTestReportArgs) variable defined in azure-pipelines.yml
+# (the pipeline that consumes this template) so the Windows and Linux/MacOS commands stay in sync;
+# see that variable for the per-flag documentation. Only the test-module glob, --results-directory,
+# and --diagnostic-output-directory are inlined here because they differ per OS (path separators +
+# .exe vs .dll).
+# We intentionally do NOT pass:
+#   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
+#     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
+#     (see src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpEnvironmentVariableProvider.cs).
+#     Skipped here too for cross-platform parity with the Windows script (mixed net4x+netcoreapp glob).
+#   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
+#     Azure DevOps" steps in azure-pipelines.yml), so collecting coverage in Release would just
+#     write unused .coverage files.
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) $(_ReleaseUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace
+  name: TestRelease
+  displayName: Test (unit tests only)
+  condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Test Results folders'
+  inputs:
+    PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+    ArtifactName: TestResults_${{ parameters.osName }}_$(_BuildConfig)_Attempt$(System.JobAttempt)
+  condition: always()
+
+- task: CopyFiles@2
+  displayName: 'Copy binlogs'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
+    Contents: |
+      **/*.binlog
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
+  condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish integration tests binlogs'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
+    ArtifactName: Integration_Tests_${{ parameters.osName }}_Binlogs_$(_BuildConfig)
+  condition: and(always(), eq(variables._BuildConfig, 'Debug'))

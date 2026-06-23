@@ -11,43 +11,16 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.CommandLine;
 /// <summary>
 /// A command line service provider bringing support for the VSTest test case.
 /// </summary>
-internal sealed class TestCaseFilterCommandLineOptionsProvider : ICommandLineOptionsProvider
+internal sealed class TestCaseFilterCommandLineOptionsProvider : CommandLineOptionsProviderBase
 {
     public const string TestCaseFilterOptionName = "filter";
 
     public TestCaseFilterCommandLineOptionsProvider(IExtension extension)
+        : base(
+            extension,
+            [
+                new(TestCaseFilterOptionName, ExtensionResources.TestCaseFilterOptionDescription, ArgumentArity.ExactlyOne, false)
+            ])
     {
-        Uid = extension.Uid;
-        DisplayName = extension.DisplayName;
-        Description = extension.Description;
-        Version = extension.Version;
     }
-
-    /// <inheritdoc />
-    public string Uid { get; }
-
-    /// <inheritdoc />
-    public string Version { get; }
-
-    /// <inheritdoc />
-    public string DisplayName { get; }
-
-    /// <inheritdoc />
-    public string Description { get; }
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    /// <inheritdoc />
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
-    [
-        new(TestCaseFilterOptionName, ExtensionResources.TestCaseFilterOptionDescription, ArgumentArity.ExactlyOne, false)
-    ];
-
-    /// <inheritdoc />
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-        => ValidationResult.ValidTask;
-
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => ValidationResult.ValidTask;
 }

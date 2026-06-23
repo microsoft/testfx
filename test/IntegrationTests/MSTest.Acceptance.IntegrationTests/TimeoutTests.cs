@@ -18,7 +18,7 @@ public sealed class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixt
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
     }
 
     [TestMethod]
@@ -29,7 +29,7 @@ public sealed class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixt
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5y", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
     }
 
     [TestMethod]
@@ -40,7 +40,7 @@ public sealed class TimeoutTests : AcceptanceTestBase<TimeoutTests.TestAssetFixt
         TestHostResult testHostResult = await testHost.ExecuteAsync("--timeout 5h6m", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("'timeout' option should have one argument as string in the format <value>[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration");
+        testHostResult.AssertOutputContains("'timeout' option should have one argument as a time value with an explicit unit suffix");
     }
 
     [TestMethod]

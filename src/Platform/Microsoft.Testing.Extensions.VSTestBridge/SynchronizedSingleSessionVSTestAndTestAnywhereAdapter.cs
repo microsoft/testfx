@@ -16,6 +16,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 /// <summary>
 /// A specialized bridged test framework base class that supports a single test session.
 /// </summary>
+[StackTraceHidden]
 public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTestBridgedTestFrameworkBase, IDisposable
 {
     private readonly IExtension _extension;
@@ -149,9 +150,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
         CancellationToken cancellationToken)
         => ExecuteRequestWithRequestCountGuardAsync(async () =>
         {
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
             string[] testAssemblyPaths = [.. _getTestAssemblies().Select(GetAssemblyPath)];
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
             switch (request)
             {
                 case DiscoverTestExecutionRequest discoverRequest:
@@ -184,12 +183,10 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     /// <see cref="Assembly.Location"/> returns an empty string (e.g. on Android CoreCLR
     /// where assemblies are memory-mapped).
     /// </summary>
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
+    [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "Empty Assembly.Location is handled explicitly by falling back to the assembly simple name; see method body.")]
     internal static string GetAssemblyPath(Assembly assembly)
     {
-#pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file
         string location = assembly.Location;
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
         if (!string.IsNullOrEmpty(location))
         {
             return location;
@@ -204,7 +201,6 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
 
         return name + ".dll";
     }
-#pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
 
     private async Task ExecuteRequestWithRequestCountGuardAsync(Func<Task> asyncFunc)
     {

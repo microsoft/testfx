@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -9,9 +10,13 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 /// Simple terminal that uses 4-bit ANSI for colors but does not move cursor and does not do other fancy stuff to stay compatible with CI systems.
 /// The colors are set on start of every line to properly color multiline strings in CI log viewers that reset color state at each newline (e.g. Azure DevOps).
 /// </summary>
+[Embedded]
 internal sealed class SimpleAnsiTerminal : SimpleTerminal
 {
     private string? _foregroundColor;
+    // Cached concatenation of "\n" + _foregroundColor, computed once in SetColor to avoid
+    // re-allocating the same string on every Append/AppendLine call when a color is active.
+    private string? _newlineAndColor;
     private bool _prependColor;
 
     public SimpleAnsiTerminal(IConsole console)
@@ -49,6 +54,7 @@ internal sealed class SimpleAnsiTerminal : SimpleTerminal
     {
         string setColor = $"{AnsiCodes.CSI}{(int)color}{AnsiCodes.SetColor}";
         _foregroundColor = setColor;
+        _newlineAndColor = "\n" + setColor;
         Console.Write(setColor);
         // This call set the color for current line, no need to prepend on next write.
         _prependColor = false;
@@ -57,10 +63,11 @@ internal sealed class SimpleAnsiTerminal : SimpleTerminal
     public override void ResetColor()
     {
         _foregroundColor = null;
+        _newlineAndColor = null;
         _prependColor = false;
         Console.Write(AnsiCodes.SetDefaultColor);
     }
 
     private string? SetColorPerLine(string value)
-        => _foregroundColor == null ? value : value.Replace("\n", $"\n{_foregroundColor}");
+        => _newlineAndColor == null ? value : value.Replace("\n", _newlineAndColor);
 }

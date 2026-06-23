@@ -4,6 +4,76 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
+## <a name="2.3.0" />[2.3.0] - UNRELEASED
+
+See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
+
+### Added
+
+* Add --crash-report option to the CrashDump extension by @Copilot in [#8191](https://github.com/microsoft/testfx/pull/8191)
+* Support placeholders in --report-trx-filename by @Evangelink in [#8223](https://github.com/microsoft/testfx/pull/8223)
+* Stream TRX test results to disk and recover partial TRX on test host crash by @Evangelink in [#8263](https://github.com/microsoft/testfx/pull/8263)
+* Add --list-tests json for machine-readable test discovery output by @Evangelink in [#8280](https://github.com/microsoft/testfx/pull/8280)
+* Add Microsoft.Testing.Extensions.HtmlReport extension by @Evangelink in [#8283](https://github.com/microsoft/testfx/pull/8283)
+* Add live Azure DevOps test result publishing by @Evangelink in [#8297](https://github.com/microsoft/testfx/pull/8297)
+* Add Microsoft.Testing.Extensions.Logging bridge to Microsoft.Extensions.Logging by @Evangelink in [#8344](https://github.com/microsoft/testfx/pull/8344)
+* Add new diagnostic env var names matching renamed CLI options by @Evangelink in [#8388](https://github.com/microsoft/testfx/pull/8388)
+* Support environmentVariables section in testconfig.json by @Evangelink in [#8391](https://github.com/microsoft/testfx/pull/8391)
+* Allow paths in --report-trx-filename by @Evangelink in [#8406](https://github.com/microsoft/testfx/pull/8406)
+* Add --ansi &lt;auto|on|off&gt; CLI option for explicit ANSI control by @Evangelink in [#8493](https://github.com/microsoft/testfx/pull/8493)
+* Add --crash-sequence option to MTP CrashDump extension by @Evangelink in [#8526](https://github.com/microsoft/testfx/pull/8526)
+* Add two-stage Ctrl+C cancellation UX by @Evangelink in [#8581](https://github.com/microsoft/testfx/pull/8581)
+* Add TestInProgressMessages IPC for dotnet test active-test rendering by @Evangelink in [#8652](https://github.com/microsoft/testfx/pull/8652)
+* Read CLI options from testconfig.json via IConfiguration by @Evangelink in [#8664](https://github.com/microsoft/testfx/pull/8664)
+* Add --crash-report-if-supported and --hangdump-type-if-supported options by @Evangelink in [#8666](https://github.com/microsoft/testfx/pull/8666)
+* Suppress banner and default stdout/stderr to `failed` in LLM environments by @Evangelink in [#8771](https://github.com/microsoft/testfx/pull/8771)
+* Add AzDO summary, progress and stack-frame filter options (#5951 item 4) by @Evangelink in [#8778](https://github.com/microsoft/testfx/pull/8778)
+* Add Azure DevOps result-level attachments and run-level coverage upload by @Evangelink in [#8782](https://github.com/microsoft/testfx/pull/8782)
+* Add Microsoft.Testing.Extensions.JUnitReport extension by @Evangelink in [#8850](https://github.com/microsoft/testfx/pull/8850)
+* Add Microsoft.Testing.Extensions.CtrfReport extension (CTRF reporter) by @Evangelink in [#8903](https://github.com/microsoft/testfx/pull/8903)
+* Add --progress {auto|on|off} and deprecate --no-progress in MTP terminal reporter by @Evangelink in [#9145](https://github.com/microsoft/testfx/pull/9145)
+* Add silence-driven progress heartbeat for SimpleAnsi/NoAnsi output modes by @Evangelink in [#9147](https://github.com/microsoft/testfx/pull/9147)
+* Add Azure DevOps per-assembly log groups by @Evangelink in [#9177](https://github.com/microsoft/testfx/pull/9177)
+* Add Azure DevOps history-driven slow-test threshold enricher by @Evangelink in [#9182](https://github.com/microsoft/testfx/pull/9182)
+* Handshake from the test host orchestrator in the dotnet test pipe protocol, advertising the orchestration feature (e.g. retry) by @Copilot in [#9215](https://github.com/microsoft/testfx/pull/9215)
+
+### Fixed
+
+* Clarify TreeNodeFilter OR-pattern diagnostics for unsupported parenthesized full-path expressions by @Evangelink in [#7415](https://github.com/microsoft/testfx/pull/7415)
+* Fix TRX result attachment layout to include per-test relative results directory by @Copilot in [#8188](https://github.com/microsoft/testfx/pull/8188)
+* Prevent telemetry host termination on boolean MSTest setting payloads by @Copilot in [#8189](https://github.com/microsoft/testfx/pull/8189)
+* Avoid duplicate async cleanup for test host lifecycle callbacks by @Copilot in [#8254](https://github.com/microsoft/testfx/pull/8254)
+* Include full command line in MTP validation errors by @Copilot in [#8255](https://github.com/microsoft/testfx/pull/8255)
+* Stop forcing verbose createdump diagnostics in CrashDump extension by @Evangelink in [#8350](https://github.com/microsoft/testfx/pull/8350)
+* Fix HangDump GetParentPidLinux mis-parsing /proc/&lt;pid&gt;/stat when comm contains spaces by @Evangelink in [#8381](https://github.com/microsoft/testfx/pull/8381)
+* Fix RetryOrchestrator leaking CancellationTokenSource and Process.Exited handler per attempt by @Evangelink in [#8382](https://github.com/microsoft/testfx/pull/8382)
+* Report unclosed quotes in response files by @Copilot in [#8448](https://github.com/microsoft/testfx/pull/8448)
+* Reject negative minimum expected test counts by @Copilot in [#8450](https://github.com/microsoft/testfx/pull/8450)
+* Preserve supplementary Unicode in TRX reports by @Copilot in [#8451](https://github.com/microsoft/testfx/pull/8451)
+* Validate retry option numeric ranges by @Copilot in [#8494](https://github.com/microsoft/testfx/pull/8494)
+* Reject negative timeout values during command-line validation by @Copilot in [#8496](https://github.com/microsoft/testfx/pull/8496)
+* Validate client port range during command-line parsing by @Copilot in [#8497](https://github.com/microsoft/testfx/pull/8497)
+* Fail on conflicting TestingPlatformBuilderHook IDs by @Copilot in [#8508](https://github.com/microsoft/testfx/pull/8508)
+* Fix HangDump artifact paths for Windows directories with spaces by @Copilot in [#8513](https://github.com/microsoft/testfx/pull/8513)
+* Fix AzureDevOpsReport suppressing failures without reporting stack frame by @Copilot in [#8525](https://github.com/microsoft/testfx/pull/8525)
+* Fix InvalidOperationException in BuildServerTestHostAsync when telemetry is enabled by @Evangelink in [#8553](https://github.com/microsoft/testfx/pull/8553)
+* Add \[UnsupportedOSPlatform("wasi")] to HangDump / Console / Process surface by @Evangelink in [#8564](https://github.com/microsoft/testfx/pull/8564)
+* Use args passed to CreateBuilderAsync in GetCurrentExecutableInfo by @Evangelink in [#8570](https://github.com/microsoft/testfx/pull/8570)
+* Improve diagnostic logging across MTP crash and IPC paths by @Evangelink in [#8584](https://github.com/microsoft/testfx/pull/8584)
+* IPC: handle disconnects and protocol corruption gracefully by @Evangelink in [#8602](https://github.com/microsoft/testfx/pull/8602)
+* Reject invalid runId in JSON-RPC requests with InvalidParams error by @Evangelink in [#8665](https://github.com/microsoft/testfx/pull/8665)
+* Make AOT-incompatible code paths a no-op at runtime in MTP/Native AOT mode by @Evangelink in [#8688](https://github.com/microsoft/testfx/pull/8688)
+* Strip --minimum-expected-tests on retry attempts in RetryOrchestrator by @Evangelink in [#8719](https://github.com/microsoft/testfx/pull/8719)
+* Honor NO_COLOR env var in TerminalOutputDevice by @Evangelink in [#8831](https://github.com/microsoft/testfx/pull/8831)
+* Auto-promote scalar JSON values for arg-bearing CLI options (fixes #8830) by @Evangelink in [#8836](https://github.com/microsoft/testfx/pull/8836)
+* Use deterministic `<asm>_<tfm>_<arch>` default for report and log file names by @Evangelink in [#8971](https://github.com/microsoft/testfx/pull/8971)
+* Remove non-conforming top-level 'code' from JSON-RPC error envelope by @Evangelink in [#9050](https://github.com/microsoft/testfx/pull/9050)
+* Flag bootstrap-only CLI options when set in testconfig.json by @Evangelink in [#9055](https://github.com/microsoft/testfx/pull/9055)
+* Fix report file-name collision between net8.0 and net8.0-windows builds by @Evangelink in [#9121](https://github.com/microsoft/testfx/pull/9121)
+* Harden report TFM resolution for custom/non-OS platforms (browserwasm) by @Evangelink in [#9137](https://github.com/microsoft/testfx/pull/9137)
+* Fix --list-tests json output under --server mode by streaming discovered tests to the SDK over the dotnet-test pipe by @Evangelink in [#9192](https://github.com/microsoft/testfx/pull/9192)
+* Make AzureDevOps summary report file name unique per assembly by @Evangelink in [#9264](https://github.com/microsoft/testfx/pull/9264)
+
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 
 See full log [of v4.2.2...v4.2.3](https://github.com/microsoft/testfx/compare/v4.2.2...v4.2.3)
@@ -831,9 +901,9 @@ See full log [of v1.4.2...v1.4.3](https://github.com/microsoft/testanywhere/comp
 
 ### Fixed
 
-* Fix live output with HotReload by @nohwnd in [#3983](https://github.com/microsoft/testfx/pull//3983)
-* Fix hangdump space in dump path by @nohwnd in [#3994](https://github.com/microsoft/testfx/pull//3994)
-* Fix hangdump not showing tests in progress by @nohwnd in [#3992](https://github.com/microsoft/testfx/pull//3992)
+* Fix live output with HotReload by @nohwnd in [#3983](https://github.com/microsoft/testfx/pull/3983)
+* Fix hangdump space in dump path by @nohwnd in [#3994](https://github.com/microsoft/testfx/pull/3994)
+* Fix hangdump not showing tests in progress by @nohwnd in [#3992](https://github.com/microsoft/testfx/pull/3992)
 
 ### Artifacts
 

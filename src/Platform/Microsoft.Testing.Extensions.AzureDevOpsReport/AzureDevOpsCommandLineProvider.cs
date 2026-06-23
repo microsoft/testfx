@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.Reporting;
 
-internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProviderBase
 {
     private static readonly string[] ArtifactUploadModes =
     [
@@ -23,43 +23,67 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
 
     private static readonly string[] SeverityOptions = ["error", "warning"];
 
+    internal const int MaxStackFrameFilterPatterns = 16;
+    internal const int StackFrameFilterMatchTimeoutMs = 500;
+
     private static readonly string DemoteKnownFlakyOptionDescriptionFormatted = string.Format(
         CultureInfo.InvariantCulture,
         AzureDevOpsResources.DemoteKnownFlakyOptionDescription,
         AzureDevOpsReporter.KnownFlakyFailureRateThreshold * 100);
 
-    public string Uid => nameof(AzureDevOpsCommandLineProvider);
+    private static readonly string StackFrameFilterOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.StackFrameFilterOptionDescription,
+        MaxStackFrameFilterPatterns,
+        StackFrameFilterMatchTimeoutMs);
 
-    public string Version => ExtensionVersion.DefaultSemVer;
+    private static readonly string SlowTestHistoryMinSampleOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.SlowTestHistoryMinSampleOptionDescription,
+        AzureDevOpsCommandLineOptions.SlowTestHistoryDefaultMinSample);
 
-    public string DisplayName => AzureDevOpsResources.DisplayName;
+    private static readonly string SlowTestHistoryMultiplierOptionDescriptionFormatted = string.Format(
+        CultureInfo.InvariantCulture,
+        AzureDevOpsResources.SlowTestHistoryMultiplierOptionDescription,
+        AzureDevOpsCommandLineOptions.SlowTestHistoryDefaultMultiplier);
 
-    public string Description => AzureDevOpsResources.Description;
+    public AzureDevOpsCommandLineProvider()
+        : base(
+            nameof(AzureDevOpsCommandLineProvider),
+            ExtensionVersion.DefaultSemVer,
+            AzureDevOpsResources.DisplayName,
+            AzureDevOpsResources.Description,
+            [
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, AzureDevOpsResources.SlowTestHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample, SlowTestHistoryMinSampleOptionDescriptionFormatted, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier, SlowTestHistoryMultiplierOptionDescriptionFormatted, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter, StackFrameFilterOptionDescriptionFormatted, ArgumentArity.OneOrMore, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSummary, AzureDevOpsResources.SummaryOptionDescription, ArgumentArity.ZeroOrOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude, AzureDevOpsResources.UploadArtifactExcludeOptionDescription, ArgumentArity.ZeroOrMore, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, AzureDevOpsResources.UploadArtifactIncludeOptionDescription, ArgumentArity.ZeroOrMore, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName, AzureDevOpsResources.UploadArtifactNameOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts, AzureDevOpsResources.UploadArtifactsOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, AzureDevOpsResources.PublishAzdoRunNameOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName, AzureDevOpsResources.PublishAzdoTestResultsOptionDescription, ArgumentArity.Zero, false),
+            ])
+    {
+    }
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        =>
-        [
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude, AzureDevOpsResources.UploadArtifactExcludeOptionDescription, ArgumentArity.ZeroOrMore, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude, AzureDevOpsResources.UploadArtifactIncludeOptionDescription, ArgumentArity.ZeroOrMore, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactName, AzureDevOpsResources.UploadArtifactNameOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts, AzureDevOpsResources.UploadArtifactsOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, AzureDevOpsResources.PublishAzdoRunNameOptionDescription, ArgumentArity.ExactlyOne, false),
-            new CommandLineOption(AzureDevOpsCommandLineOptions.PublishAzureDevOpsTestResultsOptionName, AzureDevOpsResources.PublishAzdoTestResultsOptionDescription, ArgumentArity.Zero, false),
-        ];
-
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
             AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory => ValidateFlakyHistoryArgumentsAsync(arguments),
+            AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory => ValidateSlowTestHistoryArgumentsAsync(arguments),
+            AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample => ValidateSlowTestHistoryMinSampleArgumentsAsync(arguments),
+            AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier => ValidateSlowTestHistoryMultiplierArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity when !SeverityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSeverity, arguments[0])),
+            AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter => ValidateStackFrameFilterArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifacts when !ArtifactUploadModes.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidArtifactUploadMode, arguments[0])),
             AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactInclude or AzureDevOpsCommandLineOptions.AzureDevOpsUploadArtifactExclude
@@ -67,7 +91,7 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
             _ => ValidationResult.ValidTask,
         };
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
         string? errorMessage = null;
         if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName))
@@ -88,11 +112,39 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps;
             }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsStackFrameFilterRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSummary))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsSummaryRequiresAzureDevOps;
+            }
         }
         else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky)
             && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory))
         {
             errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory;
+        }
+
+        // The slow-test-history sub-options depend on '--report-azdo-slow-test-history' regardless of whether
+        // '--report-azdo' itself is set, so these checks live outside the '--report-azdo' branch above.
+        if (errorMessage is null
+            && commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample)
+            && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
+        {
+            errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory;
+        }
+
+        if (errorMessage is null
+            && commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMultiplier)
+            && !commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory))
+        {
+            errorMessage = AzureDevOpsResources.AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory;
         }
 
         if (errorMessage is null && HasArtifactUploadConfiguration(commandLineOptions) && IsArtifactUploadDisabled(commandLineOptions))
@@ -158,4 +210,49 @@ internal sealed class AzureDevOpsCommandLineProvider : ICommandLineOptionsProvid
             && days is >= 1 and <= 90
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidFlakyHistoryDays, arguments[0]));
+
+    private static Task<ValidationResult> ValidateSlowTestHistoryArgumentsAsync(string[] arguments)
+        => int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int days)
+            && days is >= 1 and <= 90
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSlowTestHistoryDays, arguments[0]));
+
+    private static Task<ValidationResult> ValidateSlowTestHistoryMinSampleArgumentsAsync(string[] arguments)
+        => int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int minimum)
+            && minimum >= 1
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSlowTestHistoryMinSample, arguments[0]));
+
+    private static Task<ValidationResult> ValidateSlowTestHistoryMultiplierArgumentsAsync(string[] arguments)
+        => double.TryParse(arguments[0], NumberStyles.Float, CultureInfo.InvariantCulture, out double multiplier)
+            && multiplier is > 0 and <= 10_000
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidSlowTestHistoryMultiplier, arguments[0]));
+
+    private static Task<ValidationResult> ValidateStackFrameFilterArgumentsAsync(string[] arguments)
+    {
+        if (arguments.Length > MaxStackFrameFilterPatterns)
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.StackFrameFilterTooManyRegexes, MaxStackFrameFilterPatterns));
+        }
+
+        foreach (string pattern in arguments)
+        {
+            if (RoslynString.IsNullOrEmpty(pattern))
+            {
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidStackFrameFilterRegex, pattern, "pattern is empty"));
+            }
+
+            try
+            {
+                _ = new Regex(pattern, RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromMilliseconds(StackFrameFilterMatchTimeoutMs));
+            }
+            catch (ArgumentException ex)
+            {
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidStackFrameFilterRegex, pattern, ex.Message));
+            }
+        }
+
+        return ValidationResult.ValidTask;
+    }
 }

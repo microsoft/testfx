@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -43,16 +43,31 @@ internal sealed partial class TerminalTestReporter
             }
         });
 
+    /// <summary>
+    /// Orchestrator overload (<c>dotnet test</c>): carries the assembly/target-framework/architecture and per-attempt
+    /// instance id known to the multi-process orchestrator. The shared in-progress tracking is keyed by execution id,
+    /// so those extra arguments are accepted for signature parity and the overload delegates to the core method.
+    /// </summary>
     public void TestInProgress(
+        string assembly,
+        string? targetFramework,
+        string? architecture,
+        string executionId,
+        string instanceId,
+        string testNodeUid,
+        string displayName)
+        => TestInProgress(executionId, testNodeUid, displayName);
+
+    public void TestInProgress(
+        string executionId,
         string testNodeUid,
         string displayName)
     {
-        if (_testProgressState is null)
+        if (!_assemblies.TryGetValue(executionId, out TestProgressState? asm))
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
-        TestProgressState asm = _testProgressState;
         if (_options.ShowActiveTests)
         {
             asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));

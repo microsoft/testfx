@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Internal.Framework;
@@ -111,7 +111,8 @@ internal sealed partial class TestHostBuilder
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetTask(),
             serviceProvider.GetLoggerFactory(),
-            serviceProvider.GetEnvironment());
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetService<IShutdownProgressReporter>());
         await concreteMessageBusService.InitAsync().ConfigureAwait(false);
         testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
 

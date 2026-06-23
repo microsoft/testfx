@@ -138,6 +138,10 @@ internal static class ObjectModelConverters
 
         testNode.AddOutcome(testResult);
 
+        // Validate TRX prerequisites (and add TRX-only properties that don't depend on the message
+        // loop) BEFORE iterating testResult.Messages, so that an InvalidOperationException from a
+        // malformed FullyQualifiedName still wins over the UnreachableException that the message
+        // loop can throw on an unexpected msg.Category. This preserves the pre-PR exception order.
         if (isTrxEnabled)
         {
             if (!RoslynString.IsNullOrEmpty(testResult.ErrorMessage) || !RoslynString.IsNullOrEmpty(testResult.ErrorStackTrace))
@@ -170,37 +174,47 @@ internal static class ObjectModelConverters
             {
                 throw new InvalidOperationException("Unable to parse fully qualified type name from test case: " + testResult.TestCase.FullyQualifiedName);
             }
+        }
 
-            testNode.Properties.Add(new TrxMessagesProperty([.. testResult.Messages
-                .Select(msg =>
-                    msg.Category switch
-                    {
-                        string x when x == TestResultMessage.StandardErrorCategory => (TrxMessage)new StandardErrorTrxMessage(msg.Text),
-                        string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
-                        string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
-                        _ => throw new UnreachableException(),
-                    })]));
+        // Single pass over testResult.Messages: collect TRX messages, standard-error, and
+        // standard-output in one loop, avoiding a separate LINQ Select + spread + foreach.
+        // Pre-size trxMessages to the exact capacity to avoid List<T> growth reallocations
+        // (every entry in testResult.Messages produces one TRX message when TRX is enabled).
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+        List<TrxMessage>? trxMessages = isTrxEnabled ? new List<TrxMessage>(testResult.Messages.Count) : null;
+#pragma warning restore IDE0028
+        List<string>? standardErrorMessages = null;
+        List<string>? standardOutputMessages = null;
+        foreach (TestResultMessage msg in testResult.Messages)
+        {
+            if (trxMessages is not null)
+            {
+                TrxMessage trxMsg = msg.Category switch
+                {
+                    string x when x == TestResultMessage.StandardErrorCategory => new StandardErrorTrxMessage(msg.Text),
+                    string x when x == TestResultMessage.StandardOutCategory => new StandardOutputTrxMessage(msg.Text),
+                    string x when x == TestResultMessage.DebugTraceCategory => new DebugOrTraceTrxMessage(msg.Text),
+                    _ => throw new UnreachableException(),
+                };
+                trxMessages.Add(trxMsg);
+            }
+
+            if (msg.Category == TestResultMessage.StandardErrorCategory)
+            {
+                (standardErrorMessages ??= []).Add(msg.Text ?? string.Empty);
+            }
+            else if (msg.Category == TestResultMessage.StandardOutCategory)
+            {
+                (standardOutputMessages ??= []).Add(msg.Text ?? string.Empty);
+            }
+        }
+
+        if (isTrxEnabled)
+        {
+            testNode.Properties.Add(new TrxMessagesProperty(trxMessages is { Count: > 0 } ? [.. trxMessages] : []));
         }
 
         testNode.Properties.Add(new TimingProperty(new(testResult.StartTime, testResult.EndTime, testResult.Duration), []));
-
-        List<string>? standardErrorMessages = null;
-        List<string>? standardOutputMessages = null;
-        bool addVSTestProviderProperties = ShouldAddVSTestProviderProperties(namedFeatureCapability, commandLineOptions);
-        foreach (TestResultMessage testResultMessage in testResult.Messages)
-        {
-            if (testResultMessage.Category == TestResultMessage.StandardErrorCategory)
-            {
-                string message = testResultMessage.Text ?? string.Empty;
-                (standardErrorMessages ??= []).Add(message);
-            }
-
-            if (testResultMessage.Category == TestResultMessage.StandardOutCategory)
-            {
-                string message = testResultMessage.Text ?? string.Empty;
-                (standardOutputMessages ??= []).Add(message);
-            }
-        }
 
         foreach (AttachmentSet attachmentSet in testResult.Attachments)
         {

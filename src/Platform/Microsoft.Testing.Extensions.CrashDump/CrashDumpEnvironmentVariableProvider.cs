@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
 
@@ -27,6 +28,7 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly CrashDumpConfiguration _crashDumpGeneratorConfiguration;
     private readonly ILogger<CrashDumpEnvironmentVariableProvider> _logger;
+    private readonly IClock _clock;
 
     private string? _miniDumpNameValue;
     private string? _sequenceFileValue;
@@ -35,12 +37,14 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         IConfiguration configuration,
         ICommandLineOptions commandLineOptions,
         CrashDumpConfiguration crashDumpGeneratorConfiguration,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IClock clock)
     {
         _logger = loggerFactory.CreateLogger<CrashDumpEnvironmentVariableProvider>();
         _configuration = configuration;
         _commandLineOptions = commandLineOptions;
         _crashDumpGeneratorConfiguration = crashDumpGeneratorConfiguration;
+        _clock = clock;
     }
 
     /// <inheritdoc />
@@ -59,13 +63,21 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
             (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
-             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName)) &&
+             IsCrashReportEffective(_commandLineOptions)) &&
             _crashDumpGeneratorConfiguration.Enable);
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
-        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+        // IsEnabledAsync gates this method, so we know either '--crashdump' is set or an
+        // *effective* crash-report request is in play (i.e. '--crash-report' was passed, or
+        // '--crash-report-if-supported' was passed on a runtime where it is honored). On
+        // Windows/.NET Framework, '--crash-report-if-supported' alone is treated as a no-op
+        // and would never reach this method.
+        // 'crashReportEnabled' re-checks IsCrashReportEffective so the env-var-setting logic
+        // below is skipped in the '--crashdump' only case (no crash-report variables to set)
+        // and so a future caller cannot accidentally rely on this method being invoked solely
+        // because '--crash-report-if-supported' was set on an unsupported runtime.
+        bool crashReportEnabled = IsCrashReportEffective(_commandLineOptions);
 
         foreach (string prefix in Prefixes)
         {
@@ -129,9 +141,12 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         }
 
         string testAppName = Assembly.GetEntryAssembly()?.GetName().Name ?? throw ApplicationStateGuard.Unreachable();
-        _miniDumpNameValue = _commandLineOptions.TryGetOptionArgumentList(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, out string[]? dumpFileName)
-            ? Path.Combine(_configuration.GetTestResultDirectory(), dumpFileName[0])
-            : Path.Combine(_configuration.GetTestResultDirectory(), $"{testAppName}_%p_crash.dmp");
+        string? resolvedUserPattern = _commandLineOptions.TryGetOptionArgumentList(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, out string[]? dumpFileName)
+            ? ResolveUserDumpFileNameTemplate(dumpFileName[0])
+            : null;
+        _miniDumpNameValue = Path.Combine(
+            _configuration.GetTestResultDirectory(),
+            resolvedUserPattern ?? $"{testAppName}_%p_crash.dmp");
         _crashDumpGeneratorConfiguration.DumpFileNamePattern = _miniDumpNameValue;
         foreach (string prefix in Prefixes)
         {
@@ -149,9 +164,14 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
             // launches targeting the same results directory cannot stomp on each other's sequence
             // files (a write collision would otherwise be silently lost; a graceful exit of one host
             // would also delete the sibling host's sequence file before it could be published).
+            //
+            // We base the sequence file on the *resolved* user pattern (after substituting {asm}/{tfm}/
+            // {time}) so the sequence file name stays in sync with the dump file name; only the
+            // runtime placeholders that we deferred to "createdump" (e.g. {pid} -> %p, {pname} -> %e)
+            // are stripped here.
             string uniqueToken = Guid.NewGuid().ToString("N").Substring(0, 8);
-            string sequenceFileName = dumpFileName is not null
-                ? $"{StripRuntimePlaceholders(dumpFileName[0])}_{uniqueToken}.sequence.log"
+            string sequenceFileName = resolvedUserPattern is not null
+                ? $"{StripRuntimePlaceholders(resolvedUserPattern)}_{uniqueToken}.sequence.log"
                 : $"{testAppName}_{uniqueToken}_crash.sequence.log";
             _sequenceFileValue = Path.Combine(_configuration.GetTestResultDirectory(), sequenceFileName);
             _crashDumpGeneratorConfiguration.SequenceFileName = _sequenceFileValue;
@@ -180,6 +200,25 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
         }
 
         return !CommandLineOptionArgumentValidator.IsOffValue(arguments[0]);
+    }
+
+    private string ResolveUserDumpFileNameTemplate(string userTemplate)
+    {
+        // CrashDump's filename is consumed by the .NET runtime's "createdump" - not by our code -
+        // so any user-facing token whose value is only knowable at crash time (process id and
+        // executable name) must map to a runtime placeholder ("%p" / "%e") rather than a literal
+        // value resolved here. The remaining standard tokens (asm/tfm/time) are deterministic at
+        // configuration time and substituted straight away.
+        //
+        // Implementation note: GetStandardReplacements seeds the dictionary with pname=processName
+        // and pid=processId, so passing "%e" / "%p" as those arguments yields a dictionary whose
+        // {pname}/{pid} entries are the runtime placeholders themselves. This keeps the resolver
+        // generic and avoids a second post-processing pass.
+        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(
+            processName: "%e",
+            processId: "%p",
+            _clock.UtcNow);
+        return ArtifactNamingHelper.ResolveTemplate(userTemplate, replacements);
     }
 
     private static string StripRuntimePlaceholders(string pattern)
@@ -218,8 +257,11 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
 #else
         StringBuilder errors = new();
 
-        // IsEnabledAsync gates this method, so at least one of --crashdump / --crash-report is set here.
-        bool crashReportEnabled = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+        // IsEnabledAsync gates this method, so we know either '--crashdump' is set or an
+        // *effective* crash-report request is in play. Match the env-var-setting logic in
+        // UpdateAsync: '--crash-report-if-supported' on Windows is silently ignored and the
+        // crash-report environment variables are therefore never validated in that case.
+        bool crashReportEnabled = IsCrashReportEffective(_commandLineOptions);
 
         ValidateBothPrefixes(EnableMiniDumpVariable, EnabledValue);
 
@@ -281,6 +323,34 @@ internal sealed class CrashDumpEnvironmentVariableProvider : ITestHostEnvironmen
                 }
             }
         }
+#endif
+    }
+
+    // The "if-supported" companion of --crash-report only contributes to the effective
+    // crash-report configuration on platforms where the underlying runtime env vars are
+    // honored. Two scenarios disqualify the runtime entirely:
+    //  - .NET Framework, where the env-var-based createdump/crashreport mechanism is not
+    //    available at all (see ValidateTestHostEnvironmentVariablesAsync below);
+    //  - Windows on .NET (Core), where the runtime ignores DOTNET_EnableCrashReport(Only)
+    //    (see dotnet/runtime#80191).
+    // In both cases we treat the option as a silent no-op so that a single command line
+    // can be reused across CI matrices without per-OS / per-TFM branching.
+    internal static bool IsCrashReportEffective(ICommandLineOptions commandLineOptions)
+    {
+        if (commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName))
+        {
+            return true;
+        }
+
+        if (!commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName))
+        {
+            return false;
+        }
+
+#if !NETCOREAPP
+        return false;
+#else
+        return !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 #endif
     }
 }

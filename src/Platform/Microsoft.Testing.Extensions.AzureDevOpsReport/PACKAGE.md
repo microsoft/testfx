@@ -17,6 +17,8 @@ This package extends Microsoft.Testing.Platform with:
 - **Azure DevOps reporting**: emits individual CI errors/warnings for each test failure via the Azure DevOps logging commands
 - **Configurable severity**: supports `--report-azdo-severity` (`error` or `warning`)
 - **CI auto-detection**: detects Azure DevOps environments through the `TF_BUILD` variable
+- **Live publishing**: streams test results to the Azure DevOps Tests tab while the run is still in progress (`--publish-azdo-test-results`)
+- **Automatic attachments**: for failed tests, attaches stdout/stderr and any `FileArtifactProperty` data (dumps, screenshots) to the matching result in the Tests tab; uploads `*.coverage`, `*.cobertura.xml`, and `*.opencover.xml` artifacts as run-level attachments
 
 Enable Azure DevOps reporting with the `--report-azdo` command line option.
 

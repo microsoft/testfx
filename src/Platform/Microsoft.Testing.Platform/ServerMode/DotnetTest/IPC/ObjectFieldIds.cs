@@ -1,27 +1,33 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.IPC;
 
 // WARNING: Please note this file needs to be kept aligned with the one in the dotnet sdk.
 // The protocol follows the concept of optional properties.
 // The id is used to identify the property in the stream and it will be skipped if it's not recognized.
 // We can add new properties with new ids, but we CANNOT change the existing ids (to support backwards compatibility).
+[Embedded]
 internal static class VoidResponseFieldsId
 {
     public const int MessagesSerializerId = 0;
 }
 
+[Embedded]
 internal static class TestHostCompletedRequestFieldsId
 {
     public const int MessagesSerializerId = 1;
 }
 
+[Embedded]
 internal static class TestHostProcessPIDRequestFieldsId
 {
     public const int MessagesSerializerId = 2;
 }
 
+[Embedded]
 internal static class CommandLineOptionMessagesFieldsId
 {
     public const int MessagesSerializerId = 3;
@@ -30,6 +36,7 @@ internal static class CommandLineOptionMessagesFieldsId
     public const ushort CommandLineOptionMessageList = 2;
 }
 
+[Embedded]
 internal static class CommandLineOptionMessageFieldsId
 {
     public const ushort Name = 1;
@@ -39,6 +46,7 @@ internal static class CommandLineOptionMessageFieldsId
     // Reserved: field ID 5 was ObsolescenceMessage, removed as unused.
 }
 
+[Embedded]
 internal static class DiscoveredTestMessagesFieldsId
 {
     public const int MessagesSerializerId = 5;
@@ -48,6 +56,7 @@ internal static class DiscoveredTestMessagesFieldsId
     public const ushort DiscoveredTestMessageList = 3;
 }
 
+[Embedded]
 internal static class DiscoveredTestMessageFieldsId
 {
     public const ushort Uid = 1;
@@ -61,12 +70,14 @@ internal static class DiscoveredTestMessageFieldsId
     public const ushort ParameterTypeFullNames = 9;
 }
 
+[Embedded]
 internal static class TraitMessageFieldsId
 {
     public const ushort Key = 1;
     public const ushort Value = 2;
 }
 
+[Embedded]
 internal static class TestResultMessagesFieldsId
 {
     public const int MessagesSerializerId = 6;
@@ -77,6 +88,7 @@ internal static class TestResultMessagesFieldsId
     public const ushort FailedTestMessageList = 4;
 }
 
+[Embedded]
 internal static class SuccessfulTestResultMessageFieldsId
 {
     public const ushort Uid = 1;
@@ -89,6 +101,7 @@ internal static class SuccessfulTestResultMessageFieldsId
     public const ushort SessionUid = 8;
 }
 
+[Embedded]
 internal static class FailedTestResultMessageFieldsId
 {
     public const ushort Uid = 1;
@@ -102,6 +115,7 @@ internal static class FailedTestResultMessageFieldsId
     public const ushort SessionUid = 9;
 }
 
+[Embedded]
 internal static class ExceptionMessageFieldsId
 {
     public const ushort ErrorMessage = 1;
@@ -109,6 +123,7 @@ internal static class ExceptionMessageFieldsId
     public const ushort StackTrace = 3;
 }
 
+[Embedded]
 internal static class FileArtifactMessagesFieldsId
 {
     public const int MessagesSerializerId = 7;
@@ -118,6 +133,7 @@ internal static class FileArtifactMessagesFieldsId
     public const ushort FileArtifactMessageList = 3;
 }
 
+[Embedded]
 internal static class FileArtifactMessageFieldsId
 {
     public const ushort FullPath = 1;
@@ -128,6 +144,7 @@ internal static class FileArtifactMessageFieldsId
     public const ushort SessionUid = 6;
 }
 
+[Embedded]
 internal static class TestSessionEventFieldsId
 {
     public const int MessagesSerializerId = 8;
@@ -137,7 +154,25 @@ internal static class TestSessionEventFieldsId
     public const ushort ExecutionId = 3;
 }
 
+[Embedded]
 internal static class HandshakeMessageFieldsId
 {
     public const int MessagesSerializerId = 9;
+}
+
+[Embedded]
+internal static class TestInProgressMessagesFieldsId
+{
+    public const int MessagesSerializerId = 10;
+
+    public const ushort ExecutionId = 1;
+    public const ushort InstanceId = 2;
+    public const ushort TestInProgressMessageList = 3;
+}
+
+[Embedded]
+internal static class TestInProgressMessageFieldsId
+{
+    public const ushort Uid = 1;
+    public const ushort DisplayName = 2;
 }

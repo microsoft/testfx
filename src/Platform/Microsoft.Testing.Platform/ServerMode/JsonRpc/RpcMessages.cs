@@ -59,6 +59,13 @@ internal sealed record CancelRequestArgs(int CancelRequestId);
 
 internal sealed record ExitRequestArgs;
 
+/// <summary>
+/// Sentinel params type used when a request's params failed to deserialize.
+/// The request reaches the handler so a proper JSON-RPC error can be sent back
+/// using the request's id rather than crashing the message-handling loop.
+/// </summary>
+internal sealed record InvalidRequestParamsArgs(int ErrorCode, string ErrorMessage);
+
 internal sealed record ClientInfo(string Name, string Version);
 
 internal sealed record ClientCapabilities(bool DebuggerProvider);

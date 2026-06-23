@@ -165,4 +165,65 @@ public sealed class DoNotUseSystemDescriptionAttributeAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenDataTestMethodHasSystemDescriptionAttribute_Diagnostic()
+    {
+        // DataTestMethodAttribute inherits from TestMethodAttribute, so the Inherits() check should
+        // catch it and report the same diagnostic as for [TestMethod].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                [System.ComponentModel.Description("Description")]
+                public void [|MyTestMethod|](int x)
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                [Description("Description")]
+                public void MyTestMethod(int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasMSTestDescriptionAttribute_NoDiagnostic()
+    {
+        // When only the MSTest namespace is in scope, the short-form [Description] resolves to
+        // Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute, not
+        // System.ComponentModel.DescriptionAttribute. The analyzer must not fire.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [Description("Description")]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

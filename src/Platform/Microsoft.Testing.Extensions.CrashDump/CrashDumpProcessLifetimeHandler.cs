@@ -41,6 +41,8 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
     private readonly HashSet<string> _preExistingDumpFiles;
 
+    private int _ifSupportedIgnoredMessageEmitted;
+
     public CrashDumpProcessLifetimeHandler(
         ICommandLineOptions commandLineOptions,
         IMessageBus messageBus,
@@ -73,13 +75,63 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
             (_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
-             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName)) &&
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
+             _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName)) &&
             _netCoreCrashDumpGeneratorConfiguration.Enable);
 
-    public Task BeforeTestHostProcessStartAsync(CancellationToken _) => Task.CompletedTask;
+    public async Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken)
+    {
+        // If the user opted into the best-effort '--crash-report-if-supported' variant on a
+        // runtime/platform where crash reports are unsupported emit a single informational line
+        // so the user knows the option was accepted but silently no-opped. Two scenarios apply:
+        //  - On .NET Framework the env-var-based createdump/crashreport mechanism is unavailable.
+        //  - On Windows the .NET runtime ignores DOTNET_EnableCrashReport(Only) (dotnet/runtime#80191).
+        // The "emit once" guard uses Interlocked.Exchange so that, if the test-host controller
+        // ever invokes the hook more than once (e.g. on retry), only the first caller actually
+        // emits the message.
+        if (!_commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName)
+            || _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName))
+        {
+            return;
+        }
+
+#if NETCOREAPP
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        string message = CrashDumpResources.CrashReportIfSupportedIgnoredOnWindowsInfoMessage;
+#else
+        string message = CrashDumpResources.CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage;
+#endif
+
+        if (Interlocked.Exchange(ref _ifSupportedIgnoredMessageEmitted, 1) != 0)
+        {
+            return;
+        }
+
+        // Use FormattedTextOutputDeviceData (neutral, info-style) rather than
+        // WarningMessageOutputDeviceData: this is the expected, graceful no-op path for a
+        // best-effort option and we do not want CI logs to surface a yellow warning that the
+        // user would interpret as a problem.
+        await _outputDisplay.DisplayAsync(
+            this,
+            new FormattedTextOutputDeviceData(message),
+            cancellationToken).ConfigureAwait(false);
+    }
 
     public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
+        // When neither --crashdump nor an effective --crash-report is requested (only the
+        // silent-no-op '--crash-report-if-supported' case on Windows or .NET Framework),
+        // the env-var provider was disabled and DumpFileNamePattern was never populated.
+        // Nothing to snapshot in that case.
+        if (!IsCrashHandlingEffective())
+        {
+            return Task.CompletedTask;
+        }
+
         // Snapshot any pre-existing files in the dump directory so we can later restrict dump publication
         // to files that appeared during this run. Without this, when the results/dump directory is reused
         // across runs, stale dumps from a previous crash whose names also match the configured pattern
@@ -118,6 +170,15 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        // Mirror the OnTestHostProcessStartedAsync guard: in the silent-no-op case the env-var
+        // provider was disabled, so there is no dump file pattern to scan and no crash artifact
+        // to surface.
+        if (!IsCrashHandlingEffective())
+        {
+            return;
+        }
+
         if (testHostProcessInformation.HasExitedGracefully
             || (AppDomain.CurrentDomain.GetData("ProcessKilledByHangDump") is string processKilledByHangDump && processKilledByHangDump == "true"))
         {
@@ -131,7 +192,7 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         ApplicationStateGuard.Ensure(_netCoreCrashDumpGeneratorConfiguration.DumpFileNamePattern is not null);
         bool generateDump = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName);
-        bool generateCrashReport = _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName);
+        bool generateCrashReport = CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(_commandLineOptions);
 
         // The crash dump file name pattern can contain placeholders such as %p (PID), %e (process exe name),
         // %h (hostname), %t (timestamp), etc. that are expanded by the .NET runtime when it writes the dump.
@@ -213,7 +274,39 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         // want the banner to reflect that the testhost dump is, technically, present on disk.
         testhostDumpProduced = generateDump && (testhostDumpProduced || File.Exists(expectedDumpFile));
         bool dumpArtifactProduced = generateDump && (testhostDumpProduced || publishedAnyDump);
-        bool crashReportArtifactProduced = generateCrashReport && File.Exists(expectedCrashReportFile);
+
+        // The crash report file is written as "<dump file name>.crashreport.json" beside the dump.
+        // The dump file name pattern can contain runtime placeholders besides "%p" (e.g. "%e" when
+        // the user picks the {pname} token, "%h" or "%t" when configured directly). A plain
+        // File.Exists check on `expectedCrashReportFile` would miss those reports, so we apply the
+        // same testhost-dump-name regex to the prefix of each "*.crashreport.json" file in the dump
+        // directory: this preserves the literal-`%p`-baked PID match while expanding any remaining
+        // placeholders as wildcards, mirroring the dump-publication logic above.
+        List<string>? crashReportFiles = null;
+        bool matchedCrashReportFile = false;
+        if (generateCrashReport && Directory.Exists(dumpDirectory))
+        {
+            foreach (string crashReportFile in Directory.EnumerateFiles(dumpDirectory, CrashReportFileSearchPattern))
+            {
+                string crashReportFileName = Path.GetFileName(crashReportFile);
+                if (!crashReportFileName.EndsWith(CrashReportFileExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                crashReportFiles ??= [];
+                crashReportFiles.Add(crashReportFile);
+
+                string dumpFileNamePart = crashReportFileName.Substring(0, crashReportFileName.Length - CrashReportFileExtension.Length);
+                if (testhostDumpRegex.IsMatch(dumpFileNamePart))
+                {
+                    matchedCrashReportFile = true;
+                }
+            }
+        }
+
+        bool expectedCrashReportFileExists = File.Exists(expectedCrashReportFile);
+        bool crashReportArtifactProduced = expectedCrashReportFileExists || matchedCrashReportFile;
 
         // Inspect the disk before emitting the crash banner so the message reflects
         // what was actually produced, not what was requested. The runtime may fail
@@ -253,9 +346,16 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
 
         if (generateCrashReport)
         {
-            if (crashReportArtifactProduced)
+            if (expectedCrashReportFileExists)
             {
                 await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(expectedCrashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+            }
+            else if (matchedCrashReportFile)
+            {
+                foreach (string crashReportFile in crashReportFiles!)
+                {
+                    await _messageBus.PublishAsync(this, new FileArtifact(new FileInfo(crashReportFile), CrashDumpResources.CrashReportArtifactDisplayName, CrashDumpResources.CrashReportArtifactDescription)).ConfigureAwait(false);
+                }
             }
             else
             {
@@ -444,4 +544,12 @@ internal sealed class CrashDumpProcessLifetimeHandler : ITestHostProcessLifetime
         sb.Append('$');
         return sb.ToString();
     }
+
+    // Returns true when at least one of the crash dump / crash report mechanisms is going to
+    // produce an artifact for the current process. The silent-no-op cases (e.g.
+    // '--crash-report-if-supported' alone on Windows or on .NET Framework) leave this false,
+    // so the lifecycle callbacks know there is nothing to snapshot or publish.
+    private bool IsCrashHandlingEffective()
+        => _commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName)
+            || CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(_commandLineOptions);
 }

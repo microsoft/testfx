@@ -119,6 +119,7 @@
   </resheader>
   <data name="HotReloadHandlerUnsupportedFrameworkErrorMessage" xml:space="preserve">
     <value>Hot reload is only supported on .NET 6.0 or greater</value>
+    <comment>Do not localize {Locked=".NET 6.0"}.</comment>
   </data>
   <data name="HotReloadSessionCompleted" xml:space="preserve">
     <value>Hot reload test session completed</value>

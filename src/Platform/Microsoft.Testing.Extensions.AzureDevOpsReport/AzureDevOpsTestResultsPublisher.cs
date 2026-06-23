@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -11,12 +10,11 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
-internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
+internal sealed partial class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IConfiguration _configuration;
@@ -30,8 +28,9 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     private readonly ILogger _logger;
     private readonly AzureDevOpsTestResultsPublisherOptions _options;
     // Mutate only while holding _flushSemaphore.
-    private readonly Stack<AzureDevOpsTestCaseResult> _retryResults = new();
-    private readonly ConcurrentQueue<AzureDevOpsTestCaseResult> _pendingResults = new();
+    private readonly Stack<AzureDevOpsTestCaseResultWithAttachments> _retryResults = new();
+    private readonly ConcurrentQueue<AzureDevOpsTestCaseResultWithAttachments> _pendingResults = new();
+    private readonly ConcurrentQueue<AzureDevOpsTestResultAttachment> _pendingRunAttachments = new();
     private readonly SemaphoreSlim _flushSemaphore = new(1, 1);
 
     private AzureDevOpsPublishConfiguration? _publishConfiguration;
@@ -85,7 +84,7 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
         _lastFlushTime = clock.UtcNow;
     }
 
-    public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
+    public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact)];
 
     public string Uid => nameof(AzureDevOpsTestResultsPublisher);
 
@@ -165,22 +164,31 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (_publishConfiguration is null || _runIdCoordinator is null || _coordinatedRun is null || CurrentRunId is null || value is not TestNodeUpdateMessage testNodeUpdateMessage)
+        if (_publishConfiguration is null || _runIdCoordinator is null || _coordinatedRun is null || CurrentRunId is null)
         {
             return;
         }
 
         try
         {
-            AzureDevOpsTestCaseResult? testCaseResult = CreateTestCaseResult(testNodeUpdateMessage.TestNode, _publishConfiguration.AutomatedTestStorage);
-            if (testCaseResult is null)
+            switch (value)
             {
-                return;
-            }
+                case TestNodeUpdateMessage testNodeUpdateMessage:
+                    AzureDevOpsTestCaseResultWithAttachments? testCaseResult = CreateTestCaseResult(testNodeUpdateMessage.TestNode, _publishConfiguration.AutomatedTestStorage);
+                    if (testCaseResult is null)
+                    {
+                        return;
+                    }
 
-            await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
-            _pendingResults.Enqueue(testCaseResult);
-            await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
+                    await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
+                    _pendingResults.Enqueue(testCaseResult);
+                    await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
+                    break;
+
+                case SessionFileArtifact sessionFileArtifact when TryCreateRunAttachment(sessionFileArtifact) is { } runAttachment:
+                    _pendingRunAttachments.Enqueue(runAttachment);
+                    break;
+            }
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
@@ -231,6 +239,19 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
         }
 
+        try
+        {
+            await UploadPendingRunAttachmentsAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Best-effort: don't fail finalization if the session was canceled mid-upload.
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed} {ex.Message}");
+        }
+
         // Azure DevOps test runs use "Aborted" specifically for cancellation or session-level
         // infrastructure failures. Individual failing tests should still mark the run as
         // "Completed" — only treat process exit codes other than Success/AtLeastOneTestFailed as
@@ -259,275 +280,4 @@ internal sealed class AzureDevOpsTestResultsPublisher : IDataConsumer, ITestSess
             _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed} {ex.Message}");
         }
     }
-
-    internal static AzureDevOpsTestCaseResult? CreateTestCaseResult(TestNode testNode, string automatedTestStorage)
-    {
-        TestNodeStateProperty? state = testNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-        if (state is null or DiscoveredTestNodeStateProperty or InProgressTestNodeStateProperty)
-        {
-            return null;
-        }
-
-        TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
-        string automatedTestName = testNode.Uid.Value;
-
-        return state switch
-        {
-            PassedTestNodeStateProperty passed => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.PassedTestOutcome, passed.Explanation, null, timing),
-            FailedTestNodeStateProperty failed => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.FailedTestOutcome, failed.Exception?.Message ?? failed.Explanation, failed.Exception?.StackTrace, timing),
-            ErrorTestNodeStateProperty error => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.FailedTestOutcome, error.Exception?.Message ?? error.Explanation, error.Exception?.StackTrace, timing),
-            SkippedTestNodeStateProperty skipped => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.NotExecutedTestOutcome, skipped.Explanation, null, timing),
-            TimeoutTestNodeStateProperty timeout => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.FailedTestOutcome, BuildTimeoutMessage(timeout), timeout.Exception?.StackTrace, timing),
-#pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            CancelledTestNodeStateProperty cancelled => CreateResult(testNode.DisplayName, automatedTestName, automatedTestStorage, AzureDevOpsLivePublishingConstants.AbortedTestOutcome, cancelled.Exception?.Message ?? cancelled.Explanation, cancelled.Exception?.StackTrace, timing),
-#pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-            _ => null,
-        };
-    }
-
-    private async Task BackgroundFlushLoopAsync(CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                await Task.Delay(_options.FlushInterval, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            try
-            {
-                await FlushPendingResultsAsync(force: false, cancellationToken).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
-            }
-        }
-    }
-
-    private async Task FlushPendingResultsAsync(bool force, CancellationToken cancellationToken)
-    {
-        if (_publishConfiguration is null || CurrentRunId is null)
-        {
-            return;
-        }
-
-        await _flushSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            while (_publishConfiguration is not null && CurrentRunId is not null)
-            {
-                if (!ShouldFlushUnsafe(force))
-                {
-                    return;
-                }
-
-                List<AzureDevOpsTestCaseResult> batch = [];
-                while (batch.Count < _options.BatchSize && _retryResults.Count > 0)
-                {
-                    batch.Add(_retryResults.Pop());
-                }
-
-                while (batch.Count < _options.BatchSize && _pendingResults.TryDequeue(out AzureDevOpsTestCaseResult? result))
-                {
-                    batch.Add(result);
-                }
-
-                if (batch.Count == 0)
-                {
-                    return;
-                }
-
-                try
-                {
-                    if (_coordinatedRun is not null && _runIdCoordinator is not null)
-                    {
-                        await _runIdCoordinator.RenewLeaseAsync(_coordinatedRun, cancellationToken).ConfigureAwait(false);
-                    }
-
-                    await _client.PublishTestResultsAsync(_publishConfiguration, CurrentRunId.Value, batch, cancellationToken).ConfigureAwait(false);
-                    _lastFlushTime = _clock.UtcNow;
-                }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    // Push results in reverse so Pop retries them in the original batch order.
-                    for (int i = batch.Count - 1; i >= 0; i--)
-                    {
-                        _retryResults.Push(batch[i]);
-                    }
-
-                    // Reset the interval countdown so a transient failure does not cause a tight retry loop.
-                    _lastFlushTime = _clock.UtcNow;
-                    _logger.LogWarning($"{AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed} {ex.Message}");
-                    return;
-                }
-            }
-        }
-        finally
-        {
-            _flushSemaphore.Release();
-        }
-    }
-
-    private bool TryCreatePublishConfiguration(out AzureDevOpsPublishConfiguration? publishConfiguration, out string? warning)
-    {
-        publishConfiguration = null;
-        warning = null;
-
-        List<string> missingVariables = [];
-
-        bool isTfBuild = string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase);
-        if (!isTfBuild)
-        {
-            missingVariables.Add("TF_BUILD=true");
-        }
-
-        string? collectionUri = GetRequiredEnvironmentVariable("SYSTEM_COLLECTIONURI", missingVariables);
-        string? project = GetRequiredEnvironmentVariable("SYSTEM_TEAMPROJECT", missingVariables);
-        string? accessToken = GetRequiredEnvironmentVariable("SYSTEM_ACCESSTOKEN", missingVariables);
-        string? buildIdText = GetRequiredEnvironmentVariable("BUILD_BUILDID", missingVariables);
-
-        if (missingVariables.Count > 0)
-        {
-            warning = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingMissingConfiguration, string.Join(", ", missingVariables));
-            return false;
-        }
-
-        if (!int.TryParse(buildIdText, NumberStyles.Integer, CultureInfo.InvariantCulture, out int buildId))
-        {
-            warning = string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingMissingConfiguration, "BUILD_BUILDID");
-            return false;
-        }
-
-        string currentTestApplicationPath = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-        string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? Path.GetFileNameWithoutExtension(currentTestApplicationPath);
-        string automatedTestStorage = Path.GetFileNameWithoutExtension(currentTestApplicationPath);
-        string targetFrameworkMoniker = GetTargetFrameworkMoniker();
-        string agentName = _environment.GetEnvironmentVariable("AGENT_NAME") ?? _environment.MachineName;
-        string? stageName = _environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
-        string? jobName = _environment.GetEnvironmentVariable("SYSTEM_JOBNAME");
-        string runName = GetRunName(assemblyName, targetFrameworkMoniker, agentName, stageName, jobName);
-        string resultsDirectory = _configuration.GetTestResultDirectory();
-
-        if (_commandLineOptions.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.PublishAzureDevOpsRunNameOptionName, out string[]? arguments) && arguments is [string configuredRunName])
-        {
-            runName = configuredRunName;
-        }
-
-        publishConfiguration = new AzureDevOpsPublishConfiguration(collectionUri!, project!, accessToken!, buildId, runName, automatedTestStorage, resultsDirectory);
-        return true;
-    }
-
-    private string? GetRequiredEnvironmentVariable(string variableName, List<string> missingVariables)
-    {
-        string? value = _environment.GetEnvironmentVariable(variableName);
-        if (RoslynString.IsNullOrWhiteSpace(value))
-        {
-            missingVariables.Add(variableName);
-        }
-
-        return value;
-    }
-
-    private bool ShouldFlushUnsafe(bool force)
-    {
-        int pendingResultsCount = _retryResults.Count + _pendingResults.Count;
-
-        if (pendingResultsCount == 0)
-        {
-            return false;
-        }
-
-        if (force)
-        {
-            return true;
-        }
-
-        if (_clock.UtcNow - _lastFlushTime >= _options.FlushInterval)
-        {
-            return true;
-        }
-
-        // Only trigger a batch-size based flush from fresh pending results. When a previous publish
-        // failed and pushed a full batch back into _retryResults, the next ConsumeAsync would
-        // otherwise immediately satisfy this condition and tight-retry on every incoming result —
-        // wait for the flush interval (background loop) before retrying instead.
-        return _retryResults.Count == 0 && _pendingResults.Count >= _options.BatchSize;
-    }
-
-    private static AzureDevOpsTestCaseResult CreateResult(
-        string displayName,
-        string automatedTestName,
-        string automatedTestStorage,
-        string outcome,
-        string? errorMessage,
-        string? stackTrace,
-        TimingProperty? timing)
-        => new(
-            automatedTestName,
-            automatedTestStorage,
-            displayName,
-            outcome,
-            timing is null ? null : (long)Math.Round(timing.GlobalTiming.Duration.TotalMilliseconds, MidpointRounding.AwayFromZero),
-            errorMessage,
-            stackTrace,
-            timing?.GlobalTiming.StartTime,
-            timing?.GlobalTiming.EndTime);
-
-    private static string BuildTimeoutMessage(TimeoutTestNodeStateProperty timeout)
-    {
-        string? reason = timeout.Explanation ?? timeout.Exception?.Message;
-        return RoslynString.IsNullOrWhiteSpace(reason)
-            ? AzureDevOpsResources.AzureDevOpsLivePublishingTimeoutErrorMessage
-            : string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.AzureDevOpsLivePublishingTimeoutErrorMessageWithReason, reason);
-    }
-
-    private static string GetRunName(string assemblyName, string targetFrameworkMoniker, string agentName, string? stageName, string? jobName)
-    {
-        string runName = $"{assemblyName} ({targetFrameworkMoniker}) on {agentName}";
-        string? stageJob = (SanitizeRunNameComponent(stageName), SanitizeRunNameComponent(jobName)) switch
-        {
-            ({ Length: > 0 } stage, { Length: > 0 } job) => $"{stage}/{job}",
-            ({ Length: > 0 } stage, _) => stage,
-            (_, { Length: > 0 } job) => job,
-            _ => null,
-        };
-
-        string candidateRunName = stageJob is null ? runName : $"{runName} [{stageJob}]";
-        return candidateRunName.Length <= AzureDevOpsLivePublishingConstants.MaxRunNameLength
-            ? candidateRunName
-            : candidateRunName[..AzureDevOpsLivePublishingConstants.MaxRunNameLength];
-    }
-
-    private static string? SanitizeRunNameComponent(string? value)
-    {
-        if (RoslynString.IsNullOrWhiteSpace(value))
-        {
-            return null;
-        }
-
-        char[] buffer = value.ToCharArray();
-        for (int index = 0; index < buffer.Length; index++)
-        {
-            char current = buffer[index];
-            if (current is '/' or '\\' or '\r' or '\n' || char.IsControl(current))
-            {
-                buffer[index] = '_';
-            }
-        }
-
-        return new string(buffer);
-    }
-
-    private static string GetTargetFrameworkMoniker()
-        => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>()?.FrameworkDisplayName)
-            ?? TargetFrameworkParser.GetShortTargetFramework(RuntimeInformation.FrameworkDescription);
 }

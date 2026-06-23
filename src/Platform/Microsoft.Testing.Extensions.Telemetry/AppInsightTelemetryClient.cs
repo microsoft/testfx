@@ -24,8 +24,8 @@ internal sealed class AppInsightTelemetryClient : ITelemetryClient
     }
 
     public void TrackEvent(string eventName, Dictionary<string, string> properties, Dictionary<string, double> metrics)
-    {
-        _telemetryClient.TrackEvent(eventName, properties, metrics);
-        _telemetryClient.Flush();
-    }
+        => _telemetryClient.TrackEvent(eventName, properties, metrics);
+
+    public void Flush()
+        => _telemetryClient.Flush();
 }

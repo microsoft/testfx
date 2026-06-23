@@ -6,24 +6,14 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed class EnvironmentVariablesConfigurationSource(IEnvironment environmentVariables) : IConfigurationSource
+internal sealed class EnvironmentVariablesConfigurationSource(IEnvironment environmentVariables) : ConfigurationSourceBase
 {
     private readonly IEnvironment _environmentVariables = environmentVariables;
 
-    public string Uid => nameof(EnvironmentVariablesConfigurationSource);
+    public override string Uid => nameof(EnvironmentVariablesConfigurationSource);
 
-    public string Version => PlatformVersion.Version;
+    public override int Order => 1;
 
-    // Can be empty string because it's not used in the UI
-    public string DisplayName => string.Empty;
-
-    // Can be empty string because it's not used in the UI
-    public string Description => string.Empty;
-
-    public int Order => 1;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
+    public override Task<IConfigurationProvider> BuildAsync(CommandLineParseResult commandLineParseResult)
         => Task.FromResult<IConfigurationProvider>(new EnvironmentVariablesConfigurationProvider(_environmentVariables));
 }

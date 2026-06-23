@@ -8,7 +8,7 @@ The codebase ships several distinct (but related) products. Knowing which produc
 
 - `src/Platform/Microsoft.Testing.Platform` — Microsoft.Testing.Platform (MTP), a lightweight, in-process test host that replaces VSTest. Most other folders under `src/Platform/` are MTP extensions (`TrxReport`, `CrashDump`, `HangDump`, `HotReload`, `Retry`, `Telemetry`, `HtmlReport`, `AzureDevOpsReport`, `MSBuild`, `VSTestBridge`, …).
 - `src/TestFramework` — MSTest itself: the public `Microsoft.VisualStudio.TestTools.UnitTesting` API (attributes, `Assert`, `TestContext`, …) plus `TestFramework.Extensions`.
-- `src/Adapter` — bridges MSTest to test hosts: `MSTest.TestAdapter` (VSTest adapter), `MSTestAdapter.PlatformServices` (platform-services abstraction shared by both hosts), and `MSTest.Engine` (MTP-native execution engine used by source-generated tests).
+- `src/Adapter` — bridges MSTest to test hosts: `MSTest.TestAdapter` (VSTest adapter) and `MSTestAdapter.PlatformServices` (platform-services abstraction shared by both hosts).
 - `src/Analyzers` — Roslyn analyzers and code fixes shipped as `MSTest.Analyzers`.
 - `src/Package/MSTest.Sdk` — the MSBuild project SDK that wires the pieces together for consumers.
 - `test/UnitTests/<Project>.UnitTests` — fast unit tests for each project.
@@ -24,7 +24,7 @@ Solution files: `TestFx.slnx` is the full solution; `MSTest.slnf`, `Microsoft.Te
 Always use the repo-local toolchain via the build scripts — they restore the pinned .NET SDK from `global.json` into `.dotnet/` (or reuse a matching `DOTNET_INSTALL_DIR`) and prepend that `dotnet` location to `PATH`.
 
 | Task | Windows | Linux/macOS |
-|---|---|---|
+| --- | --- | --- |
 | Restore + build (Debug) | `.\build.cmd` | `./build.sh` |
 | Release build | `.\build.cmd -c Release` | `./build.sh -c Release` |
 | Produce NuGet packages | `.\build.cmd -pack` | `./build.sh -pack` |
@@ -63,6 +63,7 @@ In addition to the rules enforced by `.editorconfig`, you SHOULD:
 - Trust the C# null annotations and don't add null checks when the type system says a value cannot be null.
 - Prefer `?.` if applicable (e.g. `scope?.Dispose()`).
 - Use `ObjectDisposedException.ThrowIf` where applicable.
+- For dictionary initializers, prefer the indexer syntax `[key] = value` over the `Add`-style `{ { key, value } }` initializer when possible (e.g. `new Dictionary<string, int> { ["a"] = 1 }` rather than `new Dictionary<string, int> { { "a", 1 } }`); note that indexer initializers use the indexer setter (different duplicate-key behavior than `Add`).
 - Respect StyleCop.Analyzers rules, in particular:
   - SA1028: Code must not contain trailing whitespace
   - SA1316: Tuple element names should use correct casing
@@ -92,6 +93,7 @@ When making change to resource files, you MUST:
   - Most MTP unit-test projects (and `MSTest.Analyzers.UnitTests`, `MSTest.SelfRealExamples.UnitTests`) ban `AwesomeAssertions` and require MSTest `Assert`/`StringAssert`/`CollectionAssert`.
   - The adapter unit-test projects (`MSTestAdapter.UnitTests`, `MSTestAdapter.PlatformServices.UnitTests`) ban MSTest's `Assert` family and require `AwesomeAssertions` (FluentAssertions-style API).
 - Acceptance integration tests run with assembly-level method parallelization. Classes that share a single generated mutable test asset across multiple methods must be marked `[DoNotParallelize]` to avoid races on `bin/obj` outputs.
+- When asserting on test-host output that contains a rendered test **duration** (e.g. `failed MyTest (040ms)`), NEVER hard-code `\(\d+ms\)`. The duration format grows leading parts (`(1s 040ms)`, `(2m 03s 040ms)`, …) on slower machines (often macOS, sometimes Windows), so a `\d+ms`-only pattern is a classic source of timing flakiness. Use the shared `AcceptanceAssert.DurationPattern` constant (or, where a duration only ever applies to skipped tests, the deterministic `(0ms)`) instead.
 - When running acceptance tests, you must first run `./build.sh -pack` on Linux/macOS or `.\build.cmd -pack` on Windows.
 
 ## CLI options guidelines
@@ -120,8 +122,32 @@ Agentic workflows live in `.github/workflows/*.md` and `*.agent.md` and are comp
 
 `TODO` comments without a tracked issue are rejected during review. Every `TODO` MUST reference a GitHub issue, e.g. `// TODO(#1234): Refactor this once the new API is available`. If the note doesn't warrant an issue, rewrite it as a plain comment explaining the rationale.
 
+## GitHub issue creation guidelines
+
+When creating new issues — or triaging existing ones — through **any** surface (manual edits in the GitHub UI, `gh issue create` / `gh issue edit`, the REST or GraphQL API, an agentic workflow, a webhook bot, or a label-sync rule) the issue category MUST be expressed through the repository's native **GitHub Issue Type** field. The legacy `type/bug`, `type/feature`, and `type/task` **labels** are banned and MUST NOT be added by anyone (humans, Copilot, bots, or automation).
+
+- Use the `Bug` issue type for an unexpected problem or regression.
+- Use the `Feature` issue type for a new capability or enhancement.
+- Use the `Task` issue type for a piece of work that is neither a bug nor a feature (refactor, follow-up, chore, RFC follow-up, …).
+- `type/bug`, `type/feature`, and `type/task` labels are **deprecated and forbidden**. They duplicate the Issue Type field and make triage queries inconsistent. Do not add them — set the Issue Type field instead.
+- Other `type/*` labels (`type/automation`, `type/tech-debt`, `type/test-gap`, `type/regression`, `type/breaking-change`, `type/rfc`, `type/pr-fix`, `type/qa`, `type/ai-inspected`, `type/announcement`, `type/discussion`, `type/flaky-test`, `type/partner-request`, `type/question`) are **not** covered by native issue types and MUST continue to be used as labels.
+
+How to set the Issue Type from each surface:
+
+- **Issue templates** (`.github/ISSUE_TEMPLATE/*.md`): set `type:` in the frontmatter (already done for `bug-report.md` and `feature-request.md`). New templates that map to a native type MUST include the matching `type:` field and MUST NOT list `type/bug` / `type/feature` / `type/task` under `labels:`.
+- **GitHub web UI**: pick the type from the "Type" picker in the right sidebar of the issue editor. Do not add `type/bug`, `type/feature`, or `type/task` from the labels dropdown.
+- **`gh` CLI / scripts** (current `gh` releases do not yet expose `--type` on `gh issue create`): create the issue, then set the type via GraphQL, e.g.:
+
+  ```bash
+  gh api graphql -f query='mutation($issue:ID!, $type:ID!){ updateIssueIssueType(input:{issueId:$issue, issueTypeId:$type}){ issue { number } } }' -F issue=<issue-node-id> -F type=<type-node-id>
+  ```
+
+  The available `issueTypeId` values can be listed once with `gh api graphql -f query='query{ repository(owner:"microsoft",name:"testfx"){ issueTypes(first:20){ nodes{ id name } } } }'`.
+- **Agentic workflows (`gh aw`)**: in `safe-outputs.create-issue`, set the issue type using the agent's prompt or `allowed-fields` settings; never list `type/bug`, `type/feature`, or `type/task` under `labels`.
+
 ## Pull Request guidelines
 
 - Let other developers discuss their comments to your PRs, unless something sounds like a direct order to you, don't do changes.
 - Do the changes when you are specifically tagged or mentioned as copilot.
 - If you are unsure, comment with the temperature and sentiment of the comment, so we know how to efficiently address you as a member of the team rather than having to tag you.
+- PRs that address a security vulnerability (e.g. a Component Governance (CG) alert or a vulnerable dependency bump) MUST avoid disclosing vulnerability details in public PR metadata. Prefer using a private security process (see [`SECURITY.md`](../SECURITY.md)) until the fix ships; if a public PR is unavoidable, use a generic title (e.g. `Update package X`) and a generic description (e.g. `Fix CG alert`) and do NOT spell out the CVE, exploit, affected versions, or attack details.

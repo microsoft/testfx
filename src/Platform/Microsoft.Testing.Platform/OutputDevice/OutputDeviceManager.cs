@@ -37,8 +37,18 @@ internal sealed class PlatformOutputDeviceManager : IOutputDeviceManager
         SetPlatformOutputDevice(serviceProvider => new CustomOutputDeviceAdapter(outputDeviceFactory(serviceProvider)));
     }
 
-    internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice)
+    internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice, bool isPipeProtocol)
     {
+        // Under the dotnet test pipe protocol, the SDK's TerminalTestReporter owns all
+        // user-facing output, so we deliberately install a no-op device here. See #7161
+        // and dotnet/sdk#51615 for the broader context.
+        if (isPipeProtocol)
+        {
+            return new ProxyOutputDevice(new NopPlatformOutputDevice(), serverModeOutputDevice: null);
+        }
+
+        // SetPlatformOutputDevice isn't public yet. Before exposing it, we should decide
+        // whether to pass the "useServerModeOutputDevice" info to it.
         IPlatformOutputDevice nonServerOutputDevice = _platformOutputDeviceFactory is null
             ? GetDefaultTerminalOutputDevice(serviceProvider)
             : _platformOutputDeviceFactory(serviceProvider);

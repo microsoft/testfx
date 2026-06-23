@@ -20,10 +20,12 @@ internal partial class TestDataConnectionSql
     /// </summary>
     /// <param name="providerName">OLEDB or ODBC provider.</param>
     /// <returns>True if provider is for MSSql.</returns>
-    protected static bool IsMSSql(string providerName) => (!StringEx.IsNullOrEmpty(providerName) &&
+    protected static bool IsMSSql(string? providerName) => (!StringEx.IsNullOrEmpty(providerName) &&
             (providerName.StartsWith(KnownOleDbProviderNames.SqlOleDb, StringComparison.OrdinalIgnoreCase) ||
              providerName.StartsWith(KnownOleDbProviderNames.MSSqlNative, StringComparison.OrdinalIgnoreCase))) ||
              string.Equals(providerName, KnownOdbcDrivers.MSSql, StringComparison.OrdinalIgnoreCase);
+
+    protected virtual string? GetProviderNameForMSSqlDetection() => null;
 #pragma warning restore SA1202 // Elements must be ordered by access
 
     /// <summary>

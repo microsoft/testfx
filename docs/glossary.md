@@ -4,6 +4,17 @@ This glossary defines key terms and concepts used throughout the MSTest and Micr
 
 ## A
 
+### ArchitectureConditionAttribute
+
+An MSTest attribute (`[ArchitectureConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current process architecture. Available only on .NET (not .NET Framework). Accepts a [ConditionMode](#conditionmode) argument and a [TestArchitectures](#testarchitectures) flags value; the single-argument overload defaults to `ConditionMode.Include`. Detection uses `RuntimeInformation.ProcessArchitecture`. The attribute is not inherited — applying it to a base class does not affect derived classes. Because its `GroupName` (`"ArchitectureCondition"`) differs from that of [OSConditionAttribute](#osconditionattribute) (`"OSCondition"`), the two compose with logical AND, making it easy to gate a test on both OS and architecture:
+
+```csharp
+[TestMethod, OSCondition(OperatingSystems.Windows), ArchitectureCondition(TestArchitectures.X64)]
+public void RunsOnlyOnWindowsX64() { }
+```
+
+Introduced in [PR #9233](https://github.com/microsoft/testfx/pull/9233). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
 ### AwesomeAssertions
 
 A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.org/packages/AwesomeAssertions)) used in some unit and integration test suites in this repository. It provides a human-readable, chainable assertion API (e.g., `result.Should().Be(42)`). AwesomeAssertions is the community-maintained fork of `FluentAssertions` created after FluentAssertions changed its license from Apache 2.0 to a commercial model; the two libraries share the same API surface. Assertion policy in this repository varies by project: some `BannedSymbols.txt` files require `AwesomeAssertions` instead of the built-in MSTest `Assert`, `CollectionAssert`, and `StringAssert` types, while others ban `AwesomeAssertions`.
@@ -12,15 +23,47 @@ A .NET fluent-assertion library ([NuGet: AwesomeAssertions](https://www.nuget.or
 
 An MTP struct (`ArgumentArity.cs`) that defines the minimum and maximum number of values a command-line option accepts. Provides five predefined constants: `Zero` (0,0), `ZeroOrOne` (0,1), `ZeroOrMore` (0,∞), `ExactlyOne` (1,1), and `OneOrMore` (1,∞). Used by `ICommandLineOptionsProvider` implementations to declare option shapes.
 
+### ArtifactNamingHelper
+
+A shared static helper compiled into MTP extensions via file linking (no NuGet service registration or InternalsVisibleTo required) that provides template-based naming for test artifact files (dump files, report files, etc.). Templates are strings containing `{placeholder}` tokens (case-sensitive, lowercase): `{pname}` (process name), `{pid}` (process ID), `{asm}` (entry-assembly name), `{tfm}` (target framework moniker, best-effort runtime detection), `{arch}` (process architecture), and `{time}` (high-precision UTC timestamp). Custom per-call overrides can replace default placeholder values via a `Dictionary<string, string>`. Used directly by the [HangDump](#hangdump) and [CrashDump](#crashdump) extensions, and indirectly by the report extensions ([HtmlReport](#htmlreport), [JUnitReport](#junitreport), and [TrxReport](#trxreport)) via the shared `ReportFileNameHelper`. The legacy `%p` pattern is not handled here; it is substituted by the [HangDump](#hangdump) extension as a separate post-processing step for backward compatibility. The [CrashDump](#crashdump) consumer passes the .NET runtime's `%e` and `%p` placeholders as the `processName` and `processId` arguments so `{pname}` and `{pid}` resolve to `%e` and `%p` respectively — those are then expanded by the runtime's `createdump` at crash-write time (the testhost PID is not yet known when the environment variables are configured).
+
 ### AzureDevOpsReport
 
 An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
 
+### AzureFoundry
+
+An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. It reads Azure OpenAI connection settings from environment variables and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
+
 ## C
+
+### CIConditionAttribute
+
+An MSTest attribute (`[CIConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on whether the test is executing in a CI environment. Accepts a `ConditionMode` argument: `Include` (run only in CI) or `Exclude` (skip in CI). Detection is delegated to `CIEnvironmentDetector`, which checks well-known CI environment variables (e.g., `CI`, `TF_BUILD`). The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
+### CodeCoverage
+
+An MTP extension (`Microsoft.Testing.Extensions.CodeCoverage`) that instruments .NET assemblies and collects code-coverage data during a test run. It is developed and maintained in the `devdiv/DevDiv/vs-code-coverage` repository and consumed by this project as a Maestro-managed dependency. The extension supports the `--coverage` command-line option; VSTest-compatible `--collect "XPlat Code Coverage"` and `--collect "Code Coverage"` forms are proposed via a [command-line option mapping](#commandlineoptionmapping) (see `docs/RFCs/015-Command-Line-Option-Mappings.md`).
+
+### CommandLineOptionMapping
+
+A proposed MTP extensibility point (see `docs/RFCs/015-Command-Line-Option-Mappings.md`) that would let an extension declaratively accept a user-facing option (e.g. `--collect "XPlat Code Coverage"`) and rewrite it at parse time into one or more first-class MTP options (e.g. `--coverage`). In RFC 015, this is expressed via `ICommandLineOptionMappingProvider`. Intended to smooth migration from VSTest by allowing legacy `--logger` and `--collect` argument forms to be forwarded to their MTP equivalents without polluting the canonical MTP option set.
+
+### ConditionBaseAttribute
+
+An abstract MSTest attribute base class in `Microsoft.VisualStudio.TestTools.UnitTesting` for implementing custom conditional test execution. Derived attributes override `IsConditionMet` (returns `true` when the condition is met) and `GroupName` (used to group multiple condition attributes on the same test). Multiple `ConditionBaseAttribute`-derived attributes are evaluated with OR logic within a group and AND logic across groups: a test is skipped only if every attribute in at least one group evaluates to `false`. The `IgnoreMessage` property supplies the skip reason displayed in test output. Built-in concrete implementations include [ArchitectureConditionAttribute](#architectureconditionattribute), [CIConditionAttribute](#ciconditionattribute), [MemberConditionAttribute](#memberconditionattribute), [OSConditionAttribute](#osconditionattribute), and `IgnoreAttribute`.
+
+### ConditionMode
+
+A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` used with [ConditionBaseAttribute](#conditionbaseattribute)-derived attributes to control whether the condition is reversed. `Include` (default): run the test only when the condition is met. `Exclude`: skip (ignore) the test when the condition is met, reversing the condition.
 
 ### CrashDump
 
 An MTP extension (`Microsoft.Testing.Extensions.CrashDump`) that automatically captures a process memory dump when the test host crashes. Useful for diagnosing unexpected process termination during test runs.
+
+### CtrfReport
+
+An MTP extension (`Microsoft.Testing.Extensions.CtrfReport`) that generates a [CTRF](https://github.com/ctrf-io/ctrf) (Common Test Report Format) JSON report at the end of a test run. CTRF is a vendor-neutral open standard for structured test results, consumed by GitHub Actions test-summary tools, Slack/Teams notifiers, dashboards, and other CI tooling. Enable via `--report-ctrf`; override the output filename with `--report-ctrf-filename`. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>`. Currently **experimental** — the CLI options and output format may change without notice.
 
 ## D
 
@@ -52,7 +95,15 @@ A specific code component (function, struct, or class) selected for formal verif
 
 An MTP extension (`Microsoft.Testing.Extensions.HangDump`) that captures a process memory dump when a test exceeds a configured timeout. Helps diagnose deadlocks, infinite loops, or unexpectedly slow tests.
 
+### HtmlReport
+
+An MTP extension (`Microsoft.Testing.Extensions.HtmlReport`) that generates a self-contained HTML test report at the end of a test session. The report inlines all CSS, JavaScript, and test data into a single `.html` file with no external dependencies, making it suitable for archiving as a CI artifact, attaching to PR comments, or sharing by email. Features include failed-test-first ordering, free-text search, sort/filter by outcome or duration, an expandable per-test detail panel (error message, stack trace, stdout/stderr), and automatic light/dark theme following the system preference. Pagination keeps the report usable for very large test runs. Currently **experimental** — CLI option, layout, and on-disk format may change without notice. Enable via the `--report-html` CLI option.
+
 ## I
+
+### IChatClientProvider
+
+An MTP interface (`Microsoft.Testing.Platform.AI.IChatClientProvider`) that defines the contract for AI provider integrations in the testing platform. Exposes four members: `IsAvailable` (whether required configuration, e.g. environment variables, is present), `HasToolsCapability` (whether the provider supports tool/function calling, e.g. MCP tools), `ModelName` (the model in use), and `CreateChatClientAsync` (factory that returns an `IChatClient` from [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI)). Extensions that need AI capabilities consume an injected `IChatClientProvider` rather than implementing provider-specific logic themselves. The interface is shipped in [Microsoft.Testing.Platform.AI](#microsofttestingplatformai); the reference implementation is [AzureFoundry](#azurefoundry).
 
 ### Informal Spec (FV)
 
@@ -67,6 +118,10 @@ An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformAppli
 ### JSON-RPC Protocol
 
 The communication protocol used between a test runner executable (server) and a client (IDE, CLI, or CI tool). Based on [JSON-RPC 2.0](https://www.jsonrpc.org/specification), it defines messages for test discovery (`testing/discoverTests`), test execution (`testing/runTests`), result reporting, debugger attachment, and telemetry.
+
+### JUnitReport
+
+An MTP extension (`Microsoft.Testing.Extensions.JUnitReport`) that emits a JUnit-style XML test report at the end of a test run. The report conforms to the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema and is accepted by Jenkins (`junit` step), GitLab CI (`junit:` artifact reports), Azure DevOps (`PublishTestResults@2` with `testResultsFormat: 'JUnit'`), CircleCI, GitHub Actions test reporters, and most other CI tooling. MTP's hierarchical [TestNode](#testnode) tree is preserved as a `<property name="testpath" value="…"/>` element inside each `<testcase>`, allowing tools to reconstruct hierarchy. Auto-registers via the `TestingPlatformBuilderHook` MSBuild item declared in the package's `buildMultiTargeting` props (imported by the `build` and `buildTransitive` props), so adding a `<PackageReference>` to the package is sufficient — no opt-in property is required at the package level. When using [MSTest.Sdk](#mstestsdk), the package is not added by default (the extension is still experimental); opt in with `<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>` to have MSTest.Sdk add the `<PackageReference>` for you. Currently **experimental** — the API, CLI options, and on-disk format may change without notice. Enable via `--report-junit`; override filename with `--report-junit-filename`.
 
 ## L
 
@@ -87,7 +142,7 @@ An automated agentic workflow (`.github/workflows/lean-squad.md`) that manages t
 An optional argument value for the MTP `--list-tests` command-line option that switches test discovery output from the default human-readable text to a machine-readable JSON document emitted on stdout. Introduced in [PR #8280](https://github.com/microsoft/testfx/pull/8280).
 
 | Invocation | Behavior |
-|---|---|
+| --- | --- |
 | `--list-tests` | Default human-readable text output (unchanged) |
 | `--list-tests text` | Explicit alias for the default text mode |
 | `--list-tests json` | JSON document on stdout; banner, progress, and per-test text are suppressed; errors go to stderr |
@@ -95,6 +150,10 @@ An optional argument value for the MTP `--list-tests` command-line option that s
 The JSON document conforms to **schema v1**: a top-level object with `schemaVersion` (integer) and `tests` (array). Each test entry always includes `uid` and `displayName`, and optionally includes `type` (assembly full name, namespace, type name, method name, arity, return type, parameter types — from `TestMethodIdentifierProperty`), `location` (file path, start/end lines — from `TestFileLocationProperty`), `traits` (from `TestMetadataProperty`), and `properties` (from `SerializableKeyValuePairStringProperty`). Absent fields are omitted rather than emitted as `null`; `traits` and `properties` are arrays of `{ key, value }` objects so duplicate keys are preserved. The `schemaVersion` field is incremented on any breaking schema change.
 
 ## M
+
+### MemberConditionAttribute
+
+An MSTest attribute (`[MemberConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the value of one or more `public static bool` members (property, field, or parameterless method) on a specified type. Accepts a [ConditionMode](#conditionmode) argument and one or more member names; when multiple names are supplied they are combined with logical AND — the condition is met only when every referenced member is `true`. Each `[MemberConditionAttribute]` instance forms its own group, so stacking multiple attributes on the same target is also combined with AND. Throws `InvalidOperationException` at test discovery time if a referenced member cannot be resolved, surfacing typos as errors rather than silent skips. The attribute is not inherited — applying it to a base class does not affect derived classes. Introduced in [PR #9071](https://github.com/microsoft/testfx/pull/9071). Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
 ### MSTest
 
@@ -108,6 +167,10 @@ The self-contained test runner mode for MSTest, built on top of Microsoft.Testin
 
 A meta-package that bundles `MSTest.TestFramework`, `MSTest.TestAdapter`, and `MSTest.Analyzers` with default MSBuild SDK configuration. Simplifies project setup by providing a single package reference.
 
+### MSTest.SourceGeneration
+
+A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. Adoption requires only a `<PackageReference>` to `MSTest.SourceGeneration`; existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
+
 ### MTP
 
 See **Microsoft.Testing.Platform**.
@@ -115,6 +178,10 @@ See **Microsoft.Testing.Platform**.
 ### Microsoft.Testing.Platform (MTP)
 
 A lightweight, extensible test platform for .NET that serves as a modern alternative to VSTest. MTP ships as a NuGet package (`Microsoft.Testing.Platform`) and provides the core infrastructure for running tests: command-line parsing, test session management, result reporting, and an extension model. Test frameworks (e.g., MSTest, xUnit adapters) and extensions (e.g., CrashDump, HangDump) plug into MTP.
+
+### Microsoft.Testing.Platform.AI
+
+A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility abstractions for Microsoft.Testing.Platform. It defines the [IChatClientProvider](#ichatclientprovider) interface and leverages [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI) types so that test frameworks and extensions can consume Large Language Model (LLM) capabilities — flaky test analysis, crash dump analysis, test failure root-cause analysis, and more — without implementing provider-specific logic. This package ships the **abstractions only**; an AI provider implementation such as [Microsoft.Testing.Extensions.AzureFoundry](#azurefoundry) must also be registered to supply actual AI capabilities. See `docs/microsoft.testing.platform/001-AI-Extensibility.md` for the design RFC.
 
 ## N
 
@@ -132,7 +199,27 @@ A component in MTP that coordinates multi-process test execution. The orchestrat
 
 An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports test session telemetry using the [OpenTelemetry](https://opentelemetry.io/) standard, enabling integration with distributed tracing and observability platforms.
 
+### OSConditionAttribute
+
+An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
+
 ## P
+
+### PlannedTest
+
+A sealed class (`Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest`, currently `[Experimental("MSTESTEXP")]`) that describes a test that has been discovered and passed the active filter for the current assembly, before execution begins. Exposes the test's `FullyQualifiedTestClassName`, `TestName`, `TestDisplayName`, `AssemblyPath`, `ManagedTypeName`, `ManagedMethodName`, source file location (`DeclaringFilePath`, `DeclaringLineNumber`), `TestCategories` (from `[TestCategory]`), and `TestProperties` (from `[TestProperty]`). Instances are accessed via `TestRun.Current.PlannedTests`. Data-driven tests whose rows are resolved only at execution time (non-serializable data, `TestDataSourceUnfoldingStrategy.Fold` set via `[TestMethod(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]`, `[DataSource]`) appear as a single `PlannedTest` entry rather than one per row. See also [TestRun](#testrun) and RFC 014 (`docs/RFCs/014-TestRun-Current-PlannedTests.md`).
+
+### --progress
+
+An MTP terminal-reporter command-line option that controls whether animated progress output is shown during a test run. Accepts three values:
+
+| Value | Behavior |
+| --- | --- |
+| `auto` (default) | Show progress unless the terminal cannot update in place (non-ANSI/simple terminal), or the session is a test-host controller, `--list-tests`, or server mode |
+| `on` | Same as `auto` (a dedicated heartbeat renderer for non-cursor modes is tracked separately) |
+| `off` | Suppress all progress output |
+
+Introduced in [PR #9145](https://github.com/microsoft/testfx/pull/9145) as a replacement for the former `--no-progress` flag. `--no-progress` continues to work as a deprecated alias that routes to `--progress off`; outside of CI it emits a one-per-process deprecation warning on stderr. The warning is suppressed in CI environments, where it would be invisible noise and where build infrastructure (such as the Arcade SDK test runner) passes `--no-progress` unconditionally. `--progress` always wins when both are supplied.
 
 ### PropertyBag
 
@@ -150,9 +237,25 @@ Request for Comments document in the `docs/RFCs/` folder. RFCs describe design d
 
 ## T
 
+### TestArchitectures
+
+A `[Flags]` public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that specifies one or more processor architectures used with [ArchitectureConditionAttribute](#architectureconditionattribute). Available only on .NET (not .NET Framework). Flag values: `X86`, `X64`, `Arm`, `Arm64`, `Wasm`, `S390x`, `LoongArch64`, `Armv6`, `Ppc64le`, and (on .NET 9+) `RiscV64`. Values may be combined with bitwise OR to target multiple architectures (e.g. `TestArchitectures.X64 | TestArchitectures.Arm64`). The enum is named `TestArchitectures` rather than `Architecture` to avoid clashing with `System.Runtime.InteropServices.Architecture`, following the same pluralised `[Flags]`-enum pattern as `OperatingSystems`. Introduced in [PR #9233](https://github.com/microsoft/testfx/pull/9233).
+
+### testconfig.json
+
+The per-project configuration file for Microsoft.Testing.Platform, placed at the project root and read at test startup. Supports multiple top-level sections; a key one is `environmentVariables`, which declares environment variables to set on the test host process — mirroring the `<EnvironmentVariables>` element of legacy `.runsettings` and removing the need to write a custom `ITestHostEnvironmentVariableProvider` (see `docs/microsoft.testing.platform/002-TestConfig-EnvironmentVariables.md`). When the `environmentVariables` section is present and non-empty, MTP activates the **controller process model**: the launching process becomes the controller, injects the declared variables into `ProcessStartInfo`, and spawns the actual test host as a child process.
+
+### TestContainer
+
+An abstract base class (`TestFramework.ForTestingMSTest.TestContainer`) in the internal [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) framework used to unit-test MSTest itself. Any class that inherits from `TestContainer` is treated as a test class; every `public` parameterless method on that class is treated as a test — no `[TestClass]` or `[TestMethod]` attributes are needed. The constructor runs before each test and `Dispose(bool)` runs after each test. This framework is used only in `test/UnitTests/TestFramework.UnitTests`; all other test projects in this repository use standard MSTest or MTP.
+
 ### TestNode
 
 A core MTP class (`Microsoft.Testing.Platform.Extensions.Messages.TestNode`) that represents a single test item — either discovered or executed. Each `TestNode` carries a unique `Uid` (`TestNodeUid`), a human-readable `DisplayName`, and a [PropertyBag](#propertybag) of typed properties (state, timing, file location, metadata, etc.). `TestNode` instances are published to the `IMessageBus` by test framework adapters during discovery and execution phases.
+
+### TestRun
+
+A static ambient class (`Microsoft.VisualStudio.TestTools.UnitTesting.TestRun`, currently `[Experimental("MSTESTEXP")]`) that exposes run-wide information about the currently executing test session via `TestRun.Current` (type `ITestRunInfo`). `Current` is never `null`: before discovery is complete for an assembly it returns an empty `ITestRunInfo`; once the adapter has finished filtering, `Current.PlannedTests` contains one [PlannedTest](#plannedtest) per test that will run. Unlike `TestContext.Current` (which is `null` outside test execution), `TestRun.Current` is accessible from `[AssemblyInitialize]`, helper classes, fixtures, and extension code. Scoped per process and per AppDomain (on .NET Framework). See also [PlannedTest](#plannedtest) and RFC 014 (`docs/RFCs/014-TestRun-Current-PlannedTests.md`).
 
 ### TFM (Target Framework Moniker)
 

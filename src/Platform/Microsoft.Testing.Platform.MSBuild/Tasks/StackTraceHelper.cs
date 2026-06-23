@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Helpers;
+
 namespace Microsoft.Testing.Platform.MSBuild;
 
 internal static class StackTraceHelper
@@ -13,7 +15,7 @@ internal static class StackTraceHelper
         place = null;
         lineNumber = 0;
 
-        if (errorStackTrace == null)
+        if (errorStackTrace is null)
         {
             return false;
         }
@@ -41,61 +43,50 @@ internal static class StackTraceHelper
         InitializeRegex();
 
         // stack frame looks like this '   at Program.<Main>$(String[] args) in S:\t\ConsoleApp81\ConsoleApp81\Program.cs:line 9'
-        Match match = s_regex.Match(stackFrame);
+        Match match;
+        try
+        {
+            match = s_regex.Match(stackFrame);
+        }
+        catch (RegexMatchTimeoutException)
+        {
+            line = 0;
+            file = null;
+            place = null;
+            return false;
+        }
 
         line = 0;
         file = null;
         place = null;
 
-        if (match.Success)
+        bool hasLocation = match.Success && match.Groups["file"].Success && match.Groups["line"].Success;
+        if (hasLocation)
         {
             // get the exact info from stack frame.
-            place = match.Groups["code"].Value;
+            Group code = match.Groups["code"];
+            Group codeWithoutLocation = match.Groups["code1"];
+            place = code.Success ? code.Value : codeWithoutLocation.Value;
+
             file = match.Groups["file"].Value;
             _ = int.TryParse(match.Groups["line"].Value, out line);
         }
 
-        return match.Success;
+        return hasLocation;
     }
 
     [MemberNotNull(nameof(s_regex))]
     private static void InitializeRegex()
     {
-        if (s_regex != null)
+        if (s_regex is not null)
         {
             return;
         }
 
-        string atResourceName = "Word_At";
-        string inResourceName = "StackTrace_InFileLineNumber";
-
-        string? atString = null;
-        string? inString = null;
-
-        // Grab words from localized resource, in case the stack trace is localized.
-        try
-        {
-            // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
-            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod("GetResourceString", BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
-            if (getResourceStringMethod is not null)
-            {
-                // <value>at</value>
-                atString = (string?)getResourceStringMethod.Invoke(null, [atResourceName]);
-
-                // <value>in {0}:line {1}</value>
-                inString = (string?)getResourceStringMethod.Invoke(null, [inResourceName]);
-            }
-        }
-        catch
-        {
-            // If we fail, populate the defaults below.
-        }
-
-        atString = atString == null || atString == atResourceName ? "at" : atString;
-        inString = inString == null || inString == inResourceName ? "in {0}:line {1}" : inString;
-
-        string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
-
-        s_regex = new Regex(@$"^   {atString} (?<code>.+) {inPattern}$", RegexOptions.Compiled, matchTimeout: TimeSpan.FromSeconds(1));
+        // Keep this location-only pattern because MSBuild only reports frames that can provide a file and line.
+        s_regex = new Regex(
+            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: false),
+            RegexOptions.Compiled,
+            StackTraceRegexHelper.MatchTimeout);
     }
 }

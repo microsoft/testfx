@@ -119,12 +119,14 @@
   </resheader>
   <data name="BrowserPlatformNotSupportedOnOlderFrameworks" xml:space="preserve">
     <value>Browser platform is only supported on .NET 7.0 or greater.</value>
+    <comment>{Locked=".NET 7.0"}</comment>
   </data>
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
   </data>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
     <value>The same instance of 'CompositeExtensionFactory' is already registered</value>
+    <comment>{Locked="CompositeExtensionFactory"}</comment>
   </data>
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
@@ -137,39 +139,59 @@
   </data>
   <data name="ExtensionDoesNotImplementGivenInterfaceErrorMessage" xml:space="preserve">
     <value>Extension of type '{0}' is not implementing the required '{1}' interface</value>
+    <comment>{0} is the extension type name. {1} is the required interface type name.</comment>
   </data>
   <data name="ExtensionWithSameUidAlreadyRegisteredErrorMessage" xml:space="preserve">
     <value>Extensions with the same UID '{0}' have already been registered. Registered extensions are of types: {1}</value>
+    <comment>{0} is the duplicate extension UID. {1} is the list of registered extension type names.</comment>
   </data>
   <data name="JsonConfigurationFileParserDuplicateKeyErrorMessage" xml:space="preserve">
     <value>A duplicate key '{0}' was found</value>
+    <comment>{0} is the duplicate JSON key.</comment>
   </data>
   <data name="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage" xml:space="preserve">
     <value>Top-level JSON element must be an object. Instead, '{0}' was found</value>
+    <comment>{0} is the JSON value kind that was found.</comment>
   </data>
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
+    <comment>{0} is the unsupported JSON token type.</comment>
   </data>
   <data name="JsonConfigurationSectionMustBeAnObjectErrorMessage" xml:space="preserve">
     <value>The '{0}' section in the testconfig.json file ('{1}') must be a JSON object.</value>
-    <comment>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file.</comment>
+    <comment>{0} is the section name (e.g. environmentVariables). {1} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="environmentVariables"}</comment>
   </data>
   <data name="JsonConfigurationSectionEntryMustBeScalarErrorMessage" xml:space="preserve">
     <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be a scalar string value. Nested objects and arrays are not supported.</value>
-    <comment>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file.</comment>
+    <comment>{0} is the full dotted/colon-separated key. {1} is the section name. {2} is the path to the testconfig.json file. {Locked="testconfig.json"}</comment>
+  </data>
+  <data name="JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage" xml:space="preserve">
+    <value>The entry '{0}' under section '{1}' in the testconfig.json file ('{2}') must be either a scalar value (string, number, boolean) or an array of scalar values. Nested objects are not supported.</value>
+    <comment>{0} is the entry name relative to the section (e.g. an option name like 'timeout' or an indexed key like 'timeout:0'). {1} is the section name (commandLineOptions). {2} is the path to the testconfig.json file. {Locked="testconfig.json"}{Locked="commandLineOptions"}{Locked="timeout"}{Locked="timeout:0"}</comment>
+  </data>
+  <data name="JsonCommandLineOptionsValidationErrorPrefix" xml:space="preserve">
+    <value>In testconfig.json under 'commandLineOptions': {0}</value>
+    <comment>{0} is the underlying validation error message (unknown option, arity mismatch, invalid arguments...). {Locked="testconfig.json"}{Locked="commandLineOptions"}</comment>
+  </data>
+  <data name="JsonCommandLineOptionIsBootstrapOnlyErrorMessage" xml:space="preserve">
+    <value>The option '--{0}' is read during platform bootstrap (before the testconfig.json file is loaded) and must therefore be passed on the command line rather than declared under 'commandLineOptions' in testconfig.json.</value>
+    <comment>{0} is the bare bootstrap-only option name without the leading "--" (e.g. config-file, diagnostic, diagnostic-verbosity); the "--" prefix is already in the format string. {Locked="--"}{Locked="commandLineOptions"}{Locked="testconfig.json"}</comment>
   </data>
   <data name="TestConfigurationEnvironmentVariableProviderDisplayName" xml:space="preserve">
     <value>testconfig.json environment variables provider</value>
+    <comment>{Locked="testconfig.json"}</comment>
   </data>
   <data name="TestConfigurationEnvironmentVariableProviderDescription" xml:space="preserve">
     <value>Applies environment variables declared in the 'environmentVariables' section of the testconfig.json file to the test host child process.</value>
+    <comment>{Locked="environmentVariables"}{Locked="testconfig.json"}</comment>
   </data>
   <data name="TestConfigurationEnvironmentVariableNameCannotBeEmptyErrorMessage" xml:space="preserve">
     <value>Environment variable names declared in the 'environmentVariables' section of the testconfig.json file must not be empty.</value>
+    <comment>{Locked="environmentVariables"}{Locked="testconfig.json"}</comment>
   </data>
   <data name="TestConfigurationEnvironmentVariableInvalidNameErrorMessage" xml:space="preserve">
     <value>Environment variable name '{0}' declared in the 'environmentVariables' section of the testconfig.json file is invalid. Names must not contain '=' or null characters.</value>
-    <comment>{0} is the invalid environment variable name.</comment>
+    <comment>{0} is the invalid environment variable name. {Locked="environmentVariables"}{Locked="testconfig.json"}{Locked="="}</comment>
   </data>
   <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
     <value>Creates the right test execution filter for server mode</value>
@@ -179,15 +201,19 @@
   </data>
   <data name="ServiceProviderCannotFindServiceErrorMessage" xml:space="preserve">
     <value>Cannot find service of type '{0}'</value>
+    <comment>{0} is the requested service type name.</comment>
   </data>
   <data name="ServiceProviderServiceAlreadyRegistered" xml:space="preserve">
     <value>Instance of type '{0}' is already registered</value>
+    <comment>{0} is the already registered service type name.</comment>
   </data>
   <data name="ServiceProviderShouldNotRegisterTestFramework" xml:space="preserve">
     <value>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</value>
+    <comment>{Locked="ITestFramework"}{Locked="ITestApplicationBuilder.RegisterTestFramework"}</comment>
   </data>
   <data name="TestAdapterInvokerFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestFrameworkInvoker' factory is already set</value>
+    <comment>{Locked="ITestFrameworkInvoker"}</comment>
   </data>
   <data name="TestApplicationBuilderApplicationAlreadyRegistered" xml:space="preserve">
     <value>The application has already been built</value>
@@ -200,6 +226,7 @@
   </data>
   <data name="TestApplicationBuilderTestFrameworkNotRegistered" xml:space="preserve">
     <value>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</value>
+    <comment>{Locked="ITestApplicationBuilder.RegisterTestFramework"}</comment>
   </data>
   <data name="TestApplicationResultDescription" xml:space="preserve">
     <value>Determine the result of the test application execution</value>
@@ -209,71 +236,92 @@
   </data>
   <data name="TestApplicationVSTestModeTooManyBuilders" xml:space="preserve">
     <value>VSTest mode only supports a single TestApplicationBuilder per process</value>
+    <comment>{Locked="VSTest"}{Locked="TestApplicationBuilder"}</comment>
   </data>
   <data name="TestHostAdapterInvokerFailedTestSessionErrorMessage" xml:space="preserve">
     <value>Test adapter test session failure</value>
   </data>
   <data name="TreeNodeFilterCannotContainSlashCharacterErrorMessage" xml:space="preserve">
     <value>A filter '{0}' should not contain a '/' character</value>
+    <comment>{0} is the filter expression string. {Locked="/"}</comment>
   </data>
   <data name="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage" xml:space="preserve">
     <value>An escape character should not terminate the filter string '{0}'</value>
+    <comment>{0} is the filter expression string.</comment>
   </data>
   <data name="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage" xml:space="preserve">
     <value>Only the final filter path can contain '**' wildcard</value>
+    <comment>{Locked="**"}</comment>
   </data>
   <data name="TreeNodeFilterOperatorNotAllowedErrorMessage" xml:space="preserve">
     <value>Unexpected operator '&amp;' or '|' within filter expression '{0}'</value>
+    <comment>{0} is the filter expression string. {Locked="&amp;"}{Locked="|"}</comment>
   </data>
   <data name="TreeNodeFilterPathShouldStartWithSlashErrorMessage" xml:space="preserve">
     <value>Invalid node path, expected root as first character '{0}'</value>
+    <comment>{0} is the first character found in the invalid node path.</comment>
   </data>
   <data name="TreeNodeFilterUnbalancedFilterErrorMessage" xml:space="preserve">
     <value>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</value>
-    <comment>{1} and {2} are () or []</comment>
+    <comment>{0} is the filter expression string. {1} and {2} are () or [] operator pairs. {Locked="()"}{Locked="[]"}</comment>
   </data>
   <data name="TreeNodeFilterUnexpectedSlashOperatorErrorMessage" xml:space="preserve">
     <value>Filter contains an unexpected '/' operator inside a parenthesized expression</value>
+    <comment>{Locked="/"}</comment>
+  </data>
+  <data name="TreeNodeFilterUnexpectedSlashOperatorInPathSegmentErrorMessage" xml:space="preserve">
+    <value>Filter contains an unexpected '/' operator inside a parenthesized expression. Filter: '{0}'. To combine alternatives for one path segment, use syntax like '/A/B/C/(X|Y)'.</value>
+    <comment>{0} is the filter expression string. Diagnostic thrown by the TreeNodeFilter parser when a '/' is encountered inside a parenthesized alternative such as '/A/(B/C)'. {Locked="/"}{Locked="/A/B/C/(X|Y)"}{Locked="/A/(B/C)"}</comment>
   </data>
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
+    <comment>{Locked="ITestExecutionFilterFactory"}</comment>
   </data>
   <data name="CannotRemoveEnvironmentVariableAtThisStageErrorMessage" xml:space="preserve">
     <value>Cannot remove environment variables at this stage</value>
   </data>
   <data name="CannotRemoveEnvironmentVariableItIsLockedErrorMessage" xml:space="preserve">
     <value>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</value>
+    <comment>{0} is the extension display name. {1} is the environment variable name. {2} is the display name of the extension that locked the environment variable.</comment>
   </data>
   <data name="CannotSetEnvironmentVariableAtThisStageErrorMessage" xml:space="preserve">
     <value>Cannot set environment variables at this stage</value>
   </data>
   <data name="CannotSetEnvironmentVariableItIsLockedErrorMessage" xml:space="preserve">
     <value>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</value>
+    <comment>{0} is the extension display name. {1} is the environment variable name. {2} is the display name of the extension that locked the environment variable.</comment>
   </data>
   <data name="ProcessHasNotYetExitedErrorMessage" xml:space="preserve">
     <value>Process should have exited before we can determine this value</value>
   </data>
   <data name="CannotStartProcessErrorMessage" xml:space="preserve">
     <value>Cannot start process '{0}'</value>
+    <comment>{0} is the process file name.</comment>
   </data>
   <data name="EnvironmentVariableProviderFailedWithError" xml:space="preserve">
     <value>Provider '{0}' (UID: {1}) failed with error: {2}</value>
+    <comment>{0} is the provider display name. {1} is the provider UID. {2} is the error message.</comment>
   </data>
   <data name="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage" xml:space="preserve">
     <value>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</value>
+    <comment>{Locked="ITestHostEnvironmentVariableProvider"}</comment>
   </data>
   <data name="TestFrameworkProxyApiShouldNotBeCalled" xml:space="preserve">
     <value>Method '{0}' should not have been called on this proxy object</value>
+    <comment>{0} is the method name.</comment>
   </data>
   <data name="TestProcessDidNotExitGracefullyErrorMessage" xml:space="preserve">
     <value>Test application process didn't exit gracefully, exit code is '{0}'</value>
+    <comment>{0} is the process exit code.</comment>
   </data>
   <data name="CannotCreateUniqueLogFileErrorMessage" xml:space="preserve">
     <value>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</value>
+    <comment>{0} is the last log file name that was tried.</comment>
   </data>
   <data name="FailedToWriteLogToChannelErrorMessage" xml:space="preserve">
     <value>Failed to write the log to the channel. Missed log content:
 {0}</value>
+    <comment>{0} is the log content that could not be written.</comment>
   </data>
   <data name="ServerLogMessageDescription" xml:space="preserve">
     <value>This data represents a server log message</value>
@@ -283,44 +331,48 @@
   </data>
   <data name="TimeoutAcquiringSemaphoreErrorMessage" xml:space="preserve">
     <value>Failed to acquire semaphore before timeout of '{0}' seconds</value>
+    <comment>{0} is the timeout in seconds.</comment>
   </data>
   <data name="TimeoutFlushingLogsErrorMessage" xml:space="preserve">
     <value>Failed to flush logs before the timeout of '{0}' seconds</value>
+    <comment>{0} is the timeout in seconds.</comment>
   </data>
   <data name="UnexpectedExceptionInFileLoggerErrorMessage" xml:space="preserve">
     <value>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
 {0}</value>
-    <comment>{0} exception ToString</comment>
-  </data>
-  <data name="UnexpectedStateErrorMessage" xml:space="preserve">
-    <value>Unexpected state in file '{0}' at line '{1}'</value>
-  </data>
-  <data name="UnreachableLocationErrorMessage" xml:space="preserve">
-    <value>This program location is thought to be unreachable. File='{0}' Line={1}</value>
+    <comment>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</comment>
   </data>
   <data name="RetryFailedAfterTriesErrorMessage" xml:space="preserve">
     <value>Retry failed after {0} times</value>
+    <comment>{0} is the retry count.</comment>
   </data>
   <data name="CommandLineInvalidArgumentsForOption" xml:space="preserve">
     <value>Option '--{0}' has invalid arguments: {1}</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the invalid argument value or validation error.</comment>
   </data>
   <data name="CommandLineInvalidConfiguration" xml:space="preserve">
     <value>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</value>
+    <comment>{0} is the provider display name. {1} is the provider UID. {2} is the configuration error message.</comment>
   </data>
   <data name="CommandLineOptionExpectsAtLeastArguments" xml:space="preserve">
     <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {3} is the minimum number of expected arguments.</comment>
   </data>
   <data name="CommandLineOptionExpectsAtMostArguments" xml:space="preserve">
     <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {3} is the maximum number of expected arguments.</comment>
   </data>
   <data name="CommandLineOptionExpectsNoArguments" xml:space="preserve">
     <value>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID.</comment>
   </data>
   <data name="CommandLineOptionIsUsingReservedPrefix" xml:space="preserve">
     <value>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the provider display name. {2} is the provider UID. {Locked="--internal"}</comment>
   </data>
   <data name="CommandLineUnknownOption" xml:space="preserve">
     <value>Unknown option '--{0}'</value>
+    <comment>{0} is the unknown option name without the leading dashes.</comment>
   </data>
   <data name="InvalidCommandLineArguments" xml:space="preserve">
     <value>Invalid command line arguments:</value>
@@ -334,30 +386,38 @@
   </data>
   <data name="CommandLineInvalidOptionName" xml:space="preserve">
     <value>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</value>
+    <comment>{0} is the invalid option name. {Locked="-"}{Locked="my-option"}</comment>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProviders" xml:space="preserve">
-    <value>Option '--{0}' is declared by multiple extensions: '{1}'</value>
+    <value>Option '--{0}' is declared by multiple providers: '{1}'</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the list of provider display names.</comment>
   </data>
   <data name="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround" xml:space="preserve">
     <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
   </data>
   <data name="CommandLineOptionIsReserved" xml:space="preserve">
     <value>Option '--{0}' is reserved and cannot be used by providers: '{1}'</value>
+    <comment>{0} is the option name without the leading dashes. {1} is the list of provider display names.</comment>
   </data>
   <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
     <value>Unexpected argument {0}</value>
+    <comment>{0} is the unexpected command-line argument.</comment>
   </data>
   <data name="CommandLineParserUnexpectedSingleQuoteInArgument" xml:space="preserve">
     <value>Unexpected single quote in argument: {0}</value>
+    <comment>{0} is the command-line argument containing the unexpected single quote.</comment>
   </data>
   <data name="CommandLineParserUnexpectedSingleQuoteInArgumentForOption" xml:space="preserve">
     <value>Unexpected single quote in argument: {0} for option '--{1}'</value>
+    <comment>{0} is the command-line argument containing the unexpected single quote. {1} is the option name without the leading dashes.</comment>
   </data>
   <data name="HelpApplicationUsage" xml:space="preserve">
     <value>Usage {0} [option providers] [extension option providers]</value>
+    <comment>{0} is the application name used in the usage line.</comment>
   </data>
   <data name="HelpExecuteTestApplication" xml:space="preserve">
     <value>Execute a .NET Test Application.</value>
+    <comment>{Locked=".NET"}</comment>
   </data>
   <data name="HelpExtensionOptions" xml:space="preserve">
     <value>Extension options:</value>
@@ -370,6 +430,7 @@
   </data>
   <data name="HelpTestApplicationRunner" xml:space="preserve">
     <value>&lt;test application runner&gt;</value>
+    <comment>{Locked="&lt;test application runner&gt;"}</comment>
   </data>
   <data name="NotAvailable" xml:space="preserve">
     <value>Not available</value>
@@ -391,43 +452,54 @@ Note that this is slowing down the test execution.</value>
   <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">
     <value>Enable the diagnostic logging. The default log level is 'Trace'.
 The file will be written in the output directory with the name log_[yyMMddHHmmssfff].diag</value>
+    <comment>{Locked="Trace"}{Locked="log_[yyMMddHHmmssfff].diag"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage" xml:space="preserve">
     <value>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</value>
+    <comment>{Locked="--diagnostic-verbosity"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionIsMissing" xml:space="preserve">
     <value>'--{0}' requires '--diagnostic' to be provided</value>
+    <comment>{0} is the option name without the leading dashes. {Locked="--diagnostic"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription" xml:space="preserve">
     <value>Output directory of the diagnostic logging.
 If not specified the file will be generated inside the default 'TestResults' directory.</value>
+    <comment>{Locked="TestResults"}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription" xml:space="preserve">
     <value>Prefix for the log file name that will replace '[log]_.'</value>
+    <comment>{Locked="[log]_."}</comment>
   </data>
   <data name="PlatformCommandLineDiagnosticVerbosityOptionDescription" xml:space="preserve">
     <value>Define the level of the verbosity for the --diagnostic.
 The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'.</value>
+    <comment>{Locked="--diagnostic"}{Locked="Trace"}{Locked="Debug"}{Locked="Information"}{Locked="Warning"}{Locked="Error"}{Locked="Critical"}</comment>
   </data>
   <data name="PlatformCommandLineDiscoverTestsOptionDescription" xml:space="preserve">
     <value>List available tests.
 Optionally accepts 'text' (the default human-readable output) or 'json' to print the discovered tests as a JSON document on standard output.</value>
+    <comment>{Locked="text"}{Locked="json"}</comment>
   </data>
   <data name="PlatformCommandLineDiscoverTestsInvalidArgument" xml:space="preserve">
     <value>'--list-tests' received unexpected value '{0}'. Supported values are: {1}.</value>
+    <comment>{0} is the unexpected option value. {1} is the comma-separated list of supported values. {Locked="--list-tests"}{Locked="text"}{Locked="json"}</comment>
   </data>
   <data name="PlatformCommandLineHelpOptionDescription" xml:space="preserve">
     <value>Show the command line help.</value>
   </data>
   <data name="PlatformCommandLineInfoOptionDescription" xml:space="preserve">
     <value>Display .NET test application information.</value>
+    <comment>{Locked=".NET"}</comment>
   </data>
   <data name="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests" xml:space="preserve">
     <value>'--list-tests' and '--minimum-expected-tests' are incompatible options</value>
+    <comment>{Locked="--list-tests"}{Locked="--minimum-expected-tests"}</comment>
   </data>
   <data name="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument" xml:space="preserve">
     <value>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</value>
+    <comment>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</comment>
   </data>
   <data name="PlatformCommandLineNoBannerOptionDescription" xml:space="preserve">
     <value>Do not display the startup banner, the copyright message or the telemetry banner.</value>
@@ -437,6 +509,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
   </data>
   <data name="PlatformCommandLinePortOptionSingleArgument" xml:space="preserve">
     <value>'--{0}' expects a single valid port as argument</value>
+    <comment>{0} is the option name without the leading dashes.</comment>
   </data>
   <data name="PlatformCommandLineProviderDescription" xml:space="preserve">
     <value>Microsoft Testing Platform command line provider</value>
@@ -448,9 +521,18 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
     <value>The directory where the test results are going to be placed.
 If the specified directory doesn't exist, it's created.
 The default is TestResults in the directory that contains the test application.</value>
+    <comment>{Locked="TestResults"}</comment>
   </data>
   <data name="PlatformCommandLineServerOptionDescription" xml:space="preserve">
     <value>Enable the server mode.</value>
+  </data>
+  <data name="PlatformCommandLineServerInvalidArgument" xml:space="preserve">
+    <value>'--server' received unexpected value '{0}'. Supported values are: {1}.</value>
+    <comment>{0} is the unexpected protocol value. {1} is the comma-separated list of supported protocol values. {Locked="--server"}{Locked="jsonrpc"}{Locked="dotnettestcli"}</comment>
+  </data>
+  <data name="PlatformCommandLineDotnetTestCliRequiresPipe" xml:space="preserve">
+    <value>'--server {0}' requires '--{1}' to be specified.</value>
+    <comment>{0} is the server protocol value. {1} is the required option name without the leading dashes. {Locked="--server"}{Locked="dotnettestcli"}{Locked="dotnet-test-pipe"}</comment>
   </data>
   <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
     <value>For testing purposes</value>
@@ -460,18 +542,22 @@ The default is TestResults in the directory that contains the test application.<
   </data>
   <data name="PlatformCommandLineDotnetTestPipe" xml:space="preserve">
     <value>dotnet test pipe.</value>
+    <comment>{Locked="dotnet test"}</comment>
   </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>
   </data>
   <data name="ConnectingToClientHost" xml:space="preserve">
     <value>Connecting to client host '{0}' port '{1}'</value>
+    <comment>{0} is the client host name. {1} is the client port.</comment>
   </data>
   <data name="JsonRpcTcpServerDescription" xml:space="preserve">
     <value>JsonRpc server implementation based on the test platform protocol specification.</value>
+    <comment>{Locked="JsonRpc"}</comment>
   </data>
   <data name="JsonRpcTcpServerToSingleClientDescription" xml:space="preserve">
     <value>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</value>
+    <comment>{Locked="JsonRpc"}</comment>
   </data>
   <data name="TelemetryNotice" xml:space="preserve">
     <value>Telemetry
@@ -480,6 +566,7 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</value>
+    <comment>{Locked="TESTINGPLATFORM_TELEMETRY_OPTOUT"}{Locked="DOTNET_CLI_TELEMETRY_OPTOUT"}{Locked="1"}{Locked="true"}{Locked="https://aka.ms/testingplatform/telemetry"}</comment>
   </data>
   <data name="TelemetryProviderAlreadySetErrorMessage" xml:space="preserve">
     <value>Telemetry provider is already set</value>
@@ -489,51 +576,54 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   </data>
   <data name="CouldNotFindDirectoryErrorMessage" xml:space="preserve">
     <value>Could not find directory '{0}'</value>
+    <comment>{0} is the directory path.</comment>
   </data>
   <data name="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage" xml:space="preserve">
     <value>Method '{0}' did not exit successfully</value>
+    <comment>{0} is the method name.</comment>
   </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
     <value>Do not report non successful exit value for specific exit codes
 (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
+    <comment>{Locked="--ignore-exit-code 8;9"}</comment>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitOptionDescription" xml:space="preserve">
     <value>Exit the test process if dependent process exits. PID must be provided.</value>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitSingleArgument" xml:space="preserve">
     <value>'--{0}' expects a single int PID argument</value>
+    <comment>{0} is the option name without the leading dashes.</comment>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitInvalidDependentProcess" xml:space="preserve">
     <value>Invalid PID '{0}'
 {1}</value>
+    <comment>{0} is the invalid process ID. {1} is the exception message.</comment>
   </data>
   <data name="PlatformCommandLineExitOnProcessExitNotSupportedInBrowser" xml:space="preserve">
     <value>The '--exit-on-process-exit' option is not supported in browser environments.</value>
+    <comment>{Locked="--exit-on-process-exit"}</comment>
   </data>
   <data name="Aborted" xml:space="preserve">
     <value>Aborted</value>
   </data>
-  <data name="Actual" xml:space="preserve">
-    <value>Actual</value>
-  </data>
-  <data name="CancelledLowercase" xml:space="preserve">
-    <value>canceled</value>
-  </data>
   <data name="CancellingTestSession" xml:space="preserve">
     <value>Canceling the test session...</value>
   </data>
+  <data name="PressCtrlCAgainToForceExit" xml:space="preserve">
+    <value>Press Ctrl+C again to force exit.</value>
+    <comment>{Locked="Ctrl+C"}</comment>
+  </data>
+  <data name="ShutdownProgressStillWaitingPrefix" xml:space="preserve">
+    <value>Still waiting for: </value>
+    <comment>Prefix for the message that lists extensions that have not yet completed their shutdown work. Each entry is formatted as "{DisplayName} ({Phase}, {Seconds}s)" and entries are separated by "; ". {Locked="{DisplayName} ({Phase}, {Seconds}s)"}{Locked="; "}</comment>
+  </data>
   <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with async flush): {1}</value>
-    <comment>0 level such as verbose,
-1 path to file</comment>
+    <comment>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</comment>
   </data>
   <data name="DiagnosticFileLevelWithFlush" xml:space="preserve">
     <value>Diagnostic file (level '{0}' with sync flush): {1}</value>
-    <comment>0 level such as verbose,
-1 path to file</comment>
-  </data>
-  <data name="Expected" xml:space="preserve">
-    <value>Expected</value>
+    <comment>{0} is the diagnostic log level, such as verbose. {1} is the path to the diagnostic log file.</comment>
   </data>
   <data name="Failed" xml:space="preserve">
     <value>Failed</value>
@@ -541,25 +631,8 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="FailedLowercase" xml:space="preserve">
     <value>failed</value>
   </data>
-  <data name="ForTest" xml:space="preserve">
-    <value>For test</value>
-    <comment>is followed by test name</comment>
-  </data>
-  <data name="InProcessArtifactsProduced" xml:space="preserve">
-    <value>In process file artifacts produced:</value>
-  </data>
-  <data name="MinimumExpectedTestsPolicyViolation" xml:space="preserve">
-    <value>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</value>
-    <comment>{0}, {1} number of tests</comment>
-  </data>
-  <data name="OutOfProcessArtifactsProduced" xml:space="preserve">
-    <value>Out of process file artifacts produced:</value>
-  </data>
   <data name="Passed" xml:space="preserve">
     <value>Passed</value>
-  </data>
-  <data name="PassedLowercase" xml:space="preserve">
-    <value>passed</value>
   </data>
   <data name="Skipped" xml:space="preserve">
     <value>Skipped</value>
@@ -579,132 +652,78 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="ZeroTestsRan" xml:space="preserve">
     <value>Zero tests ran</value>
   </data>
-  <data name="ConsoleIsAlreadyInBatchingMode" xml:space="preserve">
-    <value>Console is already in batching mode.</value>
-    <comment>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</comment>
-  </data>
-  <data name="DurationLowercase" xml:space="preserve">
-    <value>duration</value>
-  </data>
   <data name="FailedWithErrors" xml:space="preserve">
     <value>failed with {0} error(s)</value>
+    <comment>{0} is the number of errors.</comment>
   </data>
   <data name="FailedWithErrorsAndWarnings" xml:space="preserve">
     <value>failed with {0} error(s) and {1} warning(s)</value>
+    <comment>{0} is the number of errors. {1} is the number of warnings.</comment>
   </data>
   <data name="FailedWithWarnings" xml:space="preserve">
     <value>failed with {0} warning(s)</value>
+    <comment>{0} is the number of warnings.</comment>
   </data>
   <data name="RunningTestsFrom" xml:space="preserve">
     <value>Running tests from</value>
-  </data>
-  <data name="TestRunSummary" xml:space="preserve">
-    <value>Test run summary:</value>
   </data>
   <data name="FromFile" xml:space="preserve">
     <value>from</value>
     <comment>from followed by a file name to point to the file from which test is originating</comment>
   </data>
-  <data name="StackFrameAt" xml:space="preserve">
-    <value>at</value>
-    <comment>at that is used for a stack frame location in a stack trace, is followed by a class and method name</comment>
-  </data>
-  <data name="StackFrameIn" xml:space="preserve">
-    <value>in</value>
-    <comment>in that is used in stack frame it is followed by file name</comment>
-  </data>
-  <data name="TerminalNoAnsiOptionDescription" xml:space="preserve">
-    <value>Disable outputting ANSI escape characters to screen.</value>
-  </data>
-  <data name="TerminalAnsiOptionDescription" xml:space="preserve">
-    <value>Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --no-progress if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</value>
-  </data>
-  <data name="TerminalAnsiOptionInvalidArgument" xml:space="preserve">
-    <value>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
-  </data>
-  <data name="TerminalNoProgressOptionDescription" xml:space="preserve">
-    <value>Disable reporting progress to screen.</value>
-  </data>
-  <data name="TerminalTestReporterDescription" xml:space="preserve">
-    <value>Writes test results to terminal.</value>
-  </data>
-  <data name="TerminalTestReporterDisplayName" xml:space="preserve">
-    <value>Terminal test reporter</value>
-  </data>
-  <data name="TerminalOutputOptionDescription" xml:space="preserve">
-    <value>Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</value>
-  </data>
-  <data name="TerminalOutputOptionInvalidArgument" xml:space="preserve">
-    <value>--output expects a single parameter with value 'Normal' or 'Detailed'.</value>
-  </data>
-  <data name="TerminalShowStdoutOptionDescription" xml:space="preserve">
-    <value>Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
-  </data>
-  <data name="TerminalShowStderrOptionDescription" xml:space="preserve">
-    <value>Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All'.</value>
-  </data>
-  <data name="TerminalShowOutputOptionInvalidArgument" xml:space="preserve">
-    <value>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</value>
+  <data name="TerminalNoProgressDeprecatedWarning" xml:space="preserve">
+    <value>warning: --no-progress is deprecated; use --progress off instead.</value>
+    <comment>{Locked="--no-progress"}{Locked="--progress off"}</comment>
   </data>
   <data name="PlatformCommandLineTimeoutArgumentErrorMessage" xml:space="preserve">
-    <value>'timeout' option should have one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is a finite, non-negative number that does not exceed the maximum supported duration</value>
+    <value>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
+    <comment>{Locked="timeout"}{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</comment>
   </data>
   <data name="PlatformCommandLineTimeoutOptionDescription" xml:space="preserve">
     <value>A global test execution timeout.
-Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is float.</value>
+Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</value>
+    <comment>{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</comment>
   </data>
   <data name="LoggerFactoryNotReady" xml:space="preserve">
     <value>The ILoggerFactory has not been built yet.</value>
+    <comment>{Locked="ILoggerFactory"}</comment>
   </data>
   <data name="MessageBusNotReady" xml:space="preserve">
     <value>The message bus has not been built yet or is no more usable at this stage.</value>
   </data>
   <data name="CommandLineOptionsNotReady" xml:space="preserve">
     <value>The ICommandLineOptions has not been built yet.</value>
+    <comment>{Locked="ICommandLineOptions"}</comment>
   </data>
   <data name="MissingClientPortFoJsonRpc" xml:space="preserve">
     <value>Expected --client-port when jsonRpc protocol is used.</value>
-  </data>
-  <data name="StandardError" xml:space="preserve">
-    <value>Error output</value>
-  </data>
-  <data name="StandardOutput" xml:space="preserve">
-    <value>Standard output</value>
+    <comment>{Locked="--client-port"}{Locked="jsonRpc"}</comment>
   </data>
   <data name="DiscoveringTestsFrom" xml:space="preserve">
     <value>Discovering tests from</value>
   </data>
   <data name="TestDiscoverySummary" xml:space="preserve">
     <value>Test discovery summary: found {0} test(s) in {1} assemblies.</value>
-    <comment>0 is number of tests, 1 is count of assemblies</comment>
+    <comment>{0} is the number of discovered tests. {1} is the count of assemblies.</comment>
   </data>
   <data name="DiscoveredTestsInAssembly" xml:space="preserve">
     <value>Discovered {0} test(s) in assembly</value>
-    <comment>0 is count, the sentence is followed by the path of the assebly</comment>
-  </data>
-  <data name="TestDiscoverySummarySingular" xml:space="preserve">
-    <value>Test discovery summary: found {0} test(s)</value>
-    <comment>0 is number of tests</comment>
+    <comment>{0} is the number of discovered tests. The sentence is followed by the assembly path.</comment>
   </data>
   <data name="ExitCode" xml:space="preserve">
     <value>Exit code</value>
   </data>
   <data name="CommandLineParserResponseFileNotFound" xml:space="preserve">
     <value>The response file '{0}' was not found</value>
+    <comment>{0} is the response file path.</comment>
   </data>
   <data name="CommandLineParserFailedToReadResponseFile" xml:space="preserve">
     <value>Failed to read response file '{0}'. {1}.</value>
-    <comment>{1} is the exception</comment>
+    <comment>{0} is the response file path. {1} is the exception message.</comment>
   </data>
   <data name="CommandLineParserUnclosedQuoteInResponseFile" xml:space="preserve">
     <value>Unclosed quote in response file at line {0}</value>
-    <comment>{0} is the line number</comment>
+    <comment>{0} is the line number in the response file.</comment>
   </data>
   <data name="CommandLineParserUnclosedQuoteInCommandLine" xml:space="preserve">
     <value>Unclosed quote in command line</value>
@@ -714,21 +733,26 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="PlatformCommandLineConfigFileOptionDescription" xml:space="preserve">
     <value>Specifies a testconfig.json file.</value>
+    <comment>{Locked="testconfig.json"}</comment>
   </data>
   <data name="ConfigurationFileNotFound" xml:space="preserve">
     <value>The configuration file '{0}' specified with '--config-file' could not be found.</value>
+    <comment>{0} is the configuration file path. {Locked="--config-file"}</comment>
   </data>
   <data name="ActiveTestsRunning_MoreTestsCount" xml:space="preserve">
     <value>and {0} more</value>
+    <comment>{0} is the number of additional active tests.</comment>
   </data>
   <data name="ActiveTestsRunning_FullTestsCount" xml:space="preserve">
     <value>{0} tests running</value>
+    <comment>{0} is the number of currently running tests.</comment>
   </data>
   <data name="StartingTestSession" xml:space="preserve">
     <value>Starting test session.</value>
   </data>
   <data name="StartingTestSessionWithLogFilePath" xml:space="preserve">
     <value>Starting test session. The log file path is '{0}'.</value>
+    <comment>{0} is the log file path.</comment>
   </data>
   <data name="FinishedTestSession" xml:space="preserve">
     <value>Finished test session.</value>
@@ -738,40 +762,45 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="ServerTestHostDescription" xml:space="preserve">
     <value>The 'ITestHost' implementation used when running server mode.</value>
+    <comment>{Locked="ITestHost"}</comment>
   </data>
   <data name="UnobservedTaskExceptionWarningMessage" xml:space="preserve">
     <value>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</value>
-    <comment>{0} is the exception that was unhandled/unobserved</comment>
+    <comment>{0} is the exception that was unhandled/unobserved. {Locked="ServerTestHost.OnTaskSchedulerUnobservedTaskException"}</comment>
   </data>
   <data name="ExceptionDuringCancellationWarningMessage" xml:space="preserve">
     <value>Exception during the cancellation of request id '{0}'</value>
-    <comment>{0} is the request id</comment>
+    <comment>{0} is the request id.</comment>
   </data>
   <data name="DeprecatedEnvironmentVariableWarning" xml:space="preserve">
     <value>Warning: The environment variable '{0}' is deprecated and will be removed in a future major version. Use '{1}' instead.</value>
-    <comment>{0} is the deprecated environment variable name, {1} is the replacement environment variable name.</comment>
+    <comment>{0} is the deprecated environment variable name. {1} is the replacement environment variable name.</comment>
   </data>
   <data name="PlatformCommandLineMaxFailedTestsOptionDescription" xml:space="preserve">
     <value>Specifies a maximum number of test failures that, when exceeded, will abort the test run.</value>
   </data>
   <data name="MaxFailedTestsMustBePositive" xml:space="preserve">
     <value>The option '--maximum-failed-tests' must be a positive integer. The value '{0}' is not valid.</value>
+    <comment>{0} is the invalid option value. {Locked="--maximum-failed-tests"}</comment>
   </data>
   <data name="AbortForMaxFailedTestsDescription" xml:space="preserve">
     <value>Extension used to support '--maximum-failed-tests'. When a given failures threshold is reached, the test run will be aborted.</value>
+    <comment>{Locked="--maximum-failed-tests"}</comment>
   </data>
   <data name="ReachedMaxFailedTestsMessage" xml:space="preserve">
     <value>Test session is aborting due to reaching failures ('{0}') specified by the '--maximum-failed-tests' option.</value>
-    <comment>{0} is the number of max failed tests.</comment>
+    <comment>{0} is the number of max failed tests. {Locked="--maximum-failed-tests"}</comment>
   </data>
   <data name="AbortForMaxFailedTestsCapabilityNotAvailable" xml:space="preserve">
     <value>The current test framework does not implement 'IGracefulStopTestExecutionCapability' which is required for '--maximum-failed-tests' feature.</value>
+    <comment>{Locked="IGracefulStopTestExecutionCapability"}{Locked="--maximum-failed-tests"}</comment>
   </data>
   <data name="PlatformCommandLineFilterUidOptionDescription" xml:space="preserve">
     <value>Provides a list of test node UIDs to filter by.</value>
   </data>
   <data name="OnlyOneFilterSupported" xml:space="preserve">
     <value>Passing both '--treenode-filter' and '--filter-uid' is unsupported.</value>
+    <comment>{Locked="--treenode-filter"}{Locked="--filter-uid"}</comment>
   </data>
   <data name="PlatformCommandLineDebugAttachOptionDescription" xml:space="preserve">
     <value>Allows to pause execution in order to attach to the process for debug purposes.</value>
@@ -784,15 +813,18 @@ Takes one argument as string in the format &lt;value&gt;[h|m|s] where 'value' is
   </data>
   <data name="TestHostControllerProcessRestartNotSupportedOnWebAssembly" xml:space="preserve">
     <value>Test host controller extensions that require process restart are not supported on browser/WebAssembly platforms.</value>
+    <comment>{Locked="WebAssembly"}</comment>
   </data>
   <data name="SyncFlushNotSupportedInBrowserErrorMessage" xml:space="preserve">
     <value>Synchronous flush is not supported in browser environments.</value>
   </data>
   <data name="WaitDebuggerAttachNotSupportedInBrowserErrorMessage" xml:space="preserve">
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported in browser environments.</value>
+    <comment>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}</comment>
   </data>
   <data name="WaitDebuggerAttachNotSupportedInWasiErrorMessage" xml:space="preserve">
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</value>
+    <comment>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</comment>
   </data>
   <data name="PlatformOutputDeviceAlreadyRegisteredErrorMessage" xml:space="preserve">
     <value>A custom output device has already been registered.</value>

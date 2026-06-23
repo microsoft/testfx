@@ -661,7 +661,7 @@ public class TypeCacheTests : TestContainer
         _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
-        baseType.GetMethod("TestInit").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestInitializeMethodsQueue.Peek());
+        baseType.GetMethod("TestInit").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestInitializeMethodsQueue[0]);
     }
 
     public void GetTestMethodInfoShouldCacheTestCleanupAttributeDefinedInBaseClass()
@@ -679,7 +679,7 @@ public class TypeCacheTests : TestContainer
         _typeCache.GetTestMethodInfo(testMethod);
 
         _typeCache.ClassInfoCache.Should().HaveCount(1);
-        baseType.GetMethod("TestCleanup").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestCleanupMethodsQueue.Peek());
+        baseType.GetMethod("TestCleanup").Should().BeSameAs(_typeCache.ClassInfoCache.First()!.BaseTestCleanupMethodsQueue[0]);
     }
 
     public void GetTestMethodInfoShouldCacheClassInfoInstanceAndReuseFromCache()

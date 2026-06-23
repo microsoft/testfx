@@ -97,7 +97,7 @@ namespace MSTestSdkTest
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --no-progress --no-ansi", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} --project {testAsset.TargetAssetPath} --progress off --no-ansi", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
         compilationResult.AssertOutputMatchesRegex(@"MSTestSdk.*? \(net10\.0\|x64\) passed");
@@ -200,6 +200,29 @@ namespace MSTestSdkTest
               "<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>",
               "--report-azdo",
               "--crashdump"));
+
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsCtrfReport>true</EnableMicrosoftTestingExtensionsCtrfReport>",
+              "--report-ctrf",
+              "--crashdump"));
+
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsHtmlReport>true</EnableMicrosoftTestingExtensionsHtmlReport>",
+              "--report-html",
+              "--crashdump"));
+
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>",
+              "--report-junit",
+              "--crashdump"));
+
+            // OpenTelemetry is API-only (no CLI flag); the enable property only opts the package into the build.
+            // We pass an empty enable arg to validate the package restores and the test host runs cleanly, and we
+            // assert that an unrelated extension's CLI arg ('--crashdump') is rejected to prove no other extensions leaked in.
+            yield return new((buildConfig.MultiTfm, buildConfig.BuildConfiguration,
+              "<EnableMicrosoftTestingExtensionsOpenTelemetry>true</EnableMicrosoftTestingExtensionsOpenTelemetry>",
+              string.Empty,
+              "--crashdump"));
         }
     }
 
@@ -246,7 +269,7 @@ namespace MSTestSdkTest
         foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo", cancellationToken: TestContext.CancellationToken);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump --report-azdo --report-html", cancellationToken: TestContext.CancellationToken);
             testHostResult.AssertOutputContainsSummary(0, 1, 0);
         }
     }
@@ -323,8 +346,18 @@ namespace MSTestSdkTest
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",
+            warnAsError: false,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
+
+        // MSTest.TestAdapter (referenced via MSTest.Sdk's NativeAOT runner) transitively pulls in
+        // vstest Microsoft.TestPlatform.ObjectModel and System.Private.DataContractSerialization which
+        // produce trim/AOT warnings outside this repo's control. Instead of failing on those warnings,
+        // we assert MSTest-owned source files do not appear in publish output. See TrimAndAotAssertions.
+        foreach (string fileName in TrimAndAotAssertions.MSTestOwnedSourceFiles)
+        {
+            compilationResult.AssertOutputDoesNotContain(fileName);
+        }
 
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent, verb: Verb.publish);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);

@@ -3,6 +3,19 @@
 
   <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
 
+  <PropertyGroup Condition=" '$(IsTestApplication)' == 'true' ">
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+
+    <!-- When we are using mstest sdk-style project, we have IsTestingPlatformApplication set to false, thus it's causing issues.
+    Because we are setting this property based on EnableMSTestRunner which is set to false,
+    because of the order of import (mstest testadapter props then NativeAOT.targets),
+    we need to set IsTestingPlatformApplication to true in NativeAOT.targets to fix this issue.
+
+    The IsTestingPlatformApplication property is needed for the dotnet test driver to distinguish
+    if we need to run the test project using the new testing platform. -->
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+  </PropertyGroup>
+
   <Target Name="_MSTestSDKValidateFeatures" BeforeTargets="Build">
     <Error Condition=" '$(EnableAspireTesting)' == 'true' " Text="Aspire MSTest currently doesn't support NativeAOT mode." />
     <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright MSTest currently doesn't support NativeAOT mode." />
@@ -11,6 +24,8 @@
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " Text="Hang dump extension might not be working well under Native AOT." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
     <Warning Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Text="Hot reload extension might not be working well under Native AOT." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' " Text="Azure DevOps report extension is not supported in NativeAOT mode." />
+    <Warning Condition=" '$(EnableMicrosoftTestingExtensionsJUnitReport)' == 'true' " Text="JUnit report extension is not supported in NativeAOT mode." />
   </Target>
 
   <!-- Core -->
@@ -27,18 +42,15 @@
     <PackageVersion Include="MSTest.TestFramework" Version="$(MSTestVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
 
-    <PackageReference Include="MSTest.Engine" Sdk="MSTest">
-      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestEngineVersion)</Version>
-    </PackageReference>
-    <PackageVersion Include="MSTest.Engine" Version="$(MSTestEngineVersion)"
-                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
-
     <PackageReference Include="MSTest.SourceGeneration" Sdk="MSTest">
-      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestEngineVersion)</Version>
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestSourceGenerationVersion)</Version>
     </PackageReference>
-    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestEngineVersion)"
+    <PackageVersion Include="MSTest.SourceGeneration" Version="$(MSTestSourceGenerationVersion)"
                     Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
+  </ItemGroup>
 
+  <!-- Core (for test applications - not for test libraries) -->
+  <ItemGroup Condition=" '$(IsTestApplication)' == 'true' ">
     <!--
       Most of the times this dependency is not required but we leave the opportunity to align the version of the platform being used.
       At the moment this is mainly used for our acceptance tests because the locally/CI built version ends with -dev or -ci which is
@@ -51,6 +63,17 @@
     </PackageReference>
     <PackageVersion Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)"
                     Condition=" '$(EnableMicrosoftTestingPlatform)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <!--
+      MSTest.TestAdapter is required because it carries MSTestAdapter.PlatformServices.dll which
+      contains the runtime hook types (ReflectionMetadataHook, SourceGeneratedReflectionDataProvider)
+      that the MSTest.SourceGeneration analyzer emits calls into.
+      -->
+    <PackageReference Include="MSTest.TestAdapter" Sdk="MSTest">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MSTestVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="MSTest.TestAdapter" Version="$(MSTestVersion)"
+                    Condition=" '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
   <!-- Extensions -->
@@ -71,11 +94,11 @@
 
     <!-- Support for -p:AotMsCodeCoverageInstrumentation="true" during dotnet publish for native aot -->
     <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Sdk="MSTest"
-                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' ">
+                      Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and '$(PublishAot)' == 'true' ">
       <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsCodeCoverageVersion)</Version>
     </PackageReference>
     <PackageVersion Include="Microsoft.CodeCoverage.MSBuild" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)"
-                    Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+                    Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and '$(PublishAot)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
   </ItemGroup>
 
 </Project>

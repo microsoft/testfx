@@ -5,10 +5,29 @@
     <TargetFrameworks>net10.0</TargetFrameworks>
     <RuntimeIdentifier>wasi-wasm</RuntimeIdentifier>
     <PublishTrimmed>true</PublishTrimmed>
+    <!-- Use the pre-built dotnet.wasm and load managed assemblies from disk (no wasi-sdk required) -->
+    <WasmSingleFileBundle>false</WasmSingleFileBundle>
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!--
+      Workaround for a bug in 11.0.100-preview.5 SDK manifests where
+      $(UsingWasiRuntimeWorkload) never resolves to 'true' for net10.0 projects,
+      so the WASI Sdk targets (Microsoft.NET.Runtime.WebAssembly.Wasi.Sdk.net10)
+      are never imported and no dotnet.wasm bundle is produced.
+      See: WorkloadManifest.Wasi.targets only checks $(WasiNativeWorkload10) when
+      $(TargetsCurrent) (net11.0) is true, never when $(TargetsNet10) is true.
+    -->
+    <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>
 
     <Nullable>enable</Nullable>
-    <OutputType>Exe</OutputType>
-    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <!--
+      IsTestingPlatformApplication is intentionally NOT set when running under
+      'dotnet test' (CI's Debug Test step on TestFx.slnx passes -p:UsingDotNetTest=true).
+      The wasi-wasm executable can only run via WasmAppHost + wasmtime, which is not
+      available on Windows CI agents. Keeping the property true during a normal build
+      ensures the MTP entry point is still generated and baked into the wasm bundle.
+    -->
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>

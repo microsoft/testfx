@@ -19,11 +19,48 @@ public sealed class StringAssert
     /// Gets the singleton instance of the StringAssert functionality.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Users can use this to plug-in custom assertions through C# extension methods.
-    /// For instance, the signature of a custom assertion provider could be "public static void ContainsWords(this StringAssert customAssert, string value, ICollection substrings)"
-    /// Users could then use a syntax similar to the default assertions which in this case is "StringAssert.That.ContainsWords(value, substrings);"
-    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
+    /// For instance, the signature of a custom assertion provider could be <c>public static void ContainsWords(this StringAssert customAssert, string value, ICollection substrings)</c>
+    /// and the call-site would be <c>StringAssert.That.ContainsWords(value, substrings);</c>.
+    /// </para>
+    /// <para>
+    /// For new custom assertions, prefer extending <see cref="Assert.That"/> instead, because <see cref="StringAssert"/> is likely to be deprecated in a future release.
+    /// For more information, see <see href="https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-writing-tests-assertions#extension-hooks-on-stringassert-and-collectionassert">Extension hooks on StringAssert and CollectionAssert</see>.
+    /// </para>
     /// </remarks>
+    /// <example>
+    /// The following example defines a custom <c>ContainsWords</c> assertion as an extension method
+    /// on <see cref="StringAssert"/> and invokes it through <c>StringAssert.That</c>:
+    /// <code language="csharp">
+    /// using System.Collections.Generic;
+    /// using Microsoft.VisualStudio.TestTools.UnitTesting;
+    ///
+    /// public static class CustomStringAssertExtensions
+    /// {
+    ///     public static void ContainsWords(this StringAssert stringAssert, string value, IEnumerable&lt;string&gt; words)
+    ///     {
+    ///         foreach (string word in words)
+    ///         {
+    ///             if (value == null || !value.Contains(word))
+    ///             {
+    ///                 throw new AssertFailedException($"StringAssert.That.ContainsWords failed. Word &lt;{word}&gt; not found in &lt;{value}&gt;.");
+    ///             }
+    ///         }
+    ///     }
+    /// }
+    ///
+    /// [TestClass]
+    /// public class MessageTests
+    /// {
+    ///     [TestMethod]
+    ///     public void Greeting_ContainsExpectedWords()
+    ///     {
+    ///         StringAssert.That.ContainsWords("Hello, world!", new[] { "Hello", "world" });
+    ///     }
+    /// }
+    /// </code>
+    /// </example>
     public static StringAssert That { get; } = new();
 
     #endregion
@@ -123,10 +160,26 @@ public sealed class StringAssert
         Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring");
         if (value.IndexOf(substring, comparisonType) < 0)
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.ContainsFail, value, substring, userMessage);
-            Assert.ReportAssertFailed("StringAssert.Contains", finalMessage);
+            ReportContainsFailed(value, substring, comparisonType, Assert.BuildUserMessage(message));
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportContainsFailed(string value, string substring, StringComparison comparisonType, string? userMessage)
+    {
+        string expectedText = AssertionValueRenderer.RenderValue(substring);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected substring:", expectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.ContainsSubstringFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -222,10 +275,26 @@ public sealed class StringAssert
         Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring");
         if (!value.StartsWith(substring, comparisonType))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.StartsWithFail, value, substring, userMessage);
-            Assert.ReportAssertFailed("StringAssert.StartsWith", finalMessage);
+            ReportStartsWithFailed(value, substring, comparisonType, Assert.BuildUserMessage(message));
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportStartsWithFailed(string value, string substring, StringComparison comparisonType, string? userMessage)
+    {
+        string expectedText = AssertionValueRenderer.RenderValue(substring);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected prefix:", expectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.StartsWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -321,10 +390,26 @@ public sealed class StringAssert
         Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring");
         if (!value.EndsWith(substring, comparisonType))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.EndsWithFail, value, substring, userMessage);
-            Assert.ReportAssertFailed("StringAssert.EndsWith", finalMessage);
+            ReportEndsWithFailed(value, substring, comparisonType, Assert.BuildUserMessage(message));
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportEndsWithFailed(string value, string substring, StringComparison comparisonType, string? userMessage)
+    {
+        string expectedText = AssertionValueRenderer.RenderValue(substring);
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected suffix:", expectedText)
+            .AddLine("actual:", actualText)
+            .AddLine("comparison:", comparisonType.ToString());
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.EndsWithFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(expectedText, actualText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     #endregion Substrings
@@ -378,10 +463,25 @@ public sealed class StringAssert
 
         if (!pattern.IsMatch(value))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsMatchFail, value, pattern, userMessage);
-            Assert.ReportAssertFailed("StringAssert.Matches", finalMessage);
+            ReportMatchesFailed(value, pattern, Assert.BuildUserMessage(message));
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportMatchesFailed(string value, Regex pattern, string? userMessage)
+    {
+        string patternText = AssertionValueRenderer.RenderValue(pattern.ToString());
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("expected pattern:", patternText)
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.MatchesRegexFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(patternText, actualText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     /// <summary>
@@ -431,10 +531,25 @@ public sealed class StringAssert
 
         if (pattern.IsMatch(value))
         {
-            string userMessage = Assert.BuildUserMessage(message);
-            string finalMessage = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.IsNotMatchFail, value, pattern, userMessage);
-            Assert.ReportAssertFailed("StringAssert.DoesNotMatch", finalMessage);
+            ReportDoesNotMatchFailed(value, pattern, Assert.BuildUserMessage(message));
         }
+    }
+
+    [DoesNotReturn]
+    private static void ReportDoesNotMatchFailed(string value, Regex pattern, string? userMessage)
+    {
+        string patternText = AssertionValueRenderer.RenderValue(pattern.ToString());
+        string actualText = AssertionValueRenderer.RenderValue(value);
+        EvidenceBlock evidence = EvidenceBlock.Create()
+            .AddLine("unexpected pattern:", patternText)
+            .AddLine("actual:", actualText);
+
+        StructuredAssertionMessage structured = new(FrameworkMessages.DoesNotMatchRegexFailedSummary);
+        structured.WithUserMessage(userMessage);
+        structured.WithEvidence(evidence);
+        structured.WithExpectedAndActual(patternText, actualText);
+
+        Assert.ReportAssertFailed(structured);
     }
 
     #endregion Regular Expressions

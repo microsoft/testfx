@@ -101,6 +101,89 @@ public sealed class FormatterUtilitiesTests
         }
     }
 
+    [DataRow(typeof(DiscoverRequestArgs))]
+    [DataRow(typeof(RunRequestArgs))]
+    [TestMethod]
+    public void Deserialize_InvalidRunId_ThrowsMessageFormatException(Type type)
+    {
+        const string json = """
+            {
+                "runId": "not-a-guid"
+            }
+            """;
+
+        Assert.Throws<MessageFormatException>(() => Deserialize(type, json));
+    }
+
+    [DataRow("testing/discoverTests", "\"runId\": 42")]
+    [DataRow("testing/runTests", "\"runId\": 42")]
+    [DataRow("testing/discoverTests", "")]
+    [DataRow("testing/runTests", "")]
+    [TestMethod]
+    public void DeserializeRpcMessage_InvalidRunIdShape_CapturesInvalidParamsSentinel(string method, string runIdProperty)
+    {
+        string json = $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": 42,
+                "method": "{{method}}",
+                "params": {
+                    {{runIdProperty}}
+                }
+            }
+            """;
+
+#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
+#pragma warning disable SA1111 // Closing parenthesis should be on line of last parameter
+        RpcMessage msg = _formatter.Deserialize<RpcMessage>(json
+#if NETCOREAPP
+            .AsMemory()
+#endif
+            );
+#pragma warning restore SA1111 // Closing parenthesis should be on line of last parameter
+#pragma warning restore SA1009 // Closing parenthesis should be spaced correctly
+
+        var request = (RequestMessage)msg;
+        Assert.AreEqual(42, request.Id);
+        Assert.AreEqual(method, request.Method);
+        var invalid = (InvalidRequestParamsArgs)request.Params!;
+        Assert.AreEqual(ErrorCodes.InvalidParams, invalid.ErrorCode);
+    }
+
+    [DataRow("testing/discoverTests")]
+    [DataRow("testing/runTests")]
+    [TestMethod]
+    public void DeserializeRpcMessage_InvalidRunId_CapturesInvalidParamsSentinel(string method)
+    {
+        string json = $$"""
+            {
+                "jsonrpc": "2.0",
+                "id": 42,
+                "method": "{{method}}",
+                "params": {
+                    "runId": "not-a-guid"
+                }
+            }
+            """;
+
+#pragma warning disable SA1009 // Closing parenthesis should be spaced correctly
+#pragma warning disable SA1111 // Closing parenthesis should be on line of last parameter
+        RpcMessage msg = _formatter.Deserialize<RpcMessage>(json
+#if NETCOREAPP
+            .AsMemory()
+#endif
+            );
+#pragma warning restore SA1111 // Closing parenthesis should be on line of last parameter
+#pragma warning restore SA1009 // Closing parenthesis should be spaced correctly
+
+        var request = (RequestMessage)msg;
+        Assert.AreEqual(42, request.Id);
+        Assert.AreEqual(method, request.Method);
+        var invalid = (InvalidRequestParamsArgs)request.Params!;
+        Assert.AreEqual(ErrorCodes.InvalidParams, invalid.ErrorCode);
+        Assert.Contains("runId", invalid.ErrorMessage);
+    }
+
     private static void AssertRequestArgs<TRequestArgs>(Type type, TRequestArgs actualRequest, TRequestArgs expectedRequest)
         where TRequestArgs : RequestArgsBase
     {
@@ -234,7 +317,9 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(ErrorMessage))
         {
-            Assert.AreEqual("""{"jsonrpc":"2.0","code":2,"id":1,"error":{"code":2,"data":{},"message":"This is error"}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            // Per JSON-RPC 2.0 §5.1, "code" must only appear inside the nested "error" object,
+            // never at the top level of the response envelope.
+            Assert.AreEqual("""{"jsonrpc":"2.0","id":1,"error":{"code":2,"data":{},"message":"This is error"}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 

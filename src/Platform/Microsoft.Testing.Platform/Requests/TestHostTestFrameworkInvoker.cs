@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
@@ -17,7 +18,7 @@ using Microsoft.Testing.Platform.TestHost;
 namespace Microsoft.Testing.Platform.Requests;
 
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "HotReload needs to inherit and override ExecuteRequestAsync")]
-internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer
+internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
     protected IServiceProvider ServiceProvider { get; } = serviceProvider;
 
@@ -28,6 +29,21 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
     public string DisplayName => string.Empty;
 
     public string Description => string.Empty;
+
+#pragma warning disable CS0618 // Type or member is obsolete
+    // TestRequestExecutionTimeInfo is kept only for binary compatibility with the
+    // Microsoft.Testing.Platform.MSBuild <= 2.2.x extension, whose MSBuildConsumer
+    // depends on receiving this message to trigger its end-of-session summary
+    // (HandleSummaryAsync sends the TestRunSummaryRequest over the IPC pipe to
+    // MSBuild). The current in-tree consumer no longer lists this type in its
+    // DataTypesConsumed, so when paired with this newer platform the message is
+    // simply dropped by AsynchronousMessageBus, but the old shipped consumer still
+    // needs it published in order to emit the run summary to MSBuild.
+    // See: https://github.com/microsoft/testfx/pull/8514 (removal),
+    //      https://github.com/microsoft/testfx/pull/8921 (binary-compat restore),
+    //      https://github.com/microsoft/testfx/issues/8925 (remove in next major).
+    public Type[] DataTypesProduced => [typeof(TestRequestExecutionTimeInfo)];
+#pragma warning restore CS0618 // Type or member is obsolete
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -44,13 +60,16 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
             }
         }
 
+        DateTimeOffset startTime = DateTimeOffset.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
         SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionUid;
+        await logger.LogDebugAsync($"Test session UID: '{sessionId.Value}'").ConfigureAwait(false);
 
         IPlatformOpenTelemetryService? otelService = ServiceProvider.GetPlatformOTelService();
         using (otelService?.StartActivity("CreateTestFrameworkSession", tags: [new("SessionUid", sessionId)]))
         {
             CreateTestSessionResult createTestSessionResult = await testFramework.CreateTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
-            await HandleTestSessionResultAsync(createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
+            await HandleTestSessionResultAsync(logger, "CreateTestSession", sessionId, createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
         }
 
         TestExecutionRequest request;
@@ -71,8 +90,16 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         using (otelService?.StartActivity("CloseTestFrameworkSession", tags: [new("SessionUid", sessionId)]))
         {
             CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, cancellationToken)).ConfigureAwait(false);
-            await HandleTestSessionResultAsync(closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
+            await HandleTestSessionResultAsync(logger, "CloseTestSession", sessionId, closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage, cancellationToken).ConfigureAwait(false);
         }
+
+        DateTimeOffset endTime = DateTimeOffset.UtcNow;
+#pragma warning disable CS0618 // Type or member is obsolete
+        // Republished for binary compatibility with the older Microsoft.Testing.Platform.MSBuild
+        // extension (<= 2.2.x). Current in-tree consumers do not listen for this message, so it
+        // is silently dropped by AsynchronousMessageBus when only the new extension is loaded.
+        await messageBus.PublishAsync(this, new TestRequestExecutionTimeInfo(new TimingInfo(startTime, endTime, stopwatch.Elapsed))).ConfigureAwait(false);
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
@@ -85,19 +112,22 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         await requestSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task HandleTestSessionResultAsync(bool isSuccess, string? warningMessage, string? errorMessage, CancellationToken cancellationToken)
+    private async Task HandleTestSessionResultAsync(ILogger logger, string phase, SessionUid sessionId, bool isSuccess, string? warningMessage, string? errorMessage, CancellationToken cancellationToken)
     {
         if (warningMessage is not null)
         {
+            await logger.LogWarningAsync($"Test framework '{phase}' (session '{sessionId.Value}') reported warning: {warningMessage}").ConfigureAwait(false);
             IOutputDevice outputDisplay = ServiceProvider.GetOutputDevice();
             await outputDisplay.DisplayAsync(this, new WarningMessageOutputDeviceData(warningMessage), cancellationToken).ConfigureAwait(false);
         }
 
         if (!isSuccess)
         {
+            string effectiveErrorMessage = errorMessage ?? PlatformResources.TestHostAdapterInvokerFailedTestSessionErrorMessage;
+            await logger.LogErrorAsync($"Test framework '{phase}' (session '{sessionId.Value}') failed: {effectiveErrorMessage}").ConfigureAwait(false);
             ITestApplicationProcessExitCode testApplicationProcessExitCode = ServiceProvider.GetTestApplicationProcessExitCode();
             await testApplicationProcessExitCode.SetTestAdapterTestSessionFailureAsync(
-                errorMessage ?? PlatformResources.TestHostAdapterInvokerFailedTestSessionErrorMessage,
+                effectiveErrorMessage,
                 cancellationToken).ConfigureAwait(false);
         }
     }

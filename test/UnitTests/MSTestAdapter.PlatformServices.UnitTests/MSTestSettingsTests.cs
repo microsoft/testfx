@@ -258,6 +258,135 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.ParallelizationScope.HasValue.Should().BeFalse();
     }
 
+    public void RandomizeTestOrderShouldBeFalseByDefault()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+
+        adapterSettings.RandomizeTestOrder.Should().BeFalse();
+        adapterSettings.RandomTestOrderSeed.Should().BeNull();
+    }
+
+    public void RandomizeTestOrderShouldBeConsumedFromRunSettingsWhenSpecified()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomizeTestOrder>True</RandomizeTestOrder>
+                <RandomTestOrderSeed>42</RandomTestOrderSeed>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+
+        adapterSettings.RandomizeTestOrder.Should().BeTrue();
+        adapterSettings.RandomTestOrderSeed.Should().Be(42);
+    }
+
+    public void RandomTestOrderSeedShouldAcceptNegativeValues()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomTestOrderSeed>-7</RandomTestOrderSeed>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+
+        adapterSettings.RandomTestOrderSeed.Should().Be(-7);
+    }
+
+    public void RandomizeTestOrderShouldWarnWhenValueIsInvalid()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomizeTestOrder>notabool</RandomizeTestOrder>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+
+        adapterSettings.RandomizeTestOrder.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'notabool' for runsettings entry 'RandomizeTestOrder', setting will be ignored."), Times.Once);
+    }
+
+    public void RandomTestOrderSeedShouldWarnWhenValueIsInvalid()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomTestOrderSeed>notanint</RandomTestOrderSeed>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+
+        adapterSettings.RandomTestOrderSeed.Should().BeNull();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value 'notanint' for runsettings entry 'RandomTestOrderSeed', setting will be ignored."), Times.Once);
+    }
+
+    public void PopulateSettingsShouldWarnWhenRandomizeTestOrderAndOrderTestsByNameInClassAreBothEnabled()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomizeTestOrder>True</RandomizeTestOrder>
+                <OrderTestsByNameInClass>True</OrderTestsByNameInClass>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
+        MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(
+            lm => lm.SendMessage(
+                TestMessageLevel.Warning,
+                "Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored."),
+            Times.Once);
+    }
+
+    public void PopulateSettingsShouldNotWarnWhenOnlyRandomizeTestOrderIsEnabled()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <RandomizeTestOrder>True</RandomizeTestOrder>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+
+        MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
+        MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeFalse();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
+    }
+
     public void GetSettingsShouldThrowIfParallelizationWorkersIsNotInt()
     {
         string runSettingsXml =
@@ -1075,6 +1204,8 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
             { "mstest:orderTestsByNameInClass", "true" },
+            { "mstest:execution:randomizeTestOrder", "true" },
+            { "mstest:execution:randomTestOrderSeed", "-12345" },
             { "mstest:output:captureTrace", "true" },
         };
 
@@ -1089,6 +1220,8 @@ public class MSTestSettingsTests : TestContainer
 
         // Assert
         settings.OrderTestsByNameInClass.Should().BeTrue();
+        settings.RandomizeTestOrder.Should().BeTrue();
+        settings.RandomTestOrderSeed.Should().Be(-12345);
         settings.CaptureDebugTraces.Should().BeTrue();
         settings.CooperativeCancellationTimeout.Should().BeTrue();
         settings.MapInconclusiveToFailed.Should().BeTrue();

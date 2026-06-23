@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);NETSDK1023;SA0001;EnableGenerateDocumentationFile</NoWarn>
+
+    <!--
+      Mirror Mtp.csproj: opt this project out of the CI 'dotnet test' run, which passes
+      -p:UsingDotNetTest=true. The playground intentionally contains failing/throwing/skipped
+      tests so users can diff the CTRF output against the in-repo extension; those failures
+      must not break CI. A normal build still enables MTP so 'dotnet run' works as documented.
+    -->
+    <UseMicrosoftTestingPlatformRunner Condition=" '$(UsingDotNetTest)' != 'true' ">true</UseMicrosoftTestingPlatformRunner>
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' == 'true' ">false</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- xunit.v3 ships its own CTRF reporter, enabled via the `-ctrf <file>` switch (see README.md). -->
+    <PackageReference Include="xunit.v3.mtp-v2" />
+  </ItemGroup>
+</Project>

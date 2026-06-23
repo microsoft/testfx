@@ -241,12 +241,14 @@ internal sealed partial class TestClassInfo
     internal ExecutionContext? ExecutionContext { get; set; }
 
     /// <summary>
-    /// Gets a queue of test initialize methods to call for this type.
+    /// Gets a list of base-class test initialize methods, ordered nearest-derived first (i.e. direct parent at index 0,
+    /// grandparent at index 1, …). Callers that need grandparent-first execution iterate in reverse.
     /// </summary>
-    public Queue<MethodInfo> BaseTestInitializeMethodsQueue { get; } = new();
+    public List<MethodInfo> BaseTestInitializeMethodsQueue { get; } = [];
 
     /// <summary>
-    /// Gets a queue of test cleanup methods to call for this type.
+    /// Gets a list of base-class test cleanup methods, ordered nearest-derived first (i.e. direct parent at index 0,
+    /// grandparent at index 1, …). Callers that need parent-first execution iterate forward.
     /// </summary>
-    public Queue<MethodInfo> BaseTestCleanupMethodsQueue { get; } = new();
+    public List<MethodInfo> BaseTestCleanupMethodsQueue { get; } = [];
 }

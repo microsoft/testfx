@@ -76,6 +76,61 @@ public sealed class AzureDevOpsHistoryServiceTests
     }
 
     [TestMethod]
+    public async Task HistoryService_ComputesDurationStatsWhenSlowTestHistoryEnabledAsync()
+    {
+        Mock<IAzureDevOpsHistoryClient> historyClientMock = new();
+        historyClientMock
+            .Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/_apis/test/Runs/1")]);
+
+        List<AzureDevOpsTestResult> results = [];
+        for (int i = 1; i <= 100; i++)
+        {
+            results.Add(new AzureDevOpsTestResult("Namespace.Tests.Slow", "Passed", i * 100.0));
+        }
+
+        results.Add(new AzureDevOpsTestResult("Namespace.Tests.NoDuration", "Passed"));
+        results.Add(new AzureDevOpsTestResult("Namespace.Tests.NonPositive", "Passed", 0));
+
+        historyClientMock
+            .Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/_apis/test/Runs/1", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage(results, continuationToken: null));
+
+        ICommandLineOptions options = CreateCommandLineOptions((AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, ["30"]));
+        AzureDevOpsHistoryService historyService = CreateHistoryService(historyClientMock, options);
+        await historyService.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        Assert.IsTrue(historyService.TryGetDurationStats("Namespace.Tests.Slow", out DurationHistoryStats stats));
+        Assert.AreEqual(100, stats.SampleCount);
+
+        // Nearest-rank over 100ms..10000ms (step 100ms): p95 -> rank 95 -> 9500ms, p99 -> rank 99 -> 9900ms.
+        Assert.AreEqual(9500.0, stats.P95Milliseconds);
+        Assert.AreEqual(9900.0, stats.P99Milliseconds);
+
+        // Tests with no positive duration samples are not published.
+        Assert.IsFalse(historyService.TryGetDurationStats("Namespace.Tests.NoDuration", out _));
+        Assert.IsFalse(historyService.TryGetDurationStats("Namespace.Tests.NonPositive", out _));
+    }
+
+    [TestMethod]
+    public async Task HistoryService_DoesNotComputeDurationStatsWhenSlowTestHistoryDisabledAsync()
+    {
+        Mock<IAzureDevOpsHistoryClient> historyClientMock = new();
+        historyClientMock
+            .Setup(x => x.GetRunsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([new AzureDevOpsTestRun("https://example/_apis/test/Runs/1")]);
+        historyClientMock
+            .Setup(x => x.GetResultsAsync(It.IsAny<AzureDevOpsHistoryQuery>(), "https://example/_apis/test/Runs/1", 0, 1000, null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AzureDevOpsTestResultsPage([new AzureDevOpsTestResult("Namespace.Tests.Slow", "Passed", 1234.0)], continuationToken: null));
+
+        // Default options enable only flaky-history, so durations must not be collected.
+        AzureDevOpsHistoryService historyService = CreateHistoryService(historyClientMock);
+        await historyService.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        Assert.IsFalse(historyService.TryGetDurationStats("Namespace.Tests.Slow", out _));
+    }
+
+    [TestMethod]
     public async Task HistoryService_AggregatesStatsAcrossPagesAsync()
     {
         Mock<IAzureDevOpsHistoryClient> historyClientMock = new();

@@ -1,0 +1,117 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      netstandard2.0 is deliberate, NOT net8/9/10: this is a source-only package. The contract files are shipped as
+      contentFiles/cs/any and are compiled into the CONSUMER's compilation under the consumer's own TFM (e.g. net11
+      in dotnet/sdk), so this TargetFramework never reaches consumers. This project does not compile the contract
+      files itself (see DotnetTestProtocolContractCompile below), so the TFM only governs the empty placeholder
+      assembly; netstandard2.0 keeps it the lightest and needs no runtime packs.
+    -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+
+    <!--
+      Internal, source-only package for the 'dotnet test' <-> Microsoft.Testing.Platform integration. It ships
+      shared source files as contentFiles/cs/any so a consumer (the dotnet/sdk 'dotnet test' implementation)
+      compiles them into its OWN assembly, keeping a single source of truth instead of hand-copying.
+
+      Internal, source-only package for the 'dotnet test' <-> Microsoft.Testing.Platform integration. It ships
+      shared source files as contentFiles/cs/any so a consumer (the dotnet/sdk 'dotnet test' implementation)
+      compiles them into its OWN assembly, keeping a single source of truth instead of hand-copying.
+
+      It hosts (a) the named-pipe wire contract (ObjectFieldIds.cs + Constants.cs) and (b) the terminal reporter
+      (reporter + rendering + state + the small platform abstractions it needs) together with its localized
+      resources (TerminalResources.resx + xlf, wired up by the build-extension props this package ships - see
+      build/). The name is deliberately generic and carries 'Internal' so it is clearly NOT a public API / client
+      library (see also issue #5667, closed pending a real use case for a public MTP client).
+
+      *ContractCompile=false makes the imported .props skip its <Compile> items: this project only *packs* the files,
+      it does not compile them. The guarantee that each shared contract compiles standalone is provided by its
+      dedicated consumer test project (e.g.
+      test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests), not by this package build.
+    -->
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DotnetTestProtocolContractCompile>false</DotnetTestProtocolContractCompile>
+    <TerminalReporterContractCompile>false</TerminalReporterContractCompile>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+    <!-- Build-only / source contribution: it must not flow as a transitive runtime dependency to consumers. -->
+    <DevelopmentDependency>true</DevelopmentDependency>
+
+    <!--
+      IsShipping=false keeps this package OUT of nuget.org and in the internal (NonShipping) feed used for cross-repo
+      dependency flow (dotnet/sdk). NOTE: the exact internal-feed shipping mechanism still needs confirmation with
+      the Arcade team (see PR discussion).
+    -->
+    <IsShipping>false</IsShipping>
+
+    <!-- NU5128: source-only package has no lib/ assembly, only contentFiles. -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This is an INTERNAL, source-only package: it shares - as compiled source - the pieces of the 'dotnet test' <-> Microsoft.Testing.Platform integration that must stay a single source of truth across the microsoft/testfx and dotnet/sdk repositories (today: the named-pipe wire contract; designed to also host the terminal reporter). It is an implementation detail of 'dotnet test' integration and is NOT intended for direct end-user consumption.]]>
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!--
+    Pulls in @(DotnetTestProtocolContractSource) - the canonical contract file list. We set
+    DotnetTestProtocolContractCompile=false above, so the .props does NOT add <Compile> items here; this project only
+    packs that same item as contentFiles, so the NuGet and the in-repo source-share can never drift.
+  -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
+
+  <!--
+    Pulls in @(TerminalReporterContractSource) (the reporter source + abstractions) and
+    @(TerminalReporterContractResource) (TerminalResources.resx). TerminalReporterContractCompile=false above stops
+    the .props from <Compile>-ing them here; this project only packs them.
+  -->
+  <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\TerminalReporterContract.props" />
+
+  <ItemGroup>
+    <!-- (a) wire contract source -->
+    <None Include="@(DotnetTestProtocolContractSource)"
+          Pack="true"
+          BuildAction="Compile"
+          PackagePath="contentFiles/cs/any/DotnetTestProtocol/%(Filename)%(Extension)" />
+
+    <!-- (b) terminal reporter source (reporter + rendering + state + abstractions), compiled by the consumer -->
+    <None Include="@(TerminalReporterContractSource)"
+          Pack="true"
+          BuildAction="Compile"
+          PackagePath="contentFiles/cs/any/TerminalReporter/%(Filename)%(Extension)" />
+
+    <!--
+      EmbeddedAttribute polyfill: the shared source marks its types [Microsoft.CodeAnalysis.Embedded]; that attribute
+      is not present in a vanilla consumer (e.g. dotnet/sdk's dotnet.csproj), so ship the trivial polyfill as source.
+      It is 'internal sealed partial' so it merges harmlessly if the consumer ever defines its own.
+    -->
+    <None Include="$(RepoRoot)src\Polyfills\EmbeddedAttribute.cs"
+          Pack="true"
+          BuildAction="Compile"
+          PackagePath="contentFiles/cs/any/TerminalReporter/EmbeddedAttribute.cs" />
+
+    <!--
+      Terminal localized resources. The resx + xlf are shipped under build/ (NOT contentFiles) so they are not
+      auto-compiled with the wrong metadata; the auto-imported build-extension props below adds the resx as an
+      <EmbeddedResource GenerateSource="true"> with a pinned Namespace (and ManifestResourceName) so XliffTasks
+      generates the strongly-typed TerminalResources accessor in the namespace the shared reporter source expects,
+      and XliffTasks (present in the consumer, e.g. dotnet/sdk via Arcade) finds the sibling xlf/ to emit satellites.
+    -->
+    <None Include="@(TerminalReporterContractResource)"
+          Pack="true"
+          PackagePath="build/TerminalReporter/%(Filename)%(Extension)" />
+    <None Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\Terminal\xlf\*.xlf"
+          Pack="true"
+          PackagePath="build/TerminalReporter/xlf/%(Filename)%(Extension)" />
+
+    <!-- Auto-imported build extension that wires the resx (strongly-typed accessor + satellites) into the consumer. -->
+    <None Include="build\Microsoft.Testing.Platform.Internal.DotnetTest.props"
+          Pack="true"
+          PackagePath="build/Microsoft.Testing.Platform.Internal.DotnetTest.props" />
+  </ItemGroup>
+
+</Project>

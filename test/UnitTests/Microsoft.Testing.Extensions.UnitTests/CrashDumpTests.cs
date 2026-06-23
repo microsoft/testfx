@@ -4,12 +4,17 @@
 using Microsoft.Testing.Extensions.Diagnostics;
 using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+
+using Moq;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -198,11 +203,153 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
-    [DataRow("MyApp_%p_crash.dmp", @"^MyApp_.*_crash\.dmp$")]
-    [DataRow("%e_%p_crash.dmp", @"^.*_.*_crash\.dmp$")]
-    [DataRow("%p%t_crash.dmp", @"^.*_crash\.dmp$")]
-    [DataRow("customdumpname.dmp", @"^customdumpname\.dmp$")]
-    [DataRow("dump_%p_%t_%h.dmp", @"^dump_.*_.*_.*\.dmp$")]
+    public async Task CrashReportIfSupported_Without_CrashDump_Is_Valid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReportIfSupported_Alongside_CrashDump_Is_Valid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReportIfSupported_OnAnyPlatform_IsValid()
+    {
+        // Unlike '--crash-report', the '-if-supported' variant must never be rejected by
+        // platform validation: that is the whole point of the option. Cover all OSes in a
+        // single test to make a future regression obvious.
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task CrashReport_And_CrashReportIfSupported_Together_IsInvalid()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashDumpTypeOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashSequenceOptionName)]
+    public async Task CrashReportIfSupported_SatisfiesMainOptionRequirement(string subOption)
+    {
+        // '--crash-report-if-supported' should count as a "main" CrashDump option so that
+        // sub-options like '--crashdump-type' do not produce a "missing main option" error.
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+            { subOption, ["value"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    [OSCondition(ConditionMode.Include, OperatingSystems.Windows, IgnoreMessage = "Validates Windows-specific fallback wording in '--crash-report' error.")]
+    public async Task CrashReport_OnWindows_ErrorPointsToIfSupportedAlternative()
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.Contains("--crash-report-if-supported", validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    [DataRow(CrashDumpCommandLineOptions.CrashReportOptionName)]
+    [DataRow(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName)]
+    public async Task ProviderRegistersBothCrashReportVariantsAsZeroArityOptions(string optionName)
+    {
+        var provider = new CrashDumpCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == optionName);
+        Assert.AreEqual(ArgumentArity.Zero, option.Arity);
+    }
+
+    [TestMethod]
+    public void IsCrashReportEffective_ReturnsTrue_When_StrictCrashReport_IsSet()
+    {
+        // The strict '--crash-report' always opts the user in: any "is this effective?" check
+        // should follow suit regardless of the runtime / OS.
+        var options = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+        });
+
+        Assert.IsTrue(CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+    }
+
+    [TestMethod]
+    public void IsCrashReportEffective_ReturnsFalse_When_NoCrashReportOption_IsSet()
+    {
+        var options = new TestCommandLineOptions([]);
+        Assert.IsFalse(CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+    }
+
+    [TestMethod]
+    public void IsCrashReportEffective_With_IfSupported_MatchesCurrentRuntimeAndPlatform()
+    {
+        // The "-if-supported" variant is effective only when the underlying runtime can honor
+        // the request. This test mirrors the production check so that any divergence between
+        // the helper and what the env-var provider / lifetime handler rely on is caught.
+        var options = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName, [] },
+        });
+
+#if !NETCOREAPP
+        // .NET Framework: the env-var-based createdump/crashreport mechanism is unavailable,
+        // so the option is a no-op regardless of the OS.
+        Assert.IsFalse(CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+#else
+        bool expected = !RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        Assert.AreEqual(expected, CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(options));
+#endif
+    }
+
+    [TestMethod]
     [DataRow("trailing%", "^trailing%$")]
     // Glob metacharacters that may appear literally in a user-supplied filename must be escaped so they are
     // matched literally, not treated as wildcards. This guards against picking up unrelated dump files on
@@ -265,6 +412,47 @@ public sealed class CrashDumpTests
     }
 
     [TestMethod]
+    [DataRow("{pname}_{pid}_crash.dmp", "%e_%p_crash.dmp")]
+    [DataRow("{asm}_{pid}.dmp", null)]
+    [DataRow("literal.dmp", "literal.dmp")]
+    public async Task UpdateAsync_UserFilenameTemplate_SetsCorrectDumpFileNamePattern(string userTemplate, string? expectedSuffix)
+    {
+        var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+            { CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, [userTemplate] },
+        });
+        string resultsDirectory = Path.Combine(Path.GetTempPath(), "crashdump-tests-" + Guid.NewGuid().ToString("N"));
+        var configuration = new Mock<IConfiguration>();
+        configuration.Setup(x => x[PlatformConfigurationConstants.PlatformResultDirectory]).Returns(resultsDirectory);
+        var crashDumpConfiguration = new CrashDumpConfiguration();
+        var loggerFactory = new Mock<ILoggerFactory>();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>());
+        var clock = new Mock<IClock>();
+        clock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(2026, 6, 11, 7, 0, 0, TimeSpan.Zero));
+        var environmentVariables = new Mock<IEnvironmentVariables>();
+        var provider = new CrashDumpEnvironmentVariableProvider(
+            configuration.Object,
+            commandLineOptions,
+            crashDumpConfiguration,
+            loggerFactory.Object,
+            clock.Object);
+
+        await provider.UpdateAsync(environmentVariables.Object);
+
+        Assert.IsNotNull(crashDumpConfiguration.DumpFileNamePattern);
+        if (expectedSuffix is not null)
+        {
+            Assert.IsTrue(crashDumpConfiguration.DumpFileNamePattern.EndsWith(expectedSuffix, StringComparison.Ordinal), $"Expected pattern ending '{expectedSuffix}', got '{crashDumpConfiguration.DumpFileNamePattern}'.");
+        }
+        else
+        {
+            Assert.DoesNotContain("{", crashDumpConfiguration.DumpFileNamePattern, "Unresolved placeholder left in pattern.");
+            Assert.IsTrue(crashDumpConfiguration.DumpFileNamePattern.EndsWith("_%p.dmp", StringComparison.Ordinal), $"Expected pattern ending '_%p.dmp', got '{crashDumpConfiguration.DumpFileNamePattern}'.");
+        }
+    }
+
+    [TestMethod]
     public async Task OnTestHostProcessExitedAsync_OnlyPublishesDumpsThatAppearedDuringTheRun()
     {
         // Create an isolated dump directory so we can pre-populate it with stale files that simulate
@@ -307,7 +495,7 @@ public sealed class CrashDumpTests
                 .OrderBy(static p => p, StringComparer.Ordinal)
                 .ToArray();
             string[] expected = new[] { fresh1, fresh2 }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
-            CollectionAssert.AreEqual(expected, publishedDumps);
+            Assert.AreSequenceEqual(expected, publishedDumps);
         }
         finally
         {
@@ -357,7 +545,7 @@ public sealed class CrashDumpTests
                 .OfType<FileArtifact>()
                 .Select(static a => a.FileInfo.FullName)
                 .ToArray();
-            CollectionAssert.AreEqual(new[] { testhostDump }, publishedDumps);
+            Assert.AreSequenceEqual(new[] { testhostDump }, publishedDumps);
 
             // The "expected dump not found" warning must NOT be emitted: the testhost dump was
             // recognized via the regex even though `expectedDumpFile` (literal `%p` substitution)
@@ -408,7 +596,7 @@ public sealed class CrashDumpTests
                 .OfType<FileArtifact>()
                 .Select(static a => a.FileInfo.FullName)
                 .ToArray();
-            CollectionAssert.AreEqual(new[] { testhostDump }, publishedDumps);
+            Assert.AreSequenceEqual(new[] { testhostDump }, publishedDumps);
             string captured = string.Join(" | ", outputDevice.Displayed);
             Assert.DoesNotContain("dump_555_backup_555.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
         }
@@ -460,7 +648,7 @@ public sealed class CrashDumpTests
                 .OrderBy(static p => p, StringComparer.Ordinal)
                 .ToArray();
             string[] expected = new[] { testhostDump, childDump }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
-            CollectionAssert.AreEqual(expected, publishedDumps);
+            Assert.AreSequenceEqual(expected, publishedDumps);
             string captured = string.Join(" | ", outputDevice.Displayed);
             Assert.DoesNotContain("Dump_%e_123.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
         }
@@ -471,6 +659,71 @@ public sealed class CrashDumpTests
                 Directory.Delete(dumpDirectory, recursive: true);
             }
             catch
+            {
+                // Best effort cleanup.
+            }
+        }
+    }
+
+    [TestMethod]
+    public async Task OnTestHostProcessExitedAsync_CrashReport_PatternWithRuntimePlaceholders_PublishesMatchedReport()
+    {
+        // When the configured dump pattern relies on runtime placeholders other than `%p`
+        // (here `%e`, which the `{pname}` token maps to), the literal-`%p`-substituted crash
+        // report path never exists on disk. The handler must therefore identify the crash
+        // report via the testhost-dump regex applied to the report's "<dump file name>"
+        // prefix, and publish the actual file found on disk (not the unresolved path).
+        string dumpDirectory = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "crashdump-tests-" + Guid.NewGuid().ToString("N"))).FullName;
+        try
+        {
+            string dumpPattern = Path.Combine(dumpDirectory, "Dump_%e_%p.dmp");
+            var configuration = new CrashDumpConfiguration { DumpFileNamePattern = dumpPattern };
+            var commandLineOptions = new TestCommandLineOptions(new Dictionary<string, string[]>
+            {
+                { CrashDumpCommandLineOptions.CrashDumpOptionName, [] },
+                { CrashDumpCommandLineOptions.CrashReportOptionName, [] },
+            });
+            var messageBus = new RecordingMessageBus();
+            var outputDevice = new CapturingOutputDevice();
+            var handler = new CrashDumpProcessLifetimeHandler(commandLineOptions, messageBus, outputDevice, configuration);
+
+            await handler.OnTestHostProcessStartedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            // Simulate the runtime writing the testhost dump and its companion crash report with
+            // `%e` expanded to "testhost". A naive File.Exists check on the literal-%p-substituted
+            // crash report path (`Dump_%e_123.dmp.crashreport.json`) would miss the actual file.
+            string testhostDump = Path.Combine(dumpDirectory, "Dump_testhost_123.dmp");
+            string testhostCrashReport = testhostDump + ".crashreport.json";
+            string childDump = Path.Combine(dumpDirectory, "Dump_child_456.dmp");
+            string childCrashReport = childDump + ".crashreport.json";
+            File.WriteAllText(testhostDump, "fresh");
+            File.WriteAllText(testhostCrashReport, "{}");
+            File.WriteAllText(childDump, "fresh");
+            File.WriteAllText(childCrashReport, "{}");
+
+            await handler.OnTestHostProcessExitedAsync(new TestHostProcessInformation(pid: 123, exitCode: 1, hasExitedGracefully: false), CancellationToken.None);
+
+            string[] publishedFiles = messageBus.Published
+                .OfType<FileArtifact>()
+                .Select(static a => a.FileInfo.FullName)
+                .OrderBy(static p => p, StringComparer.Ordinal)
+                .ToArray();
+            string[] expected = new[] { testhostDump, testhostCrashReport, childDump, childCrashReport }.OrderBy(static p => p, StringComparer.Ordinal).ToArray();
+            Assert.AreSequenceEqual(expected, publishedFiles);
+
+            // The "expected crash report not found" warning must NOT be emitted: the report was
+            // matched by the regex even though `expectedCrashReportFile` (literal `%p` substitution)
+            // would be `Dump_%e_123.dmp.crashreport.json`, which does not exist on disk.
+            string captured = string.Join(" | ", outputDevice.Displayed);
+            Assert.DoesNotContain("Dump_%e_123.dmp.crashreport.json", captured, "CannotFindExpectedCrashReportFile must not be displayed when the report was recognized via the regex.");
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dumpDirectory, recursive: true);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 // Best effort cleanup.
             }

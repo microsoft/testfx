@@ -11,6 +11,12 @@ trigger:
     exclude:
       - .github/**
       - .gitignore
+      - azure-pipelines-codeql.yml
+      # The official pipeline ships product packages. The samples/** folder is not part of the
+      # shipping product (it is built by the PR pipeline via eng/build-samples.ps1). Skip the
+      # official pipeline for samples-only changes.
+      - samples/**
+      - eng/build-samples.ps1
 
 parameters:
 - name: isRTM
@@ -118,29 +124,7 @@ extends:
               image: windows.vs2026preview.scout.amd64
               os: windows
             steps:
-            - task: PowerShell@2
-              displayName: 'Install Windows SDK'
-              inputs:
-                targetType: filePath
-                filePath: './eng/install-windows-sdk.ps1'
-                failOnStderr: true
-                showWarnings: true
-
-            - task: PowerShell@2
-              displayName: 'Install procdump'
-              inputs:
-                targetType: filePath
-                filePath: ./eng/install-procdump.ps1
-                failOnStderr: true
-                showWarnings: true
-
-            - task: PowerShell@2
-              displayName: 'Install Access Database Engine'
-              inputs:
-                targetType: filePath
-                filePath: ./eng/install-access-database-engine.ps1
-                failOnStderr: true
-                showWarnings: true
+            - template: /eng/pipelines/steps/install-windows-prereqs.yml@self
 
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)

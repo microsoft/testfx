@@ -1,0 +1,5 @@
+#nullable enable
+Microsoft.Testing.Extensions.JUnitReport.TestingPlatformBuilderHook
+[TPEXP]Microsoft.Testing.Extensions.JUnitReportExtensions
+static Microsoft.Testing.Extensions.JUnitReport.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
+[TPEXP]static Microsoft.Testing.Extensions.JUnitReportExtensions.AddJUnitReportProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void

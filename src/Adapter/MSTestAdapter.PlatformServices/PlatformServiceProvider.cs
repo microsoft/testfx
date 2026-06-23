@@ -172,4 +172,15 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
         testContextImplementation.SetOutcome(outcome);
         return testContextImplementation;
     }
+
+    /// <summary>
+    /// Swaps the cached <see cref="ReflectionOperations"/> and <see cref="FileOperations"/>
+    /// instances for the source-generator-backed implementations. Used by
+    /// <see cref="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ReflectionMetadataHook"/>.
+    /// </summary>
+    internal void SetSourceGeneratedOperations(IReflectionOperations reflectionOperations, IFileOperations fileOperations)
+    {
+        ReflectionOperations = reflectionOperations ?? throw new ArgumentNullException(nameof(reflectionOperations));
+        FileOperations = fileOperations ?? throw new ArgumentNullException(nameof(fileOperations));
+    }
 }
