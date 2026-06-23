@@ -499,13 +499,9 @@ internal static class TestClassModelBuilder
     private static bool IsSupportedTestClassConstructor(IMethodSymbol constructor)
     {
         ImmutableArray<IParameterSymbol> parameters = constructor.Parameters;
-        if (parameters.Length == 0)
-        {
-            return true;
-        }
-
-        return parameters.Length == 1
-            && parameters[0].Type.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext";
+        return parameters.Length == 0
+            || (parameters.Length == 1
+                && parameters[0].Type.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext");
     }
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
@@ -562,70 +558,32 @@ internal static class TestClassModelBuilder
     }
 
     private static bool IsAttributeMaterializable(AttributeData attribute, INamedTypeSymbol attributeClass, IAssemblySymbol consumingAssembly)
-    {
-        // The attribute type (and every enclosing type) must be referenceable.
-        if (!IsTypeReferenceableFrom(attributeClass, consumingAssembly))
-        {
-            return false;
-        }
-
-        // The constructor the generated `new T(...)` would bind to must be callable. A null
-        // AttributeConstructor (Roslyn could not resolve it) is treated as not materializable.
-        if (attribute.AttributeConstructor is not { } constructor
-            || !IsMemberAccessibleFrom(constructor.DeclaredAccessibility, constructor.ContainingType, consumingAssembly))
-        {
-            return false;
-        }
-
-        // Every argument type the emitter writes out (enum casts, typeof targets, typed nulls,
-        // and nested array element types) must also be referenceable.
-        foreach (TypedConstant argument in attribute.ConstructorArguments)
-        {
-            if (!AreArgumentTypesReferenceable(argument, consumingAssembly))
-            {
-                return false;
-            }
-        }
-
-        foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
-        {
-            if (!AreArgumentTypesReferenceable(named.Value, consumingAssembly))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
+        // The attribute type (and every enclosing type) must be referenceable; the constructor the
+        // generated `new T(...)` binds to must be callable (a null AttributeConstructor — Roslyn could
+        // not resolve it — is treated as not materializable); and every argument type the emitter
+        // writes out (enum casts, typeof targets, typed nulls, nested array elements) must also be
+        // referenceable.
+        => IsTypeReferenceableFrom(attributeClass, consumingAssembly)
+            && attribute.AttributeConstructor is { } constructor
+            && IsMemberAccessibleFrom(constructor.DeclaredAccessibility, constructor.ContainingType, consumingAssembly)
+            && attribute.ConstructorArguments.All(argument => AreArgumentTypesReferenceable(argument, consumingAssembly))
+            && attribute.NamedArguments.All(named => AreArgumentTypesReferenceable(named.Value, consumingAssembly));
 
     private static bool AreArgumentTypesReferenceable(TypedConstant constant, IAssemblySymbol consumingAssembly)
-    {
-        switch (constant.Kind)
+        => constant.Kind switch
         {
-            case TypedConstantKind.Array:
-                foreach (TypedConstant element in constant.Values)
-                {
-                    if (!AreArgumentTypesReferenceable(element, consumingAssembly))
-                    {
-                        return false;
-                    }
-                }
+            TypedConstantKind.Array => constant.Values.All(element => AreArgumentTypesReferenceable(element, consumingAssembly)),
 
-                return true;
+            // typeof(X): the target type must be referenceable. Non-named targets (arrays, type
+            // parameters) are conservatively rejected.
+            TypedConstantKind.Type => constant.Value is null
+                || (constant.Value is INamedTypeSymbol typeofTarget && IsTypeReferenceableFrom(typeofTarget, consumingAssembly)),
 
-            case TypedConstantKind.Type:
-                // typeof(X): the target type must be referenceable. Non-named targets (arrays,
-                // type parameters) are conservatively rejected.
-                return constant.Value is null
-                    || (constant.Value is INamedTypeSymbol typeofTarget && IsTypeReferenceableFrom(typeofTarget, consumingAssembly));
-
-            default:
-                // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type
-                // must be referenceable. Untyped values (Type is null) are plain literals.
-                return constant.Type is not INamedTypeSymbol namedType
-                    || IsTypeReferenceableFrom(namedType, consumingAssembly);
-        }
-    }
+            // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type must be
+            // referenceable. Untyped values (Type is null) are plain literals.
+            _ => constant.Type is not INamedTypeSymbol namedType
+                || IsTypeReferenceableFrom(namedType, consumingAssembly),
+        };
 
     private static bool IsTypeReferenceableFrom(INamedTypeSymbol type, IAssemblySymbol consumingAssembly)
     {
@@ -644,15 +602,9 @@ internal static class TestClassModelBuilder
 
         // Also require every generic type argument to be referenceable (e.g. a closed generic
         // attribute type argument that is itself inaccessible).
-        foreach (ITypeSymbol typeArgument in type.TypeArguments)
-        {
-            if (typeArgument is INamedTypeSymbol namedArgument && !IsTypeReferenceableFrom(namedArgument, consumingAssembly))
-            {
-                return false;
-            }
-        }
-
-        return true;
+        return type.TypeArguments
+            .OfType<INamedTypeSymbol>()
+            .All(namedArgument => IsTypeReferenceableFrom(namedArgument, consumingAssembly));
     }
 
     private static bool IsMemberAccessibleFrom(Accessibility accessibility, INamedTypeSymbol containingType, IAssemblySymbol consumingAssembly)
