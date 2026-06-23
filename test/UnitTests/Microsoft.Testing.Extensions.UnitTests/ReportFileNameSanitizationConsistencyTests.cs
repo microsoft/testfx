@@ -17,16 +17,18 @@ public class ReportFileNameSanitizationConsistencyTests
         typeof(TrxReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
         ?? throw new InvalidOperationException("Could not resolve TrxReportEngine.ReplaceInvalidFileNameChars.");
 
+    // CtrfReportEngine, HtmlReportEngine and JUnitReportEngine inherit ReplaceInvalidFileNameChars from
+    // ReportEngineBase, so we flatten the hierarchy to resolve the inherited protected static method.
     private static readonly MethodInfo HtmlSanitizeMethod =
-        typeof(HtmlReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+        typeof(HtmlReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)
         ?? throw new InvalidOperationException("Could not resolve HtmlReportEngine.ReplaceInvalidFileNameChars.");
 
     private static readonly MethodInfo JUnitSanitizeMethod =
-        typeof(JUnitReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+        typeof(JUnitReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)
         ?? throw new InvalidOperationException("Could not resolve JUnitReportEngine.ReplaceInvalidFileNameChars.");
 
     private static readonly MethodInfo CtrfSanitizeMethod =
-        typeof(CtrfReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static)
+        typeof(CtrfReportEngine).GetMethod("ReplaceInvalidFileNameChars", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)
         ?? throw new InvalidOperationException("Could not resolve CtrfReportEngine.ReplaceInvalidFileNameChars.");
 
     [TestMethod]

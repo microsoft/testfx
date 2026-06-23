@@ -75,6 +75,9 @@ internal abstract class ReportEngineBase
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.{extension}";
-        return ReportFileNameSanitizer.ReplaceInvalidFileNameChars(raw);
+        return ReplaceInvalidFileNameChars(raw);
     }
+
+    protected static string ReplaceInvalidFileNameChars(string fileName)
+        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
 }

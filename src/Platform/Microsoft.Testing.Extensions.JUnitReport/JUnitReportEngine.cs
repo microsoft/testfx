@@ -110,9 +110,4 @@ internal sealed class JUnitReportEngine : ReportEngineBase
                 ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.JUnitReportFileExistsAndWillBeOverwritten, finalPath)
                 : null);
     }
-
-#pragma warning disable IDE0051 // Accessed by unit tests through reflection.
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
-#pragma warning restore IDE0051
 }
