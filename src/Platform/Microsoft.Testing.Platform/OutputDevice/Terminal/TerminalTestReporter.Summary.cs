@@ -44,7 +44,7 @@ internal sealed partial class TerminalTestReporter
 
         // Single-pass aggregation: compute all summary counters in one foreach instead of
         // 7 separate LINQ calls (Sum×5, Any×1, Count×1), saving 6 extra O(N) passes and
-        // 6 LINQ enumerator allocations per test run.
+        // 7 LINQ enumerator allocations per test run.
         int totalTests = 0;
         int totalFailedTests = 0;
         int totalSkippedTests = 0;
