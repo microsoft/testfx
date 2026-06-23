@@ -215,7 +215,8 @@ public class UnitTest1
 /// over all target frameworks without hand-writing a bespoke build-matrix data source.
 /// </summary>
 [AttributeUsage(AttributeTargets.Parameter)]
-public sealed class AllTargetFrameworksAttribute : Attribute, ICombinatorialValuesProvider
+internal sealed class AllTargetFrameworksAttribute : Attribute, ICombinatorialValuesProvider
 {
-    public object?[] GetValues(ParameterInfo parameter) => [.. TargetFrameworks.All];
+    // TargetFrameworks.All is never mutated, so it's safe to hand the same array back on every call.
+    public object?[] GetValues(ParameterInfo _) => TargetFrameworks.All;
 }
