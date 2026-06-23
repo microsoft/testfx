@@ -161,6 +161,9 @@ public sealed class AzureDevOpsSummaryReporterTests
         Assert.HasCount(1, lines);
         Assert.StartsWith("##vso[task.uploadsummary]", lines[0]);
         Assert.Contains("azdo-summary-", lines[0]);
+        // The assembly name must be part of the default file name so concurrent test assemblies
+        // sharing the same TFM and TestResults directory don't race to write the same file.
+        Assert.Contains("MyAssembly", lines[0]);
         Assert.EndsWith(".md", lines[0]);
     }
 

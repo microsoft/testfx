@@ -196,4 +196,73 @@ public sealed class UseRetryWithTestMethodAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenDataTestMethodHasRetryAttribute_NoDiagnostic()
+    {
+        // DataTestMethodAttribute derives from TestMethodAttribute, so [Retry] on a [DataTestMethod] is valid.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [Retry(maxRetryAttempts: 3)]
+                [DataRow(1)]
+                public void M(int x)
+                {
+                }
+
+                [Retry(maxRetryAttempts: 3)]
+                [DataTestMethod]
+                [DataRow(2)]
+                public void M2(int x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestInitializeHasRetryAttribute_Diagnostic()
+    {
+        // [TestInitialize] is a fixture method, not a test method. Placing [Retry] on it is invalid.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                [Retry(maxRetryAttempts: 3)]
+                public void [|Setup|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodInNonTestClassHasRetryAttribute_Diagnostic()
+    {
+        // A method with [Retry] inside a class that is not decorated with [TestClass] should be flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyHelper
+            {
+                [Retry(maxRetryAttempts: 3)]
+                public void [|M|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

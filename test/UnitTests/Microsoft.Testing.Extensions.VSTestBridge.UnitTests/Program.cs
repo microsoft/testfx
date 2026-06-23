@@ -1,7 +1,12 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions;
+
+#if !NATIVE_AOT
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+#endif
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
 
@@ -21,6 +26,14 @@ builder.AddCodeCoverageProvider();
 #endif
 builder.AddAppInsightsTelemetryProvider();
 builder.AddHangDumpProvider();
+// Dogfood the OpenTelemetry extension: subscribe to the Microsoft.Testing.Platform activity source
+// and meter so the OpenTelemetryResultHandler pipeline is exercised end-to-end in CI. No exporter
+// is registered, so the recorded data is dropped by the SDK at the export stage — this keeps CI
+// logs clean while still flowing every test event through the OTel pipeline. Gated on !NATIVE_AOT
+// because the OpenTelemetry SDK relies on reflection-heavy patterns that may not work under AOT.
+builder.AddOpenTelemetryProvider(
+    tracing => tracing.AddTestingPlatformInstrumentation(),
+    metrics => metrics.AddTestingPlatformInstrumentation());
 Console.WriteLine("NATIVE_AOT disabled");
 #else
 Console.WriteLine("NATIVE_AOT enabled");
@@ -28,7 +41,9 @@ Console.WriteLine("NATIVE_AOT enabled");
 
 builder.AddCrashDumpProvider(ignoreIfNotSupported: true);
 builder.AddTrxReportProvider();
+builder.AddJUnitReportProvider();
 builder.AddAzureDevOpsProvider();
+builder.AddCtrfReportProvider();
 
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();

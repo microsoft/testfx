@@ -4,9 +4,8 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
 /// <summary>
-/// Small helper that produces indented source text. Mirrors the helper used by the existing
-/// MSTest.SourceGeneration project so that the generated output is consistent with the rest of
-/// the MSTest source generators.
+/// Canonical source-generator indentation helper. This file is linked by
+/// MSTest.AotReflection.SourceGeneration so both generators use deterministic newlines.
 /// </summary>
 internal sealed class IndentedStringBuilder
 {
@@ -17,30 +16,40 @@ internal sealed class IndentedStringBuilder
 
     public int IndentationLevel { get; internal set; }
 
-    public void Append(string value)
+    public IndentedStringBuilder Append(string value)
     {
         MaybeAppendIndent();
         _builder.Append(value);
         _needsIndent = false;
+
+        return this;
     }
 
-    public void AppendLine()
+    public IndentedStringBuilder AppendLine()
     {
         _builder.Append(Constants.NewLine);
         _needsIndent = true;
+
+        return this;
     }
 
-    public void AppendLine(string value)
+    public IndentedStringBuilder AppendLine(string value)
     {
         MaybeAppendIndent();
         _builder.Append(value);
         _builder.Append(Constants.NewLine);
         _needsIndent = true;
+
+        return this;
     }
 
-    public IDisposable AppendBlock(string header)
+    public IDisposable Block(string? header = null)
     {
-        AppendLine(header);
+        if (header is not null)
+        {
+            AppendLine(header);
+        }
+
         AppendLine("{");
         IndentationLevel++;
 

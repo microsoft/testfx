@@ -1,4 +1,6 @@
 #nullable enable
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AddValueFormatter(System.Func<System.Func<object?, string!>!, System.Func<object?, string!>!>! factory) -> System.IDisposable!
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AddValueFormatter<T>(System.Func<T, string?>! formatter) -> System.IDisposable!
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.AssemblyFixtureProviderAttribute(System.Type! fixtureType) -> void
@@ -7,6 +9,15 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.ge
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter.Filter(Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext! context) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(System.Type! conditionType, string! conditionMemberName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionMemberNames.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionType.get -> System.Type!
+override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.IsConditionMet.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InOrder = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder

@@ -37,12 +37,98 @@ variables:
     value: False
   - name: _RunAsPublic
     value: True
+  # OS-agnostic Microsoft.Testing.Platform report/dump arguments shared by the Release unit-test
+  # ("--test-modules") commands in the Windows job (below) and the Linux/MacOS jobs
+  # (eng/pipelines/steps/test-non-windows.yml). Keeping them in a single variable guarantees every OS
+  # emits the same set of reports (TRX + CTRF + JUnit + AzDO) so the published TestResults drops stay
+  # in sync. Only the test-module glob, --results-directory, and --diagnostic-output-directory differ
+  # per OS (path separators + .exe vs .dll), so those stay inline in each script.
+  #   --report-trx / --report-trx-filename "{asm}_{tfm}.trx" — TRX per (assembly x TFM).
+  #   --report-ctrf / --report-ctrf-filename "{asm}_{tfm}.ctrf.json" — CTRF JSON per (assembly x TFM).
+  #   --report-junit / --report-junit-filename "{asm}_{tfm}.xml" — JUnit XML per (assembly x TFM).
+  #   --report-azdo — surfaces failed tests in the AzDO UI.
+  #   --report-azdo-summary — Markdown job summary uploaded to the build's Summary tab.
+  #   --hangdump --hangdump-timeout 15m — dump a module that hangs past 15 minutes.
+  # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
+  - name: _ReleaseUnitTestReportArgs
+    value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
 
 stages:
 
 - stage: build
   displayName: Build
   jobs:
+
+  # Lightweight job that classifies the PR diff into two scopes (product vs samples)
+  # and exposes them as output variables. Downstream jobs use them to skip work that
+  # the diff does not touch (so e.g. a samples-only Dependabot PR does not spin up
+  # the full Windows/Linux/macOS product matrix, and a product-only PR does not run
+  # the samples build).
+  #
+  # Fail-safe behaviour:
+  #   - Non-PR triggers (manual queue, scheduled, etc.) leave SYSTEM_PULLREQUEST_TARGETBRANCH
+  #     empty, so we emit "true" for both flags and run everything.
+  #   - If the diff is empty (e.g. force-push to the same SHA), we also run everything.
+  #   - Downstream conditions use `ne(..., 'false')` rather than `eq(..., 'true')`
+  #     so a missing/empty output (e.g. detect step failed) still runs the job.
+  - job: DetectChanges
+    displayName: Detect changed paths
+    pool:
+      name: NetCore-Public
+      demands: ImageOverride -equals build.ubuntu.2204.amd64.open
+    steps:
+    - checkout: self
+      fetchDepth: 0
+      clean: false
+    - bash: |
+        set -euo pipefail
+
+        target="${SYSTEM_PULLREQUEST_TARGETBRANCH:-}"
+        # ADO exposes the target branch as a full ref (e.g. "refs/heads/main"); strip the
+        # "refs/heads/" prefix so it can be combined with the "origin/" remote-tracking prefix.
+        target="${target#refs/heads/}"
+        if [[ -z "${target}" ]]; then
+          echo "Not a PR build (SYSTEM_PULLREQUEST_TARGETBRANCH is empty); running all jobs."
+          hasProduct=true
+          hasSamples=true
+        else
+          echo "PR target branch: ${target}"
+          git fetch --no-tags --depth=200 origin "${target}" 2>/dev/null \
+            || git fetch --no-tags origin "${target}"
+          base="$(git merge-base "origin/${target}" HEAD)"
+          echo "Diff range: ${base}..HEAD"
+          files="$(git diff --name-only "${base}" HEAD)"
+          echo "Changed files:"
+          echo "${files}"
+
+          if [[ -z "${files}" ]]; then
+            echo "No files changed in diff; running all jobs."
+            hasProduct=true
+            hasSamples=true
+          else
+            # A file is a "samples-affecting" change if it lives under samples/** or it is
+            # one of the eng/ scripts that drives the samples build (build-samples.ps1).
+            # Everything else is treated as a product change.
+            samples_pattern='^(samples/|eng/build-samples\.ps1$)'
+            if echo "${files}" | grep -Eqv "${samples_pattern}"; then
+              hasProduct=true
+            else
+              hasProduct=false
+            fi
+            if echo "${files}" | grep -Eq "${samples_pattern}"; then
+              hasSamples=true
+            else
+              hasSamples=false
+            fi
+          fi
+        fi
+
+        echo "hasProductChanges=${hasProduct}"
+        echo "hasSamplesChanges=${hasSamples}"
+        echo "##vso[task.setvariable variable=hasProductChanges;isOutput=true]${hasProduct}"
+        echo "##vso[task.setvariable variable=hasSamplesChanges;isOutput=true]${hasSamples}"
+      name: detect
+      displayName: Classify changed files
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -57,10 +143,14 @@ stages:
       enableTelemetry: true
       jobs:
       - job: Windows
+        dependsOn: DetectChanges
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
+        variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
         strategy:
           matrix:
             Release:
@@ -68,21 +158,8 @@ stages:
             Debug:
               _BuildConfig: Debug
         steps:
-        - task: PowerShell@2
-          displayName: 'Install Windows SDK'
-          inputs:
-            targetType: filePath
-            filePath: './eng/install-windows-sdk.ps1'
-            failOnStderr: true
-            showWarnings: true
+        - template: /eng/pipelines/steps/install-windows-prereqs.yml
 
-        - task: PowerShell@2
-          displayName: 'Install procdump'
-          inputs:
-            targetType: filePath
-            filePath: ./eng/install-procdump.ps1
-            failOnStderr: true
-            showWarnings: true
         - task: PowerShell@2
           displayName: 'Enable local dumps'
           inputs:
@@ -92,13 +169,6 @@ stages:
               Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps"
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
-        - task: PowerShell@2
-          displayName: 'Install Access Database Engine'
-          inputs:
-            targetType: filePath
-            filePath: ./eng/install-access-database-engine.ps1
-            failOnStderr: true
-            showWarnings: true
 
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
@@ -114,26 +184,41 @@ stages:
           # Because the build step is using -ci flag, restore is done in a local .packages directory.
           # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
           # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
+          #
+          # -p:TestingPlatformCaptureOutput=false streams each test exe's stdout to the AzDO console at
+          # MessageImportance.High. Required so the silence-driven heartbeat (and per-test progress) emitted
+          # by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
+          # output is buffered into a per-module .log file and only surfaced on failure, so no live progress
+          # is visible during long-running test sessions.
+          - script: dotnet test -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig)\TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false
             name: Test
             displayName: Test
             condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
           # Use *.exe to cover both net4x (native exe) and net8+/net9+ (apphost exe) in a single glob.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) --no-progress --output detailed
+          #
+          # --test-modules bypasses MSBuild evaluation, so test/Directory.Build.targets cannot inject
+          # any of its TestingPlatformCommandLineArguments. We therefore restore the subset of those
+          # options that makes sense in Release. The OS-agnostic report/dump flags (TRX + CTRF + JUnit +
+          # AzDO + hangdump) live in the $(_ReleaseUnitTestReportArgs) variable defined at the top of this
+          # file so the Windows and Linux/MacOS commands stay in sync; see that variable for the per-flag
+          # documentation. Only the test-module glob, --results-directory, and --diagnostic-output-directory
+          # are inlined here because they differ per OS (path separators + .exe vs .dll).
+          # Use *.exe to cover both net4x (native exe) and net8+/net9+ (apphost exe) in a single glob.
+          # We intentionally do NOT pass:
+          #   --crashdump — gated on .NETCoreApp in Directory.Build.targets; the CrashDump extension's
+          #     ValidateTestHostEnvironmentVariablesAsync hard-fails the run on non-NETCoreApp hosts
+          #     (see src/Platform/Microsoft.Testing.Extensions.CrashDump/CrashDumpEnvironmentVariableProvider.cs),
+          #     and this glob mixes net4x and net8+/net9+ hosts.
+          #   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
+          #     Azure DevOps" steps below), so collecting coverage in Release would just write unused
+          #     .coverage files.
+          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.exe" --results-directory $(BUILD.SOURCESDIRECTORY)\artifacts\TestResults\$(_BuildConfig) $(_ReleaseUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig) --diagnostic-verbosity trace
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'
@@ -158,13 +243,19 @@ stages:
               ArtifactName: Integration_Tests_Windows_Binlogs_$(_BuildConfig)
             condition: and(always(), eq(variables._BuildConfig, 'Debug'))
 
-          # Upload code coverage to codecov.io
-          - script: dotnet msbuild -restore
-              eng/CodeCoverage.proj
-              /p:Configuration=$(_BuildConfig)
-              /bl:$(BUILD.SOURCESDIRECTORY)\artifacts\log\$(_BuildConfig)\CodeCoverage.binlog
-            displayName: Upload coverage to codecov.io
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+          # Publish coverage to Azure DevOps. PublishCodeCoverageResults@2 accepts the binary
+          # .coverage format Microsoft Code Coverage emits natively (per
+          # https://learn.microsoft.com/azure/devops/pipelines/tasks/reference/publish-code-coverage-results-v2:
+          # "The task supports all kinds of coverage formats such as: .coverage, .covx, .covb,
+          # .cjson, .xml, .lcov, pycov, etc."), and merges multiple files via the minimatch glob.
+          # Coverage shows up in the build's "Code Coverage" tab and on the build summary, one
+          # click from the GitHub PR status check (we used to upload to codecov.io here).
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish coverage to Azure DevOps'
+            inputs:
+              summaryFileLocation: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)/*.coverage'
+              pathToSources: '$(Build.SourcesDirectory)/src'
+            condition: and(succeededOrFailed(), eq(variables._BuildConfig, 'Debug'))
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish local dumps'
@@ -174,10 +265,14 @@ stages:
             condition: failed()
 
       - job: Linux
+        dependsOn: DetectChanges
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals build.ubuntu.2204.amd64.open
+        variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
         strategy:
           matrix:
             Release:
@@ -195,58 +290,20 @@ stages:
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
-          # Because the build step is using -ci flag, restore is done in a local .packages directory.
-          # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
-          # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
-            name: Test
-            displayName: Test
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
-
-          # Integration tests are redundant in Release—they spawn child processes that already cover
-          # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
-            name: TestRelease
-            displayName: Test (unit tests only)
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Test Results folders'
-            inputs:
-              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_Linux_$(_BuildConfig)_Attempt$(System.JobAttempt)
-            condition: always()
-
-          - task: CopyFiles@2
-            displayName: 'Copy binlogs'
-            inputs:
-              SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
-              Contents: |
-                **/*.binlog
-              TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish integration tests binlogs'
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
-              ArtifactName: Integration_Tests_Linux_Binlogs_$(_BuildConfig)
-            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+          - template: /eng/pipelines/steps/test-non-windows.yml
+            parameters:
+              osName: Linux
 
       - job: MacOS
+        dependsOn: DetectChanges
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
           vmImage: macos-latest
           os: macOS
+        variables:
+          - template: /eng/pipelines/variables/test-env-vars.yml
         strategy:
           matrix:
             Release:
@@ -264,51 +321,9 @@ stages:
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
-          # Because the build step is using -ci flag, restore is done in a local .packages directory.
-          # We need to pass NUGET_PACKAGES so that when dotnet test is doing evaluation phase on the projects, it can resolve .props/.targets from packages and import them.
-          # Otherwise, props/targets are not imported. It's important that they are imported so that IsTestingPlatformApplication ends up being set.
-          - script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog --no-progress --output detailed -p:UsingDotNetTest=true
-            name: Test
-            displayName: Test
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
-
-          # Integration tests are redundant in Release—they spawn child processes that already cover
-          # both Debug and Release configurations. Use --test-modules to run only unit tests.
-          - script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) --no-progress --output detailed
-            name: TestRelease
-            displayName: Test (unit tests only)
-            condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
-            env:
-              DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
-              NUGET_PACKAGES: $(Build.SourcesDirectory)/.packages
-              DOTNET_CLI_CONTEXT_VERBOSE: 1
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Test Results folders'
-            inputs:
-              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults_MacOs_$(_BuildConfig)_Attempt$(System.JobAttempt)
-            condition: always()
-
-          - task: CopyFiles@2
-            displayName: 'Copy binlogs'
-            inputs:
-              SourceFolder: '$(Build.SourcesDirectory)/artifacts/tmp/$(_BuildConfig)/testsuite'
-              Contents: |
-                **/*.binlog
-              TargetFolder: '$(Build.ArtifactStagingDirectory)/binlogs'
-            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish integration tests binlogs'
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)/binlogs'
-              ArtifactName: Integration_Tests_MacOS_Binlogs_$(_BuildConfig)
-            condition: and(always(), eq(variables._BuildConfig, 'Debug'))
+          - template: /eng/pipelines/steps/test-non-windows.yml
+            parameters:
+              osName: MacOS
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
@@ -321,6 +336,8 @@ stages:
       enableTelemetry: true
       jobs:
       - job: WindowsSamples
+        dependsOn: DetectChanges
+        condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasSamplesChanges'], 'false'))
         timeoutInMinutes: 30
         pool:
           name: NetCore-Public

@@ -11,6 +11,17 @@ updates:
       - dependency-name: Moq
     commit-message:
       prefix: '[main] '
+  - package-ecosystem: nuget
+    directory: "/samples/public"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      # handled by Darc/Maestro flows
+      - dependency-name: "Microsoft.DotNet.Arcade.Sdk"
+      - dependency-name: Moq
+    commit-message:
+      prefix: '[main] '
   - package-ecosystem: dotnet-sdk
     directory: /
     schedule:

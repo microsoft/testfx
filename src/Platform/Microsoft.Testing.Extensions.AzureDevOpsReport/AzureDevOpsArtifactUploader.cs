@@ -22,7 +22,6 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
 {
     private const string AzureDevOpsArtifactUploadCommandFormat = "##vso[artifact.upload containerfolder={0};artifactname={0}]{1}";
     private const string AzureDevOpsBuildAddTagCommandPrefix = "##vso[build.addbuildtag]";
-    private const string AzureDevOpsTfBuildVariableName = "TF_BUILD";
     private const string CrashDumpProducerUid = "CrashDumpProcessLifetimeHandler";
     private const string CrashDumpTag = "has-crashdump";
     private const string HangDumpProducerUid = "HangDumpProcessLifetimeHandler";
@@ -105,7 +104,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
                 return;
             }
 
-            _emitAzureDevOpsCommands = string.Equals(_environment.GetEnvironmentVariable(AzureDevOpsTfBuildVariableName), "true", StringComparison.OrdinalIgnoreCase);
+            _emitAzureDevOpsCommands = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
             if (_emitAzureDevOpsCommands)
             {
                 return;

@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
-using MSTest.AotReflection.SourceGeneration.Helpers;
+using MSTest.Analyzers.Shared;
 using MSTest.AotReflection.SourceGeneration.Model;
 
 namespace MSTest.AotReflection.SourceGeneration.Generators;
@@ -32,6 +30,7 @@ internal static class MetadataRegistryEmitter
 
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine();
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
@@ -39,57 +38,60 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
-                sb.AppendLine("public Type Type { get; init; } = null!;");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
-                sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; init; } = Array.Empty<TestMethodReflectionInfo>();");
-                sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; init; } = Array.Empty<TestPropertyReflectionInfo>();");
-                sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; init; } = Array.Empty<TestConstructorReflectionInfo>();");
+                sb.AppendLine("public Type Type { get; set; } = null!;");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");
+                sb.AppendLine("public IReadOnlyList<TestPropertyReflectionInfo> Properties { get; set; } = Array.Empty<TestPropertyReflectionInfo>();");
+                sb.AppendLine("public IReadOnlyList<TestConstructorReflectionInfo> Constructors { get; set; } = Array.Empty<TestConstructorReflectionInfo>();");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestMethodReflectionInfo"))
             {
-                sb.AppendLine("public string Name { get; init; } = string.Empty;");
-                sb.AppendLine("public bool IsStatic { get; init; }");
-                sb.AppendLine("public bool ReturnsTask { get; init; }");
-                sb.AppendLine("public bool ReturnsValueTask { get; init; }");
-                sb.AppendLine("public bool ReturnsVoid { get; init; }");
-                sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
-                sb.AppendLine("public string[] ParameterNames { get; init; } = Array.Empty<string>();");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
-                sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />.</summary>");
-                sb.AppendLine("public Func<object?, object?[]?, object?> Invoke { get; init; } = static (_, _) => null;");
+                sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("public bool IsStatic { get; set; }");
+                sb.AppendLine("public bool ReturnsTask { get; set; }");
+                sb.AppendLine("public bool ReturnsValueTask { get; set; }");
+                sb.AppendLine("public bool ReturnsVoid { get; set; }");
+                sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
+                sb.AppendLine("public string[] ParameterNames { get; set; } = Array.Empty<string>();");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
+                sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
+                sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
+                sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestPropertyReflectionInfo"))
             {
-                sb.AppendLine("public string Name { get; init; } = string.Empty;");
-                sb.AppendLine("public Type PropertyType { get; init; } = typeof(object);");
-                sb.AppendLine("public bool HasPublicSetter { get; init; }");
-                sb.AppendLine("public Attribute[] Attributes { get; init; } = Array.Empty<Attribute>();");
-                sb.AppendLine("public Func<object?, object?> Get { get; init; } = static _ => null;");
-                sb.AppendLine("public Action<object?, object?> Set { get; init; } = static (_, _) => { };");
+                sb.AppendLine("public string Name { get; set; } = string.Empty;");
+                sb.AppendLine("public Type PropertyType { get; set; } = typeof(object);");
+                sb.AppendLine("public bool HasPublicSetter { get; set; }");
+                sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
+                sb.AppendLine("public Func<object?, object?> Get { get; set; } = static _ => null;");
+                sb.AppendLine("public Action<object?, object?> Set { get; set; } = static (_, _) => { };");
             }
 
             sb.AppendLine();
             using (sb.Block("internal sealed class TestConstructorReflectionInfo"))
             {
-                sb.AppendLine("public Type[] ParameterTypes { get; init; } = Array.Empty<Type>();");
-                sb.AppendLine("public Func<object?[]?, object> Invoke { get; init; } = static _ => throw new InvalidOperationException(\"No constructor registered.\");");
+                sb.AppendLine("public Type[] ParameterTypes { get; set; } = Array.Empty<Type>();");
+                sb.AppendLine("public Func<object?[]?, object> Invoke { get; set; } = static _ => throw new InvalidOperationException(\"No constructor registered.\");");
             }
         }
 
         return sb.ToString();
     }
 
-    public static string EmitRegistry(string assemblyName, IReadOnlyList<TestClassModel> testClasses)
+    public static string EmitRegistry(string assemblyName, AssemblyMetadataModel assemblyMetadata, IReadOnlyList<TestClassModel> testClasses)
     {
         var sb = new IndentedStringBuilder();
         AppendHeader(sb);
 
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine();
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
@@ -99,6 +101,12 @@ internal static class MetadataRegistryEmitter
             {
                 sb.AppendLine($"public const string AssemblyName = \"{Escape(assemblyName)}\";");
                 sb.AppendLine();
+
+                // Emit assembly-level [assembly: ...] attributes so the consumer never has to call
+                // Assembly.GetCustomAttributes for attributes declared in the same compilation.
+                EmitAssemblyAttributesProperty(sb, assemblyMetadata.Attributes);
+                sb.AppendLine();
+
                 sb.AppendLine("public static IReadOnlyList<TestClassReflectionInfo> TestClasses { get; } = new TestClassReflectionInfo[]");
                 using (sb.Block(null))
                 {
@@ -117,6 +125,35 @@ internal static class MetadataRegistryEmitter
         }
 
         return sb.ToString();
+    }
+
+    private static void EmitAssemblyAttributesProperty(IndentedStringBuilder sb, EquatableArray<AttributeApplicationModel> attributes)
+    {
+        if (attributes.Length == 0)
+        {
+            sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = Array.Empty<Attribute>();");
+            return;
+        }
+
+        sb.AppendLine("public static IReadOnlyList<Attribute> AssemblyAttributes { get; } = new Attribute[]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                AttributeApplicationModel attr = attributes[i];
+                sb.Append(BuildAttributeExpression(attr));
+                if (i < attributes.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
+
+        sb.AppendLine(";");
     }
 
     private static void EmitTestClass(IndentedStringBuilder sb, TestClassModel model)
@@ -190,6 +227,8 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine(",");
                     EmitAttributesProperty(sb, "Attributes", method.Attributes);
                     sb.AppendLine(",");
+                    EmitDataRows(sb, method.DataRows);
+                    sb.AppendLine(",");
                     EmitMethodInvoker(sb, fqn, method);
                 }
 
@@ -217,9 +256,22 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine($"HasPublicSetter = {Bool(prop.HasPublicSetter)},");
                     EmitAttributesProperty(sb, "Attributes", prop.Attributes);
                     sb.AppendLine(",");
-                    sb.AppendLine($"Get = static instance => instance is null ? null : (object?)(({fqn})instance).{prop.Name},");
+
+                    // Static members are accessed through the type name; instance members through
+                    // the cast receiver. Indexers are filtered out earlier because the name-based
+                    // Get/Set delegate shape cannot represent them.
+                    string getBody = (prop.HasGettableValue, prop.IsStatic) switch
+                    {
+                        (false, _) => $"throw new InvalidOperationException(\"Property '{prop.Name}' has no accessible getter.\")",
+                        (true, true) => $"(object?){fqn}.{prop.Name}",
+                        (true, false) => $"instance is null ? null : (object?)(({fqn})instance).{prop.Name}",
+                    };
+
+                    sb.AppendLine($"Get = static instance => {getBody},");
+
+                    string setTarget = prop.IsStatic ? fqn : $"(({fqn})instance!)";
                     string setBody = prop.HasPublicSetter
-                        ? $"(({fqn})instance!).{prop.Name} = ({prop.FullyQualifiedType})value!"
+                        ? $"{setTarget}.{prop.Name} = ({prop.FullyQualifiedType})value!"
                         : $"throw new InvalidOperationException(\"Property '{prop.Name}' has no public setter.\")";
                     sb.AppendLine($"Set = static (instance, value) => {setBody},");
                 }
@@ -238,11 +290,79 @@ internal static class MetadataRegistryEmitter
         string args = BuildArgumentsFromObjectArray(method.Parameters);
         string call = $"{target}.{method.Name}({args})";
 
-        string body = method.ReturnsVoid
-            ? $"{{ {call}; return null; }}"
-            : $"{{ return {call}; }}";
+        // The contract is: return a non-null Task representing the (async or sync) completion of the
+        // test method, discarding any result value. This lets the caller use a single `await invoker(...)`
+        // path regardless of the underlying return shape.
+        //   - void / non-Task sync: invoke, return Task.CompletedTask.
+        //   - Task / Task<T>: forward the returned Task (treat a `null` return as success).
+        //   - ValueTask / ValueTask<T>: avoid Task allocation for the synchronously-completed fast path
+        //     via IsCompletedSuccessfully, consuming the result before returning Task.CompletedTask;
+        //     otherwise call AsTask().
+        string body;
+        if (method.ReturnsTask)
+        {
+            // Task<T> derives from Task, so the same forwarding code handles both. A test method that
+            // *declares* a Task return type and then returns `null` is broken at runtime, but mirroring
+            // reflection-Invoke we tolerate it and treat it as already-completed.
+            body = $"{{ Task? __t = {call}; return __t ?? Task.CompletedTask; }}";
+        }
+        else if (method.ReturnsValueTask)
+        {
+            body = $"{{ var __vt = {call}; if (__vt.IsCompletedSuccessfully) {{ __vt.GetAwaiter().GetResult(); return Task.CompletedTask; }} return __vt.AsTask(); }}";
+        }
+        else if (method.ReturnsVoid)
+        {
+            body = $"{{ {call}; return Task.CompletedTask; }}";
+        }
+        else
+        {
+            // Non-void, non-Task return (e.g. `int Test()`). The test runner discards the value; we still
+            // execute the call for its side effects and report success.
+            //
+            // Note: using a plain invocation statement (instead of `_ = {call}`) discards the value while
+            // also handling `ref`-returning methods (e.g. `ref int M()`), where assigning the byref return
+            // to a discard would not compile.
+            body = $"{{ {call}; return Task.CompletedTask; }}";
+        }
 
         sb.AppendLine($"Invoke = static (instance, args) => {body},");
+    }
+
+    private static void EmitDataRows(IndentedStringBuilder sb, EquatableArray<DataRowModel> dataRows)
+    {
+        if (dataRows.Length == 0)
+        {
+            sb.Append("DataRows = Array.Empty<object?[]>()");
+            sb.AppendLine();
+            return;
+        }
+
+        sb.AppendLine("DataRows = new object?[][]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < dataRows.Length; i++)
+            {
+                EquatableArray<TypedConstantModel> args = dataRows[i].Arguments;
+                if (args.Length == 0)
+                {
+                    sb.Append("Array.Empty<object?>()");
+                }
+                else
+                {
+                    string literals = string.Join(", ", args.AsImmutableArray().Select(BuildConstantExpression));
+                    sb.Append($"new object?[] {{ {literals} }}");
+                }
+
+                if (i < dataRows.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
     }
 
     private static void EmitParameterTypes(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)
@@ -299,7 +419,7 @@ internal static class MetadataRegistryEmitter
         }
     }
 
-    private static string BuildAttributeExpression(AttributeApplicationModel attribute)
+    internal static string BuildAttributeExpression(AttributeApplicationModel attribute)
     {
         string ctorArgs = string.Join(", ", attribute.ConstructorArguments.AsImmutableArray().Select(BuildConstantExpression));
         string ctorCall = $"new {attribute.FullyQualifiedAttributeType}({ctorArgs})";
@@ -378,19 +498,14 @@ internal static class MetadataRegistryEmitter
         };
 
     private static string BuildArgumentsFromObjectArray(EquatableArray<TestParameterModel> parameters)
-    {
-        if (parameters.Length == 0)
-        {
-            return string.Empty;
-        }
-
-        return string.Join(", ", parameters.AsImmutableArray()
-            .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
-    }
+        => parameters.Length == 0
+            ? string.Empty
+            : string.Join(", ", parameters.AsImmutableArray()
+                .Select((p, i) => $"({p.FullyQualifiedType})args![{i}]!"));
 
     private static string Bool(bool value) => value ? "true" : "false";
 
-    private static string Escape(string value)
+    internal static string Escape(string value)
         => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
     private static void AppendHeader(IndentedStringBuilder sb)

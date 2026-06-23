@@ -119,5 +119,6 @@
   </resheader>
   <data name="InvalidTestApplicationBuilderTypeForAI" xml:space="preserve">
     <value>AI extensions only work with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
+    <comment>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</comment>
   </data>
 </root>

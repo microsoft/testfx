@@ -48,6 +48,13 @@ jobs:
 
   steps:
 
+  # NOTE: Do not add an explicit `UseDotNet@2` with `useGlobalJson: true` here.
+  # global.json pins a preview SDK (11.0.x-preview.*) and the `UseDotNet@2` task
+  # does not search preview channels by default, so it fails with
+  # "sdk version matching: 11.0.x could not be found". `eng\common\CIBuild.cmd`
+  # (invoked below) restores the correct SDK from global.json via `dotnet-install.ps1`,
+  # which handles preview versions correctly.
+
   - task: PowerShell@2
     displayName: 'Install Windows SDK'
     inputs:
@@ -59,11 +66,37 @@ jobs:
   - task: CodeQL3000Init@0
     displayName: CodeQL Initialize
 
-  - script: eng\common\cibuild.cmd
+  # Force the .NET SDK MSBuild (x64) instead of the default VS x86 MSBuild on the
+  # windows.vs2026.amd64 image. Since image version 2026.0529.211646 (deployed 2026-06-05),
+  # the bundled VS MSBuild fails to spin up an x86 .NET task host for Arcade tasks declared
+  # with Runtime="NET", producing MSB4216 on InstallDotNetCore. See dotnet/msbuild#13739.
+  #
+  # Skip the uap10.0.16299 target framework on this pipeline because MSBuild.Sdk.Extras'
+  # Workarounds.targets refuses to build full-MSBuild targets under 'dotnet msbuild'.
+  # UAP-specific code paths are still scanned via the other TFMs the affected projects
+  # multi-target (net462, net8.0, net9.0).
+  #
+  # Disable Pack/Sign/Publish because CIBuild.cmd implies all three, and they cascade-fail
+  # when UAP is skipped (.nuspec files reference absent uap10.0.16299 outputs; Sign then
+  # errors with "List of files to sign is empty"). CodeQL only needs source compilation.
+  - script: eng\common\CIBuild.cmd
       -configuration $(_BuildConfig)
       -prepareMachine
+      -msbuildEngine dotnet
       /p:Test=false
+      /p:Pack=false
+      /p:Sign=false
+      /p:Publish=false
+      /p:SkipUapTargetFramework=true
     displayName: Windows Build
 
   - task: CodeQL3000Finalize@0
     displayName: CodeQL Finalize
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish build binlogs'
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+      ArtifactName: Build_Binlogs_$(_BuildConfig)_Attempt$(System.JobAttempt)
+    condition: always()
+    continueOnError: true

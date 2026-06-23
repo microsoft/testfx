@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -167,36 +168,29 @@ internal sealed partial class TestClassInfo
 
             DebugEx.Assert(!IsClassInitializeExecuted, "If class initialize was executed, we should have been in the previous if were we have a result available.");
 
-            bool isSTATestClass = ClassAttribute is STATestClassAttribute;
-            bool isWindowsOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-            if (isSTATestClass
-                && isWindowsOS
-                && Thread.CurrentThread.GetApartmentState() != ApartmentState.STA)
-            {
-                var result = new TestResult
+            ApartmentState? requestedApartmentState = ClassAttribute is STATestClassAttribute
+                ? ApartmentState.STA
+                : null;
+            return await StaThreadHelper.RunOnApartmentThreadIfNeededAsync(
+                requestedApartmentState,
+                "MSTest STATestClass ClassInitialize",
+                DoRunAsync,
+                () => new TestResult
                 {
                     Outcome = UnitTestOutcome.Error,
                     IgnoreReason = "MSTest STATestClass ClassInitialize didn't complete",
-                };
-
-                Thread entryPointThread = new(() => result = DoRunAsync().GetAwaiter().GetResult())
-                {
-                    Name = "MSTest STATestClass ClassInitialize",
-                };
-
-                entryPointThread.SetApartmentState(ApartmentState.STA);
-                entryPointThread.Start();
-
-                try
+                },
+                entryPointThread =>
                 {
                     entryPointThread.Join();
-                    return result;
-                }
-                catch (Exception ex)
+                    return Task.CompletedTask;
+                },
+                (thread, ex) =>
                 {
                     if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsErrorEnabled)
                     {
-                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(ex.ToString());
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Error(
+                            $"Failed to join STA thread '{thread.Name}': {ex}");
                     }
 
                     return new TestResult
@@ -204,21 +198,14 @@ internal sealed partial class TestClassInfo
                         TestFailureException = new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()),
                         Outcome = UnitTestOutcome.Error,
                     };
-                }
-            }
-            else
-            {
-                // If the requested apartment state is STA and the OS is not Windows, then warn the user.
-                if (!isWindowsOS && isSTATestClass)
+                },
+                () =>
                 {
                     if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
                     {
                         PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(Resource.STAIsOnlySupportedOnWindowsWarning);
                     }
-                }
-
-                return await DoRunAsync().ConfigureAwait(false);
-            }
+                }).ConfigureAwait(false);
         }
         finally
         {

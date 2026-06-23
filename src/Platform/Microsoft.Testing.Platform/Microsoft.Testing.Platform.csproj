@@ -5,6 +5,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>
+
+    <!-- Treat "missing XML doc comment for publicly visible type or member" as a build error so
+         the public API stays fully documented. See #9060. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CS1591</WarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +28,9 @@ This package provides the core platform and the .NET implementation of the proto
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Remove="Configurations/JsonConfigurationFileParser.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/Json.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Deserializers.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.Serializers.cs" />
+    <Compile Remove="ServerMode/JsonRpc/Json/Json.TestNodeSerializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonCollectionDeserializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonDeserializer.cs" />
     <Compile Remove="ServerMode/JsonRpc/Json/JsonElementDeserializer.cs" />
@@ -42,9 +49,11 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.OpenTelemetry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CrashDump" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CtrfReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HotReload" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HtmlReport" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.JUnitReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.MSBuild" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Retry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Telemetry" Key="$(VsPublicKey)" />
@@ -82,6 +91,7 @@ This package provides the core platform and the .NET implementation of the proto
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\StackTraceRegexHelper.cs" Link="Helpers\StackTraceRegexHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>

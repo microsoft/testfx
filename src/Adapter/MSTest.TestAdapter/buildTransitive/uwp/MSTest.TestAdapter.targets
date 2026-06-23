@@ -28,17 +28,25 @@
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Name)' != '' "/>
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Parent.Parent.Name)' != '' "/>
     </ItemGroup>
-  </Target>
 
-  <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
-  <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild" Condition=" '$(EnableMSTestV2CopyResources)' == 'true' " DependsOnTargets="GetMSTestV2CultureHierarchy">
-
-    <!-- Expand the UICulture hierarchy to items, such as cs-CZ, cs, and attach the culture metadata to the item. -->
+    <!--
+      Expand the UICulture hierarchy to items, such as cs-CZ, cs, and attach the culture metadata to the item.
+      This is populated here (rather than inside CopyMSTestV2Resources) so the item group is available when the
+      Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
+    -->
     <ItemGroup>
       <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
         <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
       </MSTestV2Files>
     </ItemGroup>
+  </Target>
+
+  <!-- Copy resources over to $(TargetDir) if this is a localized build. -->
+  <Target Name="CopyMSTestV2Resources" BeforeTargets="PrepareForBuild"
+          Condition=" '$(EnableMSTestV2CopyResources)' == 'true' "
+          DependsOnTargets="GetMSTestV2CultureHierarchy"
+          Inputs="@(MSTestV2Files)"
+          Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)\%(FileName)%(Extension)')">
 
     <ItemGroup>
       <!-- Add the localization file as content so it gets copied from nuget to bin folder. -->

@@ -7,27 +7,37 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Sdk</PackageId>
-    <NuspecFile>MSTest.Sdk.nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 
       This package contains the MSTest MSBuild project SDK.
     </PackageDescription>
+    <!-- This package only ships MSBuild SDK props/targets: no lib and no dependencies. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup Label="NuGet">
-    <NuspecProperty Include="MSBuildProjectDirectory=$(MSBuildProjectDirectory)" />
-    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
-  </ItemGroup>
-
   <ItemGroup>
-    <Content Include="Sdk\**">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <!--
+      Pack the MSBuild SDK props/targets into the 'Sdk' folder of the package.
+      These are listed explicitly (rather than via a glob) because Sdk.props and
+      Runner.targets are generated from templates during the build (see GenerateTemplates),
+      so they may not exist yet at evaluation time. Listing them explicitly ensures they
+      are picked up at pack time once generated.
+    -->
+    <None Remove="Sdk\**\*.props;Sdk\**\*.targets" />
+    <None Include="Sdk\Sdk.props" Pack="true" PackagePath="Sdk\Sdk.props" />
+    <None Include="Sdk\Sdk.targets" Pack="true" PackagePath="Sdk\Sdk.targets" />
+    <None Include="Sdk\Features\Aspire.targets" Pack="true" PackagePath="Sdk\Features\Aspire.targets" />
+    <None Include="Sdk\Features\Playwright.targets" Pack="true" PackagePath="Sdk\Features\Playwright.targets" />
+    <None Include="Sdk\Runner\Runner.targets" Pack="true" PackagePath="Sdk\Runner\Runner.targets" />
+    <None Include="Sdk\Runner\Common.targets" Pack="true" PackagePath="Sdk\Runner\Common.targets" />
+    <None Include="Sdk\Runner\ClassicEngine.targets" Pack="true" PackagePath="Sdk\Runner\ClassicEngine.targets" />
+    <None Include="Sdk\Runner\NativeAOT.targets" Pack="true" PackagePath="Sdk\Runner\NativeAOT.targets" />
+    <None Include="Sdk\VSTest\VSTest.targets" Pack="true" PackagePath="Sdk\VSTest\VSTest.targets" />
   </ItemGroup>
 
   <ItemGroup>
@@ -42,7 +52,29 @@
       <_MSTestSourceGenerationVersionSuffix>$(_MSTestSourceGenerationPreReleaseVersionLabel)$(_BuildNumberLabels)</_MSTestSourceGenerationVersionSuffix>
       <_MSTestSourceGenerationVersion>$(MSTestSourceGenerationVersionPrefix)</_MSTestSourceGenerationVersion>
       <_MSTestSourceGenerationVersion Condition="'$(_MSTestSourceGenerationVersionSuffix)' != ''">$(_MSTestSourceGenerationVersion)-$(_MSTestSourceGenerationVersionSuffix)</_MSTestSourceGenerationVersion>
-      <_TemplateProperties>MSTestSourceGenerationVersion=$(_MSTestSourceGenerationVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion)</_TemplateProperties>
+
+      <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsCtrfReportVersionSuffix>$(_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)$(_BuildNumberLabels)</_MicrosoftTestingExtensionsCtrfReportVersionSuffix>
+      <_MicrosoftTestingExtensionsCtrfReportVersion>$(MicrosoftTestingExtensionsCtrfReportVersionPrefix)</_MicrosoftTestingExtensionsCtrfReportVersion>
+      <_MicrosoftTestingExtensionsCtrfReportVersion Condition="'$(_MicrosoftTestingExtensionsCtrfReportVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsCtrfReportVersion)-$(_MicrosoftTestingExtensionsCtrfReportVersionSuffix)</_MicrosoftTestingExtensionsCtrfReportVersion>
+
+      <_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsJUnitReportVersionSuffix>$(_MicrosoftTestingExtensionsJUnitReportPreReleaseVersionLabel)$(_BuildNumberLabels)</_MicrosoftTestingExtensionsJUnitReportVersionSuffix>
+      <_MicrosoftTestingExtensionsJUnitReportVersion>$(MicrosoftTestingExtensionsJUnitReportVersionPrefix)</_MicrosoftTestingExtensionsJUnitReportVersion>
+      <_MicrosoftTestingExtensionsJUnitReportVersion Condition="'$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsJUnitReportVersion)-$(_MicrosoftTestingExtensionsJUnitReportVersionSuffix)</_MicrosoftTestingExtensionsJUnitReportVersion>
+
+      <_MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>$(MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel)</_MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
+      <_MicrosoftTestingExtensionsOpenTelemetryVersionSuffix>$(_MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel)$(_BuildNumberLabels)</_MicrosoftTestingExtensionsOpenTelemetryVersionSuffix>
+      <_MicrosoftTestingExtensionsOpenTelemetryVersion>$(MicrosoftTestingExtensionsOpenTelemetryVersionPrefix)</_MicrosoftTestingExtensionsOpenTelemetryVersion>
+      <_MicrosoftTestingExtensionsOpenTelemetryVersion Condition="'$(_MicrosoftTestingExtensionsOpenTelemetryVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsOpenTelemetryVersion)-$(_MicrosoftTestingExtensionsOpenTelemetryVersionSuffix)</_MicrosoftTestingExtensionsOpenTelemetryVersion>
+
+      <_TemplateProperties>MSTestSourceGenerationVersion=$(_MSTestSourceGenerationVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion);MicrosoftTestingExtensionsOpenTelemetryVersion=$(_MicrosoftTestingExtensionsOpenTelemetryVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

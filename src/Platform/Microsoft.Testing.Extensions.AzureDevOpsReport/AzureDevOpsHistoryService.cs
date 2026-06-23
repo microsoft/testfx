@@ -23,8 +23,13 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
     // NOTE: Bound per-run paging so a single large run cannot keep session startup busy indefinitely.
     private const int MaxResultPagesPerRun = 50;
 
+    // NOTE: Bound the number of duration samples retained per test so the slow-test history feature
+    // cannot grow memory without limit on a heavily-run test; p95/p99 are stable well below this cap.
+    private const int MaxDurationSamplesPerTest = 1000;
+
     private static readonly TimeSpan HistoryLoadBudget = TimeSpan.FromSeconds(30);
     private static readonly IReadOnlyDictionary<string, FlakyStats> EmptyStatsByTest = new Dictionary<string, FlakyStats>(StringComparer.OrdinalIgnoreCase);
+    private static readonly IReadOnlyDictionary<string, DurationHistoryStats> EmptyDurationStatsByTest = new Dictionary<string, DurationHistoryStats>(StringComparer.OrdinalIgnoreCase);
 
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
@@ -33,7 +38,9 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
     private readonly ITask _task;
     private readonly ILogger _logger;
     private int _historyWindowInDays;
+    private bool _collectDurations;
     private IReadOnlyDictionary<string, FlakyStats> _statsByTest = EmptyStatsByTest;
+    private IReadOnlyDictionary<string, DurationHistoryStats> _durationStatsByTest = EmptyDurationStatsByTest;
 
     public AzureDevOpsHistoryService(
         ICommandLineOptions commandLineOptions,
@@ -63,17 +70,20 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(_commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
-            && _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory));
+            && (_commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory)
+                || _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory)));
 
     public async Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
         if (!_commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
-            || !TryGetHistoryWindowInDays(out int historyWindowInDays))
+            || !TryGetHistoryConfiguration(out int historyWindowInDays, out bool collectDurations))
         {
             return;
         }
 
-        if (!string.Equals(_environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase))
+        _collectDurations = collectDurations;
+
+        if (!AzureDevOpsConstants.IsRunningInAzureDevOps(_environment))
         {
             return;
         }
@@ -152,6 +162,18 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
             && stats.TotalCount > 0
             && stats.FailureRate >= threshold;
 
+    public bool TryGetDurationStats(string testName, out DurationHistoryStats stats)
+    {
+        if (RoslynString.IsNullOrWhiteSpace(testName))
+        {
+            stats = default;
+            return false;
+        }
+
+        // NOTE: Callers must only query stats after test-session start completes; the published snapshot is empty until then.
+        return Volatile.Read(ref _durationStatsByTest).TryGetValue(testName, out stats);
+    }
+
     private async Task LoadHistoryAsync(AzureDevOpsHistoryQuery query, int historyWindowInDays, CancellationToken cancellationToken)
     {
         IReadOnlyList<AzureDevOpsTestRun> runs = await _historyClient.GetRunsAsync(query, MaxRunsToInspect + 1, cancellationToken).ConfigureAwait(false);
@@ -162,18 +184,24 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         }
 
         var counts = new Dictionary<string, (int PassCount, int FailCount)>(StringComparer.OrdinalIgnoreCase);
+#pragma warning disable IDE0028 // Collection initialization can be simplified - the comparer cannot be passed via a collection expression.
+        Dictionary<string, List<double>>? durations = _collectDurations
+            ? new Dictionary<string, List<double>>(StringComparer.OrdinalIgnoreCase)
+            : null;
+#pragma warning restore IDE0028
         foreach (AzureDevOpsTestRun run in runs)
         {
-            await AggregateRunResultsAsync(query, run, counts, cancellationToken).ConfigureAwait(false);
+            await AggregateRunResultsAsync(query, run, counts, durations, cancellationToken).ConfigureAwait(false);
         }
 
-        PublishHistoryStats(historyWindowInDays, counts);
+        PublishHistoryStats(historyWindowInDays, counts, durations);
     }
 
     private async Task AggregateRunResultsAsync(
         AzureDevOpsHistoryQuery query,
         AzureDevOpsTestRun run,
         Dictionary<string, (int PassCount, int FailCount)> counts,
+        Dictionary<string, List<double>>? durations,
         CancellationToken cancellationToken)
     {
         string? continuationToken = null;
@@ -197,6 +225,20 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
                     "Failed" => (currentCount.PassCount, currentCount.FailCount + 1),
                     _ => currentCount,
                 };
+
+                if (durations is not null && result.DurationMilliseconds is double durationMs && durationMs > 0)
+                {
+                    if (!durations.TryGetValue(result.AutomatedTestName, out List<double>? samples))
+                    {
+                        samples = [];
+                        durations[result.AutomatedTestName] = samples;
+                    }
+
+                    if (samples.Count < MaxDurationSamplesPerTest)
+                    {
+                        samples.Add(durationMs);
+                    }
+                }
             }
 
             if (page.Results.Count == 0)
@@ -229,7 +271,7 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
         _logger.LogWarning(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning, run.Url, MaxResultPagesPerRun));
     }
 
-    private void PublishHistoryStats(int historyWindowInDays, Dictionary<string, (int PassCount, int FailCount)> counts)
+    private void PublishHistoryStats(int historyWindowInDays, Dictionary<string, (int PassCount, int FailCount)> counts, Dictionary<string, List<double>>? durations)
     {
         Volatile.Write(ref _historyWindowInDays, historyWindowInDays);
         IReadOnlyDictionary<string, FlakyStats> publishedStats = counts.ToDictionary(
@@ -239,6 +281,23 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
         // NOTE: Volatile.Write on a reference atomically publishes the fully materialized dictionary to concurrent readers.
         Volatile.Write(ref _statsByTest, publishedStats);
+
+        if (durations is null)
+        {
+            Volatile.Write(ref _durationStatsByTest, EmptyDurationStatsByTest);
+            return;
+        }
+
+        var publishedDurationStats = new Dictionary<string, DurationHistoryStats>(durations.Count, StringComparer.OrdinalIgnoreCase);
+        foreach (KeyValuePair<string, List<double>> entry in durations)
+        {
+            if (DurationHistoryStats.TryCreate(entry.Value, out DurationHistoryStats stats))
+            {
+                publishedDurationStats[entry.Key] = stats;
+            }
+        }
+
+        Volatile.Write(ref _durationStatsByTest, publishedDurationStats);
     }
 
     private void ResetHistoryState()
@@ -247,14 +306,42 @@ internal sealed class AzureDevOpsHistoryService : ITestSessionLifetimeHandler, I
 
         // NOTE: Volatile.Write on a reference atomically publishes the empty snapshot when history loading is skipped or fails.
         Volatile.Write(ref _statsByTest, EmptyStatsByTest);
+        Volatile.Write(ref _durationStatsByTest, EmptyDurationStatsByTest);
     }
 
-    private bool TryGetHistoryWindowInDays(out int historyWindowInDays)
+    private bool TryGetHistoryConfiguration(out int historyWindowInDays, out bool collectDurations)
     {
         historyWindowInDays = 0;
-        return _commandLineOptions.TryGetOptionArgumentList(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, out string[]? arguments)
+        collectDurations = false;
+        bool anyEnabled = false;
+
+        // Flaky-history and slow-test-history share a single Azure DevOps query to avoid paying for the fetch
+        // twice. When both are enabled with different windows we deliberately query the *maximum* of the two
+        // windows so neither feature is starved of data; the narrower feature simply ignores the extra days.
+        // This means the flaky "in last {N}d" annotation reflects the effective (maximum) window, not necessarily
+        // the value passed to --report-azdo-flaky-history when the slow-test window is larger.
+        if (TryGetWindowInDays(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, out int flakyWindow))
+        {
+            anyEnabled = true;
+            historyWindowInDays = Math.Max(historyWindowInDays, flakyWindow);
+        }
+
+        if (TryGetWindowInDays(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, out int slowWindow))
+        {
+            anyEnabled = true;
+            collectDurations = true;
+            historyWindowInDays = Math.Max(historyWindowInDays, slowWindow);
+        }
+
+        return anyEnabled;
+    }
+
+    private bool TryGetWindowInDays(string optionName, out int windowInDays)
+    {
+        windowInDays = 0;
+        return _commandLineOptions.TryGetOptionArgumentList(optionName, out string[]? arguments)
             && arguments is [string value]
-            && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out historyWindowInDays);
+            && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out windowInDays);
     }
 
     private bool TryCreateQuery(int historyWindowInDays, [NotNullWhen(true)] out AzureDevOpsHistoryQuery? query)

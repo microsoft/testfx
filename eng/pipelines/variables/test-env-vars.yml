@@ -1,0 +1,18 @@
+# Environment variables needed by `dotnet test` invocations in azure-pipelines.yml.
+# Declared as job-level variables so they apply to every step in the consuming job
+# (Azure Pipelines automatically exposes pipeline variables as environment variables
+# to scripts).
+#
+# - DOTNET_ROOT pins the .NET host to the locally restored SDK under .dotnet/, so
+#   `dotnet test` uses the same toolchain as the build steps.
+# - NUGET_PACKAGES mirrors the `-ci` flag's restore destination so `dotnet test`'s
+#   MSBuild evaluation phase can resolve .props/.targets from the same package cache
+#   (ensures IsTestingPlatformApplication is set correctly).
+# - DOTNET_CLI_CONTEXT_VERBOSE surfaces extra diagnostics in `dotnet test` output.
+variables:
+- name: DOTNET_ROOT
+  value: $(Build.SourcesDirectory)/.dotnet
+- name: NUGET_PACKAGES
+  value: $(Build.SourcesDirectory)/.packages
+- name: DOTNET_CLI_CONTEXT_VERBOSE
+  value: 1

@@ -51,23 +51,18 @@ internal sealed class SqlDataConnection : TestDataConnectionSql
             // No file, so no need to rewrite the connection string
             return connectionString;
         }
-        else
-        {
-            // Force pooling off for SQL when there is a file involved
-            // Without this, after the connection is closed, an exclusive lock persists
-            // for a long time, preventing us from moving files around
-            sqlBuilder.Pooling = false;
 
-            // Fix-up magic file paths
-            string? fixedFilePath = FixPath(attachedFile, dataFolders);
-            if (fixedFilePath != null)
-            {
-                sqlBuilder.AttachDBFilename = fixedFilePath;
-            }
+        // Force pooling off for SQL when there is a file involved
+        // Without this, after the connection is closed, an exclusive lock persists
+        // for a long time, preventing us from moving files around
+        sqlBuilder.Pooling = false;
 
-            // Return modified connection string
-            return sqlBuilder.ConnectionString;
-        }
+        return FixConnectionStringFilePath(
+            sqlBuilder,
+            connectionString,
+            () => attachedFile,
+            fixedFilePath => sqlBuilder.AttachDBFilename = fixedFilePath,
+            dataFolders);
     }
 }
 

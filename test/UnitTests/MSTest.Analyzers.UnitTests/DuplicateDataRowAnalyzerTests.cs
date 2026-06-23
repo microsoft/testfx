@@ -402,4 +402,140 @@ public sealed class DuplicateDataRowAnalyzerTests
             NumberOfFixAllInProjectIterations = 2,
         }.RunAsync();
     }
+
+    [TestMethod]
+    public async Task WhenEnumArgumentIsDuplicated_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(ConsoleColor.Red)]
+                [[|DataRow(ConsoleColor.Red)|]]
+                public static void TestMethod(object c)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenEnumArgumentsAreDifferent_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(ConsoleColor.Red)]
+                [DataRow(ConsoleColor.Blue)]
+                public static void TestMethod(object c)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTypeArgumentIsDuplicated_Diagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(typeof(int))]
+                [[|DataRow(typeof(int))|]]
+                public static void TestMethod(Type t)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTypeArgumentsAreDifferent_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(typeof(int))]
+                [DataRow(typeof(string))]
+                public static void TestMethod(Type t)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenArrayContainsNullElement_SameContent_Diagnostic()
+    {
+        // Tests the IsNull && IsNull path within a nested array element comparison.
+        // Using a typed string[] ensures both null elements share the same element type (string),
+        // so the comparer reaches the IsNull && IsNull guard instead of short-circuiting on a type mismatch.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(new string[] { null })]
+                [[|DataRow(new string[] { null })|]]
+                public static void TestMethod(string[] x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenArrayFirstElementNullDiffersFromNonNull_NoDiagnostic()
+    {
+        // Tests the asymmetric IsNull || IsNull path: one null element vs one non-null element.
+        // Using a typed string[] ensures both elements share the same element type (string),
+        // so the comparer reaches the IsNull || IsNull guard instead of short-circuiting on a type mismatch.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(new string[] { null })]
+                [DataRow(new string[] { "a" })]
+                public static void TestMethod(string[] x)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

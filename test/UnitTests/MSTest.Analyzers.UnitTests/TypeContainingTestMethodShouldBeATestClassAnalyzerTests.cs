@@ -462,4 +462,72 @@ public sealed class TypeContainingTestMethodShouldBeATestClassAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenClassWithoutTestAttribute_HasDataTestMethod_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class [|MyTestClass|]
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                public void TestMethod1(int value) {}
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                public void TestMethod1(int value) {}
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenClassWithoutTestAttribute_InheritsDataTestMethodFromAbstractBase_Diagnostic()
+    {
+        // Abstract base is exempt from the diagnostic; derived non-test class
+        // that inherits [DataTestMethod] via the inheritance walk should fire.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class AbstractBase
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                public void TestMethod1(int value) {}
+            }
+
+            public class [|MyTestClass|] : AbstractBase
+            {
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class AbstractBase
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                public void TestMethod1(int value) {}
+            }
+
+            [TestClass]
+            public class MyTestClass : AbstractBase
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

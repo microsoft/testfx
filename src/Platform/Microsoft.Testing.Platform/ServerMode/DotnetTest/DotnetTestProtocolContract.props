@@ -1,0 +1,42 @@
+<Project>
+
+  <!--
+    Shared-source manifest for the 'dotnet test' named-pipe protocol *wire contract*.
+
+    PURPOSE
+      ObjectFieldIds.cs and Constants.cs define the serializer ids, field ids and the handshake/session/state
+      constants that flow over the named pipe between a Microsoft.Testing.Platform test host and 'dotnet test'.
+      The dotnet/sdk repository hand-copies these exact values (see its ObjectFieldIds.cs, which carries a
+      "must be kept aligned with the testfx repo" warning). Any drift is a silent wire-protocol break.
+
+      This .props lets the same source files be compiled into another assembly (a standalone consumer, or - once
+      packaged as a source NuGet - the dotnet/sdk 'dotnet test' implementation) so the contract has a single source
+      of truth instead of being duplicated by hand.
+
+    SCOPE
+      Only the zero-dependency wire contract (ids + constants) is shared here. The message models and serializers
+      are intentionally NOT included yet: they still depend on TestMetadataProperty (Microsoft.Testing.Platform.
+      Extensions.Messages) and use a different class shape than the SDK's copy, so they require decoupling/unifying
+      first. See the protocol contract tests in
+      test/UnitTests/Microsoft.Testing.Platform.UnitTests/IPC/ProtocolTests.cs.
+
+    USAGE
+      Import this file from any project that needs the contract. Microsoft.Testing.Platform itself does NOT import
+      it (it compiles these files via its default source globbing); importing it there would double-include them.
+
+        The single canonical list of contract files lives in the @(DotnetTestProtocolContractSource) item below.
+      - Source consumers (e.g. the standalone contract test project) get them as <Compile> items (the default).
+      - The Microsoft.Testing.Platform.DotnetTestProtocol package project sets
+        DotnetTestProtocolContractCompile=false and instead packs @(DotnetTestProtocolContractSource) as
+        contentFiles, so the NuGet and the source-share never drift.
+  -->
+  <ItemGroup>
+    <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\ObjectFieldIds.cs" />
+    <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\Constants.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(DotnetTestProtocolContractCompile)' != 'false' ">
+    <Compile Include="@(DotnetTestProtocolContractSource)" Link="DotnetTestProtocol\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

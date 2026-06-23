@@ -13,9 +13,23 @@
     <MSTestAnalysisMode>Recommended</MSTestAnalysisMode>
 
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --diagnostic --diagnostic-output-directory $(RepoRoot)artifacts/log/$(Configuration) --diagnostic-file-prefix $(ModuleName) --diagnostic-verbosity trace</TestingPlatformCommandLineArguments>
-    <TestingPlatformCommandLineArguments Condition=" $([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" '$([MSBuild]::GetTargetFrameworkIdentifier($(TargetFramework)))' == '.NETCoreApp' ">$(TestingPlatformCommandLineArguments) --crashdump</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --hangdump --hangdump-timeout 15m</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-azdo</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-ctrf --report-ctrf-filename $(MSBuildProjectName)_$(TargetFramework).ctrf.json</TestingPlatformCommandLineArguments>
+    <!-- The report-azdo-summary option implements ITestSessionLifetimeHandler and emits a warning on the
+         output device when TF_BUILD is not 'true', unlike the silent report-azdo. Gate it on $(TF_BUILD)
+         so local 'dotnet test' runs stay quiet and only CI pipelines opt into the AzDO output. -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-summary</TestingPlatformCommandLineArguments>
+    <!-- Dogfood the Azure DevOps history-driven slow-test threshold enricher (issue #9140). It queries the
+         pipeline's own test history to lower the per-test 'still running' threshold and decorate slow-test
+         lines with historical p95/p99. It requires the report-azdo option (added above) and the OAuth access
+         token, and silently no-ops when TF_BUILD is not 'true' or no token is available, so gate it on $(TF_BUILD). -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history 30</TestingPlatformCommandLineArguments>
+    <!-- Dogfood the JUnit report extension (Microsoft.Testing.Extensions.JUnitReport). The .xml files end up in
+         $(ResultsDirectory) (Arcade default) alongside the TRX files so they are picked up by the AzDO
+         PublishTestResults task and any external JUnit consumer. -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit</TestingPlatformCommandLineArguments>
     <TestingPlatformCommandLineArguments Condition=" '$(EnableCodeCoverage)' == 'True' ">$(TestingPlatformCommandLineArguments) --coverage --coverage-settings $(RepoRoot)test/coverage.config --coverage-output $(ModuleName).coverage</TestingPlatformCommandLineArguments>
 
   </PropertyGroup>
@@ -30,15 +44,27 @@
     <_TestArchitecture>$(PlatformTarget)</_TestArchitecture>
     <_TestArchitecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</_TestArchitecture>
     <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-trx --report-trx-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).trx --results-directory $(ArtifactsTestResultsDir)</TestingPlatformCommandLineArguments>
+    <!-- Match the TRX filename pattern so the JUnit XML report sits next to its TRX twin per (project x TFM x arch). -->
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --report-junit-filename $(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture).xml</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' OR '$(UseInternalTestFramework)' == 'true' ">
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CtrfReport\Microsoft.Testing.Extensions.CtrfReport.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.HangDump\Microsoft.Testing.Extensions.HangDump.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Retry\Microsoft.Testing.Extensions.Retry.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.JUnitReport\Microsoft.Testing.Extensions.JUnitReport.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Condition="'$(UseMSTestFromSource)' == 'true'" />
+    <!-- Microsoft.Testing.Extensions.OpenTelemetry is referenced so the per-project Program.cs can wire
+         AddOpenTelemetryProvider with AddTestingPlatformInstrumentation, exercising the platform's
+         OpenTelemetryResultHandler pipeline end-to-end in CI. -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.OpenTelemetry\Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <!-- When consuming MSTest from source, also reference Microsoft.Testing.Platform.MSBuild from source so its
+         version matches the one that flows transitively through the MSTest.TestAdapter project reference. Using the
+         NuGet package here pins the older flowed-in version and produces an NU1605 downgrade against the locally
+         built project (see https://github.com/microsoft/testfx/pull/9259). -->
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition="'$(UseMSTestFromSource)' == 'true'" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" GeneratePathProperty="True" />
   </ItemGroup>
 

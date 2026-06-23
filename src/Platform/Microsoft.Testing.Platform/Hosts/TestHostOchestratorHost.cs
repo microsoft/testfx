@@ -3,7 +3,9 @@
 
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
@@ -26,6 +28,26 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
 
         ITestHostExecutionOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
         ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
+
+        // When connected to dotnet test through the pipe protocol, handshake from the orchestrator too
+        // (test hosts and test host controllers already do). This lets the SDK know that an orchestrator
+        // (e.g. retry) is participating in the run, identified by the OrchestratorFeature property.
+        IPushOnlyProtocol? pushOnlyProtocol = _serviceProvider.GetService<IPushOnlyProtocol>();
+        if (pushOnlyProtocol is { IsServerMode: true })
+        {
+            Dictionary<byte, string> additionalHandshakeProperties = new()
+            {
+                [HandshakeMessagePropertyNames.OrchestratorFeature] = testHostOrchestrator.Uid,
+            };
+
+            bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(
+                HandshakeMessageHostTypes.TestHostOrchestrator, additionalHandshakeProperties).ConfigureAwait(false);
+            if (!isProtocolCompatible)
+            {
+                return (int)ExitCode.IncompatibleProtocolVersion;
+            }
+        }
+
         int exitCode;
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'").ConfigureAwait(false);
         try

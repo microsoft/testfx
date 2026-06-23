@@ -71,16 +71,18 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="expectedSuffix"/>.
     /// </exception>
     public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.EndsWith");
-
-        CheckParameterNotNull(value, "Assert.EndsWith", "value");
-        CheckParameterNotNull(expectedSuffix, "Assert.EndsWith", "expectedSuffix");
-        if (!value.EndsWith(expectedSuffix, comparisonType))
-        {
-            ReportAssertEndsWithFailed(expectedSuffix, value, comparisonType, message, expectedSuffixExpression, valueExpression);
-        }
-    }
+        => StartsOrEndsWithCore(
+            expectedSuffix,
+            value,
+            comparisonType,
+            "Assert.EndsWith",
+            "expectedSuffix",
+            message,
+            expectedSuffixExpression,
+            valueExpression,
+            shouldMatch: true,
+            static (candidate, affix, comparison) => candidate.EndsWith(affix, comparison),
+            ReportAssertEndsWithFailed);
 
     [DoesNotReturn]
     private static void ReportAssertEndsWithFailed(string expectedSuffix, string value, StringComparison comparisonType, string? userMessage, string expectedSuffixExpression, string valueExpression)
@@ -164,16 +166,18 @@ public sealed partial class Assert
     /// or <paramref name="value"/> ends with <paramref name="notExpectedSuffix"/>.
     /// </exception>
     public static void DoesNotEndWith([NotNull] string? notExpectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedSuffix))] string notExpectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotEndWith");
-
-        CheckParameterNotNull(value, "Assert.DoesNotEndWith", "value");
-        CheckParameterNotNull(notExpectedSuffix, "Assert.DoesNotEndWith", "notExpectedSuffix");
-        if (value.EndsWith(notExpectedSuffix, comparisonType))
-        {
-            ReportAssertDoesNotEndWithFailed(notExpectedSuffix, value, comparisonType, message, notExpectedSuffixExpression, valueExpression);
-        }
-    }
+        => StartsOrEndsWithCore(
+            notExpectedSuffix,
+            value,
+            comparisonType,
+            "Assert.DoesNotEndWith",
+            "notExpectedSuffix",
+            message,
+            notExpectedSuffixExpression,
+            valueExpression,
+            shouldMatch: false,
+            static (candidate, affix, comparison) => candidate.EndsWith(affix, comparison),
+            ReportAssertDoesNotEndWithFailed);
 
     [DoesNotReturn]
     private static void ReportAssertDoesNotEndWithFailed(string notExpectedSuffix, string value, StringComparison comparisonType, string? userMessage, string notExpectedSuffixExpression, string valueExpression)

@@ -19,8 +19,7 @@ namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
 
 internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer
 {
-    private const string AzureDevOpsTfBuildVariableName = "TF_BUILD";
-    private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}.md";
+    private const string DefaultSummaryFileNameFormat = "azdo-summary-{0}-{1}-{2}.md";
     private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MaxSlowestTests = 10;
     private const int MaxTopFailingClasses = 5;
@@ -96,7 +95,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
                 return;
             }
 
-            _emitAzureDevOpsCommands = string.Equals(_environment.GetEnvironmentVariable(AzureDevOpsTfBuildVariableName), "true", StringComparison.OrdinalIgnoreCase);
+            _emitAzureDevOpsCommands = AzureDevOpsConstants.IsRunningInAzureDevOps(_environment);
             if (_emitAzureDevOpsCommands)
             {
                 return;
@@ -139,8 +138,35 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
 
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
-            string fullyQualifiedName = GetFullyQualifiedName(update.TestNode);
-            TimeSpan duration = GetDuration(update.TestNode);
+
+            // Single-pass collection of TimingProperty and the FQN SerializableKeyValuePairStringProperty:
+            // replaces 1 × SingleOrDefault<TimingProperty>() + 1 × OfType<>().FirstOrDefault() with one
+            // GetStructEnumerator() walk, saving 1 linked-list traversal and 1 LINQ allocation per terminal result.
+            // Singleton-typed properties use the local GetSingleOrDefaultValue helper to preserve the
+            // throw-on-duplicate invariant that SingleOrDefault<T>() provided; the FQN key keeps the
+            // prior FirstOrDefault semantics (first match wins) so we don't silently overwrite earlier values.
+            TimingProperty? timing = null;
+            string? fqnValue = null;
+            PropertyBag.PropertyBagEnumerator enumerator = update.TestNode.Properties.GetStructEnumerator();
+            while (enumerator.MoveNext())
+            {
+                switch (enumerator.Current)
+                {
+                    case TimingProperty t: timing = GetSingleOrDefaultValue(timing, t); break;
+                    case SerializableKeyValuePairStringProperty kv when kv.Key == FullyQualifiedNamePropertyKey && fqnValue is null:
+                        fqnValue = kv.Value;
+                        break;
+                }
+            }
+
+            static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
+                where TProperty : class, IProperty
+                => existingProperty is not null
+                    ? throw new InvalidOperationException($"Found multiple properties of type '{typeof(TProperty)}'.")
+                    : property;
+
+            string fullyQualifiedName = fqnValue ?? displayName;
+            TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
             lock (_stateLock)
             {
@@ -240,7 +266,23 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
             return null;
         }
 
-        string fileName = string.Format(CultureInfo.InvariantCulture, DefaultSummaryFileNameFormat, _targetFrameworkMoniker.Value);
+        // Include the assembly name and process architecture in the default file name (matching the
+        // <asm>_<tfm>_<arch> shape used by the TRX/HTML/JUnit reports) so that multiple test assemblies
+        // that share the same target framework and TestResults directory (a common CI setup) don't all
+        // resolve to the same path and race to write it, which surfaced as
+        // "The process cannot access the file ... because it is being used by another process".
+        string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown";
+        string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
+
+        // Sanitize the whole file name (matching TRX/HTML/JUnit) so that unexpected characters in any segment
+        // - including the target framework moniker or architecture, not just the assembly name - cannot produce
+        // an invalid file name.
+        string fileName = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(string.Format(
+            CultureInfo.InvariantCulture,
+            DefaultSummaryFileNameFormat,
+            assemblyName,
+            _targetFrameworkMoniker.Value,
+            architecture));
         return Path.GetFullPath(Path.Combine(configuredTestResultsDirectory!, fileName));
     }
 
@@ -409,18 +451,6 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         }
 
         return sb.ToString();
-    }
-
-    private static string GetFullyQualifiedName(TestNode testNode)
-        => testNode.Properties
-            .OfType<SerializableKeyValuePairStringProperty>()
-            .FirstOrDefault(static property => property.Key == FullyQualifiedNamePropertyKey)?.Value
-            ?? testNode.DisplayName;
-
-    private static TimeSpan GetDuration(TestNode testNode)
-    {
-        TimingProperty? timing = testNode.Properties.SingleOrDefault<TimingProperty>();
-        return timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
     }
 
     private static TerminalKind GetTerminalKind(TestNodeStateProperty? state)

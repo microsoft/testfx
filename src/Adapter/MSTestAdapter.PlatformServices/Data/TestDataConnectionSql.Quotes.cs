@@ -2,6 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
+using System.Data.Odbc;
+using System.Data.OleDb;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
@@ -94,13 +97,23 @@ internal partial class TestDataConnectionSql
     protected virtual string QuoteIdentifier(string identifier)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier should not be null.");
-        return CommandBuilder.QuoteIdentifier(identifier);
+        return CommandBuilder switch
+        {
+            OdbcCommandBuilder odbcCommandBuilder when Connection is OdbcConnection odbcConnection => odbcCommandBuilder.QuoteIdentifier(identifier, odbcConnection),
+            OleDbCommandBuilder oleDbCommandBuilder when Connection is OleDbConnection oleDbConnection => oleDbCommandBuilder.QuoteIdentifier(identifier, oleDbConnection),
+            _ => CommandBuilder.QuoteIdentifier(identifier),
+        };
     }
 
     protected virtual string UnquoteIdentifier(string identifier)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier should not be null.");
-        return CommandBuilder.UnquoteIdentifier(identifier);
+        return CommandBuilder switch
+        {
+            OdbcCommandBuilder odbcCommandBuilder when Connection is OdbcConnection odbcConnection => odbcCommandBuilder.UnquoteIdentifier(identifier, odbcConnection),
+            OleDbCommandBuilder oleDbCommandBuilder when Connection is OleDbConnection oleDbConnection => oleDbCommandBuilder.UnquoteIdentifier(identifier, oleDbConnection),
+            _ => CommandBuilder.UnquoteIdentifier(identifier),
+        };
     }
 
     [MemberNotNull(nameof(_quotePrefix), nameof(_quoteSuffix), nameof(QuotePrefix), nameof(QuoteSuffix))]

@@ -28,7 +28,9 @@ public class Program
             _ => new TestFrameworkCapabilities(),
             (capabilities, serviceProvider) => new SimpleTestFramework(serviceProvider));
 
-        // Enable OpenTelemetry with console exporter
+        // Enable OpenTelemetry with console exporter. AddOpenTelemetryProvider does not register any instrumentation
+        // or exporter by default, so the delegates must call AddTestingPlatformInstrumentation() to subscribe to the
+        // Microsoft Testing Platform source/meter and wire whatever exporter(s) you want.
         testApplicationBuilder.AddOpenTelemetryProvider(
             tracing =>
             {

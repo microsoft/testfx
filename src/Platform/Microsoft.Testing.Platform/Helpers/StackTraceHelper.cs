@@ -6,6 +6,9 @@ namespace Microsoft.Testing.Platform.Helpers;
 internal static partial class StackTraceHelper
 {
 #if NET7_0_OR_GREATER
+    // NOTE: GeneratedRegex requires a compile-time-constant pattern, so localization via
+    // StackTraceRegexHelper.CreateFrameRegexPattern()/GetLocalizedStackFrameRegexParts() is intentionally not used on
+    // this path. Pre-NET7 targets fall back to the #else branch which does attempt localization.
     // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
     // thread suspends, so the regex gets blamed incorrectly.
     [GeneratedRegex(@"^   at ((?<code>.+) in (?<file>.+):line (?<line>\d+)|(?<code1>.+))$", RegexOptions.ExplicitCapture)]
@@ -16,48 +19,16 @@ internal static partial class StackTraceHelper
     [MemberNotNull(nameof(s_regex))]
     public static Regex GetFrameRegex()
     {
-        if (s_regex != null)
+        if (s_regex is not null)
         {
             return s_regex;
         }
 
-        string atResourceName = "Word_At";
-        string inResourceName = "StackTrace_InFileLineNumber";
-
-        string? atString = null;
-        string? inString = null;
-
-        // Grab words from localized resource, in case the stack trace is localized.
-        try
-        {
-            // Get these resources: https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/Resources/Strings.resx
-#pragma warning disable RS0030 // Do not use banned APIs
-            MethodInfo? getResourceStringMethod = typeof(Environment).GetMethod(
-                "GetResourceString",
-                BindingFlags.Static | BindingFlags.NonPublic, null, [typeof(string)], null);
-#pragma warning restore RS0030 // Do not use banned APIs
-            if (getResourceStringMethod is not null)
-            {
-                // <value>at</value>
-                atString = (string?)getResourceStringMethod.Invoke(null, [atResourceName]);
-
-                // <value>in {0}:line {1}</value>
-                inString = (string?)getResourceStringMethod.Invoke(null, [inResourceName]);
-            }
-        }
-        catch
-        {
-            // If we fail, populate the defaults below.
-        }
-
-        atString = atString == null || atString == atResourceName ? "at" : atString;
-        inString = inString == null || inString == inResourceName ? "in {0}:line {1}" : inString;
-
-        string inPattern = string.Format(CultureInfo.InvariantCulture, inString, "(?<file>.+)", @"(?<line>\d+)");
-
         // Specifying no timeout, the regex is linear. And the timeout does not measure the regex only, but measures also any
         // thread suspends, so the regex gets blamed incorrectly.
-        s_regex = new Regex(@$"^   {atString} ((?<code>.+) {inPattern}|(?<code1>.+))$", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+        s_regex = new Regex(
+            StackTraceRegexHelper.CreateFrameRegexPattern(matchFramesWithoutLocation: true),
+            RegexOptions.Compiled | RegexOptions.ExplicitCapture);
         return s_regex;
     }
 #endif

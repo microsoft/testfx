@@ -12,6 +12,7 @@ description: >
   how to make statics injectable, adopt System.IO.Abstractions, make file calls testable.
   DO NOT USE FOR: detecting statics (use detect-static-dependencies), migrating call
   sites (use migrate-static-to-wrapper), general interface design not about testability.
+license: MIT
 ---
 
 # Generate Testability Wrappers
@@ -228,4 +229,3 @@ Always generate:
 | Registering scoped when singleton suffices | Stateless wrappers should be `AddSingleton` |
 | Forgetting test helper packages | `Microsoft.Extensions.TimeProvider.Testing` for time, `System.IO.Abstractions.TestingHelpers` for filesystem |
 | Ambient context without `AsyncLocal` | Non-async `[ThreadStatic]` breaks with `async`/`await` — always use `AsyncLocal<T>` |
-

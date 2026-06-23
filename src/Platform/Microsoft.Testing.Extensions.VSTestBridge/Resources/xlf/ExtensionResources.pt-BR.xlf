@@ -5,57 +5,57 @@
       <trans-unit id="MissingRunSettingsAttribute">
         <source>Invalid .runsettings file, '&lt;RunSettings&gt;' attribute is missing</source>
         <target state="translated">Arquivo .runsettings inválido, o atributo "&lt;RunSettings&gt;" está ausente</target>
-        <note />
+        <note>Do not localize file extension {Locked=".runsettings"} or element {Locked="&lt;RunSettings&gt;"}.</note>
       </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
         <target state="translated">O caminho, relativo ou absoluto, para o arquivo .runsettings. Para obter mais informações e exemplos sobre como configurar a execução de teste, consulte https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>
-        <note />
+        <note>Do not localize file extension {Locked=".runsettings"} or link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file"}.</note>
       </trans-unit>
       <trans-unit id="RunsettingsFileCannotBeRead">
         <source>runsettings file '{0}' cannot be read</source>
         <target state="translated">o arquivo runsettings "{0}" não pode ser lido</target>
-        <note />
+        <note>0 is the {Locked="runsettings"} file path.</note>
       </trans-unit>
       <trans-unit id="RunsettingsFileDoesNotExist">
         <source>runsettings file '{0}' does not exist</source>
         <target state="translated">o arquivo runsettings "{0}" não existe</target>
-        <note />
+        <note>0 is the {Locked="runsettings"} file path.</note>
       </trans-unit>
       <trans-unit id="TestCaseFilterOptionDescription">
         <source>Filters tests using the given expression. For more information, see the Filter option details section. For more information and examples on how to use selective unit test filtering, see https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</source>
         <target state="translated">Filtra testes usando a expressão fornecida. Para obter mais informações, consulte a seção detalhes da opção Filtro. Para obter mais informações e exemplos sobre como usar a filtragem de teste de unidade seletiva, consulte https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests.</target>
-        <note />
+        <note>Do not localize link {Locked="https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests"}.</note>
       </trans-unit>
       <trans-unit id="TestRunParameterOptionArgumentIsNotParameter">
         <source>argument '{0}' is not a parameter. Parameters arguments are matching the following pattern 'key=value'.</source>
         <target state="translated">o argumento '{0}' não é um parâmetro. Os argumentos de parâmetros correspondem ao padrão 'key=value' a seguir.</target>
-        <note />
+        <note>0 is the invalid argument. Do not localize pattern {Locked="key=value"}.</note>
       </trans-unit>
       <trans-unit id="TestRunParameterOptionDescription">
         <source>Specify or override a key-value pair parameter. For more information and examples, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</source>
         <target state="translated">Especifique ou substitua um parâmetro de par chave-valor. Para obter mais informações e exemplos, consulte https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters</target>
-        <note />
+        <note>Do not localize link {Locked="https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#testrunparameters"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunconfigurationSetting">
         <source>Runsettings attribute '{0}' is not supported by Microsoft.Testing.Platform and will be ignored</source>
         <target state="translated">O atributo Runsettings "{0}" não tem suporte no Microsoft.Testing.Platform e será ignorado</target>
-        <note />
+        <note>0 is the unsupported {Locked="Runsettings"} attribute name. Do not localize {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsDatacollectors">
         <source>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="translated">Os coletores de dados de arquivos runsettings não são compatíveis com Microsoft.Testing.Platform e serão ignorados</target>
-        <note />
+        <target state="translated">Os coletores de dados de arquivos Runsettings não são compatíveis com Microsoft.Testing.Platform e serão ignorados</target>
+        <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsLoggers">
         <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="translated">Os registradores de arquivos runsettings não têm suporte no Microsoft.Testing.Platform e serão ignorados</target>
-        <note />
+        <target state="translated">Os registradores de arquivos Runsettings não têm suporte no Microsoft.Testing.Platform e serão ignorados</target>
+        <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
         <source>The bridged framework supports only one session at a time. A session with UID {0} is already open.</source>
         <target state="translated">A estrutura em ponte dá suporte a apenas uma sessão por vez. Uma sessão com UID {0} já está aberta.</target>
-        <note />
+        <note>{0} is the session {Locked="UID"}.</note>
       </trans-unit>
     </body>
   </file>

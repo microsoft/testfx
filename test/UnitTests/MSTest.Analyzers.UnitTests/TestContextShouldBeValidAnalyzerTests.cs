@@ -119,6 +119,33 @@ public sealed class TestContextShouldBeValidAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
+    public async Task WhenTestContextPrimaryConstructorParameterAssignedToField_NoDiagnostic()
+    {
+        // Regression test for https://github.com/microsoft/testfx/issues/8984:
+        // capturing a TestContext primary-constructor parameter in a readonly field
+        // must not trigger MSTEST0005. Fields of type TestContext are not validated
+        // by MSTEST0005 (see WhenTestContextCaseInsensitiveIsField_NoDiagnostic), so
+        // this pattern is allowed regardless of whether the constructor is primary or not.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTest(TestContext testContext)
+            {
+                private readonly TestContext _testContext = testContext;
+
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    _testContext.CancellationTokenSource.Cancel();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     [DataRow("TestContext", "private")]
     [DataRow("TestContext", "internal")]
     [DataRow("testcontext", "private")]
@@ -515,5 +542,85 @@ public sealed class TestContextShouldBeValidAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [DataRow("private")]
+    [DataRow("protected")]
+    [DataRow("internal")]
+    [TestMethod]
+    public async Task WhenTestContextPropertyHasNonPublicSetter_NoDiagnostic(string setterAccessibility)
+    {
+        // A public TestContext property named exactly "TestContext" with a non-public setter
+        // satisfies IsTestContextPropertyAutomaticallyAssigned (SetMethod is not null, regardless
+        // of the setter's accessibility), so the runtime can still inject the value via reflection
+        // and no diagnostic should be reported.
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public TestContext TestContext { get; {{setterAccessibility}} set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenInvalidTestContextPropertyIsOnNonTestClass_NoDiagnostic()
+    {
+        // The analyzer only validates TestContext properties inside [TestClass]-attributed types.
+        // A class without [TestClass] must never be flagged, even if its TestContext property
+        // layout would be invalid inside a test class.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                public TestContext TestContext { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestContextAssignedOnlyInMultiParamConstructor_Diagnostic()
+    {
+        // TryGetTestContextParameterIfValidConstructor requires the constructor to have
+        // exactly ONE parameter of type TestContext. A constructor with extra parameters
+        // is not recognised, so the assignment is invisible to the analyzer and the
+        // property (which lacks an auto-setter) must be reported.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext, string name)
+                {
+                    TestContext = testContext;
+                }
+
+                public TestContext [|TestContext|] { get; }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public MyTestClass(TestContext testContext, string name)
+                {
+                    TestContext = testContext;
+                }
+
+                public TestContext TestContext { get; set; }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 }

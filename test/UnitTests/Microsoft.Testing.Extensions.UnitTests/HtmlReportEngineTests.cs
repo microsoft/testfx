@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
+
 using Microsoft.Testing.Extensions.HtmlReport;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -16,6 +18,19 @@ namespace Microsoft.Testing.Extensions.UnitTests;
 [TestClass]
 public class HtmlReportEngineTests
 {
+    private static readonly Type CaptureHelperType = typeof(HtmlReportEngine).Assembly
+        .GetType("Microsoft.Testing.Extensions.TestResultCaptureHelper", throwOnError: true)!;
+
+    // Bound to the production constants (resolved via reflection from the HtmlReport assembly, since the
+    // linked TestResultCaptureHelper type is ambiguous across extension assemblies) so the tests stay
+    // aligned if the shared truncation limits change.
+    private static readonly int MaxStandardStreamLength = GetCaptureHelperConstant(nameof(MaxStandardStreamLength));
+    private static readonly int MaxIdentityFieldLength = GetCaptureHelperConstant(nameof(MaxIdentityFieldLength));
+    private static readonly int MaxTraitFieldLength = GetCaptureHelperConstant(nameof(MaxTraitFieldLength));
+
+    private static int GetCaptureHelperConstant(string name)
+        => (int)CaptureHelperType.GetField(name, BindingFlags.NonPublic | BindingFlags.Static)!.GetRawConstantValue()!;
+
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<ICommandLineOptions> _commandLineOptionsMock = new();
     private readonly Mock<IConfiguration> _configurationMock = new();
@@ -110,7 +125,7 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_Truncates_OverLength_StandardOutput_AtBoundary()
     {
-        string huge = new('a', TestResultCapture.MaxStandardStreamLength + 7);
+        string huge = new('a', MaxStandardStreamLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(huge));
@@ -120,15 +135,15 @@ public class HtmlReportEngineTests
 
         Assert.IsNotNull(result);
         Assert.IsNotNull(result.StandardOutput);
-        Assert.StartsWith(new string('a', TestResultCapture.MaxStandardStreamLength), result.StandardOutput!);
+        Assert.StartsWith(new string('a', MaxStandardStreamLength), result.StandardOutput!);
         Assert.Contains("[truncated, original length:", result.StandardOutput);
-        Assert.Contains((TestResultCapture.MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
+        Assert.Contains((MaxStandardStreamLength + 7).ToString(CultureInfo.InvariantCulture), result.StandardOutput);
     }
 
     [TestMethod]
     public void TestResultCapture_Does_Not_Truncate_When_Exactly_At_MaxLength()
     {
-        string atMax = new('a', TestResultCapture.MaxStandardStreamLength);
+        string atMax = new('a', MaxStandardStreamLength);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new StandardOutputProperty(atMax));
@@ -137,6 +152,42 @@ public class HtmlReportEngineTests
         CapturedTestResult result = TestResultCapture.TryCapture(node)!;
 
         Assert.AreEqual(atMax, result.StandardOutput);
+    }
+
+    [TestMethod]
+    public void TestResultCapture_DoesNotSplitSurrogatePair_AtTruncationBoundary()
+    {
+        // Build a string whose (maxLength-1)-th char is the high surrogate of a pair.
+        // After truncation the high surrogate must be dropped so the result is valid UTF-16.
+        string prefix = new('a', MaxStandardStreamLength - 1);
+        const string surrogatePair = "\uD83D\uDE00"; // 😀 — high surrogate at index maxLength-1
+        string input = prefix + surrogatePair + new string('z', 10);
+
+        var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        bag.Add(new StandardOutputProperty(input));
+        TestNode node = new() { Uid = "id", DisplayName = "T", Properties = bag };
+
+        CapturedTestResult result = TestResultCapture.TryCapture(node)!;
+
+        Assert.IsNotNull(result.StandardOutput);
+
+        // Verify truncation happened (also establishes that '\n' is present in the output).
+        Assert.Contains("[truncated, original length:", result.StandardOutput);
+
+        // Now safely index back from the truncation marker '\n'.
+        int newlineIdx = result.StandardOutput!.IndexOf('\n');
+        Assert.IsGreaterThan(0, newlineIdx, "Newline marker must not be at position 0 or absent.");
+
+        // The truncated prefix must not end with a lone high surrogate.
+        Assert.IsFalse(
+            char.IsHighSurrogate(result.StandardOutput[newlineIdx - 1]),
+            "Truncate must not leave a lone high surrogate at the cut boundary.");
+
+        // Confirm we backed off exactly one char over the high surrogate.
+        Assert.AreEqual(
+            MaxStandardStreamLength - 1,
+            newlineIdx,
+            "Prefix should be maxLength-1 chars (backed off over the high surrogate).");
     }
 
     [TestMethod]
@@ -293,11 +344,11 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_DefaultFileName_IncludesModuleNameAndTargetFramework()
+    public async Task GenerateReportAsync_DefaultFileName_IsAsmTfmArchShape()
     {
         string? pathSeen = null;
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 pathSeen = path;
@@ -327,9 +378,15 @@ public class HtmlReportEngineTests
 
         (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        const string ExpectedFileNamePattern = "^u_M_My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_2026-02-03_04_05_06\\.html$";
+        // <asm>_<tfm>_<arch>.html — deterministic, discoverable across reruns and matrices.
+        // The arch token is derived from RuntimeInformation.ProcessArchitecture so the regex stays in
+        // sync with new Architecture enum values without manual maintenance.
+        string archToken = Regex.Escape(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+        string expectedFileNamePattern = $"^My\\.Test\\.Module_net[0-9]+(\\.[0-9]+)?_{archToken}\\.html$";
         Assert.AreEqual(pathSeen, finalPath);
-        Assert.IsTrue(Regex.IsMatch(Path.GetFileName(finalPath), ExpectedFileNamePattern));
+        Assert.IsTrue(
+            Regex.IsMatch(Path.GetFileName(finalPath), expectedFileNamePattern),
+            $"File name '{Path.GetFileName(finalPath)}' does not match expected default pattern '{expectedFileNamePattern}'.");
     }
 
     [TestMethod]
@@ -444,24 +501,19 @@ public class HtmlReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_AppendsDisambiguatingSuffix_When_DefaultFileExists()
+    public async Task GenerateReportAsync_OverwritesAndWarns_When_DefaultFileExists()
     {
-        // Set up file system: pretend the default file already exists, then succeed on
-        // the second name. The engine must retry rather than throwing IOException.
-        var bytesSeen = new List<string>();
-        int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        // Default-name path uses the same overwrite-and-warn semantics as the explicit-name
+        // path: a single, predictable rule. When the file already exists, the engine
+        // overwrites it (FileMode.Create) and surfaces the HtmlReportFileExistsAndWillBeOverwritten
+        // warning.
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
-                callCount++;
-                bytesSeen.Add(path);
-                return callCount == 1
-                    ? throw new IOException("file exists")
-                    : new MemoryFileStream();
+                pathSeen = path;
+                return new MemoryFileStream();
             });
-
-        // The retry only kicks in when the candidate path actually exists, so the file
-        // system must report the first candidate as already on disk.
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
@@ -485,28 +537,28 @@ public class HtmlReportEngineTests
             0,
             CancellationToken.None);
 
-        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+        (string finalPath, string? warning) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        Assert.AreEqual(2, callCount);
-        Assert.AreEqual(bytesSeen[1], finalPath);
-        Assert.Contains("_1.html", finalPath);
+        Assert.AreEqual(pathSeen, finalPath);
+        Assert.DoesNotContain("_1.html", finalPath);
+        Assert.IsNotNull(warning);
+        Assert.Contains(finalPath, warning!);
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_PropagatesIOException_When_FileDoesNotExist()
+    public async Task GenerateReportAsync_PropagatesIOException_When_WriteFails()
     {
-        // Simulate an IOException that is not caused by the candidate already existing
-        // (e.g. disk full, permission denied). The engine must propagate the failure
-        // immediately rather than spinning up disambiguating suffixes for 5 seconds.
+        // An IOException during the write (e.g. disk full, permission denied, path too
+        // long) must propagate to the caller — there is no longer any disambiguation
+        // loop that could mask such failures behind a 5-second retry budget.
         int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 callCount++;
                 throw new IOException("disk full");
             });
 
-        // ExistFile reports false so the IOException is not interpreted as a collision.
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
@@ -537,7 +589,7 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_TruncatesIdentityFields_AtBoundary()
     {
-        string huge = new('a', TestResultCapture.MaxIdentityFieldLength + 7);
+        string huge = new('a', MaxIdentityFieldLength + 7);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new TestMethodIdentifierProperty("asm", "n", "t", huge, 0, [], "void"));
@@ -555,8 +607,8 @@ public class HtmlReportEngineTests
     [TestMethod]
     public void TestResultCapture_TruncatesTraitKeysAndValues_AtBoundary()
     {
-        string hugeKey = new('k', TestResultCapture.MaxTraitFieldLength + 3);
-        string hugeValue = new('v', TestResultCapture.MaxTraitFieldLength + 5);
+        string hugeKey = new('k', MaxTraitFieldLength + 3);
+        string hugeValue = new('v', MaxTraitFieldLength + 5);
 
         var bag = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
         bag.Add(new TestMetadataProperty(hugeKey, hugeValue));

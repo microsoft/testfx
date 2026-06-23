@@ -317,7 +317,9 @@ public sealed class FormatterUtilitiesTests
 
         if (type == typeof(ErrorMessage))
         {
-            Assert.AreEqual("""{"jsonrpc":"2.0","code":2,"id":1,"error":{"code":2,"data":{},"message":"This is error"}}""".Replace(" ", string.Empty), instanceSerialized, because);
+            // Per JSON-RPC 2.0 §5.1, "code" must only appear inside the nested "error" object,
+            // never at the top level of the response envelope.
+            Assert.AreEqual("""{"jsonrpc":"2.0","id":1,"error":{"code":2,"data":{},"message":"This is error"}}""".Replace(" ", string.Empty), instanceSerialized, because);
             return;
         }
 

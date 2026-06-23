@@ -1,0 +1,2 @@
+#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.RiscV64 = 512 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures

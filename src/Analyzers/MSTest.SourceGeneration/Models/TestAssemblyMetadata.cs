@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Immutable;
+using MSTest.Analyzers.Shared;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
@@ -27,56 +27,3 @@ internal sealed record TestMethodMetadata(string Name, EquatableArray<string> Pa
 internal sealed record TestAssemblyMetadata(
     string AssemblyName,
     EquatableArray<TestClassMetadata> Classes);
-
-/// <summary>
-/// Minimal value-equatable wrapper around an <see cref="ImmutableArray{T}"/>. Source generators
-/// need value equality on collections; <see cref="ImmutableArray{T}"/> only has reference equality
-/// out of the box, which would cause cache misses on every compilation tick.
-/// </summary>
-/// <typeparam name="T">The element type stored in the underlying <see cref="ImmutableArray{T}"/>.</typeparam>
-internal readonly record struct EquatableArray<T>(ImmutableArray<T> Items)
-    where T : IEquatable<T>
-{
-    public int Count => Items.IsDefault ? 0 : Items.Length;
-
-    // Return ImmutableArray<T>.Enumerator (a struct) by value so that 'foreach' uses the duck-typed
-    // enumerator and avoids boxing on the source-generator hot path. Returning IEnumerator<T> here
-    // would force an interface dispatch and allocate on every iteration.
-    public ImmutableArray<T>.Enumerator GetEnumerator() => (Items.IsDefault ? ImmutableArray<T>.Empty : Items).GetEnumerator();
-
-    public bool Equals(EquatableArray<T> other)
-    {
-        ImmutableArray<T> a = Items.IsDefault ? ImmutableArray<T>.Empty : Items;
-        ImmutableArray<T> b = other.Items.IsDefault ? ImmutableArray<T>.Empty : other.Items;
-        if (a.Length != b.Length)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < a.Length; i++)
-        {
-            if (!EqualityComparer<T>.Default.Equals(a[i], b[i]))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public override int GetHashCode()
-    {
-        if (Items.IsDefault)
-        {
-            return 0;
-        }
-
-        int hash = 17;
-        foreach (T item in Items)
-        {
-            hash = unchecked((hash * 31) + (item?.GetHashCode() ?? 0));
-        }
-
-        return hash;
-    }
-}

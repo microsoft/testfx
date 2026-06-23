@@ -204,7 +204,7 @@ public sealed class CommandLineParseResultTests
     {
         var a = new CommandLineParseResult("tool", [], []);
 
-        Assert.AreEqual(a, a);
+        Assert.IsTrue(a.Equals(a));
     }
 
     [TestMethod]
