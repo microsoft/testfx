@@ -1006,12 +1006,12 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="needs-review-translation">Asynchronní metody testovacích přípravků nevyžadují příponu Async.</target>
+        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
         <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="needs-review-translation">Asynchronní testovací metody nevyžadují příponu Async.</target>
+        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
         <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">
