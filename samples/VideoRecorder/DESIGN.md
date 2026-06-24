@@ -83,8 +83,9 @@ The licensing risk is **not "ffmpeg"** — it is the **GPL/patented codecs**:
   (no-op fallback so test code never throws).
 - `FfmpegVideoRecorder` — the current backend. Per-OS capture input, graceful stop, best-effort
   (never throws), prunes empty output files, warns on capture failure.
-- `VideoRecorderSessionHandler` — MTP wiring: tracks failures, persists/discards/attaches videos at
-  session end, applies CLI overrides.
+- `VideoRecorderSessionHandler` — MTP wiring: drives recording per the **granularity** (per-test
+  by default, per-session, or manual), tracks failures, persists/discards/attaches videos, applies
+  CLI overrides.
 - `VideoRecorderCommandLineProvider` / `AddVideoRecorderProvider` — opt-in CLI + registration.
 
 ### Capture-source resolution (Windows window mode)
@@ -101,7 +102,10 @@ owned by the terminal (ConPTY), not the test process.
   "access denied", no video; logged and the run continues).
 - Window capture is best with a classic console window or a GUI app under test; Windows Terminal and
   headless runs fall back to full screen.
-- Single, **session-global, serial** recording (mark recording tests `[DoNotParallelize]`).
+- Single, **session-global, serial** recorder. **Per-test** granularity (the default) records each
+  test into its own video and so expects **serial** execution (mark recording tests
+  `[DoNotParallelize]`); with parallel execution only one overlapping test is captured. Use
+  `manual` granularity for full control, or `session` for one video per run.
 - macOS `avfoundation` device index may need overriding via `InputArgumentsOverride`.
 
 ## Future work ("complexify later")
@@ -111,4 +115,5 @@ owned by the terminal (ConPTY), not the test process.
 2. **Optional bundled minimal LGPL/VP8 ffmpeg** for a zero-prerequisite experience — pending legal.
 3. **Frame-source mode** (Playwright-style) for callers that can emit frames/screenshots.
 4. **Audio** capture/mux (currently video-only).
-5. Per-test correlation of recordings to outcomes (today retention is session-grained).
+5. **Per-test-node attachment**: attach each per-test video to its test node (today per-test videos
+   are attached as session artifacts named after the test).

@@ -42,6 +42,33 @@ public enum VideoRecorderPersistenceMode
 }
 
 /// <summary>
+/// Controls how recordings are split across a test run.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public enum VideoCaptureGranularity
+{
+    /// <summary>
+    /// Automatically record each test individually, producing one video per test (named after the
+    /// test). This is what most people expect. Because a screen recorder is a single, serial
+    /// resource, tests being recorded should run serially (mark them <c>[DoNotParallelize]</c>);
+    /// with parallel execution only one overlapping test is recorded.
+    /// </summary>
+    PerTest,
+
+    /// <summary>
+    /// Record the whole run as a single video (from session start to session end).
+    /// </summary>
+    PerSession,
+
+    /// <summary>
+    /// Don't record automatically; tests drive recording explicitly through
+    /// <see cref="VideoRecorder.Current"/> (<see cref="IVideoRecorder.Start"/> /
+    /// <see cref="IVideoRecorder.StopAsync"/>).
+    /// </summary>
+    Manual,
+}
+
+/// <summary>
 /// What the recorder captures.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
@@ -87,6 +114,13 @@ public sealed class VideoRecorderOptions
     /// Gets or sets the output video format. Defaults to <see cref="VideoRecorderFormat.Mp4H264"/>.
     /// </summary>
     public VideoRecorderFormat Format { get; set; } = VideoRecorderFormat.Mp4H264;
+
+    /// <summary>
+    /// Gets or sets how recordings are split across a run: one video per test (default), one for
+    /// the whole session, or manual (tests drive recording themselves). Can be overridden on the
+    /// command line with <c>--capture-video-granularity</c>.
+    /// </summary>
+    public VideoCaptureGranularity Granularity { get; set; } = VideoCaptureGranularity.PerTest;
 
     /// <summary>
     /// Gets or sets when recorded videos are persisted. Defaults to

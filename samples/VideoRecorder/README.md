@@ -46,6 +46,7 @@ testApplicationBuilder.AddVideoRecorderProvider(options =>
     options.FrameRate = 15;
     options.Format = VideoRecorderFormat.Mp4H264;           // or WebMVp9 (royalty-free)
     options.PersistMode = VideoRecorderPersistenceMode.OnFailure; // or Always
+    options.Granularity = VideoCaptureGranularity.PerTest;        // PerTest (default) / PerSession / Manual
     options.Source = VideoCaptureSource.Screen;                  // or VideoCaptureSource.Window (capture only this process's window; Windows)
     // options.OutputDirectory = ...;                       // defaults to <TestResults>/VideoRecordings
     // options.InputArgumentsOverride = ...;                // capture a window/region instead of the full screen
@@ -65,14 +66,18 @@ screenshots — under the same `--capture-` umbrella (e.g. `--capture-screenshot
 | Option | Values | Description |
 | --- | --- | --- |
 | `--capture-video` | *(none)*, `on-failure`, `always` | Enables screen recording for the run. The optional argument controls retention: `on-failure` (**default** — keep the video only if at least one test fails) or `always`. |
+| `--capture-video-granularity` | `test` (default), `session`, `manual` | How recordings are split: **one video per test** (default — named after the test), one video for the whole run, or `manual` (tests drive recording via `VideoRecorder.Current`). |
 | `--capture-video-source` | `screen` (default), `window` | What to capture: the full screen, or only the current process window (Windows; falls back to full screen elsewhere). Requires `--capture-video`. |
 | `--capture-video-args` | any string | Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires `--capture-video`. |
 
 Examples:
 
 ```bash
-# Record, keeping the video only if a test fails (default)
+# Record, keeping the video only if a test fails (default). Each test gets its own video.
 yourtests --capture-video
+
+# Record the whole run into a single video instead of one per test
+yourtests --capture-video always --capture-video-granularity session
 
 # Record and always keep the video
 yourtests --capture-video always
@@ -97,8 +102,14 @@ yourtests --capture-video --capture-video-args="-vf scale=1280:-1"
 > disconnected RDP session, or a session-0 service, `gdigrab` fails with "access denied" and no
 > video is produced — the recorder logs this and the run continues.
 
-> Retention is decided at **session** granularity: if any test in the run fails, all recordings
-> produced during the run are kept; if every test passes, they are all discarded.
+> Retention is decided per recording: in `on-failure` mode a **per-test** video is kept only if
+> *that* test failed; a **per-session** video is kept if *any* test in the run failed.
+>
+> **Per-test granularity** (the default) records each test into its own video automatically — no
+> code in the test body. Because a screen recorder can only follow one test at a time, tests being
+> recorded should run **serially** (mark them `[DoNotParallelize]`); with parallel execution only
+> one overlapping test is recorded. Use `manual` granularity to drive recording yourself via
+> `VideoRecorder.Current`.
 
 ## A note on ffmpeg licensing / codecs
 

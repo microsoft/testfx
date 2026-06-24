@@ -14,6 +14,7 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
 {
     public const string EnableOptionName = "capture-video";
     public const string SourceOptionName = "capture-video-source";
+    public const string GranularityOptionName = "capture-video-granularity";
     public const string ArgsOptionName = "capture-video-args";
 
     public const string ModeAlways = "always";
@@ -22,8 +23,13 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
     public const string SourceScreen = "screen";
     public const string SourceWindow = "window";
 
+    public const string GranularityTest = "test";
+    public const string GranularitySession = "session";
+    public const string GranularityManual = "manual";
+
     private static readonly string[] ModeValues = [ModeOnFailure, ModeAlways];
     private static readonly string[] SourceValues = [SourceScreen, SourceWindow];
+    private static readonly string[] GranularityValues = [GranularityTest, GranularitySession, GranularityManual];
 
     public string Uid => nameof(VideoRecorderCommandLineProvider);
 
@@ -48,6 +54,11 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
             ArgumentArity.ExactlyOne,
             isHidden: false),
         new CommandLineOption(
+            GranularityOptionName,
+            "How recordings are split: 'test' (default, one video per test), 'session' (one video for the whole run), or 'manual' (tests call VideoRecorder.Current.Start/StopAsync themselves). Requires --capture-video.",
+            ArgumentArity.ExactlyOne,
+            isHidden: false),
+        new CommandLineOption(
             ArgsOptionName,
             "Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args=\"-vf scale=1280:-1\".",
             ArgumentArity.ExactlyOne,
@@ -59,10 +70,12 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
             ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{EnableOptionName}. Valid values are '{ModeOnFailure}' and '{ModeAlways}'.")
             : commandOption.Name == SourceOptionName && arguments.Length > 0 && !SourceValues.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{SourceOptionName}. Valid values are '{SourceScreen}' and '{SourceWindow}'.")
-                : ValidationResult.ValidTask;
+                : commandOption.Name == GranularityOptionName && arguments.Length > 0 && !GranularityValues.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
+                    ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{GranularityOptionName}. Valid values are '{GranularityTest}', '{GranularitySession}' and '{GranularityManual}'.")
+                    : ValidationResult.ValidTask;
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => (commandLineOptions.IsOptionSet(ArgsOptionName) || commandLineOptions.IsOptionSet(SourceOptionName)) && !commandLineOptions.IsOptionSet(EnableOptionName)
-            ? ValidationResult.InvalidTask($"--{ArgsOptionName} and --{SourceOptionName} require --{EnableOptionName} to be specified.")
+        => (commandLineOptions.IsOptionSet(ArgsOptionName) || commandLineOptions.IsOptionSet(SourceOptionName) || commandLineOptions.IsOptionSet(GranularityOptionName)) && !commandLineOptions.IsOptionSet(EnableOptionName)
+            ? ValidationResult.InvalidTask($"--{ArgsOptionName}, --{SourceOptionName} and --{GranularityOptionName} require --{EnableOptionName} to be specified.")
             : ValidationResult.ValidTask;
 }
