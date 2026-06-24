@@ -1,9 +1,10 @@
 # Video Recorder extension (sample)
 
-A Microsoft.Testing.Platform (MTP) extension that exposes a small **service** letting tests
-start/stop **screen recording** while they run. Recording is performed by an external
-**ffmpeg** process (the only engine that is cross-platform *and* covers screen capture).
-Each produced video is attached to the test session as a file artifact.
+A Microsoft.Testing.Platform (MTP) extension that **records the screen** while tests run.
+Recording is **automatic and declarative** — enable it with `--capture-video` and the extension
+captures the screen for you (one video per test by default, or one per session). Recording is
+performed by an external **ffmpeg** process (the only engine that is cross-platform *and* covers
+screen capture). Each kept video is attached to the test session as a file artifact.
 
 This is a local sample (not a shipping package) wired into the `Playground` sample.
 See [DESIGN.md](DESIGN.md) for the engine choice, alternatives considered (Playwright,

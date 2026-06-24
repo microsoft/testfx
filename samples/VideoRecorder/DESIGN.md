@@ -6,9 +6,10 @@ This document records the design decisions and the alternatives we considered, s
 
 ## Goal
 
-Expose a Microsoft.Testing.Platform (MTP) **service** that lets a test (or another extension)
-start/stop **video recording** during a test run, and attach the produced video to the test
-session as an artifact. Primary scenario: **capture the OS screen / a window** while a UI test
+Provide a Microsoft.Testing.Platform (MTP) extension that **records the screen** during a test
+run and attaches the produced video to the test session as an artifact. Recording is automatic
+and declarative (enabled with `--capture-video`, one video per test by default) — there is no
+public test-facing API. Primary scenario: **capture the OS screen / a window** while a UI test
 runs (WinForms/WPF/Avalonia/console/browser).
 
 ## Decision (ADR-style)

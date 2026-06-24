@@ -390,7 +390,7 @@ internal sealed class FfmpegVideoRecorder
                     return $"-f gdigrab -framerate {fps} -offset_x {x} -offset_y {y} -video_size {width}x{height} -i desktop";
                 }
 
-                _log?.Invoke("Could not resolve a visible current-process window (headless run, or a terminal whose window is not owned by this process such as Windows Terminal); capturing the full screen instead.");
+                _log?.Invoke("Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.");
             }
 
             return $"-f gdigrab -framerate {fps} -i desktop";
