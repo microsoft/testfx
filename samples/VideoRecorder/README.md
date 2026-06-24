@@ -97,7 +97,7 @@ yourtests --capture-video --capture-video-args="-vf scale=1280:-1"
 > Screen capture also requires an **accessible interactive desktop**. On a locked screen, a
 > disconnected RDP session, or a session-0 service, `gdigrab` fails with "access denied" and no
 > video is produced — the recorder logs this and the run continues.
-
+>
 > Retention is decided per recording: in `on-failure` mode a **per-test** video is kept only if
 > *that* test failed; a **per-session** video is kept if *any* test in the run failed.
 >

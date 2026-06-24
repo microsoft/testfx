@@ -44,6 +44,7 @@ runs (WinForms/WPF/Avalonia/console/browser).
 | **Bundle a minimal LGPL/VP8 ffmpeg** | OS screen/window | ✅ | ❌ | LGPL notice + source offer | defer; needs legal sign-off |
 
 Notes:
+
 - **Playwright** does **not** record the OS screen. It captures the **browser page** via the
   browser's CDP screencast, then encodes the frames with a **bundled minimal LGPL ffmpeg** to
   **VP8/WebM** (royalty-free). It works headlessly precisely because the browser is the *frame
@@ -79,7 +80,7 @@ The licensing risk is **not "ffmpeg"** — it is the **GPL/patented codecs**:
   Playwright bundling an LGPL ffmpeg is precedent.) **This path needs OSS/legal sign-off and is
   explicitly out of scope for now.**
 
-*(Not legal advice; final compliance goes through the standard OSS review.)*
+(Not legal advice; final compliance goes through the standard OSS review.)
 
 ## Architecture
 
