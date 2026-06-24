@@ -2,45 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
 internal sealed class HtmlReportGenerator : ReportGeneratorBase<HtmlReportGenerator, CapturedTestResult>
 {
-    public HtmlReportGenerator(
-        IConfiguration configuration,
-        ICommandLineOptions commandLineOptions,
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IMessageBus messageBus,
-        IClock clock,
-        IEnvironment environment,
-        IOutputDevice outputDevice,
-        ITestFramework testFramework,
-        ITestApplicationProcessExitCode testApplicationProcessExitCode,
-        ILogger<HtmlReportGenerator> logger)
-        : base(
-            configuration,
-            commandLineOptions,
-            fileSystem,
-            testApplicationModuleInfo,
-            messageBus,
-            clock,
-            environment,
-            outputDevice,
-            testFramework,
-            testApplicationProcessExitCode,
-            logger,
-            HtmlReportGeneratorCommandLine.HtmlReportOptionName)
+    public HtmlReportGenerator(IServiceProvider serviceProvider)
+        : base(serviceProvider, HtmlReportGeneratorCommandLine.HtmlReportOptionName)
     {
     }
 
