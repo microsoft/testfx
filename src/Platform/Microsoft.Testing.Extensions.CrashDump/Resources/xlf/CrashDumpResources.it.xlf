@@ -157,10 +157,10 @@ Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnos
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="translated">Controllare se un file di sequenza che elenca i test avviati e terminati durante la sessione di test viene generato insieme al dump di arresto anomalo del sistema o al report di arresto anomalo del sistema.
+        <target state="needs-review-translation">Controllare se un file di sequenza che elenca i test avviati e terminati durante la sessione di test viene generato insieme al dump di arresto anomalo del sistema o al report di arresto anomalo del sistema.
 Il file consente di identificare i test in esecuzione al momento dell'arresto anomalo senza dover esaminare il dump.
 I valori validi sono ''on'' (impostazione predefinita; accetta anche ''true'', 'enable'', ''1'') o ''off'' (accetta anche ''false'', ''disable'', ''0'').</target>
-        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>

@@ -649,14 +649,14 @@ Wartość domyślna to TestResults w katalogu zawierającym aplikację testową.
       <trans-unit id="PlatformCommandLineTimeoutArgumentErrorMessage">
         <source>'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="new">'timeout' option should have one argument as a time value with an explicit unit suffix and a positive numeric value within the supported range (up to ~49.7 days). Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="timeout"}{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
+        <note>{Locked="'timeout'"}{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineTimeoutOptionDescription">
         <source>A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</source>
         <target state="new">A global test execution timeout.
 Takes one argument as a time value with an explicit unit suffix. Accepted suffixes are 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)', and 'd'/'day(s)', e.g. '500ms', '5400s', '90m', '1.5h', '1d'.</target>
-        <note>{Locked="ms"}{Locked="mil(s)"}{Locked="millisecond(s)"}{Locked="s"}{Locked="sec(s)"}{Locked="second(s)"}{Locked="m"}{Locked="min(s)"}{Locked="minute(s)"}{Locked="h"}{Locked="hour(s)"}{Locked="d"}{Locked="day(s)"}{Locked="500ms"}{Locked="5400s"}{Locked="90m"}{Locked="1.5h"}{Locked="1d"}</note>
+        <note>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
