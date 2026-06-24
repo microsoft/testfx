@@ -20,9 +20,9 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AssemblyCleanupShouldBeValidRuleId,
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidTitle)),
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat)),
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidDescription)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidTitle)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyCleanupShouldBeValidDescription)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -35,7 +35,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodDiagnosticAnalyzer.RegisterFixtureMethodSymbolAction(
+        FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute,
             AnalyzeSymbol);

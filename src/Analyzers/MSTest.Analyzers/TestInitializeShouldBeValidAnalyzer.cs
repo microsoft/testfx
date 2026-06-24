@@ -19,9 +19,9 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// <inheritdoc cref="Resources.TestInitializeShouldBeValidTitle" />
     public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestInitializeShouldBeValidRuleId,
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidTitle)),
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidMessageFormat)),
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidDescription)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidTitle)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidMessageFormat)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestInitializeShouldBeValidDescription)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -34,7 +34,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodDiagnosticAnalyzer.RegisterFixtureMethodSymbolAction(
+        FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute,
             static (symbolContext, symbols) => FixtureMethodAnalyzerHelper.AnalyzeInstanceFixtureMethod(symbolContext, symbols, Rule));

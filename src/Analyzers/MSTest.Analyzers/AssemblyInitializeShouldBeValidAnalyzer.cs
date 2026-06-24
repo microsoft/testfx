@@ -20,9 +20,9 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AssemblyInitializeShouldBeValidRuleId,
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.AssemblyInitializeShouldBeValidTitle)),
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat)),
-        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.AssemblyInitializeShouldBeValidDescription)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyInitializeShouldBeValidTitle)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat)),
+        FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.AssemblyInitializeShouldBeValidDescription)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -35,7 +35,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodDiagnosticAnalyzer.RegisterFixtureMethodSymbolAction(
+        FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute,
             AnalyzeSymbol,
