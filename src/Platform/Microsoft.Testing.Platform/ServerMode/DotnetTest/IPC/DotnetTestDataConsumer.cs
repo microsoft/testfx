@@ -272,33 +272,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             }
         }
 
-        FileArtifactProperty[] artifacts;
-        if (firstArtifact is null)
-        {
-            artifacts = [];
-        }
-        else if (artifactsOverflow is not null)
-        {
-            artifacts = [.. artifactsOverflow];
-        }
-        else
-        {
-            artifacts = [firstArtifact];
-        }
+        FileArtifactProperty[] artifacts = firstArtifact is null
+            ? []
+            : artifactsOverflow is not null ? [.. artifactsOverflow] : [firstArtifact];
 
-        TestMetadataProperty[] traits;
-        if (firstTrait is null)
-        {
-            traits = [];
-        }
-        else if (traitsOverflow is not null)
-        {
-            traits = [.. traitsOverflow];
-        }
-        else
-        {
-            traits = [firstTrait];
-        }
+        TestMetadataProperty[] traits = firstTrait is null
+            ? []
+            : traitsOverflow is not null ? [.. traitsOverflow] : [firstTrait];
 
         string? standardOutput = standardOutputProperty?.StandardOutput;
         string? standardError = standardErrorProperty?.StandardError;
