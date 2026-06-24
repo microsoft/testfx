@@ -2,20 +2,40 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Logging;
-#if !NET7_0_OR_GREATER
 using Microsoft.Testing.Platform.Resources;
-#endif
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal sealed class PlatformOutputDeviceManager
+internal sealed class PlatformOutputDeviceManager : IOutputDeviceManager
 {
     private Func<IServiceProvider, IPlatformOutputDevice>? _platformOutputDeviceFactory;
 
     public void SetPlatformOutputDevice(Func<IServiceProvider, IPlatformOutputDevice> platformOutputDeviceFactory)
-        => _platformOutputDeviceFactory = platformOutputDeviceFactory ?? throw new ArgumentNullException(nameof(platformOutputDeviceFactory));
+    {
+        if (platformOutputDeviceFactory is null)
+        {
+            throw new ArgumentNullException(nameof(platformOutputDeviceFactory));
+        }
+
+        if (_platformOutputDeviceFactory is not null)
+        {
+            throw new InvalidOperationException(PlatformResources.PlatformOutputDeviceAlreadyRegisteredErrorMessage);
+        }
+
+        _platformOutputDeviceFactory = platformOutputDeviceFactory;
+    }
+
+    public void SetOutputDevice(Func<IServiceProvider, ICustomOutputDevice> outputDeviceFactory)
+    {
+        if (outputDeviceFactory is null)
+        {
+            throw new ArgumentNullException(nameof(outputDeviceFactory));
+        }
+
+        SetPlatformOutputDevice(serviceProvider => new CustomOutputDeviceAdapter(outputDeviceFactory(serviceProvider)));
+    }
 
     internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice, bool isPipeProtocol)
     {

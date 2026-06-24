@@ -1,1 +1,9 @@
 #nullable enable
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager!
+[TPEXP]Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice
+[TPEXP]Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice.DisplayAfterSessionEndRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice.DisplayAsync(Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! producer, Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice.DisplayBannerAsync(string? bannerMessage, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice.DisplayBeforeSessionStartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager
+[TPEXP]Microsoft.Testing.Platform.OutputDevice.IOutputDeviceManager.SetOutputDevice(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.OutputDevice.ICustomOutputDevice!>! outputDeviceFactory) -> void

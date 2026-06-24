@@ -663,6 +663,11 @@ Recebe um argumento como valor temporal, com um sufixo de unidade explícito. O
         <target state="translated">Pressione Ctrl+C de novo para forçar a saída.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
+      <trans-unit id="PlatformOutputDeviceAlreadyRegisteredErrorMessage">
+        <source>A custom output device has already been registered.</source>
+        <target state="new">A custom output device has already been registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">O processo deve ter sido encerrado antes que possamos determinar esse valor</target>
