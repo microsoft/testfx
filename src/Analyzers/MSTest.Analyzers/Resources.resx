@@ -469,11 +469,11 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseAsyncSuffixTestFixtureMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test fixture methods do not require the 'Async' suffix</value>
-    <comment>{Locked="'Async'"}</comment>
+    <comment>{Locked="Async"}</comment>
   </data>
   <data name="UseAsyncSuffixTestMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test methods do not require the 'Async' suffix</value>
-    <comment>{Locked="'Async'"}</comment>
+    <comment>{Locked="Async"}</comment>
   </data>
   <data name="UnusedParameterSuppressorJustification" xml:space="preserve">
     <value>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</value>
