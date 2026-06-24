@@ -1007,12 +1007,12 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
         <target state="translated">Asynchronous 테스트 fixture 메서드에는 'Async' 접미사가 필요하지 않습니다.</target>
-        <note>{Locked="'Async'"}</note>
+        <note>{Locked="Async"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
         <target state="translated">Asynchronous 테스트 메서드에는 'Async' 접미사가 필요하지 않습니다.</target>
-        <note>{Locked="'Async'"}</note>
+        <note>{Locked="Async"}</note>
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">
         <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
