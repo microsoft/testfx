@@ -218,15 +218,21 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             return null;
         }
 
-        // Single pass over the property bag to collect all needed properties at once,
-        // instead of 3 separate linked-list walks for StandardOutput, StandardError, and TimingProperty,
-        // plus 2 additional OfType<T>() walks in ConsumeAsync for FileArtifactProperty and TestMetadataProperty.
-        // This eliminates 4 O(N) PropertyBag traversals per test node update.
+        // This method already performs a single GetStructEnumerator() walk to collect the
+        // StandardOutput, StandardError, and TimingProperty values. Folding FileArtifactProperty
+        // and TestMetadataProperty collection into that same walk removes the two additional
+        // PropertyBag.OfType<T>() linked-list traversals that ConsumeAsync used to perform for
+        // every test node update.
         TimingProperty? timingProperty = null;
         StandardOutputProperty? standardOutputProperty = null;
         StandardErrorProperty? standardErrorProperty = null;
-        List<FileArtifactProperty>? artifactsList = null;
-        List<TestMetadataProperty>? traitsList = null;
+
+        // Mirror PropertyBag.OfType<T>()'s "first + overflow list" pattern so the common case of
+        // zero or one match doesn't allocate a List<T>.
+        FileArtifactProperty? firstArtifact = null;
+        List<FileArtifactProperty>? artifactsOverflow = null;
+        TestMetadataProperty? firstTrait = null;
+        List<TestMetadataProperty>? traitsOverflow = null;
         PropertyBag.PropertyBagEnumerator enumerator = testNodeUpdateMessage.TestNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
@@ -242,16 +248,36 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                     standardErrorProperty = GetSingleOrDefaultValue(standardErrorProperty, errorProperty);
                     break;
                 case FileArtifactProperty artifact:
-                    (artifactsList ??= []).Add(artifact);
+                    if (firstArtifact is null)
+                    {
+                        firstArtifact = artifact;
+                    }
+                    else
+                    {
+                        (artifactsOverflow ??= [firstArtifact]).Add(artifact);
+                    }
+
                     break;
                 case TestMetadataProperty trait:
-                    (traitsList ??= []).Add(trait);
+                    if (firstTrait is null)
+                    {
+                        firstTrait = trait;
+                    }
+                    else
+                    {
+                        (traitsOverflow ??= [firstTrait]).Add(trait);
+                    }
+
                     break;
             }
         }
 
-        FileArtifactProperty[] artifacts = artifactsList is null ? [] : [.. artifactsList];
-        TestMetadataProperty[] traits = traitsList is null ? [] : [.. traitsList];
+        FileArtifactProperty[] artifacts = firstArtifact is null
+            ? []
+            : artifactsOverflow is not null ? [.. artifactsOverflow] : [firstArtifact];
+        TestMetadataProperty[] traits = firstTrait is null
+            ? []
+            : traitsOverflow is not null ? [.. traitsOverflow] : [firstTrait];
 
         string? standardOutput = standardOutputProperty?.StandardOutput;
         string? standardError = standardErrorProperty?.StandardError;
