@@ -1,6 +1,6 @@
 # Perf Improver — State for microsoft/testfx
 
-_Last updated: 2026-06-23 (run 28032837283)_
+_Last updated: 2026-06-24 (run 28105007003)_
 
 ## Completed Work
 
@@ -17,7 +17,7 @@ _Last updated: 2026-06-23 (run 28032837283)_
 
 | PR | Description | Status |
 |---|---|---|
-| #aw_pr_linux_perf (TBD) | perf: add Linux job to nightly perf-timing workflow | Created 2026-06-23, awaiting CI/review |
+| (branch: perf-assist/add-linux-perf-timing-job) | perf: add Linux parallel job to nightly perf-timing workflow | Created 2026-06-24, awaiting CI/review |
 
 ## Optimization Backlog
 
@@ -29,19 +29,19 @@ _Last updated: 2026-06-23 (run 28032837283)_
 ## Monthly Activity Issue
 
 Issue #9258 — open, "[perf-improver] Monthly Activity 2026-06"
-- Updated 2026-06-23 with new PR #aw_pr_linux_perf and #9348 merged fix
+- Updated 2026-06-24 with new PR (Linux perf timing job)
 
 ## Task Schedule (round-robin)
 
 | Task | Last Run |
 |---|---|
 | T1: Discover commands | 2026-06-19 (validated) |
-| T2: Identify opportunities | 2026-06-23 |
-| T3: Implement improvement | 2026-06-25 (PR #9348 merged) |
-| T4: Maintain PRs | 2026-06-25 (no open PRs at time) |
+| T2: Identify opportunities | 2026-06-24 |
+| T3: Implement improvement | 2026-06-23 (PR #9348 merged) |
+| T4: Maintain PRs | 2026-06-24 (new PR created, no fixes needed) |
 | T5: Comment on issues | 2026-06-25 (no issues needed) |
-| T6: Measurement infrastructure | 2026-06-23 (PR #aw_pr_linux_perf) |
-| T7: Monthly summary | 2026-06-23 ✅ |
+| T6: Measurement infrastructure | 2026-06-24 (PR: add Linux perf timing job) |
+| T7: Monthly summary | 2026-06-24 ✅ |
 
 ## Checked-off items (by maintainer) — do NOT re-suggest
 
@@ -55,4 +55,5 @@ Issue #9258 — open, "[perf-improver] Monthly Activity 2026-06"
 - Issue #5348 (in-progress/passed duplicates in server mode): efficiency-improver already posted detailed proposal — do NOT comment again unless new human comments appear
 - PropertyBag SingleOrDefault<TestNodeStateProperty>() is O(1) via _testNodeStateProperty fast-path — already optimal
 - TestNodeUid: reference type (sealed class), value equality via .Value string; using original instance vs new wrapper is semantically identical for dict operations
-- perf-timing-nightly.yml artifact renamed: windows→perf-timing-result-json-windows, new linux→perf-timing-result-json-linux
+- perf-timing-nightly.yml: Windows artifact renamed to perf-timing-result-json-windows; Linux uses perf-timing-result-json-linux
+- efficiency-improver merged DotnetTestDataConsumer single-pass PropertyBag (#9380) on 2026-06-24 — already covered, no overlap
