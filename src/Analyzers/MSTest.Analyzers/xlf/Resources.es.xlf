@@ -1006,12 +1006,12 @@ El tipo que declara estos métodos también debe respetar las reglas siguientes:
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="needs-review-translation">Los métodos Asynchronous de accesorio de prueba no requieren el sufijo "Async".</target>
+        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
         <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="needs-review-translation">Los métodos de prueba Asynchronous no requieren el sufijo "Async"</target>
+        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
         <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">
