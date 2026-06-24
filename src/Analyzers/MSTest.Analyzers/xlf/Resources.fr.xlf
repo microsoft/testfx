@@ -1006,13 +1006,13 @@ Le type doit être une classe
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="translated">Les méthodes de fixture de test Asynchronous ne nécessitent pas le suffixe « Async »</target>
-        <note>{Locked="Async"}</note>
+        <target state="needs-review-translation">Les méthodes de fixture de test Asynchronous ne nécessitent pas le suffixe « Async »</target>
+        <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="translated">Les méthodes de test Asynchrones ne nécessitent pas le suffixe « Async »</target>
-        <note>{Locked="Async"}</note>
+        <target state="needs-review-translation">Les méthodes de test Asynchrones ne nécessitent pas le suffixe « Async »</target>
+        <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">
         <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
