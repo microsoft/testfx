@@ -25,7 +25,7 @@
 - **Static classes in Roslyn**: Static classes are NOT abstract (`IsAbstract=false`); they have `IsStatic=true`. The `UseDeploymentItem` analyzer's abstract-class early return does NOT apply to static classes.
 - **Nullable annotation (CS8632)**: In analyzer test code strings, avoid `object?` — use `object` instead, or add `#nullable enable` at top of test code string. The test harness doesn't enable nullable by default.
 - **ManagedMethod/ManagedType**: Listed in TestContextPropertyUsageAnalyzer restriction sets but these properties do NOT exist on the actual TestContext class — those entries are dead code in the restriction sets.
-- **VerifyCodeFixAsync for "no fix" case**: Do NOT use `VerifyCodeFixAsync(code, sameCode)` when the fixer returns without registering a fix — the framework checks the fixed state still has 0 diagnostics, causing failure. Use `VerifyAnalyzerAsync(code, explicit DiagnosticResult)` or restructure the test to use a fixable scenario.
+- **VerifyCodeFixAsync for "no fix" case**: `VerifyCodeFixAsync(code, code)` (same string for both params, diagnostic markers preserved) IS valid when no fix is registered — framework compares actual output (unchanged) to expected fixedCode (same as original), and the kept diagnostic markers in fixedCode correctly express that the diagnostic remains. Verified working in `RemoveClassCleanupBehaviorArgumentFixerTests.WhenClassCleanupBehaviorReferencedOutsideAttribute_NoFix`.
 
 ## Testing Opportunities Backlog
 
@@ -40,6 +40,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-24 | Task 3 (RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard), Task 7 (Monthly Issue Jun) |
 | 2026-06-23 | Task 3 (PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases), Task 7 (Monthly Issue Jun) |
 | 2026-06-22 | Task 3 (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases: TestInitialize method, non-TestContext symbol, parameter receiver), Task 7 (Monthly Issue Jun) |
 | 2026-06-21 | Task 3 (RedundantTestMethodDisplayNameAnalyzer custom-derived attribute + UseAsyncSuffix suppressors negative boundary cases), Task 7 (Monthly Issue Jun) |
@@ -67,11 +68,12 @@
 
 ## Last Run
 
-2026-06-23 23:20 UTC
+2026-06-24 23:20 UTC
 
 ## Completed Work
 
-- PR (pending) for PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases (2026-06-23) — full dispose pattern, Dispose+TestCleanup coexistence, static constructor
+- PR (pending) for RemoveClassCleanupBehaviorArgumentFixer edge cases (2026-06-24) — first-arg ordering (ClassCleanupBehavior before InheritanceBehavior), non-attribute context guard (no fix in method body)
+- PR #9382 merged (2026-06-24 by Evangelink) — PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases: full dispose pattern, Dispose+TestCleanup coexistence, static constructor
 - PR #9355 merged (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases) — merged 2026-06-23 by Evangelink
 - PR #9314 merged (async-suffix suppressors + redundant display name edge cases) — merged 2026-06-22 by Evangelink
 - PR #9301 merged (UnusedParameterSuppressor MSTEST0047 edge cases) — merged 2026-06-21 by Evangelink
