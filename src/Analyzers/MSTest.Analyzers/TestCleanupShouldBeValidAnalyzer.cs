@@ -19,9 +19,9 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     /// <inheritdoc cref="Resources.TestCleanupShouldBeValidTitle" />
     public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestCleanupShouldBeValidRuleId,
-        new LocalizableResourceString(nameof(Resources.TestCleanupShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.TestCleanupShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        new LocalizableResourceString(nameof(Resources.TestCleanupShouldBeValidDescription), Resources.ResourceManager, typeof(Resources)),
+        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.TestCleanupShouldBeValidTitle)),
+        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.TestCleanupShouldBeValidMessageFormat)),
+        FixtureMethodDiagnosticAnalyzer.CreateResourceString(nameof(Resources.TestCleanupShouldBeValidDescription)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -34,11 +34,9 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-
-        context.RegisterCompilationStartAction(context =>
-            FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
-                context,
-                WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute,
-                static (symbolContext, symbols) => FixtureMethodAnalyzerHelper.AnalyzeInstanceFixtureMethod(symbolContext, symbols, Rule)));
+        FixtureMethodDiagnosticAnalyzer.RegisterFixtureMethodSymbolAction(
+            context,
+            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute,
+            static (symbolContext, symbols) => FixtureMethodAnalyzerHelper.AnalyzeInstanceFixtureMethod(symbolContext, symbols, Rule));
     }
 }
