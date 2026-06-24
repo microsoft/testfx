@@ -16,8 +16,9 @@ namespace Microsoft.Testing.Extensions;
 public static class VideoRecorderExtensions
 {
     /// <summary>
-    /// Adds the video recorder service to the test application. Tests can then start and stop
-    /// screen recording through <see cref="VideoRecorder.Current"/>.
+    /// Adds the video recorder to the test application. When the run is started with
+    /// <c>--capture-video</c>, the screen is recorded automatically (one video per test by
+    /// default, or one per session).
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     /// <param name="configure">An optional callback to configure recording options.</param>

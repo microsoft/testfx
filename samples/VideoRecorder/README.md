@@ -17,25 +17,21 @@ Windows.Graphics.Capture, Game Bar), and the licensing rationale.
    (see options below). On Windows the recorder uses `gdigrab`, on macOS `avfoundation`, on
    Linux `x11grab`.
 2. Build and run the `Playground` sample **with `--capture-video`** (recording is opt-in). It
-   contains a demo test (`VideoRecorderDemoTests.RecordDesktopForAFewSeconds`) that records the
-   desktop for 3s.
-3. Find the video under `<TestResults>/VideoRecordings/` (it is also reported as a session
-   artifact at the end of the run). With the default `on-failure` retention, a video from a
-   passing run is discarded — use `--capture-video always` to keep it.
+   contains demo tests (`VideoRecorderDemoTests`) that simulate a couple of seconds of UI work.
+3. Find the videos under `<TestResults>/VideoRecordings/` (also reported as session artifacts at
+   the end of the run). With the default per-test granularity you get **one video per test**, named
+   after the test. With the default `on-failure` retention, a passing test's video is discarded —
+   use `--capture-video always` to keep it.
 
-## Using it from a test
+## How it works
 
-```csharp
-using Microsoft.Testing.Extensions.VideoRecorder;
+Recording is **automatic and declarative** — there's no API to call from test code. Enable it with
+`--capture-video` and the extension records the screen for you:
 
-IVideoRecorder recorder = VideoRecorder.Current;
-recorder.Start("my-test");          // begins capturing the screen
-// ... drive your UI ...
-string? videoPath = await recorder.StopAsync();   // finalizes the .mp4 and returns its path
-```
+- **per test** (default): each test is captured into its own video named after the test;
+- **per session** (`--capture-video-granularity session`): the whole run is captured into one video.
 
-If the extension is not registered, `VideoRecorder.Current` returns a no-op recorder so test
-code never throws.
+Configure it on the command line and/or programmatically at registration time (see below).
 
 ## Registering the extension
 
@@ -46,7 +42,7 @@ testApplicationBuilder.AddVideoRecorderProvider(options =>
     options.FrameRate = 15;
     options.Format = VideoRecorderFormat.Mp4H264;           // or WebMVp9 (royalty-free)
     options.PersistMode = VideoRecorderPersistenceMode.OnFailure; // or Always
-    options.Granularity = VideoCaptureGranularity.PerTest;        // PerTest (default) / PerSession / Manual
+    options.Granularity = VideoCaptureGranularity.PerTest;        // PerTest (default) / PerSession
     options.Source = VideoCaptureSource.Screen;                  // or VideoCaptureSource.Window (capture only this process's window; Windows)
     // options.OutputDirectory = ...;                       // defaults to <TestResults>/VideoRecordings
     // options.InputArgumentsOverride = ...;                // capture a window/region instead of the full screen
@@ -66,7 +62,7 @@ screenshots — under the same `--capture-` umbrella (e.g. `--capture-screenshot
 | Option | Values | Description |
 | --- | --- | --- |
 | `--capture-video` | *(none)*, `on-failure`, `always` | Enables screen recording for the run. The optional argument controls retention: `on-failure` (**default** — keep the video only if at least one test fails) or `always`. |
-| `--capture-video-granularity` | `test` (default), `session`, `manual` | How recordings are split: **one video per test** (default — named after the test), one video for the whole run, or `manual` (tests drive recording via `VideoRecorder.Current`). |
+| `--capture-video-granularity` | `test` (default), `session` | How recordings are split: **one video per test** (default — named after the test) or one video for the whole run. |
 | `--capture-video-source` | `screen` (default), `window` | What to capture: the full screen, or only the current process window (Windows; falls back to full screen elsewhere). Requires `--capture-video`. |
 | `--capture-video-args` | any string | Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires `--capture-video`. |
 
@@ -108,8 +104,8 @@ yourtests --capture-video --capture-video-args="-vf scale=1280:-1"
 > **Per-test granularity** (the default) records each test into its own video automatically — no
 > code in the test body. Because a screen recorder can only follow one test at a time, tests being
 > recorded should run **serially** (mark them `[DoNotParallelize]`); with parallel execution only
-> one overlapping test is recorded. Use `manual` granularity to drive recording yourself via
-> `VideoRecorder.Current`.
+> one overlapping test is recorded. Use `--capture-video-granularity session` for a single video of
+> the whole run.
 
 ## A note on ffmpeg licensing / codecs
 

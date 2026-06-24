@@ -59,13 +59,6 @@ public enum VideoCaptureGranularity
     /// Record the whole run as a single video (from session start to session end).
     /// </summary>
     PerSession,
-
-    /// <summary>
-    /// Don't record automatically; tests drive recording explicitly through
-    /// <see cref="VideoRecorder.Current"/> (<see cref="IVideoRecorder.Start"/> /
-    /// <see cref="IVideoRecorder.StopAsync"/>).
-    /// </summary>
-    Manual,
 }
 
 /// <summary>
@@ -87,7 +80,7 @@ public enum VideoCaptureSource
 }
 
 /// <summary>
-/// Options controlling how <see cref="IVideoRecorder"/> captures and encodes video.
+/// Options controlling how the video recorder captures and encodes video.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public sealed class VideoRecorderOptions
@@ -116,9 +109,9 @@ public sealed class VideoRecorderOptions
     public VideoRecorderFormat Format { get; set; } = VideoRecorderFormat.Mp4H264;
 
     /// <summary>
-    /// Gets or sets how recordings are split across a run: one video per test (default), one for
-    /// the whole session, or manual (tests drive recording themselves). Can be overridden on the
-    /// command line with <c>--capture-video-granularity</c>.
+    /// Gets or sets how recordings are split across a run: one video per test (default) or one for
+    /// the whole session. Can be overridden on the command line with
+    /// <c>--capture-video-granularity</c>.
     /// </summary>
     public VideoCaptureGranularity Granularity { get; set; } = VideoCaptureGranularity.PerTest;
 

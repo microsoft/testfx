@@ -16,7 +16,7 @@ runs (WinForms/WPF/Avalonia/console/browser).
 > **We drive an external `ffmpeg` process, require it on `PATH`, and default to H.264/MP4.**
 > Start simple; add native backends and/or bundling only if a concrete need appears.
 
-- **Engine: `ffmpeg` as a child process**, behind an `IVideoRecorder` abstraction.
+- **Engine: `ffmpeg` as a child process**, behind an internal recorder abstraction.
   - It is the only option that is **cross-platform** *and* covers **OS screen capture**
     (`gdigrab` on Windows, `x11grab` on Linux, `avfoundation` on macOS).
   - Graceful stop by sending `q` to ffmpeg's stdin (killing risks a corrupt/unplayable file).
@@ -26,8 +26,12 @@ runs (WinForms/WPF/Avalonia/console/browser).
 - **Default format: H.264 / MP4** (`libx264`), best for inline preview in CI dashboards
   (e.g. Azure DevOps test attachments). A royalty-free **VP9 / WebM** option exists for any future
   bundled scenario.
-- **Extensibility:** `IVideoRecorder` is an abstraction so a native backend (Windows.Graphics.Capture)
-  or a UI-tool pass-through (Playwright) can be added later without changing the test-facing API.
+- **Recording is automatic/declarative** (no public test-facing API). Granularity selects
+  per-test (default) or per-session capture; the extension drives ffmpeg itself. This keeps the
+  public surface minimal (CLI options + a registration callback) — like `--crashdump`/`--hangdump`.
+- **Extensibility:** the internal recorder is swappable, so a native backend
+  (Windows.Graphics.Capture) or a UI-tool pass-through (Playwright) can be added later without
+  changing the option model.
 
 ## Alternatives considered (and why deferred)
 
@@ -79,13 +83,11 @@ The licensing risk is **not "ffmpeg"** — it is the **GPL/patented codecs**:
 
 ## Architecture
 
-- `IVideoRecorder` — test-facing service (`Start`/`StopAsync`), exposed via `VideoRecorder.Current`
-  (no-op fallback so test code never throws).
-- `FfmpegVideoRecorder` — the current backend. Per-OS capture input, graceful stop, best-effort
-  (never throws), prunes empty output files, warns on capture failure.
+- The internal `FfmpegVideoRecorder` — the current backend. Per-OS capture input, graceful stop,
+  best-effort (never throws), prunes empty output files, warns on capture failure.
 - `VideoRecorderSessionHandler` — MTP wiring: drives recording per the **granularity** (per-test
-  by default, per-session, or manual), tracks failures, persists/discards/attaches videos, applies
-  CLI overrides.
+  by default, or per-session), tracks failures, persists/discards/attaches videos, applies CLI
+  overrides.
 - `VideoRecorderCommandLineProvider` / `AddVideoRecorderProvider` — opt-in CLI + registration.
 
 ### Capture-source resolution (Windows window mode)
@@ -105,7 +107,7 @@ owned by the terminal (ConPTY), not the test process.
 - Single, **session-global, serial** recorder. **Per-test** granularity (the default) records each
   test into its own video and so expects **serial** execution (mark recording tests
   `[DoNotParallelize]`); with parallel execution only one overlapping test is captured. Use
-  `manual` granularity for full control, or `session` for one video per run.
+  `session` for one video per run.
 - macOS `avfoundation` device index may need overriding via `InputArgumentsOverride`.
 
 ## Future work ("complexify later")
@@ -117,3 +119,5 @@ owned by the terminal (ConPTY), not the test process.
 4. **Audio** capture/mux (currently video-only).
 5. **Per-test-node attachment**: attach each per-test video to its test node (today per-test videos
    are attached as session artifacts named after the test).
+6. **Programmatic API** (a test-facing `Start`/`Stop` service) — intentionally omitted for now to
+   keep the public surface minimal; add back only if a concrete framework-driven need appears.

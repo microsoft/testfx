@@ -18,8 +18,7 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 /// <summary>
 /// Wires the <see cref="FfmpegVideoRecorder"/> into the platform when recording is enabled via
 /// <c>--capture-video</c>. Depending on the granularity it records each test individually
-/// (default), records the whole session, or lets tests drive recording manually through
-/// <see cref="VideoRecorder.Current"/>. Kept videos are attached as session artifacts.
+/// (default) or records the whole session. Kept videos are attached as session artifacts.
 /// </summary>
 internal sealed class VideoRecorderSessionHandler :
     IDataConsumer,
@@ -72,14 +71,6 @@ internal sealed class VideoRecorderSessionHandler :
             outputDirectory,
             log: message => logger.LogTrace(message),
             warn: message => logger.LogWarning(message));
-
-        // Only expose the recorder to test code in Manual mode. In the automatic modes the handler
-        // drives recording itself, and exposing it would let a test's Start/Stop collide with the
-        // automatic recording.
-        if (_granularity == VideoCaptureGranularity.Manual)
-        {
-            VideoRecorder.SetCurrent(_recorder);
-        }
     }
 
     public string Uid => nameof(VideoRecorderSessionHandler);
@@ -169,7 +160,6 @@ internal sealed class VideoRecorderSessionHandler :
         IOutputDeviceData message = _recorder.IsAvailable
             ? new FormattedTextOutputDeviceData($"Video recorder ready (ffmpeg: {_recorder.FfmpegPath}, granularity: {_granularity}, persist: {_persistMode}). {GranularityHint()}")
             : new WarningMessageOutputDeviceData("Video recording requested but ffmpeg was not found on PATH (set VideoRecorderOptions.FfmpegPath or install ffmpeg). Recordings will be skipped.");
-
         await _outputDevice.DisplayAsync(this, message, cancellationToken).ConfigureAwait(false);
 
         if (_granularity == VideoCaptureGranularity.PerSession && _recorder.IsAvailable)
@@ -185,50 +175,40 @@ internal sealed class VideoRecorderSessionHandler :
             return;
         }
 
-        try
+        // Stop any recording still running (the session recording, or a per-test recording left
+        // by a test that never finished) so ffmpeg isn't orphaned and its file is finalized.
+        string? leftover = await _recorder.StopAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
+
+        if (_granularity == VideoCaptureGranularity.PerTest)
         {
-            // Stop any recording still running (the session recording, or a per-test recording left
-            // by a test that never finished) so ffmpeg isn't orphaned and its file is finalized.
-            string? leftover = await _recorder.StopAsync(testSessionContext.CancellationToken).ConfigureAwait(false);
-
-            if (_granularity == VideoCaptureGranularity.PerTest)
+            // Per-test recordings were already published as each test finished. Only a leftover
+            // from an unfinished test (e.g. a cancelled run) remains.
+            if (leftover is not null)
             {
-                // Per-test recordings were already published as each test finished. Only a leftover
-                // from an unfinished test (e.g. a cancelled run) remains.
-                if (leftover is not null)
-                {
-                    await PublishArtifactAsync(leftover, "Screen recording (incomplete)", "Recording for a test that did not finish.").ConfigureAwait(false);
-                }
-
-                return;
+                await PublishArtifactAsync(leftover, "Screen recording (incomplete)", "Recording for a test that did not finish.").ConfigureAwait(false);
             }
 
-            bool keepRecordings = _persistMode == VideoRecorderPersistenceMode.Always || _anyTestFailed;
-            foreach (string file in _recorder.ProducedFiles)
-            {
-                if (keepRecordings)
-                {
-                    await PublishArtifactAsync(file, "Screen recording", "Video captured during the test run.").ConfigureAwait(false);
-                }
-                else
-                {
-                    DeleteQuietly(file);
-                }
-            }
+            return;
         }
-        finally
+
+        bool keepRecordings = _persistMode == VideoRecorderPersistenceMode.Always || _anyTestFailed;
+        foreach (string file in _recorder.ProducedFiles)
         {
-            VideoRecorder.ResetCurrent(_recorder);
+            if (keepRecordings)
+            {
+                await PublishArtifactAsync(file, "Screen recording", "Video captured during the test run.").ConfigureAwait(false);
+            }
+            else
+            {
+                DeleteQuietly(file);
+            }
         }
     }
 
     private string GranularityHint()
-        => _granularity switch
-        {
-            VideoCaptureGranularity.PerTest => "Recording each test automatically.",
-            VideoCaptureGranularity.PerSession => "Recording the whole session into one video.",
-            _ => "Call VideoRecorder.Current.Start()/StopAsync() from your tests.",
-        };
+        => _granularity == VideoCaptureGranularity.PerSession
+            ? "Recording the whole session into one video."
+            : "Recording each test automatically.";
 
     private async Task PublishArtifactAsync(string file, string displayName, string description)
     {
@@ -279,12 +259,9 @@ internal sealed class VideoRecorderSessionHandler :
         if (commandLineOptions.TryGetOptionArgumentList(VideoRecorderCommandLineProvider.GranularityOptionName, out string[]? granularityArguments)
             && granularityArguments.Length > 0)
         {
-            options.Granularity = granularityArguments[0].ToLowerInvariant() switch
-            {
-                VideoRecorderCommandLineProvider.GranularitySession => VideoCaptureGranularity.PerSession,
-                VideoRecorderCommandLineProvider.GranularityManual => VideoCaptureGranularity.Manual,
-                _ => VideoCaptureGranularity.PerTest,
-            };
+            options.Granularity = granularityArguments[0].Equals(VideoRecorderCommandLineProvider.GranularitySession, StringComparison.OrdinalIgnoreCase)
+                ? VideoCaptureGranularity.PerSession
+                : VideoCaptureGranularity.PerTest;
         }
 
         if (commandLineOptions.TryGetOptionArgumentList(VideoRecorderCommandLineProvider.ArgsOptionName, out string[]? recorderArguments)

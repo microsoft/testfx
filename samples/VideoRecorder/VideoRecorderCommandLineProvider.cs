@@ -25,11 +25,10 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
 
     public const string GranularityTest = "test";
     public const string GranularitySession = "session";
-    public const string GranularityManual = "manual";
 
     private static readonly string[] ModeValues = [ModeOnFailure, ModeAlways];
     private static readonly string[] SourceValues = [SourceScreen, SourceWindow];
-    private static readonly string[] GranularityValues = [GranularityTest, GranularitySession, GranularityManual];
+    private static readonly string[] GranularityValues = [GranularityTest, GranularitySession];
 
     public string Uid => nameof(VideoRecorderCommandLineProvider);
 
@@ -55,7 +54,7 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
             isHidden: false),
         new CommandLineOption(
             GranularityOptionName,
-            "How recordings are split: 'test' (default, one video per test), 'session' (one video for the whole run), or 'manual' (tests call VideoRecorder.Current.Start/StopAsync themselves). Requires --capture-video.",
+            "How recordings are split: 'test' (default, one video per test) or 'session' (one video for the whole run). Requires --capture-video.",
             ArgumentArity.ExactlyOne,
             isHidden: false),
         new CommandLineOption(
@@ -71,7 +70,7 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
             : commandOption.Name == SourceOptionName && arguments.Length > 0 && !SourceValues.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
                 ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{SourceOptionName}. Valid values are '{SourceScreen}' and '{SourceWindow}'.")
                 : commandOption.Name == GranularityOptionName && arguments.Length > 0 && !GranularityValues.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
-                    ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{GranularityOptionName}. Valid values are '{GranularityTest}', '{GranularitySession}' and '{GranularityManual}'.")
+                    ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{GranularityOptionName}. Valid values are '{GranularityTest}' and '{GranularitySession}'.")
                     : ValidationResult.ValidTask;
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)

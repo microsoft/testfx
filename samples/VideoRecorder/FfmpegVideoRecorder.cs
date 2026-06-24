@@ -4,11 +4,16 @@
 namespace Microsoft.Testing.Extensions.VideoRecorder;
 
 /// <summary>
-/// An <see cref="IVideoRecorder"/> that captures the screen by driving an external ffmpeg
-/// process. Recording is started/stopped by the caller; stopping sends <c>q</c> to ffmpeg's
-/// stdin so the container is finalized cleanly (killing the process can corrupt the file).
+/// Captures the screen by driving an external ffmpeg process. Recording is started/stopped by the
+/// <see cref="VideoRecorderSessionHandler"/>; stopping sends <c>q</c> to ffmpeg's stdin so the
+/// container is finalized cleanly (killing the process can corrupt the file).
 /// </summary>
-internal sealed class FfmpegVideoRecorder : IVideoRecorder
+/// <remarks>
+/// This is a single, serial recorder: only one recording can be active at a time.
+/// <see cref="Start"/> is best-effort and never throws — if ffmpeg is unavailable, a recording is
+/// already running, or the launch fails, it warns and is a no-op.
+/// </remarks>
+internal sealed class FfmpegVideoRecorder
 {
     private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(10);
 
@@ -34,17 +39,6 @@ internal sealed class FfmpegVideoRecorder : IVideoRecorder
     }
 
     public bool IsAvailable => _ffmpegPath is not null;
-
-    public bool IsRecording
-    {
-        get
-        {
-            lock (_gate)
-            {
-                return _process is { HasExited: false };
-            }
-        }
-    }
 
     /// <summary>
     /// Gets the path to the resolved ffmpeg executable, or <see langword="null"/> if none was found.
