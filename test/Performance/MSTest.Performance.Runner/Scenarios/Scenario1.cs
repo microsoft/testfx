@@ -36,7 +36,7 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
     public async Task<SingleProject> ExecuteAsync(NoInputOutput payload, IContext context)
     {
         Console.WriteLine($"Creating Scenario1 {_numberOfClass} classes, {_methodsPerClass} methods per class, ExecutionScope {_executionScope} with {_workers} workers");
-        var versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        var versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         string microsoftNETTestSdkVersion = versionsPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
         string msTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix);
 
