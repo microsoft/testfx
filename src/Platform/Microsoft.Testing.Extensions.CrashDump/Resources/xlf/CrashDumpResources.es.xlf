@@ -157,10 +157,10 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
-        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
+        <target state="translated">Controlar si se genera un archivo de secuencia que enumera las pruebas iniciadas y finalizadas durante la sesión de prueba junto con el volcado de memoria o el informe de bloqueos.
+El archivo permite identificar las pruebas que se estaban ejecutando en el momento del bloqueo sin tener que inspeccionar el volcado.
+Los valores válidos son "on" (valor predeterminado; también acepta "true", "enable", "1") o "off" (también acepta "false", "disable", "0").</target>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
