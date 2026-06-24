@@ -37,7 +37,7 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
     protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName)
         : this(
-            serviceProvider.GetConfiguration(),
+            (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetConfiguration(),
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetRequiredService<IFileSystem>(),
             serviceProvider.GetTestApplicationModuleInfo(),
