@@ -7,6 +7,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.As
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.FixtureType.get -> System.Type!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.ConditionBaseAttribute.GetIgnoreMessage(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, string! description) -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void

@@ -179,9 +179,7 @@ public sealed class MemberConditionAttribute : ConditionBaseAttribute
             }
         }
 
-        IgnoreMessage = mode == ConditionMode.Include
-            ? $"Test is only supported when ({FormatMemberList()}) on '{conditionType.FullName ?? conditionType.Name}' is true."
-            : $"Test is not supported when ({FormatMemberList()}) on '{conditionType.FullName ?? conditionType.Name}' is true.";
+        IgnoreMessage = GetIgnoreMessage(mode, $"when ({FormatMemberList()}) on '{conditionType.FullName ?? conditionType.Name}' is true.");
     }
 
     /// <summary>

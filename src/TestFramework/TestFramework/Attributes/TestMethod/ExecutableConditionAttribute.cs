@@ -134,9 +134,7 @@ public sealed class ExecutableConditionAttribute : ConditionBaseAttribute
         string predicate = _arguments.Length == 0
             ? $"executable '{executable}' is available on PATH"
             : $"command '{executable} {string.Join(" ", _arguments)}' succeeds";
-        IgnoreMessage = mode == ConditionMode.Include
-            ? $"Test is only supported when {predicate}"
-            : $"Test is not supported when {predicate}";
+        IgnoreMessage = GetIgnoreMessage(mode, $"when {predicate}");
     }
 
     /// <summary>

@@ -18,9 +18,7 @@ public sealed class CIConditionAttribute : ConditionBaseAttribute
     /// <param name="mode">Decides whether the test should be included or excluded in CI environments.</param>
     public CIConditionAttribute(ConditionMode mode)
         : base(mode)
-        => IgnoreMessage = mode == ConditionMode.Include
-            ? "Test is only supported in CI environments"
-            : "Test is not supported in CI environments";
+        => IgnoreMessage = GetIgnoreMessage(mode, "in CI environments");
 
     /// <inheritdoc />
     public override bool IsConditionMet => CIEnvironmentDetector.Instance.IsCIEnvironment();

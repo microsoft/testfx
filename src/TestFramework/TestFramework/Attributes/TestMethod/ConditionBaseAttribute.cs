@@ -45,4 +45,18 @@ public abstract class ConditionBaseAttribute : Attribute
     /// Gets a value indicating whether the condition is met. The implementation of this property shouldn't read the <see cref="Mode"/> property.
     /// </summary>
     public abstract bool IsConditionMet { get; }
+
+    /// <summary>
+    /// Builds the standard ignore message for a condition attribute.
+    /// </summary>
+    /// <param name="mode">The condition mode.</param>
+    /// <param name="description">A short phrase describing what is required, starting with a preposition such as "on", "in", or "when".</param>
+    /// <returns>
+    /// "Test is only supported {description}" when <paramref name="mode"/> is <see cref="ConditionMode.Include"/>,
+    /// or "Test is not supported {description}" when <paramref name="mode"/> is <see cref="ConditionMode.Exclude"/>.
+    /// </returns>
+    protected static string GetIgnoreMessage(ConditionMode mode, string description)
+        => mode == ConditionMode.Include
+            ? $"Test is only supported {description}"
+            : $"Test is not supported {description}";
 }

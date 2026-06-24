@@ -27,9 +27,7 @@ public sealed class ArchitectureConditionAttribute : ConditionBaseAttribute
         : base(mode)
     {
         _architectures = architectures;
-        IgnoreMessage = mode == ConditionMode.Include
-            ? $"Test is only supported on {architectures}"
-            : $"Test is not supported on {architectures}";
+        IgnoreMessage = GetIgnoreMessage(mode, $"on {architectures}");
     }
 
     /// <summary>
