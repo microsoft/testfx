@@ -26,7 +26,7 @@ Everything downstream only needs five things from the returned handle — `Id`, 
 - **Elevation**: run the test host as administrator (UAC) or as another user.
 - **Container / remote**: launch the host inside a container (`docker run`) or on a remote device over SSH/WinRM, then bridge the pipe.
 
-Today none of these is possible without forking the platform. The existing experimental `ITestHostExecutionOrchestrator` sits at the wrong layer (see [Alternatives](#alternatives)). This RFC adds the *minimal* hook at exactly the launch site.
+Today none of these is possible without forking the platform. The existing experimental `ITestHostExecutionOrchestrator` sits at the wrong layer (see [Alternatives](#alternatives-considered)). This RFC adds the *minimal* hook at exactly the launch site.
 
 ## Goals
 
