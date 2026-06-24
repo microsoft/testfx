@@ -49,7 +49,7 @@
 
     <!--
       Keep this package preview even in stabilized/official builds. It inherits VersionPrefix from
-      src/Platform/Directory.Build.props ($(TestingPlatformVersionPrefix)) and the repo 'preview' PreReleaseVersionLabel,
+      src/Platform/Directory.Build.props ($(TestingPlatformVersionPrefix)) and the repo-wide PreReleaseVersionLabel (eng/Versions.props),
       so it ships as <TestingPlatformVersionPrefix>-preview.* today. Without this, a stabilized MTP release
       (DotNetFinalVersionKind=release) would drop the suffix and publish a STABLE 'Internal' package - which we do not
       want while the dotnet test shared-source surface is still partial. Mirrors MSTest.SourceGeneration.
