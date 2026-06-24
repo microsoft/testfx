@@ -96,7 +96,9 @@ internal sealed class VideoRecorderSessionHandler :
             return;
         }
 
-        TestNodeStateProperty? state = update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+        // A node carries a single state property in practice; use FirstOrDefault rather than
+        // SingleOrDefault so a malformed producer can't throw out of the consumer pump.
+        TestNodeStateProperty? state = update.TestNode.Properties.OfType<TestNodeStateProperty>().FirstOrDefault();
         bool isFailure = state is FailedTestNodeStateProperty or ErrorTestNodeStateProperty or TimeoutTestNodeStateProperty;
         if (isFailure)
         {
@@ -112,12 +114,13 @@ internal sealed class VideoRecorderSessionHandler :
 
         if (state is InProgressTestNodeStateProperty)
         {
-            // Start recording this test. If one is already running (parallel execution), skip — a
-            // single screen recorder can only follow one test at a time.
-            if (_recordingOwnerTestUid is null)
+            // Start recording this test. If one is already running (parallel execution), or the
+            // recorder is unavailable (no ffmpeg), skip — a single screen recorder can only follow
+            // one test at a time. Only claim ownership once a recording is actually in flight.
+            if (_recordingOwnerTestUid is null && _recorder.IsAvailable)
             {
-                _recordingOwnerTestUid = testUid;
                 _recorder.Start(update.TestNode.DisplayName);
+                _recordingOwnerTestUid = testUid;
             }
 
             return;
@@ -128,6 +131,10 @@ internal sealed class VideoRecorderSessionHandler :
         if (isTerminal && _recordingOwnerTestUid == testUid)
         {
             _recordingOwnerTestUid = null;
+
+            // Awaiting here is deliberate: it serializes the stop before the next test's
+            // InProgress is consumed (the pump processes one message at a time), so the next
+            // Start() doesn't hit the "already in progress" skip. Do not make this fire-and-forget.
             string? file = await _recorder.StopAsync(cancellationToken).ConfigureAwait(false);
             if (file is null)
             {
@@ -181,8 +188,10 @@ internal sealed class VideoRecorderSessionHandler :
 
         if (_granularity == VideoCaptureGranularity.PerTest)
         {
-            // Per-test recordings were already published as each test finished. Only a leftover
-            // from an unfinished test (e.g. a cancelled run) remains.
+            // Per-test recordings were already published as each test finished. A leftover here is
+            // a recording for a test that never reached a terminal state (e.g. a cancelled run);
+            // keep it regardless of persist mode, since an unfinished run is itself an anomaly
+            // worth the evidence.
             if (leftover is not null)
             {
                 await PublishArtifactAsync(leftover, "Screen recording (incomplete)", "Recording for a test that did not finish.").ConfigureAwait(false);
@@ -191,6 +200,9 @@ internal sealed class VideoRecorderSessionHandler :
             return;
         }
 
+        // Per-session retention. The platform drains the data-consumer queue before invoking
+        // session-finishing handlers, so every test's terminal message (and thus _anyTestFailed)
+        // has already been observed by ConsumeAsync at this point.
         bool keepRecordings = _persistMode == VideoRecorderPersistenceMode.Always || _anyTestFailed;
         foreach (string file in _recorder.ProducedFiles)
         {

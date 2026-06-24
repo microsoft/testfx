@@ -73,8 +73,8 @@ public enum VideoCaptureSource
     Screen,
 
     /// <summary>
-    /// Only the current process window. Supported on Windows (via gdigrab <c>title=</c>);
-    /// falls back to full-screen capture on other platforms.
+    /// Only the current process window. Supported on Windows (gdigrab capturing the screen region
+    /// of the window); falls back to full-screen capture on other platforms.
     /// </summary>
     Window,
 }
@@ -124,9 +124,9 @@ public sealed class VideoRecorderOptions
 
     /// <summary>
     /// Gets or sets what is captured: the full screen (default) or only the current process
-    /// window. Window capture is supported on Windows (via gdigrab <c>title=</c>) and falls back
-    /// to full-screen capture elsewhere. Can be set on the command line with
-    /// <c>--capture-video-source</c>.
+    /// window. Window capture is supported on Windows (gdigrab capturing the screen region of the
+    /// current-process window) and falls back to full-screen capture elsewhere. Can be set on the
+    /// command line with <c>--capture-video-source</c>.
     /// </summary>
     public VideoCaptureSource Source { get; set; } = VideoCaptureSource.Screen;
 
