@@ -14,11 +14,9 @@ public class OutputTests : CLITestBase
     private const string TestAssetName = "OutputTestProject";
 
     [TestMethod]
-    [Ignore("Fails on CI.")]
     public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
 
     [TestMethod]
-    [Ignore("Fails on CI.")]
     public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
 
     private static async Task ValidateOutputForClassAsync(string className)
@@ -28,6 +26,15 @@ public class OutputTests : CLITestBase
 
         // Arrange
         string assemblyPath = GetAssetFullPath(TestAssetName);
+
+        // The parallel test workers are scheduled through Task.Run, so whether the tests actually overlap
+        // depends on the thread pool being able to hand out enough threads right away. On cold/slow CI
+        // agents the thread pool injects new worker threads slowly (roughly one every 500ms), so these
+        // short-lived tests can all finish before any real parallelism kicks in, which used to make the
+        // "tests ran in parallel" guard below flaky (hence the previous [Ignore("Fails on CI.")]).
+        // Raising the minimum number of threads guarantees the workers can start concurrently.
+        ThreadPool.GetMinThreads(out int minWorkerThreads, out int minCompletionPortThreads);
+        ThreadPool.SetMinThreads(Math.Max(minWorkerThreads, Environment.ProcessorCount + 4), minCompletionPortThreads);
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
@@ -42,7 +49,11 @@ public class OutputTests : CLITestBase
         // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
         DateTimeOffset firstEnd = testResults.Min(t => t.EndTime);
         bool someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
-        Assert.IsTrue(someStartedBeforeFirstEnded, "Tests must run in parallel, but there were no other tests that started, before the first one ended.");
+        Assert.IsTrue(
+            someStartedBeforeFirstEnded,
+            "Tests must run in parallel, but there were no other tests that started before the first one ended."
+            + Environment.NewLine
+            + string.Join(Environment.NewLine, testResults.Select(t => $"  {t.DisplayName}: start={t.StartTime:O} end={t.EndTime:O}")));
 
         ValidateOutputsAreNotMixed(testResults, "TestMethod1", ["TestMethod2", "TestMethod3"]);
         ValidateOutputsAreNotMixed(testResults, "TestMethod2", ["TestMethod1", "TestMethod3"]);
