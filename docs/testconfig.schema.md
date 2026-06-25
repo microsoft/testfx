@@ -5,8 +5,8 @@
 
 It covers:
 
-- the MSTest section (`mstest:*` — `timeout`, `execution`, `parallelism`, `output`, `deployment`,
-  `assemblyResolution`, `orderTestsByNameInClass`);
+- the MSTest section (`mstest:*` — `timeout`, `execution` (including `orderTestsByNameInClass`),
+  `parallelism`, `output`, `deployment`, `assemblyResolution`);
 - the Microsoft.Testing.Platform host section (`platformOptions:*`);
 - the `environmentVariables` section.
 

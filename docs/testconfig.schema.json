@@ -122,6 +122,10 @@
             "collectSourceInformation": {
               "type": "boolean",
               "description": "When true, source file and line information is collected during discovery. Defaults to true."
+            },
+            "orderTestsByNameInClass": {
+              "type": "boolean",
+              "description": "When true, tests within a class run in alphabetical order by name. Defaults to false. Mutually exclusive with 'randomizeTestOrder'."
             }
           }
         },
@@ -197,7 +201,8 @@
         },
         "orderTestsByNameInClass": {
           "type": "boolean",
-          "description": "When true, tests within a class run in alphabetical order by name. Defaults to false. Mutually exclusive with 'execution.randomizeTestOrder'."
+          "deprecated": true,
+          "description": "Deprecated. Use 'execution.orderTestsByNameInClass' instead. When true, tests within a class run in alphabetical order by name. Defaults to false. Mutually exclusive with 'execution.randomizeTestOrder'."
         }
       }
     },

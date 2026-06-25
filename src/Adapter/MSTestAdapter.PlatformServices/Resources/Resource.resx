@@ -371,6 +371,10 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</value>
     <comment>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</comment>
   </data>
+  <data name="DeprecatedFlatOrderTestsByNameInClassKey" xml:space="preserve">
+    <value>The 'mstest:orderTestsByNameInClass' configuration key is deprecated. Use 'mstest:execution:orderTestsByNameInClass' instead.</value>
+    <comment>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</comment>
+  </data>
   <data name="UTA_AssemblyCleanupMethodWasUnsuccesful" xml:space="preserve">
     <value>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</value>
     <comment>{0} is the declaring type name. {1} is the assembly cleanup method name. {2} is the error message. {3} is the stack trace.</comment>

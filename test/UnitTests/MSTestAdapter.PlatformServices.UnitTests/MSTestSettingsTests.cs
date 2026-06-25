@@ -1203,7 +1203,7 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:mapNotRunnableToFailed", "true" },
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
-            { "mstest:orderTestsByNameInClass", "true" },
+            { "mstest:execution:orderTestsByNameInClass", "true" },
             { "mstest:execution:randomizeTestOrder", "true" },
             { "mstest:execution:randomTestOrderSeed", "-12345" },
             { "mstest:output:captureTrace", "true" },
@@ -1240,6 +1240,50 @@ public class MSTestSettingsTests : TestContainer
         settings.DisableParallelization.Should().BeFalse();
         settings.ParallelizationWorkers.Should().Be(4);
         settings.ParallelizationScope.Should().Be(ExecutionScope.ClassLevel);
+    }
+
+    public void ConfigJson_WithDeprecatedFlatOrderTestsByNameInClassKey_ValueIsSetAndWarningIsEmitted()
+    {
+        // Arrange - using the deprecated flat key
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "The 'mstest:orderTestsByNameInClass' configuration key is deprecated. Use 'mstest:execution:orderTestsByNameInClass' instead."), Times.Once);
+    }
+
+    public void ConfigJson_WithExecutionOrderTestsByNameInClassKey_ValueIsSetAndNoWarningIsEmitted()
+    {
+        // Arrange - using the new grouped key
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:execution:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "The 'mstest:orderTestsByNameInClass' configuration key is deprecated. Use 'mstest:execution:orderTestsByNameInClass' instead."), Times.Never);
     }
 
     public void ConfigJson_Parllelism_Enabled_True() => ConfigJson_Parllelism_Enabled_Core(true);
