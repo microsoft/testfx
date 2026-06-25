@@ -108,7 +108,7 @@ internal static class TaskExtensions
                         // Observe the exception
                     }
                 },
-                cancellationToken);
+                TaskScheduler.Default);
         }
 
         // Don't create a timer if the task is already completed
@@ -147,7 +147,7 @@ internal static class TaskExtensions
                         // Observe the exception
                     }
                 },
-                cancellationToken);
+                TaskScheduler.Default);
         }
 
         // Don't create a timer if the task is already completed
