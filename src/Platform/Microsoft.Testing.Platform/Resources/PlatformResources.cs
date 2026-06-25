@@ -43,6 +43,8 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineServerInvalidArgument => GetResourceString("PlatformCommandLineServerInvalidArgument");
 
+    internal static string @PlatformCommandLineZeroTestsPolicyInvalidArgument => GetResourceString("PlatformCommandLineZeroTestsPolicyInvalidArgument");
+
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
 
     internal static string @PlatformCommandLineExitOnProcessExitSingleArgument => GetResourceString("PlatformCommandLineExitOnProcessExitSingleArgument");

@@ -206,7 +206,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
-        var runSummaryInfoRequest = new RunSummaryInfoRequest(_totalTests, _totalFailedTests, _totalPassedTests, _totalSkippedTests, duration);
+        bool allowSkipped = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions) == ZeroTestsPolicy.AllowSkipped;
+        var runSummaryInfoRequest = new RunSummaryInfoRequest(_totalTests, _totalFailedTests, _totalPassedTests, _totalSkippedTests, duration, allowSkipped);
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<RunSummaryInfoRequest, VoidResponse>(runSummaryInfoRequest, cancellationToken).ConfigureAwait(false);
     }
 

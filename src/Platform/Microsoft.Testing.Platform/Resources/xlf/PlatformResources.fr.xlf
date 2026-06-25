@@ -658,6 +658,18 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
 Prend un argument correspondant à une valeur de temps avec un suffixe d’unité explicite. Les suffixes acceptés sont 'ms'/'mil(s)'/'millisecond(s)', 's'/'sec(s)'/'second(s)', 'm'/'min(s)'/'minute(s)', 'h'/'hour(s)' et 'd'/'day(s)', par exemple '500ms', '5400s', '90m', '1.5h', '1d'.</target>
         <note>{Locked="'ms'"}{Locked="'mil(s)'"}{Locked="'millisecond(s)'"}{Locked="'s'"}{Locked="'sec(s)'"}{Locked="'second(s)'"}{Locked="'m'"}{Locked="'min(s)'"}{Locked="'minute(s)'"}{Locked="'h'"}{Locked="'hour(s)'"}{Locked="'d'"}{Locked="'day(s)'"}{Locked="'500ms'"}{Locked="'5400s'"}{Locked="'90m'"}{Locked="'1.5h'"}{Locked="'1d'"}</note>
       </trans-unit>
+      <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
+        <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
+        <target state="new">Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</target>
+        <note>{Locked="--zero-tests-policy"}</note>
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
+        <source>Specifies how a run that executed no tests is treated.
+Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
+        <target state="new">Specifies how a run that executed no tests is treated.
+Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</target>
+        <note>{Locked="strict"}{Locked="allow-skipped"}</note>
+      </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
         <target state="translated">Appuyez de nouveau sur Ctrl+C pour forcer la fermeture.</target>
