@@ -91,26 +91,31 @@ internal static class TaskExtensions
     }
 #endif
 
-    // We always observe the task's exception because usually we're no more interested in the result of the task
-    public static async Task<T> WithCancellationAsync<T>(this Task<T> task, CancellationToken cancellationToken)
+    // We observe by default because usually we're no more interested in the result of the task.
+    // NOTE: 'observeException' must stay in the signature to keep binary compatibility with already
+    // shipped extensions (e.g. HangDump/TrxReport) that call this internal helper across assemblies.
+    public static async Task<T> WithCancellationAsync<T>(this Task<T> task, CancellationToken cancellationToken, bool observeException = true)
     {
-        // Fire-and-forget observer that swallows a later fault so it doesn't surface as an
-        // UnobservedTaskException. Scheduled on TaskScheduler.Default on purpose: passing
-        // 'cancellationToken' to ContinueWith would cancel this observer when the token fires,
-        // leaving a post-cancellation fault unobserved (https://github.com/microsoft/testfx/issues/6907).
-        _ = task.ContinueWith(
-            async task =>
-            {
-                try
+        if (observeException)
+        {
+            // Fire-and-forget observer that swallows a later fault so it doesn't surface as an
+            // UnobservedTaskException. Scheduled on TaskScheduler.Default on purpose: passing
+            // 'cancellationToken' to ContinueWith would cancel this observer when the token fires,
+            // leaving a post-cancellation fault unobserved (https://github.com/microsoft/testfx/issues/6907).
+            _ = task.ContinueWith(
+                async task =>
                 {
-                    await task.ConfigureAwait(false);
-                }
-                catch (Exception)
-                {
-                    // Observe the exception
-                }
-            },
-            TaskScheduler.Default);
+                    try
+                    {
+                        await task.ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        // Observe the exception
+                    }
+                },
+                TaskScheduler.Default);
+        }
 
         // Don't create a timer if the task is already completed
         if (task.IsCompleted)
@@ -131,26 +136,31 @@ internal static class TaskExtensions
         }
     }
 
-    // We always observe the task's exception because usually we're no more interested in the result of the task
-    public static async Task WithCancellationAsync(this Task task, CancellationToken cancellationToken)
+    // We observe by default because usually we're no more interested in the result of the task.
+    // NOTE: 'observeException' must stay in the signature to keep binary compatibility with already
+    // shipped extensions (e.g. HangDump/TrxReport) that call this internal helper across assemblies.
+    public static async Task WithCancellationAsync(this Task task, CancellationToken cancellationToken, bool observeException = true)
     {
-        // Fire-and-forget observer that swallows a later fault so it doesn't surface as an
-        // UnobservedTaskException. Scheduled on TaskScheduler.Default on purpose: passing
-        // 'cancellationToken' to ContinueWith would cancel this observer when the token fires,
-        // leaving a post-cancellation fault unobserved (https://github.com/microsoft/testfx/issues/6907).
-        _ = task.ContinueWith(
-            async task =>
-            {
-                try
+        if (observeException)
+        {
+            // Fire-and-forget observer that swallows a later fault so it doesn't surface as an
+            // UnobservedTaskException. Scheduled on TaskScheduler.Default on purpose: passing
+            // 'cancellationToken' to ContinueWith would cancel this observer when the token fires,
+            // leaving a post-cancellation fault unobserved (https://github.com/microsoft/testfx/issues/6907).
+            _ = task.ContinueWith(
+                async task =>
                 {
-                    await task.ConfigureAwait(false);
-                }
-                catch (Exception)
-                {
-                    // Observe the exception
-                }
-            },
-            TaskScheduler.Default);
+                    try
+                    {
+                        await task.ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        // Observe the exception
+                    }
+                },
+                TaskScheduler.Default);
+        }
 
         // Don't create a timer if the task is already completed
         if (task.IsCompleted)
@@ -162,25 +172,30 @@ internal static class TaskExtensions
         await task.WaitAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    // We always observe the task's exception because usually we're no more interested in the result of the task
-    public static async Task TimeoutAfterAsync(this Task task, TimeSpan timeout,
+    // We observe by default because usually we're no more interested in the result of the task.
+    // NOTE: 'observeException' must stay in the signature to keep binary compatibility with already
+    // shipped extensions (e.g. HangDump/TrxReport) that call this internal helper across assemblies.
+    public static async Task TimeoutAfterAsync(this Task task, TimeSpan timeout, bool observeException = true,
        [CallerFilePath] string? filePath = null,
        [CallerLineNumber] int lineNumber = default)
     {
-        // Fire-and-forget observer that swallows a later fault so it doesn't surface as an UnobservedTaskException.
-        _ = task.ContinueWith(
-            async task =>
-            {
-                try
+        if (observeException)
+        {
+            // Fire-and-forget observer that swallows a later fault so it doesn't surface as an UnobservedTaskException.
+            _ = task.ContinueWith(
+                async task =>
                 {
-                    await task.ConfigureAwait(false);
-                }
-                catch (Exception)
-                {
-                    // Observe the exception
-                }
-            },
-            TaskScheduler.Default);
+                    try
+                    {
+                        await task.ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        // Observe the exception
+                    }
+                },
+                TaskScheduler.Default);
+        }
 
         // Don't create a timer if the task is already completed
         if (task.IsCompleted)
@@ -199,28 +214,33 @@ internal static class TaskExtensions
         }
     }
 
-    // We always observe the task's exception because usually we're no more interested in the result of the task
-    public static async Task TimeoutAfterAsync(this Task task, TimeSpan timeout, CancellationToken token,
+    // We observe by default because usually we're no more interested in the result of the task.
+    // NOTE: 'observeException' must stay in the signature to keep binary compatibility with already
+    // shipped extensions (e.g. HangDump/TrxReport) that call this internal helper across assemblies.
+    public static async Task TimeoutAfterAsync(this Task task, TimeSpan timeout, CancellationToken token, bool observeException = true,
         [CallerFilePath] string? filePath = null,
         [CallerLineNumber] int lineNumber = default)
     {
-        // Fire-and-forget observer that swallows a later fault so it doesn't surface as an
-        // UnobservedTaskException. Scheduled on TaskScheduler.Default on purpose: passing 'token'
-        // to ContinueWith would cancel this observer when the token fires, leaving a
-        // post-cancellation fault unobserved (https://github.com/microsoft/testfx/issues/6907).
-        _ = task.ContinueWith(
-            async task =>
-            {
-                try
+        if (observeException)
+        {
+            // Fire-and-forget observer that swallows a later fault so it doesn't surface as an
+            // UnobservedTaskException. Scheduled on TaskScheduler.Default on purpose: passing 'token'
+            // to ContinueWith would cancel this observer when the token fires, leaving a
+            // post-cancellation fault unobserved (https://github.com/microsoft/testfx/issues/6907).
+            _ = task.ContinueWith(
+                async task =>
                 {
-                    await task.ConfigureAwait(false);
-                }
-                catch (Exception)
-                {
-                    // Observe the exception
-                }
-            },
-            TaskScheduler.Default);
+                    try
+                    {
+                        await task.ConfigureAwait(false);
+                    }
+                    catch (Exception)
+                    {
+                        // Observe the exception
+                    }
+                },
+                TaskScheduler.Default);
+        }
 
         // Don't create a timer if the task is already completed
         if (task.IsCompleted)
