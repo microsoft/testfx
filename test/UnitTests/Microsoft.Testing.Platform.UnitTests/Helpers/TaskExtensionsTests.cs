@@ -83,10 +83,10 @@ public sealed class TaskExtensionsTests
                     waitException.Set();
                     throw new InvalidOperationException();
                 }, TestContext.CancellationToken).WithCancellationAsync(token));
-#if !NETFRAMEWORK // Polyfill bug in Task.WaitAsync implementation :/
         Assert.AreEqual(token, ex.CancellationToken);
-#endif
-        waitException.WaitOne();
+        Assert.IsTrue(
+            waitException.WaitOne(TimeSpan.FromSeconds(30)),
+            "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     [TestMethod]
@@ -111,7 +111,9 @@ public sealed class TaskExtensionsTests
                 }
             }).WithCancellationAsync(token));
         Assert.AreEqual(token, ex.CancellationToken);
-        waitException.WaitOne();
+        Assert.IsTrue(
+            waitException.WaitOne(TimeSpan.FromSeconds(30)),
+            "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     private static async Task<string> DoSomething()

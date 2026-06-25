@@ -54,7 +54,7 @@ internal sealed partial class ServerModeManager
 #if NETCOREAPP
                 await client.ConnectAsync(host: _host, port: _port, cancellationToken).ConfigureAwait(false);
 #else
-                await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken, observeException: true).ConfigureAwait(false);
+                await client.ConnectAsync(host: _host, port: _port).WithCancellationAsync(cancellationToken).ConfigureAwait(false);
 #endif
                 // On NETCOREAPP, the ConnectAsync overload accepting a CancellationToken
                 // delegates to SocketAsyncEventArgs, whose ProcessIOCPResult method
