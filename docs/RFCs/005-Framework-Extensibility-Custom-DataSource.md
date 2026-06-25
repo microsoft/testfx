@@ -171,7 +171,7 @@ public void FoldedTest(int a, int b, int c)
 }
 ```
 
-The default strategy can be set for the whole assembly with `[assembly: TestDataSourceOptions(UnfoldingStrategy = TestDataSourceUnfoldingStrategy.Fold)]`.
+The default strategy can be set for the whole assembly with `[assembly: TestDataSourceOptions(TestDataSourceUnfoldingStrategy.Fold)]`.
 
 ## Unresolved questions
 

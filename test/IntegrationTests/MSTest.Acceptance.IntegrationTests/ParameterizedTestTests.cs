@@ -60,7 +60,7 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
         testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 12);
         // If this assert fails with difference showing only missing double quotes, then we are using the wrong value
         // of DynamicDataAttribute.TestIdGenerationStrategy.
         // If the failure is .NET Framework only, then it's very likely to be linked to AppDomain.
@@ -75,8 +75,6 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
               Ignore reason for second row - TestDataRowSingleParameterUnfolded
             skipped Display name for third row - TestDataRowSingleParameterUnfolded \(\d+ms\)
               Ignore reason for third row - TestDataRowSingleParameterUnfolded
-            skipped Display name for fourth row - TestDataRowSingleParameterUnfolded \(\d+ms\)
-              Ignore reason for third row - TestDataRowSingleParameterUnfolded
             skipped TestDataRowTwoParametersFolded \("TestDataRowTwoParametersFolded - Ignoring1","Ignoring2"\) \(\d+ms\)
               Ignore reason for second row - TestDataRowTwoParametersFolded
             skipped Display name for third row - TestDataRowTwoParametersFolded \(\d+ms\)
@@ -85,8 +83,6 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
               Ignore reason for second row - TestDataRowTwoParametersUnfolded
             skipped Display name for third row - TestDataRowTwoParametersUnfolded \(\d+ms\)
               Ignore reason for third row - TestDataRowTwoParametersUnfolded
-            skipped Display name for fourth row - TestDataRowTwoParametersUnfolded \(\d+ms\)
-              Ignore reason for third row - TestDataRowTwoParametersUnfolded
             skipped TestDataRowParameterIsTupleFolded \(\(TestDataRowParameterIsTupleFolded - Ignoring1, Ignoring2\)\) \(\d+ms\)
               Ignore reason for second row - TestDataRowParameterIsTupleFolded
             skipped Display name for third row - TestDataRowParameterIsTupleFolded \(\d+ms\)
@@ -94,8 +90,6 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             skipped TestDataRowParameterIsTupleUnfolded \(\(TestDataRowParameterIsTupleUnfolded - Ignoring1, Ignoring2\)\) \(\d+ms\)
               Ignore reason for second row - TestDataRowParameterIsTupleUnfolded
             skipped Display name for third row - TestDataRowParameterIsTupleUnfolded \(\d+ms\)
-              Ignore reason for third row - TestDataRowParameterIsTupleUnfolded
-            skipped Display name for fourth row - TestDataRowParameterIsTupleUnfolded \(\d+ms\)
               Ignore reason for third row - TestDataRowParameterIsTupleUnfolded
             """);
     }

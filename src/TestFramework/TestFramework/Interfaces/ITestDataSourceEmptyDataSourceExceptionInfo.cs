@@ -13,7 +13,7 @@ public interface ITestDataSourceEmptyDataSourceExceptionInfo
 {
     /// <summary>
     /// Returns the method/property name accessed by this data source.
-    /// For example, for <see cref="DynamicDataAttribute"/>, that will be attribute argument.
+    /// For example, for <see cref="DynamicDataAttribute"/>, that will be the attribute argument.
     /// </summary>
     /// <returns>The name of the member that produced the (empty) data, or <see langword="null"/> if unknown.</returns>
     string? GetPropertyOrMethodNameForEmptyDataSourceException();
