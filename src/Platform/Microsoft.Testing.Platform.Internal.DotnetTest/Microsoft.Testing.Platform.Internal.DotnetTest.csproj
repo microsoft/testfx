@@ -41,11 +41,20 @@
     <DevelopmentDependency>true</DevelopmentDependency>
 
     <!--
-      IsShipping=false keeps this package OUT of nuget.org and in the internal (NonShipping) feed used for cross-repo
-      dependency flow (dotnet/sdk). NOTE: the exact internal-feed shipping mechanism still needs confirmation with
-      the Arcade team (see PR discussion).
+      IsShipping=true publishes this package (signed) on the same train as the rest of Microsoft.Testing.Platform so
+      it can flow to dotnet/sdk via the normal dependency flow. The 'Internal' in the name plus the always-preview
+      version (see SuppressFinalPackageVersion below) make clear it is an implementation detail, NOT a public API.
     -->
-    <IsShipping>false</IsShipping>
+    <IsShipping>true</IsShipping>
+
+    <!--
+      Keep this package preview even in stabilized/official builds. It inherits VersionPrefix from
+      src/Platform/Directory.Build.props ($(TestingPlatformVersionPrefix)) and the repo-wide PreReleaseVersionLabel (eng/Versions.props),
+      so it ships as <TestingPlatformVersionPrefix>-preview.* today. Without this, a stabilized MTP release
+      (DotNetFinalVersionKind=release) would drop the suffix and publish a STABLE 'Internal' package - which we do not
+      want while the dotnet test shared-source surface is still partial. Mirrors MSTest.SourceGeneration.
+    -->
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
 
     <!-- NU5128: source-only package has no lib/ assembly, only contentFiles. -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
