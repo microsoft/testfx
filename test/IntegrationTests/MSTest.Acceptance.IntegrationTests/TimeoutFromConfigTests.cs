@@ -64,12 +64,12 @@ public sealed class TimeoutFromConfigTests : AcceptanceTestBase<TimeoutFromConfi
     private async Task RunAndAssertFromConfigAsync(string tfm, string entryKind)
     {
         const int timeoutValue = 300;
-        string configKey = InfoByKind[entryKind].ConfigKeyName;
+        var info = InfoByKind[entryKind];
         string testConfig = $$"""
 {
   "mstest": {
     "timeout": {
-      "{{configKey}}": {{timeoutValue}}
+      "{{info.ConfigKeyName}}": {{timeoutValue}}
     }
   }
 }
@@ -79,8 +79,8 @@ public sealed class TimeoutFromConfigTests : AcceptanceTestBase<TimeoutFromConfi
         string testConfigFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.json");
         File.WriteAllText(testConfigFilePath, testConfig);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--config-file \"{testConfigFilePath}\"", environmentVariables: new() { [$"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}"] = "1" }, cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after {timeoutValue}ms");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--config-file \"{testConfigFilePath}\"", environmentVariables: new() { [$"TIMEOUT_{info.EnvVarSuffix}"] = "1" }, cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContains($"{info.Prefix} method '{info.MethodFullName}' timed out after {timeoutValue}ms");
     }
 
     public sealed class TestAssetFixture : TestAssetFixtureBase
