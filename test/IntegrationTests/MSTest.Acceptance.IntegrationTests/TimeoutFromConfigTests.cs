@@ -61,7 +61,7 @@ public sealed class TimeoutFromConfigTests : AcceptanceTestBase<TimeoutFromConfi
     public async Task TestCleanup_WhenTimeoutExpires_FromConfig_TestCleanupIsCanceled(string tfm)
         => await RunAndAssertFromConfigAsync(tfm, "testCleanup");
 
-    private static async Task RunAndAssertFromConfigAsync(string tfm, string entryKind)
+    private async Task RunAndAssertFromConfigAsync(string tfm, string entryKind)
     {
         const int timeoutValue = 300;
         string configKey = InfoByKind[entryKind].ConfigKeyName;
@@ -79,7 +79,7 @@ public sealed class TimeoutFromConfigTests : AcceptanceTestBase<TimeoutFromConfi
         string testConfigFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.json");
         File.WriteAllText(testConfigFilePath, testConfig);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--config-file {testConfigFilePath}", environmentVariables: new() { [$"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}"] = "1" });
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--config-file \"{testConfigFilePath}\"", environmentVariables: new() { [$"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}"] = "1" }, cancellationToken: TestContext.CancellationToken);
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after {timeoutValue}ms");
     }
 
@@ -125,16 +125,7 @@ public class TestClassBase
     [ClassInitialize(inheritanceBehavior: InheritanceBehavior.BeforeEachDerivedClass)]
     public static async Task ClassInitBase(TestContext testContext)
     {
-        if (Environment.GetEnvironmentVariable("TESTCONTEXT_CANCEL_BASE_CLASSINIT") == "1")
-        {
-            testContext.CancellationTokenSource.Cancel();
-            await Task.Delay(10_000);
-        }
-        else if (Environment.GetEnvironmentVariable("LONG_WAIT_BASE_CLASSINIT") == "1")
-        {
-            await Task.Delay(10_000);
-        }
-        else if (Environment.GetEnvironmentVariable("TIMEOUT_BASE_CLASSINIT") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_BASE_CLASSINIT") == "1")
         {
             await Task.Delay(10_000, testContext.CancellationTokenSource.Token);
         }
@@ -148,7 +139,7 @@ public class TestClassBase
     [ClassCleanup(inheritanceBehavior: InheritanceBehavior.BeforeEachDerivedClass)]
     public static async Task ClassCleanupBase()
     {
-        if (Environment.GetEnvironmentVariable("LONG_WAIT_BASE_CLASSCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_BASE_CLASSCLEANUP") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_BASE_CLASSCLEANUP") == "1")
         {
             await Task.Delay(10_000);
         }
@@ -167,16 +158,7 @@ public class TestClass : TestClassBase
     [AssemblyInitialize]
     public static async Task AssemblyInit(TestContext testContext)
     {
-        if (Environment.GetEnvironmentVariable("TESTCONTEXT_CANCEL_ASSEMBLYINIT") == "1")
-        {
-            testContext.CancellationTokenSource.Cancel();
-            await Task.Delay(10_000);
-        }
-        else if (Environment.GetEnvironmentVariable("LONG_WAIT_ASSEMBLYINIT") == "1")
-        {
-            await Task.Delay(10_000);
-        }
-        else if (Environment.GetEnvironmentVariable("TIMEOUT_ASSEMBLYINIT") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_ASSEMBLYINIT") == "1")
         {
             await Task.Delay(60_000, testContext.CancellationTokenSource.Token);
         }
@@ -190,7 +172,7 @@ public class TestClass : TestClassBase
     [AssemblyCleanup]
     public static async Task AssemblyCleanupMethod()
     {
-        if (Environment.GetEnvironmentVariable("LONG_WAIT_ASSEMBLYCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_ASSEMBLYCLEANUP") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_ASSEMBLYCLEANUP") == "1")
         {
             await Task.Delay(10_000);
         }
@@ -204,16 +186,7 @@ public class TestClass : TestClassBase
     [ClassInitialize]
     public static async Task ClassInit(TestContext testContext)
     {
-        if (Environment.GetEnvironmentVariable("TESTCONTEXT_CANCEL_CLASSINIT") == "1")
-        {
-            testContext.CancellationTokenSource.Cancel();
-            await Task.Delay(10_000);
-        }
-        else if (Environment.GetEnvironmentVariable("LONG_WAIT_CLASSINIT") == "1")
-        {
-            await Task.Delay(10_000);
-        }
-        else if (Environment.GetEnvironmentVariable("TIMEOUT_CLASSINIT") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_CLASSINIT") == "1")
         {
             await Task.Delay(60_000, testContext.CancellationTokenSource.Token);
         }
@@ -227,7 +200,7 @@ public class TestClass : TestClassBase
     [ClassCleanup]
     public static async Task ClassCleanupMethod()
     {
-        if (Environment.GetEnvironmentVariable("LONG_WAIT_CLASSCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_CLASSCLEANUP") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_CLASSCLEANUP") == "1")
         {
             await Task.Delay(10_000);
         }
@@ -241,7 +214,7 @@ public class TestClass : TestClassBase
     [TestInitialize]
     public async Task TestInit()
     {
-        if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTINIT") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_TESTINIT") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_TESTINIT") == "1")
         {
             await Task.Delay(10_000);
         }
@@ -255,7 +228,7 @@ public class TestClass : TestClassBase
     [TestCleanup]
     public async Task TestCleanupMethod()
     {
-        if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_TESTCLEANUP") == "1")
+        if (Environment.GetEnvironmentVariable("TIMEOUT_TESTCLEANUP") == "1")
         {
             await Task.Delay(10_000);
         }
