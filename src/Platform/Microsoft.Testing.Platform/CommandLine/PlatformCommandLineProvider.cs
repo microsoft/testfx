@@ -165,10 +165,11 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         }
 
         if (commandOption.Name == ZeroTestsPolicyOptionKey
-            && !ZeroTestsPolicyStrictArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
-            && !ZeroTestsPolicyAllowSkippedArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase))
+            && arguments is [string zeroTestsPolicyArgument]
+            && !ZeroTestsPolicyStrictArgument.Equals(zeroTestsPolicyArgument, StringComparison.OrdinalIgnoreCase)
+            && !ZeroTestsPolicyAllowSkippedArgument.Equals(zeroTestsPolicyArgument, StringComparison.OrdinalIgnoreCase))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineZeroTestsPolicyInvalidArgument, arguments[0], SupportedZeroTestsPolicyValues));
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineZeroTestsPolicyInvalidArgument, zeroTestsPolicyArgument, SupportedZeroTestsPolicyValues));
         }
 
         // Now validate the minimum expected tests option

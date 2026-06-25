@@ -11,14 +11,14 @@ internal enum ZeroTestsPolicy
 {
     /// <summary>
     /// Skipped tests count as tests that ran. Only a run where no test was discovered at all yields
-    /// <see cref="Helpers.ExitCode.ZeroTests"/> (8); an all-skipped run is considered successful. This is the default.
+    /// <see cref="Microsoft.Testing.Platform.Helpers.ExitCode.ZeroTests"/> (8); an all-skipped run is considered successful. This is the default.
     /// </summary>
     AllowSkipped,
 
     /// <summary>
     /// A run is considered to have run zero tests when no test was executed, treating skipped tests
     /// as if they had not run. An all-skipped (or truly empty) run therefore yields
-    /// <see cref="Helpers.ExitCode.ZeroTests"/> (8).
+    /// <see cref="Microsoft.Testing.Platform.Helpers.ExitCode.ZeroTests"/> (8).
     /// </summary>
     Strict,
 }
