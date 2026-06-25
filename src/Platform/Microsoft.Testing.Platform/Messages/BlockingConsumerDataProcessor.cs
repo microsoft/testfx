@@ -67,16 +67,13 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
         // disposed: acquiring the single permit guarantees no consumer is currently executing, and we
         // release it immediately afterwards. The message bus marks itself disabled before calling this,
         // so no new data can reach this processor while we wait.
-        try
-        {
-            await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
-        {
-            // The application is shutting down. Nothing left to wait for.
-            return;
-        }
-
+        //
+        // We intentionally wait without the cancellation token: an in-flight consumption already
+        // receives the token and will unwind promptly on shutdown, but we must still wait for it to
+        // release the permit before Dispose runs to avoid an ObjectDisposedException on the release.
+        // This mirrors AsyncConsumerDataProcessor.CompleteAddingAsync, which unconditionally awaits its
+        // consume task on every path.
+        await _semaphore.WaitAsync().ConfigureAwait(false);
         _semaphore.Release();
     }
 
