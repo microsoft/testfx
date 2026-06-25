@@ -35,6 +35,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add Span\<T> and Memory\<T> overloads to Assert.HasCount and extend MSTEST0037 coverage by @Evangelink in [#9176](https://github.com/microsoft/testfx/pull/9176)
 * Add [ArchitectureConditionAttribute] to gate tests by process architecture by @Evangelink in [#9233](https://github.com/microsoft/testfx/pull/9233)
 * Add MSTEST0071 analyzer and code fix for redundant test method display name by @Evangelink in [#9272](https://github.com/microsoft/testfx/pull/9272)
+* Add [ExecutableConditionAttribute] to conditionally run tests based on tool availability by @Evangelink in [#9369](https://github.com/microsoft/testfx/pull/9369)
 
 ### Fixed
 

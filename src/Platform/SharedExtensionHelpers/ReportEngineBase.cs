@@ -54,7 +54,7 @@ internal abstract class ReportEngineBase
         _cancellationToken = cancellationToken;
     }
 
-    protected static string GetProvidedFileName(string[]? providedFileName)
+    internal static string GetProvidedFileName(string[]? providedFileName)
         => providedFileName is { Length: > 0 }
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
@@ -70,12 +70,15 @@ internal abstract class ReportEngineBase
     }
 
     protected string BuildDefaultFileName(string extension)
+        => BuildDefaultFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), extension);
+
+    internal static string BuildDefaultFileName(string testApplicationModule, string extension)
     {
         // Deterministic <asm>_<tfm>_<arch>.<extension> shape — discoverable across
         // reruns and multi-target/multi-arch matrices. A second run into the same
         // TestResults folder overwrites the previous file (with a warning), matching
         // the behavior of an explicitly-provided file name.
-        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string moduleName = Path.GetFileNameWithoutExtension(testApplicationModule);
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.{extension}";

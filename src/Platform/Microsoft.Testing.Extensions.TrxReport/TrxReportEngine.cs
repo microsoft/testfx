@@ -154,9 +154,10 @@ internal sealed partial class TrxReportEngine
             // contain path separators, drive letters or UNC prefixes. Invalid characters in the
             // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
             // the OS and will surface as an IOException at file creation time.
+            string template = ReportEngineBase.GetProvidedFileName(fileName);
             string processName = Path.GetFileNameWithoutExtension(testAppModule);
             string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-            reportFileName = ReportFileNameHelper.ResolveAndSanitize(fileName[0], processName, processId, _clock.UtcNow);
+            reportFileName = ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
         }
         else
         {
@@ -164,10 +165,7 @@ internal sealed partial class TrxReportEngine
             // discoverable and multi-target/multi-arch matrices don't collide on disk. A second
             // run into the same TestResults folder overwrites the previous file (with a warning),
             // matching the behavior of an explicitly-provided file name.
-            string asm = Path.GetFileNameWithoutExtension(testAppModule);
-            string tfm = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
-            string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-            reportFileName = ReportFileNameSanitizer.ReplaceInvalidFileNameChars($"{asm}_{tfm}_{arch}.trx");
+            reportFileName = ReportEngineBase.BuildDefaultFileName(testAppModule, "trx");
         }
 
         string outputDirectory = _configuration.GetTestResultDirectory();
