@@ -115,34 +115,49 @@ public abstract class AcceptanceTestBase
     }
 
     /// <summary>
-    /// Gets the metadata modes each acceptance assertion should run against. By default both the
-    /// runtime reflection path and the <c>MSTest.SourceGeneration</c> path are exercised; the
-    /// source-gen mode is dropped when globally disabled via the kill-switch.
+    /// Gets the metadata modes each acceptance assertion should run against. By default the runtime
+    /// reflection path and both source-generated paths (<c>MSTest.SourceGeneration</c> and
+    /// <c>MSTest.AotReflection.SourceGeneration</c>) are exercised; the source-gen modes are dropped
+    /// when globally disabled via the kill-switch.
     /// </summary>
     internal static MetadataMode[] MetadataModesToRun { get; }
         = AcceptanceSourceGen.IsGloballyDisabled
             ? [MetadataMode.Reflection]
-            : [MetadataMode.Reflection, MetadataMode.SourceGeneration];
+            : [MetadataMode.Reflection, MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
 
     /// <summary>
     /// DynamicData source: every <see cref="TargetFrameworks.All"/> TFM combined with every applicable
     /// <see cref="MetadataModesToRun"/> mode. Source generation is .NET-only, so .NET Framework TFMs
     /// (net4x) are paired with <see cref="MetadataMode.Reflection"/> only.
     /// </summary>
-    public static IEnumerable<object[]> AllTfmsAndMetadataModes { get; }
-        = (from tfm in TargetFrameworks.All
-           from mode in MetadataModesToRun
-           where mode == MetadataMode.Reflection || TargetFrameworks.Net.Contains(tfm)
-           select new object[] { tfm, mode }).ToArray();
+    public static IEnumerable<object[]> AllTfmsAndMetadataModes()
+    {
+        foreach (string tfm in TargetFrameworks.All)
+        {
+            foreach (MetadataMode mode in MetadataModesToRun)
+            {
+                if (mode == MetadataMode.Reflection || TargetFrameworks.Net.Contains(tfm))
+                {
+                    yield return [tfm, mode];
+                }
+            }
+        }
+    }
 
     /// <summary>
     /// DynamicData source: every .NET (non-.NET Framework) TFM combined with every
     /// <see cref="MetadataModesToRun"/> mode.
     /// </summary>
-    public static IEnumerable<object[]> NetTfmsAndMetadataModes { get; }
-        = (from tfm in TargetFrameworks.Net
-           from mode in MetadataModesToRun
-           select new object[] { tfm, mode }).ToArray();
+    public static IEnumerable<object[]> NetTfmsAndMetadataModes()
+    {
+        foreach (string tfm in TargetFrameworks.Net)
+        {
+            foreach (MetadataMode mode in MetadataModesToRun)
+            {
+                yield return [tfm, mode];
+            }
+        }
+    }
 
     /// <summary>
     /// DynamicData source: every <see cref="MetadataModesToRun"/> mode, for tests that are not

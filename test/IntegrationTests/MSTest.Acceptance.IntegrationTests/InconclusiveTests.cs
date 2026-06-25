@@ -23,12 +23,18 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
     }
 
     // Cross-products every inconclusive lifecycle step with the metadata modes under test
-    // (reflection and, unless globally disabled, source generation) so the same expectations
-    // validate both metadata paths.
-    public static IEnumerable<object[]> LifecycleAndMetadataModes { get; }
-        = (from lifecycle in Enum.GetValues<Lifecycle>()
-           from mode in MetadataModesToRun
-           select new object[] { lifecycle, mode }).ToArray();
+    // (reflection and, unless globally disabled, the two source-generation paths) so the same
+    // expectations validate every metadata path.
+    public static IEnumerable<object[]> LifecycleAndMetadataModes()
+    {
+        foreach (Lifecycle lifecycle in Enum.GetValues<Lifecycle>())
+        {
+            foreach (MetadataMode mode in MetadataModesToRun)
+            {
+                yield return [lifecycle, mode];
+            }
+        }
+    }
 
     [TestMethod]
     [DynamicData(nameof(LifecycleAndMetadataModes))]
@@ -118,6 +124,9 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         public const string ProjectName = "TestInconclusive";
 
         public string ProjectPath => GetAssetPath(ProjectName);
+
+        protected override IReadOnlyList<MetadataMode> SourceGenMetadataModes { get; }
+            = [MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
 
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode

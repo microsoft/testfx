@@ -39,6 +39,9 @@ public sealed class TestRunParametersTests : AcceptanceTestBase<TestRunParameter
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
+        protected override IReadOnlyList<MetadataMode> SourceGenMetadataModes { get; }
+            = [MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
+
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (ProjectName, ProjectName,
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.All)

@@ -24,25 +24,19 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     private bool _disposedValue;
 
     /// <summary>
-    /// Gets a value indicating whether the <see cref="MetadataMode.SourceGeneration"/> build variant
-    /// of the asset was produced. It is <see langword="false"/> when the fixture opts out via
-    /// <see cref="SkipSourceGenVariant"/> or when the variant is globally disabled.
+    /// Override to declare which source-gen metadata modes this fixture builds, in addition to the
+    /// always-built <see cref="MetadataMode.Reflection"/> build. This is opt-in: the default is empty
+    /// so an asset is only ever built under a source-gen mode once it has been validated to support
+    /// it. A mode returned here is expected to build successfully; a failed build throws with the
+    /// captured build output (see <see cref="InitializeAsync"/>).
+    /// <para>
+    /// Assets that cannot run under source generation (for example VSTest-host assets,
+    /// NativeAOT/Trim/Aspire/Playwright/ServerMode assets, or assets that rely on source-generator
+    /// gaps such as inherited <c>[TestClass]</c>, generic test methods, or cross-assembly reflection)
+    /// simply leave this empty and keep building reflection-only.
+    /// </para>
     /// </summary>
-    public bool SourceGenVariantBuilt { get; private set; }
-
-    /// <summary>
-    /// Gets the result of the <see cref="MetadataMode.SourceGeneration"/> build, or <see langword="null"/>
-    /// when the variant was not built. Useful for diagnostics when a source-gen build fails.
-    /// </summary>
-    public DotnetMuxerResult? SourceGenBuildResult { get; private set; }
-
-    /// <summary>
-    /// Override and return <see langword="true"/> to skip the <see cref="MetadataMode.SourceGeneration"/>
-    /// build variant for assets that cannot run under source generation (for example VSTest-host assets,
-    /// NativeAOT/Trim/Aspire/Playwright/ServerMode assets, or assets that rely on source-generator gaps
-    /// such as inherited <c>[TestClass]</c>, generic test methods, or cross-assembly reflection).
-    /// </summary>
-    protected virtual bool SkipSourceGenVariant => false;
+    protected virtual IReadOnlyList<MetadataMode> SourceGenMetadataModes => [];
 
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
@@ -57,18 +51,28 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
 
-        // Default-on: build a second variant with MSTest.SourceGeneration injected, into an isolated
-        // bin/SourceGen + obj/SourceGen output, so the same behavioral assertions also validate the
-        // source-generated metadata path. Only attempt it when the reflection build succeeded.
-        if (!SkipSourceGenVariant && !AcceptanceSourceGen.IsGloballyDisabled && result.ExitCode == 0)
+        // Opt-in: for each source-gen metadata mode the fixture declares, build a second variant with
+        // the matching generator injected, into an isolated bin/<sub> + obj/<sub> output, so the same
+        // behavioral assertions also validate the source-generated metadata path. The build is run
+        // with failIfReturnValueIsNotZero:false so we can surface the captured output if it fails
+        // (rather than the less actionable default exception from DotnetCli.RunAsync).
+        if (!AcceptanceSourceGen.IsGloballyDisabled)
         {
-            string sourceGenArgs = await AcceptanceSourceGen.PrepareBuildArgumentsAsync(testAsset.TargetAssetPath);
-            DotnetMuxerResult sourceGenResult = await DotnetCli.RunAsync(
-                $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
-                callerMemberName: $"{assetName}_SourceGen",
-                cancellationToken: cancellationToken);
-            SourceGenBuildResult = sourceGenResult;
-            SourceGenVariantBuilt = sourceGenResult.ExitCode == 0;
+            foreach (MetadataMode mode in SourceGenMetadataModes)
+            {
+                string sourceGenArgs = await AcceptanceSourceGen.PrepareBuildArgumentsAsync(testAsset.TargetAssetPath, mode);
+                DotnetMuxerResult sourceGenResult = await DotnetCli.RunAsync(
+                    $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
+                    failIfReturnValueIsNotZero: false,
+                    callerMemberName: $"{assetName}_{AcceptanceSourceGen.GetOutputSubFolder(mode)}",
+                    cancellationToken: cancellationToken);
+
+                if (sourceGenResult.ExitCode != 0)
+                {
+                    throw new InvalidOperationException(
+                        $"The {mode} build of acceptance asset '{assetName}' failed with exit code {sourceGenResult.ExitCode}.{Environment.NewLine}{sourceGenResult}");
+                }
+            }
         }
     }
 
