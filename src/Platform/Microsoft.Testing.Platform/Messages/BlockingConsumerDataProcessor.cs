@@ -34,11 +34,11 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
 
     public async Task PublishAsync(IDataProducer dataProducer, IData data)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
-
-        // Increment unconditionally (even for self-produced data we skip below) to keep the same
-        // ReceivedCount semantics as AsyncConsumerDataProcessor.
+        // Increment unconditionally and before honoring cancellation, to keep the same ReceivedCount
+        // semantics as AsyncConsumerDataProcessor (even self-produced data we skip below is counted).
         Interlocked.Increment(ref _receivedCount);
+
+        _cancellationToken.ThrowIfCancellationRequested();
 
         // We don't consume the data if the consumer is the producer of the data.
         if (dataProducer.Uid == DataConsumer.Uid)
