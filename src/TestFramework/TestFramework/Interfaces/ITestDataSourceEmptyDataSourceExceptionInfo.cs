@@ -8,6 +8,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// returns no rows. When a data source implements this interface, MSTest uses the returned member and type names to
 /// build a more actionable exception message instead of the generic <c>GetData returned empty collection</c> message.
 /// </summary>
+[Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public interface ITestDataSourceEmptyDataSourceExceptionInfo
 {
     /// <summary>
