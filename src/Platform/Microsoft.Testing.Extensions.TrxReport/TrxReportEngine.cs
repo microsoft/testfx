@@ -90,27 +90,6 @@ internal sealed partial class TrxReportEngine
 
             // If the user added the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
-            string trxFileName;
-            if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
-            {
-                // The argument may be a bare file name, a relative path or an absolute path. Placeholders
-                // are resolved first against the whole input. Only the leaf file name is sanitized for
-                // invalid characters — the directory portion is treated as a literal path so that it can
-                // contain path separators, drive letters or UNC prefixes. Invalid characters in the
-                // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
-                // the OS and will surface as an IOException at file creation time.
-                string processName = Path.GetFileNameWithoutExtension(testAppModule);
-                string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-                trxFileName = ReportFileNameHelper.ResolveAndSanitize(fileName[0], processName, processId, _clock.UtcNow);
-            }
-            else
-            {
-                // Default file name uses the deterministic <asm>_<tfm>_<arch>.trx shape so reruns are
-                // discoverable and multi-target/multi-arch matrices don't collide on disk. A second
-                // run into the same TestResults folder overwrites the previous file (with a warning),
-                // matching the behavior of an explicitly-provided file name.
-                trxFileName = ReportEngineBase.BuildDefaultFileName(testAppModule, "trx");
-            }
 
             var testDefinitions = new XElement("TestDefinitions");
             var testEntries = new XElement("TestEntries");
@@ -141,20 +120,7 @@ internal sealed partial class TrxReportEngine
                 node.Name = node.Parent!.Name.Namespace + node.Name.LocalName;
             }
 
-            string outputDirectory = _configuration.GetTestResultDirectory();
-
-            // Path.Combine short-circuits when the second argument is rooted, so an absolute trxFileName
-            // overrides the test results directory while a validated relative one (including one with
-            // subdirectories, but not parent traversal) stays nested under it.
-            string finalFileName = Path.Combine(outputDirectory, trxFileName);
-
-            // Ensure intermediate directories exist when the user-provided file name introduced
-            // sub-directories or pointed at an absolute path under a directory that doesn't exist yet.
-            string? finalDirectory = Path.GetDirectoryName(finalFileName);
-            if (!RoslynString.IsNullOrEmpty(finalDirectory))
-            {
-                _fileSystem.CreateDirectory(finalDirectory);
-            }
+            string finalFileName = ResolveTrxOutputPath(testAppModule);
 
             bool fileAlreadyExisted = _fileSystem.ExistFile(finalFileName);
 
@@ -176,6 +142,49 @@ internal sealed partial class TrxReportEngine
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
         }).ConfigureAwait(false);
+
+    private string ResolveTrxOutputPath(string testAppModule)
+    {
+        string reportFileName;
+        if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
+        {
+            // The argument may be a bare file name, a relative path or an absolute path. Placeholders
+            // are resolved first against the whole input. Only the leaf file name is sanitized for
+            // invalid characters — the directory portion is treated as a literal path so that it can
+            // contain path separators, drive letters or UNC prefixes. Invalid characters in the
+            // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
+            // the OS and will surface as an IOException at file creation time.
+            string template = ReportEngineBase.GetProvidedFileName(fileName);
+            string processName = Path.GetFileNameWithoutExtension(testAppModule);
+            string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+            reportFileName = ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
+        }
+        else
+        {
+            // Default file name uses the deterministic <asm>_<tfm>_<arch>.trx shape so reruns are
+            // discoverable and multi-target/multi-arch matrices don't collide on disk. A second
+            // run into the same TestResults folder overwrites the previous file (with a warning),
+            // matching the behavior of an explicitly-provided file name.
+            reportFileName = ReportEngineBase.BuildDefaultFileName(testAppModule, "trx");
+        }
+
+        string outputDirectory = _configuration.GetTestResultDirectory();
+
+        // Path.Combine short-circuits when the second argument is rooted, so an absolute reportFileName
+        // overrides the test results directory while a validated relative one (including one with
+        // subdirectories, but not parent traversal) stays nested under it.
+        string finalPath = Path.Combine(outputDirectory, reportFileName);
+
+        // Ensure intermediate directories exist when the user-provided file name introduced
+        // sub-directories or pointed at an absolute path under a directory that doesn't exist yet.
+        string? finalDirectory = Path.GetDirectoryName(finalPath);
+        if (!RoslynString.IsNullOrEmpty(finalDirectory))
+        {
+            _fileSystem.CreateDirectory(finalDirectory);
+        }
+
+        return finalPath;
+    }
 
     private readonly record struct SummaryCounts(int Passed, int Failed, int Skipped, int Timedout);
 }
