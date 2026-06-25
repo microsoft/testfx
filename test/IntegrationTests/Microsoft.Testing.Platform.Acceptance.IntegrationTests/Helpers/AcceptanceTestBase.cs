@@ -129,6 +129,13 @@ public abstract class AcceptanceTestBase
     /// DynamicData source: every <see cref="TargetFrameworks.All"/> TFM combined with every applicable
     /// <see cref="MetadataModesToRun"/> mode. Source generation is .NET-only, so .NET Framework TFMs
     /// (net4x) are paired with <see cref="MetadataMode.Reflection"/> only.
+    /// <para>
+    /// This cross-parameter filter (net4x → reflection only) cannot be expressed with independent
+    /// <c>[CombinatorialData]</c> parameter providers, so it stays a bespoke data source. Matrices
+    /// without such a dependency should instead use <c>[CombinatorialData]</c> with
+    /// <see cref="MetadataModeValuesAttribute"/> (and <see cref="AllTargetFrameworksAttribute"/> when
+    /// a TFM axis is needed).
+    /// </para>
     /// </summary>
     public static IEnumerable<object[]> AllTfmsAndMetadataModes()
     {
@@ -141,28 +148,6 @@ public abstract class AcceptanceTestBase
             }
         }
     }
-
-    /// <summary>
-    /// DynamicData source: every .NET (non-.NET Framework) TFM combined with every
-    /// <see cref="MetadataModesToRun"/> mode.
-    /// </summary>
-    public static IEnumerable<object[]> NetTfmsAndMetadataModes()
-    {
-        foreach (string tfm in TargetFrameworks.Net)
-        {
-            foreach (MetadataMode mode in MetadataModesToRun)
-            {
-                yield return [tfm, mode];
-            }
-        }
-    }
-
-    /// <summary>
-    /// DynamicData source: every <see cref="MetadataModesToRun"/> mode, for tests that are not
-    /// parameterized by TFM (they typically run against <see cref="TargetFrameworks.NetCurrent"/>).
-    /// </summary>
-    public static IEnumerable<object[]> MetadataModes { get; }
-        = MetadataModesToRun.Select(mode => new object[] { mode }).ToArray();
 
     // https://github.com/NuGet/NuGet.Client/blob/c5934bdcbc578eec1e2921f49e6a5d53481c5099/test/NuGet.Core.FuncTests/Msbuild.Integration.Test/MsbuildIntegrationTestFixture.cs#L65-L94
     private protected static async Task<string> FindMsbuildWithVsWhereAsync(CancellationToken cancellationToken)
@@ -269,4 +254,19 @@ internal sealed class AllTargetFrameworksAttribute : Attribute, ICombinatorialVa
 {
     // TargetFrameworks.All is never mutated, so it's safe to hand the same array back on every call.
     public object?[] GetValues(ParameterInfo _) => TargetFrameworks.All;
+}
+
+/// <summary>
+/// A <see cref="ICombinatorialValuesProvider"/> that yields every metadata mode under test
+/// (<see cref="AcceptanceTestBase.MetadataModesToRun"/>): the runtime reflection path and, unless
+/// disabled via the source-gen kill-switch, both source-generated paths. Apply it to a
+/// <see cref="MetadataMode"/> parameter of a <c>[CombinatorialData]</c> test method so the same
+/// assertions run against every metadata path. Prefer it over auto-expanding the enum, which would
+/// ignore the kill-switch and always emit all three values.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+internal sealed class MetadataModeValuesAttribute : Attribute, ICombinatorialValuesProvider
+{
+    // MetadataModesToRun is a single immutable array, so it's safe to hand it back on every call.
+    public object?[] GetValues(ParameterInfo _) => AcceptanceTestBase.MetadataModesToRun.Cast<object?>().ToArray();
 }
