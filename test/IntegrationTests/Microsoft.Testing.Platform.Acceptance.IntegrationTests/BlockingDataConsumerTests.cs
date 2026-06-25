@@ -85,6 +85,10 @@ public class DummyTestFramework : ITestFramework, IDataProducer
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+            context.Request.Session.SessionUid,
+            new TestNode() { Uid = "1", DisplayName = "BlockingValidation", Properties = new(DiscoveredTestNodeStateProperty.CachedInstance) }));
+
         // Publish an in-progress update. Because the consumer is a blocking data consumer that sleeps
         // inside ConsumeAsync, this call must not return until the consumption has completed.
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(

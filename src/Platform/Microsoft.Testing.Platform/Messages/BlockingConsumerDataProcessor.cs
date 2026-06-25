@@ -81,8 +81,8 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
     // ObjectDisposedException failure mode if AsynchronousMessageBus.Dispose ran while a PublishAsync
     // was still in-flight (the in-flight call would hit _semaphore.Release on a disposed instance).
     // SemaphoreSlim only owns an unmanaged WaitHandle if its AvailableWaitHandle is accessed, which we
-    // never do, so it is safe to let the GC reclaim it. This matches AsyncConsumerDataProcessor, which
-    // does not dispose a synchronization primitive either.
+    // never do, so it is safe to let the GC reclaim it. AsyncConsumerDataProcessor similarly does not
+    // dispose its synchronization primitive (its channel is not even IDisposable).
     public void Dispose()
     {
     }
