@@ -167,8 +167,8 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
       <trans-unit id="DeprecatedFlatOrderTestsByNameInClassKey">
-        <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
-        <target state="new">The 'mstest:orderTestsByNameInClass' configuration key is deprecated. Use 'mstest:execution:orderTestsByNameInClass' instead.</target>
+        <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
+        <target state="new">The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</target>
         <note>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="DiscoveryErrors">
