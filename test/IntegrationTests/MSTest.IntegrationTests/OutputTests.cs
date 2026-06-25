@@ -14,11 +14,11 @@ public class OutputTests : CLITestBase
     private const string TestAssetName = "OutputTestProject";
 
     [TestMethod]
-    [Ignore("Flaky on constrained CI agents (notably Windows Debug). ValidateOutputForClassAsync asserts the 3 methods overlap in wall-clock time to prove they ran in parallel, but the thread pool does not reliably schedule them concurrently before the short (40-100ms) methods finish, so the overlap guard fails. Re-enabling needs the asset to force overlap deterministically (e.g. a Barrier).")]
+    [CICondition(ConditionMode.Exclude)] // Asserts the methods overlap in wall-clock time to prove parallelism; the thread pool doesn't reliably schedule them concurrently on constrained CI agents (notably Windows Debug). Runs locally where scheduling is reliable.
     public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
 
     [TestMethod]
-    [Ignore("Flaky on constrained CI agents (notably Windows Debug). ValidateOutputForClassAsync asserts the 3 methods overlap in wall-clock time to prove they ran in parallel, but the thread pool does not reliably schedule them concurrently before the short (40-100ms) methods finish, so the overlap guard fails. Re-enabling needs the asset to force overlap deterministically (e.g. a Barrier).")]
+    [CICondition(ConditionMode.Exclude)] // Asserts the methods overlap in wall-clock time to prove parallelism; the thread pool doesn't reliably schedule them concurrently on constrained CI agents (notably Windows Debug). Runs locally where scheduling is reliable.
     public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
 
     private static async Task ValidateOutputForClassAsync(string className)
