@@ -139,13 +139,17 @@ internal sealed partial class MSTestSettings
             return;
         }
 
+        // This helper is only used for timeout settings, which must be strictly positive (in milliseconds).
+        // A value of 0 (or less) is rejected on purpose: omitting the key already means "no timeout" (the
+        // default is 0 internally), so accepting an explicit 0 here would be redundant and ambiguous. Invalid
+        // values are ignored with a warning rather than throwing.
         if (int.TryParse(value, out int result) && result > 0)
         {
             setSetting(result);
         }
         else
         {
-            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, value, key));
         }
     }
 

@@ -38,37 +38,37 @@
             "test": {
               "type": "integer",
               "minimum": 1,
-              "description": "Default timeout, in milliseconds, applied to every test method."
+              "description": "Default timeout, in milliseconds, applied to every test method. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
             "assemblyInitialize": {
               "type": "integer",
               "minimum": 1,
-              "description": "Timeout, in milliseconds, for [AssemblyInitialize] methods."
+              "description": "Timeout, in milliseconds, for [AssemblyInitialize] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
             "assemblyCleanup": {
               "type": "integer",
               "minimum": 1,
-              "description": "Timeout, in milliseconds, for [AssemblyCleanup] methods."
+              "description": "Timeout, in milliseconds, for [AssemblyCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
             "classInitialize": {
               "type": "integer",
               "minimum": 1,
-              "description": "Timeout, in milliseconds, for [ClassInitialize] methods."
+              "description": "Timeout, in milliseconds, for [ClassInitialize] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
             "classCleanup": {
               "type": "integer",
               "minimum": 1,
-              "description": "Timeout, in milliseconds, for [ClassCleanup] methods."
+              "description": "Timeout, in milliseconds, for [ClassCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
             "testInitialize": {
               "type": "integer",
               "minimum": 1,
-              "description": "Timeout, in milliseconds, for [TestInitialize] methods."
+              "description": "Timeout, in milliseconds, for [TestInitialize] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
             "testCleanup": {
               "type": "integer",
               "minimum": 1,
-              "description": "Timeout, in milliseconds, for [TestCleanup] methods."
+              "description": "Timeout, in milliseconds, for [TestCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
             "useCooperativeCancellation": {
               "type": "boolean",
