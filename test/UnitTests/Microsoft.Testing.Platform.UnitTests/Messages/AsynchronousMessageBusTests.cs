@@ -190,7 +190,7 @@ public sealed class AsynchronousMessageBusTests
 
         // Wait for the consumer to be invoked inline. This proves the consumption happens as part of
         // the publish call rather than being deferred to a background loop.
-        await consumer.ConsumeStarted.Task;
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
 
         // The consumer is still gated, so the publish call cannot have returned yet.
         Assert.IsFalse(publishTask.IsCompleted);
@@ -575,7 +575,7 @@ public sealed class AsynchronousMessageBusTests
                 }
 
                 ConsumeStarted.TrySetResult(true);
-                await AllowConsumeToComplete.Task;
+                await AllowConsumeToComplete.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
 
                 if (ConsumeDelay > TimeSpan.Zero)
                 {

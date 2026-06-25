@@ -26,7 +26,10 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// Inline consumption is serialized: only one <see cref="IDataConsumer.ConsumeAsync"/> call runs at a
 /// time per consumer. As a consequence, a blocking consumer must not, from within its
 /// <see cref="IDataConsumer.ConsumeAsync"/>, publish data that is routed back to itself, as that would
-/// deadlock.
+/// deadlock. Note that publishing data where the producer is the consumer itself (same UID) is safe,
+/// because the message bus skips delivering a producer's data back to that same producer; the deadlock
+/// risk is specifically re-entrant publishing that routes back to this consumer under a
+/// <em>different</em> producer UID.
 /// </para>
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
