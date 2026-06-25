@@ -120,7 +120,7 @@ internal sealed partial class TrxReportEngine
                 node.Name = node.Parent!.Name.Namespace + node.Name.LocalName;
             }
 
-            string finalFileName = ResolveOutputPath(testAppModule);
+            string finalFileName = ResolveTrxOutputPath(testAppModule);
 
             bool fileAlreadyExisted = _fileSystem.ExistFile(finalFileName);
 
@@ -143,7 +143,7 @@ internal sealed partial class TrxReportEngine
                 : (finalFileName, null);
         }).ConfigureAwait(false);
 
-    private string ResolveOutputPath(string testAppModule)
+    private string ResolveTrxOutputPath(string testAppModule)
     {
         string reportFileName;
         if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
