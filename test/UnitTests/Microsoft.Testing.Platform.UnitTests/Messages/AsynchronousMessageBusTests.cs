@@ -168,6 +168,51 @@ public sealed class AsynchronousMessageBusTests
         }
     }
 
+    [TestMethod]
+    public async Task BlockingDataConsumer_ConsumesInline_BeforePublishReturns()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+        await proxy.PublishAsync(producer, new BlockingData());
+
+        // A blocking consumer must consume the data inline, so it is already consumed by the time
+        // PublishAsync returns, without needing a drain.
+        Assert.HasCount(1, consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task BlockingDataConsumer_WhenConsumerIsProducer_ShouldNotConsumeOwnData()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        await proxy.PublishAsync(consumer, new BlockingData());
+
+        Assert.HasCount(0, consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();
@@ -403,6 +448,42 @@ public sealed class AsynchronousMessageBusTests
             public string? Description => nameof(InvalidDataToProduce);
         }
     }
+
+    private sealed class BlockingData : IData
+    {
+        public string DisplayName => nameof(BlockingData);
+
+        public string? Description => nameof(BlockingData);
+    }
+
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    private sealed class BlockingConsumer : IBlockingDataConsumer, IDataProducer
+    {
+        public BlockingConsumer(string id) => Uid = id;
+
+        public List<IData> ConsumedData { get; } = [];
+
+        public Type[] DataTypesConsumed => [typeof(BlockingData)];
+
+        public Type[] DataTypesProduced => [typeof(BlockingData)];
+
+        public string Uid { get; }
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            ConsumedData.Add(value);
+            return Task.CompletedTask;
+        }
+    }
+#pragma warning restore TPEXP
 
     private sealed class DummyProducer : IDataProducer
     {
