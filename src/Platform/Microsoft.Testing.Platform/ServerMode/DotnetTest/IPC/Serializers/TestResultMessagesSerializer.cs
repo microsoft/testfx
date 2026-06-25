@@ -156,7 +156,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
     private static SuccessfulTestResultMessage[] ReadSuccessfulTestMessagesPayload(Stream stream)
     {
         int length = ReadInt(stream);
-        SuccessfulTestResultMessage[] successfulTestResultMessages = new SuccessfulTestResultMessage[length];
+        var successfulTestResultMessages = new SuccessfulTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? uid = null, displayName = null, reason = null, standardOutput = null, errorOutput = null, sessionUid = null;
@@ -219,7 +219,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
     private static FailedTestResultMessage[] ReadFailedTestMessagesPayload(Stream stream)
     {
         int length = ReadInt(stream);
-        FailedTestResultMessage[] failedTestResultMessages = new FailedTestResultMessage[length];
+        var failedTestResultMessages = new FailedTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? uid = null, displayName = null, reason = null, sessionUid = null, standardOutput = null, errorOutput = null;
@@ -287,7 +287,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
     private static ExceptionMessage[] ReadExceptionMessagesPayload(Stream stream)
     {
         int length = ReadInt(stream);
-        ExceptionMessage[] exceptionMessages = new ExceptionMessage[length];
+        var exceptionMessages = new ExceptionMessage[length];
 
         for (int i = 0; i < length; i++)
         {
@@ -314,6 +314,10 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
                     case ExceptionMessageFieldsId.StackTrace:
                         stackTrace = ReadStringValue(stream, fieldSize);
+                        break;
+
+                    default:
+                        SetPosition(stream, stream.Position + fieldSize);
                         break;
                 }
             }
