@@ -11,7 +11,8 @@ internal sealed record RunSummaryInfoRequest(
     int TotalFailed,
     int TotalPassed,
     int TotalSkipped,
-    string? Duration) : IRequest;
+    string? Duration,
+    bool AllowSkipped) : IRequest;
 
 internal sealed class RunSummaryInfoRequestSerializer : NamedPipeSerializer<RunSummaryInfoRequest>, INamedPipeSerializer
 {
@@ -23,7 +24,8 @@ internal sealed class RunSummaryInfoRequestSerializer : NamedPipeSerializer<RunS
             ReadInt(stream),
             ReadInt(stream),
             ReadInt(stream),
-            ReadString(stream));
+            ReadString(stream),
+            ReadInt(stream) != 0);
 
     protected override void SerializeCore(RunSummaryInfoRequest objectToSerialize, Stream stream)
     {
@@ -32,5 +34,6 @@ internal sealed class RunSummaryInfoRequestSerializer : NamedPipeSerializer<RunS
         WriteInt(stream, objectToSerialize.TotalPassed);
         WriteInt(stream, objectToSerialize.TotalSkipped);
         WriteString(stream, objectToSerialize.Duration ?? string.Empty);
+        WriteInt(stream, objectToSerialize.AllowSkipped ? 1 : 0);
     }
 }

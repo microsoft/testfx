@@ -731,6 +731,15 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
   <data name="PlatformCommandLineMinimumExpectedTestsOptionDescription" xml:space="preserve">
     <value>Specifies the minimum number of tests that are expected to run.</value>
   </data>
+  <data name="PlatformCommandLineZeroTestsPolicyOptionDescription" xml:space="preserve">
+    <value>Specifies how a run that executed no tests is treated.
+Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</value>
+    <comment>{Locked="strict"}{Locked="allow-skipped"}</comment>
+  </data>
+  <data name="PlatformCommandLineZeroTestsPolicyInvalidArgument" xml:space="preserve">
+    <value>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</value>
+    <comment>{Locked="--zero-tests-policy"}</comment>
+  </data>
   <data name="PlatformCommandLineConfigFileOptionDescription" xml:space="preserve">
     <value>Specifies a testconfig.json file.</value>
     <comment>{Locked="testconfig.json"}</comment>
