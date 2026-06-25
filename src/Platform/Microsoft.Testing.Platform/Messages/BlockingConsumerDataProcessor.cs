@@ -36,13 +36,15 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
     {
         _cancellationToken.ThrowIfCancellationRequested();
 
+        // Increment unconditionally (even for self-produced data we skip below) to keep the same
+        // ReceivedCount semantics as AsyncConsumerDataProcessor.
+        Interlocked.Increment(ref _receivedCount);
+
         // We don't consume the data if the consumer is the producer of the data.
         if (dataProducer.Uid == DataConsumer.Uid)
         {
             return;
         }
-
-        Interlocked.Increment(ref _receivedCount);
 
         await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
         try
@@ -58,8 +60,25 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
     // The data is consumed inline in PublishAsync, so there is never anything left to drain.
     public Task DrainDataAsync() => Task.CompletedTask;
 
-    // The data is consumed inline in PublishAsync, so there is no background loop to complete.
-    public Task CompleteAddingAsync() => Task.CompletedTask;
+    public async Task CompleteAddingAsync()
+    {
+        // The data is consumed inline in PublishAsync, so there is no background loop to complete.
+        // We still wait for any in-flight inline consumption to finish before the processor can be
+        // disposed: acquiring the single permit guarantees no consumer is currently executing, and we
+        // release it immediately afterwards. The message bus marks itself disabled before calling this,
+        // so no new data can reach this processor while we wait.
+        try
+        {
+            await _semaphore.WaitAsync(_cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
+        {
+            // The application is shutting down. Nothing left to wait for.
+            return;
+        }
+
+        _semaphore.Release();
+    }
 
     public void Dispose()
         => _semaphore.Dispose();
