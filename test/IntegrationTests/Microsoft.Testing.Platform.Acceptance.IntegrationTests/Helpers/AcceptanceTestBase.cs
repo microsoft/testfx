@@ -134,12 +134,10 @@ public abstract class AcceptanceTestBase
     {
         foreach (string tfm in TargetFrameworks.All)
         {
-            foreach (MetadataMode mode in MetadataModesToRun)
+            // Source generation is .NET-only, so .NET Framework TFMs are paired with reflection only.
+            foreach (MetadataMode mode in MetadataModesToRun.Where(mode => mode == MetadataMode.Reflection || TargetFrameworks.Net.Contains(tfm)))
             {
-                if (mode == MetadataMode.Reflection || TargetFrameworks.Net.Contains(tfm))
-                {
-                    yield return [tfm, mode];
-                }
+                yield return [tfm, mode];
             }
         }
     }
