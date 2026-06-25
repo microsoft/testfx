@@ -174,7 +174,20 @@ internal sealed partial class MSTestSettings
     /// <param name="settings">The MSTest settings.</param>
     internal static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
     {
-        ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
+        // 'orderTestsByNameInClass' has moved under 'execution:' for consistency with the other execution settings.
+        // Prefer the new 'mstest:execution:orderTestsByNameInClass' key. Only fall back to the deprecated flat
+        // 'mstest:orderTestsByNameInClass' key (emitting a deprecation warning) when the new key is absent, so users
+        // can keep both keys for cross-version compatibility without being warned and without spurious parse warnings.
+        if (configuration["mstest:execution:orderTestsByNameInClass"] is not null)
+        {
+            ParseBooleanSetting(configuration, "execution:orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
+        }
+        else if (configuration["mstest:orderTestsByNameInClass"] is not null)
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey);
+            ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
+        }
+
         ParseBooleanSetting(configuration, "execution:randomizeTestOrder", logger, value => settings.RandomizeTestOrder = value);
         ParseSignedIntegerSetting(configuration, "execution:randomTestOrderSeed", logger, value => settings.RandomTestOrderSeed = value);
         ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
