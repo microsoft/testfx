@@ -133,8 +133,10 @@
     <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
   </ItemGroup>
   <!--
-    Declare below packages that are referenced through MSTest.Sdk but don't have a direct
-    PackageReference in this repo, so that Dependabot can discover and update them.
+    Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK
+    templates) and are not otherwise consumed by a built project, so that Dependabot can
+    discover and update them. Their only PackageReference in this repo is the inert anchor
+    described in condition 2 below.
 
     Two conditions must BOTH hold for Dependabot to bump one of these, and missing either one
     silently stops the updates:

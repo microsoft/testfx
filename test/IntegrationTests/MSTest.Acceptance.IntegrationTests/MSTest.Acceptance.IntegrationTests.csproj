@@ -56,7 +56,8 @@
     so none of their assets such as compile/runtime/build targets, e.g. Playwright's browser install,
     flow into this test project) puts them into a real restore graph so Dependabot proposes bumps. The
     _ValidateBundledSdkFeatureVersions target in Directory.Packages.props then guards the matching
-    Microsoft properties against drift after a bump. See https://github.com/microsoft/testfx/issues/9362.
+    version properties (MicrosoftPlaywrightVersion, AspireHostingTestingVersion) against drift after
+    a bump. See https://github.com/microsoft/testfx/issues/9362.
   -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright.MSTest.v4" ExcludeAssets="all" />
