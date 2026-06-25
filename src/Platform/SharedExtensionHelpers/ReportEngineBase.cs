@@ -102,7 +102,7 @@ internal abstract class ReportEngineBase
         string? finalDirectory = Path.GetDirectoryName(finalPath);
         if (!RoslynString.IsNullOrEmpty(finalDirectory))
         {
-            _fileSystem.CreateDirectory(finalDirectory!);
+            _fileSystem.CreateDirectory(finalDirectory);
         }
 
         return (finalPath, wasExplicit);
