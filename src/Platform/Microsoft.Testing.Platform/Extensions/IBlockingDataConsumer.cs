@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Platform.Extensions;
 
 /// <summary>
-/// Marker interface for a <see cref="IDataConsumer"/> that must consume the data synchronously,
+/// Marker interface for a <see cref="IDataConsumer"/> that must consume the data inline,
 /// before the call to publish the data returns to the producer.
 /// </summary>
 /// <remarks>

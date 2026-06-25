@@ -169,7 +169,7 @@ public sealed class AsynchronousMessageBusTests
     }
 
     [TestMethod]
-    public async Task BlockingDataConsumer_ConsumesInline_BeforePublishReturns()
+    public async Task BlockingDataConsumer_PublishAsync_DoesNotReturnUntilConsumeCompletes()
     {
         using MessageBusProxy proxy = new();
         BlockingConsumer consumer = new("BlockingConsumer");
@@ -183,10 +183,22 @@ public sealed class AsynchronousMessageBusTests
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
         DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
-        await proxy.PublishAsync(producer, new BlockingData());
 
-        // A blocking consumer must consume the data inline, so it is already consumed by the time
-        // PublishAsync returns, without needing a drain.
+        // Start publishing. Because the consumer is blocking, PublishAsync must not complete until
+        // ConsumeAsync completes, which we control through the gate below.
+        Task publishTask = proxy.PublishAsync(producer, new BlockingData());
+
+        // Wait for the consumer to be invoked inline. This proves the consumption happens as part of
+        // the publish call rather than being deferred to a background loop.
+        await consumer.ConsumeStarted.Task;
+
+        // The consumer is still gated, so the publish call cannot have returned yet.
+        Assert.IsFalse(publishTask.IsCompleted);
+
+        // Release the gate and let consumption (and therefore the publish) complete.
+        consumer.AllowConsumeToComplete.SetResult(true);
+        await publishTask;
+
         Assert.HasCount(1, consumer.ConsumedData);
 
         await asynchronousMessageBus.DisableAsync();
@@ -197,6 +209,11 @@ public sealed class AsynchronousMessageBusTests
     {
         using MessageBusProxy proxy = new();
         BlockingConsumer consumer = new("BlockingConsumer");
+
+        // Release the gate upfront: if the consumer were (incorrectly) invoked for its own data, the
+        // test would fail fast on the assertion below instead of hanging on the gate.
+        consumer.AllowConsumeToComplete.SetResult(true);
+
         using var asynchronousMessageBus = new AsynchronousMessageBus(
             [consumer],
             new CTRLPlusCCancellationTokenSource(),
@@ -463,6 +480,10 @@ public sealed class AsynchronousMessageBusTests
 
         public List<IData> ConsumedData { get; } = [];
 
+        public TaskCompletionSource<bool> ConsumeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> AllowConsumeToComplete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
         public Type[] DataTypesConsumed => [typeof(BlockingData)];
 
         public Type[] DataTypesProduced => [typeof(BlockingData)];
@@ -477,10 +498,11 @@ public sealed class AsynchronousMessageBusTests
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
         {
+            ConsumeStarted.TrySetResult(true);
+            await AllowConsumeToComplete.Task;
             ConsumedData.Add(value);
-            return Task.CompletedTask;
         }
     }
 #pragma warning restore TPEXP
