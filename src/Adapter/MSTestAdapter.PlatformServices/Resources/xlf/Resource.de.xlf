@@ -166,11 +166,6 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Bereitstellungselement "{0}" (Ausgabeverzeichnis "{1}")</target>
         <note>{0} is the deployment item path. {1} is the output directory.</note>
       </trans-unit>
-      <trans-unit id="DeprecatedFlatOrderTestsByNameInClassKey">
-        <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
-        <target state="new">The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</target>
-        <note>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</note>
-      </trans-unit>
       <trans-unit id="DiscoveryErrors">
         <source>Discovery failed for source '{0}' with {1} errors:
 {2}</source>
