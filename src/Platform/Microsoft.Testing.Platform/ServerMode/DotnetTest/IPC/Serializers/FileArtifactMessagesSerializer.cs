@@ -86,14 +86,14 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
             }
         }
 
-        return new(executionId, instanceId, fileArtifactMessages is null ? [] : [.. fileArtifactMessages]);
+        return new(executionId, instanceId, fileArtifactMessages ?? []);
     }
 
-    private static List<FileArtifactMessage> ReadFileArtifactMessagesPayload(Stream stream)
+    private static FileArtifactMessage[] ReadFileArtifactMessagesPayload(Stream stream)
     {
-        List<FileArtifactMessage> fileArtifactMessages = [];
-
         int length = ReadInt(stream);
+        FileArtifactMessage[] fileArtifactMessages = new FileArtifactMessage[length];
+
         for (int i = 0; i < length; i++)
         {
             string? fullPath = null, displayName = null, description = null, testUid = null, testDisplayName = null, sessionUid = null;
@@ -137,7 +137,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
                 }
             }
 
-            fileArtifactMessages.Add(new FileArtifactMessage(fullPath, displayName, description, testUid, testDisplayName, sessionUid));
+            fileArtifactMessages[i] = new FileArtifactMessage(fullPath, displayName, description, testUid, testDisplayName, sessionUid);
         }
 
         return fileArtifactMessages;

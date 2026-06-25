@@ -69,14 +69,14 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
             }
         }
 
-        return new(moduleName, commandLineOptionMessages is null ? [] : [.. commandLineOptionMessages]);
+        return new(moduleName, commandLineOptionMessages ?? []);
     }
 
-    private static List<CommandLineOptionMessage> ReadCommandLineOptionMessagesPayload(Stream stream)
+    private static CommandLineOptionMessage[] ReadCommandLineOptionMessagesPayload(Stream stream)
     {
-        List<CommandLineOptionMessage> commandLineOptionMessages = [];
-
         int length = ReadInt(stream);
+        CommandLineOptionMessage[] commandLineOptionMessages = new CommandLineOptionMessage[length];
+
         for (int i = 0; i < length; i++)
         {
             string? name = null, description = null;
@@ -113,7 +113,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
                 }
             }
 
-            commandLineOptionMessages.Add(new CommandLineOptionMessage(name, description, isHidden, isBuiltIn));
+            commandLineOptionMessages[i] = new CommandLineOptionMessage(name, description, isHidden, isBuiltIn);
         }
 
         return commandLineOptionMessages;
