@@ -1,6 +1,6 @@
 # Perf Improver — State for microsoft/testfx
 
-_Last updated: 2026-06-24 (run 28105007003)_
+_Last updated: 2026-06-25 (run 28176552850)_
 
 ## Completed Work
 
@@ -15,33 +15,34 @@ _Last updated: 2026-06-24 (run 28105007003)_
 
 ## Open Work
 
-| PR | Description | Status |
+| Branch | Description | Status |
 |---|---|---|
-| (branch: perf-assist/add-linux-perf-timing-job) | perf: add Linux parallel job to nightly perf-timing workflow | Created 2026-06-24, awaiting CI/review |
+| perf-assist/skip-unused-init-contexts | perf: skip unused TestContextImplementation allocs for repeat assembly/class init | PR submitted 2026-06-25 (draft), awaiting CI/review |
+
+**Note**: The Linux perf-timing job PR (branch: perf-assist/add-linux-perf-timing-job) was NEVER actually created (safe-outputs failed silently in runs 28032837283 and 28105007003). Removed from tracking.
 
 ## Optimization Backlog
 
 1. `AnsiTerminal.StopUpdate()` — `_stringBuilder.ToString()` on every flush. Blocked by IConsole limitation. Low priority.
 2. `SilenceDrivenHeartbeatRenderer` — allocations only on rare heartbeat paths. Low priority.
-3. `ClassifyOutcome` in `TestResultCaptureHelper.cs` — add explicit `CancelledTestNodeStateProperty` arm. Very low impact (obsolete type, rarely used). Backlog only.
-4. Look for non-server-mode hot paths in MSTest execution (RunSingleTestAsync, reflection attribute caching, etc.)
+3. `ClassifyOutcome` in `TestResultCaptureHelper.cs` — add explicit `CancelledTestNodeStateProperty` arm. Very low impact. Backlog only.
 
 ## Monthly Activity Issue
 
 Issue #9258 — open, "[perf-improver] Monthly Activity 2026-06"
-- Updated 2026-06-24 with new PR (Linux perf timing job)
+- Updated 2026-06-25 with new PR (skip unused TestContextImplementation allocs)
 
 ## Task Schedule (round-robin)
 
 | Task | Last Run |
 |---|---|
 | T1: Discover commands | 2026-06-19 (validated) |
-| T2: Identify opportunities | 2026-06-24 |
-| T3: Implement improvement | 2026-06-23 (PR #9348 merged) |
-| T4: Maintain PRs | 2026-06-24 (new PR created, no fixes needed) |
-| T5: Comment on issues | 2026-06-25 (no issues needed) |
-| T6: Measurement infrastructure | 2026-06-24 (PR: add Linux perf timing job) |
-| T7: Monthly summary | 2026-06-24 ✅ |
+| T2: Identify opportunities | 2026-06-25 |
+| T3: Implement improvement | 2026-06-25 (PR: skip-unused-init-contexts) |
+| T4: Maintain PRs | 2026-06-24 |
+| T5: Comment on issues | 2026-06-25 |
+| T6: Measurement infrastructure | 2026-06-24 |
+| T7: Monthly summary | 2026-06-25 ✅ |
 
 ## Checked-off items (by maintainer) — do NOT re-suggest
 
@@ -49,11 +50,11 @@ Issue #9258 — open, "[perf-improver] Monthly Activity 2026-06"
 
 ## Notes
 
-- Repository uses pinned SDK 11.0.100-preview — local build/test not possible in CI agent; verified logic manually + CI will confirm
-- No `AGENTS.md` found in repo (as of 2026-06-15)
-- `efficiency-improver` agent also operates on this repo — check its comments before commenting on same issues (anti-spam)
-- Issue #5348 (in-progress/passed duplicates in server mode): efficiency-improver already posted detailed proposal — do NOT comment again unless new human comments appear
-- PropertyBag SingleOrDefault<TestNodeStateProperty>() is O(1) via _testNodeStateProperty fast-path — already optimal
-- TestNodeUid: reference type (sealed class), value equality via .Value string; using original instance vs new wrapper is semantically identical for dict operations
-- perf-timing-nightly.yml: Windows artifact renamed to perf-timing-result-json-windows; Linux uses perf-timing-result-json-linux
-- efficiency-improver merged DotnetTestDataConsumer single-pass PropertyBag (#9380) on 2026-06-24 — already covered, no overlap
+- Repository uses pinned SDK 11.0.100-preview — local build/test not possible in CI agent
+- No `AGENTS.md` found in repo
+- `efficiency-improver` agent also operates on this repo — check before commenting (anti-spam)
+- PropertyBag SingleOrDefault<TestNodeStateProperty>() is O(1) via _testNodeStateProperty fast-path
+- TestContextImplementation ctor: copies testContextProperties dict + registers CancellationTokenRegistration
+- TryGetClonedCachedClassInitializeResult(): changed from private to internal in TestClassInfo.Initializer.cs
+- The SetOutcome(testContextForClassInit.Context.CurrentTestOutcome) call on class-init fast-path was a no-op (value was always InProgress) — safe to skip when context is null
+- efficiency-improver merged DotnetTestDataConsumer single-pass PropertyBag (#9380) on 2026-06-24
