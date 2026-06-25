@@ -124,7 +124,12 @@ public class CustomTestDataSourceAttribute : Attribute, ITestDataSource, ITestDa
 {
     public string? IgnoreMessage { get; set; }
 
-    public IEnumerable<object[]> GetData(MethodInfo methodInfo) => [[1, 2, 3], [4, 5, 6]];
+    public IEnumerable<object[]> GetData(MethodInfo methodInfo) =>
+        new[]
+        {
+            new object[] { 1, 2, 3 },
+            new object[] { 4, 5, 6 },
+        };
 
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
         => data != null ? $"{methodInfo.Name} ({string.Join(",", data)})" : null;
@@ -145,11 +150,12 @@ To attach metadata to an individual row (rather than the whole source), return a
 public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
 {
     public IEnumerable<object[]> GetData(MethodInfo methodInfo) =>
-    [
-        [new TestDataRow<(int, int, int)>((1, 2, 3)) { DisplayName = "first row" }],
-        [new TestDataRow<(int, int, int)>((4, 5, 6)) { IgnoreMessage = "not ready yet" }],
-        [new TestDataRow<(int, int, int)>((7, 8, 9)) { TestCategories = ["custom-category"] }],
-    ];
+        new[]
+        {
+            new object[] { new TestDataRow<(int, int, int)>((1, 2, 3)) { DisplayName = "first row" } },
+            new object[] { new TestDataRow<(int, int, int)>((4, 5, 6)) { IgnoreMessage = "not ready yet" } },
+            new object[] { new TestDataRow<(int, int, int)>((7, 8, 9)) { TestCategories = new[] { "custom-category" } } },
+        };
 
     public string? GetDisplayName(MethodInfo methodInfo, object?[]? data) => null;
 }
