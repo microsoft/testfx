@@ -35,8 +35,9 @@ public enum VideoRecorderPersistenceMode
     Always,
 
     /// <summary>
-    /// Record every test, but only keep the videos when at least one test failed during the
-    /// session. When all tests pass, the recordings are deleted at the end of the run.
+    /// Record continuously, but only keep video for failed tests. In per-test granularity only the
+    /// failed tests' clips are kept; in per-session granularity the session video is kept only when
+    /// at least one test failed.
     /// </summary>
     OnFailure,
 }
@@ -48,15 +49,15 @@ public enum VideoRecorderPersistenceMode
 public enum VideoCaptureGranularity
 {
     /// <summary>
-    /// Automatically record each test individually, producing one video per test (named after the
-    /// test). This is what most people expect. Because a screen recorder is a single, serial
-    /// resource, tests being recorded should run serially (mark them <c>[DoNotParallelize]</c>);
-    /// with parallel execution only one overlapping test is recorded.
+    /// Produce one video per test. The screen is recorded continuously for the whole run and each
+    /// test's clip is cut from that recording afterwards using the test's timing, so there is no
+    /// per-test start/stop race and tests can run in parallel.
     /// </summary>
     PerTest,
 
     /// <summary>
-    /// Record the whole run as a single video (from session start to session end).
+    /// Produce a single video for the whole run, with one chapter bookmark per test (named after
+    /// the test and its outcome) so you can jump straight to a failing test.
     /// </summary>
     PerSession,
 }
@@ -152,4 +153,29 @@ public sealed class VideoRecorderOptions
     /// <c>"1920x1080"</c>.
     /// </summary>
     public string X11CaptureSize { get; set; } = "1920x1080";
+
+    /// <summary>
+    /// Gets or sets the length, in seconds, of each rolling recording segment. Smaller segments
+    /// give finer per-test cut points and finer rolling-buffer pruning at the cost of more files.
+    /// Defaults to <c>4</c>.
+    /// </summary>
+    public int SegmentLengthSeconds { get; set; } = 4;
+
+    /// <summary>
+    /// Gets or sets the rolling-buffer length that bounds how much footage is retained on disk
+    /// during a run. When set, footage older than this window that is no longer needed (it does not
+    /// overlap a running test, and in <see cref="VideoRecorderPersistenceMode.OnFailure"/> mode does
+    /// not overlap a failed test) is pruned, which keeps disk usage bounded on multi-hour runs. When
+    /// <see langword="null"/> (the default) nothing is pruned for age and the full run is retained.
+    /// Can be set on the command line with <c>--capture-video-max-duration</c>.
+    /// </summary>
+    public TimeSpan? MaxRetainedDuration { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the per-session video includes one chapter bookmark
+    /// per test (named after the test and its outcome). Only applies to
+    /// <see cref="VideoCaptureGranularity.PerSession"/>. Defaults to <see langword="true"/>. Can be
+    /// set on the command line with <c>--capture-video-chapters</c>.
+    /// </summary>
+    public bool IncludeChapters { get; set; } = true;
 }

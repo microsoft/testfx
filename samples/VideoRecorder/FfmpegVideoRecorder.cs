@@ -1,33 +1,61 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.VideoRecorder.Resources;
+
 namespace Microsoft.Testing.Extensions.VideoRecorder;
 
 /// <summary>
-/// Captures the screen by driving an external ffmpeg process. Recording is started/stopped by the
-/// <see cref="VideoRecorderSessionHandler"/>; stopping sends <c>q</c> to ffmpeg's stdin so the
-/// container is finalized cleanly (killing the process can corrupt the file).
+/// A single finalized recording segment and the time range (in seconds, relative to the start of
+/// the recording) that it covers.
+/// </summary>
+internal readonly struct VideoSegment
+{
+    public VideoSegment(string path, double startSeconds, double endSeconds)
+    {
+        Path = path;
+        StartSeconds = startSeconds;
+        EndSeconds = endSeconds;
+    }
+
+    public string Path { get; }
+
+    public double StartSeconds { get; }
+
+    public double EndSeconds { get; }
+
+    public bool Overlaps(double fromSeconds, double toSeconds)
+        => EndSeconds > fromSeconds && StartSeconds < toSeconds;
+}
+
+/// <summary>
+/// Captures the screen by driving a single long-lived ffmpeg process that writes the recording as a
+/// rolling sequence of short, independently playable segments (the ffmpeg <c>segment</c> muxer).
+/// Recording runs continuously for the whole session, which removes the start/stop race that a
+/// per-test recorder suffers (by the time an asynchronous data consumer observes that a test
+/// started, the test may already be finishing). Per-test clips and the chaptered session video are
+/// produced afterwards by losslessly concatenating (<c>-c copy</c>) the relevant segments.
 /// </summary>
 /// <remarks>
-/// This is a single, serial recorder: only one recording can be active at a time.
-/// <see cref="Start"/> is best-effort and never throws — if ffmpeg is unavailable, a recording is
-/// already running, or the launch fails, it warns and is a no-op.
+/// <see cref="Start"/> is best-effort and never throws — if ffmpeg is unavailable or the launch
+/// fails, it warns and the recorder simply produces nothing.
 /// </remarks>
 internal sealed class FfmpegVideoRecorder
 {
-    private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(10);
+    private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(15);
 
     private readonly VideoRecorderOptions _options;
     private readonly string _outputDirectory;
     private readonly string? _ffmpegPath;
     private readonly Action<string>? _log;
     private readonly Action<string>? _warn;
-    private readonly ConcurrentBag<string> _producedFiles = new();
     private readonly ConcurrentQueue<string> _recentFfmpegOutput = new();
     private readonly object _gate = new();
 
     private Process? _process;
-    private string? _currentOutputPath;
+    private string? _segmentDirectory;
+    private string? _segmentListPath;
+    private string _segmentExtension = "mp4";
 
     public FfmpegVideoRecorder(VideoRecorderOptions options, string outputDirectory, Action<string>? log, Action<string>? warn)
     {
@@ -46,15 +74,31 @@ internal sealed class FfmpegVideoRecorder
     public string? FfmpegPath => _ffmpegPath;
 
     /// <summary>
-    /// Gets the video files produced so far during the session.
+    /// Gets the wall-clock time at which continuous recording started, used to map a test's
+    /// timestamps to an offset within the recording. <see langword="null"/> until <see cref="Start"/>
+    /// succeeds.
     /// </summary>
-    public IReadOnlyCollection<string> ProducedFiles => _producedFiles;
+    public DateTimeOffset? RecordingStartUtc { get; private set; }
 
-    public void Start(string? name = null)
+    /// <summary>
+    /// Gets the directory the segments are written to, or <see langword="null"/> if recording never
+    /// started.
+    /// </summary>
+    public string? SegmentDirectory => _segmentDirectory;
+
+    /// <summary>
+    /// Gets the file extension used for produced videos (without the dot).
+    /// </summary>
+    public string SegmentExtension => _segmentExtension;
+
+    /// <summary>
+    /// Starts the continuous segmented recording. Best-effort: never throws.
+    /// </summary>
+    public void Start()
     {
         if (_ffmpegPath is null)
         {
-            _warn?.Invoke("Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.");
+            _warn?.Invoke(VideoRecorderResources.FfmpegNotFound);
             return;
         }
 
@@ -62,27 +106,17 @@ internal sealed class FfmpegVideoRecorder
         {
             if (_process is { HasExited: false })
             {
-                // Recording is a session-global, serial resource. Rather than throw (which would
-                // fail an unrelated test), skip the new request.
-                _warn?.Invoke("A recording is already in progress; ignoring the new Start() request.");
                 return;
-            }
-
-            // A previous recording that self-terminated (e.g. ffmpeg crashed) was never disposed;
-            // tear it down now so its handle and output pump don't leak into this recording.
-            if (_process is not null)
-            {
-                DetachAndDispose(_process);
-                _process = null;
-                _currentOutputPath = null;
             }
 
             Process? process = null;
             try
             {
-                Directory.CreateDirectory(_outputDirectory);
-                string outputPath = Path.Combine(_outputDirectory, BuildFileName(name));
-                string arguments = BuildArguments(outputPath);
+                _segmentExtension = _options.Format == VideoRecorderFormat.WebMVp9 ? "webm" : "mp4";
+                string segmentDirectory = Path.Combine(_outputDirectory, "segments_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+                Directory.CreateDirectory(segmentDirectory);
+                string segmentListPath = Path.Combine(segmentDirectory, "segments.csv");
+                string arguments = BuildSegmentArguments(segmentDirectory, segmentListPath);
 
                 var startInfo = new ProcessStartInfo(_ffmpegPath, arguments)
                 {
@@ -104,24 +138,258 @@ internal sealed class FfmpegVideoRecorder
                 process.BeginErrorReadLine();
 
                 _process = process;
-                _currentOutputPath = outputPath;
+                _segmentDirectory = segmentDirectory;
+                _segmentListPath = segmentListPath;
+                RecordingStartUtc = DateTimeOffset.UtcNow;
             }
             catch (Exception ex)
             {
                 // Best-effort: anything from creating the output directory, building arguments, or
                 // launching ffmpeg simply means no recording. Never surface as a test failure.
-                _warn?.Invoke($"Failed to start recording: {ex.Message}. Recording skipped.");
+                _warn?.Invoke(string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.FailedToStartRecording, ex.Message));
                 if (process is not null)
                 {
-                    // ffmpeg may already be running if the failure happened after Start();
-                    // Dispose() alone doesn't terminate it, so kill it first.
                     TryKill(process);
                     DetachAndDispose(process);
                 }
 
                 _process = null;
-                _currentOutputPath = null;
+                _segmentDirectory = null;
+                _segmentListPath = null;
+                RecordingStartUtc = null;
             }
+        }
+    }
+
+    /// <summary>
+    /// Stops the continuous recording, asking ffmpeg to finalize the current segment cleanly.
+    /// </summary>
+    public async Task StopAsync(CancellationToken cancellationToken = default)
+    {
+        Process? process;
+        lock (_gate)
+        {
+            process = _process;
+            _process = null;
+        }
+
+        if (process is null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (!process.HasExited)
+            {
+                try
+                {
+                    await process.StandardInput.WriteLineAsync("q").ConfigureAwait(false);
+                    await process.StandardInput.FlushAsync().ConfigureAwait(false);
+                }
+                catch (IOException)
+                {
+                    // stdin already closed; fall through to wait/kill.
+                }
+
+                if (!await WaitForExitAsync(process, StopTimeout, cancellationToken).ConfigureAwait(false))
+                {
+                    _warn?.Invoke(VideoRecorderResources.StopTimeoutKilled);
+                    TryKill(process);
+                }
+            }
+        }
+        finally
+        {
+            DetachAndDispose(process);
+        }
+    }
+
+    /// <summary>
+    /// Reads the finalized segments from the segment list, ordered by their position in the
+    /// recording timeline. The segment currently being written is not listed until it is finalized,
+    /// so it is naturally excluded.
+    /// </summary>
+    public IReadOnlyList<VideoSegment> ReadSegments()
+    {
+        string? listPath = _segmentListPath;
+        string? directory = _segmentDirectory;
+        if (listPath is null || directory is null || !File.Exists(listPath))
+        {
+            return [];
+        }
+
+        var segments = new List<VideoSegment>();
+        string[] lines;
+        try
+        {
+            lines = File.ReadAllLines(listPath);
+        }
+        catch (IOException)
+        {
+            return segments;
+        }
+
+        foreach (string line in lines)
+        {
+            string[] parts = line.Split(',');
+            if (parts.Length < 3
+                || !double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double start)
+                || !double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double end))
+            {
+                continue;
+            }
+
+            string path = Path.IsPathRooted(parts[0]) ? parts[0] : Path.Combine(directory, parts[0]);
+            if (File.Exists(path) && new FileInfo(path).Length > 0)
+            {
+                segments.Add(new VideoSegment(path, start, end));
+            }
+        }
+
+        return segments;
+    }
+
+    /// <summary>
+    /// Deletes the given finalized segments from disk (used by the rolling-buffer pruning to bound
+    /// disk usage on long runs). Best-effort.
+    /// </summary>
+    public void PruneSegments(IEnumerable<VideoSegment> segments)
+    {
+        foreach (VideoSegment segment in segments)
+        {
+            try
+            {
+                if (File.Exists(segment.Path))
+                {
+                    File.Delete(segment.Path);
+                }
+            }
+            catch (Exception)
+            {
+                // Best effort.
+            }
+        }
+    }
+
+    /// <summary>
+    /// Losslessly concatenates the given segments (and optional chapter metadata) into a single
+    /// output file using a short-lived ffmpeg <c>concat</c> invocation. Returns the output path on
+    /// success, or <see langword="null"/> if nothing usable was produced.
+    /// </summary>
+    public async Task<string?> ConcatAsync(IReadOnlyList<VideoSegment> segments, string outputFileName, string? ffmetadataPath, CancellationToken cancellationToken)
+    {
+        if (_ffmpegPath is null || segments.Count == 0 || _segmentDirectory is null)
+        {
+            return null;
+        }
+
+        string outputPath = Path.Combine(_outputDirectory, outputFileName);
+        string listPath = Path.Combine(_segmentDirectory, "concat_" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt");
+
+        try
+        {
+            var builder = new StringBuilder();
+            foreach (VideoSegment segment in segments)
+            {
+                // The concat demuxer requires single quotes around the path with embedded quotes escaped.
+                builder.Append("file '").Append(segment.Path.Replace("'", @"'\''")).AppendLine("'");
+            }
+
+            File.WriteAllText(listPath, builder.ToString());
+
+            var arguments = new StringBuilder();
+            arguments.Append("-y -f concat -safe 0 -i \"").Append(listPath).Append('"');
+            if (ffmetadataPath is not null)
+            {
+                arguments.Append(" -i \"").Append(ffmetadataPath).Append("\" -map 0 -map_chapters 1");
+            }
+
+            arguments.Append(" -c copy \"").Append(outputPath).Append('"');
+
+            if (!await RunFfmpegAsync(arguments.ToString(), cancellationToken).ConfigureAwait(false))
+            {
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _log?.Invoke($"Failed to concatenate segments into '{outputFileName}': {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            try
+            {
+                if (File.Exists(listPath))
+                {
+                    File.Delete(listPath);
+                }
+            }
+            catch (Exception)
+            {
+                // Best effort.
+            }
+        }
+
+        return File.Exists(outputPath) && new FileInfo(outputPath).Length > 0
+            ? outputPath
+            : null;
+    }
+
+    /// <summary>
+    /// Returns the tail of recent ffmpeg output filtered to error-like lines, for diagnostics.
+    /// </summary>
+    public string DescribeLastFfmpegError()
+    {
+        string[] lines = _recentFfmpegOutput.ToArray();
+        if (lines.Length == 0)
+        {
+            return "No ffmpeg output was captured.";
+        }
+
+        string[] errors = Array.FindAll(
+            lines,
+            line => line.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0
+                || line.IndexOf("denied", StringComparison.OrdinalIgnoreCase) >= 0
+                || line.IndexOf("Could not", StringComparison.OrdinalIgnoreCase) >= 0
+                || line.IndexOf("Failed", StringComparison.OrdinalIgnoreCase) >= 0);
+
+        return errors.Length > 0 ? string.Join(" | ", errors) : lines[lines.Length - 1];
+    }
+
+    private async Task<bool> RunFfmpegAsync(string arguments, CancellationToken cancellationToken)
+    {
+        var startInfo = new ProcessStartInfo(_ffmpegPath!, arguments)
+        {
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+
+        _log?.Invoke($"Running ffmpeg: \"{_ffmpegPath}\" {arguments}");
+
+        using var process = new Process { StartInfo = startInfo };
+        process.OutputDataReceived += OnFfmpegOutput;
+        process.ErrorDataReceived += OnFfmpegOutput;
+        try
+        {
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            await WaitForExitAsync(process, StopTimeout, cancellationToken).ConfigureAwait(false);
+            return process.HasExited && process.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            _log?.Invoke($"ffmpeg invocation failed: {ex.Message}");
+            return false;
+        }
+        finally
+        {
+            process.OutputDataReceived -= OnFfmpegOutput;
+            process.ErrorDataReceived -= OnFfmpegOutput;
         }
     }
 
@@ -143,89 +411,6 @@ internal sealed class FfmpegVideoRecorder
         process.Dispose();
     }
 
-    public async Task<string?> StopAsync(CancellationToken cancellationToken = default)
-    {
-        Process? process;
-        string? outputPath;
-        lock (_gate)
-        {
-            process = _process;
-            outputPath = _currentOutputPath;
-            _process = null;
-            _currentOutputPath = null;
-        }
-
-        if (process is null)
-        {
-            return null;
-        }
-
-        int exitCode = -1;
-        try
-        {
-            if (!process.HasExited)
-            {
-                // Ask ffmpeg to stop gracefully so it finalizes the container.
-                try
-                {
-                    await process.StandardInput.WriteLineAsync("q").ConfigureAwait(false);
-                    await process.StandardInput.FlushAsync().ConfigureAwait(false);
-                }
-                catch (IOException)
-                {
-                    // stdin already closed; fall through to wait/kill.
-                }
-
-                if (!await WaitForExitAsync(process, StopTimeout, cancellationToken).ConfigureAwait(false))
-                {
-                    _warn?.Invoke("ffmpeg did not stop within the timeout; killing the process. The video file may be incomplete.");
-                    TryKill(process);
-                }
-            }
-
-            try
-            {
-                if (process.HasExited)
-                {
-                    exitCode = process.ExitCode;
-                }
-            }
-            catch (Exception)
-            {
-                // ExitCode may be unavailable if the process was killed; leave it as -1.
-            }
-        }
-        finally
-        {
-            DetachAndDispose(process);
-        }
-
-        if (outputPath is not null && File.Exists(outputPath))
-        {
-            var outputFile = new FileInfo(outputPath);
-            if (outputFile.Length > 0)
-            {
-                _producedFiles.Add(outputPath);
-                _log?.Invoke($"Screen recording saved to '{outputPath}'.");
-                return outputPath;
-            }
-
-            // ffmpeg created the output file but captured nothing (e.g. a locked/headless
-            // desktop). Remove the empty file so it isn't mistaken for a valid recording.
-            try
-            {
-                outputFile.Delete();
-            }
-            catch (Exception)
-            {
-                // Best effort.
-            }
-        }
-
-        _warn?.Invoke($"Screen recording produced no usable file (ffmpeg exit code {exitCode}). {DescribeLastFfmpegError()}");
-        return null;
-    }
-
     private void OnFfmpegOutput(object sender, DataReceivedEventArgs e)
     {
         if (e.Data is null)
@@ -237,27 +422,69 @@ internal sealed class FfmpegVideoRecorder
 
         // Keep a small tail of ffmpeg output so capture failures can be reported with context.
         _recentFfmpegOutput.Enqueue(e.Data);
-        while (_recentFfmpegOutput.Count > 6 && _recentFfmpegOutput.TryDequeue(out _))
+        while (_recentFfmpegOutput.Count > 8 && _recentFfmpegOutput.TryDequeue(out _))
         {
         }
     }
 
-    private string DescribeLastFfmpegError()
+    private string BuildSegmentArguments(string segmentDirectory, string segmentListPath)
     {
-        string[] lines = _recentFfmpegOutput.ToArray();
-        if (lines.Length == 0)
+        int segmentSeconds = Math.Max(1, _options.SegmentLengthSeconds);
+        string input = _options.InputArgumentsOverride ?? BuildDefaultInput();
+        string encoder = _options.Format == VideoRecorderFormat.WebMVp9
+            ? "-c:v libvpx-vp9 -b:v 0 -crf 32 -deadline realtime -cpu-used 5"
+            : "-c:v libx264 -preset veryfast -crf 28";
+        string segmentFormat = _options.Format == VideoRecorderFormat.WebMVp9 ? "webm" : "mp4";
+
+        string extra = string.IsNullOrWhiteSpace(_options.ExtraRecorderArguments)
+            ? string.Empty
+            : $"{_options.ExtraRecorderArguments!.Trim()} ";
+
+        string segmentPattern = Path.Combine(segmentDirectory, $"seg_%05d.{_segmentExtension}");
+
+        // gdigrab (and some grabbers) can capture an odd width/height, but yuv420p requires both to
+        // be even. Crop to the nearest even dimensions so the encoder's format conversion can't fail
+        // with "width/height not divisible by 2". Skipped when the caller fully overrides the input.
+        string evenCrop = _options.InputArgumentsOverride is null
+            ? "-vf \"crop=trunc(iw/2)*2:trunc(ih/2)*2\" "
+            : string.Empty;
+
+        // Force a keyframe at every segment boundary so each segment starts on an IDR frame; that
+        // makes the segments independently decodable and lets us concatenate them later with
+        // stream copy (-c copy) instead of a slow, lossy re-encode.
+        return $"-y {input} {evenCrop}{encoder} -pix_fmt yuv420p -force_key_frames \"expr:gte(t,n_forced*{segmentSeconds})\" "
+            + $"-f segment -segment_time {segmentSeconds} -segment_format {segmentFormat} -reset_timestamps 1 "
+            + $"-segment_list \"{segmentListPath}\" -segment_list_type csv {extra}\"{segmentPattern}\"";
+    }
+
+    private string BuildDefaultInput()
+    {
+        int fps = _options.FrameRate;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return "No ffmpeg output was captured.";
+            if (_options.Source == VideoCaptureSource.Window)
+            {
+                if (TryGetCurrentProcessWindowRegion(out int x, out int y, out int width, out int height))
+                {
+                    return $"-f gdigrab -framerate {fps} -offset_x {x} -offset_y {y} -video_size {width}x{height} -i desktop";
+                }
+
+                _log?.Invoke(VideoRecorderResources.WindowCaptureFallback);
+            }
+
+            return $"-f gdigrab -framerate {fps} -i desktop";
         }
 
-        string[] errors = Array.FindAll(
-            lines,
-            line => line.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0
-                || line.IndexOf("denied", StringComparison.OrdinalIgnoreCase) >= 0
-                || line.IndexOf("Could not", StringComparison.OrdinalIgnoreCase) >= 0
-                || line.IndexOf("Failed", StringComparison.OrdinalIgnoreCase) >= 0);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // The avfoundation screen device index can vary; override via InputArgumentsOverride if needed.
+            return $"-f avfoundation -capture_cursor 1 -framerate {fps} -i \"Capture screen 0\"";
+        }
 
-        return errors.Length > 0 ? string.Join(" | ", errors) : lines[lines.Length - 1];
+        // Assume Linux/X11.
+        string display = Environment.GetEnvironmentVariable("DISPLAY") is { Length: > 0 } d ? d : ":0.0";
+        return $"-f x11grab -framerate {fps} -video_size {_options.X11CaptureSize} -i {display}";
     }
 
     // Resolves the screen rectangle of the window to capture so gdigrab can record just that
@@ -361,80 +588,6 @@ internal sealed class FfmpegVideoRecorder
 
         // A classic console (conhost) window owned by the console host.
         yield return NativeMethods.GetConsoleWindow();
-    }
-
-    private string BuildArguments(string outputPath)
-    {
-        string input = _options.InputArgumentsOverride ?? BuildDefaultInput();
-        string encoder = _options.Format == VideoRecorderFormat.WebMVp9
-            ? "-c:v libvpx-vp9 -b:v 0 -crf 30"
-            : "-c:v libx264 -preset ultrafast -crf 23";
-
-        string extra = string.IsNullOrWhiteSpace(_options.ExtraRecorderArguments)
-            ? string.Empty
-            : $"{_options.ExtraRecorderArguments!.Trim()} ";
-
-        return $"-y {input} {encoder} -pix_fmt yuv420p {extra}\"{outputPath}\"";
-    }
-
-    private string BuildDefaultInput()
-    {
-        int fps = _options.FrameRate;
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            if (_options.Source == VideoCaptureSource.Window)
-            {
-                if (TryGetCurrentProcessWindowRegion(out int x, out int y, out int width, out int height))
-                {
-                    return $"-f gdigrab -framerate {fps} -offset_x {x} -offset_y {y} -video_size {width}x{height} -i desktop";
-                }
-
-                _log?.Invoke("Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.");
-            }
-
-            return $"-f gdigrab -framerate {fps} -i desktop";
-        }
-
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            // The avfoundation screen device index can vary; override via InputArgumentsOverride if needed.
-            return $"-f avfoundation -capture_cursor 1 -framerate {fps} -i \"Capture screen 0\"";
-        }
-
-        // Assume Linux/X11.
-        string display = Environment.GetEnvironmentVariable("DISPLAY") is { Length: > 0 } d ? d : ":0.0";
-        return $"-f x11grab -framerate {fps} -video_size {_options.X11CaptureSize} -i {display}";
-    }
-
-    private string BuildFileName(string? name)
-    {
-        string extension = _options.Format == VideoRecorderFormat.WebMVp9 ? "webm" : "mp4";
-        string sanitized = Sanitize(name);
-        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
-
-        // A short random suffix guarantees uniqueness even if two recordings share a name and
-        // start within the same millisecond.
-        string unique = Guid.NewGuid().ToString("N").Substring(0, 4);
-        return sanitized.Length == 0
-            ? $"recording_{timestamp}_{unique}.{extension}"
-            : $"{sanitized}_{timestamp}_{unique}.{extension}";
-    }
-
-    private static string Sanitize(string? name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            return string.Empty;
-        }
-
-        var builder = new StringBuilder(name!.Length);
-        foreach (char c in name!)
-        {
-            builder.Append(Array.IndexOf(Path.GetInvalidFileNameChars(), c) >= 0 ? '_' : c);
-        }
-
-        return builder.ToString();
     }
 
     private static void TryKill(Process process)

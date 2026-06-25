@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.VideoRecorder.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
@@ -16,6 +17,8 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
     public const string SourceOptionName = "capture-video-source";
     public const string GranularityOptionName = "capture-video-granularity";
     public const string ArgsOptionName = "capture-video-args";
+    public const string MaxDurationOptionName = "capture-video-max-duration";
+    public const string ChaptersOptionName = "capture-video-chapters";
 
     public const string ModeAlways = "always";
     public const string ModeOnFailure = "on-failure";
@@ -26,9 +29,13 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
     public const string GranularityTest = "test";
     public const string GranularitySession = "session";
 
+    public const string ChaptersOn = "on";
+    public const string ChaptersOff = "off";
+
     private static readonly string[] ModeValues = [ModeOnFailure, ModeAlways];
     private static readonly string[] SourceValues = [SourceScreen, SourceWindow];
     private static readonly string[] GranularityValues = [GranularityTest, GranularitySession];
+    private static readonly string[] ChaptersValues = [ChaptersOn, ChaptersOff];
 
     public string Uid => nameof(VideoRecorderCommandLineProvider);
 
@@ -42,39 +49,48 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
     [
-        new CommandLineOption(
-            EnableOptionName,
-            "Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only when a test fails) or 'always'.",
-            ArgumentArity.ZeroOrOne,
-            isHidden: false),
-        new CommandLineOption(
-            SourceOptionName,
-            "What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.",
-            ArgumentArity.ExactlyOne,
-            isHidden: false),
-        new CommandLineOption(
-            GranularityOptionName,
-            "How recordings are split: 'test' (default, one video per test) or 'session' (one video for the whole run). Requires --capture-video.",
-            ArgumentArity.ExactlyOne,
-            isHidden: false),
-        new CommandLineOption(
-            ArgsOptionName,
-            "Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args=\"-vf scale=1280:-1\".",
-            ArgumentArity.ExactlyOne,
-            isHidden: false),
+        new CommandLineOption(EnableOptionName, VideoRecorderResources.OptionDescriptionCaptureVideo, ArgumentArity.ZeroOrOne, isHidden: false),
+        new CommandLineOption(SourceOptionName, VideoRecorderResources.OptionDescriptionSource, ArgumentArity.ExactlyOne, isHidden: false),
+        new CommandLineOption(GranularityOptionName, VideoRecorderResources.OptionDescriptionGranularity, ArgumentArity.ExactlyOne, isHidden: false),
+        new CommandLineOption(ArgsOptionName, VideoRecorderResources.OptionDescriptionArgs, ArgumentArity.ExactlyOne, isHidden: false),
+        new CommandLineOption(MaxDurationOptionName, VideoRecorderResources.OptionDescriptionMaxDuration, ArgumentArity.ExactlyOne, isHidden: false),
+        new CommandLineOption(ChaptersOptionName, VideoRecorderResources.OptionDescriptionChapters, ArgumentArity.ExactlyOne, isHidden: false),
     ];
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-        => commandOption.Name == EnableOptionName && arguments.Length > 0 && !ModeValues.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
-            ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{EnableOptionName}. Valid values are '{ModeOnFailure}' and '{ModeAlways}'.")
-            : commandOption.Name == SourceOptionName && arguments.Length > 0 && !SourceValues.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
-                ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{SourceOptionName}. Valid values are '{SourceScreen}' and '{SourceWindow}'.")
-                : commandOption.Name == GranularityOptionName && arguments.Length > 0 && !GranularityValues.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
-                    ? ValidationResult.InvalidTask($"Invalid value '{arguments[0]}' for --{GranularityOptionName}. Valid values are '{GranularityTest}' and '{GranularitySession}'.")
-                    : ValidationResult.ValidTask;
+        => arguments.Length == 0
+            ? ValidationResult.ValidTask
+            : commandOption.Name switch
+            {
+                EnableOptionName => ValidateAllowedValuesAsync(EnableOptionName, arguments[0], ModeValues),
+                SourceOptionName => ValidateAllowedValuesAsync(SourceOptionName, arguments[0], SourceValues),
+                GranularityOptionName => ValidateAllowedValuesAsync(GranularityOptionName, arguments[0], GranularityValues),
+                ChaptersOptionName => ValidateAllowedValuesAsync(ChaptersOptionName, arguments[0], ChaptersValues),
+                MaxDurationOptionName when !int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds) || seconds <= 0
+                    => ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.InvalidOptionPositiveInteger, arguments[0], MaxDurationOptionName)),
+                _ => ValidationResult.ValidTask,
+            };
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => (commandLineOptions.IsOptionSet(ArgsOptionName) || commandLineOptions.IsOptionSet(SourceOptionName) || commandLineOptions.IsOptionSet(GranularityOptionName)) && !commandLineOptions.IsOptionSet(EnableOptionName)
-            ? ValidationResult.InvalidTask($"--{ArgsOptionName}, --{SourceOptionName} and --{GranularityOptionName} require --{EnableOptionName} to be specified.")
+    {
+        bool anySubOption = commandLineOptions.IsOptionSet(ArgsOptionName)
+            || commandLineOptions.IsOptionSet(SourceOptionName)
+            || commandLineOptions.IsOptionSet(GranularityOptionName)
+            || commandLineOptions.IsOptionSet(MaxDurationOptionName)
+            || commandLineOptions.IsOptionSet(ChaptersOptionName);
+
+        return anySubOption && !commandLineOptions.IsOptionSet(EnableOptionName)
+            ? ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.SubOptionsRequireEnable, EnableOptionName))
             : ValidationResult.ValidTask;
+    }
+
+    private static Task<ValidationResult> ValidateAllowedValuesAsync(string optionName, string value, string[] allowed)
+        => allowed.Contains(value, StringComparer.OrdinalIgnoreCase)
+            ? ValidationResult.ValidTask
+            : ValidationResult.InvalidTask(string.Format(
+                CultureInfo.CurrentCulture,
+                VideoRecorderResources.InvalidOptionValue,
+                value,
+                optionName,
+                string.Join(", ", allowed.Select(v => $"'{v}'"))));
 }

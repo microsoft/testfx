@@ -27,9 +27,11 @@ runs (WinForms/WPF/Avalonia/console/browser).
 - **Default format: H.264 / MP4** (`libx264`), best for inline preview in CI dashboards
   (e.g. Azure DevOps test attachments). A royalty-free **VP9 / WebM** option exists for any future
   bundled scenario.
-- **Recording is automatic/declarative** (no public test-facing API). Granularity selects
-  per-test (default) or per-session capture; the extension drives ffmpeg itself. This keeps the
-  public surface minimal (CLI options + a registration callback) — like `--crashdump`/`--hangdump`.
+- **Recording is automatic/declarative** (no public test-facing API). The screen is recorded
+  **continuously** for the whole run as short rolling segments; granularity selects whether the
+  artifacts are **per-test clips** (default) or a single **chaptered per-session video**, both cut
+  from those segments afterwards. This keeps the public surface minimal (CLI options + a
+  registration callback) — like `--crashdump`/`--hangdump`.
 - **Extensibility:** the internal recorder is swappable, so a native backend
   (Windows.Graphics.Capture) or a UI-tool pass-through (Playwright) can be added later without
   changing the option model.
@@ -85,12 +87,40 @@ The licensing risk is **not "ffmpeg"** — it is the **GPL/patented codecs**:
 
 ## Architecture
 
-- The internal `FfmpegVideoRecorder` — the current backend. Per-OS capture input, graceful stop,
-  best-effort (never throws), prunes empty output files, warns on capture failure.
-- `VideoRecorderSessionHandler` — MTP wiring: drives recording per the **granularity** (per-test
-  by default, or per-session), tracks failures, persists/discards/attaches videos, applies CLI
-  overrides.
+- The internal `FfmpegVideoRecorder` — the current backend. It drives **one long-lived ffmpeg
+  process** that writes the recording as a rolling sequence of short, independently playable
+  **segments** (the ffmpeg `segment` muxer with a forced keyframe at each boundary). Per-OS capture
+  input, graceful stop (sends `q` so the current segment is finalized), best-effort (never throws).
+  It also exposes helpers to read the segment time-index, prune old segments, and losslessly
+  concatenate segments (`-c copy`) into per-test clips or the chaptered session video.
+- `VideoRecorderSessionHandler` — MTP wiring: starts continuous recording at session start, records
+  each test's authoritative timing (from `TimingProperty.GlobalTiming`, falling back to the observed
+  in-progress timestamp), prunes the rolling buffer during the run, and at session end cuts the
+  per-test clips or stitches the chaptered session video and attaches the kept ones.
 - `VideoRecorderCommandLineProvider` / `AddVideoRecorderProvider` — opt-in CLI + registration.
+
+### Why continuous segmented recording (the key design decision)
+
+A per-test recorder (start ffmpeg on a test's `InProgress`, stop on its terminal state) has a
+**race**: MTP delivers messages to data consumers **asynchronously** through a queue, and the test
+framework does not wait for consumers before running the test. By the time our consumer dequeues
+`InProgress` and ffmpeg spins up (~hundreds of ms), the test may already be finishing, so the start
+of the test — often the interesting part — is missed, and it serializes recording across parallel
+tests.
+
+Instead we **record the whole session continuously** and **slice afterwards** by time:
+
+- **No race / parallel-safe.** Every test is fully covered because recording never stops mid-run;
+  clips are cut from the timeline using each test's wall-clock window, so parallel tests each get
+  their overlapping footage.
+- **Per-test clips** = concatenate (stream-copy) the segments overlapping a test's `[start, end]`.
+  Clips are segment-aligned (a fraction of a second of padding), which is acceptable and lossless.
+- **Per-session video** = concatenate all surviving segments, muxing **ffmetadata chapters** (one
+  per test, titled `<test> [Outcome]`) so a reviewer can jump straight to a failing test.
+- **Disk safety on long runs.** Continuous recording could fill the disk on multi-hour runs, so a
+  **rolling buffer** (`--capture-video-max-duration`) prunes old segments that no running test needs;
+  in `on-failure` mode passed-only footage is pruned eagerly (failed-test footage is retained to be
+  sliced at the end). Stream-copy keyframe-aligned segments make both pruning and concatenation cheap.
 
 ### Capture-source resolution (Windows window mode)
 
@@ -98,7 +128,9 @@ The licensing risk is **not "ffmpeg"** — it is the **GPL/patented codecs**:
 → foreground window → console window**, read under a **Per-Monitor-V2** DPI context (so the rect is in
 physical pixels matching gdigrab) and clamped to the screen. Falls back to full screen (with a logged
 note) when no usable window exists — e.g. headless/CI, or Windows Terminal whose visible window is
-owned by the terminal (ConPTY), not the test process.
+owned by the terminal (ConPTY), not the test process. Full-screen capture is cropped to even
+dimensions (`crop=trunc(iw/2)*2:trunc(ih/2)*2`) because `gdigrab` can grab an odd-sized desktop while
+`yuv420p` requires even width/height.
 
 ## Known limitations
 
@@ -106,10 +138,12 @@ owned by the terminal (ConPTY), not the test process.
   "access denied", no video; logged and the run continues).
 - Window capture is best with a classic console window or a GUI app under test; Windows Terminal and
   headless runs fall back to full screen.
-- Single, **session-global, serial** recorder. **Per-test** granularity (the default) records each
-  test into its own video and so expects **serial** execution (mark recording tests
-  `[DoNotParallelize]`); with parallel execution only one overlapping test is captured. Use
-  `session` for one video per run.
+- A **single screen** is captured, so parallel tests share one viewport — each per-test clip shows
+  whatever was on screen during that test (including other tests' UI). Per-test clips are
+  segment-aligned, so they include a little padding around the test.
+- With a `--capture-video-max-duration` rolling buffer, footage older than the window may be pruned,
+  so a per-session video can start mid-run and an early test's clip may be unavailable. Leave it
+  unset to retain the full run.
 - macOS `avfoundation` device index may need overriding via `InputArgumentsOverride`.
 
 ## Future work ("complexify later")
