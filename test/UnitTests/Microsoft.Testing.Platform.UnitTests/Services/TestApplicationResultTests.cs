@@ -38,7 +38,7 @@ public sealed class TestApplicationResultTests : IDisposable
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_With_StrictPolicy_Returns_ZeroTestsRan()
     {
-        TestApplicationResult testApplicationResult
+        using TestApplicationResult testApplicationResult
             = new(
                 new Mock<IOutputDevice>().Object,
                 new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyStrictArgument]),
@@ -76,7 +76,7 @@ public sealed class TestApplicationResultTests : IDisposable
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_All_Skipped_With_AllowSkippedPolicy_Returns_Success()
     {
-        TestApplicationResult testApplicationResult
+        using TestApplicationResult testApplicationResult
             = new(
                 new Mock<IOutputDevice>().Object,
                 new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyAllowSkippedArgument]),
@@ -99,7 +99,7 @@ public sealed class TestApplicationResultTests : IDisposable
     [TestMethod]
     public async Task GetProcessExitCodeAsync_If_No_Tests_With_AllowSkippedPolicy_Returns_ZeroTestsRan()
     {
-        TestApplicationResult testApplicationResult
+        using TestApplicationResult testApplicationResult
             = new(
                 new Mock<IOutputDevice>().Object,
                 new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyAllowSkippedArgument]),
