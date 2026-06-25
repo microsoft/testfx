@@ -66,7 +66,7 @@ internal sealed class BlockingConsumerDataProcessor : IAsyncConsumerDataProcesso
         // We still wait for any in-flight inline consumption to finish before the processor can be
         // disposed: acquiring the single permit guarantees no consumer is currently executing, and we
         // release it immediately afterwards. The message bus marks itself disabled before calling this,
-        // so no new data can reach this processor while we wait.
+        // so the platform stops issuing new publishes to this processor while we wait.
         //
         // We intentionally wait without the cancellation token: an in-flight consumption already
         // receives the token and will unwind promptly on shutdown, but we must still wait for it to
