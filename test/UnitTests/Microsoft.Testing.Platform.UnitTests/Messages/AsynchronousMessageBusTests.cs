@@ -168,6 +168,126 @@ public sealed class AsynchronousMessageBusTests
         }
     }
 
+    [TestMethod]
+    public async Task BlockingDataConsumer_PublishAsync_DoesNotReturnUntilConsumeCompletes()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+
+        // Start publishing. Because the consumer is blocking, PublishAsync must not complete until
+        // ConsumeAsync completes, which we control through the gate below.
+        Task publishTask = proxy.PublishAsync(producer, new BlockingData());
+
+        // Wait for the consumer to be invoked inline. This proves the consumption happens as part of
+        // the publish call rather than being deferred to a background loop.
+        await consumer.ConsumeStarted.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+        // The consumer is still gated, so the publish call cannot have returned yet.
+        Assert.IsFalse(publishTask.IsCompleted);
+
+        // Release the gate and let consumption (and therefore the publish) complete.
+        consumer.AllowConsumeToComplete.SetResult(true);
+        await publishTask;
+
+        Assert.HasCount(1, consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task BlockingDataConsumer_WhenConsumerIsProducer_ShouldNotConsumeOwnData()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer");
+
+        // Release the gate upfront: if the consumer were (incorrectly) invoked for its own data, the
+        // test would fail fast on the assertion below instead of hanging on the gate.
+        consumer.AllowConsumeToComplete.SetResult(true);
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        await proxy.PublishAsync(consumer, new BlockingData());
+
+        Assert.HasCount(0, consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task BlockingDataConsumer_SerializesConcurrentPublishes()
+    {
+        using MessageBusProxy proxy = new();
+        BlockingConsumer consumer = new("BlockingConsumer")
+        {
+            ConsumeDelay = TimeSpan.FromMilliseconds(20),
+        };
+
+        // Don't gate consumption for this test; we want it to run as soon as it is invoked.
+        consumer.AllowConsumeToComplete.SetResult(true);
+
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        const int publishCount = 8;
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+        await Task.WhenAll(Enumerable.Range(0, publishCount)
+            .Select(_ => Task.Run(async () => await proxy.PublishAsync(producer, new BlockingData()), TestContext.CancellationToken)));
+
+        // Even though publishes happen concurrently, the blocking processor must serialize the inline
+        // consumption so the consumer never observes overlapping ConsumeAsync calls.
+        Assert.AreEqual(1, consumer.MaxObservedConcurrency);
+        Assert.HasCount(publishCount, consumer.ConsumedData);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
+    [TestMethod]
+    public async Task BlockingDataConsumer_WhenConsumeThrows_PublishAsyncSurfacesTheException()
+    {
+        using MessageBusProxy proxy = new();
+        ThrowingBlockingConsumer consumer = new();
+        using var asynchronousMessageBus = new AsynchronousMessageBus(
+            [consumer],
+            new CTRLPlusCCancellationTokenSource(),
+            new SystemTask(),
+            new NopLoggerFactory(),
+            new SystemEnvironment());
+        await asynchronousMessageBus.InitAsync();
+        proxy.SetBuiltMessageBus(asynchronousMessageBus);
+
+        DummyProducer producer = new("BlockingProducer", typeof(BlockingData));
+
+        // Because the consumer runs inline, its exception must propagate to the publishing producer.
+        InvalidOperationException ex = await Assert.ThrowsExactlyAsync<InvalidOperationException>(
+            async () => await proxy.PublishAsync(producer, new BlockingData()));
+        Assert.AreEqual("Blocking consumer failure", ex.Message);
+
+        await asynchronousMessageBus.DisableAsync();
+    }
+
     private sealed class NopLoggerFactory : ILoggerFactory
     {
         public ILogger CreateLogger(string categoryName) => new NopLogger();
@@ -403,6 +523,95 @@ public sealed class AsynchronousMessageBusTests
             public string? Description => nameof(InvalidDataToProduce);
         }
     }
+
+    private sealed class BlockingData : IData
+    {
+        public string DisplayName => nameof(BlockingData);
+
+        public string? Description => nameof(BlockingData);
+    }
+
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    private sealed class BlockingConsumer : IBlockingDataConsumer, IDataProducer
+    {
+        private int _currentConcurrency;
+
+        public BlockingConsumer(string id) => Uid = id;
+
+        public List<IData> ConsumedData { get; } = [];
+
+        public TaskCompletionSource<bool> ConsumeStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> AllowConsumeToComplete { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // When set, ConsumeAsync delays for this duration while inside the consumption to widen the
+        // window in which a missing serialization guarantee would surface as overlapping calls.
+        public TimeSpan ConsumeDelay { get; set; } = TimeSpan.Zero;
+
+        public int MaxObservedConcurrency { get; private set; }
+
+        public Type[] DataTypesConsumed => [typeof(BlockingData)];
+
+        public Type[] DataTypesProduced => [typeof(BlockingData)];
+
+        public string Uid { get; }
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        {
+            int concurrency = Interlocked.Increment(ref _currentConcurrency);
+            try
+            {
+                lock (ConsumedData)
+                {
+                    MaxObservedConcurrency = Math.Max(MaxObservedConcurrency, concurrency);
+                }
+
+                ConsumeStarted.TrySetResult(true);
+                await AllowConsumeToComplete.Task.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+
+                if (ConsumeDelay > TimeSpan.Zero)
+                {
+                    await Task.Delay(ConsumeDelay, cancellationToken);
+                }
+
+                lock (ConsumedData)
+                {
+                    ConsumedData.Add(value);
+                }
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _currentConcurrency);
+            }
+        }
+    }
+
+    private sealed class ThrowingBlockingConsumer : IBlockingDataConsumer
+    {
+        public Type[] DataTypesConsumed => [typeof(BlockingData)];
+
+        public string Uid => nameof(ThrowingBlockingConsumer);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => string.Empty;
+
+        public string Description => string.Empty;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+            => throw new InvalidOperationException("Blocking consumer failure");
+    }
+#pragma warning restore TPEXP
 
     private sealed class DummyProducer : IDataProducer
     {
