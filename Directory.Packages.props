@@ -113,7 +113,7 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Polly" Version="8.6.6" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.24.84" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
     <!--
       Nerdbank.MessagePack and MessagePack both come transitively via StreamJsonRpc, but we pin them
       here to pick up versions that fix security vulnerabilities in the transitive versions shipped
@@ -165,7 +165,7 @@
     PackageVersion), so the duplication can never ship out of sync.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.2.1" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.4.6" />
     <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.60.0" />
   </ItemGroup>
   <Target Name="_ValidateBundledSdkFeatureVersions"
