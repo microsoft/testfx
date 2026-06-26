@@ -93,14 +93,17 @@ public partial class InvokeTestingPlatformTask
             }
         }
 
-        string values = Environment.GetEnvironmentVariable("PATH")!;
-        foreach (string? p in values.Split(Path.PathSeparator))
+        string? values = Environment.GetEnvironmentVariable("PATH");
+        if (values is not null)
         {
-            string fullPath = Path.Combine(p, dotnetRunnerName);
-            if (File.Exists(fullPath))
+            foreach (string? p in values.Split(Path.PathSeparator))
             {
-                Log.LogMessage(MessageImportance.Low, $"Runner tool path found using PATH environment variable: '{fullPath}'");
-                return fullPath;
+                string fullPath = Path.Combine(p, dotnetRunnerName);
+                if (File.Exists(fullPath))
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Runner tool path found using PATH environment variable: '{fullPath}'");
+                    return fullPath;
+                }
             }
         }
 
@@ -150,7 +153,7 @@ public partial class InvokeTestingPlatformTask
             // In case ToolName ended up being "dotnet.exe" and we are
             // .NET Framework, that means it's the user's assembly that is named "dotnet".
             // In that case, we want to execute the tool (user's executable) directly.
-            // So, we only only "exec" if we are .NETCoreApp
+            // So, we only "exec" if we are .NETCoreApp
             builder.AppendSwitch("exec");
             builder.AppendFileNameIfNotNull(TargetPath.ItemSpec);
         }
