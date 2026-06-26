@@ -147,7 +147,7 @@ monitoring contract):
 
 ```csharp
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-public interface ITestHostHandle
+public interface ITestHostHandle : IDisposable
 {
     /// <summary>
     /// Free-form diagnostic identifier (a PID, container id, remote host:pid, …) or null. The
@@ -155,14 +155,24 @@ public interface ITestHostHandle
     /// </summary>
     string? Identifier { get; }
 
+    /// <summary>Only valid once <see cref="HasExited"/> is true (reading it earlier is undefined).</summary>
     int ExitCode { get; }
     bool HasExited { get; }
-    Task WaitForExitAsync();
+
+    /// <summary>Waits for exit, or for the token to be canceled. May be awaited more than once.</summary>
+    Task WaitForExitAsync(CancellationToken cancellationToken);
 
     /// <summary>Best-effort teardown (e.g. when hang dump aborts the run).</summary>
     void Terminate();
 }
 ```
+
+`ITestHostHandle` extends `IDisposable`: the platform owns the handle for the whole lifetime of the
+test host and disposes it once the host has exited, so implementations release any OS resources they
+hold (process objects, sockets, container clients, …) in `Dispose`. `WaitForExitAsync` takes a
+`CancellationToken` so the platform can stop waiting on cancellation; the controller host still
+reconciles the real OS exit code afterwards (on cancellation it terminates the host and waits for it
+to fully exit).
 
 Registration mirrors the existing methods on `ITestHostControllersManager`:
 
@@ -212,11 +222,22 @@ public interface ITestHostControllersManager
   environment variables, so a packaged-app launcher must transfer them another way.
 - The returned handle must report exit reliably (`WaitForExitAsync`, `ExitCode`, `HasExited`) and
   support `Terminate()` (hang dump terminates the host through it). `WaitForExitAsync` may be awaited
-  more than once.
+  more than once, and must honor its `CancellationToken`. `ExitCode` is only required to be valid
+  once `HasExited` is `true` (or after `WaitForExitAsync` completes); reading it on a still-running
+  handle is undefined and implementations are not required to throw.
+- The handle is `IDisposable`; the platform disposes it once the host has exited, so the launcher
+  should release any OS resources it holds (process object, sockets, container client, …) in
+  `Dispose`.
 - `Identifier` is an optional free-form diagnostic string (PID, container id, remote `host:pid`, …)
   and may be `null`. The platform never relies on it for control flow.
 - If the launcher cannot start the host it should throw; the platform surfaces it as a
   platform-setup failure.
+
+> The `Quote` and `PasteArguments` helpers used in the examples below are placeholders for whatever
+> argument/shell quoting the target mechanism needs (e.g. `PasteArguments` from dotnet/runtime for
+> Windows command lines, POSIX single-quoting for a shell). Implement them carefully to avoid
+> argument-injection bugs; the reference `Microsoft.Testing.Extensions.PackagedApp` extension (see the
+> implementation PR) shows a concrete approach.
 
 ## Examples
 
@@ -307,8 +328,11 @@ requires that the host ends up with `context.EnvironmentVariables`.
 
 ### 4. Container
 
-Run the test host inside a container and bridge the pipe. The returned handle tracks the
-`docker run` client process; `Terminate()` tears down the container.
+Run the test host inside a container and bridge the pipe. `docker run --rm` is used so the container
+is removed when it stops. The returned handle tracks the `docker run` client process; note that
+killing the client alone does not reliably stop the container, so a real implementation should make
+`Terminate()` run `docker stop`/`docker rm` (or run with `--init` and rely on `--rm`) rather than
+just killing the local client.
 
 ```csharp
 public Task<ITestHostHandle> LaunchTestHostAsync(
@@ -317,6 +341,9 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     var args = new List<string> { "run", "--rm", "--init" };
     foreach (var kvp in context.EnvironmentVariables.Where(kv => kv.Value is not null)) { args.Add("-e"); args.Add($"{kvp.Key}={kvp.Value}"); } // skip unset (null) vars
     // Map the controller pipe into the container (Windows named pipe / Unix domain socket mount).
+    args.Add("--name");
+    string containerName = $"mtp-{Guid.NewGuid():N}";
+    args.Add(containerName);
     args.Add("test-image:latest");
     args.Add(context.FileName);
     args.AddRange(context.Arguments);
@@ -324,7 +351,9 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     var psi = new ProcessStartInfo("docker") { UseShellExecute = false };
     foreach (string a in args) psi.ArgumentList.Add(a);
     Process p = Process.Start(psi)!;
-    return Task.FromResult<ITestHostHandle>(new ProcessHandleAdapter(p));
+    // Wrap so Terminate() runs `docker stop <containerName>` (which tears down the container), not
+    // just Kill() on the local docker client.
+    return Task.FromResult<ITestHostHandle>(new DockerRunHandle(p, containerName));
 }
 ```
 
@@ -376,8 +405,9 @@ An earlier draft of this RFC named the hook `ITestHostProcessLauncher` and retur
 is a local OS process," which is false for container and remote launches and awkward for
 AUMID-activated apps. The current design renames the types to drop "Process", replaces the `int`
 process id with an optional free-form `string Identifier` (diagnostic only), drops the redundant
-`Exited` event in favour of `WaitForExitAsync`, and names the teardown `Terminate()` instead of
-`Kill()`.
+`Exited` event in favour of `WaitForExitAsync`, gives `WaitForExitAsync` a `CancellationToken` and
+makes the handle `IDisposable` (so the platform can honor cancellation and deterministically release
+handle resources), and names the teardown `Terminate()` instead of `Kill()`.
 
 ### Do nothing (keep `Process.Start`)
 

@@ -5,7 +5,7 @@
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.HasExited.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Identifier.get -> string?
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Terminate() -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.WaitForExitAsync() -> System.Threading.Tasks.Task!
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.WaitForExitAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher.LaunchTestHostAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle!>!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext

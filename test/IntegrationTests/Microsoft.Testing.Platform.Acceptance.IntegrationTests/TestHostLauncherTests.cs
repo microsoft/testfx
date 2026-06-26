@@ -124,9 +124,11 @@ public sealed class ProcessTestHostHandle : ITestHostHandle
 
     public bool HasExited => _process.HasExited;
 
-    public Task WaitForExitAsync() => _process.WaitForExitAsync();
+    public Task WaitForExitAsync(CancellationToken cancellationToken) => _process.WaitForExitAsync(cancellationToken);
 
     public void Terminate() => _process.Kill();
+
+    public void Dispose() => _process.Dispose();
 }
 
 public class DummyTestFramework : ITestFramework, IDataProducer

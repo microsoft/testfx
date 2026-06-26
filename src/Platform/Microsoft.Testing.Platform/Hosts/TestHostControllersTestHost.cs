@@ -321,7 +321,19 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 }
 
                 await _logger.LogDebugAsync("Wait for test host process exit").ConfigureAwait(false);
-                await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
+                try
+                {
+                    await testHostProcess.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // The run was canceled while waiting for the test host to exit. Tear the host down
+                    // and wait (without cancellation) for it to fully exit, so the exit-code
+                    // reconciliation below still observes a real OS exit code.
+                    await _logger.LogDebugAsync("Wait for test host process exit was canceled; terminating the test host").ConfigureAwait(false);
+                    testHostProcess.Kill();
+                    await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
+                }
             }
 
             if (_testHostPID is null)

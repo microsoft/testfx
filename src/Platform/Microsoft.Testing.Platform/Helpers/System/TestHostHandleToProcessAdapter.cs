@@ -15,6 +15,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 internal sealed class TestHostHandleToProcessAdapter : IProcess
 {
     private readonly ITestHostHandle _handle;
+    private readonly CancellationTokenSource _disposedCts = new();
 
     public TestHostHandleToProcessAdapter(ITestHostHandle handle)
     {
@@ -42,23 +43,29 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 
     public DateTime StartTime => default;
 
-    public Task WaitForExitAsync() => _handle.WaitForExitAsync();
+    public Task WaitForExitAsync(CancellationToken cancellationToken) => _handle.WaitForExitAsync(cancellationToken);
 
-    public void WaitForExit() => _handle.WaitForExitAsync().GetAwaiter().GetResult();
+    public void WaitForExit() => _handle.WaitForExitAsync(CancellationToken.None).GetAwaiter().GetResult();
 
     public void Kill() => _handle.Terminate();
 
-    public void Dispose() => (_handle as IDisposable)?.Dispose();
+    public void Dispose()
+    {
+        _disposedCts.Cancel();
+        _disposedCts.Dispose();
+        _handle.Dispose();
+    }
 
     private async Task RaiseExitedWhenDoneAsync()
     {
         try
         {
-            await _handle.WaitForExitAsync().ConfigureAwait(false);
+            await _handle.WaitForExitAsync(_disposedCts.Token).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            // The Exited event is informational only; never surface failures from this path.
+            // The Exited event is informational only; never surface failures (including cancellation
+            // when the adapter is disposed before the host exits) from this path.
             Debug.WriteLine($"Ignoring failure while awaiting test host exit for the informational Exited event: {ex}");
         }
 

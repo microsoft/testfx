@@ -29,7 +29,7 @@ internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
 
     public bool HasExited => _process.HasExited;
 
-    public Task WaitForExitAsync() => _process.WaitForExitAsync();
+    public Task WaitForExitAsync(CancellationToken cancellationToken) => _process.WaitForExitAsync(cancellationToken);
 
     public void Terminate()
     {

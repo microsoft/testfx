@@ -28,7 +28,7 @@ internal interface IProcess : IDisposable
     /// <summary>
     /// Instructs the Process component to wait for the associated process to exit, or for the cancellationToken to be canceled.
     /// </summary>
-    Task WaitForExitAsync();
+    Task WaitForExitAsync(CancellationToken cancellationToken);
 
     /// <inheritdoc cref="Process.WaitForExit()" />
     void WaitForExit();
