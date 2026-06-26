@@ -10,7 +10,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// that deliberately exposes no identifier, modelling a launch where no local, queryable PID is
 /// available.
 /// </summary>
-internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
+internal sealed class PackagedAppTestHostHandle : ITestHostHandle
 {
     private readonly Process _process;
     private readonly string _deploymentDirectory;

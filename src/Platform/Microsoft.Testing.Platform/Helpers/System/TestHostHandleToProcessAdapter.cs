@@ -64,9 +64,11 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
         }
         catch (Exception ex)
         {
-            // The Exited event is informational only; never surface failures (including cancellation
-            // when the adapter is disposed before the host exits) from this path.
+            // The wait faulted or was cancelled (e.g. the adapter was disposed before the host
+            // exited). The host did not necessarily exit, so do NOT raise the informational Exited
+            // event and never surface the failure from this best-effort path.
             Debug.WriteLine($"Ignoring failure while awaiting test host exit for the informational Exited event: {ex}");
+            return;
         }
 
         Exited?.Invoke(this, EventArgs.Empty);

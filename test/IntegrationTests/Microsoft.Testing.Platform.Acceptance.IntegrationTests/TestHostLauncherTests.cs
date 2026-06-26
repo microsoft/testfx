@@ -85,7 +85,11 @@ public sealed class TestHostLauncher : ITestHostLauncher
 
     public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
     {
-        System.IO.File.WriteAllText("LaunchTestHostAsync.txt", "TestHostLauncher.LaunchTestHostAsync");
+        // Write the marker next to the test host executable (context.FileName) so its location is
+        // deterministic regardless of the controller process' current working directory. The test
+        // reads it from testHost.DirectoryName, which is the same folder.
+        string markerPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(context.FileName)!, "LaunchTestHostAsync.txt");
+        System.IO.File.WriteAllText(markerPath, "TestHostLauncher.LaunchTestHostAsync");
 
         var startInfo = new ProcessStartInfo(context.FileName)
         {
