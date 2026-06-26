@@ -38,6 +38,25 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     /// </summary>
     protected virtual IReadOnlyList<MetadataMode> SourceGenMetadataModes => [];
 
+    // THROWAWAY SURVEY BRANCH — do not merge.
+    // When this environment variable is truthy, every fixture (opt-out, ignoring SourceGenMetadataModes)
+    // attempts to build these source-gen variants, and the outcome is RECORDED rather than asserted, so
+    // a single CI run gauges how many acceptance assets cannot support source generation today.
+    // Scoped to SourceGeneration for this first pass to bound CI cost; AOT is a planned second pass.
+    private const string SurveyEnvironmentVariable = "MSTEST_ACCEPTANCE_SOURCEGEN_SURVEY";
+
+    private static readonly MetadataMode[] SurveyModes = [MetadataMode.SourceGeneration];
+
+    private static bool IsSurveyEnabled
+    {
+        get
+        {
+            string? value = Environment.GetEnvironmentVariable(SurveyEnvironmentVariable);
+            return value is not null
+                && (value == "1" || string.Equals(value, "true", StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
@@ -50,6 +69,16 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: assetName, cancellationToken: cancellationToken);
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
+
+        // THROWAWAY SURVEY BRANCH — do not merge.
+        // Survey mode takes precedence over the normal opt-in path: build the survey modes for EVERY
+        // fixture and record the outcome instead of asserting, so we can gauge source-gen support
+        // across the whole acceptance suite from a single (green) CI run.
+        if (IsSurveyEnabled)
+        {
+            await RunSourceGenSurveyAsync(testAsset, assetName, result, cancellationToken);
+            return;
+        }
 
         // Opt-in: for each source-gen metadata mode the fixture declares, build a second variant with
         // the matching generator injected, into an isolated bin/<sub> + obj/<sub> output, so the same
@@ -73,6 +102,53 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
                         $"The {mode} build of acceptance asset '{assetName}' failed with exit code {sourceGenResult.ExitCode}.{Environment.NewLine}{sourceGenResult}");
                 }
             }
+        }
+    }
+
+    // THROWAWAY SURVEY BRANCH — do not merge.
+    private async Task RunSourceGenSurveyAsync(TestAsset testAsset, string assetName, DotnetMuxerResult reflectionResult, CancellationToken cancellationToken)
+    {
+        // Build the union of the survey modes (measured for every fixture, opt-out) and any modes the
+        // fixture already declares (so already-converted classes whose tests run in those modes still
+        // find their bin/<sub> output and stay green). Everything is non-fatal in survey mode.
+        MetadataMode[] modesToBuild = [.. SurveyModes.Concat(SourceGenMetadataModes).Distinct()];
+        var results = new Dictionary<MetadataMode, DotnetMuxerResult?>();
+
+        foreach (MetadataMode mode in modesToBuild)
+        {
+            // If even the plain reflection build failed, the asset is broken independently of source
+            // generation; record a skip so it does not count as a source-gen failure.
+            if (reflectionResult.ExitCode != 0)
+            {
+                results[mode] = null;
+                continue;
+            }
+
+            try
+            {
+                string sourceGenArgs = await AcceptanceSourceGen.PrepareBuildArgumentsAsync(testAsset.TargetAssetPath, mode);
+                results[mode] = await DotnetCli.RunAsync(
+                    $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
+                    failIfReturnValueIsNotZero: false,
+                    callerMemberName: $"{assetName}_{AcceptanceSourceGen.GetOutputSubFolder(mode)}_survey",
+                    cancellationToken: cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                // Never let the survey itself fail a test class; record and continue.
+                SourceGenSurvey.Record(assetName, mode, result: null, skippedReason: $"survey-exception: {ex.GetType().Name}: {ex.Message}");
+            }
+        }
+
+        // Record one survey line per measured (opt-out) mode.
+        foreach (MetadataMode mode in SurveyModes)
+        {
+            results.TryGetValue(mode, out DotnetMuxerResult? modeResult);
+            SourceGenSurvey.Record(
+                assetName,
+                mode,
+                modeResult,
+                skippedReason: reflectionResult.ExitCode != 0 ? "reflection-build-failed" : null);
         }
     }
 

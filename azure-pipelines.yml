@@ -33,6 +33,13 @@ variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: MSTest
+  # THROWAWAY SURVEY BRANCH — do not merge.
+  # Turns on the source-gen survey in TestAssetFixtureBase: every acceptance fixture attempts to build
+  # its asset under MetadataMode.SourceGeneration (opt-out) and RECORDS the outcome via SourceGenSurvey
+  # (tagged "##SGSURVEY##" console lines) instead of asserting, so a single CI run gauges how many
+  # acceptance assets cannot support source generation today. Remove before merging.
+  - name: MSTEST_ACCEPTANCE_SOURCEGEN_SURVEY
+    value: 1
   - name: _RunAsInternal
     value: False
   - name: _RunAsPublic
