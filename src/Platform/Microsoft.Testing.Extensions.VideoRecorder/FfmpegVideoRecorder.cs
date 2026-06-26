@@ -395,7 +395,15 @@ internal sealed class FfmpegVideoRecorder
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-            await WaitForExitAsync(process, StopTimeout, cancellationToken).ConfigureAwait(false);
+            if (!await WaitForExitAsync(process, StopTimeout, cancellationToken).ConfigureAwait(false))
+            {
+                // ffmpeg didn't finish within the timeout (or the run was cancelled). Disposing the
+                // Process below does not terminate the underlying OS process, so kill it explicitly
+                // to avoid leaving an orphaned ffmpeg behind on slow machines or long sessions.
+                TryKill(process);
+                return false;
+            }
+
             return process.HasExited && process.ExitCode == 0;
         }
         catch (Exception ex)
