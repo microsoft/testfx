@@ -56,9 +56,10 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
         {
             await _handle.WaitForExitAsync().ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
             // The Exited event is informational only; never surface failures from this path.
+            Debug.WriteLine($"Ignoring failure while awaiting test host exit for the informational Exited event: {ex}");
         }
 
         Exited?.Invoke(this, EventArgs.Empty);
