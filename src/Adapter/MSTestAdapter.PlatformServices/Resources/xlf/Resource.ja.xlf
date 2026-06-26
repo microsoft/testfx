@@ -249,11 +249,6 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">MSTestAdapter で設定 '{1}' に予期しない要素 '{0}' が見つかりました。この要素を削除して、もう一度お試しください。</target>
         <note>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</note>
       </trans-unit>
-      <trans-unit id="InvalidTimeoutValue">
-        <source>Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</target>
-        <note>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</note>
-      </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">runsettings エントリ '{1}' の値 '{0}' は無効です。設定は無視されます。</target>
