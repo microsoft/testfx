@@ -207,6 +207,10 @@
     <value>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</value>
     <comment>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</comment>
   </data>
+  <data name="InvalidTimeoutValue" xml:space="preserve">
+    <value>Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</value>
+    <comment>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</comment>
+  </data>
   <data name="AssemblyCleanupTimedOut" xml:space="preserve">
     <value>Assembly cleanup method '{0}.{1}' timed out after {2}ms</value>
     <comment>{0} is the type name. {1} is the assembly cleanup method name. {2} is the timeout in milliseconds.</comment>

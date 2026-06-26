@@ -248,6 +248,11 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">MSTestAdapter ha rilevato un elemento imprevisto '{0}' nelle impostazioni '{1}'. Rimuovere l'elemento e riprovare.</target>
         <note>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</note>
       </trans-unit>
+      <trans-unit id="InvalidTimeoutValue">
+        <source>Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</source>
+        <target state="new">Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</target>
+        <note>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</note>
+      </trans-unit>
       <trans-unit id="InvalidValue">
         <source>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</source>
         <target state="translated">Valore non valido '{0}' per la voce runsettings '{1}'. L'impostazione verrà ignorata.</target>
