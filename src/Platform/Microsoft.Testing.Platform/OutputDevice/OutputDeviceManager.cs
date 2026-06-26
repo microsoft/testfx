@@ -20,11 +20,25 @@ internal sealed class PlatformOutputDeviceManager
     internal async Task<ProxyOutputDevice> BuildAsync(ServiceProvider serviceProvider, bool useServerModeOutputDevice, bool isPipeProtocol)
     {
         // Under the dotnet test pipe protocol, the SDK's TerminalTestReporter owns all
-        // user-facing output, so we deliberately install a no-op device here. See #7161
+        // user-facing output, so the host must not produce console output of its own. See #7161
         // and dotnet/sdk#51615 for the broader context.
+        //
+        // Outside Azure DevOps there is nothing to forward, so we keep the pure no-op device. Under
+        // Azure DevOps the AzureDevOpsReport extension produces logging commands (##[group],
+        // ##vso[...]) that must still reach the pipeline log; DotnetTestPassthroughOutputDevice
+        // forwards those marked lines to the SDK over the protocol while discarding everything else.
+        // The forwarder gates on the agent only (TF_BUILD), NOT the TESTINGPLATFORM_AZDO_OUTPUT opt-out:
+        // that opt-out is scoped to the platform's automatic ##vso[task.logissue] emission, and honoring
+        // it here would make multi-assembly forwarding inconsistent with single-assembly runs (where the
+        // extension's output is gated on TF_BUILD alone).
         if (isPipeProtocol)
         {
-            return new ProxyOutputDevice(new NopPlatformOutputDevice(), serverModeOutputDevice: null);
+            IPlatformOutputDevice pipeProtocolOutputDevice =
+                AzureDevOpsLogIssueFormatter.IsAzureDevOpsAgent(serviceProvider.GetEnvironment())
+                    ? new DotnetTestPassthroughOutputDevice(serviceProvider)
+                    : new NopPlatformOutputDevice();
+
+            return new ProxyOutputDevice(pipeProtocolOutputDevice, serverModeOutputDevice: null);
         }
 
         // SetPlatformOutputDevice isn't public yet. Before exposing it, we should decide

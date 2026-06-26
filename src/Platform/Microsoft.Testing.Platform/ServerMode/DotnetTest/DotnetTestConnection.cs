@@ -87,6 +87,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     public bool IsIDE { get; private set; }
 
+    // True once the handshake negotiated protocol version 1.2.0 or later, which is when the SDK is
+    // able to receive AzureDevOpsLogMessage forwards. The host gates forwarding on this so an older
+    // SDK (1.0.0/1.1.0) never receives an unknown message id.
+    public bool IsLogForwardingSupported { get; private set; }
+
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
@@ -122,8 +127,16 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             bool.TryParse(isIDEValue, out bool isIDE) &&
             isIDE;
 
-        return response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true &&
-            IsVersionCompatible(protocolVersion, supportedProtocolVersions);
+        if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) == true)
+        {
+            bool isCompatible = IsVersionCompatible(protocolVersion, supportedProtocolVersions);
+            IsLogForwardingSupported = isCompatible
+                && Version.TryParse(protocolVersion, out Version? negotiatedVersion)
+                && negotiatedVersion >= new Version(1, 2, 0);
+            return isCompatible;
+        }
+
+        return false;
     }
 
     private string GetExecutionMode()
@@ -155,6 +168,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
             case TestSessionEvent testSessionEvent:
                 await _dotnetTestPipeClient.RequestReplyAsync<TestSessionEvent, VoidResponse>(testSessionEvent, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                break;
+
+            case AzureDevOpsLogMessage azureDevOpsLogMessage:
+                await _dotnetTestPipeClient.RequestReplyAsync<AzureDevOpsLogMessage, VoidResponse>(azureDevOpsLogMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
         }
     }

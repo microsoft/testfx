@@ -162,7 +162,7 @@ internal sealed class AzureDevOpsReporter :
         bool isQuarantined = _quarantineFile?.Matches(testName) == true;
         if (isQuarantined && Interlocked.Exchange(ref _quarantineBuildTagEmitted, 1) == 0)
         {
-            await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(QuarantineBuildTagLine), cancellationToken).ConfigureAwait(false);
+            await _outputDisplay.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(QuarantineBuildTagLine), cancellationToken).ConfigureAwait(false);
         }
 
         string severity = GetSeverity(testName, isQuarantined);
@@ -183,7 +183,7 @@ internal sealed class AzureDevOpsReporter :
             _logger.LogTrace($"Showing failure message '{line}'.");
         }
 
-        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)

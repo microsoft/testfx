@@ -428,7 +428,7 @@ public sealed class AzureDevOpsArtifactUploaderTests
         => segments.Aggregate(OutsideResultsDirectory, Path.Combine);
 
     private string[] GetFormattedLines()
-        => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
+        => [.. _outputData.OfType<TextOutputDeviceData>().Select(output => output.Text)];
 
     private string[] GetWarnings()
         => [.. _outputData.OfType<WarningMessageOutputDeviceData>().Select(output => output.Message)];

@@ -40,6 +40,7 @@ internal static class DotnetTestPipeProtocol
         public const int TestSessionEvent = 8;
         public const int HandshakeMessage = 9;
         public const int TestInProgressMessages = 10;
+        public const int AzureDevOpsLogMessage = 11;
     }
 
     public static class HandshakeProperties
@@ -69,6 +70,13 @@ internal static class DotnetTestPipeProtocol
         public const ushort SessionType = 1;
         public const ushort SessionUid = 2;
         public const ushort ExecutionId = 3;
+    }
+
+    public static class AzureDevOpsLogMessageFields
+    {
+        public const ushort ExecutionId = 1;
+        public const ushort InstanceId = 2;
+        public const ushort LogText = 3;
     }
 
     /// <summary>
@@ -219,6 +227,44 @@ internal static class DotnetTestPipeProtocol
         }
 
         return (sessionType, sessionUid, executionId);
+    }
+
+    /// <summary>
+    /// Decodes the body of a <see cref="SerializerIds.AzureDevOpsLogMessage"/> frame.
+    /// Format: <c>ushort fieldCount; (ushort fieldId, int fieldSize, payload)*fieldCount</c>
+    /// where every field is a length-prefixed UTF-8 string. Returns <c>null</c> for absent fields.
+    /// </summary>
+    public static (string? ExecutionId, string? InstanceId, string? LogText) DecodeAzureDevOpsLogMessageBody(byte[] body)
+    {
+        string? executionId = null;
+        string? instanceId = null;
+        string? logText = null;
+
+        using MemoryStream stream = new(body, writable: false);
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            switch (fieldId)
+            {
+                case AzureDevOpsLogMessageFields.ExecutionId:
+                    executionId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case AzureDevOpsLogMessageFields.InstanceId:
+                    instanceId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case AzureDevOpsLogMessageFields.LogText:
+                    logText = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                default:
+                    stream.Seek(fieldSize, SeekOrigin.Current);
+                    break;
+            }
+        }
+
+        return (executionId, instanceId, logText);
     }
 
     /// <summary>

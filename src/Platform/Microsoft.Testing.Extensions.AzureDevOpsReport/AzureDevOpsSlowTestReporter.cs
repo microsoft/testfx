@@ -263,7 +263,7 @@ internal sealed class AzureDevOpsSlowTestReporter : IDataConsumer, ITestSessionL
             line = $"{line}  {decoration}";
         }
 
-        await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
+        await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
     }
 
     private TimeSpan ResolveThreshold(string testName)

@@ -137,7 +137,7 @@ public sealed class AzureDevOpsLogGroupReporterTests
     }
 
     private string[] GetFormattedLines()
-        => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
+        => [.. _outputData.OfType<TextOutputDeviceData>().Select(output => output.Text)];
 
     private sealed class TestSessionContext : ITestSessionContext
     {
