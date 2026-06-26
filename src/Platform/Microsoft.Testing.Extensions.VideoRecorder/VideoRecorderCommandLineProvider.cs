@@ -39,11 +39,11 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
 
     public string Uid => nameof(VideoRecorderCommandLineProvider);
 
-    public string Version => "1.0.0";
+    public string Version => ExtensionVersion.DefaultSemVer;
 
-    public string DisplayName => "Video recorder";
+    public string DisplayName => VideoRecorderResources.ExtensionDisplayName;
 
-    public string Description => "Command-line options for the video recorder extension.";
+    public string Description => VideoRecorderResources.CommandLineProviderDescription;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

@@ -95,8 +95,8 @@
     <comment>Informational message on non-Windows when window capture is requested.</comment>
   </data>
   <data name="RecordingCapReached" xml:space="preserve">
-    <value>Video recording reached its configured cap ({0}); recording stopped. Tests after this point are not captured.</value>
-    <comment>Warning when the recording size/duration cap is hit. {0} describes the cap that was reached.</comment>
+    <value>Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</value>
+    <comment>Warning when the rolling-buffer size/duration limit is hit and old footage is pruned. {0} describes the limit that was reached.</comment>
   </data>
   <data name="CapDurationDescription" xml:space="preserve">
     <value>duration {0}</value>
@@ -181,5 +181,17 @@
   <data name="SubOptionsRequireEnable" xml:space="preserve">
     <value>The video recorder sub-options require --{0} to be specified.</value>
     <comment>Validation error when a sub-option is used without the enable option. {0} is the enable option name.</comment>
+  </data>
+  <data name="ExtensionDisplayName" xml:space="preserve">
+    <value>Video recorder</value>
+    <comment>Display name of the video recorder extension.</comment>
+  </data>
+  <data name="ExtensionDescription" xml:space="preserve">
+    <value>Records the screen during a test run using ffmpeg.</value>
+    <comment>Description of the video recorder extension.</comment>
+  </data>
+  <data name="CommandLineProviderDescription" xml:space="preserve">
+    <value>Command-line options for the video recorder extension.</value>
+    <comment>Description of the video recorder command-line options provider.</comment>
   </data>
 </root>

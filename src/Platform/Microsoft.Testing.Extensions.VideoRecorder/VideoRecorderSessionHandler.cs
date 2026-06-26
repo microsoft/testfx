@@ -36,6 +36,8 @@ internal sealed class VideoRecorderSessionHandler :
     IDataProducer,
     IOutputDeviceDataProducer
 {
+    private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+
     private readonly bool _enabled;
     private readonly FfmpegVideoRecorder? _recorder;
     private readonly VideoRecorderOptions _options;
@@ -98,11 +100,11 @@ internal sealed class VideoRecorderSessionHandler :
 
     public string Uid => nameof(VideoRecorderSessionHandler);
 
-    public string Version => "1.0.0";
+    public string Version => ExtensionVersion.DefaultSemVer;
 
-    public string DisplayName => "Video recorder";
+    public string DisplayName => VideoRecorderResources.ExtensionDisplayName;
 
-    public string Description => "Records the screen during a test run using ffmpeg.";
+    public string Description => VideoRecorderResources.ExtensionDescription;
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
@@ -338,7 +340,7 @@ internal sealed class VideoRecorderSessionHandler :
 
         (TestRecord Record, double Start, double End)[] ordered = records
             .Select(record => (Record: record, Start: Math.Max(0, (record.Start - recordingStart).TotalSeconds - baseOffset), End: (record.End - recordingStart).TotalSeconds - baseOffset))
-            .Where(item => item.End > 0)
+            .Where(item => item.End > 0 && item.Start < videoEnd)
             .OrderBy(item => item.Start)
             .ToArray();
 
@@ -508,7 +510,10 @@ internal sealed class VideoRecorderSessionHandler :
         string extension = _recorder!.SegmentExtension;
         string sanitized = Sanitize(name);
         string timestamp = _clock.UtcNow.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
-        string unique = Guid.NewGuid().ToString("N").Substring(0, 4);
+
+        // A short random suffix guarantees uniqueness even if two clips share a name and are
+        // produced within the same millisecond.
+        string unique = Guid.NewGuid().ToString("N").Substring(0, 8);
         return sanitized.Length == 0
             ? $"recording_{timestamp}_{unique}.{extension}"
             : $"{sanitized}_{timestamp}_{unique}.{extension}";
@@ -524,7 +529,7 @@ internal sealed class VideoRecorderSessionHandler :
         var builder = new StringBuilder(name!.Length);
         foreach (char c in name!)
         {
-            builder.Append(Array.IndexOf(Path.GetInvalidFileNameChars(), c) >= 0 ? '_' : c);
+            builder.Append(Array.IndexOf(InvalidFileNameChars, c) >= 0 ? '_' : c);
         }
 
         return builder.ToString();
