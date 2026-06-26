@@ -1,60 +1,83 @@
 # Perf Improver — State for microsoft/testfx
 
-_Last updated: 2026-06-25 (run 28176552850)_
+## Validated Commands
+
+```sh
+# Build all projects (Debug)
+./build.sh
+
+# Build + run unit tests
+./build.sh -test
+
+# Pack NuGet packages (required before acceptance tests and performance runner)
+./build.sh -pack
+
+# Run acceptance integration tests (requires -pack first)
+./build.sh -pack -test -integrationTest
+
+# Run performance timing scenarios (requires -pack first)
+.dotnet/dotnet run --project test/Performance/MSTest.Performance.Runner \
+  -- execute --pipelineNameFilter "*PlainProcess*"
+
+# Run a single test project
+.dotnet/dotnet run --project <project-path> -f net9.0 --no-build -- --treenode-filter "*/*/MyTestClass/*"
+```
+
+NOTE: Local SDK (.dotnet/) is NOT available in CI agent. Build/test must go through CI.
+NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.PlatformServices.UnitTests — NOT MSTest Assert.
 
 ## Completed Work
 
-| PR | Description | Status |
-|---|---|---|
-| #9159 | perf: single-pass PropertyBag walk in TerminalOutputDevice | Merged by Evangelink 2026-06-16 |
-| #9257 | perf: replace per-test Queue/Stack with List-based index iteration | Merged by Evangelink 2026-06-19 |
-| #9299 | perf: Array.IndexOf(GetType()) → is pattern in TestApplicationResult, AbortForMaxFailedTests, RetryDataConsumer | Merged by Evangelink 2026-06-22 |
-| #9311 | perf: extend MSTest.Performance.Runner timing to Linux/macOS + ClassLevel variant | Merged by Evangelink 2026-06-22 |
-| #9312 (issue) | Proposal: Phase 1 nightly perf-timing CI workflow | Closed — Evangelink implemented via PR #9325 |
-| #9348 | perf: avoid redundant TestNodeUid allocation in PopulateTestNodeStatistics | Merged by Evangelink 2026-06-23 |
+- PR #9159 merged: perf: single-pass PropertyBag walk in TerminalOutputDevice
+- PR #9257 merged: perf: replace per-test Queue/Stack allocation in TestMethodInfo lifecycle
+- PR #9299 merged: Replace Array.IndexOf(GetType()) with is pattern matching in TestApplicationResult etc.
+- PR #9311 merged: Extend performance runner to Linux/macOS; add ClassLevel variant
+- PR #9348 merged: Avoid redundant TestNodeUid allocation in server mode
+- PR #9433 merged (2026-06-26): Skip unused TestContextImplementation allocs in RunSingleTestAsync (assembly/class init fast path)
+- PR #9450 merged (2026-06-26): Add Linux job to nightly perf-timing workflow
 
 ## Open Work
 
-| Branch | Description | Status |
-|---|---|---|
-| perf-assist/skip-unused-init-contexts | perf: skip unused TestContextImplementation allocs for repeat assembly/class init | PR submitted 2026-06-25 (draft), awaiting CI/review |
-
-**Note**: The Linux perf-timing job PR (branch: perf-assist/add-linux-perf-timing-job) was NEVER actually created (safe-outputs failed silently in runs 28032837283 and 28105007003). Removed from tracking.
+- Branch perf-assist/defer-class-cleanup-context-alloc — PR submitted 2026-06-26
+  - Defers testContextForClassCleanup allocation inside if(isLastTestInClass) block
+  - Saves C*(K-1) TestContextImplementation allocs per run (one dict copy + CancellationTokenRegistration each)
+  - Files: UnitTestRunner.cs + UnitTestRunnerTests.cs
+  - Safety: ShouldRunEndOfAssemblyCleanup can only be true when isLastTestInClass is true (MarkClassComplete only called in that block)
 
 ## Optimization Backlog
 
-1. `AnsiTerminal.StopUpdate()` — `_stringBuilder.ToString()` on every flush. Blocked by IConsole limitation. Low priority.
-2. `SilenceDrivenHeartbeatRenderer` — allocations only on rare heartbeat paths. Low priority.
-3. `ClassifyOutcome` in `TestResultCaptureHelper.cs` — add explicit `CancelledTestNodeStateProperty` arm. Very low impact. Backlog only.
+Priority | Item
+---------|-----
+Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450 merged
+Pending | defer-class-cleanup-context-alloc (PR submitted 2026-06-26)
+Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
+Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
+Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
+
+## Performance Notes
+
+- TestContextImplementation ctor copies testContextProperties dict + registers CancellationTokenRegistration — non-trivial per-test cost
+- TestablePlatformServiceProvider.GetTestContextCallCount tracks allocation counts in unit tests
+- MarkClassComplete is only called inside if(isLastTestInClass) — ShouldRunEndOfAssemblyCleanup invariant
+- efficiency-improver bot also operates on this repo — check for duplicate opportunities before creating PRs
+- Acceptance tests need -pack first; unit tests do not
+
+## Task Schedule (last run dates)
+
+- Task 1 (Commands): 2026-06-25
+- Task 2 (Identify): 2026-06-26 ✓ this run
+- Task 3 (Implement): 2026-06-26 ✓ this run
+- Task 4 (Maintain PRs): 2026-06-26 ✓ this run
+- Task 5 (Comment issues): 2026-06-24
+- Task 6 (Infra): 2026-06-21
+- Task 7 (Monthly Summary): 2026-06-26 ✓ this run (issue #9258)
 
 ## Monthly Activity Issue
 
-Issue #9258 — open, "[perf-improver] Monthly Activity 2026-06"
-- Updated 2026-06-25 with new PR (skip unused TestContextImplementation allocs)
+Issue #9258: [perf-improver] Monthly Activity 2026-06 (open)
+Last updated: 2026-06-26 run 28243694549
 
-## Task Schedule (round-robin)
+## Backlog Cursor
 
-| Task | Last Run |
-|---|---|
-| T1: Discover commands | 2026-06-19 (validated) |
-| T2: Identify opportunities | 2026-06-25 |
-| T3: Implement improvement | 2026-06-25 (PR: skip-unused-init-contexts) |
-| T4: Maintain PRs | 2026-06-24 |
-| T5: Comment on issues | 2026-06-25 |
-| T6: Measurement infrastructure | 2026-06-24 |
-| T7: Monthly summary | 2026-06-25 ✅ |
-
-## Checked-off items (by maintainer) — do NOT re-suggest
-
-- (none yet)
-
-## Notes
-
-- Repository uses pinned SDK 11.0.100-preview — local build/test not possible in CI agent
-- No `AGENTS.md` found in repo
-- `efficiency-improver` agent also operates on this repo — check before commenting (anti-spam)
-- PropertyBag SingleOrDefault<TestNodeStateProperty>() is O(1) via _testNodeStateProperty fast-path
-- TestContextImplementation ctor: copies testContextProperties dict + registers CancellationTokenRegistration
-- TryGetClonedCachedClassInitializeResult(): changed from private to internal in TestClassInfo.Initializer.cs
-- The SetOutcome(testContextForClassInit.Context.CurrentTestOutcome) call on class-init fast-path was a no-op (value was always InProgress) — safe to skip when context is null
-- efficiency-improver merged DotnetTestDataConsumer single-pass PropertyBag (#9380) on 2026-06-24
+Scanned all hot paths in UnitTestRunner.cs, TestMethodRunner.cs, ClassCleanupManager.cs.
+Next: consider TestMethodInfo.Lifecycle.cs for remaining alloc opportunities (verify nothing missed).
