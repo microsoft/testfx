@@ -1,16 +1,17 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Tasks Last Run
-- Task 2 (Identify Opportunities): 2026-06-25
-- Task 3 (Implement Improvement): 2026-06-25
-- Task 4 (Maintain PRs): 2026-06-25
+- Task 2 (Identify Opportunities): 2026-06-26
+- Task 3 (Implement Improvement): 2026-06-26
+- Task 4 (Maintain PRs): 2026-06-26
 - Task 5 (Comment on Issues): 2026-06-24
 - Task 6 (Measurement Infrastructure): 2026-06-08
-- Task 7 (Monthly Summary): 2026-06-25
+- Task 7 (Monthly Summary): 2026-06-26
 
 ## Backlog Cursor
 - IPC serializer series: COMPLETE (all 6 serializers now use direct-array allocation)
-- Next scan area: Task 6 (Measurement Infrastructure) + src/Analyzers/ + broader codebase scan
+- Analyzers scan: DONE — found and fixed DerivesFrom() LINQ iterator allocations
+- Next scan area: Task 6 (Measurement Infrastructure) + broader Platform scan for remaining OfType<T> on PropertyBag
 
 ## Validated Commands
 
@@ -30,16 +31,13 @@ Notes:
 ## Monthly Activity Issue
 - Issue #9197: `[efficiency-improver] Monthly Activity 2026-06` (open)
 - Label: `efficiency`
-- Last updated: 2026-06-25
+- Last updated: 2026-06-26
 
 ## Work in Progress
-- PR #aw_pr_ipc2 (submitted 2026-06-25, branch efficiency/direct-array-alloc-remaining-ipc-serializers)
-  - Change: CommandLineOptionMessagesSerializer + FileArtifactMessagesSerializer
-  - Pattern: List<T> + [.. spread] → read length first, new T[length], populate directly
-  - Completes IPC serializer series
-  - CI pending
+None (IPC #9436 merged 2026-06-26)
 
 ## Completed Work (PRs merged or applied)
+- PR #9436: direct-allocate arrays in IPC CommandLineOption and FileArtifact deserializers — merged 2026-06-26
 - PR #9408: direct-allocate arrays in IPC TestResultMessagesSerializer — merged 2026-06-25
 - PR #9380: single-pass PropertyBag collection in DotnetTestDataConsumer — merged 2026-06-24
 - PR #9353: single-pass aggregation in AppendTestRunSummary — merged
@@ -55,14 +53,10 @@ Notes:
 ## Efficiency Notes (Key Insights)
 - PropertyBag hot-path series COMPLETE: all OfType<T>() → GetStructEnumerator() conversions done across all report extensions
 - IPC serializer series: COMPLETE — all 6 serializers now use direct T[length] allocation pattern
-  - DiscoveredTestMessages: already correct (reference pattern)
-  - TestResultMessages: fixed in #9408 (merged)
-  - TestInProgress: was already correct before this series started
-  - TestSessionEvent: no list fields (scalar only)
-  - CommandLineOptionMessages: fixed in #aw_pr_ipc2 (this run)
-  - FileArtifactMessages: fixed in #aw_pr_ipc2 (this run)
-  - HandshakeMessage: uses Dictionary, different pattern, not applicable
-- perf-improver workflow (#9258) is a separate bot; recent PRs: #9299, #9311, #9348, #9376, #9399. Avoid duplicating.
+- Analyzers: DerivesFrom() fix (this run) — ImmutableArray<INamedTypeSymbol>.OfType<ITypeSymbol>() + optional Select() + Contains() replaced by direct foreach. Called ~36 times per symbol analysis.
+- perf-improver workflow (#9258) is a separate bot; recent PRs: #9299, #9311, #9348, #9376, #9399, #9433. Avoid duplicating.
+- VideoRecorderSessionHandler.cs: still uses OfType<TestNodeStateProperty>().FirstOrDefault() — could use SingleOrDefault<TestNodeStateProperty>(). Low priority (rarely-used extension).
+- OpenTelemetryResultHandler.cs:126: OfType<TestMetadataProperty>() in iterator method — cannot use GetStructEnumerator() in yield methods. Low priority.
 - `TerminalTestReporter.TotalTests` property calls `_assemblies.Values.Sum()` on every access, but is rarely called — low priority.
 - `GroupBy().Where(Count()>1)` in `ToolsTestHost.cs:55` runs only once at startup — negligible.
 
@@ -70,8 +64,9 @@ Notes:
 
 | Priority | Focus Area | Opportunity | Notes |
 |----------|------------|-------------|-------|
-| MEDIUM | Code-Level | Scan src/Analyzers/ for hot-path inefficiencies (OfType<T>, LINQ in hot paths) | Not yet scanned |
 | MEDIUM | Infrastructure | Task 6: Assess benchmark coverage for IPC/reporter paths — do benchmarks exist for these serializers? | No local SDK; propose via issue |
+| LOW | Code-Level | VideoRecorder: `Properties.OfType<TestNodeStateProperty>().FirstOrDefault()` → `Properties.SingleOrDefault<TestNodeStateProperty>()` | Rarely-used extension, low impact |
+| LOW | Code-Level | OpenTelemetry: `Properties.OfType<TestMetadataProperty>()` in iterator method | Cannot use struct enumerator in yield; would need refactor |
 | LOW | Code-Level | `TerminalTestReporter.cs:68` TotalTests prop calls `Sum()` on every access | Rare caller, negligible |
 | LOW | Code-Level | `ToolsTestHost.cs:55` GroupBy at startup | Startup only, negligible |
 | LOW | Infrastructure | Add output-byte-count tracking as CI health metric (suggested in #8824 comment) | Needs maintainer discussion first |
@@ -82,5 +77,6 @@ Notes:
 - Do not re-comment on these until new human activity appears
 
 ## Round-Robin Task Schedule
-- Next run should prioritize: Task 6 (Measurement Infrastructure) + Task 5 (Issue comments, check for new activity on #8894 and #8824) + Task 2 (scan Analyzers)
-- IPC series is complete; backlog cursor moves to Analyzers + infrastructure
+- Tasks 2+3 done this run (DerivesFrom fix)
+- Next run should prioritize: Task 6 (Measurement Infrastructure) + Task 5 (check for new activity)
+- Backlog cursor: infrastructure gaps (Task 6 is overdue — last run 2026-06-08)
