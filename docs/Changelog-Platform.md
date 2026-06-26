@@ -38,6 +38,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Handshake from the test host orchestrator in the dotnet test pipe protocol, advertising the orchestration feature (e.g. retry) by @Copilot in [#9215](https://github.com/microsoft/testfx/pull/9215)
 * Add --zero-tests-policy &lt;allow-skipped|strict&gt; and make 'allow-skipped' the default so an all-skipped run no longer fails with exit code 8 (use 'strict' for the previous behavior) by @Evangelink in [#9415](https://github.com/microsoft/testfx/pull/9415)
 * Add testconfig.json JSON schema for SchemaStore publication and IDE validation by @Evangelink in [#9405](https://github.com/microsoft/testfx/pull/9405)
+* Add experimental `IBlockingDataConsumer` marker interface for synchronous inline data consumption by @Evangelink in [#9426](https://github.com/microsoft/testfx/pull/9426)
 
 ### Fixed
 
