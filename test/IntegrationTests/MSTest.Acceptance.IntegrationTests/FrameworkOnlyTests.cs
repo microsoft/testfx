@@ -30,6 +30,11 @@ public class FrameworkOnlyTests : AcceptanceTestBase<FrameworkOnlyTests.TestAsse
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
+        // FrameworkOnlyTests references only MSTest.TestFramework (not the adapter), so the
+        // source-generated ReflectionMetadataHook registration cannot compile (CS0234). Opt out of the
+        // default SourceGeneration build; it stays reflection-only.
+        protected override IReadOnlyList<MetadataMode> SourceGenMetadataModes => [];
+
         private const string Sources = """
 #file FrameworkOnlyTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
