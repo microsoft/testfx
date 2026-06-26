@@ -45,7 +45,7 @@ You can combine operators
 The `!` (unary NOT) operator negates a condition. It must appear immediately after an opening parenthesis.
 
 - `/A/(!*Slow*)` -> All nodes under A whose name does not contain `Slow`
-- `/A/(B*)&(!*C)` -> All nodes under A whose name starts with B and does not end with C
+- `/A/(!*Integration*)` -> All nodes under A whose name does not contain `Integration`
 
 ## Filtering with the `**` path operator
 
