@@ -10,6 +10,6 @@ plugins:
         mode: summary
     - id: dotnet-msbuild
       source: dotnet/skills
-      ref: v1.0.0
+      ref: main
       install:
         mode: summary
