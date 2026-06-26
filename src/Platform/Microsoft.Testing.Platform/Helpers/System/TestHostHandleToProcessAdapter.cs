@@ -19,12 +19,18 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
     public TestHostHandleToProcessAdapter(ITestHostHandle handle)
     {
         _handle = handle;
-        _handle.Exited += OnHandleExited;
+
+        // The public handle deliberately has no Exited event (consumers use WaitForExitAsync). The
+        // internal IProcess contract still exposes one for the in-process logging hook, so synthesize
+        // it from the exit task. It is informational only, hence best-effort and fire-and-forget.
+        _ = RaiseExitedWhenDoneAsync();
     }
 
     public event EventHandler? Exited;
 
-    public int Id => _handle.ProcessId ?? throw new InvalidOperationException("The test host launcher did not expose a process id ('ITestHostHandle.ProcessId' is null).");
+    // A custom launcher does not necessarily back a local OS process, so there is no numeric PID to
+    // return. The controller host only reads Id for logging and tolerates this exception.
+    public int Id => throw new InvalidOperationException("The test host launcher does not expose a numeric process id; use 'ITestHostHandle.Identifier' for diagnostics.");
 
     public string Name => string.Empty;
 
@@ -36,18 +42,25 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 
     public DateTime StartTime => default;
 
-    private void OnHandleExited(object? sender, EventArgs e)
-        => Exited?.Invoke(this, e);
-
     public Task WaitForExitAsync() => _handle.WaitForExitAsync();
 
     public void WaitForExit() => _handle.WaitForExitAsync().GetAwaiter().GetResult();
 
     public void Kill() => _handle.Terminate();
 
-    public void Dispose()
+    public void Dispose() => (_handle as IDisposable)?.Dispose();
+
+    private async Task RaiseExitedWhenDoneAsync()
     {
-        _handle.Exited -= OnHandleExited;
-        (_handle as IDisposable)?.Dispose();
+        try
+        {
+            await _handle.WaitForExitAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+            // The Exited event is informational only; never surface failures from this path.
+        }
+
+        Exited?.Invoke(this, EventArgs.Empty);
     }
 }

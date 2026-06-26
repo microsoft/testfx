@@ -18,7 +18,7 @@ The hook is deliberately **agnostic of the launch mechanism**: the launcher does
 local OS process. It can deploy and activate a packaged application, launch a container, or start
 the host on a remote machine. To make this explicit, the launcher returns an `ITestHostHandle` that
 exposes only the lifecycle the platform needs (`WaitForExitAsync`, `ExitCode`, `HasExited`,
-`Exited`, `Terminate`); a process id is *optional* and used purely for diagnostics.
+`Terminate`) plus an optional free-form `Identifier` string used purely for diagnostics.
 
 The motivating scenario is **packaging and deployment of MSIX-packaged applications — both UWP and
 WinUI** (see [#2784](https://github.com/microsoft/testfx/issues/2784)): packaged/MSIX apps cannot be
@@ -41,8 +41,8 @@ using IProcess testHostProcess = process.Start(processStartInfo);
 ```
 
 Everything downstream only needs a handful of things from the returned handle — a way to observe
-exit (`Exited`, `WaitForExitAsync()`, `ExitCode`, `HasExited`), optionally a PID for logging, and a
-way to tear it down (`Kill`) — plus the child connecting back on the named pipe whose name was
+exit (`WaitForExitAsync()`, `ExitCode`, `HasExited`), optionally an identifier for logging, and a
+way to tear it down — plus the child connecting back on the named pipe whose name was
 injected via an environment variable. **`Process.Start` is the only assumption that does not hold
 universally.** Several real scenarios need a different launch mechanism:
 
@@ -55,7 +55,7 @@ universally.** Several real scenarios need a different launch mechanism:
   `vsdbg` / `WinDbg` / `dlv`) and only then resume.
 - **Elevation**: run the test host as administrator (UAC) or as another user.
 - **Container / remote**: launch the host inside a container (`docker run`) or on a remote device
-  over SSH/WinRM, then bridge the pipe — neither of which exposes a local, query-able PID.
+  over SSH/WinRM, then bridge the pipe — neither of which exposes a local, queryable PID.
 
 Today none of these is possible without forking the platform. The existing experimental
 `ITestHostExecutionOrchestrator` sits at the wrong layer (see [Alternatives](#alternatives-considered)). This
@@ -149,10 +149,11 @@ monitoring contract):
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostHandle
 {
-    event EventHandler Exited;
-
-    /// <summary>The OS process id, when available. Null for container/remote launches. Logging only.</summary>
-    int? ProcessId { get; }
+    /// <summary>
+    /// Free-form diagnostic identifier (a PID, container id, remote host:pid, …) or null. The
+    /// platform never relies on it for control flow.
+    /// </summary>
+    string? Identifier { get; }
 
     int ExitCode { get; }
     bool HasExited { get; }
@@ -186,10 +187,11 @@ public interface ITestHostControllersManager
    env-var providers ran), if a launcher is registered, build a `TestHostLaunchContext` from the
    `ProcessStartInfo` and `await launcher.LaunchTestHostAsync(...)`. Otherwise keep the default
    `process.Start`. The returned `ITestHostHandle` is adapted to the internal `IProcess` monitoring
-   contract — which only uses `Id` / `Exited` / `WaitForExitAsync` / `ExitCode` / `HasExited` /
-   `Kill`. Because `ProcessId` is optional, the premature-exit check is gated on `HasExited` only
-   (not on PID availability), so a launcher that returns no PID (container/remote/AUMID) is
-   monitored purely through the handle lifecycle and the IPC PID handshake.
+   contract — which only uses `WaitForExitAsync` / `ExitCode` / `HasExited` / `Kill` (and an
+   internal `Exited` event synthesized from the exit task for an informational log). The
+   premature-exit check is gated on `HasExited` only (not on whether an identifier is available), so
+   a launcher that returns no identifier (container/remote/AUMID) is monitored purely through the
+   handle lifecycle and the IPC PID handshake.
 2. **Force the controller host.** A launcher makes `RequireProcessRestart` `true` when one is
    registered (computed in `TestHostControllersManager.BuildAsync`, checked in
    `TestHostBuilder.Modes.cs`); without this, a run with *only* a launcher (no dump/lifetime
@@ -208,10 +210,11 @@ public interface ITestHostControllersManager
   host is left to the launcher — they can be inherited from the environment, passed as activation
   arguments, or bridged through a broker. AUMID activation in particular cannot set per-launch
   environment variables, so a packaged-app launcher must transfer them another way.
-- The returned handle must report exit reliably (`WaitForExitAsync`, `ExitCode`, `HasExited`,
-  `Exited`) and support `Terminate()` (hang dump terminates the host through it).
-- `ProcessId` may be `null` when there is no local, query-able process (container/remote). It is
-  used only for diagnostics.
+- The returned handle must report exit reliably (`WaitForExitAsync`, `ExitCode`, `HasExited`) and
+  support `Terminate()` (hang dump terminates the host through it). `WaitForExitAsync` may be awaited
+  more than once.
+- `Identifier` is an optional free-form diagnostic string (PID, container id, remote `host:pid`, …)
+  and may be `null`. The platform never relies on it for control flow.
 - If the launcher cannot start the host it should throw; the platform surfaces it as a
   platform-setup failure.
 
@@ -246,11 +249,12 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     var aam = (IApplicationActivationManager)new ApplicationActivationManager();
     aam.ActivateApplication(aumid, PasteArguments(context.Arguments), ACTIVATEOPTIONS.AO_NONE, out uint pid);
 
-    // 3. Wrap the returned PID. AUMID activation cannot set per-launch environment variables, so the
+    // 3. Wrap the activated app. AUMID activation cannot set per-launch environment variables, so the
     //    launcher must bridge the values the host needs from context.EnvironmentVariables (the
     //    MONITORTOHOST pipe name, correlation id, etc.) another way — e.g. activation arguments or a
-    //    broker process the activated app reads on startup.
-    return Task.FromResult<ITestHostHandle>(new ProcessIdHandle((int)pid));
+    //    broker process the activated app reads on startup. The handle surfaces the activated PID as
+    //    its (diagnostic-only) Identifier.
+    return Task.FromResult<ITestHostHandle>(new ActivatedAppHandle(pid));
 }
 ```
 
@@ -266,7 +270,8 @@ public async Task<ITestHostHandle> LaunchTestHostAsync(
 {
     var psi = new ProcessStartInfo(context.FileName) { UseShellExecute = false };
     foreach (string arg in context.Arguments) psi.ArgumentList.Add(arg);
-    foreach (var kvp in context.EnvironmentVariables) psi.Environment[kvp.Key] = kvp.Value;
+    foreach (var kvp in context.EnvironmentVariables.Where(kv => kv.Value is not null))
+        psi.Environment[kvp.Key] = kvp.Value; // skip unset (null) vars
     psi.Environment["DOTNET_DefaultDiagnosticPortSuspend"] = "1"; // start suspended
 
     Process p = Process.Start(psi)!;
@@ -310,7 +315,7 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     TestHostLaunchContext context, CancellationToken cancellationToken)
 {
     var args = new List<string> { "run", "--rm", "--init" };
-    foreach (var kvp in context.EnvironmentVariables) { args.Add("-e"); args.Add($"{kvp.Key}={kvp.Value}"); }
+    foreach (var kvp in context.EnvironmentVariables.Where(kv => kv.Value is not null)) { args.Add("-e"); args.Add($"{kvp.Key}={kvp.Value}"); } // skip unset (null) vars
     // Map the controller pipe into the container (Windows named pipe / Unix domain socket mount).
     args.Add("test-image:latest");
     args.Add(context.FileName);
@@ -338,7 +343,7 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     psi.ArgumentList.Add("user@remote-host");
     psi.ArgumentList.Add(remoteCmd);
     Process ssh = Process.Start(psi)!; // tunnel the controller pipe over the SSH connection
-    // The handle tracks the local ssh client; ProcessId here is the ssh client PID (diagnostic only).
+    // The handle tracks the local ssh client; its Identifier could be the ssh client PID (diagnostic only).
     return Task.FromResult<ITestHostHandle>(new ProcessHandleAdapter(ssh));
 }
 ```
@@ -367,10 +372,12 @@ bake in the "it's always a local process" assumption. A purpose-built, minimal, 
 ### A process-centric `ITestHostProcessLauncher` returning a `ProcessId`
 
 An earlier draft of this RFC named the hook `ITestHostProcessLauncher` and returned an
-`ITestHostProcessHandle` whose `ProcessId` was mandatory. That over-commits to "the test host is a
-local OS process," which is false for container and remote launches and awkward for AUMID-activated
-apps. The current design renames the types to drop "Process", makes `ProcessId` optional, and names
-the teardown `Terminate()` instead of `Kill()`.
+`ITestHostProcessHandle` whose `ProcessId` was a mandatory `int`. That over-commits to "the test host
+is a local OS process," which is false for container and remote launches and awkward for
+AUMID-activated apps. The current design renames the types to drop "Process", replaces the `int`
+process id with an optional free-form `string Identifier` (diagnostic only), drops the redundant
+`Exited` event in favour of `WaitForExitAsync`, and names the teardown `Terminate()` instead of
+`Kill()`.
 
 ### Do nothing (keep `Process.Start`)
 

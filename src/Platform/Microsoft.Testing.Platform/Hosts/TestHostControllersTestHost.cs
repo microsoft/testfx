@@ -427,6 +427,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
         await _logger.LogDebugAsync($"Delegating test host launch to '{testHostLauncher.DisplayName}' (UID: {testHostLauncher.Uid})").ConfigureAwait(false);
         ITestHostHandle handle = await testHostLauncher.LaunchTestHostAsync(context, cancellationToken).ConfigureAwait(false);
+        await _logger.LogDebugAsync($"Test host launched by '{testHostLauncher.Uid}' (Identifier: '{handle.Identifier ?? "<none>"}')").ConfigureAwait(false);
         return new TestHostHandleToProcessAdapter(handle);
     }
 

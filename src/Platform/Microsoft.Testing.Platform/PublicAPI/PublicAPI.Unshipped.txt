@@ -1,9 +1,8 @@
 #nullable enable
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Exited -> System.EventHandler!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.ExitCode.get -> int
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.HasExited.get -> bool
-[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.ProcessId.get -> int?
+[TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Identifier.get -> string?
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.Terminate() -> void
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.WaitForExitAsync() -> System.Threading.Tasks.Task!
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher

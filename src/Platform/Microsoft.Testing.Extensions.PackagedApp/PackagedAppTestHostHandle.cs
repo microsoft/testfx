@@ -7,8 +7,8 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
 /// An <see cref="ITestHostHandle"/> over a deployed packaged Windows (UWP/WinUI) test host process
-/// that deliberately hides the underlying process id, modelling a launch where no local, query-able
-/// PID is available.
+/// that deliberately exposes no identifier, modelling a launch where no local, query-able PID is
+/// available.
 /// </summary>
 internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
 {
@@ -19,15 +19,11 @@ internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
     {
         _process = process;
         _deploymentDirectory = deploymentDirectory;
-        _process.EnableRaisingEvents = true;
-        _process.Exited += OnProcessExited;
     }
 
-    public event EventHandler? Exited;
-
-    // Intentionally null: the platform must not depend on a local process id. A packaged UWP/WinUI
-    // implementation could surface the AUMID-activated PID here instead.
-    public int? ProcessId => null;
+    // Intentionally null: the platform must not depend on any identifier. A packaged UWP/WinUI
+    // implementation could surface the AUMID-activated PID (as a string) here instead.
+    public string? Identifier => null;
 
     public int ExitCode => _process.ExitCode;
 
@@ -49,7 +45,6 @@ internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
 
     public void Dispose()
     {
-        _process.Exited -= OnProcessExited;
         _process.Dispose();
 
         // The platform disposes the handle once the host has exited, so it is safe to remove the
@@ -68,7 +63,4 @@ internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
         {
         }
     }
-
-    private void OnProcessExited(object? sender, EventArgs e)
-        => Exited?.Invoke(this, e);
 }

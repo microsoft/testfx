@@ -8,26 +8,22 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// </summary>
 /// <remarks>
 /// The handle is intentionally agnostic of the underlying launch mechanism: it does not assume a
-/// local OS process. <see cref="ProcessId"/> is therefore optional and used only for diagnostics;
-/// the platform tracks completion through <see cref="WaitForExitAsync"/>, <see cref="HasExited"/>,
-/// <see cref="ExitCode"/>, and the <see cref="Exited"/> event.
+/// local OS process. <see cref="Identifier"/> is therefore an optional, free-form string used only
+/// for diagnostics; the platform tracks completion through <see cref="WaitForExitAsync"/>,
+/// <see cref="HasExited"/>, and <see cref="ExitCode"/>.
 /// </remarks>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITestHostHandle
 {
     /// <summary>
-    /// Occurs when the test host exits.
-    /// </summary>
-    event EventHandler Exited;
-
-    /// <summary>
-    /// Gets the operating-system process identifier of the test host, when one is available.
+    /// Gets an optional, free-form identifier for the launched test host, used only for diagnostics.
     /// </summary>
     /// <remarks>
-    /// Returns <see langword="null"/> when the launch mechanism does not expose a local, queryable
-    /// process id (for example a container or a remote launch). The value is used only for logging.
+    /// The value can be anything meaningful for the launch mechanism — for example a process id, a
+    /// container id, or a remote <c>host:pid</c>. Returns <see langword="null"/> when the launcher
+    /// has nothing useful to surface. The platform never relies on this value for control flow.
     /// </remarks>
-    int? ProcessId { get; }
+    string? Identifier { get; }
 
     /// <summary>
     /// Gets the exit code of the test host. Only valid once <see cref="HasExited"/> is
@@ -41,7 +37,7 @@ public interface ITestHostHandle
     bool HasExited { get; }
 
     /// <summary>
-    /// Waits asynchronously for the test host to exit.
+    /// Waits asynchronously for the test host to exit. The platform may await this more than once.
     /// </summary>
     /// <returns>A task that completes when the test host has exited.</returns>
     Task WaitForExitAsync();

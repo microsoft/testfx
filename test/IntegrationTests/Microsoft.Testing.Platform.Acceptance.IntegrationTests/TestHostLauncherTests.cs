@@ -116,16 +116,9 @@ public sealed class ProcessTestHostHandle : ITestHostHandle
 {
     private readonly Process _process;
 
-    public ProcessTestHostHandle(Process process)
-    {
-        _process = process;
-        _process.EnableRaisingEvents = true;
-        _process.Exited += (sender, e) => Exited?.Invoke(this, e);
-    }
+    public ProcessTestHostHandle(Process process) => _process = process;
 
-    public event EventHandler? Exited;
-
-    public int? ProcessId => _process.Id;
+    public string? Identifier => _process.Id.ToString();
 
     public int ExitCode => _process.ExitCode;
 
