@@ -134,7 +134,16 @@
   </ItemGroup>
   <!--
     Declare below packages that are referenced through MSTest.Sdk but don't have a direct
-    PackageReference in this repo, so that Dependabot can discover and update them.
+    PackageReference in this repo, so that the build can pin a single version for them.
+
+    IMPORTANT: a PackageVersion entry here is NOT enough on its own for Dependabot to discover the
+    package. Dependabot only proposes updates for packages that have a real consuming reference
+    (PackageReference / PackageDownload). Each of these packages therefore also has a matching
+    PackageDownload in test/IntegrationTests/MSTest.Acceptance.IntegrationTests/
+    MSTest.Acceptance.IntegrationTests.csproj which is what actually triggers the update; Dependabot
+    then bumps both the *Version property and the literal PackageVersion below. If you add another
+    bundled-but-unreferenced SDK feature package here, add a matching PackageDownload too, otherwise
+    it will silently never be updated.
 
     The version MUST be a literal here (not an MSBuild property such as
     $(MicrosoftPlaywrightVersion)): Dependabot does not update a Central Package Management
