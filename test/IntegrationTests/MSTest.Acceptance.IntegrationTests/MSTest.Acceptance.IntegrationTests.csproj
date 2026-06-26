@@ -42,14 +42,9 @@
     <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
   </ItemGroup>
 
-  <!-- Packages needed for the test assets but that we don't want to reference.
-       These PackageDownload items also give Dependabot a real consuming reference for the
-       bundled MSTest.Sdk feature packages (Aspire/Playwright), which is what makes it discover
-       and bump them. A lone orphan PackageVersion in Directory.Packages.props is NOT enough:
-       Dependabot only proposes updates for packages that have an actual reference. -->
+  <!-- Packages needed for the test assets but that we don't want to reference -->
   <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
-    <PackageDownload Include="Microsoft.Playwright.MSTest.v4" Version="[$(MicrosoftPlaywrightVersion)]" />
   </ItemGroup>
 
   <!--
