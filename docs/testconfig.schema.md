@@ -76,7 +76,6 @@ There are two layers of versioning to keep in mind:
 
    ```json
    "versions": {
-     "v3": "https://raw.githubusercontent.com/microsoft/testfx/v3.x/docs/testconfig.schema.json",
      "v4": "https://raw.githubusercontent.com/microsoft/testfx/main/docs/testconfig.schema.json"
    }
    ```
