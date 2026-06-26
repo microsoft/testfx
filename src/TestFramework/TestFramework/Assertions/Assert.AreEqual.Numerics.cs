@@ -14,28 +14,33 @@ public sealed partial class Assert
 #pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 
     private static bool AreEqualFailing(float expected, float actual, float delta)
-    {
-        if (float.IsNaN(delta) || delta < 0)
-        {
-            // NaN and negative values don't make sense as a delta value.
-            throw new ArgumentOutOfRangeException(nameof(delta));
-        }
-
-        if (expected.Equals(actual))
-        {
-            return false;
-        }
-
-        // If both floats are NaN, then they were considered equal in the previous check.
-        // If only one of them is NaN, then they are not equal regardless of the value of delta.
-        // Then, the subtraction comparison to delta isn't involving NaNs.
-        return float.IsNaN(expected) || float.IsNaN(actual) ||
-                Math.Abs(expected - actual) > delta;
-    }
+        => AreEqualFailingFloatingPoint(
+            expected,
+            actual,
+            delta,
+            static value => float.IsNaN(value),
+            static value => value < 0,
+            static (left, right, allowedDelta) => Math.Abs(left - right) > allowedDelta);
 
     private static bool AreEqualFailing(double expected, double actual, double delta)
+        => AreEqualFailingFloatingPoint(
+            expected,
+            actual,
+            delta,
+            static value => double.IsNaN(value),
+            static value => value < 0,
+            static (left, right, allowedDelta) => Math.Abs(left - right) > allowedDelta);
+
+    private static bool AreEqualFailingFloatingPoint<T>(
+        T expected,
+        T actual,
+        T delta,
+        Func<T, bool> isNaN,
+        Func<T, bool> isNegativeDelta,
+        Func<T, T, T, bool> isAbsoluteDifferenceGreaterThanDelta)
+        where T : struct
     {
-        if (double.IsNaN(delta) || delta < 0)
+        if (isNaN(delta) || isNegativeDelta(delta))
         {
             // NaN and negative values don't make sense as a delta value.
             throw new ArgumentOutOfRangeException(nameof(delta));
@@ -46,11 +51,11 @@ public sealed partial class Assert
             return false;
         }
 
-        // If both doubles are NaN, then they were considered equal in the previous check.
+        // If both values are NaN, then they were considered equal in the previous check.
         // If only one of them is NaN, then they are not equal regardless of the value of delta.
         // Then, the subtraction comparison to delta isn't involving NaNs.
-        return double.IsNaN(expected) || double.IsNaN(actual) ||
-                Math.Abs(expected - actual) > delta;
+        return isNaN(expected) || isNaN(actual) ||
+                isAbsoluteDifferenceGreaterThanDelta(expected, actual, delta);
     }
 
     private static bool AreEqualFailing(decimal expected, decimal actual, decimal delta)
