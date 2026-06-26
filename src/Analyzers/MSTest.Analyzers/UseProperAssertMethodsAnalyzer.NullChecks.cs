@@ -54,8 +54,8 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         [NotNullWhen(true)] out SyntaxNode? expressionUnderTest,
         out ITypeSymbol? typeOfExpressionUnderTest)
     {
-        if (operation is IBinaryOperation { OperatorKind: var operatorKind } binaryOperation &&
-            operatorKind == binaryOperatorKind &&
+        if (operation is IBinaryOperation binaryOperation &&
+            binaryOperation.OperatorKind == binaryOperatorKind &&
             !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
             if (binaryOperation.RightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
