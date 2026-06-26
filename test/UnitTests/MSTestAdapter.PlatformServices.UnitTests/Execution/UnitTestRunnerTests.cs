@@ -394,7 +394,7 @@ public sealed class UnitTestRunnerTests : TestContainer
         var unitTestElement1 = new UnitTestElement(testMethod1);
         var unitTestElement2 = new UnitTestElement(testMethod2);
         var unitTestElement3 = new UnitTestElement(testMethod3);
-        var unitTestRunner = new UnitTestRunner(new MSTestSettings(), [unitTestElement1, unitTestElement2, unitTestElement3]);
+        UnitTestRunner unitTestRunner = CreateUnitTestRunner([unitTestElement1, unitTestElement2, unitTestElement3]);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
             .Returns(Assembly.GetExecutingAssembly());

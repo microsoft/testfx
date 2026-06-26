@@ -281,7 +281,8 @@ internal sealed class UnitTestRunner
                 // testContextForClassCleanup is guaranteed non-null here: ShouldRunEndOfAssemblyCleanup
                 // becomes true only after MarkClassComplete, which is called exclusively inside the
                 // isLastTestInClass block above — where testContextForClassCleanup is allocated.
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup!.Context.CurrentTestOutcome);
+                DebugEx.Assert(testContextForClassCleanup is not null, "testContextForClassCleanup should not be null when running assembly cleanup.");
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
 
                 // Flow properties set during AssemblyInitialize so the AssemblyCleanup method
                 // observes them. Class-init properties are intentionally NOT flowed here because
