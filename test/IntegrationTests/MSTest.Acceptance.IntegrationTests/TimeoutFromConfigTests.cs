@@ -64,7 +64,7 @@ public sealed class TimeoutFromConfigTests : AcceptanceTestBase<TimeoutFromConfi
     private async Task RunAndAssertFromConfigAsync(string tfm, string entryKind)
     {
         const int timeoutValue = 300;
-        var info = InfoByKind[entryKind];
+        (string MethodFullName, string Prefix, string EnvVarSuffix, string ConfigKeyName) info = InfoByKind[entryKind];
         string testConfig = $$"""
 {
   "mstest": {
