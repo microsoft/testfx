@@ -25,9 +25,9 @@ public enum MetadataMode
 
     /// <summary>
     /// A build with the experimental <c>MSTest.AotReflection.SourceGeneration</c> package injected.
-    /// On top of the rooting the shipping generator performs, it also publishes materialized type-
-    /// and assembly-level attributes through <c>ReflectionMetadataHook</c> so the adapter serves them
-    /// without runtime reflection (the AOT-reflection path).
+    /// In addition to the type and test-method rooting the shipping generator performs, it also
+    /// publishes materialized type- and assembly-level attributes through <c>ReflectionMetadataHook</c>
+    /// so the adapter serves them without runtime reflection (the AOT-reflection path).
     /// Output lands under <c>bin/AotSourceGen/&lt;config&gt;/&lt;tfm&gt;</c>.
     /// </summary>
     AotSourceGeneration,

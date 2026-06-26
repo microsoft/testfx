@@ -267,6 +267,9 @@ internal sealed class AllTargetFrameworksAttribute : Attribute, ICombinatorialVa
 [AttributeUsage(AttributeTargets.Parameter)]
 internal sealed class MetadataModeValuesAttribute : Attribute, ICombinatorialValuesProvider
 {
-    // MetadataModesToRun is a single immutable array, so it's safe to hand it back on every call.
-    public object?[] GetValues(ParameterInfo _) => AcceptanceTestBase.MetadataModesToRun.Cast<object?>().ToArray();
+    // MetadataModesToRun never changes during a run, so box it into an object?[] once and hand the
+    // same array back on every call to avoid repeated allocations during combinatorial expansion.
+    private static readonly object?[] BoxedValues = [.. AcceptanceTestBase.MetadataModesToRun.Cast<object?>()];
+
+    public object?[] GetValues(ParameterInfo _) => BoxedValues;
 }
