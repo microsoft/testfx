@@ -86,7 +86,7 @@ jobs:
         run: ./build.sh -pack -c Release
 
       - name: Mark timing start
-        run: touch /tmp/perf_timing_start
+        run: touch "$RUNNER_TEMP/perf_timing_start"
 
       - name: Run PlainProcess timing pipeline
         env:
@@ -96,12 +96,12 @@ jobs:
 
       - name: Stage Result.json files
         run: |
-          set -e
+          set -euo pipefail
           STAGING_DIR="$GITHUB_WORKSPACE/artifacts/perf-results"
           mkdir -p "$STAGING_DIR"
 
           RESULT_ROOT="$GITHUB_WORKSPACE/artifacts/tmp/Release/testsuite"
-          mapfile -d '' -t RESULTS < <(find "$RESULT_ROOT" -name "Result.json" -type f -newer /tmp/perf_timing_start -print0 2>/dev/null)
+          mapfile -d '' -t RESULTS < <(find "$RESULT_ROOT" -name "Result.json" -type f -newer "$RUNNER_TEMP/perf_timing_start" -print0 2>/dev/null)
 
           if [ "${#RESULTS[@]}" -eq 0 ]; then
             echo "::error::No Result.json files were found under '$RESULT_ROOT' after the PlainProcess run."
