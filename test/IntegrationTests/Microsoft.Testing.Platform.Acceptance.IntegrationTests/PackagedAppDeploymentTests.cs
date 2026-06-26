@@ -48,10 +48,14 @@ public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppD
     <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
+    <!-- AddPackagedAppDeployment is an experimental (TPEXP) API. -->
+    <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- The PackagedApp package is an experimental package with a downgraded (alpha) version. -->
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$MicrosoftTestingPlatformVersion$" />
+    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$MicrosoftTestingExtensionsPackagedAppVersion$" />
   </ItemGroup>
 </Project>
 
@@ -129,7 +133,8 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         public override (string ID, string Name, string Code) GetAssetsToGenerate() => (AssetName, AssetName,
                 Sources
                 .PatchTargetFrameworks(TargetFrameworks.Net)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsPackagedAppVersion$", MicrosoftTestingExtensionsPackagedAppVersion));
     }
 
     public TestContext TestContext { get; set; }

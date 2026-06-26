@@ -10,6 +10,10 @@
     <PackageLicenseFile>License.txt</PackageLicenseFile>
     <!-- This extension consumes the experimental ITestHostLauncher extension point. -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- Early preview/experimental package: keep an experimental (alpha) version even in official builds. -->
+    <VersionPrefix>$(MicrosoftTestingExtensionsPackagedAppVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel)</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
   <!-- NuGet properties -->

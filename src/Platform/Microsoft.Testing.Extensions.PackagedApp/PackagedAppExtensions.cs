@@ -10,6 +10,7 @@ namespace Microsoft.Testing.Extensions;
 /// Provides extension methods for adding packaged Windows (UWP/WinUI) test host deployment support
 /// to the test application builder.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class PackagedAppExtensions
 {
     /// <summary>
