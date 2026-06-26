@@ -66,11 +66,12 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
 
-        // Opt-in: for each source-gen metadata mode the fixture declares, build a second variant with
-        // the matching generator injected, into an isolated bin/<sub> + obj/<sub> output, so the same
-        // behavioral assertions also validate the source-generated metadata path. The build is run
-        // with failIfReturnValueIsNotZero:false so we can surface the captured output if it fails
-        // (rather than the less actionable default exception from DotnetCli.RunAsync).
+        // For each source-gen metadata mode the fixture builds (opt-out: see SourceGenMetadataModes,
+        // which defaults to SourceGeneration), build a variant with the matching generator injected,
+        // into an isolated bin/<sub> + obj/<sub> output, so the source-generated metadata path is at
+        // least compiled (and, for parameterized fixtures, exercised). The build is run with
+        // failIfReturnValueIsNotZero:false so we can surface the captured output if it fails (rather
+        // than the less actionable default exception from DotnetCli.RunAsync).
         if (!AcceptanceSourceGen.IsGloballyDisabled)
         {
             foreach (MetadataMode mode in SourceGenMetadataModes)
