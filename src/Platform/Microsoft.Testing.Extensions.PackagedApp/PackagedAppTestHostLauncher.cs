@@ -45,13 +45,16 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 
     public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken)
     {
+        // Honor immediate cancellation before doing any (potentially expensive) deployment work.
+        cancellationToken.ThrowIfCancellationRequested();
+
         string sourceDirectory = Path.GetDirectoryName(context.FileName)
             ?? throw new InvalidOperationException($"Unable to determine the source directory of '{context.FileName}'.");
 
         // 1. Deploy the app's loose layout into an isolated directory. For packaged UWP/WinUI this is
         //    also where the layout would be registered via PackageManager.RegisterPackageByUriAsync.
         string deploymentDirectory = Path.Combine(Path.GetTempPath(), "MTPPackagedAppDeployment", Guid.NewGuid().ToString("N"));
-        CopyDirectory(sourceDirectory, deploymentDirectory);
+        CopyDirectory(sourceDirectory, deploymentDirectory, cancellationToken);
 
         // 2. Launch the deployed test host, forwarding the platform-prepared arguments and
         //    environment (which include the controller IPC pipe name the host connects back on).
@@ -61,7 +64,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         var startInfo = new ProcessStartInfo(deployedFileName)
         {
             UseShellExecute = false,
-            WorkingDirectory = deploymentDirectory,
+            // Honor an explicitly requested working directory; otherwise run from the deployment dir.
+            WorkingDirectory = context.WorkingDirectory ?? deploymentDirectory,
         };
 
         foreach (string argument in context.Arguments)
@@ -77,9 +81,6 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         Process process = Process.Start(startInfo)
             ?? throw new InvalidOperationException($"Failed to start deployed packaged-app test host '{deployedFileName}'.");
 
-        // Leave a breadcrumb next to the original app so the deployment is observable by callers/tests.
-        File.WriteAllText(Path.Combine(sourceDirectory, "PackagedAppDeployment.txt"), deploymentDirectory);
-
         // 3. Return a handle that deliberately does NOT surface the underlying process id, validating
         //    that the platform relies purely on the lifecycle contract
         //    (WaitForExitAsync/ExitCode/HasExited/Terminate) and the IPC PID handshake. This
@@ -89,18 +90,20 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         return Task.FromResult<ITestHostHandle>(new PackagedAppTestHostHandle(process, deploymentDirectory));
     }
 
-    private static void CopyDirectory(string sourceDirectory, string destinationDirectory)
+    private static void CopyDirectory(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(destinationDirectory);
 
         foreach (string file in Directory.EnumerateFiles(sourceDirectory))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             File.Copy(file, Path.Combine(destinationDirectory, Path.GetFileName(file)), overwrite: true);
         }
 
         foreach (string directory in Directory.EnumerateDirectories(sourceDirectory))
         {
-            CopyDirectory(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)));
+            cancellationToken.ThrowIfCancellationRequested();
+            CopyDirectory(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), cancellationToken);
         }
     }
 }
