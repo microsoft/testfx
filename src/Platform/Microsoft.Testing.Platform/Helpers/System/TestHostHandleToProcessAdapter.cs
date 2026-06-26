@@ -24,7 +24,7 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 
     public event EventHandler? Exited;
 
-    public int Id => _handle.ProcessId ?? throw new InvalidOperationException();
+    public int Id => _handle.ProcessId ?? throw new InvalidOperationException("The test host launcher did not expose a process id ('ITestHostHandle.ProcessId' is null).");
 
     public string Name => string.Empty;
 

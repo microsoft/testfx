@@ -13,10 +13,12 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
 {
     private readonly Process _process;
+    private readonly string _deploymentDirectory;
 
-    public PackagedAppTestHostHandle(Process process)
+    public PackagedAppTestHostHandle(Process process, string deploymentDirectory)
     {
         _process = process;
+        _deploymentDirectory = deploymentDirectory;
         _process.EnableRaisingEvents = true;
         _process.Exited += OnProcessExited;
     }
@@ -49,6 +51,22 @@ internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable
     {
         _process.Exited -= OnProcessExited;
         _process.Dispose();
+
+        // The platform disposes the handle once the host has exited, so it is safe to remove the
+        // staged deployment now. Best-effort: never let cleanup failures surface as run failures.
+        try
+        {
+            if (Directory.Exists(_deploymentDirectory))
+            {
+                Directory.Delete(_deploymentDirectory, recursive: true);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     private void OnProcessExited(object? sender, EventArgs e)

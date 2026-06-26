@@ -58,7 +58,7 @@ universally.** Several real scenarios need a different launch mechanism:
   over SSH/WinRM, then bridge the pipe — neither of which exposes a local, query-able PID.
 
 Today none of these is possible without forking the platform. The existing experimental
-`ITestHostExecutionOrchestrator` sits at the wrong layer (see [Alternatives](#alternatives)). This
+`ITestHostExecutionOrchestrator` sits at the wrong layer (see [Alternatives](#alternatives-considered)). This
 RFC adds the *minimal* hook at exactly the launch site.
 
 ## Goals
@@ -203,8 +203,11 @@ public interface ITestHostControllersManager
 
 ### Contract requirements on the launcher
 
-- The launched host **must** receive `context.EnvironmentVariables` (so it connects back on the
-  controller pipe) and **must** be passed `context.Arguments`.
+- The launched host **must** end up with the values in `context.EnvironmentVariables` (so it connects
+  back on the controller pipe) and **must** receive `context.Arguments`. *How* those values reach the
+  host is left to the launcher — they can be inherited from the environment, passed as activation
+  arguments, or bridged through a broker. AUMID activation in particular cannot set per-launch
+  environment variables, so a packaged-app launcher must transfer them another way.
 - The returned handle must report exit reliably (`WaitForExitAsync`, `ExitCode`, `HasExited`,
   `Exited`) and support `Terminate()` (hang dump terminates the host through it).
 - `ProcessId` may be `null` when there is no local, query-able process (container/remote). It is
@@ -223,8 +226,10 @@ builder.TestHostControllers.AddTestHostLauncher(sp => new MyLauncher(sp));
 ### 1. Packaged WinUI / MSIX (the motivating case)
 
 Deploy the loose layout (Developer Mode) and activate the packaged app by AUMID instead of starting
-an exe. The activated app self-hosts MTP (as the `MSTestRunnerWinUI` sample already does) and
-connects back on the env-provided pipe.
+an exe. The activated app self-hosts MTP (as the `MSTestRunnerWinUI` sample already does for the
+in-process case); the launcher is responsible for getting the controller pipe name and correlation
+id to it so it can connect back, since AUMID activation does not flow per-launch environment
+variables on its own.
 
 ```csharp
 public Task<ITestHostHandle> LaunchTestHostAsync(
@@ -235,12 +240,16 @@ public Task<ITestHostHandle> LaunchTestHostAsync(
     //    new PackageManager().RegisterPackageByUriAsync(manifestUri, options);
     string aumid = AppxManifest.ResolveAumid(context.FileName);
 
-    // 2. Activate, passing the SAME args the platform prepared.
+    // 2. Activate, passing the SAME args the platform prepared. AUMID activation takes a single
+    //    command-line string, so the launcher must escape/quote context.Arguments (e.g. with a
+    //    PasteArguments-style helper) to preserve what ProcessStartInfo.ArgumentList would have done.
     var aam = (IApplicationActivationManager)new ApplicationActivationManager();
-    aam.ActivateApplication(aumid, string.Join(' ', context.Arguments), ACTIVATEOPTIONS.AO_NONE, out uint pid);
+    aam.ActivateApplication(aumid, PasteArguments(context.Arguments), ACTIVATEOPTIONS.AO_NONE, out uint pid);
 
-    // 3. Wrap the returned PID. The app inherits context.EnvironmentVariables
-    //    (incl. the MONITORTOHOST pipe name) via its activation/launch profile.
+    // 3. Wrap the returned PID. AUMID activation cannot set per-launch environment variables, so the
+    //    launcher must bridge the values the host needs from context.EnvironmentVariables (the
+    //    MONITORTOHOST pipe name, correlation id, etc.) another way — e.g. activation arguments or a
+    //    broker process the activated app reads on startup.
     return Task.FromResult<ITestHostHandle>(new ProcessIdHandle((int)pid));
 }
 ```

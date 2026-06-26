@@ -21,13 +21,14 @@ public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppD
         // for "not just a dumb process".
         testHostResult.AssertExitCodeIs(ExitCode.Success);
 
-        // The launcher leaves a breadcrumb pointing at the isolated deployment directory it created
-        // and launched from.
+        // The launcher leaves a breadcrumb (next to the original, non-deployed app) pointing at the
+        // isolated deployment directory it created and launched from. The directory itself is cleaned
+        // up once the host exits, so we only assert it was a distinct location rather than requiring
+        // it to still be on disk.
         string markerPath = Path.Combine(testHost.DirectoryName, "PackagedAppDeployment.txt");
         Assert.IsTrue(File.Exists(markerPath), $"Expected deployment marker at '{markerPath}'.");
 
         string deploymentDirectory = File.ReadAllText(markerPath);
-        Assert.IsTrue(Directory.Exists(deploymentDirectory), $"Expected deployment directory '{deploymentDirectory}' to exist.");
         Assert.AreNotEqual(testHost.DirectoryName, deploymentDirectory, "The test host must have been deployed to a different directory.");
     }
 
