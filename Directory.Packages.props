@@ -16,7 +16,7 @@
          template. It MUST be kept in sync with the literal Aspire.Hosting.Testing PackageVersion
          declared near the bottom of this file (the one Dependabot updates). The
          _ValidateBundledSdkFeatureVersions target there fails the build if the two drift apart. -->
-    <AspireHostingTestingVersion>13.2.1</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>13.4.6</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
