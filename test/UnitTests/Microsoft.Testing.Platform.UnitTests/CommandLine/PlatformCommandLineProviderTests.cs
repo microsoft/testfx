@@ -40,6 +40,32 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    [DataRow("strict")]
+    [DataRow("allow-skipped")]
+    [DataRow("STRICT")]
+    [DataRow("Allow-Skipped")]
+    public async Task IsValid_If_ZeroTestsPolicy_Has_CorrectValue(string policy)
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ZeroTestsPolicyOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [policy]).ConfigureAwait(false);
+        Assert.IsTrue(validateOptionsResult.IsValid);
+        Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
+    }
+
+    [TestMethod]
+    public async Task IsInvalid_If_ZeroTestsPolicy_Has_IncorrectValue()
+    {
+        var provider = new PlatformCommandLineProvider();
+        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ZeroTestsPolicyOptionKey);
+
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.Contains("invalid", validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("0")]
     [DataRow("32")]
     [DataRow("65535")]

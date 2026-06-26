@@ -199,4 +199,61 @@ public sealed class UseExecuteAsyncOverrideFixerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task ExecuteMethodWithoutPublicModifier_ShouldNotOfferCodeFix()
+    {
+        // The fixer requires a public modifier; a protected override Execute should not be transformed.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class C : TestMethodAttribute
+            {
+                protected override TestResult[] {|CS0115:Execute|}(ITestMethod testMethod)
+                {
+                    return new TestResult[] { };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ExecuteMethodWithZeroParameters_ShouldNotOfferCodeFix()
+    {
+        // The fixer requires exactly one parameter; Execute with no parameters should not be transformed.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class C : TestMethodAttribute
+            {
+                public override TestResult[] {|CS0115:Execute|}()
+                {
+                    return new TestResult[] { };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task ExecuteMethodWithWrongParameterType_ShouldNotOfferCodeFix()
+    {
+        // The fixer requires an ITestMethod parameter; a different parameter type should not be transformed.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class C : TestMethodAttribute
+            {
+                public override TestResult[] {|CS0115:Execute|}(int testMethod)
+                {
+                    return new TestResult[] { };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

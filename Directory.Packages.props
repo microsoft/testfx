@@ -16,7 +16,7 @@
          template. It MUST be kept in sync with the literal Aspire.Hosting.Testing PackageVersion
          declared near the bottom of this file (the one Dependabot updates). The
          _ValidateBundledSdkFeatureVersions target there fails the build if the two drift apart. -->
-    <AspireHostingTestingVersion>13.2.1</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>13.4.6</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
@@ -113,7 +113,7 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Polly" Version="8.6.6" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.24.84" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
     <!--
       Nerdbank.MessagePack and MessagePack both come transitively via StreamJsonRpc, but we pin them
       here to pick up versions that fix security vulnerabilities in the transitive versions shipped
@@ -145,11 +145,22 @@
     bundled-but-unreferenced SDK feature package here, add a matching PackageDownload too, otherwise
     it will silently never be updated.
 
-    The version MUST be a literal here (not an MSBuild property such as
-    $(MicrosoftPlaywrightVersion)): Dependabot does not update a Central Package Management
-    PackageVersion whose Version is an MSBuild property interpolation when the package has no
-    direct PackageReference, so a property-based version silently stops receiving updates.
-    See dependabot/dependabot-core#5812 and dependabot/dependabot-core#7183.
+    Two conditions must BOTH hold for Dependabot to bump one of these, and missing either one
+    silently stops the updates:
+
+      1. The version MUST be a literal here (not an MSBuild property such as
+         $(MicrosoftPlaywrightVersion)): Dependabot does not update a Central Package Management
+         PackageVersion whose Version is an MSBuild property interpolation.
+         See dependabot/dependabot-core#5812 and dependabot/dependabot-core#7183.
+
+      2. The package MUST have a real PackageReference somewhere in the repo's restore graph:
+         Dependabot only updates a CPM PackageVersion that is actually referenced by a project;
+         an "orphan" PackageVersion (declared here but referenced nowhere) is ignored. Because
+         these packages are only baked into the shipped SDK templates (Sdk/Features/*.targets)
+         and never referenced by a built project, we add inert anchor references
+         (PackageReference with ExcludeAssets="all") in
+         test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj.
+         Without those anchors Dependabot never proposed bumps (see #9362).
 
     Each literal version is duplicated as the matching *Version property (defined near the top of
     this file) which is the value actually consumed by the build and baked into the MSTest.Sdk
@@ -161,7 +172,7 @@
     PackageVersion), so the duplication can never ship out of sync.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.2.1" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.4.6" />
     <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.60.0" />
   </ItemGroup>
   <Target Name="_ValidateBundledSdkFeatureVersions"

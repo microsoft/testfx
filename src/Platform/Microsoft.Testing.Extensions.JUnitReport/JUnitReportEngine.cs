@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -56,26 +55,9 @@ internal sealed class JUnitReportEngine : ReportEngineBase
         IReadOnlyDictionary<string, TestResultCapture.ParentChainEntry> parentChain,
         DateTimeOffset finishTime)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
-
-        bool fileNameExplicitlyProvided = _commandLineOptions.TryGetOptionArgumentList(
+        (string finalPath, _) = ResolveOutputPath(
             JUnitReportGeneratorCommandLine.JUnitReportFileNameOptionName,
-            out string[]? providedFileName);
-
-        string fileName = fileNameExplicitlyProvided
-            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName("xml");
-
-        string outputDirectory = _configuration.GetTestResultDirectory();
-        // Path.Combine short-circuits when the second argument is rooted, so an absolute
-        // user-provided file name overrides the test results directory while validated
-        // relative paths stay nested under it.
-        string finalPath = Path.Combine(outputDirectory, fileName);
-        string? finalDirectory = Path.GetDirectoryName(finalPath);
-        if (!RoslynString.IsNullOrEmpty(finalDirectory))
-        {
-            _fileSystem.CreateDirectory(finalDirectory);
-        }
+            "xml");
 
         // Two-pass strategy: build all suites and resolve testcase-name collisions in
         // memory first, then stream the XML once. This keeps the writer logic linear

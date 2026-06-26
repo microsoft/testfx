@@ -14,11 +14,11 @@ public class OutputTests : CLITestBase
     private const string TestAssetName = "OutputTestProject";
 
     [TestMethod]
-    [Ignore("Fails on CI.")]
+    [CICondition(ConditionMode.Exclude)] // Asserts the methods overlap in wall-clock time to prove parallelism; the thread pool doesn't reliably schedule them concurrently on constrained CI agents (notably Windows Debug). Runs locally where scheduling is reliable.
     public async Task OutputIsNotMixedWhenTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest1");
 
     [TestMethod]
-    [Ignore("Fails on CI.")]
+    [CICondition(ConditionMode.Exclude)] // Asserts the methods overlap in wall-clock time to prove parallelism; the thread pool doesn't reliably schedule them concurrently on constrained CI agents (notably Windows Debug). Runs locally where scheduling is reliable.
     public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel() => await ValidateOutputForClassAsync("UnitTest2");
 
     private static async Task ValidateOutputForClassAsync(string className)

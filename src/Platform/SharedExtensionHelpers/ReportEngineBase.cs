@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -53,7 +54,7 @@ internal abstract class ReportEngineBase
         _cancellationToken = cancellationToken;
     }
 
-    protected static string GetProvidedFileName(string[]? providedFileName)
+    internal static string GetProvidedFileName(string[]? providedFileName)
         => providedFileName is { Length: > 0 }
             ? providedFileName[0]
             : throw ApplicationStateGuard.Unreachable();
@@ -69,15 +70,44 @@ internal abstract class ReportEngineBase
     }
 
     protected string BuildDefaultFileName(string extension)
+        => BuildDefaultFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), extension);
+
+    internal static string BuildDefaultFileName(string testApplicationModule, string extension)
     {
         // Deterministic <asm>_<tfm>_<arch>.<extension> shape — discoverable across
         // reruns and multi-target/multi-arch matrices. A second run into the same
         // TestResults folder overwrites the previous file (with a warning), matching
         // the behavior of an explicitly-provided file name.
-        string moduleName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string moduleName = Path.GetFileNameWithoutExtension(testApplicationModule);
         string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.{extension}";
         return ReplaceInvalidFileNameChars(raw);
+    }
+
+    protected (string FinalPath, bool WasExplicit) ResolveOutputPath(string fileNameOptionName, string extension)
+        => ResolveOutputPath(fileNameOptionName, () => BuildDefaultFileName(extension));
+
+    protected (string FinalPath, bool WasExplicit) ResolveOutputPath(string fileNameOptionName, Func<string> defaultFileNameFactory)
+    {
+        _cancellationToken.ThrowIfCancellationRequested();
+
+        bool wasExplicit = _commandLineOptions.TryGetOptionArgumentList(fileNameOptionName, out string[]? providedFileName);
+        string fileName = wasExplicit
+            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
+            : defaultFileNameFactory();
+
+        string outputDirectory = _configuration.GetTestResultDirectory();
+        // Path.Combine short-circuits when the second argument is rooted, so an absolute
+        // user-provided file name overrides the test results directory while validated
+        // relative paths stay nested under it.
+        string finalPath = Path.Combine(outputDirectory, fileName);
+        string? finalDirectory = Path.GetDirectoryName(finalPath);
+        if (!RoslynString.IsNullOrEmpty(finalDirectory))
+        {
+            _fileSystem.CreateDirectory(finalDirectory);
+        }
+
+        return (finalPath, wasExplicit);
     }
 }

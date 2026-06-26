@@ -49,7 +49,7 @@ public sealed class InconclusiveTests : AcceptanceTestBase<InconclusiveTests.Tes
         }
         else
         {
-            testHostResult.AssertExitCodeIs(ExitCode.ZeroTests);
+            testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContainsSummary(failed: 0, passed: 0, skipped: 1);
         }
 

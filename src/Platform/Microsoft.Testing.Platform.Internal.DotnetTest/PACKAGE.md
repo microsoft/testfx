@@ -7,8 +7,9 @@ stay a **single source of truth** across the [microsoft/testfx](https://github.c
 break).
 
 > ⚠️ This package is an **implementation detail** of `dotnet test` integration — that is what the `Internal` in the
-> name signals. It is `IsShipping=false` (not published to nuget.org) and is **not** intended for direct end-user
-> consumption. (A *public* MTP client/orchestration library was proposed in
+> name signals. It ships as a **preview** package (`IsShipping=true`, always preview via `SuppressFinalPackageVersion`)
+> on the same train as the rest of Microsoft.Testing.Platform so it can flow to dotnet/sdk, and is **not** intended for
+> direct end-user consumption. (A *public* MTP client/orchestration library was proposed in
 > [#5667](https://github.com/microsoft/testfx/issues/5667); that is a separate effort, closed pending a real use
 > case.)
 

@@ -52,6 +52,23 @@
     <PackageDownload Include="Microsoft.Playwright.MSTest.v4" Version="[$(MicrosoftPlaywrightVersion)]" />
   </ItemGroup>
 
+  <!--
+    Dependabot anchor for the packages bundled by MSTest.Sdk (Microsoft.Playwright.MSTest.v4,
+    Aspire.Hosting.Testing). These are baked into the shipped SDK templates (Sdk/Features/*.targets)
+    and have no other PackageReference in the repo, so their Central Package Management PackageVersion
+    entries in Directory.Packages.props are "orphans" that Dependabot ignores (it only updates package
+    versions that are actually referenced by a project). Referencing them here (with ExcludeAssets="all"
+    so none of their assets such as compile/runtime/build targets, e.g. Playwright's browser install,
+    flow into this test project) puts them into a real restore graph so Dependabot proposes bumps. The
+    _ValidateBundledSdkFeatureVersions target in Directory.Packages.props then guards the matching
+    version properties (MicrosoftPlaywrightVersion, AspireHostingTestingVersion) against drift after
+    a bump. See https://github.com/microsoft/testfx/issues/9362.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Playwright.MSTest.v4" ExcludeAssets="all" />
+    <PackageReference Include="Aspire.Hosting.Testing" ExcludeAssets="all" />
+  </ItemGroup>
+
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <MicrosoftTestingExtensionsCodeCoveragePackage Include="$(PkgMicrosoft_Testing_Extensions_CodeCoverage)\microsoft.testing.extensions.codecoverage.*.nupkg" />

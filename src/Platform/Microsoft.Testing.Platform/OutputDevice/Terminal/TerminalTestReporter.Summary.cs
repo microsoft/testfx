@@ -70,11 +70,8 @@ internal sealed partial class TerminalTestReporter
             }
         }
 
-        // DESIGN: `allTestsWereSkipped` is intentionally treated as a failed run. Skipped tests don't count as
-        // "ran", so an all-skipped (or zero-test) run is reported in red as "Zero tests ran". This is the strict
-        // default chosen in #3216 / #3243 ("Skipped tests count as not run") to flag the common "invalid filter
-        // ran nothing" mistake. `--ignore-exit-code 8` only affects the process exit code; it does not change
-        // this terminal summary/verdict/coloring, which still reports the run as failed by design.
+        // The `--zero-tests-policy` decision is mirrored here: under the default `allow-skipped` an all-skipped run is
+        // reported as a passing run instead of red "Zero tests ran"; under `strict` it is reported as "Zero tests ran".
         //
         // Two sibling sites mirror this decision and must stay in lockstep:
         //   - TestApplicationResult.ConsumeAsync (excludes skipped from `_totalRanTests` -> exit code 8)
@@ -84,12 +81,12 @@ internal sealed partial class TerminalTestReporter
         // ShowAssembly off and never sets Success, so this stays false and its verdict/color are unchanged.
         bool hasFailedAssemblies = _options.ShowAssembly && anyAssemblyFailed;
 
-        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests) || HasHandshakeFailure || hasFailedAssemblies;
+        bool runFailed = TestRunSummaryHelper.IsRunFailed(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, _options.ZeroTestsPolicy) || HasHandshakeFailure || hasFailedAssemblies;
         terminal.SetColor(runFailed ? TerminalColor.DarkRed : TerminalColor.DarkGreen);
 
         terminal.Append(TerminalResources.TestRunSummary);
         terminal.Append(' ');
-        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies));
+        terminal.Append(TestRunSummaryHelper.GetVerdictText(totalTests, totalFailedTests, totalSkippedTests, WasCancelled, _options.MinimumExpectedTests, HasHandshakeFailure, hasFailedAssemblies, _options.ZeroTestsPolicy));
 
         // For a single assembly (the in-process host) the verdict is followed by the assembly link, exactly as
         // before. For multiple assemblies (the dotnet test orchestrator) the per-assembly identity is rendered in

@@ -157,9 +157,9 @@ Daha fazla bilgi için https://learn.microsoft.com/dotnet/core/diagnostics/colle
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Test oturumu sırasında başlatılan ve sonlandırılan testleri listeleyen bir sıra dosyasının kilitlenme bilgi dökümü veya kilitlenme raporuyla birlikte oluşturulup oluşturulmadığını denetleyin.
+Dosya, dökümü incelemeye gerek kalmadan kilitlenme sırasında çalışan testlerin belirlenmesini mümkün kılar.
+Geçerli değerler: 'on' (varsayılan: 'true', 'enable', '1' değerlerini de kabul eder) ve 'off' ('false', 'disable', '0' değerlerini de kabul eder).</target>
         <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
