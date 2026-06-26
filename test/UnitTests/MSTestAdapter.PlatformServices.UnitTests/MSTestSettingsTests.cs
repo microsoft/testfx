@@ -133,6 +133,24 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'ConsiderEmptyDataSourceAsInconclusive', setting will be ignored."), Times.Once);
     }
 
+    public void RunSettings_WithZeroTimeout_GettingAWarningAndTimeoutIsNotSet()
+    {
+        // "0" parses as an integer but is rejected by the strictly-positive guard (issue #9403).
+        string runSettingsXml =
+            """
+            <RunSettings>
+                <MSTestV2>
+                    <TestTimeout>0</TestTimeout>
+               </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object)!;
+
+        adapterSettings.TestTimeout.Should().Be(0);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '0' for runsettings entry 'TestTimeout'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
+    }
+
     public void MapNotRunnableToFailedShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingsXml =
@@ -1181,6 +1199,26 @@ public class MSTestSettingsTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:treatDiscoveryWarningsAsErrors', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:mapInconclusiveToFailed', setting will be ignored."), Times.Once);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'execution:considerEmptyDataSourceAsInconclusive', setting will be ignored."), Times.Once);
+    }
+
+    public void ConfigJson_WithZeroTimeout_GettingAWarningAndTimeoutIsNotSet()
+    {
+        // Arrange - "0" parses as an integer but is rejected by the strictly-positive guard.
+        // This is the exact scenario from issue #9403: a parseable value that silently has no effect.
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:timeout:test", "0" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        settings.TestTimeout.Should().Be(0);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '0' for runsettings entry 'timeout:test'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored."), Times.Once);
     }
 
     public void ConfigJson_WithValidValues_ValuesAreSetCorrectly()

@@ -106,7 +106,7 @@ When you add, rename, or remove a configuration key in any of those, update
 The `mstest:timeout:*` keys (`test`, `assemblyInitialize`, `assemblyCleanup`, `classInitialize`,
 `classCleanup`, `testInitialize`, `testCleanup`) are timeouts expressed in **milliseconds** and must
 be a **strictly positive integer** (`>= 1`). This is enforced identically by both the
-`testconfig.json`/JSON parser (`ParseIntegerSetting`) and the legacy `.runsettings` XML parser, so
+`testconfig.json`/JSON parser (`ParseTimeoutSetting`) and the legacy `.runsettings` XML parser, so
 behavior is the same across formats and matches the schema's `"minimum": 1`.
 
 A value of `0` (or any negative number) is **not** a valid timeout. It does not mean "disable the
@@ -117,6 +117,12 @@ Invalid value '0' for runsettings entry 'timeout:test'. The timeout must be a st
 integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default
 (no timeout). The setting will be ignored.
 ```
+
+> **Note on the warning text:** when the value comes from `testconfig.json`, the warning currently
+> reports the key **without** the `mstest:` prefix (for example `timeout:test`, not
+> `mstest:timeout:test`). When correlating a warning with your `testconfig.json`, mentally prepend
+> `mstest:` — the JSON key you actually set is `mstest:timeout:test`. The `.runsettings` XML parser
+> reports the corresponding element name instead (for example `TestTimeout`).
 
 To run without a timeout, **omit the key** rather than setting it to `0`; absence of the key already
 means "no timeout" (the internal default). Because an explicit `0` would be redundant with omitting
