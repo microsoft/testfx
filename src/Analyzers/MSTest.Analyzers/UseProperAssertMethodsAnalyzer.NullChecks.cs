@@ -47,34 +47,15 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         return false;
     }
 
-    private static bool IsEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
+    private static bool IsNullBinaryOperator(
+        IOperation operation,
+        BinaryOperatorKind binaryOperatorKind,
+        INamedTypeSymbol objectTypeSymbol,
+        [NotNullWhen(true)] out SyntaxNode? expressionUnderTest,
+        out ITypeSymbol? typeOfExpressionUnderTest)
     {
-        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.Equals } binaryOperation &&
-            !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
-        {
-            if (binaryOperation.RightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
-            {
-                expressionUnderTest = binaryOperation.LeftOperand.Syntax;
-                typeOfExpressionUnderTest = binaryOperation.LeftOperand.WalkDownConversion().Type;
-                return true;
-            }
-
-            if (binaryOperation.LeftOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
-            {
-                expressionUnderTest = binaryOperation.RightOperand.Syntax;
-                typeOfExpressionUnderTest = binaryOperation.RightOperand.WalkDownConversion().Type;
-                return true;
-            }
-        }
-
-        expressionUnderTest = null;
-        typeOfExpressionUnderTest = null;
-        return false;
-    }
-
-    private static bool IsNotEqualsNullBinaryOperator(IOperation operation, INamedTypeSymbol objectTypeSymbol, [NotNullWhen(true)] out SyntaxNode? expressionUnderTest, out ITypeSymbol? typeOfExpressionUnderTest)
-    {
-        if (operation is IBinaryOperation { OperatorKind: BinaryOperatorKind.NotEquals } binaryOperation &&
+        if (operation is IBinaryOperation binaryOperation &&
+            binaryOperation.OperatorKind == binaryOperatorKind &&
             !IsExcludedOperator(binaryOperation.OperatorMethod, objectTypeSymbol))
         {
             if (binaryOperation.RightOperand.WalkDownConversion() is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } })
@@ -106,12 +87,12 @@ public sealed partial class UseProperAssertMethodsAnalyzer
         out ITypeSymbol? typeOfExpressionUnderTest)
     {
         if (IsIsNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
-            IsEqualsNullBinaryOperator(operation, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
+            IsNullBinaryOperator(operation, BinaryOperatorKind.Equals, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNull;
         }
         else if (IsIsNotNullPattern(operation, out expressionUnderTest, out typeOfExpressionUnderTest) ||
-            IsNotEqualsNullBinaryOperator(operation, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
+            IsNullBinaryOperator(operation, BinaryOperatorKind.NotEquals, objectTypeSymbol, out expressionUnderTest, out typeOfExpressionUnderTest))
         {
             return NullCheckStatus.IsNotNull;
         }
