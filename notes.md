@@ -35,11 +35,13 @@
    - `UseCooperativeCancellationForTimeoutAnalyzerTests` (33 tests) — possible additional fixture method scenarios
    - `UseParallelizeAttributeAnalyzerTests` (7 tests) — well covered
    - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — similar to PreferTestCleanupOverDispose but opposite direction
+   - `DoNotUseShadowingAnalyzerTests` (18 tests) — look at multi-level inheritance chain edge cases
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-26 | Task 4 (verified PRs #9438 and #9410 merged), Task 3 (IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment, lambda block body, chained receiver), Task 7 (Monthly Issue Jun) |
 | 2026-06-25 | Task 3 (UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type), Task 7 (Monthly Issue Jun) |
 | 2026-06-24 | Task 3 (RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard), Task 7 (Monthly Issue Jun) |
 | 2026-06-23 | Task 3 (PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases), Task 7 (Monthly Issue Jun) |
@@ -69,12 +71,13 @@
 
 ## Last Run
 
-2026-06-25 23:22 UTC
+2026-06-26 23:20 UTC
 
 ## Completed Work
 
-- PR (pending) for UseExecuteAsyncOverrideFixer edge cases (2026-06-25) — no public modifier (protected override), zero parameters, wrong parameter type (non-ITestMethod); 3 new tests; all 9 pass
-- PR (pending) for RemoveClassCleanupBehaviorArgumentFixer edge cases (2026-06-24) — first-arg ordering (ClassCleanupBehavior before InheritanceBehavior), non-attribute context guard (no fix in method body)
+- PR (pending) for IgnoreStringMethodReturnValueAnalyzer edge cases (2026-06-26) — discard assignment (no diagnostic), lambda block body (diagnostic), chained receiver (no diagnostic); 8/8 pass
+- PR #9438 merged (2026-06-26 by Evangelink) — UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type
+- PR #9410 merged (2026-06-25 by Evangelink) — RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard
 - PR #9382 merged (2026-06-24 by Evangelink) — PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases: full dispose pattern, Dispose+TestCleanup coexistence, static constructor
 - PR #9355 merged (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases) — merged 2026-06-23 by Evangelink
 - PR #9314 merged (async-suffix suppressors + redundant display name edge cases) — merged 2026-06-22 by Evangelink
