@@ -134,9 +134,10 @@
   </ItemGroup>
   <!--
     Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK
-    templates) and are not otherwise consumed by a built project, so that Dependabot can
-    discover and update them. Their only reference in this repo is the inert anchor described
-    in condition 2 below.
+    templates) and are not otherwise consumed by a restored project, so that Dependabot can
+    discover and update them. They are referenced only inside the SDK feature targets
+    (Sdk/Features/*.targets, which Dependabot doesn't restore); their only graph-visible reference
+    from a repo project restore is the inert anchor described in condition 2 below.
 
     Two conditions must BOTH hold for Dependabot to bump one of these, and missing either one
     silently stops the updates:
