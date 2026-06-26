@@ -27,8 +27,10 @@ internal sealed class UnitTestRunner
 #endif
 {
     // Reusable TestResult returned for the assembly-init fast path (init already passed).
-    // It is read-only and never mutated, so sharing across concurrent test runs is safe.
-    private static readonly TestResult s_assemblyInitPassedResult = new() { Outcome = UnitTestOutcome.Passed };
+    // Safe to share across concurrent test runs because it is private to this type and treated
+    // as immutable: the fast path only reads from it (Outcome plus the null Log/DebugTrace fields)
+    // and the instance never escapes RunSingleTestAsync. Do not mutate it.
+    private static readonly TestResult AssemblyInitPassedResult = new() { Outcome = UnitTestOutcome.Passed };
 
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
@@ -155,7 +157,7 @@ internal sealed class UnitTestRunner
                 {
                     // Fast path: assembly init already ran and succeeded.
                     // Skip the TestContextImplementation allocation (dictionary copy + cancellation registration).
-                    assemblyInitializeResult = s_assemblyInitPassedResult;
+                    assemblyInitializeResult = AssemblyInitPassedResult;
                 }
                 else
                 {
