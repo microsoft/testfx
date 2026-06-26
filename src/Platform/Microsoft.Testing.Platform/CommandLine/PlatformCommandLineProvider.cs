@@ -227,6 +227,12 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
         }
 
+        if (commandLineOptions.IsOptionSet(FilterUidOptionKey)
+            && commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.OnlyOneFilterSupported);
+        }
+
         // The '--server dotnettestcli' protocol path requires '--dotnet-test-pipe' to connect to the
         // dotnet test pipe. Without it, the dotnet test connection silently never activates and the
         // application falls back to console mode, leading to confusing behavior. Both options are

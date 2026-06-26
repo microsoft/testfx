@@ -304,7 +304,7 @@ The XML-based test result file format used by Visual Studio, Azure DevOps, and `
 
 ### TreeNodeFilter
 
-An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against test node properties to select which tests to run. Filter expressions support Boolean algebra: `&` (AND), `|` (OR), `!` (NOT), and property comparisons (e.g., `FullyQualifiedName~MyTest`). Internally, filter expressions are parsed into a `FilterExpression` tree and evaluated recursively.
+An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against test node properties to select which tests to run. Filter expressions support Boolean algebra: `&` (AND), `|` (OR), `!` (NOT), and property comparisons (e.g., `/**[Tag=Smoke]`). Wildcard patterns (`*`) are supported in both path segments and property values. Internally, filter expressions are parsed into a `FilterExpression` tree and evaluated recursively.
 
 ## V
 

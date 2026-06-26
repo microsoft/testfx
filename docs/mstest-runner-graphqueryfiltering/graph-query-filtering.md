@@ -8,6 +8,7 @@ Available operators
 
 - `&`    -> and
 - `|`    -> or
+- `!`    -> unary NOT (must appear immediately after an opening parenthesis, e.g. `(!A*)`)
 - `()`   -> order, mandatory when defining multiple conditions
 - `=`    -> equals
 - `!=`   -> not equal
@@ -38,6 +39,15 @@ C-->G;
 You can combine operators
 `/A/(B*)&(!*C)`
 -> All nodes under A whose name starts with B and does not end with C
+
+## Filtering with NOT
+
+The `!` (unary NOT) operator negates a condition. It must appear immediately after an opening parenthesis.
+
+- `/A/(!*Slow*)` -> All nodes under A whose name does not contain `Slow`
+- `/A/(B*)&(!*C)` -> All nodes under A whose name starts with B and does not end with C
+
+## Filtering with the `**` path operator
 
 In addition to all the previously mentioned operators, for path filtering we want to allow one more operator `**`.
 `/A/**`
@@ -79,6 +89,8 @@ You can combine operators:
 /!\ We don't want to allow values without key
 
 /!\ Wildcard only apply to value of the property
+
+> **Note for test framework authors**: The property filter syntax (`[Key=Value]`) evaluates against `TestMetadataProperty` entries in a node's `PropertyBag` only. Properties stored as other `IProperty` subtypes are silently not matched. To make test traits filterable via `--treenode-filter`, expose them as `TestMetadataProperty` instances.
 
 ## Real life examples
 
