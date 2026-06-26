@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
 /// An <see cref="ITestHostHandle"/> over a deployed packaged Windows (UWP/WinUI) test host process
-/// that deliberately exposes no identifier, modelling a launch where no local, query-able PID is
+/// that deliberately exposes no identifier, modelling a launch where no local, queryable PID is
 /// available.
 /// </summary>
 internal sealed class PackagedAppTestHostHandle : ITestHostHandle, IDisposable

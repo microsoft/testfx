@@ -82,8 +82,8 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 
         // 3. Return a handle that deliberately does NOT surface the underlying process id, validating
         //    that the platform relies purely on the lifecycle contract
-        //    (WaitForExitAsync/ExitCode/HasExited/Exited/Terminate) and the IPC PID handshake. This
-        //    matches launch mechanisms where no local, query-able PID is available (e.g. an
+        //    (WaitForExitAsync/ExitCode/HasExited/Terminate) and the IPC PID handshake. This
+        //    matches launch mechanisms where no local, queryable PID is available (e.g. an
         //    AppContainer-sandboxed AUMID activation surfaced through a broker). The handle also owns
         //    cleanup of the deployment directory once the host has exited.
         return Task.FromResult<ITestHostHandle>(new PackagedAppTestHostHandle(process, deploymentDirectory));
