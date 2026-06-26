@@ -10,7 +10,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
-/// Provides extension methods to add the video recorder service to a test application.
+/// Provides extension methods to add the video recorder to a test application.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class VideoRecorderExtensions
@@ -18,10 +18,14 @@ public static class VideoRecorderExtensions
     /// <summary>
     /// Adds the video recorder to the test application. When the run is started with
     /// <c>--capture-video</c>, the screen is recorded automatically (one video per test by
-    /// default, or one per session).
+    /// default, or one chaptered video per session).
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     /// <param name="configure">An optional callback to configure recording options.</param>
+    [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("ios")]
+    [UnsupportedOSPlatform("tvos")]
+    [UnsupportedOSPlatform("wasi")]
     public static void AddVideoRecorderProvider(this ITestApplicationBuilder builder, Action<VideoRecorderOptions>? configure = null)
     {
         var options = new VideoRecorderOptions();
@@ -34,6 +38,7 @@ public static class VideoRecorderExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetMessageBus(),
                 serviceProvider.GetOutputDevice(),
+                serviceProvider.GetSystemClock(),
                 serviceProvider.GetLoggerFactory().CreateLogger<VideoRecorderSessionHandler>()));
 
         builder.TestHost.AddDataConsumer(compositeFactory);

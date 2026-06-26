@@ -1,6 +1,7 @@
 # Video Recorder extension — design notes
 
-Status: **sample / experimental** (`[Experimental("TPEXP")]`, `IsPackable=false`).
+Status: **preview / experimental** — shipped as the `Microsoft.Testing.Extensions.VideoRecorder`
+NuGet package (early-preview `1.0.0-alpha`), with the public API marked `[Experimental("TPEXP")]`.
 This document records the design decisions and the alternatives we considered, so we can
 "complexify later" deliberately rather than rediscover the trade-offs.
 

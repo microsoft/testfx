@@ -2,12 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
@@ -24,6 +26,10 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 /// are invoked asynchronously, so by the time a test's <c>InProgress</c> message is observed the
 /// test may already be finishing.
 /// </summary>
+[UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("ios")]
+[UnsupportedOSPlatform("tvos")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class VideoRecorderSessionHandler :
     IDataConsumer,
     ITestSessionLifetimeHandler,
@@ -37,11 +43,16 @@ internal sealed class VideoRecorderSessionHandler :
     private readonly VideoCaptureGranularity _granularity;
     private readonly IMessageBus _messageBus;
     private readonly IOutputDevice _outputDevice;
+    private readonly IClock _clock;
     private readonly ILogger<VideoRecorderSessionHandler> _logger;
 
+#if NET9_0_OR_GREATER
+    private readonly Lock _stateGate = new();
+#else
     private readonly object _stateGate = new();
-    private readonly List<TestRecord> _testRecords = new();
-    private readonly Dictionary<string, DateTimeOffset> _inFlight = new();
+#endif
+    private readonly List<TestRecord> _testRecords = [];
+    private readonly Dictionary<string, DateTimeOffset> _inFlight = [];
 
     private SessionUid? _sessionUid;
     private bool _anyTestFailed;
@@ -53,10 +64,12 @@ internal sealed class VideoRecorderSessionHandler :
         ICommandLineOptions commandLineOptions,
         IMessageBus messageBus,
         IOutputDevice outputDevice,
+        IClock clock,
         ILogger<VideoRecorderSessionHandler> logger)
     {
         _messageBus = messageBus;
         _outputDevice = outputDevice;
+        _clock = clock;
         _logger = logger;
         _options = options;
 
@@ -78,6 +91,7 @@ internal sealed class VideoRecorderSessionHandler :
         _recorder = new FfmpegVideoRecorder(
             options,
             outputDirectory,
+            clock,
             log: message => logger.LogTrace(message),
             warn: message => logger.LogWarning(message));
     }
@@ -123,7 +137,7 @@ internal sealed class VideoRecorderSessionHandler :
                 // terminal message doesn't carry authoritative timing.
                 if (!_inFlight.ContainsKey(testUid))
                 {
-                    _inFlight[testUid] = DateTimeOffset.UtcNow;
+                    _inFlight[testUid] = _clock.UtcNow;
                 }
             }
 
@@ -383,7 +397,7 @@ internal sealed class VideoRecorderSessionHandler :
             return;
         }
 
-        double nowOffset = (DateTimeOffset.UtcNow - recordingStart).TotalSeconds;
+        double nowOffset = (_clock.UtcNow - recordingStart).TotalSeconds;
         double[] failedWindows;
         double watermark;
         lock (_stateGate)
@@ -431,7 +445,7 @@ internal sealed class VideoRecorderSessionHandler :
 
         if (prunable.Count > 0)
         {
-            _recorder.PruneSegments(prunable);
+            FfmpegVideoRecorder.PruneSegments(prunable);
         }
     }
 
@@ -465,7 +479,7 @@ internal sealed class VideoRecorderSessionHandler :
             return (timing.GlobalTiming.StartTime, timing.GlobalTiming.EndTime);
         }
 
-        DateTimeOffset now = DateTimeOffset.UtcNow;
+        DateTimeOffset now = _clock.UtcNow;
         DateTimeOffset observedStart;
         lock (_stateGate)
         {
@@ -493,7 +507,7 @@ internal sealed class VideoRecorderSessionHandler :
     {
         string extension = _recorder!.SegmentExtension;
         string sanitized = Sanitize(name);
-        string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
+        string timestamp = _clock.UtcNow.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
         string unique = Guid.NewGuid().ToString("N").Substring(0, 4);
         return sanitized.Length == 0
             ? $"recording_{timestamp}_{unique}.{extension}"
@@ -502,7 +516,7 @@ internal sealed class VideoRecorderSessionHandler :
 
     private static string Sanitize(string? name)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        if (RoslynString.IsNullOrWhiteSpace(name))
         {
             return string.Empty;
         }

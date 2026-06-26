@@ -86,6 +86,13 @@
     This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
     -->
     <MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>1.0.0</MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>
+
+    <MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>
+
+    <!--
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsVideoRecorderVersionPrefix>1.0.0</MicrosoftTestingExtensionsVideoRecorderVersionPrefix>
   </PropertyGroup>
 
   <!-- Pack config -->

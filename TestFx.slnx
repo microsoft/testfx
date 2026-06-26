@@ -6,7 +6,6 @@
     <Project Path="samples/FxExtensibility/FxExtensibility.csproj" />
     <Project Path="samples/NUnitPlayground/NUnitPlayground.csproj" />
     <Project Path="samples/Playground/Playground.csproj" />
-    <Project Path="samples/VideoRecorder/VideoRecorder.csproj" />
     <Project Path="samples/WasiPlayground/WasiPlayground.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
@@ -55,6 +54,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport/Microsoft.Testing.Extensions.TrxReport.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VSTestBridge/Microsoft.Testing.Extensions.VSTestBridge.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.VideoRecorder/Microsoft.Testing.Extensions.VideoRecorder.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.Internal.DotnetTest/Microsoft.Testing.Platform.Internal.DotnetTest.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />

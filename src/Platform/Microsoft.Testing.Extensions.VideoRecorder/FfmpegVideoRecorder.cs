@@ -2,6 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
+using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Helpers;
+
+#if !NETCOREAPP
+using Polyfills;
+#endif
 
 namespace Microsoft.Testing.Extensions.VideoRecorder;
 
@@ -40,38 +46,45 @@ internal readonly struct VideoSegment
 /// <see cref="Start"/> is best-effort and never throws — if ffmpeg is unavailable or the launch
 /// fails, it warns and the recorder simply produces nothing.
 /// </remarks>
+[UnsupportedOSPlatform("browser")]
+[UnsupportedOSPlatform("ios")]
+[UnsupportedOSPlatform("tvos")]
+[UnsupportedOSPlatform("wasi")]
 internal sealed class FfmpegVideoRecorder
 {
     private static readonly TimeSpan StopTimeout = TimeSpan.FromSeconds(15);
 
     private readonly VideoRecorderOptions _options;
     private readonly string _outputDirectory;
-    private readonly string? _ffmpegPath;
+    private readonly IClock _clock;
     private readonly Action<string>? _log;
     private readonly Action<string>? _warn;
     private readonly ConcurrentQueue<string> _recentFfmpegOutput = new();
+#if NET9_0_OR_GREATER
+    private readonly Lock _gate = new();
+#else
     private readonly object _gate = new();
+#endif
 
     private Process? _process;
-    private string? _segmentDirectory;
     private string? _segmentListPath;
-    private string _segmentExtension = "mp4";
 
-    public FfmpegVideoRecorder(VideoRecorderOptions options, string outputDirectory, Action<string>? log, Action<string>? warn)
+    public FfmpegVideoRecorder(VideoRecorderOptions options, string outputDirectory, IClock clock, Action<string>? log, Action<string>? warn)
     {
         _options = options;
         _outputDirectory = outputDirectory;
+        _clock = clock;
         _log = log;
         _warn = warn;
-        _ffmpegPath = FindFfmpeg(options.FfmpegPath);
+        FfmpegPath = FindFfmpeg(options.FfmpegPath);
     }
 
-    public bool IsAvailable => _ffmpegPath is not null;
+    public bool IsAvailable => FfmpegPath is not null;
 
     /// <summary>
     /// Gets the path to the resolved ffmpeg executable, or <see langword="null"/> if none was found.
     /// </summary>
-    public string? FfmpegPath => _ffmpegPath;
+    public string? FfmpegPath { get; }
 
     /// <summary>
     /// Gets the wall-clock time at which continuous recording started, used to map a test's
@@ -84,19 +97,19 @@ internal sealed class FfmpegVideoRecorder
     /// Gets the directory the segments are written to, or <see langword="null"/> if recording never
     /// started.
     /// </summary>
-    public string? SegmentDirectory => _segmentDirectory;
+    public string? SegmentDirectory { get; private set; }
 
     /// <summary>
     /// Gets the file extension used for produced videos (without the dot).
     /// </summary>
-    public string SegmentExtension => _segmentExtension;
+    public string SegmentExtension { get; private set; } = "mp4";
 
     /// <summary>
     /// Starts the continuous segmented recording. Best-effort: never throws.
     /// </summary>
     public void Start()
     {
-        if (_ffmpegPath is null)
+        if (FfmpegPath is null)
         {
             _warn?.Invoke(VideoRecorderResources.FfmpegNotFound);
             return;
@@ -112,13 +125,13 @@ internal sealed class FfmpegVideoRecorder
             Process? process = null;
             try
             {
-                _segmentExtension = _options.Format == VideoRecorderFormat.WebMVp9 ? "webm" : "mp4";
+                SegmentExtension = _options.Format == VideoRecorderFormat.WebMVp9 ? "webm" : "mp4";
                 string segmentDirectory = Path.Combine(_outputDirectory, "segments_" + Guid.NewGuid().ToString("N").Substring(0, 8));
                 Directory.CreateDirectory(segmentDirectory);
                 string segmentListPath = Path.Combine(segmentDirectory, "segments.csv");
                 string arguments = BuildSegmentArguments(segmentDirectory, segmentListPath);
 
-                var startInfo = new ProcessStartInfo(_ffmpegPath, arguments)
+                var startInfo = new ProcessStartInfo(FfmpegPath, arguments)
                 {
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
@@ -127,7 +140,7 @@ internal sealed class FfmpegVideoRecorder
                     CreateNoWindow = true,
                 };
 
-                _log?.Invoke($"Starting screen recording: \"{_ffmpegPath}\" {arguments}");
+                _log?.Invoke($"Starting screen recording: \"{FfmpegPath}\" {arguments}");
                 ClearRecentFfmpegOutput();
 
                 process = new Process { StartInfo = startInfo };
@@ -138,9 +151,9 @@ internal sealed class FfmpegVideoRecorder
                 process.BeginErrorReadLine();
 
                 _process = process;
-                _segmentDirectory = segmentDirectory;
+                SegmentDirectory = segmentDirectory;
                 _segmentListPath = segmentListPath;
-                RecordingStartUtc = DateTimeOffset.UtcNow;
+                RecordingStartUtc = _clock.UtcNow;
             }
             catch (Exception ex)
             {
@@ -154,7 +167,7 @@ internal sealed class FfmpegVideoRecorder
                 }
 
                 _process = null;
-                _segmentDirectory = null;
+                SegmentDirectory = null;
                 _segmentListPath = null;
                 RecordingStartUtc = null;
             }
@@ -185,7 +198,11 @@ internal sealed class FfmpegVideoRecorder
                 try
                 {
                     await process.StandardInput.WriteLineAsync("q").ConfigureAwait(false);
+#if NET
+                    await process.StandardInput.FlushAsync(cancellationToken).ConfigureAwait(false);
+#else
                     await process.StandardInput.FlushAsync().ConfigureAwait(false);
+#endif
                 }
                 catch (IOException)
                 {
@@ -213,7 +230,7 @@ internal sealed class FfmpegVideoRecorder
     public IReadOnlyList<VideoSegment> ReadSegments()
     {
         string? listPath = _segmentListPath;
-        string? directory = _segmentDirectory;
+        string? directory = SegmentDirectory;
         if (listPath is null || directory is null || !File.Exists(listPath))
         {
             return [];
@@ -254,7 +271,7 @@ internal sealed class FfmpegVideoRecorder
     /// Deletes the given finalized segments from disk (used by the rolling-buffer pruning to bound
     /// disk usage on long runs). Best-effort.
     /// </summary>
-    public void PruneSegments(IEnumerable<VideoSegment> segments)
+    public static void PruneSegments(IEnumerable<VideoSegment> segments)
     {
         foreach (VideoSegment segment in segments)
         {
@@ -279,13 +296,13 @@ internal sealed class FfmpegVideoRecorder
     /// </summary>
     public async Task<string?> ConcatAsync(IReadOnlyList<VideoSegment> segments, string outputFileName, string? ffmetadataPath, CancellationToken cancellationToken)
     {
-        if (_ffmpegPath is null || segments.Count == 0 || _segmentDirectory is null)
+        if (FfmpegPath is null || segments.Count == 0 || SegmentDirectory is null)
         {
             return null;
         }
 
         string outputPath = Path.Combine(_outputDirectory, outputFileName);
-        string listPath = Path.Combine(_segmentDirectory, "concat_" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt");
+        string listPath = Path.Combine(SegmentDirectory, "concat_" + Guid.NewGuid().ToString("N").Substring(0, 8) + ".txt");
 
         try
         {
@@ -360,7 +377,7 @@ internal sealed class FfmpegVideoRecorder
 
     private async Task<bool> RunFfmpegAsync(string arguments, CancellationToken cancellationToken)
     {
-        var startInfo = new ProcessStartInfo(_ffmpegPath!, arguments)
+        var startInfo = new ProcessStartInfo(FfmpegPath!, arguments)
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -368,7 +385,7 @@ internal sealed class FfmpegVideoRecorder
             CreateNoWindow = true,
         };
 
-        _log?.Invoke($"Running ffmpeg: \"{_ffmpegPath}\" {arguments}");
+        _log?.Invoke($"Running ffmpeg: \"{FfmpegPath}\" {arguments}");
 
         using var process = new Process { StartInfo = startInfo };
         process.OutputDataReceived += OnFfmpegOutput;
@@ -436,11 +453,11 @@ internal sealed class FfmpegVideoRecorder
             : "-c:v libx264 -preset veryfast -crf 28";
         string segmentFormat = _options.Format == VideoRecorderFormat.WebMVp9 ? "webm" : "mp4";
 
-        string extra = string.IsNullOrWhiteSpace(_options.ExtraRecorderArguments)
+        string extra = RoslynString.IsNullOrWhiteSpace(_options.ExtraRecorderArguments)
             ? string.Empty
             : $"{_options.ExtraRecorderArguments!.Trim()} ";
 
-        string segmentPattern = Path.Combine(segmentDirectory, $"seg_%05d.{_segmentExtension}");
+        string segmentPattern = Path.Combine(segmentDirectory, $"seg_%05d.{SegmentExtension}");
 
         // gdigrab (and some grabbers) can capture an odd width/height, but yuv420p requires both to
         // be even. Crop to the nearest even dimensions so the encoder's format conversion can't fail
@@ -493,7 +510,7 @@ internal sealed class FfmpegVideoRecorder
     // Windows Terminal work, since its window isn't owned by the test process), then the console
     // window (classic conhost). Returns false when none is a usable visible window, in which case
     // the caller falls back to full-screen capture.
-    private bool TryGetCurrentProcessWindowRegion(out int x, out int y, out int width, out int height)
+    private static bool TryGetCurrentProcessWindowRegion(out int x, out int y, out int width, out int height)
     {
         x = y = width = height = 0;
 
@@ -604,7 +621,10 @@ internal sealed class FfmpegVideoRecorder
 
     private static async Task<bool> WaitForExitAsync(Process process, TimeSpan timeout, CancellationToken cancellationToken)
     {
-#if NETCOREAPP
+        // Process.WaitForExitAsync(CancellationToken) is available on modern .NET and provided by a
+        // polyfill on netstandard2.0, so a single token-based implementation works on every target.
+        // A linked CTS bounds the wait by the timeout; an already-cancelled token simply means we
+        // report whether the process happened to have exited (best-effort stop on a cancelled run).
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         cts.CancelAfter(timeout);
         try
@@ -616,20 +636,11 @@ internal sealed class FfmpegVideoRecorder
         {
             return process.HasExited;
         }
-#else
-        // On .NET Framework, WaitForExit can't be interrupted once it's blocking, so the token
-        // can't shorten the wait anyway. Intentionally don't pass it to Task.Run: a token that is
-        // already cancelled would make Task.Run return a cancelled task and throw
-        // OperationCanceledException, which would break the best-effort stop on a cancelled run.
-        // The timeout bounds the wait.
-        _ = cancellationToken;
-        return await Task.Run(() => process.WaitForExit((int)timeout.TotalMilliseconds)).ConfigureAwait(false);
-#endif
     }
 
     private static string? FindFfmpeg(string? configuredPath)
     {
-        if (!string.IsNullOrEmpty(configuredPath))
+        if (!RoslynString.IsNullOrEmpty(configuredPath))
         {
             return File.Exists(configuredPath) ? configuredPath : null;
         }
@@ -643,7 +654,7 @@ internal sealed class FfmpegVideoRecorder
 
         foreach (string directory in pathVariable.Split(Path.PathSeparator))
         {
-            if (string.IsNullOrWhiteSpace(directory))
+            if (RoslynString.IsNullOrWhiteSpace(directory))
             {
                 continue;
             }

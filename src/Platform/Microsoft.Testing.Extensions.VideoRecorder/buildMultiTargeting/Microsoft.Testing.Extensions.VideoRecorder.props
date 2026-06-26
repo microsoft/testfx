@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <!--
+      !!! IMPORTANT !!!
+      DO NOT CHANGE THE GUID, IT'S A WELL KNOWN EXTENSION POINT.
+    -->
+    <TestingPlatformBuilderHook Include="94E0FF54-745E-4F42-9B0A-695EDC8AB34F" >
+      <DisplayName>Microsoft.Testing.Extensions.VideoRecorder</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.VideoRecorder.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>
