@@ -135,8 +135,8 @@
   <!--
     Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK
     templates) and are not otherwise consumed by a built project, so that Dependabot can
-    discover and update them. Their only PackageReference in this repo is the inert anchor
-    described in condition 2 below.
+    discover and update them. Their only reference in this repo is the inert anchor described
+    in condition 2 below.
 
     Two conditions must BOTH hold for Dependabot to bump one of these, and missing either one
     silently stops the updates:
@@ -146,14 +146,17 @@
          PackageVersion whose Version is an MSBuild property interpolation.
          See dependabot/dependabot-core#5812 and dependabot/dependabot-core#7183.
 
-      2. The package MUST have a real PackageReference somewhere in the repo's restore graph:
+      2. The package MUST appear in the repo's restore graph via a graph-visible reference:
          Dependabot only updates a CPM PackageVersion that is actually referenced by a project;
          an "orphan" PackageVersion (declared here but referenced nowhere) is ignored. Because
          these packages are only baked into the shipped SDK templates (Sdk/Features/*.targets)
-         and never referenced by a built project, we add inert anchor references
-         (PackageReference with ExcludeAssets="all") in
+         and never referenced by a built project, we add inert anchor references in
          test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj.
-         Without those anchors Dependabot never proposed bumps (see #9362).
+         The anchor MUST be a PackageDownload, NOT a PackageReference with ExcludeAssets="all":
+         ExcludeAssets="all" removes the reference from the dependency graph Dependabot reads, so
+         the package stays invisible and never gets bumped. PackageDownload keeps it in the restore
+         graph (so Dependabot proposes bumps) without flowing any of its assets into the project.
+         Without a graph-visible anchor Dependabot never proposed bumps (see #9362).
 
     Each literal version is duplicated as the matching *Version property (defined near the top of
     this file) which is the value actually consumed by the build and baked into the MSTest.Sdk
