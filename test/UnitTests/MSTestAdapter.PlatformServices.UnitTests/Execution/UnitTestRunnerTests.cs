@@ -420,9 +420,11 @@ public sealed class UnitTestRunnerTests : TestContainer
         thirdResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
         int allocationsForThird = _testablePlatformServiceProvider.GetTestContextCallCount - countBeforeThird;
 
-        // The last-test run allocates more contexts because it creates the class/assembly cleanup contexts
-        // that are deferred from all non-last tests.
-        allocationsForThird.Should().BeGreaterThan(allocationsForSecond);
+        // The last-test run allocates exactly two more contexts than a non-last test: the class-cleanup
+        // context and the assembly-cleanup context, both of which are deferred from all non-last tests.
+        // Asserting the exact delta (rather than a loose "greater than") catches the regression this test
+        // guards against, where a non-last test mistakenly allocates the deferred class-cleanup context.
+        allocationsForThird.Should().Be(allocationsForSecond + 2);
     }
 
     #endregion
