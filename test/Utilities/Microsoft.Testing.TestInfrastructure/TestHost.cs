@@ -121,10 +121,28 @@ public sealed class TestHost
         string tfm,
         string rid = "",
         Verb verb = Verb.build,
-        BuildConfiguration buildConfiguration = BuildConfiguration.Release)
+        BuildConfiguration buildConfiguration = BuildConfiguration.Release,
+        MetadataMode metadataMode = MetadataMode.Reflection)
     {
         string moduleName = $"{testHostModuleNameWithoutExtension}{(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ".exe" : string.Empty)}";
-        string expectedRootPath = Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm);
+
+        // Each source-generation build variant is redirected to its own bin sub-folder (see
+        // AcceptanceSourceGen), so it never overwrites the default reflection build under bin.
+        string expectedRootPath = metadataMode == MetadataMode.Reflection
+            ? Path.Combine(rootFolder, "bin", buildConfiguration.ToString(), tfm)
+            : Path.Combine(rootFolder, "bin", AcceptanceSourceGen.GetOutputSubFolder(metadataMode), buildConfiguration.ToString(), tfm);
+
+        // Directory.GetFiles throws a non-actionable DirectoryNotFoundException when the expected
+        // output folder is missing (typically because the fixture did not build this metadata variant,
+        // for example a fixture that did not opt the mode into SourceGenMetadataModes). Surface a clear
+        // message instead.
+        if (!Directory.Exists(expectedRootPath))
+        {
+            throw new InvalidOperationException(
+                $"Expected build output folder for metadata mode '{metadataMode}' was not found: '{expectedRootPath}'. " +
+                $"Ensure the asset fixture builds the '{metadataMode}' variant (see TestAssetFixtureBase.SourceGenMetadataModes).");
+        }
+
         string[] executables = Directory.GetFiles(expectedRootPath, moduleName, SearchOption.AllDirectories);
         string? expectedPath = executables.SingleOrDefault(p => p.Contains(rid) && p.Contains(verb == Verb.publish ? "publish" : string.Empty));
 
