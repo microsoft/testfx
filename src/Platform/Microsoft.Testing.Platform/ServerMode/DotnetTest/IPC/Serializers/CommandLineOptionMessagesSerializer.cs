@@ -43,7 +43,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
     protected override CommandLineOptionMessages DeserializeCore(Stream stream)
     {
         string? moduleName = null;
-        List<CommandLineOptionMessage>? commandLineOptionMessages = null;
+        CommandLineOptionMessage[]? commandLineOptionMessages = null;
 
         ushort fieldCount = ReadUShort(stream);
 
@@ -75,7 +75,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
     private static CommandLineOptionMessage[] ReadCommandLineOptionMessagesPayload(Stream stream)
     {
         int length = ReadInt(stream);
-        CommandLineOptionMessage[] commandLineOptionMessages = new CommandLineOptionMessage[length];
+        var commandLineOptionMessages = new CommandLineOptionMessage[length];
 
         for (int i = 0; i < length; i++)
         {

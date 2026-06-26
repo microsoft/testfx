@@ -56,7 +56,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
     {
         string? executionId = null;
         string? instanceId = null;
-        List<FileArtifactMessage>? fileArtifactMessages = null;
+        FileArtifactMessage[]? fileArtifactMessages = null;
 
         ushort fieldCount = ReadUShort(stream);
 
@@ -92,7 +92,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
     private static FileArtifactMessage[] ReadFileArtifactMessagesPayload(Stream stream)
     {
         int length = ReadInt(stream);
-        FileArtifactMessage[] fileArtifactMessages = new FileArtifactMessage[length];
+        var fileArtifactMessages = new FileArtifactMessage[length];
 
         for (int i = 0; i < length; i++)
         {
