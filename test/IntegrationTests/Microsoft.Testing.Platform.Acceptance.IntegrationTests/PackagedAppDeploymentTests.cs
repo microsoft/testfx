@@ -48,10 +48,9 @@ public sealed class PackagedAppDeploymentTests : AcceptanceTestBase<PackagedAppD
     <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
     <LangVersion>preview</LangVersion>
-    <!-- AddPackagedAppDeployment is an experimental (TPEXP) API. -->
-    <NoWarn>$(NoWarn);TPEXP</NoWarn>
-    <!-- The PackagedApp package is an experimental package with a downgraded (alpha) version. -->
-    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+    <!-- AddPackagedAppDeployment is an experimental (TPEXP) API and the PackagedApp package is an
+         experimental package with a downgraded (alpha) version (NETSDK1201). -->
+    <NoWarn>$(NoWarn);TPEXP;NETSDK1201</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
