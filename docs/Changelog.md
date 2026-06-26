@@ -2753,7 +2753,7 @@ A list of changes since last release are available [of v2.0.0-beta4...v2.0.0](ht
 
 ## <a name="2.0.0-beta4" />[2.0.0-beta4] - 2019-04-10
 
-A list of changes since last release are available [of 2.0.0-beta2...v2.0.0-beta4](https://github.com/microsoft/testfx/compare/2.0.0-beta2...v2.0.0-beta4)
+A list of changes since last release are available [of 2.0.0-beta2...v2.0.0-beta4](https://github.com/microsoft/testfx/compare/v2.0.0-beta2...v2.0.0-beta4)
 
 ### Changed
 
@@ -2768,7 +2768,7 @@ A list of changes since last release are available [of 2.0.0-beta2...v2.0.0-beta
 
 ## <a name="2.0.0-beta2" />[2.0.0-beta2] - 2019-02-15
 
-A list of changes since last release are available [of 1.4.0...2.0.0-beta2](https://github.com/microsoft/testfx/compare/1.4.0...2.0.0-beta2)
+A list of changes since last release are available [of 1.4.0...2.0.0-beta2](https://github.com/microsoft/testfx/compare/1.4.0...v2.0.0-beta2)
 
 ### Changed
 
@@ -2783,7 +2783,7 @@ A list of changes since last release are available [of 1.4.0...2.0.0-beta2](http
 
 ## <a name="1.4.0" />[1.4.0] - 2018-11-26
 
-A list of changes since last release are available [of 1.4.0-beta...1.4.0](https://github.com/microsoft/testfx/compare/1.4.0-beta...1.4.0)
+A list of changes since last release are available [of 1.4.0-beta...1.4.0](https://github.com/microsoft/testfx/compare/v1.4.0-beta...1.4.0)
 
 ### Added
 
@@ -2805,7 +2805,7 @@ A list of changes since last release are available [of 1.4.0-beta...1.4.0](https
 
 ## <a name="1.4.0-beta" />[1.4.0-beta] 2018-10-17
 
-A list of changes since last release are available [of 1.3.2...1.4.0-beta](https://github.com/microsoft/testfx/compare/1.3.2...1.4.0-beta)
+A list of changes since last release are available [of 1.3.2...1.4.0-beta](https://github.com/microsoft/testfx/compare/v1.3.2...v1.4.0-beta)
 
 ### Added
 
