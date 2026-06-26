@@ -160,7 +160,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, testTimeout, "TestTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, testTimeout, "TestTimeout"));
                         }
 
                         break;
@@ -172,7 +172,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, assemblyCleanupTimeout, "AssemblyCleanupTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, assemblyCleanupTimeout, "AssemblyCleanupTimeout"));
                         }
 
                         break;
@@ -196,7 +196,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, assemblyInitializeTimeout, "AssemblyInitializeTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, assemblyInitializeTimeout, "AssemblyInitializeTimeout"));
                         }
 
                         break;
@@ -208,7 +208,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, classInitializeTimeout, "ClassInitializeTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, classInitializeTimeout, "ClassInitializeTimeout"));
                         }
 
                         break;
@@ -220,7 +220,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, classCleanupTimeout, "ClassCleanupTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, classCleanupTimeout, "ClassCleanupTimeout"));
                         }
 
                         break;
@@ -232,7 +232,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, testInitializeTimeout, "TestInitializeTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, testInitializeTimeout, "TestInitializeTimeout"));
                         }
 
                         break;
@@ -244,7 +244,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, testCleanupTimeout, "TestCleanupTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, testCleanupTimeout, "TestCleanupTimeout"));
                         }
 
                         break;

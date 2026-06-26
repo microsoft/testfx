@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -132,20 +132,24 @@ internal sealed partial class MSTestSettings
         }
     }
 
-    private static void ParseIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
+    private static void ParseTimeoutSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
         {
             return;
         }
 
+        // This helper is only used for timeout settings, which must be strictly positive (in milliseconds).
+        // A value of 0 (or less) is rejected on purpose: omitting the key already means "no timeout" (the
+        // default is 0 internally), so accepting an explicit 0 here would be redundant and ambiguous. Invalid
+        // values are ignored with a warning rather than throwing.
         if (int.TryParse(value, out int result) && result > 0)
         {
             setSetting(result);
         }
         else
         {
-            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, value, key));
         }
     }
 
@@ -198,13 +202,13 @@ internal sealed partial class MSTestSettings
         ParseBooleanSetting(configuration, "execution:considerEmptyDataSourceAsInconclusive", logger, value => settings.ConsiderEmptyDataSourceAsInconclusive = value);
         ParseDebuggerLaunchModeSetting(configuration, "execution:launchDebuggerOnAssertionFailure", logger, value => settings.LaunchDebuggerOnAssertionFailure = value);
         ParseBooleanSetting(configuration, "timeout:useCooperativeCancellation", logger, value => settings.CooperativeCancellationTimeout = value);
-        ParseIntegerSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
-        ParseIntegerSetting(configuration, "timeout:assemblyCleanup", logger, value => settings.AssemblyCleanupTimeout = value);
-        ParseIntegerSetting(configuration, "timeout:assemblyInitialize", logger, value => settings.AssemblyInitializeTimeout = value);
-        ParseIntegerSetting(configuration, "timeout:classInitialize", logger, value => settings.ClassInitializeTimeout = value);
-        ParseIntegerSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
-        ParseIntegerSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
-        ParseIntegerSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:test", logger, value => settings.TestTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:assemblyCleanup", logger, value => settings.AssemblyCleanupTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:assemblyInitialize", logger, value => settings.AssemblyInitializeTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:classInitialize", logger, value => settings.ClassInitializeTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
 
         if (configuration["mstest:parallelism:workers"] is string workers)
         {
