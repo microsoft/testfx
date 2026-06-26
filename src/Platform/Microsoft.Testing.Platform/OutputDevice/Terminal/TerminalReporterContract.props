@@ -12,7 +12,7 @@
     SCOPE
       The set is the reporter + its rendering/state types + the small platform abstractions it depends on
       (IConsole/IStopwatch/IColor/System* + RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser
-      /TestRunSummaryHelper). It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
+      /TestRunSummaryHelper/ZeroTestsPolicy). It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
       command-line specific - the SDK has its own CLI) and TerminalResources.cs (the hand-written [Embedded]
       accessor used by in-repo IVT-linked consumers; standalone consumers compile the resx instead - see below).
 
@@ -62,6 +62,7 @@
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SystemConsoleColor.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TargetFrameworkParser.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TestRunSummaryHelper.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\CommandLine\ZeroTestsPolicy.cs" />
   </ItemGroup>
 
   <!-- The shared localized resource (resx + xlf) the reporter strings come from. -->

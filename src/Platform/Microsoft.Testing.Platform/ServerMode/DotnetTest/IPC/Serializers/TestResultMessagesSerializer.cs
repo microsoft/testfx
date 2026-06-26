@@ -111,8 +111,8 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
     {
         string? executionId = null;
         string? instanceId = null;
-        List<SuccessfulTestResultMessage>? successfulTestResultMessages = null;
-        List<FailedTestResultMessage>? failedTestResultMessages = null;
+        SuccessfulTestResultMessage[]? successfulTestResultMessages = null;
+        FailedTestResultMessage[]? failedTestResultMessages = null;
 
         ushort fieldCount = ReadUShort(stream);
 
@@ -149,15 +149,14 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         return new(
             executionId,
             instanceId,
-            successfulTestResultMessages is null ? [] : [.. successfulTestResultMessages],
-            failedTestResultMessages is null ? [] : [.. failedTestResultMessages]);
+            successfulTestResultMessages ?? [],
+            failedTestResultMessages ?? []);
     }
 
-    private static List<SuccessfulTestResultMessage> ReadSuccessfulTestMessagesPayload(Stream stream)
+    private static SuccessfulTestResultMessage[] ReadSuccessfulTestMessagesPayload(Stream stream)
     {
-        List<SuccessfulTestResultMessage> successfulTestResultMessages = [];
-
         int length = ReadInt(stream);
+        var successfulTestResultMessages = new SuccessfulTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? uid = null, displayName = null, reason = null, standardOutput = null, errorOutput = null, sessionUid = null;
@@ -211,17 +210,16 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                 }
             }
 
-            successfulTestResultMessages.Add(new SuccessfulTestResultMessage(uid, displayName, state, duration, reason, standardOutput, errorOutput, sessionUid));
+            successfulTestResultMessages[i] = new SuccessfulTestResultMessage(uid, displayName, state, duration, reason, standardOutput, errorOutput, sessionUid);
         }
 
         return successfulTestResultMessages;
     }
 
-    private static List<FailedTestResultMessage> ReadFailedTestMessagesPayload(Stream stream)
+    private static FailedTestResultMessage[] ReadFailedTestMessagesPayload(Stream stream)
     {
-        List<FailedTestResultMessage> failedTestResultMessages = [];
-
         int length = ReadInt(stream);
+        var failedTestResultMessages = new FailedTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? uid = null, displayName = null, reason = null, sessionUid = null, standardOutput = null, errorOutput = null;
@@ -280,7 +278,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                 }
             }
 
-            failedTestResultMessages.Add(new FailedTestResultMessage(uid, displayName, state, duration, reason, exceptionMessages, standardOutput, errorOutput, sessionUid));
+            failedTestResultMessages[i] = new FailedTestResultMessage(uid, displayName, state, duration, reason, exceptionMessages, standardOutput, errorOutput, sessionUid);
         }
 
         return failedTestResultMessages;
@@ -288,9 +286,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
     private static ExceptionMessage[] ReadExceptionMessagesPayload(Stream stream)
     {
-        var exceptionMessages = new List<ExceptionMessage>();
-
         int length = ReadInt(stream);
+        var exceptionMessages = new ExceptionMessage[length];
+
         for (int i = 0; i < length; i++)
         {
             int fieldCount = ReadUShort(stream);
@@ -317,13 +315,17 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                     case ExceptionMessageFieldsId.StackTrace:
                         stackTrace = ReadStringValue(stream, fieldSize);
                         break;
+
+                    default:
+                        SetPosition(stream, stream.Position + fieldSize);
+                        break;
                 }
             }
 
-            exceptionMessages.Add(new ExceptionMessage(errorMessage, errorType, stackTrace));
+            exceptionMessages[i] = new ExceptionMessage(errorMessage, errorType, stackTrace);
         }
 
-        return [.. exceptionMessages];
+        return exceptionMessages;
     }
 
     protected override void SerializeCore(TestResultMessages objectToSerialize, Stream stream)

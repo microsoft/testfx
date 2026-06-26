@@ -181,7 +181,8 @@ public sealed class ConfigurationSettingsTests : AcceptanceTestBase<Configuratio
       "mapInconclusiveToFailed": true,
       "mapNotRunnableToFailed": true,
       "treatDiscoveryWarningsAsErrors": true,
-      "considerEmptyDataSourceAsInconclusive": true
+      "considerEmptyDataSourceAsInconclusive": true,
+      "orderTestsByNameInClass": true
     },
     "deployment": {
       "enabled": true,

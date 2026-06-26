@@ -9,17 +9,21 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// When this type is returned from <see cref="ITestDataSource.GetData(MethodInfo)" /> (for example, through <see cref="DynamicDataAttribute" />), it
 /// determines information related to the specific test case.
 /// </summary>
+/// <remarks>
+/// To use this type from a custom <see cref="ITestDataSource"/>, wrap each instance in a single-element <see cref="object"/> array,
+/// for example <c>new object[] { new TestDataRow&lt;int&gt;(42) { DisplayName = "my row" } }</c>. MSTest unwraps the
+/// <see cref="Value"/> to obtain the test method arguments and applies the <see cref="DisplayName"/>,
+/// <see cref="IgnoreMessage"/>, and <see cref="TestCategories"/> metadata to the generated test case.
+/// </remarks>
 /// <typeparam name="T">The type parameter corresponding to the type of the value held by this type. It can be a tuple for test methods with more than one parameter.</typeparam>
 [DataContract]
 public sealed class TestDataRow<T> : ITestDataRow
 {
-#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
     /// <summary>
     /// Initializes a new instance of the <see cref="TestDataRow{T}"/> class.
     /// </summary>
-    /// <param name="value">The value to be held by this instance, which could be a <see cref="Tuple"/> or <see cref="ValueTuple"/> if the test method has more than one parameter.</param>
+    /// <param name="value">The value to be held by this instance, which could be a <c>Tuple</c> or <c>ValueTuple</c> if the test method has more than one parameter.</param>
     public TestDataRow(T value)
-#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
         => Value = value;
 
     /// <summary>

@@ -1,4 +1,5 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Extensions.IBlockingDataConsumer
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.ExitCode.get -> int
 [TPEXP]Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle.HasExited.get -> bool

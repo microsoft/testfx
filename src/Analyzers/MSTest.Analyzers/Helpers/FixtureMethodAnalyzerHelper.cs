@@ -10,6 +10,9 @@ namespace MSTest.Analyzers.Helpers;
 
 internal static class FixtureMethodAnalyzerHelper
 {
+    internal static LocalizableResourceString CreateResourceString(string resourceName)
+        => new(resourceName, Resources.ResourceManager, typeof(Resources));
+
     internal static bool TryGetFixtureMethodSymbols(
         Compilation compilation,
         string fixtureAttributeMetadataName,
@@ -33,6 +36,18 @@ internal static class FixtureMethodAnalyzerHelper
 
         return true;
     }
+
+    internal static void RegisterFixtureMethodSymbolAction(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        Action<SymbolAnalysisContext, FixtureMethodSymbols> analyzeSymbolAction,
+        bool requireTestContextSymbol = false)
+        => context.RegisterCompilationStartAction(context =>
+            RegisterFixtureMethodSymbolAction(
+                context,
+                fixtureAttributeMetadataName,
+                analyzeSymbolAction,
+                requireTestContextSymbol));
 
     internal static void RegisterFixtureMethodSymbolAction(
         CompilationStartAnalysisContext context,

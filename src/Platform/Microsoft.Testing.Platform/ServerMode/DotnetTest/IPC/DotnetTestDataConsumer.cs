@@ -66,7 +66,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         {
                             testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
                             testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-                            traits = testNodeUpdateMessage.TestNode.Properties.OfType<TestMetadataProperty>();
+                            traits = testNodeDetails.Traits;
                         }
 
                         DiscoveredTestMessages discoveredTestMessages = new(
@@ -150,7 +150,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         break;
                 }
 
-                foreach (FileArtifactProperty artifact in testNodeUpdateMessage.TestNode.Properties.OfType<FileArtifactProperty>())
+                foreach (FileArtifactProperty artifact in testNodeDetails.Artifacts)
                 {
                     FileArtifactMessages testFileArtifactMessages = new(
                         _executionId,
@@ -218,11 +218,21 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
             return null;
         }
 
-        // Single pass over the property bag to collect all needed properties at once,
-        // instead of 3 separate linked-list walks for StandardOutput, StandardError, and TimingProperty.
+        // This method already performs a single GetStructEnumerator() walk to collect the
+        // StandardOutput, StandardError, and TimingProperty values. Folding FileArtifactProperty
+        // and TestMetadataProperty collection into that same walk removes the two additional
+        // PropertyBag.OfType<T>() linked-list traversals that ConsumeAsync used to perform for
+        // every test node update.
         TimingProperty? timingProperty = null;
         StandardOutputProperty? standardOutputProperty = null;
         StandardErrorProperty? standardErrorProperty = null;
+
+        // Mirror PropertyBag.OfType<T>()'s "first + overflow list" pattern so the common case of
+        // zero or one match doesn't allocate a List<T>.
+        FileArtifactProperty? firstArtifact = null;
+        List<FileArtifactProperty>? artifactsOverflow = null;
+        TestMetadataProperty? firstTrait = null;
+        List<TestMetadataProperty>? traitsOverflow = null;
         PropertyBag.PropertyBagEnumerator enumerator = testNodeUpdateMessage.TestNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
         {
@@ -237,8 +247,37 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 case StandardErrorProperty errorProperty:
                     standardErrorProperty = GetSingleOrDefaultValue(standardErrorProperty, errorProperty);
                     break;
+                case FileArtifactProperty artifact:
+                    if (firstArtifact is null)
+                    {
+                        firstArtifact = artifact;
+                    }
+                    else
+                    {
+                        (artifactsOverflow ??= [firstArtifact]).Add(artifact);
+                    }
+
+                    break;
+                case TestMetadataProperty trait:
+                    if (firstTrait is null)
+                    {
+                        firstTrait = trait;
+                    }
+                    else
+                    {
+                        (traitsOverflow ??= [firstTrait]).Add(trait);
+                    }
+
+                    break;
             }
         }
+
+        FileArtifactProperty[] artifacts = firstArtifact is null
+            ? []
+            : artifactsOverflow is not null ? [.. artifactsOverflow] : [firstArtifact];
+        TestMetadataProperty[] traits = firstTrait is null
+            ? []
+            : traitsOverflow is not null ? [.. traitsOverflow] : [firstTrait];
 
         string? standardOutput = standardOutputProperty?.StandardOutput;
         string? standardError = standardErrorProperty?.StandardError;
@@ -295,7 +334,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 break;
         }
 
-        return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError);
+        return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError, artifacts, traits);
 
         static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
             where TProperty : IProperty
@@ -322,7 +361,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError);
+    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError, FileArtifactProperty[] Artifacts, TestMetadataProperty[] Traits);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

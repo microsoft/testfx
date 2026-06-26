@@ -4,9 +4,6 @@
 using Microsoft.Testing.Extensions.HtmlReport;
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
@@ -25,17 +22,5 @@ public static class HtmlReportExtensions
             builder,
             ExtensionResources.InvalidTestApplicationBuilderType,
             () => new HtmlReportGeneratorCommandLine(),
-            serviceProvider =>
-                new HtmlReportGenerator(
-                    serviceProvider.GetConfiguration(),
-                    serviceProvider.GetCommandLineOptions(),
-                    serviceProvider.GetRequiredService<IFileSystem>(),
-                    serviceProvider.GetTestApplicationModuleInfo(),
-                    serviceProvider.GetMessageBus(),
-                    serviceProvider.GetSystemClock(),
-                    serviceProvider.GetEnvironment(),
-                    serviceProvider.GetOutputDevice(),
-                    serviceProvider.GetTestFramework(),
-                    serviceProvider.GetTestApplicationProcessExitCode(),
-                    serviceProvider.GetLoggerFactory().CreateLogger<HtmlReportGenerator>()));
+            serviceProvider => new HtmlReportGenerator(serviceProvider));
 }

@@ -5,6 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 using MSTest.AotReflection.SourceGeneration.Generators;
 
@@ -76,10 +77,18 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     private const string RuntimeHookStub = """
         namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration
         {
+            public readonly struct ConstructorInvokerInfo
+            {
+                public ConstructorInvokerInfo(System.Type[] parameterTypes, System.Func<object[], object> invoker) { ParameterTypes = parameterTypes; Invoker = invoker; }
+                public System.Type[] ParameterTypes { get; }
+                public System.Func<object[], object> Invoker { get; }
+            }
+
             public static class ReflectionMetadataHook
             {
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods) { }
                 public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes) { }
+                public static void Register(System.Reflection.Assembly assembly, System.Type[] types, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Reflection.MethodInfo[]> testMethods, System.Collections.Generic.IReadOnlyDictionary<System.Type, System.Attribute[]> typeAttributes, object[] assemblyAttributes, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.MethodInfo, System.Func<object, object[], object>> methodInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Type, ConstructorInvokerInfo[]> constructorInvokers, System.Collections.Generic.IReadOnlyDictionary<System.Reflection.PropertyInfo, System.Action<object, object>> propertySetters) { }
             }
         }
         """;
@@ -266,6 +275,49 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
+    public void Generator_RegistersOnlySupportedConstructorShapes()
+    {
+        // MSTest only instantiates a test class via a parameterless or single-TestContext ctor. An
+        // additional ctor(object) (or any other shape) must NOT be registered: it is never selected by
+        // the adapter, and registering it could let the runtime's argument-type matching pick it over
+        // the intended ctor.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Microsoft.VisualStudio.TestTools.UnitTesting
+            {
+                public class TestContext { }
+            }
+
+            namespace Sample
+            {
+                [TestClass]
+                public class CtorTests
+                {
+                    public CtorTests() { }
+                    public CtorTests(TestContext context) { }
+                    public CtorTests(object anything) { }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        // Parameterless and single-TestContext ctors are registered.
+        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests(),");
+        registry.Should().Contain("Invoke = static args => new global::Sample.CtorTests((global::Microsoft.VisualStudio.TestTools.UnitTesting.TestContext)args![0]!),");
+
+        // The unsupported ctor(object) is not registered.
+        registry.Should().NotContain("new global::Sample.CtorTests((object)args![0]!)");
+    }
+
+    [TestMethod]
     public void Generator_EmitsParameterTypes_ForMethodWithParameters()
     {
         const string userCode = """
@@ -319,6 +371,50 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("ReturnsTask = true");
         registry.Should().Contain("Name = \"Test2\"");
         registry.Should().Contain("ReturnsValueTask = true");
+    }
+
+    [TestMethod]
+    public void Generator_OmitsInaccessibleAttribute_AndStillCompiles()
+    {
+        // [Mark] resolves to Outer.MarkAttribute, which is private to Outer. It is validly applied to
+        // Inner (nested in Outer, so it can see Outer's private members), but the generated registry —
+        // a top-level type in a different namespace — cannot reference it. Emitting
+        // `new global::Sample.Outer.MarkAttribute()` would fail with CS0122, so the safener must omit
+        // it while still materializing the accessible [TestCategory] on the same class.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class Outer
+                {
+                    private sealed class MarkAttribute : System.Attribute { }
+
+                    [TestClass]
+                    [Mark]
+                    [TestCategory("Smoke")]
+                    public class Inner
+                    {
+                        [TestMethod]
+                        public void Test1() { }
+                    }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        // The emitted registry must compile — no CS0122 from referencing the private attribute.
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty("the safener must omit attributes the generated code cannot reference");
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+        string registry = GetRegistry(result);
+
+        // Accessible attribute is still materialized; the inaccessible one is omitted.
+        registry.Should().Contain("global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute");
+        registry.Should().NotContain("MarkAttribute");
     }
 
     [TestMethod]
@@ -378,6 +474,82 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("HasPublicSetter = true");
         registry.Should().Contain("Get = static instance => instance is null ? null : (object?)((global::Sample.PropTests)instance).Context,");
         registry.Should().Contain("Set = static (instance, value) => ((global::Sample.PropTests)instance!).Context = (global::Sample.TestContext)value!,");
+    }
+
+    [TestMethod]
+    public void Generator_NonPublicSetter_IsNotPubliclySettable_AndNotRegistered()
+    {
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class PropTests
+                {
+                    [TestContext]
+                    public TestContext? Context { get; private set; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        // A non-public setter is not callable from the generated code, so the registry emits a
+        // throwing setter (never a direct assignment) and reports HasPublicSetter = false.
+        registry.Should().Contain("HasPublicSetter = false");
+        registry.Should().Contain("Property 'Context' has no public setter.");
+        registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
+
+        // The module initializer gates setter registration on HasPublicSetter, so this property's
+        // (throwing) setter is never published; the adapter falls back to PropertyInfo.SetValue.
+        string registration = result.GeneratedSources
+            .Single(s => s.HintName == "MSTestReflectionMetadata.Registration.g.cs")
+            .SourceText.ToString();
+        registration.Should().Contain("if (property.HasPublicSetter)");
+    }
+
+    [TestMethod]
+    public void Generator_InitOnlySetter_IsNotPubliclySettable_AndDoesNotEmitAssignment()
+    {
+        // An init-only setter has public accessibility but cannot be assigned outside an object
+        // initializer; emitting `instance.Prop = value` would not compile (CS8852). The generator
+        // must treat it as non-settable.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public class TestContext { }
+
+                [TestClass]
+                public class PropTests
+                {
+                    [TestContext]
+                    public TestContext? Context { get; init; }
+
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        GeneratorRunResult result = RunGenerator(MinimalMSTestStub, userCode);
+
+        result.Diagnostics.Should().BeEmpty();
+        string registry = GetRegistry(result);
+
+        registry.Should().Contain("HasPublicSetter = false");
+        registry.Should().Contain("Property 'Context' has no public setter.");
+        registry.Should().NotContain(".Context = (global::Sample.TestContext)value!");
     }
 
     [TestMethod]
@@ -640,7 +812,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
             additionalTexts: null,
             parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
-            optionsProvider: null,
+            optionsProvider: ReflectionFreeOptionsProvider.Instance,
             driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps: true));
 
         GeneratorDriver firstDriver = driver.RunGenerators(compilation);
@@ -694,9 +866,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             """;
 
         CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
-        GeneratorDriver driver = CSharpGeneratorDriver
-            .Create(new MSTestReflectionMetadataGenerator())
-            .WithUpdatedParseOptions((CSharpParseOptions)compilation.SyntaxTrees.First().Options);
+        GeneratorDriver driver = CreateDriver(compilation);
 
         // Track step output cache reasons.
         driver = driver.RunGenerators(compilation);
@@ -2151,7 +2321,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         // and the registration also publishes pre-materialized type-level attributes so the adapter
         // serves them without runtime reflection.
         CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MSTestReflectionMetadataGenerator());
+        GeneratorDriver driver = CreateDriver(compilation);
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
 
         GeneratorRunResult result = driver.GetRunResult().Results[0];
@@ -2162,14 +2332,26 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         registration.Should().Contain("[ModuleInitializer]");
         registration.Should().Contain("[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(global::Sample.MyTests))]");
-        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes);");
 
-        // Type-level attributes are materialized into the registration (reflection-free), and only
-        // [TestMethod]-annotated methods are registered for the assembly.
-        registration.Should().Contain("[typeof(global::Sample.MyTests)] = new Attribute[] {");
-        registration.Should().Contain("new global::Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute(\"Smoke\")");
-        registration.Should().Contain("\"Test1\"");
-        registration.Should().NotContain("\"NotATest\"");
+        // The initializer consumes the MSTestReflectionMetadata registry (no more dead code) and
+        // publishes the delegate-based invokers via the richer Register overload so the adapter
+        // executes tests without runtime reflection.
+        registration.Should().Contain("global::MSTest.SourceGenerated.MSTestReflectionMetadata.TestClasses");
+        registration.Should().Contain("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();");
+        registration.Should().Contain("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();");
+        registration.Should().Contain("methodInvokers[methodInfo] = method.Invoke;");
+        registration.Should().Contain("constructorInvokers[type] = constructors;");
+        registration.Should().Contain("propertySetters[propertyInfo] = property.Set;");
+        registration.Should().Contain(".ReflectionMetadataHook.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodInvokers, constructorInvokers, propertySetters);");
+
+        // Only [TestMethod]-annotated methods become test roots; the registry's IsTestMethod flag
+        // drives that filtering at module-load time.
+        registration.Should().Contain("if (method.IsTestMethod)");
+        registration.Should().Contain("testMethodRoots.Add(methodInfo);");
+
+        // The initializer resolves the reflection objects it keys on at startup.
+        registration.Should().Contain("private static MethodInfo? ResolveMethod(");
+        registration.Should().Contain("private static PropertyInfo? ResolveProperty(");
 
         // The generator run itself should produce no diagnostics. This guards against future
         // generator changes that emit warnings/errors going unnoticed because the emitted code
@@ -2182,6 +2364,43 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         errors.Should().BeEmpty("the emitted module initializer must compile against the adapter's ReflectionMetadataHook");
     }
 
+    [TestMethod]
+    public void Generator_EmitsNothing_InRootingMode()
+    {
+        // The reflection-free generator must stay completely silent unless the consumer opts in via
+        // <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>. In the default rooting mode the
+        // separate rooting generator owns emission, so this generator emits no sources at all —
+        // otherwise the assembly would be registered twice.
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    public void Test1() { }
+                }
+            }
+            """;
+
+        CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
+
+        // No options provider => MSTestSourceGenMode is unset => defaults to rooting.
+        GeneratorDriver driver = CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: null,
+            driverOptions: default);
+        driver = driver.RunGenerators(compilation);
+
+        GeneratorRunResult result = driver.GetRunResult().Results[0];
+        result.Diagnostics.Should().BeEmpty();
+        result.GeneratedSources.Should().BeEmpty("the reflection-free generator must not emit in rooting mode");
+    }
+
     private static string GetRegistry(GeneratorRunResult result)
         => result.GeneratedSources
             .Single(s => s.HintName == "MSTestReflectionMetadata.Registry.g.cs")
@@ -2191,7 +2410,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     private static GeneratorRunResult RunGenerator(params string[] sources)
     {
         CSharpCompilation compilation = CreateCompilation(sources);
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MSTestReflectionMetadataGenerator());
+        GeneratorDriver driver = CreateDriver(compilation);
         driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
         return driver.GetRunResult().Results[0];
     }
@@ -2199,10 +2418,21 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     private static Compilation RunGeneratorAndGetCompilation(params string[] sources)
     {
         CSharpCompilation compilation = CreateCompilation(sources);
-        GeneratorDriver driver = CSharpGeneratorDriver.Create(new MSTestReflectionMetadataGenerator());
+        GeneratorDriver driver = CreateDriver(compilation);
         driver.RunGeneratorsAndUpdateCompilation(compilation, out Compilation outputCompilation, out _);
         return outputCompilation;
     }
+
+    // Drives the generator in ReflectionFree mode (the mode under test). Without the
+    // MSTestSourceGenMode=ReflectionFree option the generator stays silent (rooting is the default),
+    // so the test harness always opts in.
+    private static GeneratorDriver CreateDriver(CSharpCompilation compilation, bool trackIncrementalGeneratorSteps = false)
+        => CSharpGeneratorDriver.Create(
+            generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
+            additionalTexts: null,
+            parseOptions: (CSharpParseOptions)compilation.SyntaxTrees.First().Options,
+            optionsProvider: ReflectionFreeOptionsProvider.Instance,
+            driverOptions: new GeneratorDriverOptions(IncrementalGeneratorOutputKind.None, trackIncrementalGeneratorSteps));
 
     private static CSharpCompilation CreateCompilation(params string[] sources)
     {
@@ -2226,5 +2456,36 @@ public sealed class MSTestReflectionMetadataGeneratorTests
             trees,
             references,
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    /// <summary>
+    /// An <see cref="AnalyzerConfigOptionsProvider"/> whose global options report
+    /// <c>build_property.MSTestSourceGenMode = ReflectionFree</c>, so the generator under test emits
+    /// its reflection-free output instead of staying silent (rooting is the default mode).
+    /// </summary>
+    private sealed class ReflectionFreeOptionsProvider : AnalyzerConfigOptionsProvider
+    {
+        public static readonly ReflectionFreeOptionsProvider Instance = new();
+
+        public override AnalyzerConfigOptions GlobalOptions { get; } = new ReflectionFreeOptions();
+
+        public override AnalyzerConfigOptions GetOptions(SyntaxTree tree) => GlobalOptions;
+
+        public override AnalyzerConfigOptions GetOptions(AdditionalText textFile) => GlobalOptions;
+
+        private sealed class ReflectionFreeOptions : AnalyzerConfigOptions
+        {
+            public override bool TryGetValue(string key, [NotNullWhen(true)] out string? value)
+            {
+                if (key == "build_property.MSTestSourceGenMode")
+                {
+                    value = "ReflectionFree";
+                    return true;
+                }
+
+                value = null;
+                return false;
+            }
+        }
     }
 }

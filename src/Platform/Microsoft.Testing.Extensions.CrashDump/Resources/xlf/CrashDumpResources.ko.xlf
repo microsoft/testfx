@@ -157,10 +157,10 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
-        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+        <target state="translated">테스트 세션 중에 시작되고 종료된 테스트를 나열하는 시퀀스 파일이 크래시 덤프 또는 크래시 보고서와 함께 생성되는지 여부를 제어합니다.
+이 파일을 사용하면 덤프를 검사하지 않고도 크래시 발생 시 실행 중이던 테스트를 식별할 수 있습니다.
+유효한 값은 'on'(기본값, 'true', 'enable', '1'도 허용) 또는 'off'('false', 'disable', '0'도 허용)입니다.</target>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>

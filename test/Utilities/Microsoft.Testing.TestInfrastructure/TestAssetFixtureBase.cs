@@ -23,6 +23,21 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     private readonly TempDirectory _tempDirectory = new();
     private bool _disposedValue;
 
+    /// <summary>
+    /// Override to declare which source-gen metadata modes this fixture builds, in addition to the
+    /// always-built <see cref="MetadataMode.Reflection"/> build. This is opt-in: the default is empty
+    /// so an asset is only ever built under a source-gen mode once it has been validated to support
+    /// it. A mode returned here is expected to build successfully; a failed build throws with the
+    /// captured build output (see <see cref="InitializeAsync"/>).
+    /// <para>
+    /// Assets that cannot run under source generation (for example VSTest-host assets,
+    /// NativeAOT/Trim/Aspire/Playwright/ServerMode assets, or assets that rely on source-generator
+    /// gaps such as inherited <c>[TestClass]</c>, generic test methods, or cross-assembly reflection)
+    /// simply leave this empty and keep building reflection-only.
+    /// </para>
+    /// </summary>
+    protected virtual IReadOnlyList<MetadataMode> SourceGenMetadataModes => [];
+
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
@@ -35,6 +50,30 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: assetName, cancellationToken: cancellationToken);
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
+
+        // Opt-in: for each source-gen metadata mode the fixture declares, build a second variant with
+        // the matching generator injected, into an isolated bin/<sub> + obj/<sub> output, so the same
+        // behavioral assertions also validate the source-generated metadata path. The build is run
+        // with failIfReturnValueIsNotZero:false so we can surface the captured output if it fails
+        // (rather than the less actionable default exception from DotnetCli.RunAsync).
+        if (!AcceptanceSourceGen.IsGloballyDisabled)
+        {
+            foreach (MetadataMode mode in SourceGenMetadataModes)
+            {
+                string sourceGenArgs = await AcceptanceSourceGen.PrepareBuildArgumentsAsync(testAsset.TargetAssetPath, mode);
+                DotnetMuxerResult sourceGenResult = await DotnetCli.RunAsync(
+                    $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
+                    failIfReturnValueIsNotZero: false,
+                    callerMemberName: $"{assetName}_{AcceptanceSourceGen.GetOutputSubFolder(mode)}",
+                    cancellationToken: cancellationToken);
+
+                if (sourceGenResult.ExitCode != 0)
+                {
+                    throw new InvalidOperationException(
+                        $"The {mode} build of acceptance asset '{assetName}' failed with exit code {sourceGenResult.ExitCode}.{Environment.NewLine}{sourceGenResult}");
+                }
+            }
+        }
     }
 
     /// <summary>

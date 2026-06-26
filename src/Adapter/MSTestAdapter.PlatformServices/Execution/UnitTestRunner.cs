@@ -26,6 +26,12 @@ internal sealed class UnitTestRunner
     : MarshalByRefObject
 #endif
 {
+    // Reusable TestResult returned for the assembly-init fast path (init already passed).
+    // Safe to share across concurrent test runs because it is private to this type and treated
+    // as immutable: the fast path only reads from it (Outcome plus the null Log/DebugTrace fields)
+    // and the instance never escapes RunSingleTestAsync. Do not mutate it.
+    private static readonly TestResult AssemblyInitPassedResult = new() { Outcome = UnitTestOutcome.Passed };
+
     private readonly TypeCache _typeCache;
     private readonly ClassCleanupManager _classCleanupManager;
 
@@ -145,9 +151,19 @@ internal sealed class UnitTestRunner
             {
                 DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
 
-                testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-
-                TestResult assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
+                TestAssemblyInfo assemblyInfo = testMethodInfo.Parent.Parent;
+                TestResult assemblyInitializeResult;
+                if (assemblyInfo.IsAssemblyInitializeExecuted && assemblyInfo.AssemblyInitializationException is null)
+                {
+                    // Fast path: assembly init already ran and succeeded.
+                    // Skip the TestContextImplementation allocation (dictionary copy + cancellation registration).
+                    assemblyInitializeResult = AssemblyInitPassedResult;
+                }
+                else
+                {
+                    testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                    assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
+                }
 
                 if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
                 {
@@ -162,13 +178,25 @@ internal sealed class UnitTestRunner
 
                     _lastRunnableTestInWholeAssembly = unitTestElement;
 
-                    testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForAssemblyInit.Context.CurrentTestOutcome);
+                    // Fast path: class init already ran; skip the TestContextImplementation allocation
+                    // (dictionary copy + cancellation registration). The cached result is a lightweight clone.
+                    TestResult? cachedClassInit = testMethodInfo.Parent.TryGetClonedCachedClassInitializeResult();
+                    TestResult classInitializeResult;
+                    if (cachedClassInit is not null)
+                    {
+                        classInitializeResult = cachedClassInit;
+                    }
+                    else
+                    {
+                        testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
-                    // Flow properties set during AssemblyInitialize into the class-init context so the
-                    // ClassInitialize method observes them.
-                    ((TestContextImplementation)testContextForClassInit.Context).MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
+                        // Flow properties set during AssemblyInitialize into the class-init context so the
+                        // ClassInitialize method observes them.
+                        ((TestContextImplementation)testContextForClassInit.Context).MergeProperties(assemblyInfo.PostAssemblyInitProperties);
 
-                    TestResult classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
+                        classInitializeResult = await testMethodInfo.Parent.GetResultOrRunClassInitializeAsync(testContextForClassInit, assemblyInitializeResult.LogOutput, assemblyInitializeResult.LogError, assemblyInitializeResult.DebugTrace, assemblyInitializeResult.TestContextMessages).ConfigureAwait(false);
+                    }
+
                     DebugEx.Assert(testMethodInfo.Parent.IsClassInitializeExecuted, "IsClassInitializeExecuted should be true after attempting to run it.");
                     if (classInitializeResult.Outcome != UnitTestOutcome.Passed)
                     {
@@ -177,7 +205,12 @@ internal sealed class UnitTestRunner
                     else
                     {
                         // Run the test method
-                        testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
+                        // When testContextForClassInit is null (class init fast path), its outcome
+                        // would have been InProgress (unchanged), making SetOutcome a no-op; skip it.
+                        if (testContextForClassInit is not null)
+                        {
+                            testContextForTestExecution.SetOutcome(testContextForClassInit.Context.CurrentTestOutcome);
+                        }
 
                         // Flow properties set during AssemblyInitialize and ClassInitialize into the
                         // per-test execution context so the test class constructor, [TestInitialize],
@@ -185,7 +218,7 @@ internal sealed class UnitTestRunner
                         // Note: when a test method has multiple data rows, the merge is applied once
                         // before all rows; data rows share the same execution context (and bag).
                         var testExecImpl = (TestContextImplementation)testContextForTestExecution.Context;
-                        testExecImpl.MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
+                        testExecImpl.MergeProperties(assemblyInfo.PostAssemblyInitProperties);
                         testExecImpl.MergeProperties(testMethodInfo.Parent.PostClassInitProperties);
 
                         RetryBaseAttribute? retryAttribute = testMethodInfo.RetryAttribute;

@@ -277,7 +277,16 @@ internal partial class TestMethodInfo
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private object? CreateTestClassInstance()
-        => Parent.Constructor.Invoke(Parent.IsParameterlessConstructor ? null : [TestContext]);
+    {
+        object?[]? arguments = Parent.IsParameterlessConstructor ? null : [TestContext];
+
+        // Reflection-free fast path: use the source-generated constructor invoker when available;
+        // otherwise fall back to ConstructorInfo.Invoke (reflection mode).
+        Func<object?[]?, object>? sourceGeneratedInvoker = PlatformServiceProvider.Instance.ReflectionOperations.GetConstructorInvoker(Parent.ClassType);
+        return sourceGeneratedInvoker is not null
+            ? sourceGeneratedInvoker(arguments)
+            : Parent.Constructor.Invoke(arguments);
+    }
 
     /// <summary>
     /// Execute test with a timeout.

@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -47,26 +46,9 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 
     private async Task<(string FileName, string? Warning)> GenerateReportCoreAsync(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
-
-        bool fileNameExplicitlyProvided = _commandLineOptions.TryGetOptionArgumentList(
+        (string finalPath, _) = ResolveOutputPath(
             HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName,
-            out string[]? providedFileName);
-
-        string fileName = fileNameExplicitlyProvided
-            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName("html");
-
-        string outputDirectory = _configuration.GetTestResultDirectory();
-        // Path.Combine short-circuits when the second argument is rooted, so an absolute
-        // user-provided file name overrides the test results directory while validated
-        // relative paths stay nested under it.
-        string finalPath = Path.Combine(outputDirectory, fileName);
-        string? finalDirectory = Path.GetDirectoryName(finalPath);
-        if (!RoslynString.IsNullOrEmpty(finalDirectory))
-        {
-            _fileSystem.CreateDirectory(finalDirectory);
-        }
+            "html");
 
         string template = LoadTemplate();
         string json = BuildJson(results, finishTime);

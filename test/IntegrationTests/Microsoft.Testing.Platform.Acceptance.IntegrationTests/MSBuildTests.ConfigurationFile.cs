@@ -1,14 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Combinatorial.MSTest;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestClass]
 public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
 {
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    [CombinatorialData]
     [TestMethod]
-    public async Task ConfigFileGeneration_CorrectlyCreateAndCacheAndCleaned(string tfm, BuildConfiguration compilationMode, Verb verb)
+    public async Task ConfigFileGeneration_CorrectlyCreateAndCacheAndCleaned([AllTargetFrameworks] string tfm, BuildConfiguration compilationMode, Verb verb)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             nameof(ConfigFileGeneration_CorrectlyCreateAndCacheAndCleaned),
@@ -63,9 +65,9 @@ public class MSBuildTests : AcceptanceTestBase<NopAssetFixture>
         }
     }
 
-    [DynamicData(nameof(GetBuildMatrixTfmBuildVerbConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
+    [CombinatorialData]
     [TestMethod]
-    public async Task ConfigFileGeneration_NoConfigurationFile_TaskWontRun(string tfm, BuildConfiguration compilationMode, Verb verb)
+    public async Task ConfigFileGeneration_NoConfigurationFile_TaskWontRun([AllTargetFrameworks] string tfm, BuildConfiguration compilationMode, Verb verb)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             nameof(ConfigFileGeneration_NoConfigurationFile_TaskWontRun),

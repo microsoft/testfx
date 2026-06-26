@@ -12,18 +12,24 @@ namespace MSTest.AotReflection.SourceGeneration.Generators;
 /// adapter via <c>ReflectionMetadataHook.Register</c>. This is what makes a project that
 /// references only this generator discoverable and runnable.
 /// <para>
-/// On top of the type / test-method rooting that the shipping generator performs, this
-/// registration also publishes the <b>materialized type-level and assembly-level attributes</b>
-/// the generator already computes, so the adapter serves them from source-generated data instead
-/// of calling <see cref="System.Reflection.MemberInfo.GetCustomAttributes(bool)"/> at runtime.
+/// The initializer <b>consumes the <c>MSTestReflectionMetadata</c> registry</b> emitted by
+/// <see cref="MetadataRegistryEmitter"/>: it iterates the registry's test classes and publishes
+/// the delegate-based invokers (constructor factories, method invokers, property setters) so the
+/// adapter executes tests without runtime reflection (<c>MethodInfo.Invoke</c> /
+/// <c>Activator.CreateInstance</c> / <c>PropertyInfo.SetValue</c>). The reflection objects that
+/// the adapter still keys on (<see cref="System.Reflection.MethodInfo"/>,
+/// <see cref="System.Reflection.PropertyInfo"/>) are resolved once at module-load time under the
+/// <c>[DynamicDependency(All)]</c> roots emitted below.
 /// </para>
 /// </summary>
 internal static class RuntimeRegistrationEmitter
 {
     private const string GeneratedTypeName = "MSTestAotSourceGeneratedReflectionMetadata";
     private const string GeneratedNamespace = "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generated.Aot";
+    private const string RegistryNamespace = "global::MSTest.SourceGenerated";
+    private const string ConstructorInvokerInfoFullName = "global::Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.ConstructorInvokerInfo";
 
-    public static string Emit(AssemblyMetadataModel assemblyMetadata, IReadOnlyList<TestClassModel> testClasses)
+    public static string Emit(IReadOnlyList<TestClassModel> testClasses)
     {
         var sb = new IndentedStringBuilder();
 
@@ -37,6 +43,7 @@ internal static class RuntimeRegistrationEmitter
         sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("using System.Reflection;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
+        sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine();
 
         using (sb.Block($"namespace {GeneratedNamespace}"))
@@ -49,16 +56,13 @@ internal static class RuntimeRegistrationEmitter
 
                 using (sb.Block("internal static void Initialize()"))
                 {
-                    sb.AppendLine($"var assembly = typeof({GeneratedTypeName}).Assembly;");
-                    EmitTypes(sb, testClasses);
-                    EmitTestMethods(sb, testClasses);
-                    EmitTypeAttributes(sb, testClasses);
-                    EmitAssemblyAttributes(sb, assemblyMetadata);
-                    sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes);");
+                    EmitInitializeBody(sb);
                 }
 
                 sb.AppendLine();
                 EmitResolveMethodHelper(sb);
+                sb.AppendLine();
+                EmitResolvePropertyHelper(sb);
             }
         }
 
@@ -85,93 +89,92 @@ internal static class RuntimeRegistrationEmitter
         }
     }
 
-    private static void EmitTypes(IndentedStringBuilder sb, IReadOnlyList<TestClassModel> testClasses)
+    private static void EmitInitializeBody(IndentedStringBuilder sb)
     {
-        if (testClasses.Count == 0)
-        {
-            sb.AppendLine("var types = Array.Empty<Type>();");
-            return;
-        }
+        sb.AppendLine($"var assembly = typeof({GeneratedTypeName}).Assembly;");
+        sb.AppendLine($"IReadOnlyList<{RegistryNamespace}.TestClassReflectionInfo> testClasses = {RegistryNamespace}.MSTestReflectionMetadata.TestClasses;");
+        sb.AppendLine();
+        sb.AppendLine("var types = new Type[testClasses.Count];");
+        sb.AppendLine("var testMethods = new Dictionary<Type, MethodInfo[]>(testClasses.Count);");
+        sb.AppendLine("var typeAttributes = new Dictionary<Type, Attribute[]>(testClasses.Count);");
+        sb.AppendLine("var methodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();");
+        sb.AppendLine($"var constructorInvokers = new Dictionary<Type, {ConstructorInvokerInfoFullName}[]>(testClasses.Count);");
+        sb.AppendLine("var propertySetters = new Dictionary<PropertyInfo, Action<object?, object?>>();");
+        sb.AppendLine();
 
-        sb.AppendLine("var types = new Type[]");
-        using (sb.Block(null))
+        using (sb.Block("for (int classIndex = 0; classIndex < testClasses.Count; classIndex++)"))
         {
-            foreach (TestClassModel cls in testClasses)
+            sb.AppendLine($"{RegistryNamespace}.TestClassReflectionInfo testClass = testClasses[classIndex];");
+            sb.AppendLine("Type type = testClass.Type;");
+            sb.AppendLine("types[classIndex] = type;");
+            sb.AppendLine("typeAttributes[type] = testClass.Attributes;");
+            sb.AppendLine();
+
+            sb.AppendLine($"var constructors = new {ConstructorInvokerInfoFullName}[testClass.Constructors.Count];");
+            using (sb.Block("for (int constructorIndex = 0; constructorIndex < testClass.Constructors.Count; constructorIndex++)"))
             {
-                sb.AppendLine($"typeof({cls.FullyQualifiedTypeName}),");
+                sb.AppendLine($"{RegistryNamespace}.TestConstructorReflectionInfo constructor = testClass.Constructors[constructorIndex];");
+                sb.AppendLine($"constructors[constructorIndex] = new {ConstructorInvokerInfoFullName}(constructor.ParameterTypes, constructor.Invoke);");
             }
-        }
 
-        sb.AppendLine(";");
-    }
+            sb.AppendLine("constructorInvokers[type] = constructors;");
+            sb.AppendLine();
 
-    private static void EmitTestMethods(IndentedStringBuilder sb, IReadOnlyList<TestClassModel> testClasses)
-    {
-        sb.AppendLine("var testMethods = new Dictionary<Type, MethodInfo[]>");
-        using (sb.Block(null))
-        {
-            foreach (TestClassModel cls in testClasses)
+            sb.AppendLine("var testMethodRoots = new List<MethodInfo>(testClass.Methods.Count);");
+            using (sb.Block("for (int methodIndex = 0; methodIndex < testClass.Methods.Count; methodIndex++)"))
             {
-                var testMethods = cls.Methods.AsImmutableArray().Where(m => m.IsTestMethod).ToList();
-                if (testMethods.Count == 0)
-                {
-                    continue;
-                }
+                sb.AppendLine($"{RegistryNamespace}.TestMethodReflectionInfo method = testClass.Methods[methodIndex];");
 
-                sb.AppendLine($"[typeof({cls.FullyQualifiedTypeName})] = new MethodInfo[]");
-                using (sb.Block(null))
+                // Tolerate an unresolved member: skip its invoker (the adapter falls back to
+                // reflection for that one method) rather than throwing out of the [ModuleInitializer],
+                // which would fault registration for the whole assembly.
+                sb.AppendLine("MethodInfo? methodInfo = ResolveMethod(type, method.Name, method.ParameterTypes);");
+                using (sb.Block("if (methodInfo is not null)"))
                 {
-                    foreach (TestMethodModel method in testMethods)
+                    sb.AppendLine("methodInvokers[methodInfo] = method.Invoke;");
+                    using (sb.Block("if (method.IsTestMethod)"))
                     {
-                        string parameterTypes = method.Parameters.Length == 0
-                            ? "Array.Empty<Type>()"
-                            : "new Type[] { " + string.Join(", ", method.Parameters.AsImmutableArray().Select(p => $"typeof({p.FullyQualifiedType})")) + " }";
-                        sb.AppendLine($"ResolveMethod(typeof({cls.FullyQualifiedTypeName}), \"{MetadataRegistryEmitter.Escape(method.Name)}\", {parameterTypes}),");
+                        sb.AppendLine("testMethodRoots.Add(methodInfo);");
                     }
                 }
-
-                sb.AppendLine(",");
             }
-        }
 
-        sb.AppendLine(";");
-    }
+            sb.AppendLine("testMethods[type] = testMethodRoots.ToArray();");
+            sb.AppendLine();
 
-    private static void EmitTypeAttributes(IndentedStringBuilder sb, IReadOnlyList<TestClassModel> testClasses)
-    {
-        sb.AppendLine("var typeAttributes = new Dictionary<Type, Attribute[]>");
-        using (sb.Block(null))
-        {
-            foreach (TestClassModel cls in testClasses)
+            using (sb.Block("for (int propertyIndex = 0; propertyIndex < testClass.Properties.Count; propertyIndex++)"))
             {
-                if (cls.Attributes.Length == 0)
-                {
-                    continue;
-                }
+                sb.AppendLine($"{RegistryNamespace}.TestPropertyReflectionInfo property = testClass.Properties[propertyIndex];");
 
-                string attributes = string.Join(", ", cls.Attributes.AsImmutableArray().Select(MetadataRegistryEmitter.BuildAttributeExpression));
-                sb.AppendLine($"[typeof({cls.FullyQualifiedTypeName})] = new Attribute[] {{ {attributes} }},");
+                // Only publish a setter delegate when the property has a usable (public, non-init)
+                // setter. For non-public / init-only setters the delegate would throw, so leave it
+                // unregistered and let the adapter fall back to PropertyInfo.SetValue.
+                using (sb.Block("if (property.HasPublicSetter)"))
+                {
+                    sb.AppendLine("PropertyInfo? propertyInfo = ResolveProperty(type, property.Name);");
+                    using (sb.Block("if (propertyInfo is not null)"))
+                    {
+                        sb.AppendLine("propertySetters[propertyInfo] = property.Set;");
+                    }
+                }
             }
         }
 
-        sb.AppendLine(";");
-    }
-
-    private static void EmitAssemblyAttributes(IndentedStringBuilder sb, AssemblyMetadataModel assemblyMetadata)
-    {
-        if (assemblyMetadata.Attributes.Length == 0)
+        sb.AppendLine();
+        sb.AppendLine($"IReadOnlyList<Attribute> assemblyAttributeList = {RegistryNamespace}.MSTestReflectionMetadata.AssemblyAttributes;");
+        sb.AppendLine("var assemblyAttributes = new object[assemblyAttributeList.Count];");
+        using (sb.Block("for (int attributeIndex = 0; attributeIndex < assemblyAttributeList.Count; attributeIndex++)"))
         {
-            sb.AppendLine("var assemblyAttributes = Array.Empty<object>();");
-            return;
+            sb.AppendLine("assemblyAttributes[attributeIndex] = assemblyAttributeList[attributeIndex];");
         }
 
-        string attributes = string.Join(", ", assemblyMetadata.Attributes.AsImmutableArray().Select(MetadataRegistryEmitter.BuildAttributeExpression));
-        sb.AppendLine($"var assemblyAttributes = new object[] {{ {attributes} }};");
+        sb.AppendLine();
+        sb.AppendLine($"{Constants.ReflectionMetadataHookFullName}.Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, methodInvokers, constructorInvokers, propertySetters);");
     }
 
     private static void EmitResolveMethodHelper(IndentedStringBuilder sb)
     {
-        sb.AppendLine("private static MethodInfo ResolveMethod([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, Type[] parameterTypes)");
+        sb.AppendLine("private static MethodInfo? ResolveMethod([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string name, Type[] parameterTypes)");
         using (sb.Block(null))
         {
             sb.AppendLine("const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;");
@@ -208,7 +211,28 @@ internal static class RuntimeRegistrationEmitter
             }
 
             sb.AppendLine();
-            sb.AppendLine("throw new MissingMethodException(type.FullName, name);");
+            sb.AppendLine("// Unresolved: caller skips this member and the adapter falls back to reflection.");
+            sb.AppendLine("return null;");
+        }
+    }
+
+    private static void EmitResolvePropertyHelper(IndentedStringBuilder sb)
+    {
+        sb.AppendLine("private static PropertyInfo? ResolveProperty([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type, string name)");
+        using (sb.Block(null))
+        {
+            sb.AppendLine("const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;");
+            using (sb.Block("foreach (PropertyInfo candidate in type.GetProperties(flags))"))
+            {
+                using (sb.Block("if (candidate.Name == name)"))
+                {
+                    sb.AppendLine("return candidate;");
+                }
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("// Unresolved: caller skips this member and the adapter falls back to reflection.");
+            sb.AppendLine("return null;");
         }
     }
 }

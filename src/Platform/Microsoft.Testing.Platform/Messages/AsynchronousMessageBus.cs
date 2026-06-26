@@ -83,7 +83,12 @@ internal sealed class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDis
 
                 if (!_consumerProcessor.TryGetValue(consumer, out IAsyncConsumerDataProcessor? asyncMultiProducerMultiConsumerDataProcessor))
                 {
-                    asyncMultiProducerMultiConsumerDataProcessor = new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
+                    // A consumer that implements the IBlockingDataConsumer marker interface must consume the data
+                    // inline (the publisher blocks until consumption completes) instead of going through the
+                    // asynchronous background processing loop.
+                    asyncMultiProducerMultiConsumerDataProcessor = consumer is IBlockingDataConsumer
+                        ? new BlockingConsumerDataProcessor(consumer, _testApplicationCancellationTokenSource.CancellationToken)
+                        : new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);
                 }
 

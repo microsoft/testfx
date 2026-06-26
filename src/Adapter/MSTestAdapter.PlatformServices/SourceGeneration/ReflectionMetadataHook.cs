@@ -89,6 +89,50 @@ public static class ReflectionMetadataHook
         IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
         IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
         object[] assemblyAttributes)
+        => Register(assembly, types, testMethods, typeAttributes, assemblyAttributes, EmptyMethodInvokers, EmptyConstructorInvokers, EmptyPropertySetters);
+
+    /// <summary>
+    /// <b>Infrastructure.</b> Publishes source-generated metadata for <paramref name="assembly"/>
+    /// to the MSTest adapter, including the delegate-based invokers that let the adapter run tests
+    /// without runtime reflection: per-method invokers (replacing <c>MethodInfo.Invoke</c>),
+    /// per-type constructor invokers (replacing <c>Activator.CreateInstance</c>), and per-property
+    /// setters (replacing <c>PropertyInfo.SetValue</c>). Safe to call from multiple module
+    /// initializers; later registrations are merged with earlier ones.
+    /// </summary>
+    /// <param name="assembly">The test assembly the metadata describes.</param>
+    /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
+    /// <param name="testMethods">A map from each test class to its <c>[TestMethod]</c> set.</param>
+    /// <param name="typeAttributes">A map from each test class to its pre-inflated <see cref="Attribute"/> instances.</param>
+    /// <param name="assemblyAttributes">Pre-inflated assembly-level attribute instances.</param>
+    /// <param name="methodInvokers">
+    /// A map from each test/fixture <see cref="MethodInfo"/> to a delegate that invokes it directly.
+    /// The delegate returns a non-null <see cref="Task"/> representing the method's completion: the
+    /// source generator normalizes every shape to a <see cref="Task"/> (<c>void</c>/synchronous yield
+    /// <see cref="Task.CompletedTask"/>, a <c>ValueTask</c> is converted to a <see cref="Task"/>, and
+    /// any return value is discarded).
+    /// </param>
+    /// <param name="constructorInvokers">
+    /// A map from each test class to its constructor invokers. Each entry pairs the constructor's
+    /// parameter types with a delegate that constructs the instance from an argument array.
+    /// </param>
+    /// <param name="propertySetters">
+    /// A map from each settable property (today: the <c>TestContext</c> property) to a delegate that
+    /// assigns it directly.
+    /// </param>
+    /// <remarks>
+    /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
+    /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator.
+    /// </remarks>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static void Register(
+        Assembly assembly,
+        Type[] types,
+        IReadOnlyDictionary<Type, MethodInfo[]> testMethods,
+        IReadOnlyDictionary<Type, Attribute[]> typeAttributes,
+        object[] assemblyAttributes,
+        IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokers,
+        IReadOnlyDictionary<Type, ConstructorInvokerInfo[]> constructorInvokers,
+        IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> propertySetters)
     {
         if (assembly is null)
         {
@@ -115,6 +159,21 @@ public static class ReflectionMetadataHook
             throw new ArgumentNullException(nameof(assemblyAttributes));
         }
 
+        if (methodInvokers is null)
+        {
+            throw new ArgumentNullException(nameof(methodInvokers));
+        }
+
+        if (constructorInvokers is null)
+        {
+            throw new ArgumentNullException(nameof(constructorInvokers));
+        }
+
+        if (propertySetters is null)
+        {
+            throw new ArgumentNullException(nameof(propertySetters));
+        }
+
         var typesCopy = (Type[])types.Clone();
 
         var testMethodsCopy = new Dictionary<Type, MethodInfo[]>(testMethods.Count);
@@ -130,6 +189,35 @@ public static class ReflectionMetadataHook
         }
 
         object[] assemblyAttributesCopy = (object[])assemblyAttributes.Clone();
+
+        var methodInvokersCopy = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>(methodInvokers.Count);
+        foreach (KeyValuePair<MethodInfo, Func<object?, object?[]?, object?>> kvp in methodInvokers)
+        {
+            methodInvokersCopy[kvp.Key] = kvp.Value;
+        }
+
+        var constructorInvokersCopy = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>(constructorInvokers.Count);
+        foreach (KeyValuePair<Type, ConstructorInvokerInfo[]> kvp in constructorInvokers)
+        {
+            var invokers = new SourceGeneratedReflectionDataProvider.ConstructorInvoker[kvp.Value.Length];
+            for (int i = 0; i < kvp.Value.Length; i++)
+            {
+                ConstructorInvokerInfo info = kvp.Value[i];
+                invokers[i] = new SourceGeneratedReflectionDataProvider.ConstructorInvoker
+                {
+                    Parameters = (Type[])info.ParameterTypes.Clone(),
+                    Invoker = info.Invoker,
+                };
+            }
+
+            constructorInvokersCopy[kvp.Key] = invokers;
+        }
+
+        var propertySettersCopy = new Dictionary<PropertyInfo, Action<object?, object?>>(propertySetters.Count);
+        foreach (KeyValuePair<PropertyInfo, Action<object?, object?>> kvp in propertySetters)
+        {
+            propertySettersCopy[kvp.Key] = kvp.Value;
+        }
 
         // TypesByName must always match Type.FullName at runtime (see comment in the source
         // generator emitter): compute it on the runtime side from typeof(T).FullName so the
@@ -153,6 +241,9 @@ public static class ReflectionMetadataHook
             TypeMethods = testMethodsCopy,
             TypeAttributes = typeAttributesCopy,
             AssemblyAttributes = assemblyAttributesCopy,
+            TypeMethodInvokers = methodInvokersCopy,
+            TypeConstructorsInvoker = constructorInvokersCopy,
+            TypePropertySetters = propertySettersCopy,
         };
 
         lock (Lock)
@@ -170,4 +261,10 @@ public static class ReflectionMetadataHook
     }
 
     private static readonly Dictionary<Type, Attribute[]> EmptyTypeAttributes = [];
+
+    private static readonly Dictionary<MethodInfo, Func<object?, object?[]?, object?>> EmptyMethodInvokers = [];
+
+    private static readonly Dictionary<Type, ConstructorInvokerInfo[]> EmptyConstructorInvokers = [];
+
+    private static readonly Dictionary<PropertyInfo, Action<object?, object?>> EmptyPropertySetters = [];
 }

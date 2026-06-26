@@ -103,7 +103,7 @@ internal sealed partial class TestClassInfo
         throw testFailedException;
     }
 
-    private TestResult? TryGetClonedCachedClassInitializeResult()
+    internal TestResult? TryGetClonedCachedClassInitializeResult()
     {
         // Historically, we were not caching class initialize result, and were always going through the logic in GetResultOrRunClassInitialize.
         // When caching is introduced, we found out that using the cached instance can change the behavior in some cases. For example,

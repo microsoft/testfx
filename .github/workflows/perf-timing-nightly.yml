@@ -1,9 +1,9 @@
 name: Perf timing nightly
 
-# Phase 1 for microsoft/testfx#9312: artifact-only perf timing collection.
+# Artifact-only perf timing collection for microsoft/testfx#9312.
 # This workflow does not gate PRs and only uploads PlainProcess Result.json
-# files for trend tracking. PlainProcess is Windows-only until #9311 merges;
-# once that lands, this job can move to Linux for better reproducibility.
+# files for trend tracking. Runs on both Windows and Linux so results can be
+# compared across platforms (Linux runners tend to have more consistent timing).
 
 on:
   schedule:
@@ -19,8 +19,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  collect:
-    name: Collect PlainProcess timing
+  collect-windows:
+    name: Collect PlainProcess timing (Windows)
     runs-on: windows-latest
     timeout-minutes: 120
 
@@ -69,7 +69,57 @@ jobs:
       - name: Upload Result.json
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: perf-timing-result-json
+          name: perf-timing-result-json-windows
           path: artifacts\perf-results\
+          if-no-files-found: error
+          retention-days: 90
+
+  collect-linux:
+    name: Collect PlainProcess timing (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Build packages
+        run: ./build.sh -pack -c Release
+
+      - name: Mark timing start
+        run: touch "$RUNNER_TEMP/perf_timing_start"
+
+      - name: Run PlainProcess timing pipeline
+        env:
+          Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup: '0'
+        run: |
+          "$GITHUB_WORKSPACE/.dotnet/dotnet" run --project test/Performance/MSTest.Performance.Runner -c Release -- execute --pipelineNameFilter "*PlainProcess*"
+
+      - name: Stage Result.json files
+        run: |
+          set -euo pipefail
+          STAGING_DIR="$GITHUB_WORKSPACE/artifacts/perf-results"
+          mkdir -p "$STAGING_DIR"
+
+          RESULT_ROOT="$GITHUB_WORKSPACE/artifacts/tmp/Release/testsuite"
+          mapfile -d '' -t RESULTS < <(find "$RESULT_ROOT" -name "Result.json" -type f -newer "$RUNNER_TEMP/perf_timing_start" -print0 2>/dev/null)
+
+          if [ "${#RESULTS[@]}" -eq 0 ]; then
+            echo "::error::No Result.json files were found under '$RESULT_ROOT' after the PlainProcess run."
+            exit 1
+          fi
+
+          for i in "${!RESULTS[@]}"; do
+            IDX=$(( i + 1 ))
+            DEST_DIR="$STAGING_DIR/result-$(printf '%03d' "$IDX")"
+            mkdir -p "$DEST_DIR"
+            cp "${RESULTS[$i]}" "$DEST_DIR/Result.json"
+            echo "Staged '${RESULTS[$i]}'"
+          done
+
+      - name: Upload Result.json
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: perf-timing-result-json-linux
+          path: artifacts/perf-results/
           if-no-files-found: error
           retention-days: 90

@@ -310,6 +310,81 @@ public sealed class UnitTestRunnerTests : TestContainer
         validator.Should().Be(1);
     }
 
+    public async Task RunSingleTestWhenAssemblyAndClassInitializeAlreadyPassedShouldTakeFastPathAndSkipContextAllocation()
+    {
+        var mockReflectHelper = new Mock<ReflectHelper>();
+
+        Type type = typeof(DummyTestClassWithInitializeMethods);
+        TestMethod testMethod1 = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod2 = CreateTestMethod("TestMethod2", type.FullName!, "A", displayName: null);
+        // A third (never executed) test keeps the class "incomplete" so that running the second
+        // test does not trigger class/assembly cleanup, isolating the init fast-path allocations.
+        TestMethod testMethod3 = CreateTestMethod("TestMethod3", type.FullName!, "A", displayName: null);
+        var unitTestElement1 = new UnitTestElement(testMethod1);
+        var unitTestElement2 = new UnitTestElement(testMethod2);
+        var unitTestElement3 = new UnitTestElement(testMethod3);
+        var unitTestRunner = new UnitTestRunner(new MSTestSettings(), [unitTestElement1, unitTestElement2, unitTestElement3], mockReflectHelper.Object);
+
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+            .Returns(Assembly.GetExecutingAssembly());
+        mockReflectHelper.Setup(
+            rh => rh.IsAttributeDefined<AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize")!))
+            .Returns(true);
+
+        DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { };
+        DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { };
+
+        // First test in the assembly/class goes through the slow path, which allocates dedicated
+        // contexts for assembly initialize and class initialize.
+        TestResult[] firstResults = await unitTestRunner.RunSingleTestAsync(unitTestElement1, _testRunParameters, null!);
+        firstResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int contextsAllocatedForFirstRun = _testablePlatformServiceProvider.GetTestContextCallCount;
+
+        // Second test takes both the assembly-init and class-init fast paths, so neither an
+        // assembly-init nor a class-init context is allocated, and the test still passes.
+        TestResult[] secondResults = await unitTestRunner.RunSingleTestAsync(unitTestElement2, _testRunParameters, null!);
+        secondResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int contextsAllocatedForSecondRun = _testablePlatformServiceProvider.GetTestContextCallCount - contextsAllocatedForFirstRun;
+
+        // The fast-path run allocates strictly fewer TestContext instances than the slow-path run
+        // because it skips both the assembly-init and class-init contexts.
+        contextsAllocatedForSecondRun.Should().BeLessThan(contextsAllocatedForFirstRun);
+    }
+
+    public async Task RunSingleTestWhenClassInitializeAlreadyFailedShouldTakeFastPathAndReturnCachedFailure()
+    {
+        Type type = typeof(DummyTestClassWithFailingClassInitialize);
+        TestMethod testMethod1 = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod2 = CreateTestMethod("TestMethod2", type.FullName!, "A", displayName: null);
+        // A third (never executed) test keeps the class "incomplete" so that running the second
+        // test does not trigger class/assembly cleanup, isolating the init fast-path allocations.
+        TestMethod testMethod3 = CreateTestMethod("TestMethod3", type.FullName!, "A", displayName: null);
+        var unitTestElement1 = new UnitTestElement(testMethod1);
+        var unitTestElement2 = new UnitTestElement(testMethod2);
+        var unitTestElement3 = new UnitTestElement(testMethod3);
+
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+            .Returns(Assembly.GetExecutingAssembly());
+
+        UnitTestRunner unitTestRunner = CreateUnitTestRunner([unitTestElement1, unitTestElement2, unitTestElement3]);
+
+        // First test in the class runs class initialize through the slow path (allocating a
+        // dedicated class-init context) and it fails.
+        TestResult[] firstResults = await unitTestRunner.RunSingleTestAsync(unitTestElement1, _testRunParameters, null!);
+        firstResults[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+        int contextsAllocatedForFirstRun = _testablePlatformServiceProvider.GetTestContextCallCount;
+
+        // Second test takes the class-init fast path: it returns the cached failure clone without
+        // allocating a class-init context, while still reporting the cached failure outcome.
+        TestResult[] secondResults = await unitTestRunner.RunSingleTestAsync(unitTestElement2, _testRunParameters, null!);
+        secondResults[0].Outcome.Should().Be(UnitTestOutcome.Failed);
+        int contextsAllocatedForSecondRun = _testablePlatformServiceProvider.GetTestContextCallCount - contextsAllocatedForFirstRun;
+
+        // The fast-path run allocates strictly fewer TestContext instances than the slow-path run
+        // because it skips the class-init context.
+        contextsAllocatedForSecondRun.Should().BeLessThan(contextsAllocatedForFirstRun);
+    }
+
     #endregion
 
     #region private helpers
@@ -368,6 +443,38 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         [TestMethod]
         public void TestMethod()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod2()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod3()
+        {
+        }
+    }
+
+    [DummyTestClass]
+    private class DummyTestClassWithFailingClassInitialize
+    {
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext tc) => throw new InvalidOperationException("Class initialize failure.");
+
+        [TestMethod]
+        public void TestMethod()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod2()
+        {
+        }
+
+        [TestMethod]
+        public void TestMethod3()
         {
         }
     }

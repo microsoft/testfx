@@ -285,7 +285,7 @@ internal class AssemblyEnumerator
         // This code is to discover tests. To run the tests code is in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync.
         // Any change made here should be reflected in TestMethodRunner.TryExecuteFoldedDataDrivenTestsAsync as well.
         IEnumerable<object?[]> dataEnumerable = dataSource.GetData(methodInfo);
-        string? testDataSourceIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
+        string? sourceLevelIgnoreMessage = (dataSource as ITestDataSourceIgnoreCapability)?.IgnoreMessage;
 
         var discoveredTests = new List<UnitTestElement>();
         bool dataSourceHasData = false;
@@ -295,9 +295,14 @@ internal class AssemblyEnumerator
             dataSourceHasData = true;
             object?[] d = dataOrTestDataRow;
             ParameterInfo[] parameters = methodInfo.GetParameters();
+
+            // The effective ignore message for this row is the row-level ignore message (from
+            // TestDataRow<T>), falling back to the whole-source ignore message. It must be
+            // recomputed per row so an ignore message on one row does not leak to later rows.
+            string? testDataSourceIgnoreMessage = sourceLevelIgnoreMessage;
             if (TestDataSourceHelpers.TryHandleITestDataRow(d, parameters, out d, out string? ignoreMessageFromTestDataRow, out string? displayNameFromTestDataRow, out IList<string>? testCategoriesFromTestDataRow))
             {
-                testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? testDataSourceIgnoreMessage;
+                testDataSourceIgnoreMessage = ignoreMessageFromTestDataRow ?? sourceLevelIgnoreMessage;
             }
             else if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(d, parameters))
             {
@@ -375,7 +380,7 @@ internal class AssemblyEnumerator
             UnitTestElement discoveredTest = test.Clone();
             // Make the test not data driven, because it had no data.
             discoveredTest.TestMethod.DataType = DynamicDataType.None;
-            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = testDataSourceIgnoreMessage;
+            discoveredTest.TestMethod.TestDataSourceIgnoreMessage = sourceLevelIgnoreMessage;
             discoveredTest.TestMethod.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.TestMethod.DisplayName;
             tests.Add(discoveredTest);
 

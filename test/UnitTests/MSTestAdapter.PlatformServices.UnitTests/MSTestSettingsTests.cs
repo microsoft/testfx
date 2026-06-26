@@ -6,6 +6,7 @@ using AwesomeAssertions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -1203,7 +1204,7 @@ public class MSTestSettingsTests : TestContainer
             { "mstest:execution:mapNotRunnableToFailed", "true" },
             { "mstest:execution:treatDiscoveryWarningsAsErrors", "true" },
             { "mstest:execution:considerEmptyDataSourceAsInconclusive", "true" },
-            { "mstest:orderTestsByNameInClass", "true" },
+            { "mstest:execution:orderTestsByNameInClass", "true" },
             { "mstest:execution:randomizeTestOrder", "true" },
             { "mstest:execution:randomTestOrderSeed", "-12345" },
             { "mstest:output:captureTrace", "true" },
@@ -1240,6 +1241,74 @@ public class MSTestSettingsTests : TestContainer
         settings.DisableParallelization.Should().BeFalse();
         settings.ParallelizationWorkers.Should().Be(4);
         settings.ParallelizationScope.Should().Be(ExecutionScope.ClassLevel);
+    }
+
+    public void ConfigJson_WithDeprecatedFlatOrderTestsByNameInClassKey_ValueIsSetAndWarningIsEmitted()
+    {
+        // Arrange - using the deprecated flat key
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Once);
+    }
+
+    public void ConfigJson_WithExecutionOrderTestsByNameInClassKey_ValueIsSetAndNoWarningIsEmitted()
+    {
+        // Arrange - using the new grouped key
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:execution:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Never);
+    }
+
+    public void ConfigJson_WithBothOrderTestsByNameInClassKeys_NewExecutionKeyTakesPrecedenceAndNoWarningIsEmitted()
+    {
+        // Arrange - both the new grouped key and the deprecated flat key are present with conflicting values.
+        // The new key must win and, since it is present, the deprecated key is ignored without a warning.
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:orderTestsByNameInClass", "false" },
+            { "mstest:execution:orderTestsByNameInClass", "true" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object, settings);
+
+        // Assert
+        settings.OrderTestsByNameInClass.Should().BeTrue();
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey), Times.Never);
     }
 
     public void ConfigJson_Parllelism_Enabled_True() => ConfigJson_Parllelism_Enabled_Core(true);
