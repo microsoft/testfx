@@ -39,6 +39,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add --zero-tests-policy &lt;allow-skipped|strict&gt; and make 'allow-skipped' the default so an all-skipped run no longer fails with exit code 8 (use 'strict' for the previous behavior) by @Evangelink in [#9415](https://github.com/microsoft/testfx/pull/9415)
 * Add testconfig.json JSON schema for SchemaStore publication and IDE validation by @Evangelink in [#9405](https://github.com/microsoft/testfx/pull/9405)
 * Add experimental `IBlockingDataConsumer` marker interface for synchronous inline data consumption by @Evangelink in [#9426](https://github.com/microsoft/testfx/pull/9426)
+* Add experimental `Microsoft.Testing.Extensions.VideoRecorder` extension for screen recording during test runs (requires ffmpeg; `--capture-video` opt-in) by @Evangelink in [#9377](https://github.com/microsoft/testfx/pull/9377)
 
 ### Fixed
 
@@ -76,6 +77,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Harden report TFM resolution for custom/non-OS platforms (browserwasm) by @Evangelink in [#9137](https://github.com/microsoft/testfx/pull/9137)
 * Fix --list-tests json output under --server mode by streaming discovered tests to the SDK over the dotnet-test pipe by @Evangelink in [#9192](https://github.com/microsoft/testfx/pull/9192)
 * Make AzureDevOps summary report file name unique per assembly by @Evangelink in [#9264](https://github.com/microsoft/testfx/pull/9264)
+* Fix `--treenode-filter` + `--filter-uid` mutual exclusion: validated up front at CLI parse time (proper `InvalidCommandLine` exit code) instead of a late `NotSupportedException`; documentation gaps for the `!` NOT operator and property-filter semantics addressed by @Evangelink in [#9458](https://github.com/microsoft/testfx/pull/9458)
 
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 
