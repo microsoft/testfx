@@ -212,13 +212,12 @@ internal sealed partial class MSTestSettings
 
         if (configuration["mstest:parallelism:workers"] is string workers)
         {
-            settings.ParallelizationWorkers = int.TryParse(workers, out int parallelWorkers)
-                ? parallelWorkers == 0
-                    ? Environment.ProcessorCount
-                    : parallelWorkers > 0
-                        ? parallelWorkers
-                        : throw new AdapterSettingsException(string.Format(CultureInfo.CurrentCulture, Resource.InvalidParallelWorkersValue, workers))
-                : throw new AdapterSettingsException(string.Format(CultureInfo.CurrentCulture, Resource.InvalidParallelWorkersValue, workers));
+            if (!int.TryParse(workers, out int parallelWorkers) || parallelWorkers < 0)
+            {
+                throw new AdapterSettingsException(string.Format(CultureInfo.CurrentCulture, Resource.InvalidParallelWorkersValue, workers));
+            }
+
+            settings.ParallelizationWorkers = parallelWorkers == 0 ? Environment.ProcessorCount : parallelWorkers;
         }
 
         if (configuration["mstest:parallelism:scope"] is string value)

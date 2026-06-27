@@ -76,16 +76,18 @@ internal sealed class VideoRecorderSessionHandler :
         _options = options;
 
         _enabled = commandLineOptions.IsOptionSet(VideoRecorderCommandLineProvider.EnableOptionName);
-        if (!_enabled)
+        if (_enabled)
         {
-            _persistMode = options.PersistMode;
-            _granularity = options.Granularity;
-            return;
+            ApplyCommandLineOverrides(options, commandLineOptions);
         }
 
-        ApplyCommandLineOverrides(options, commandLineOptions);
         _persistMode = options.PersistMode;
         _granularity = options.Granularity;
+
+        if (!_enabled)
+        {
+            return;
+        }
 
         string outputDirectory = options.OutputDirectory
             ?? Path.Combine(configuration.GetTestResultDirectory(), "VideoRecordings");
