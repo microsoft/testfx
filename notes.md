@@ -26,6 +26,8 @@
 - **Nullable annotation (CS8632)**: In analyzer test code strings, avoid `object?` — use `object` instead, or add `#nullable enable` at top of test code string. The test harness doesn't enable nullable by default.
 - **ManagedMethod/ManagedType**: Listed in TestContextPropertyUsageAnalyzer restriction sets but these properties do NOT exist on the actual TestContext class — those entries are dead code in the restriction sets.
 - **VerifyCodeFixAsync for "no fix" case**: `VerifyCodeFixAsync(code, code)` (same string for both params, diagnostic markers preserved) IS valid when no fix is registered — framework compares actual output (unchanged) to expected fixedCode (same as original), and the kept diagnostic markers in fixedCode correctly express that the diagnostic remains. Verified working in `RemoveClassCleanupBehaviorArgumentFixerTests.WhenClassCleanupBehaviorReferencedOutsideAttribute_NoFix`.
+- **OperationAnalysisContext.ContainingSymbol for lambdas**: For `OperationKind.PropertyReference` inside a lambda, `context.ContainingSymbol` resolves to the **enclosing named method** (NOT the lambda's anonymous method). This means [AssemblyInitialize] attribute IS visible even inside a lambda — the TestContextPropertyUsageAnalyzer correctly fires for accesses inside lambdas.
+- **Discard variable name clash**: Do NOT use `_` as a parameter name if the test code also uses `_ = expr` discard assignments — the compiler binds `_` to the parameter (CS0029 if types differ).
 
 ## Testing Opportunities Backlog
 
@@ -33,14 +35,15 @@
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **Analyzer edge cases (ongoing)** — Continue with analyzers with few tests. Next candidates:
    - `UseCooperativeCancellationForTimeoutAnalyzerTests` (33 tests) — possible additional fixture method scenarios
-   - `UseParallelizeAttributeAnalyzerTests` (7 tests) — well covered
-   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — similar to PreferTestCleanupOverDispose but opposite direction
+   - `UseParallelizeAttributeAnalyzerTests` (7 tests) — well covered relative to complexity
+   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — similar to PreferTestCleanupOverDispose but opposite direction; abstract class / non-TestClass scenarios
    - `DoNotUseShadowingAnalyzerTests` (18 tests) — look at multi-level inheritance chain edge cases
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-27 | Task 3 (TestContextPropertyUsageAnalyzer MSTEST0048 edge cases: non-TestContext type guard, lambda ContainingSymbol behavior), Task 7 (Monthly Issue Jun) |
 | 2026-06-26 | Task 4 (verified PRs #9438 and #9410 merged), Task 3 (IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment, lambda block body, chained receiver), Task 7 (Monthly Issue Jun) |
 | 2026-06-25 | Task 3 (UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type), Task 7 (Monthly Issue Jun) |
 | 2026-06-24 | Task 3 (RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard), Task 7 (Monthly Issue Jun) |
@@ -71,11 +74,12 @@
 
 ## Last Run
 
-2026-06-26 23:20 UTC
+2026-06-27 23:16 UTC
 
 ## Completed Work
 
-- PR (pending) for IgnoreStringMethodReturnValueAnalyzer edge cases (2026-06-26) — discard assignment (no diagnostic), lambda block body (diagnostic), chained receiver (no diagnostic); 8/8 pass
+- PR (pending) for TestContextPropertyUsageAnalyzer MSTEST0048 edge cases (2026-06-27) — non-TestContext type guard, lambda ContainingSymbol behavior; 10/10 pass
+- PR #9468 (pending) for IgnoreStringMethodReturnValueAnalyzer edge cases (2026-06-26) — discard assignment (no diagnostic), lambda block body (diagnostic), chained receiver (no diagnostic); 8/8 pass
 - PR #9438 merged (2026-06-26 by Evangelink) — UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type
 - PR #9410 merged (2026-06-25 by Evangelink) — RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard
 - PR #9382 merged (2026-06-24 by Evangelink) — PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases: full dispose pattern, Dispose+TestCleanup coexistence, static constructor
