@@ -1,17 +1,18 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Tasks Last Run
-- Task 2 (Identify Opportunities): 2026-06-26
-- Task 3 (Implement Improvement): 2026-06-26
-- Task 4 (Maintain PRs): 2026-06-26
-- Task 5 (Comment on Issues): 2026-06-24
-- Task 6 (Measurement Infrastructure): 2026-06-08
-- Task 7 (Monthly Summary): 2026-06-26
+- Task 2 (Identify Opportunities): 2026-06-27
+- Task 3 (Implement Improvement): 2026-06-27
+- Task 4 (Maintain PRs): 2026-06-27
+- Task 5 (Comment on Issues): 2026-06-27 (no new activity; no re-engagement)
+- Task 6 (Measurement Infrastructure): 2026-06-27
+- Task 7 (Monthly Summary): 2026-06-27
 
 ## Backlog Cursor
-- IPC serializer series: COMPLETE (all 6 serializers now use direct-array allocation)
-- Analyzers scan: DONE — found and fixed DerivesFrom() LINQ iterator allocations
-- Next scan area: Task 6 (Measurement Infrastructure) + broader Platform scan for remaining OfType<T> on PropertyBag
+- IPC serializer series: COMPLETE
+- Analyzers scan: DONE — DerivesFrom() fix (PR #9466)
+- SourceGeneratedReflectionOperations: DONE — LINQ chains fixed (PR submitted this run: efficiency/eliminate-linq-in-source-gen-attribute-lookup)
+- Next scan area: broader Platform scan for remaining OfType<T> on PropertyBag / hot paths in MSTestAdapter
 
 ## Validated Commands
 
@@ -31,52 +32,50 @@ Notes:
 ## Monthly Activity Issue
 - Issue #9197: `[efficiency-improver] Monthly Activity 2026-06` (open)
 - Label: `efficiency`
-- Last updated: 2026-06-26
+- Last updated: 2026-06-27
+
+## Open PRs (Efficiency Improver)
+- PR #9466: `[efficiency-improver] perf: eliminate LINQ iterator allocations in MSTest Analyzer DerivesFrom interface check` — open draft, CI passing ✅
+- PR (branch: efficiency/eliminate-linq-in-source-gen-attribute-lookup): `perf: replace LINQ iterator chains with direct foreach in SourceGeneratedReflectionOperations` — submitted 2026-06-27, awaiting PR number
 
 ## Work in Progress
-None (IPC #9436 merged 2026-06-26)
+None — SourceGeneratedReflectionOperations optimization submitted this run.
 
 ## Completed Work (PRs merged or applied)
 - PR #9436: direct-allocate arrays in IPC CommandLineOption and FileArtifact deserializers — merged 2026-06-26
 - PR #9408: direct-allocate arrays in IPC TestResultMessagesSerializer — merged 2026-06-25
 - PR #9380: single-pass PropertyBag collection in DotnetTestDataConsumer — merged 2026-06-24
 - PR #9353: single-pass aggregation in AppendTestRunSummary — merged
-- CommandLineParseResult.IsOptionSet + TryGetOptionArgumentList: hoisted Trim(), single-pass foreach (changes in main already)
-- PR #9300: replace `artifactGroups.Any()` with `_artifacts.Count > 0` in `AppendTestRunSummary`
-- PR #9274: single-pass GroupBy partition in `TestExecutionManager.Parallelization.cs`
-- PR #9196: defer `GetTestName()` + avoid `OfType<>` in `AzureDevOpsReporter`
-- PR #9162: single-pass PropertyBag walk in `DiscoveredTestsJsonSerializer`
-- PR #9159: single-pass PropertyBag walk in `TerminalOutputDevice` + `SimplifiedConsoleOutputDeviceBase`
-- PR #9018: single-pass PropertyBag walk in `JUnitReport TestResultCapture`
-- Earlier PRs #8692–#8975: UTF-8 encoding, IPC serialization, TRX/OTel/TrxReport/AzureDevOps/SerializerUtilities PropertyBag walks, AnsiTerminal string caching (all merged)
+- PR #9300, #9274, #9196, #9162, #9159, #9018, #8692–#8975: all merged
 
 ## Efficiency Notes (Key Insights)
-- PropertyBag hot-path series COMPLETE: all OfType<T>() → GetStructEnumerator() conversions done across all report extensions
-- IPC serializer series: COMPLETE — all 6 serializers now use direct T[length] allocation pattern
-- Analyzers: DerivesFrom() fix (this run) — ImmutableArray<INamedTypeSymbol>.OfType<ITypeSymbol>() + optional Select() + Contains() replaced by direct foreach. Called ~36 times per symbol analysis.
-- perf-improver workflow (#9258) is a separate bot; recent PRs: #9299, #9311, #9348, #9376, #9399, #9433. Avoid duplicating.
-- VideoRecorderSessionHandler.cs: still uses OfType<TestNodeStateProperty>().FirstOrDefault() — could use SingleOrDefault<TestNodeStateProperty>(). Low priority (rarely-used extension).
-- OpenTelemetryResultHandler.cs:126: OfType<TestMetadataProperty>() in iterator method — cannot use GetStructEnumerator() in yield methods. Low priority.
-- `TerminalTestReporter.TotalTests` property calls `_assemblies.Values.Sum()` on every access, but is rarely called — low priority.
-- `GroupBy().Where(Count()>1)` in `ToolsTestHost.cs:55` runs only once at startup — negligible.
+- PropertyBag hot-path series COMPLETE across all report extensions
+- IPC serializer series: COMPLETE (all 6 serializers use direct T[length] allocation)
+- Analyzers: DerivesFrom() fix (PR #9466) — ImmutableArray OfType + optional Select + Contains → direct foreach
+- SourceGeneratedReflectionOperations: DONE — 3 attribute helpers (IsAttributeDefined, GetFirstAttributeOrDefault, GetSingleAttributeOrDefault) had LINQ chains allocating 1–3 iterator state machines per call; replaced with direct foreach loops (zero allocs). GetAttributes<T> left as-is (returns IEnumerable<T> by contract).
+- nightly perf pipeline (perf-timing-nightly.yml): only measures plain-process scenarios; server-mode (JSON-RPC) path has NO benchmark coverage. Issue created (#aw_issue_perfgap) to track this gap.
+- PlainProcess.cs: new JsonSerializerOptions per run (CA1869 suppressed) — LOW priority, nightly-only code.
+- perf-improver workflow: separate bot — avoid duplicating its work.
+- VideoRecorderSessionHandler.cs: OfType<TestNodeStateProperty>().FirstOrDefault() — low priority (rarely-used extension).
+- OpenTelemetry: OfType in yield method — cannot use struct enumerator; needs refactor.
 
 ## Optimisation Backlog
 
 | Priority | Focus Area | Opportunity | Notes |
 |----------|------------|-------------|-------|
-| MEDIUM | Infrastructure | Task 6: Assess benchmark coverage for IPC/reporter paths — do benchmarks exist for these serializers? | No local SDK; propose via issue |
-| LOW | Code-Level | VideoRecorder: `Properties.OfType<TestNodeStateProperty>().FirstOrDefault()` → `Properties.SingleOrDefault<TestNodeStateProperty>()` | Rarely-used extension, low impact |
-| LOW | Code-Level | OpenTelemetry: `Properties.OfType<TestMetadataProperty>()` in iterator method | Cannot use struct enumerator in yield; would need refactor |
-| LOW | Code-Level | `TerminalTestReporter.cs:68` TotalTests prop calls `Sum()` on every access | Rare caller, negligible |
-| LOW | Code-Level | `ToolsTestHost.cs:55` GroupBy at startup | Startup only, negligible |
-| LOW | Infrastructure | Add output-byte-count tracking as CI health metric (suggested in #8824 comment) | Needs maintainer discussion first |
+| MEDIUM | Infrastructure | Add server-mode (JSON-RPC) perf scenario to nightly pipeline + trend tracking | Issue created (#aw_issue_perfgap) this run |
+| LOW | Code-Level | VideoRecorder: OfType<TestNodeStateProperty>().FirstOrDefault() → direct foreach | Rarely-used extension |
+| LOW | Code-Level | OpenTelemetry: OfType<TestMetadataProperty>() in iterator method | Needs non-iterator refactor |
+| LOW | Code-Level | TerminalTestReporter.TotalTests: calls _assemblies.Values.Sum() on every access | Rare caller, negligible |
+| LOW | Code-Level | ToolsTestHost.cs:55: GroupBy at startup only | Negligible |
+| LOW | Code-Level | PlainProcess.cs: cache JsonSerializerOptions instance (CA1869) | Negligible |
+| LOW | Infrastructure | Output-byte-count CI health metric (suggested in #8824 comment) | Needs maintainer discussion |
 
 ## Issue Comments Posted (Task 5)
-- #8894 (ITestFilter): commented 2026-06-24 — energy framing, ClassInit waste quantification, measurement suggestion, GSF Demand Shaping
-- #8824 (LLM-efficient output RFC): commented 2026-06-24 — energy-impact prioritisation table, stack-frame filtering as highest win
-- Do not re-comment on these until new human activity appears
+- #8894 (ITestFilter): commented 2026-06-24 — no new activity as of 2026-06-27
+- #8824 (LLM-efficient output RFC): commented 2026-06-24 — no new activity as of 2026-06-27
+- Do not re-comment until new human activity appears
 
 ## Round-Robin Task Schedule
-- Tasks 2+3 done this run (DerivesFrom fix)
-- Next run should prioritize: Task 6 (Measurement Infrastructure) + Task 5 (check for new activity)
-- Backlog cursor: infrastructure gaps (Task 6 is overdue — last run 2026-06-08)
+- This run (2026-06-27): Tasks 2, 3, 4, 5, 6, 7
+- Next run should prioritize: Task 1 (validate commands — check if SDK available) + Task 2 (broader scan) + Task 7
