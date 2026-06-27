@@ -38,18 +38,25 @@ NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.Platfo
 
 ## Open Work
 
-- Branch perf-assist/defer-class-cleanup-context-alloc — PR submitted 2026-06-26
+- Branch perf-assist/defer-class-cleanup-context-alloc — PR #9461 (submitted 2026-06-26)
   - Defers testContextForClassCleanup allocation inside if(isLastTestInClass) block
   - Saves C*(K-1) TestContextImplementation allocs per run (one dict copy + CancellationTokenRegistration each)
-  - Files: UnitTestRunner.cs + UnitTestRunnerTests.cs
-  - Safety: ShouldRunEndOfAssemblyCleanup can only be true when isLastTestInClass is true (MarkClassComplete only called in that block)
+  - Linux Debug CI failed — code invariant analyzed as correct; likely pre-existing flaky test
+  - Status: awaiting maintainer review
+
+- Branch perf-assist/avoid-empty-snapshot-alloc — PR submitted 2026-06-27 (number TBD)
+  - CaptureLifecycleProperties now returns null when no non-label properties captured (common case)
+  - Avoids 2 allocations (Dictionary + ReadOnlyDictionary) + 2 lock acquisitions per test
+  - Files: TestContextImplementation.cs + TestContextImplementationTests.cs + TestAssemblyInfoTests.cs + TestClassInfoTests.cs
+  - Safety: PostAssemblyInitProperties/PostClassInitProperties already nullable; MergeProperties(null) returns early
 
 ## Optimization Backlog
 
 Priority | Item
 ---------|-----
 Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450 merged
-Pending | defer-class-cleanup-context-alloc (PR submitted 2026-06-26)
+Pending | PR #9461 — defer class-cleanup alloc (awaiting review)
+Pending | PR (2026-06-27) — skip CaptureLifecycleProperties allocs when empty
 Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
 Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
 Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
@@ -59,25 +66,26 @@ Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallb
 - TestContextImplementation ctor copies testContextProperties dict + registers CancellationTokenRegistration — non-trivial per-test cost
 - TestablePlatformServiceProvider.GetTestContextCallCount tracks allocation counts in unit tests
 - MarkClassComplete is only called inside if(isLastTestInClass) — ShouldRunEndOfAssemblyCleanup invariant
+- CaptureLifecycleProperties: internal method on TestContextImplementation; return type now nullable (null = no user properties set)
 - efficiency-improver bot also operates on this repo — check for duplicate opportunities before creating PRs
 - Acceptance tests need -pack first; unit tests do not
 
 ## Task Schedule (last run dates)
 
 - Task 1 (Commands): 2026-06-25
-- Task 2 (Identify): 2026-06-26 ✓ this run
-- Task 3 (Implement): 2026-06-26 ✓ this run
-- Task 4 (Maintain PRs): 2026-06-26 ✓ this run
+- Task 2 (Identify): 2026-06-27 ✓ this run
+- Task 3 (Implement): 2026-06-27 ✓ this run
+- Task 4 (Maintain PRs): 2026-06-27 ✓ this run
 - Task 5 (Comment issues): 2026-06-24
 - Task 6 (Infra): 2026-06-21
-- Task 7 (Monthly Summary): 2026-06-26 ✓ this run (issue #9258)
+- Task 7 (Monthly Summary): 2026-06-27 ✓ this run (issue #9258)
 
 ## Monthly Activity Issue
 
 Issue #9258: [perf-improver] Monthly Activity 2026-06 (open)
-Last updated: 2026-06-26 run 28243694549
+Last updated: 2026-06-27 run 28291508097
 
 ## Backlog Cursor
 
-Scanned all hot paths in UnitTestRunner.cs, TestMethodRunner.cs, ClassCleanupManager.cs.
-Next: consider TestMethodInfo.Lifecycle.cs for remaining alloc opportunities (verify nothing missed).
+Scanned TestContextImplementation, TestAssemblyInfo, TestClassInfo, UnitTestRunner hot paths.
+Next: consider Task 5 (Comment performance issues) or Task 6 (infra) — both overdue since 2026-06-21/24.
