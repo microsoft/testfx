@@ -1,18 +1,19 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Tasks Last Run
-- Task 2 (Identify Opportunities): 2026-06-27
-- Task 3 (Implement Improvement): 2026-06-27
-- Task 4 (Maintain PRs): 2026-06-27
+- Task 2 (Identify Opportunities): 2026-06-28
+- Task 3 (Implement Improvement): 2026-06-28
+- Task 4 (Maintain PRs): 2026-06-28
 - Task 5 (Comment on Issues): 2026-06-27 (no new activity; no re-engagement)
 - Task 6 (Measurement Infrastructure): 2026-06-27
-- Task 7 (Monthly Summary): 2026-06-27
+- Task 7 (Monthly Summary): 2026-06-28
 
 ## Backlog Cursor
 - IPC serializer series: COMPLETE
-- Analyzers scan: DONE — DerivesFrom() fix (PR #9466)
-- SourceGeneratedReflectionOperations: DONE — LINQ chains fixed (PR submitted this run: efficiency/eliminate-linq-in-source-gen-attribute-lookup)
-- Next scan area: broader Platform scan for remaining OfType<T> on PropertyBag / hot paths in MSTestAdapter
+- Analyzers scan: DONE — DerivesFrom() fix (PR #9466, merged 2026-06-28)
+- SourceGeneratedReflectionOperations: DONE — LINQ chains fixed (PR #9479, merged 2026-06-28)
+- VideoRecorder PropertyBag.FirstOrDefault: IN PROGRESS — PR submitted this run (branch: efficiency/propertybag-firstordefault)
+- Next scan area: MSTestAdapter / OpenTelemetry handler / TerminalTestReporter
 
 ## Validated Commands
 
@@ -32,16 +33,20 @@ Notes:
 ## Monthly Activity Issue
 - Issue #9197: `[efficiency-improver] Monthly Activity 2026-06` (open)
 - Label: `efficiency`
-- Last updated: 2026-06-27
+- Last updated: 2026-06-28
 
 ## Open PRs (Efficiency Improver)
-- PR #9466: `[efficiency-improver] perf: eliminate LINQ iterator allocations in MSTest Analyzer DerivesFrom interface check` — open draft, CI passing ✅
-- PR (branch: efficiency/eliminate-linq-in-source-gen-attribute-lookup): `perf: replace LINQ iterator chains with direct foreach in SourceGeneratedReflectionOperations` — submitted 2026-06-27, awaiting PR number
+- PR (branch: efficiency/propertybag-firstordefault): `perf: add PropertyBag.FirstOrDefault<T>() to eliminate per-call array allocation` — submitted 2026-06-28, awaiting PR number
+  - Adds zero-allocation FirstOrDefault<TProperty>() to PropertyBag
+  - Updates VideoRecorderSessionHandler lines 128 and 480 to use it
+  - Declared in both PublicAPI.Unshipped.txt files
 
 ## Work in Progress
-None — SourceGeneratedReflectionOperations optimization submitted this run.
+None — PropertyBag.FirstOrDefault optimization submitted this run.
 
 ## Completed Work (PRs merged or applied)
+- PR #9479: eliminate LINQ iterator allocations in SourceGeneratedReflectionOperations — merged 2026-06-28
+- PR #9466: eliminate LINQ iterator allocations in MSTest Analyzer DerivesFrom() — merged 2026-06-28
 - PR #9436: direct-allocate arrays in IPC CommandLineOption and FileArtifact deserializers — merged 2026-06-26
 - PR #9408: direct-allocate arrays in IPC TestResultMessagesSerializer — merged 2026-06-25
 - PR #9380: single-pass PropertyBag collection in DotnetTestDataConsumer — merged 2026-06-24
@@ -49,25 +54,22 @@ None — SourceGeneratedReflectionOperations optimization submitted this run.
 - PR #9300, #9274, #9196, #9162, #9159, #9018, #8692–#8975: all merged
 
 ## Efficiency Notes (Key Insights)
-- PropertyBag hot-path series COMPLETE across all report extensions
+- PropertyBag internal structure: _testNodeStateProperty (fast path, O(1)) + linked-list for other props
+- PropertyBag.FirstOrDefault<T>(): same pattern as SingleOrDefault — check fast path, IsAssignableFrom guard, linked-list walk with early exit. Zero allocation.
+- OfType<T>() always allocates TProperty[] — avoid in hot paths.
 - IPC serializer series: COMPLETE (all 6 serializers use direct T[length] allocation)
-- Analyzers: DerivesFrom() fix (PR #9466) — ImmutableArray OfType + optional Select + Contains → direct foreach
-- SourceGeneratedReflectionOperations: DONE — 3 attribute helpers (IsAttributeDefined, GetFirstAttributeOrDefault, GetSingleAttributeOrDefault) had LINQ chains allocating 1–3 iterator state machines per call; replaced with direct foreach loops (zero allocs). GetAttributes<T> left as-is (returns IEnumerable<T> by contract).
-- nightly perf pipeline (perf-timing-nightly.yml): only measures plain-process scenarios; server-mode (JSON-RPC) path has NO benchmark coverage. Issue created (#aw_issue_perfgap) to track this gap.
+- nightly perf pipeline: only measures plain-process scenarios; issue #9480 tracks server-mode gap.
 - PlainProcess.cs: new JsonSerializerOptions per run (CA1869 suppressed) — LOW priority, nightly-only code.
 - perf-improver workflow: separate bot — avoid duplicating its work.
-- VideoRecorderSessionHandler.cs: OfType<TestNodeStateProperty>().FirstOrDefault() — low priority (rarely-used extension).
-- OpenTelemetry: OfType in yield method — cannot use struct enumerator; needs refactor.
+- OpenTelemetry: OfType in yield method — cannot use struct enumerator; needs non-iterator refactor.
 
 ## Optimisation Backlog
 
 | Priority | Focus Area | Opportunity | Notes |
 |----------|------------|-------------|-------|
-| MEDIUM | Infrastructure | Add server-mode (JSON-RPC) perf scenario to nightly pipeline + trend tracking | Issue created (#aw_issue_perfgap) this run |
-| LOW | Code-Level | VideoRecorder: OfType<TestNodeStateProperty>().FirstOrDefault() → direct foreach | Rarely-used extension |
+| MEDIUM | Infrastructure | Add server-mode (JSON-RPC) perf scenario to nightly pipeline + trend tracking | Issue #9480 open |
 | LOW | Code-Level | OpenTelemetry: OfType<TestMetadataProperty>() in iterator method | Needs non-iterator refactor |
 | LOW | Code-Level | TerminalTestReporter.TotalTests: calls _assemblies.Values.Sum() on every access | Rare caller, negligible |
-| LOW | Code-Level | ToolsTestHost.cs:55: GroupBy at startup only | Negligible |
 | LOW | Code-Level | PlainProcess.cs: cache JsonSerializerOptions instance (CA1869) | Negligible |
 | LOW | Infrastructure | Output-byte-count CI health metric (suggested in #8824 comment) | Needs maintainer discussion |
 
@@ -77,5 +79,5 @@ None — SourceGeneratedReflectionOperations optimization submitted this run.
 - Do not re-comment until new human activity appears
 
 ## Round-Robin Task Schedule
-- This run (2026-06-27): Tasks 2, 3, 4, 5, 6, 7
-- Next run should prioritize: Task 1 (validate commands — check if SDK available) + Task 2 (broader scan) + Task 7
+- This run (2026-06-28): Tasks 2, 3, 7
+- Next run should prioritize: Task 4 (check new PR CI), Task 5 (check for new issue activity), Task 6 (infrastructure), Task 7
