@@ -158,7 +158,7 @@ public sealed class IgnoreStringMethodReturnValueAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenDiscardAssignmentIgnoresReturnValue_NoDiagnostic()
+    public async Task WhenExplicitDiscardAssignment_NoDiagnostic()
     {
         string code = """
             public class TestClass
@@ -167,7 +167,7 @@ public sealed class IgnoreStringMethodReturnValueAnalyzerTests
                 {
                     string str = "Hello World";
 
-                    // Discard assignment: outer operation is IAssignmentOperation, not IInvocationOperation,
+                    // Discard assignment: outer operation is ISimpleAssignmentOperation, not IInvocationOperation,
                     // so the analyzer's early-return guard fires and no diagnostic is reported.
                     _ = str.Contains("Hello");
                     _ = str.StartsWith("Hello");
