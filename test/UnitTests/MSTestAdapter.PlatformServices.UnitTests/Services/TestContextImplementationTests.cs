@@ -513,7 +513,7 @@ public class TestContextImplementationTests : TestContainer
         snapshot.Should().ContainKey("UserKey");
         snapshot!["UserKey"].Should().Be("UserValue");
         snapshot.Should().ContainKey("AnotherKey");
-        snapshot["AnotherKey"].Should().Be(7);
+        snapshot!["AnotherKey"].Should().Be(7);
         snapshot.Should().NotContainKey("FullyQualifiedTestClassName");
         snapshot.Should().NotContainKey("TestName");
     }
@@ -522,7 +522,8 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = CreateTestContextImplementation();
 
-        // Only per-context labels are present; no user-defined properties.
+        // Context has no properties at all; no labels were seeded because the ITestMethod mock is
+        // unconfigured (FullClassName/Name return null) and testClassFullName is null.
         IReadOnlyDictionary<string, object?>? snapshot = _testContextImplementation.CaptureLifecycleProperties();
 
         snapshot.Should().BeNull();
