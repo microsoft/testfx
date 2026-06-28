@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
-using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.VideoRecorder;
 
@@ -280,5 +280,4 @@ internal sealed partial class FfmpegVideoRecorder
             ? outputPath
             : null;
     }
-
 }

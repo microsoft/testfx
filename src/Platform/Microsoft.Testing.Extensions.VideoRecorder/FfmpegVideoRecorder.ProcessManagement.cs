@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
-using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform;
 
 #if !NETCOREAPP
 using Polyfills;
@@ -128,6 +128,7 @@ internal sealed partial class FfmpegVideoRecorder
     {
         while (_recentFfmpegOutput.TryDequeue(out _))
         {
+            // Drain the queue; the dequeued values are intentionally discarded.
         }
     }
 #endif
@@ -152,6 +153,7 @@ internal sealed partial class FfmpegVideoRecorder
         _recentFfmpegOutput.Enqueue(e.Data);
         while (_recentFfmpegOutput.Count > 8 && _recentFfmpegOutput.TryDequeue(out _))
         {
+            // Trim the oldest entries; the dequeued values are intentionally discarded.
         }
     }
 
