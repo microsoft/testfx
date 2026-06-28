@@ -10,6 +10,18 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions;
 
+internal readonly record struct ReportEngineContext(
+    IFileSystem FileSystem,
+    ITestApplicationModuleInfo TestApplicationModuleInfo,
+    IEnvironment Environment,
+    ICommandLineOptions CommandLineOptions,
+    IConfiguration Configuration,
+    IClock Clock,
+    ITestFramework TestFramework,
+    DateTimeOffset TestStartTime,
+    int ExitCode,
+    CancellationToken CancellationToken);
+
 /// <summary>
 /// Shared base class for report engine implementations (CTRF, JUnit, HTML, ...) that all consume
 /// the same set of platform services (file system, configuration, clock, ...) and need a common
@@ -30,28 +42,18 @@ internal abstract class ReportEngineBase
     protected readonly CancellationToken _cancellationToken;
 #pragma warning restore SA1401
 
-    protected ReportEngineBase(
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IEnvironment environment,
-        ICommandLineOptions commandLineOptions,
-        IConfiguration configuration,
-        IClock clock,
-        ITestFramework testFramework,
-        DateTimeOffset testStartTime,
-        int exitCode,
-        CancellationToken cancellationToken)
+    protected ReportEngineBase(ReportEngineContext context)
     {
-        _fileSystem = fileSystem;
-        _testApplicationModuleInfo = testApplicationModuleInfo;
-        _environment = environment;
-        _commandLineOptions = commandLineOptions;
-        _configuration = configuration;
-        _clock = clock;
-        _testFramework = testFramework;
-        _testStartTime = testStartTime;
-        _exitCode = exitCode;
-        _cancellationToken = cancellationToken;
+        _fileSystem = context.FileSystem;
+        _testApplicationModuleInfo = context.TestApplicationModuleInfo;
+        _environment = context.Environment;
+        _commandLineOptions = context.CommandLineOptions;
+        _configuration = context.Configuration;
+        _clock = context.Clock;
+        _testFramework = context.TestFramework;
+        _testStartTime = context.TestStartTime;
+        _exitCode = context.ExitCode;
+        _cancellationToken = context.CancellationToken;
     }
 
     internal static string GetProvidedFileName(string[]? providedFileName)
