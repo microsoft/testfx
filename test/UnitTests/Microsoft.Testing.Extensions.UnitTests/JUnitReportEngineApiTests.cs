@@ -55,11 +55,15 @@ public sealed class JUnitReportEngineApiTests
 
         (string fileName, string? warning) = await engine.GenerateReportAsync([], new Dictionary<string, TestResultCapture.ParentChainEntry>());
 
+        // The production code combines the results directory with the file name via Path.Combine,
+        // so the separator is platform-specific ('/' on Unix, '\' on Windows).
+        string expectedPrefix = "/results" + Path.DirectorySeparatorChar;
+
         Assert.IsNull(warning);
-        Assert.StartsWith("/results/", fileName);
+        Assert.StartsWith(expectedPrefix, fileName);
         Assert.EndsWith(".xml", fileName);
-        fileSystemMock.Verify(x => x.NewFileStream(It.Is<string>(path => path.StartsWith("/results/") && path.EndsWith(".tmp")), FileMode.Create), Times.Once);
-        fileSystemMock.Verify(x => x.MoveFile(It.Is<string>(path => path.StartsWith("/results/") && path.EndsWith(".tmp")), fileName, overwrite: true), Times.Once);
+        fileSystemMock.Verify(x => x.NewFileStream(It.Is<string>(path => path.StartsWith(expectedPrefix) && path.EndsWith(".tmp")), FileMode.Create), Times.Once);
+        fileSystemMock.Verify(x => x.MoveFile(It.Is<string>(path => path.StartsWith(expectedPrefix) && path.EndsWith(".tmp")), fileName, overwrite: true), Times.Once);
     }
 
     private sealed class MemoryFileStream : IFileStream
