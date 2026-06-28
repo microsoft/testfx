@@ -48,16 +48,19 @@ internal static class ITypeSymbolExtensions
 
         if (!baseTypesOnly && candidateBaseType.TypeKind == TypeKind.Interface)
         {
-            IEnumerable<ITypeSymbol> allInterfaces = symbol.AllInterfaces.OfType<ITypeSymbol>();
-            if (SymbolEqualityComparer.Default.Equals(candidateBaseType.OriginalDefinition, candidateBaseType))
+            // Avoid OfType<ITypeSymbol>() + optional Select() + Contains() chain — each creates a heap-allocated
+            // LINQ iterator state machine. AllInterfaces is ImmutableArray<INamedTypeSymbol>; iterating it
+            // directly uses the struct enumerator (zero heap allocation).
+            bool useOriginalDefinition = SymbolEqualityComparer.Default.Equals(candidateBaseType.OriginalDefinition, candidateBaseType);
+            foreach (INamedTypeSymbol iface in symbol.AllInterfaces)
             {
-                // Candidate base type is not a constructed generic type, so use original definition for interfaces.
-                allInterfaces = allInterfaces.Select(i => i.OriginalDefinition);
-            }
-
-            if (allInterfaces.Contains(candidateBaseType, SymbolEqualityComparer.Default))
-            {
-                return true;
+                // When the candidate is not a constructed generic type, compare via OriginalDefinition
+                // (mirrors the original Select(i => i.OriginalDefinition) projection).
+                ITypeSymbol candidate = useOriginalDefinition ? iface.OriginalDefinition : iface;
+                if (SymbolEqualityComparer.Default.Equals(candidate, candidateBaseType))
+                {
+                    return true;
+                }
             }
         }
 
