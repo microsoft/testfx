@@ -37,6 +37,21 @@ internal static class FixtureMethodAnalyzerHelper
         return true;
     }
 
+    /// <summary>
+    /// Registers the standard symbol analysis for an instance fixture method (e.g. <c>[TestInitialize]</c> or
+    /// <c>[TestCleanup]</c>): reports <paramref name="rule"/> for methods that do not have a valid instance
+    /// fixture signature. Callers remain responsible for <c>ConfigureGeneratedCodeAnalysis</c> /
+    /// <c>EnableConcurrentExecution</c> as required by the RS1025/RS1026 analyzers.
+    /// </summary>
+    internal static void RegisterInstanceFixtureAnalyzer(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        DiagnosticDescriptor rule)
+        => RegisterFixtureMethodSymbolAction(
+            context,
+            fixtureAttributeMetadataName,
+            (symbolContext, symbols) => AnalyzeInstanceFixtureMethod(symbolContext, symbols, rule));
+
     internal static void RegisterFixtureMethodSymbolAction(
         AnalysisContext context,
         string fixtureAttributeMetadataName,

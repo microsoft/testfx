@@ -38,17 +38,7 @@ internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenera
         int exitCode,
         CancellationToken cancellationToken)
     {
-        var engine = new CtrfReportEngine(
-            FileSystem,
-            TestApplicationModuleInfo,
-            Environment,
-            CommandLineOptions,
-            Configuration,
-            Clock,
-            TestFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken);
+        var engine = new CtrfReportEngine(CreateEngineContext(testStartTime, exitCode, cancellationToken));
         return engine.GenerateReportAsync(tests);
     }
 }

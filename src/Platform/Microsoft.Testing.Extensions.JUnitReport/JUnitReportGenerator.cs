@@ -63,17 +63,7 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         int exitCode,
         CancellationToken cancellationToken)
     {
-        var engine = new JUnitReportEngine(
-            FileSystem,
-            TestApplicationModuleInfo,
-            Environment,
-            CommandLineOptions,
-            Configuration,
-            Clock,
-            TestFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken);
+        var engine = new JUnitReportEngine(CreateEngineContext(testStartTime, exitCode, cancellationToken));
         return engine.GenerateReportAsync(tests, _parentChain);
     }
 }

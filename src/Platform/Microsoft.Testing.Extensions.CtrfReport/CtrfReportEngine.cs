@@ -40,6 +40,11 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
     {
     }
 
+    public CtrfReportEngine(ReportEngineContext context)
+        : base(context)
+    {
+    }
+
     public Task<(string FileName, string? Warning)> GenerateReportAsync(CapturedTestResult[] results)
         => GenerateReportCoreAsync(results, _clock.UtcNow);
 

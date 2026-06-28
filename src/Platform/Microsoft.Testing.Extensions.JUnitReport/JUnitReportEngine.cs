@@ -42,6 +42,11 @@ internal sealed class JUnitReportEngine : ReportEngineBase
     {
     }
 
+    public JUnitReportEngine(ReportEngineContext context)
+        : base(context)
+    {
+    }
+
     public Task<(string FileName, string? Warning)> GenerateReportAsync(
         CapturedTestResult[] results,
         IReadOnlyDictionary<string, TestResultCapture.ParentChainEntry> parentChain)

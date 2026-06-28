@@ -54,6 +54,21 @@ internal abstract class ReportEngineBase
         _cancellationToken = cancellationToken;
     }
 
+    protected ReportEngineBase(ReportEngineContext context)
+        : this(
+            context.FileSystem,
+            context.TestApplicationModuleInfo,
+            context.Environment,
+            context.CommandLineOptions,
+            context.Configuration,
+            context.Clock,
+            context.TestFramework,
+            context.TestStartTime,
+            context.ExitCode,
+            context.CancellationToken)
+    {
+    }
+
     internal static string GetProvidedFileName(string[]? providedFileName)
         => providedFileName is { Length: > 0 }
             ? providedFileName[0]

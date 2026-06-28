@@ -57,6 +57,7 @@ This package extends Microsoft Testing Platform to produce test reports in the C
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameHelper.cs" Link="Helpers\ReportFileNameHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportFileNameSanitizer.cs" Link="Helpers\ReportFileNameSanitizer.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineBase.cs" Link="Helpers\ReportEngineBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportEngineContext.cs" Link="Helpers\ReportEngineContext.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorBase.cs" Link="Helpers\ReportGeneratorBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportProviderRegistration.cs" Link="Helpers\ReportProviderRegistration.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\ReportGeneratorCommandLineBase.cs" Link="Helpers\ReportGeneratorCommandLineBase.cs" />

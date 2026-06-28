@@ -113,6 +113,24 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
     protected ITestFramework TestFramework { get; }
 
+    /// <summary>
+    /// Bundles the shared platform services together with the per-session call-time arguments into a
+    /// single <see cref="ReportEngineContext"/> so derived generators can construct their report engine
+    /// without repeating the full dependency list.
+    /// </summary>
+    protected ReportEngineContext CreateEngineContext(DateTimeOffset testStartTime, int exitCode, CancellationToken cancellationToken)
+        => new(
+            FileSystem,
+            TestApplicationModuleInfo,
+            Environment,
+            CommandLineOptions,
+            Configuration,
+            Clock,
+            TestFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken);
+
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 

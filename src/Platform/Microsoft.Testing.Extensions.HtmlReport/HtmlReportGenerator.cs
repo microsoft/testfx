@@ -38,17 +38,7 @@ internal sealed class HtmlReportGenerator : ReportGeneratorBase<HtmlReportGenera
         int exitCode,
         CancellationToken cancellationToken)
     {
-        var engine = new HtmlReportEngine(
-            FileSystem,
-            TestApplicationModuleInfo,
-            Environment,
-            CommandLineOptions,
-            Configuration,
-            Clock,
-            TestFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken);
+        var engine = new HtmlReportEngine(CreateEngineContext(testStartTime, exitCode, cancellationToken));
         return engine.GenerateReportAsync(tests);
     }
 }
