@@ -70,11 +70,9 @@ public partial class InvokeTestingPlatformTask
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
         {
-            StringBuilder sb = new();
-            sb.AppendLine();
-            sb.AppendLine("=== COMMAND LINE ===");
-            sb.AppendLine(_toolCommand);
-            _output.AppendLine(sb.ToString());
+            _output.AppendLine();
+            _output.AppendLine("=== COMMAND LINE ===");
+            _output.AppendLine(_toolCommand);
         }
 
         // Persist the output to the file.

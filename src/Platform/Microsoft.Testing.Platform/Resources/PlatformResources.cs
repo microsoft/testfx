@@ -53,6 +53,8 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests => GetResourceString("PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests");
 
+    internal static string @OnlyOneFilterSupported => GetResourceString("OnlyOneFilterSupported");
+
     internal static string @PlatformCommandLineMinimumExpectedTestsOptionSingleArgument => GetResourceString("PlatformCommandLineMinimumExpectedTestsOptionSingleArgument");
 
     internal static string @PlatformCommandLinePortOptionSingleArgument => GetResourceString("PlatformCommandLinePortOptionSingleArgument");

@@ -21,6 +21,7 @@ public abstract class AcceptanceTestBase
         MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
         MicrosoftTestingExtensionsPackagedAppVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
+        MicrosoftTestingExtensionsVideoRecorderVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
     }
 
     internal static string RID { get; }
@@ -47,6 +48,8 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftTestingExtensionsJUnitReportVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsPackagedAppVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsVideoRecorderVersion { get; private set; }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {

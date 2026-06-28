@@ -57,7 +57,7 @@ internal static class TestClassModelBuilder
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
             // under trimming / Native AOT. Members are folded into the leaf model, but the trimmer
             // only keeps members of the concrete type unless the base is rooted explicitly too.
-            if (!isLeaf && !current.IsGenericType && IsTypeReachableFromGeneratedCode(current))
+            if (!isLeaf && !current.IsGenericType && SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(current))
             {
                 baseTypes.Add(current.ToDisplayString(FullyQualifiedFormat));
             }
@@ -131,29 +131,6 @@ internal static class TestClassModelBuilder
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
             Attributes: BuildAttributes(typeSymbol.GetAttributes(), consumingAssembly),
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
-    }
-
-    // The generated registration lives in the same assembly as the test class, so a type is
-    // reachable when it (and every enclosing type) is at least internal and not file-local.
-    private static bool IsTypeReachableFromGeneratedCode(INamedTypeSymbol type)
-    {
-        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
-        {
-            if (current.IsFileLocal)
-            {
-                return false;
-            }
-
-            switch (current.DeclaredAccessibility)
-            {
-                case Accessibility.Private:
-                case Accessibility.Protected:
-                case Accessibility.ProtectedAndInternal:
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     private static bool IsTestMethodAttributePresent(IMethodSymbol method)

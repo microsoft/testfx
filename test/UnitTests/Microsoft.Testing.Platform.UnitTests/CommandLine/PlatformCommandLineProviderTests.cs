@@ -200,6 +200,21 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task IsInvalid_When_Both_FilterUid_And_TreenodeFilter_Provided()
+    {
+        var provider = new PlatformCommandLineProvider();
+        var options = new Dictionary<string, string[]>
+        {
+            { PlatformCommandLineProvider.FilterUidOptionKey, ["uid0"] },
+            { TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, ["/A/B"] },
+        };
+
+        ValidationResult validateOptionsResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(options)).ConfigureAwait(false);
+        Assert.IsFalse(validateOptionsResult.IsValid);
+        Assert.AreEqual(PlatformResources.OnlyOneFilterSupported, validateOptionsResult.ErrorMessage);
+    }
+
+    [TestMethod]
     [DataRow("0")]
     [DataRow("-1")]
     public async Task IsInvalid_When_MinimumExpectedTests_Is_Not_Positive(string minimumExpectedTests)

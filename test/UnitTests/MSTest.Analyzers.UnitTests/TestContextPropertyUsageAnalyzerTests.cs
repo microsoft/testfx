@@ -241,4 +241,78 @@ public sealed class TestContextPropertyUsageAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenNonTestContextTypeWithSamePropertyNamesAccessedInFixtureMethods_NoDiagnostic()
+    {
+        // A custom class that happens to have properties with the same names as restricted
+        // TestContext properties should NOT trigger the diagnostic — the analyzer guards against
+        // this with SymbolEqualityComparer.Default.Equals(propertyReference.Property.ContainingType, testContextSymbol).
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class FakeContext
+            {
+                public string TestData => "data";
+                public string TestName => "name";
+                public string TestDisplayName => "display";
+                public string FullyQualifiedTestClassName => "class";
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext tc)
+                {
+                    var fake = new FakeContext();
+                    _ = fake.TestData;
+                    _ = fake.TestName;
+                    _ = fake.TestDisplayName;
+                    _ = fake.FullyQualifiedTestClassName;
+                }
+
+                [ClassInitialize]
+                public static void ClassInit(TestContext tc)
+                {
+                    var fake = new FakeContext();
+                    _ = fake.TestData;
+                    _ = fake.TestName;
+                    _ = fake.FullyQualifiedTestClassName;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenRestrictedTestContextPropertyAccessedInLambdaInsideAssemblyInitialize_Diagnostic()
+    {
+        // The analyzer uses context.ContainingSymbol, which for operations inside a lambda refers
+        // to the enclosing named method (not the lambda's anonymous method). Therefore the
+        // [AssemblyInitialize] attribute is still visible and the diagnostic fires correctly —
+        // the lambda will be invoked during assembly initialization where these properties are unavailable.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext testContext)
+                {
+                    Action action = () =>
+                    {
+                        _ = [|testContext.TestName|];
+                        _ = [|testContext.TestData|];
+                    };
+                    action();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

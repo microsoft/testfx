@@ -24,19 +24,34 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     private bool _disposedValue;
 
     /// <summary>
-    /// Override to declare which source-gen metadata modes this fixture builds, in addition to the
-    /// always-built <see cref="MetadataMode.Reflection"/> build. This is opt-in: the default is empty
-    /// so an asset is only ever built under a source-gen mode once it has been validated to support
-    /// it. A mode returned here is expected to build successfully; a failed build throws with the
-    /// captured build output (see <see cref="InitializeAsync"/>).
+    /// The metadata modes every acceptance asset is built under by default, in addition to the
+    /// always-built <see cref="MetadataMode.Reflection"/> build. This is <b>opt-out</b>: a source-gen
+    /// survey across the whole acceptance corpus showed every asset except <c>FrameworkOnlyTests</c>
+    /// builds cleanly under <see cref="MetadataMode.SourceGeneration"/>, so it is on by default and a
+    /// failing build throws (see <see cref="InitializeAsync"/>).
     /// <para>
-    /// Assets that cannot run under source generation (for example VSTest-host assets,
-    /// NativeAOT/Trim/Aspire/Playwright/ServerMode assets, or assets that rely on source-generator
-    /// gaps such as inherited <c>[TestClass]</c>, generic test methods, or cross-assembly reflection)
-    /// simply leave this empty and keep building reflection-only.
+    /// <see cref="MetadataMode.AotSourceGeneration"/> is intentionally not part of the default yet: it
+    /// has not been validated across the whole corpus, so fixtures that want it (and run tests against
+    /// it) opt in explicitly via <see cref="SourceGenMetadataModes"/>.
     /// </para>
     /// </summary>
-    protected virtual IReadOnlyList<MetadataMode> SourceGenMetadataModes => [];
+    private static readonly IReadOnlyList<MetadataMode> DefaultSourceGenMetadataModes = [MetadataMode.SourceGeneration];
+
+    /// <summary>
+    /// Override to change which source-gen metadata modes this fixture builds, in addition to the
+    /// always-built <see cref="MetadataMode.Reflection"/> build. Defaults to
+    /// <see cref="DefaultSourceGenMetadataModes"/> (opt-out). A mode returned here is expected to build
+    /// successfully; a failed build throws with the captured build output (see <see cref="InitializeAsync"/>).
+    /// <para>
+    /// Return an empty list to opt an asset out entirely — for assets that genuinely cannot build under
+    /// source generation (for example <c>FrameworkOnlyTests</c>, which references only the test
+    /// framework and not the adapter that carries the source-generated metadata hook). Note this only
+    /// governs which variants are <i>built</i>; an asset's tests still run reflection-only unless the
+    /// test methods are parameterized by <c>MetadataMode</c> and threaded through
+    /// <c>TestHost.LocateFrom</c>.
+    /// </para>
+    /// </summary>
+    protected virtual IReadOnlyList<MetadataMode> SourceGenMetadataModes => DefaultSourceGenMetadataModes;
 
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
@@ -51,11 +66,12 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
 
-        // Opt-in: for each source-gen metadata mode the fixture declares, build a second variant with
-        // the matching generator injected, into an isolated bin/<sub> + obj/<sub> output, so the same
-        // behavioral assertions also validate the source-generated metadata path. The build is run
-        // with failIfReturnValueIsNotZero:false so we can surface the captured output if it fails
-        // (rather than the less actionable default exception from DotnetCli.RunAsync).
+        // For each source-gen metadata mode the fixture builds (opt-out: see SourceGenMetadataModes,
+        // which defaults to SourceGeneration), build a variant with the matching generator injected,
+        // into an isolated bin/<sub> + obj/<sub> output, so the source-generated metadata path is at
+        // least compiled (and, for parameterized fixtures, exercised). The build is run with
+        // failIfReturnValueIsNotZero:false so we can surface the captured output if it fails (rather
+        // than the less actionable default exception from DotnetCli.RunAsync).
         if (!AcceptanceSourceGen.IsGloballyDisabled)
         {
             foreach (MetadataMode mode in SourceGenMetadataModes)
