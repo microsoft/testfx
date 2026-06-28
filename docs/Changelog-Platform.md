@@ -77,7 +77,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Harden report TFM resolution for custom/non-OS platforms (browserwasm) by @Evangelink in [#9137](https://github.com/microsoft/testfx/pull/9137)
 * Fix --list-tests json output under --server mode by streaming discovered tests to the SDK over the dotnet-test pipe by @Evangelink in [#9192](https://github.com/microsoft/testfx/pull/9192)
 * Make AzureDevOps summary report file name unique per assembly by @Evangelink in [#9264](https://github.com/microsoft/testfx/pull/9264)
-* Fix `--treenode-filter` + `--filter-uid` mutual exclusion: validated up front at CLI parse time (proper `InvalidCommandLine` exit code) instead of a late `NotSupportedException`; documentation gaps for the `!` NOT operator and property-filter semantics addressed by @Evangelink in [#9458](https://github.com/microsoft/testfx/pull/9458)
+* Fix `--treenode-filter` + `--filter-uid` mutual exclusion: validated during command-line validation (proper `InvalidCommandLine` exit code) instead of a late `NotSupportedException`; documentation gaps for the `!` NOT operator and property-filter semantics addressed by @Evangelink in [#9458](https://github.com/microsoft/testfx/pull/9458)
 
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 
