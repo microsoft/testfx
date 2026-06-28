@@ -287,24 +287,52 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
 
     public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => attributeProvider is null
-            ? throw new ArgumentNullException(nameof(attributeProvider))
-            : GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().Any();
+    {
+        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
+        {
+            if (attr is TAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().FirstOrDefault();
+    {
+        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
+        {
+            if (attr is TAttribute match)
+            {
+                return match;
+            }
+        }
+
+        return null;
+    }
 
     public TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
     {
-        TAttribute[] matches = [.. GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().Take(2)];
-        return matches.Length switch
+        TAttribute? first = null;
+        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
         {
-            0 => null,
-            1 => matches[0],
-            _ => throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Found multiple attributes of type '{0}' when only one was expected.", typeof(TAttribute))),
-        };
+            if (attr is not TAttribute match)
+            {
+                continue;
+            }
+
+            if (first is not null)
+            {
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Found multiple attributes of type '{0}' when only one was expected.", typeof(TAttribute)));
+            }
+
+            first = match;
+        }
+
+        return first;
     }
 
     public IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider)
