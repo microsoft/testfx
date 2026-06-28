@@ -113,6 +113,22 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
     protected ITestFramework TestFramework { get; }
 
+    protected ReportEngineContext CreateReportEngineContext(
+        DateTimeOffset testStartTime,
+        int exitCode,
+        CancellationToken cancellationToken)
+        => new(
+            FileSystem,
+            TestApplicationModuleInfo,
+            Environment,
+            CommandLineOptions,
+            Configuration,
+            Clock,
+            TestFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken);
+
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);
 

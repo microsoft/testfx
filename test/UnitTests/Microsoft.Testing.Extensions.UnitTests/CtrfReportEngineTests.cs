@@ -845,7 +845,7 @@ public class CtrfReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.Version).Returns("0.0.0");
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("Fake");
 
-        return new CtrfReportEngine(
+        return new CtrfReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -855,7 +855,7 @@ public class CtrfReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
     }
 
     internal sealed class MemoryFileStream : IFileStream

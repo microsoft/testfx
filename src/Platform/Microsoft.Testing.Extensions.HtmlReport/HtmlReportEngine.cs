@@ -16,6 +16,11 @@ internal sealed class HtmlReportEngine : ReportEngineBase
     private const string DataPlaceholder = "/*__MTP_DATA__*/null";
     private const string GeneratorVersionPlaceholder = "__MTP_GENERATOR_VERSION__";
 
+    public HtmlReportEngine(ReportEngineContext context)
+        : base(context)
+    {
+    }
+
     public HtmlReportEngine(
         IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -27,7 +32,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-        : base(
+        : this(new(
             fileSystem,
             testApplicationModuleInfo,
             environment,
@@ -37,7 +42,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             testFramework,
             testStartTime,
             exitCode,
-            cancellationToken)
+            cancellationToken))
     {
     }
 
