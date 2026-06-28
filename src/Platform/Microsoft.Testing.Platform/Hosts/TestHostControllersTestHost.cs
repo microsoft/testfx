@@ -335,11 +335,14 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                     {
                         testHostProcess.Kill();
                     }
-                    catch (InvalidOperationException)
+                    catch (Exception ex)
                     {
-                        // The host may have exited between the cancellation and this Kill call, in which
-                        // case Kill throws because there is no longer a process to terminate. That is the
-                        // outcome we wanted, so treat termination as best-effort and ignore it.
+                        // Termination is best-effort. The host may have exited between the cancellation
+                        // and this Kill call (InvalidOperationException), or Kill may delegate to a custom
+                        // ITestHostLauncher's Terminate() which can throw anything (e.g. NotSupportedException,
+                        // Win32Exception). Either way the host is on its way out, so swallow and log rather
+                        // than letting it mask the cancellation teardown flow.
+                        await _logger.LogDebugAsync($"Ignoring failure while terminating the test host during cancellation: {ex}").ConfigureAwait(false);
                     }
 
                     await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);

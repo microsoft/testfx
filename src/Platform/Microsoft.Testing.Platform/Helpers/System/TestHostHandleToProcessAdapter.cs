@@ -43,6 +43,8 @@ internal sealed class TestHostHandleToProcessAdapter : IProcess
 
     public DateTime StartTime => default;
 
+    public Task WaitForExitAsync() => _handle.WaitForExitAsync(CancellationToken.None);
+
     public Task WaitForExitAsync(CancellationToken cancellationToken) => _handle.WaitForExitAsync(cancellationToken);
 
     public void WaitForExit() => _handle.WaitForExitAsync(CancellationToken.None).GetAwaiter().GetResult();
