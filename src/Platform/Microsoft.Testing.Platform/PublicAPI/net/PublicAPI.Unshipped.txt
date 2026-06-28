@@ -1,1 +1,2 @@
 #nullable enable
+Microsoft.Testing.Platform.Extensions.Messages.PropertyBag.FirstOrDefault<TProperty>() -> TProperty?
