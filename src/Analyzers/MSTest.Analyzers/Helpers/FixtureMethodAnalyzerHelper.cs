@@ -66,6 +66,48 @@ internal static class FixtureMethodAnalyzerHelper
             SymbolKind.Method);
     }
 
+    internal static void RegisterFixtureMethodSymbolAction<TState>(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        Action<SymbolAnalysisContext, FixtureMethodSymbols, TState> analyzeSymbolAction,
+        TState state,
+        bool requireTestContextSymbol = false)
+        => context.RegisterCompilationStartAction(context =>
+            RegisterFixtureMethodSymbolAction(
+                context,
+                fixtureAttributeMetadataName,
+                analyzeSymbolAction,
+                state,
+                requireTestContextSymbol));
+
+    internal static void RegisterFixtureMethodSymbolAction<TState>(
+        CompilationStartAnalysisContext context,
+        string fixtureAttributeMetadataName,
+        Action<SymbolAnalysisContext, FixtureMethodSymbols, TState> analyzeSymbolAction,
+        TState state,
+        bool requireTestContextSymbol = false)
+    {
+        if (!TryGetFixtureMethodSymbols(context.Compilation, fixtureAttributeMetadataName, out FixtureMethodSymbols symbols)
+            || (requireTestContextSymbol && symbols.TestContextSymbol is null))
+        {
+            return;
+        }
+
+        context.RegisterSymbolAction(
+            symbolContext => analyzeSymbolAction(symbolContext, symbols, state),
+            SymbolKind.Method);
+    }
+
+    internal static void RegisterInstanceFixtureAnalyzer(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        DiagnosticDescriptor rule)
+        => RegisterFixtureMethodSymbolAction(
+            context,
+            fixtureAttributeMetadataName,
+            static (symbolContext, symbols, rule) => AnalyzeInstanceFixtureMethod(symbolContext, symbols, rule),
+            rule);
+
     internal static void AnalyzeInstanceFixtureMethod(
         SymbolAnalysisContext context,
         FixtureMethodSymbols symbols,
