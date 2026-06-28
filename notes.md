@@ -28,6 +28,7 @@
 - **VerifyCodeFixAsync for "no fix" case**: `VerifyCodeFixAsync(code, code)` (same string for both params, diagnostic markers preserved) IS valid when no fix is registered — framework compares actual output (unchanged) to expected fixedCode (same as original), and the kept diagnostic markers in fixedCode correctly express that the diagnostic remains. Verified working in `RemoveClassCleanupBehaviorArgumentFixerTests.WhenClassCleanupBehaviorReferencedOutsideAttribute_NoFix`.
 - **OperationAnalysisContext.ContainingSymbol for lambdas**: For `OperationKind.PropertyReference` inside a lambda, `context.ContainingSymbol` resolves to the **enclosing named method** (NOT the lambda's anonymous method). This means [AssemblyInitialize] attribute IS visible even inside a lambda — the TestContextPropertyUsageAnalyzer correctly fires for accesses inside lambdas.
 - **Discard variable name clash**: Do NOT use `_` as a parameter name if the test code also uses `_ = expr` discard assignments — the compiler binds `_` to the parameter (CS0029 if types differ).
+- **DoNotUseShadowingAnalyzer**: `GetBaseMembers` walks the full inheritance chain via while-loop on `BaseType`; `IsMemberShadowing` handles only `IMethodSymbol` and `IPropertySymbol` — fields fall through to `return false`. Property type must match via `SymbolEqualityComparer` for shadowing detection.
 
 ## Testing Opportunities Backlog
 
@@ -36,13 +37,13 @@
 3. **Analyzer edge cases (ongoing)** — Continue with analyzers with few tests. Next candidates:
    - `UseCooperativeCancellationForTimeoutAnalyzerTests` (33 tests) — possible additional fixture method scenarios
    - `UseParallelizeAttributeAnalyzerTests` (7 tests) — well covered relative to complexity
-   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — similar to PreferTestCleanupOverDispose but opposite direction; abstract class / non-TestClass scenarios
-   - `DoNotUseShadowingAnalyzerTests` (18 tests) — look at multi-level inheritance chain edge cases
+   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — abstract class / non-TestClass scenarios
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-28 | Task 3 (DoNotUseShadowingAnalyzer MSTEST0036 edge cases: multi-level inheritance, property type mismatch, field shadowing), Task 7 (Monthly Issue Jun) |
 | 2026-06-27 | Task 3 (TestContextPropertyUsageAnalyzer MSTEST0048 edge cases: non-TestContext type guard, lambda ContainingSymbol behavior), Task 7 (Monthly Issue Jun) |
 | 2026-06-26 | Task 4 (verified PRs #9438 and #9410 merged), Task 3 (IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment, lambda block body, chained receiver), Task 7 (Monthly Issue Jun) |
 | 2026-06-25 | Task 3 (UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type), Task 7 (Monthly Issue Jun) |
@@ -74,12 +75,13 @@
 
 ## Last Run
 
-2026-06-27 23:16 UTC
+2026-06-28 23:18 UTC
 
 ## Completed Work
 
-- PR (pending) for TestContextPropertyUsageAnalyzer MSTEST0048 edge cases (2026-06-27) — non-TestContext type guard, lambda ContainingSymbol behavior; 10/10 pass
-- PR #9468 (pending) for IgnoreStringMethodReturnValueAnalyzer edge cases (2026-06-26) — discard assignment (no diagnostic), lambda block body (diagnostic), chained receiver (no diagnostic); 8/8 pass
+- PR (pending) for DoNotUseShadowingAnalyzer MSTEST0036 edge cases (2026-06-28) — multi-level inheritance walk, property type mismatch guard, field symbol fallthrough; 21/21 pass
+- PR #9481 merged (2026-06-28 by Evangelink) — TestContextPropertyUsageAnalyzer MSTEST0048: non-TestContext type guard, lambda ContainingSymbol behavior
+- PR #9468 merged (2026-06-28 by Evangelink) — IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment (no diagnostic), lambda block body (diagnostic), chained receiver (no diagnostic)
 - PR #9438 merged (2026-06-26 by Evangelink) — UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type
 - PR #9410 merged (2026-06-25 by Evangelink) — RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard
 - PR #9382 merged (2026-06-24 by Evangelink) — PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases: full dispose pattern, Dispose+TestCleanup coexistence, static constructor
