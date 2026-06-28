@@ -33,14 +33,16 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 {
     private static readonly string s_root = RootFinder.Find();
     private readonly string _reportFileName;
+    private readonly BuildConfiguration _buildConfiguration;
     private readonly int _numberOfRun;
     private readonly CompressionLevel _compressionLevel;
 
     public string Description => "run dotnet test (MTP server mode)";
 
-    public DotnetTestProcess(string reportFileName, int numberOfRun = 3, CompressionLevel compressionLevel = CompressionLevel.Fastest)
+    public DotnetTestProcess(string reportFileName, BuildConfiguration buildConfiguration = BuildConfiguration.Debug, int numberOfRun = 3, CompressionLevel compressionLevel = CompressionLevel.Fastest)
     {
         _reportFileName = reportFileName;
+        _buildConfiguration = buildConfiguration;
         _numberOfRun = numberOfRun;
         _compressionLevel = compressionLevel;
     }
@@ -50,12 +52,17 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
         string dotnet = Path.Combine(s_root, ".dotnet", $"dotnet{Constants.ExecutableExtension}");
         string projectDir = payload.TestAsset.TargetAssetPath;
 
-        // Use the repo-local SDK consistently with the build step (DotnetMuxer).
-        ProcessStartInfo psi = new(dotnet, $"test \"{projectDir}\" --no-build")
+        // Use the repo-local SDK consistently with the build step (DotnetMuxer). The
+        // configuration must match the one used by DotnetMuxer so that --no-build finds the
+        // binaries that were actually produced. WorkingDirectory is pinned to the test asset so
+        // relative outputs (TestResults, logs, temp files) stay inside the generated asset rather
+        // than polluting the runner's current directory between scenarios.
+        ProcessStartInfo psi = new(dotnet, $"test \"{projectDir}\" --no-build --configuration {_buildConfiguration}")
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            WorkingDirectory = projectDir,
         };
 
         psi.EnvironmentVariables["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
@@ -75,6 +82,17 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
             Task<string> stderrTask = process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
             await Task.WhenAll(stdoutTask, stderrTask);
+
+            // Fail fast on a non-zero exit code: `dotnet test` has many infrastructure failure
+            // modes (restore issues, SDK mismatch, missing build artefacts) that would otherwise
+            // record timings for an invalid run and silently corrupt the perf baseline.
+            if (process.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    $"'dotnet test' exited with code {process.ExitCode}.{Environment.NewLine}" +
+                    $"stdout:{Environment.NewLine}{await stdoutTask}{Environment.NewLine}" +
+                    $"stderr:{Environment.NewLine}{await stderrTask}");
+            }
 
             var result = new
             {

@@ -108,7 +108,7 @@ internal class EntryPoint
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
-            .NextStep(() => new DotnetTestProcess("Scenario1_DotnetTest_PlainProcess.zip"))
+            .NextStep(() => new DotnetTestProcess("Scenario1_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
