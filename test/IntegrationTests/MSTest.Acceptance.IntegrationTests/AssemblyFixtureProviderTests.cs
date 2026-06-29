@@ -32,6 +32,15 @@ public sealed class AssemblyFixtureProviderTests : AcceptanceTestBase<AssemblyFi
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
     {
+        // This asset has a multi-targeting ProjectReference (ProviderLibrary). The default
+        // SourceGeneration build redirects bin/obj to an isolated sub-folder, but RAR for the net8.0
+        // leg ends up resolving ProviderLibrary's transitive MSTest.TestFramework.Extensions.dll from
+        // the net10.0 reflection output (bin/Release/net10.0) instead of the net8.0 one. That produces
+        // MSB3277 System.* version conflicts (8.0.0.0 vs 9.0.0.0) which the source-gen build promotes to
+        // errors via MSBuildTreatWarningsAsErrors. The test only exercises the reflection build, so opt
+        // out of the source-gen build; it stays reflection-only.
+        protected override IReadOnlyList<MetadataMode> SourceGenMetadataModes => [];
+
         public const string AssetName = "AssemblyFixtureProviderAcceptance";
         public const string TestProjectName = "AssemblyFixtureProvider.Tests";
         public const string LibraryProjectName = "ProviderLibrary";
