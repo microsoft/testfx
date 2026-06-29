@@ -72,6 +72,14 @@
   <data name="NoFailureMessageFallback" xml:space="preserve">
     <value>The test failed without providing a failure message.</value>
   </data>
+  <data name="StepSummaryOptionDescription" xml:space="preserve">
+    <value>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
+  </data>
+  <data name="StepSummaryWriteFailedWarning" xml:space="preserve">
+    <value>Failed to write the GitHub Actions job summary to '{0}': {1}</value>
+    <comment>{0} is the file path, {1} is the error message.</comment>
+  </data>
   <data name="DisplayName" xml:space="preserve">
     <value>GitHub Actions report generator</value>
   </data>
