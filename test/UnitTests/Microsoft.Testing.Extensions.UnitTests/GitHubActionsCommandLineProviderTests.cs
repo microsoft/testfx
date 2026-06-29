@@ -29,4 +29,24 @@ public sealed class GitHubActionsCommandLineProviderTests
 
         Assert.IsTrue(validationResult.IsValid);
     }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenAnnotationsValueIsNotOnOrOffAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsAnnotations);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_WhenAnnotationsValueIsOffAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsAnnotations);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["off"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid);
+    }
 }

@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pt-BR" original="../GitHubActionsResources.resx">
     <body>
+      <trans-unit id="AnnotationTitle">
+        <source>Test failed: {0}</source>
+        <target state="new">Test failed: {0}</target>
+        <note>{0} is the fully qualified test name.</note>
+      </trans-unit>
+      <trans-unit id="AnnotationsOptionDescription">
+        <source>Enable or disable GitHub Actions failure annotations ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="new">Enable or disable GitHub Actions failure annotations ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</target>
+        <note>{Locked="on"}{Locked="off"}</note>
+      </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
         <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
@@ -26,6 +36,11 @@
         <source>Invalid value '{0}'. Valid values are 'on' and 'off'.</source>
         <target state="new">Invalid value '{0}'. Valid values are 'on' and 'off'.</target>
         <note>{Locked="on"}{Locked="off"}</note>
+      </trans-unit>
+      <trans-unit id="NoFailureMessageFallback">
+        <source>The test failed without providing a failure message.</source>
+        <target state="new">The test failed without providing a failure message.</target>
+        <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
