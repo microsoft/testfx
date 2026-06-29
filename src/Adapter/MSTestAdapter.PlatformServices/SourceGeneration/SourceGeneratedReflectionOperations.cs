@@ -319,17 +319,15 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
         TAttribute? first = null;
         foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
         {
-            if (attr is not TAttribute match)
+            if (attr is TAttribute match)
             {
-                continue;
-            }
+                if (first is not null)
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Found multiple attributes of type '{0}' when only one was expected.", typeof(TAttribute)));
+                }
 
-            if (first is not null)
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Found multiple attributes of type '{0}' when only one was expected.", typeof(TAttribute)));
+                first = match;
             }
-
-            first = match;
         }
 
         return first;
