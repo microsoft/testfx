@@ -36,6 +36,9 @@
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.AzureDevOpsReport\Microsoft.Testing.Extensions.AzureDevOpsReport.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.GitHubActionsReport\Microsoft.Testing.Extensions.GitHubActionsReport.csproj">
+      <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.CrashDump\Microsoft.Testing.Extensions.CrashDump.csproj">
       <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
     </ProjectReference>
