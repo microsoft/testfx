@@ -10,10 +10,16 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
+
+// The programmatic test-filter types (ITestFilter, TestFilterContext, TestFilterResult,
+// TestFilterAction, TestFilterProviderAttribute) are [Experimental] public API. This file is part
+// of the adapter implementation of that feature, so consuming them here is intentional.
+#pragma warning disable MSTESTEXP
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -41,6 +47,12 @@ internal sealed class UnitTestRunner
 
     // Used to attach assembly cleanup failures to the right test.
     private UnitTestElement? _lastRunnableTestInWholeAssembly;
+
+    // Tracks whether at least one test in this runner's lifetime triggered AssemblyInitialize.
+    // Needed so that end-of-assembly cleanup still runs when the very last test of the assembly
+    // was filtered out by a [TestFilterProvider] (in which case testMethodInfo is null for the
+    // cleanup decision in RunSingleTestAsync).
+    private bool _assemblyInitializeWasExecuted;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
@@ -139,6 +151,21 @@ internal sealed class UnitTestRunner
         {
             testContextForTestExecution = PlatformServiceProvider.Instance.GetTestContext(testMethod, null, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
+            // Apply user-supplied [TestFilterProvider] filter BEFORE loading the test type, BEFORE
+            // running [AssemblyInitialize] and BEFORE [ClassInitialize]. This is the whole point of
+            // the feature: a Drop or Skip here pays none of those costs. See
+            // https://github.com/microsoft/testfx/issues/8894 for the design.
+            TestResult[]? filterResult = ApplyTestFilter(unitTestElement);
+            if (filterResult is not null)
+            {
+                return await FinishFilteredOutTestAsync(
+                    testMethod,
+                    testContextProperties,
+                    messageLogger,
+                    filterResult,
+                    testContextForTestExecution).ConfigureAwait(false);
+            }
+
             // Get the testMethod
             TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod);
 
@@ -164,6 +191,11 @@ internal sealed class UnitTestRunner
                     testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
                     assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
                 }
+
+                // Remember that assembly initialize ran for this assembly so the end-of-assembly cleanup
+                // guard still fires even when the last test of the assembly is filtered out (and therefore
+                // has no testMethodInfo of its own). See FinishFilteredOutTestAsync.
+                _assemblyInitializeWasExecuted |= assemblyInfo.IsAssemblyInitializeExecuted;
 
                 if (assemblyInitializeResult.Outcome != UnitTestOutcome.Passed)
                 {
@@ -284,13 +316,6 @@ internal sealed class UnitTestRunner
                 DebugEx.Assert(testContextForClassCleanup is not null, "testContextForClassCleanup should not be null when running assembly cleanup.");
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
 
-                // Flow properties set during AssemblyInitialize so the AssemblyCleanup method
-                // observes them. Class-init properties are intentionally NOT flowed here because
-                // AssemblyCleanup is assembly-scoped and runs once across many classes; picking
-                // a single class's snapshot would be arbitrary.
-                // testMethodInfo is non-null inside this block thanks to the guard above.
-                ((TestContextImplementation)testContextForAssemblyCleanup.Context).MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
-
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)
                 {
@@ -355,10 +380,16 @@ internal sealed class UnitTestRunner
 
     private static async Task<TestResult?> RunAssemblyCleanupAsync(ITestContext testContext, TypeCache typeCache, TestResult[] results)
     {
-        var testContextImpl = testContext as TestContextImplementation;
+        var testContextImpl = testContext.Context as TestContextImplementation;
         IEnumerable<TestAssemblyInfo> assemblyInfoCache = typeCache.AssemblyInfoListWithExecutableCleanupMethods;
         foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
         {
+            // Flow properties set during AssemblyInitialize so the AssemblyCleanup method observes
+            // them. Class-init properties are intentionally NOT flowed here because AssemblyCleanup
+            // is assembly-scoped and runs once across many classes; picking a single class's
+            // snapshot would be arbitrary.
+            testContextImpl?.MergeProperties(assemblyInfo.PostAssemblyInitProperties);
+
             TestFailedException? ex = await assemblyInfo.ExecuteAssemblyCleanupAsync(testContext.Context).ConfigureAwait(false);
 
             if (ex is not null)
@@ -429,4 +460,171 @@ internal sealed class UnitTestRunner
     }
 
     internal void ForceCleanup(IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger) => ClassCleanupManager.ForceCleanup(_typeCache, sourceLevelParameters, logger);
+
+    /// <summary>
+    /// Invokes the user-supplied <see cref="ITestFilter"/> registered via
+    /// <see cref="TestFilterProviderAttribute"/> for the test assembly, if any. Returns
+    /// <see langword="null"/> if no filter is registered or the filter returned
+    /// <see cref="TestFilterResult.Run"/> (test should run normally), an empty array if the
+    /// filter returned <see cref="TestFilterResult.Drop"/>, or a single Skipped
+    /// <see cref="TestResult"/> if the filter returned <see cref="TestFilterResult.Skip(string)"/>.
+    /// </summary>
+    /// <remarks>
+    /// A filter exception is surfaced as an Error test result so the failure is visible to the
+    /// user instead of silently affecting test selection. <see cref="TestFilterProviderAttribute"/>
+    /// is single-per-assembly by design: callers that want to combine multiple strategies should
+    /// compose them explicitly inside their <see cref="ITestFilter"/> implementation.
+    /// </remarks>
+    private TestResult[]? ApplyTestFilter(UnitTestElement unitTestElement)
+    {
+        ITestFilter? filter = _typeCache.GetOrLoadTestFilter(unitTestElement.TestMethod.AssemblyName);
+        if (filter is null)
+        {
+            return null;
+        }
+
+        TestFilterContext context = CreateFilterContext(unitTestElement);
+
+        TestFilterResult result;
+        try
+        {
+            result = filter.Filter(context);
+        }
+        catch (Exception ex)
+        {
+            string message = string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_TestFilterProviderThrew,
+                filter.GetType().FullName,
+                context.FullyQualifiedName,
+                ex.Message);
+            return
+            [
+                new TestResult
+                {
+                    Outcome = UnitTestOutcome.Error,
+                    TestFailureException = new TestFailedException(UnitTestOutcome.Error, message, ex.TryGetStackTraceInformation()),
+                }
+            ];
+        }
+
+        return result.Action switch
+        {
+            TestFilterAction.Drop => [],
+            TestFilterAction.Skip => [TestResult.CreateIgnoredResult(result.SkipReason)],
+            _ => null,
+        };
+    }
+
+    private static TestFilterContext CreateFilterContext(UnitTestElement element)
+    {
+        TestMethod testMethod = element.TestMethod;
+        string[] categories = element.TestCategory ?? [];
+
+        KeyValuePair<string, string?>[] traits;
+        if (element.Traits is { Length: > 0 } source)
+        {
+            traits = new KeyValuePair<string, string?>[source.Length];
+            for (int i = 0; i < source.Length; i++)
+            {
+                traits[i] = new KeyValuePair<string, string?>(source[i].Name, source[i].Value);
+            }
+        }
+        else
+        {
+            traits = [];
+        }
+
+        // Pull namespace + simple class name from the hierarchy when available — this is the
+        // same source the IDE / Test Explorer uses, so it correctly handles nested types and
+        // generic classes (where naïve FullClassName splitting would lie).
+        string? hierarchyNamespace = null;
+        string? hierarchyClassName = null;
+        if (testMethod.Hierarchy is IReadOnlyList<string?> hierarchy && hierarchy.Count > HierarchyConstants.Levels.ClassIndex)
+        {
+            hierarchyNamespace = hierarchy[HierarchyConstants.Levels.NamespaceIndex];
+            hierarchyClassName = hierarchy[HierarchyConstants.Levels.ClassIndex];
+        }
+
+        // ManagedMethodName is an ECMA-335 string like `MyMethod`1(System.Int32)` — parse it
+        // cheaply (no MethodInfo reflection) to surface arity and parameter type names.
+        int? methodArity = null;
+        IReadOnlyList<string>? parameterTypeFullNames = null;
+        if (testMethod.ManagedMethodName is { } managedMethod)
+        {
+            try
+            {
+                ManagedNameParser.ParseManagedMethodName(managedMethod, out _, out int arity, out string[]? parameterTypes);
+                methodArity = arity;
+                parameterTypeFullNames = parameterTypes ?? (IReadOnlyList<string>)[];
+            }
+            catch (InvalidManagedNameException)
+            {
+                // Defensive: if the managed name is malformed for any reason, surface what we
+                // can via the flat strings rather than failing the filter.
+            }
+        }
+
+        return new TestFilterContext
+        {
+            FullyQualifiedName = $"{testMethod.FullClassName}.{testMethod.Name}",
+            DisplayName = testMethod.DisplayName,
+            MethodName = testMethod.Name,
+            Source = testMethod.AssemblyName,
+            Namespace = hierarchyNamespace,
+            ClassName = hierarchyClassName,
+            ManagedTypeName = testMethod.ManagedTypeName,
+            ManagedMethodName = testMethod.ManagedMethodName,
+            MethodArity = methodArity,
+            ParameterTypeFullNames = parameterTypeFullNames,
+            Categories = categories,
+            Traits = traits,
+            Priority = element.Priority,
+        };
+    }
+
+    /// <summary>
+    /// Handles the bookkeeping (class-cleanup countdown, end-of-assembly cleanup) for a test that
+    /// was filtered out by a <see cref="ITestFilter"/>. Mirrors the tail of <see cref="RunSingleTestAsync"/>
+    /// without ever requiring <c>testMethodInfo</c>, since the filter ran before any type was loaded.
+    /// </summary>
+    private async Task<TestResult[]> FinishFilteredOutTestAsync(
+        TestMethod testMethod,
+        IDictionary<string, object?> testContextProperties,
+        IMessageLogger messageLogger,
+        TestResult[] filterResult,
+        ITestContext testContextForTestExecution)
+    {
+        _classCleanupManager.MarkTestComplete(testMethod, out bool isLastTestInClass);
+        if (isLastTestInClass)
+        {
+            // No class cleanup possible: we never loaded the test type, so there's nothing to
+            // execute. Still mark the class as complete so end-of-assembly cleanup is gated correctly.
+            _classCleanupManager.MarkClassComplete(testMethod.FullClassName);
+        }
+
+        if (_assemblyInitializeWasExecuted && _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
+        {
+            ITestContext? testContextForAssemblyCleanup = null;
+            try
+            {
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+
+                TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, filterResult).ConfigureAwait(false);
+                if (assemblyCleanupResult is not null)
+                {
+                    // Current test was filtered (no result), so an assembly cleanup failure needs to
+                    // be associated with the last real test that ran in the assembly.
+                    assemblyCleanupResult.AssociatedUnitTestElement = _lastRunnableTestInWholeAssembly;
+                    filterResult = [.. filterResult, assemblyCleanupResult];
+                }
+            }
+            finally
+            {
+                (testContextForAssemblyCleanup as IDisposable)?.Dispose();
+            }
+        }
+
+        return filterResult;
+    }
 }

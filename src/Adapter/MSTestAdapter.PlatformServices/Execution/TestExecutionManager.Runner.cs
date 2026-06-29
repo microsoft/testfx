@@ -19,6 +19,12 @@ internal partial class TestExecutionManager
         DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)
     {
+        if (unitTestResults.Length == 0)
+        {
+            testExecutionRecorder.RecordEnd(test, TestOutcome.None);
+            return;
+        }
+
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();

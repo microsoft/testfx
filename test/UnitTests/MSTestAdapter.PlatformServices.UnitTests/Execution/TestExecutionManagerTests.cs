@@ -120,6 +120,17 @@ public class TestExecutionManagerTests : TestContainer
         expectedResultList.SequenceEqual(_frameworkHandle.ResultsList).Should().BeTrue();
     }
 
+    public void SendTestResults_WhenUnitTestResultsIsEmpty_RecordsEndWithoutResult()
+    {
+        TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
+        Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] unitTestResults = [];
+
+        _testExecutionManager.SendTestResults(testCase, unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle);
+
+        _frameworkHandle.TestCaseEndList.Should().Equal("PassingTest:None");
+        _frameworkHandle.ResultsList.Should().BeEmpty();
+    }
+
     public async Task RunTestsForIgnoredTestShouldSendResultsMarkingIgnoredTestsAsSkipped()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "IgnoredTest");
