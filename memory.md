@@ -1,19 +1,20 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Tasks Last Run
-- Task 2 (Identify Opportunities): 2026-06-28
-- Task 3 (Implement Improvement): 2026-06-28
-- Task 4 (Maintain PRs): 2026-06-28
+- Task 2 (Identify Opportunities): 2026-06-29
+- Task 3 (Implement Improvement): 2026-06-29
+- Task 4 (Maintain PRs): 2026-06-29 (no open efficiency PRs; #9488 confirmed merged)
 - Task 5 (Comment on Issues): 2026-06-27 (no new activity; no re-engagement)
 - Task 6 (Measurement Infrastructure): 2026-06-27
-- Task 7 (Monthly Summary): 2026-06-28
+- Task 7 (Monthly Summary): 2026-06-29
 
 ## Backlog Cursor
 - IPC serializer series: COMPLETE
-- Analyzers scan: DONE — DerivesFrom() fix (PR #9466, merged 2026-06-28)
-- SourceGeneratedReflectionOperations: DONE — LINQ chains fixed (PR #9479, merged 2026-06-28)
-- VideoRecorder PropertyBag.FirstOrDefault: IN PROGRESS — PR submitted this run (branch: efficiency/propertybag-firstordefault)
-- Next scan area: MSTestAdapter / OpenTelemetry handler / TerminalTestReporter
+- Analyzers scan: DONE
+- SourceGeneratedReflectionOperations: DONE (PR #9479, merged 2026-06-28)
+- VideoRecorder PropertyBag.FirstOrDefault: DONE (PR #9488, merged 2026-06-29)
+- GetParameters caching: IN PROGRESS — PR submitted 2026-06-29 (branch: efficiency/cache-get-parameters)
+- Next scan area: OpenTelemetry handler / TerminalTestReporter / further MSTestAdapter paths
 
 ## Validated Commands
 
@@ -33,18 +34,19 @@ Notes:
 ## Monthly Activity Issue
 - Issue #9197: `[efficiency-improver] Monthly Activity 2026-06` (open)
 - Label: `efficiency`
-- Last updated: 2026-06-28
+- Last updated: 2026-06-29
 
 ## Open PRs (Efficiency Improver)
-- PR (branch: efficiency/propertybag-firstordefault): `perf: add PropertyBag.FirstOrDefault<T>() to eliminate per-call array allocation` — submitted 2026-06-28, awaiting PR number
-  - Adds zero-allocation FirstOrDefault<TProperty>() to PropertyBag
-  - Updates VideoRecorderSessionHandler lines 128 and 480 to use it
-  - Declared in both PublicAPI.Unshipped.txt files
+- PR (branch: efficiency/cache-get-parameters): `perf: cache MethodInfo.GetParameters() to avoid per-row array allocations in data-driven tests` — submitted 2026-06-29
+  - TestMethodInfo.ParameterTypes: lazy-cached via C# 14 `field` keyword (field ??= MethodInfo.GetParameters())
+  - AssemblyEnumerator.TryUnfoldITestDataSource: GetParameters() hoisted above foreach loop
+  - Impact: ParameterInfo[] allocs per N-row test: N + 3N → 1 (discovery + execution)
 
 ## Work in Progress
-None — PropertyBag.FirstOrDefault optimization submitted this run.
+None — GetParameters caching optimization submitted this run.
 
 ## Completed Work (PRs merged or applied)
+- PR #9488: add PropertyBag.FirstOrDefault<T>() — zero-allocation linked-list walk — merged 2026-06-29
 - PR #9479: eliminate LINQ iterator allocations in SourceGeneratedReflectionOperations — merged 2026-06-28
 - PR #9466: eliminate LINQ iterator allocations in MSTest Analyzer DerivesFrom() — merged 2026-06-28
 - PR #9436: direct-allocate arrays in IPC CommandLineOption and FileArtifact deserializers — merged 2026-06-26
@@ -62,6 +64,8 @@ None — PropertyBag.FirstOrDefault optimization submitted this run.
 - PlainProcess.cs: new JsonSerializerOptions per run (CA1869 suppressed) — LOW priority, nightly-only code.
 - perf-improver workflow: separate bot — avoid duplicating its work.
 - OpenTelemetry: OfType in yield method — cannot use struct enumerator; needs non-iterator refactor.
+- MethodInfo.GetParameters(): always returns a fresh array copy (CLR safety). Use field ??= caching or hoist outside loops for data-driven paths.
+- C# 14 `field` keyword available (LangVersion=preview). Useful for lazy-initialized auto properties.
 
 ## Optimisation Backlog
 
@@ -79,5 +83,5 @@ None — PropertyBag.FirstOrDefault optimization submitted this run.
 - Do not re-comment until new human activity appears
 
 ## Round-Robin Task Schedule
-- This run (2026-06-28): Tasks 2, 3, 7
-- Next run should prioritize: Task 4 (check new PR CI), Task 5 (check for new issue activity), Task 6 (infrastructure), Task 7
+- This run (2026-06-29): Tasks 3, 4, 7
+- Next run should prioritize: Task 5 (check for new issue activity), Task 6 (infrastructure), Task 2 (scan OpenTelemetry/TerminalTestReporter area), Task 7
