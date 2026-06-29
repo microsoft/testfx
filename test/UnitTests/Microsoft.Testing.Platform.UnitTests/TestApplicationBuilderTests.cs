@@ -176,6 +176,38 @@ public sealed class TestApplicationBuilderTests
         Assert.AreEqual(((ICompositeExtensionFactory)compositeExtensionFactory).GetInstance(), configuration.EnvironmentVariableProviders[0]);
     }
 
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    [TestMethod]
+    public async Task TestHostLauncher_WhenRegistered_ForcesProcessRestartAndIsStored()
+    {
+        TestHostControllersManager testHostControllerManager = new();
+        TestHostLauncher launcher = new("launcher");
+        testHostControllerManager.AddTestHostLauncher(_ => launcher);
+        TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
+        Assert.IsTrue(configuration.RequireProcessRestart);
+        Assert.AreEqual((object)launcher, configuration.TestHostLauncher);
+    }
+
+    [TestMethod]
+    public async Task TestHostLauncher_MultipleRegistered_ShouldFail()
+    {
+        TestHostControllersManager testHostControllerManager = new();
+        testHostControllerManager.AddTestHostLauncher(_ => new TestHostLauncher("launcher1"));
+        testHostControllerManager.AddTestHostLauncher(_ => new TestHostLauncher("launcher2"));
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
+    }
+
+    [TestMethod]
+    public async Task TestHostLauncher_DuplicatedId_ShouldFail()
+    {
+        TestHostControllersManager testHostControllerManager = new();
+        testHostControllerManager.AddTestHostLauncher(_ => new TestHostLauncher("duplicatedId"));
+        testHostControllerManager.AddTestHostLauncher(_ => new TestHostLauncher("duplicatedId"));
+        InvalidOperationException invalidOperationException = await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => testHostControllerManager.BuildAsync(_serviceProvider));
+        Assert.IsTrue(invalidOperationException.Message.Contains("duplicatedId") && invalidOperationException.Message.Contains(typeof(TestHostLauncher).ToString()));
+    }
+#pragma warning restore TPEXP
+
     [DataRow(true)]
     [DataRow(false)]
     [TestMethod]
@@ -272,6 +304,25 @@ public sealed class TestApplicationBuilderTests
 
         public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
+
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates.
+    private sealed class TestHostLauncher : ITestHostLauncher
+    {
+        public TestHostLauncher(string id) => Uid = id;
+
+        public string Uid { get; }
+
+        public string Version => nameof(TestHostLauncher);
+
+        public string DisplayName => nameof(TestHostLauncher);
+
+        public string Description => nameof(TestHostLauncher);
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public Task<ITestHostHandle> LaunchTestHostAsync(TestHostLaunchContext context, CancellationToken cancellationToken) => throw new NotImplementedException();
+    }
+#pragma warning restore TPEXP
 
     private sealed class TestHostEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
     {

@@ -434,6 +434,11 @@
         <target state="translated">不支援同時傳遞 '--treenode-filter' 和 '--filter-uid'。</target>
         <note>{Locked="--treenode-filter"}{Locked="--filter-uid"}</note>
       </trans-unit>
+      <trans-unit id="OnlyOneTestHostLauncherSupported">
+        <source>Only one test host launcher can be registered.</source>
+        <target state="new">Only one test host launcher can be registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
         <target state="translated">成功</target>
