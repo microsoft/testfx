@@ -40,4 +40,46 @@ internal static class GitHubActionsEscaper
 
         return result.ToString();
     }
+
+    /// <summary>
+    /// Escapes a value used as a property of a GitHub Actions workflow command (e.g. the <c>file</c>,
+    /// <c>line</c>, <c>col</c> or <c>title</c> of an <c>::error</c> command). In addition to the data
+    /// escapes, properties must also escape <c>:</c> and <c>,</c> because those characters delimit the
+    /// command syntax. See <see href="https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#example-of-a-debug-message"/>.
+    /// </summary>
+    public static string EscapeProperty(string value)
+    {
+        if (RoslynString.IsNullOrEmpty(value))
+        {
+            return value;
+        }
+
+        var result = new StringBuilder(value.Length);
+        foreach (char c in value)
+        {
+            switch (c)
+            {
+                case '%':
+                    result.Append("%25");
+                    break;
+                case '\r':
+                    result.Append("%0D");
+                    break;
+                case '\n':
+                    result.Append("%0A");
+                    break;
+                case ':':
+                    result.Append("%3A");
+                    break;
+                case ',':
+                    result.Append("%2C");
+                    break;
+                default:
+                    result.Append(c);
+                    break;
+            }
+        }
+
+        return result.ToString();
+    }
 }

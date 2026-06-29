@@ -27,6 +27,14 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetLoggerFactory()));
 
+        builder.TestHost.AddDataConsumer(serviceProvider =>
+            new GitHubActionsAnnotationReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetLoggerFactory()));
+
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
     }

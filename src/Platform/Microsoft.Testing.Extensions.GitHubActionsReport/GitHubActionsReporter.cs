@@ -53,21 +53,11 @@ internal sealed class GitHubActionsReporter :
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync()
     {
-        // The groups feature is on by default. It can be turned off explicitly via '--report-gh-groups off'.
-        if (_commandLine.TryGetOptionArgumentList(GitHubActionsCommandLineOptions.GitHubActionsGroups, out string[]? groupsArguments)
-            && groupsArguments is [string value]
-            && string.Equals(value, GitHubActionsCommandLineOptions.OptionOff, StringComparison.OrdinalIgnoreCase))
-        {
-            return Task.FromResult(false);
-        }
-
-        // Auto-activate when running on GitHub Actions, but only no-op otherwise.
-        bool isGitHubActions = string.Equals(_environment.GetEnvironmentVariable("GITHUB_ACTIONS"), "true", StringComparison.OrdinalIgnoreCase);
-        bool isEnabled = isGitHubActions || _commandLine.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsOptionName);
+        bool isEnabled = GitHubActionsFeature.IsEnabled(_commandLine, _environment, GitHubActionsCommandLineOptions.GitHubActionsGroups);
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
-            _logger.LogTrace($"{nameof(GitHubActionsReport)} is {(isEnabled ? "enabled" : "disabled")}.");
+            _logger.LogTrace($"{nameof(GitHubActionsReport)} groups is {(isEnabled ? "enabled" : "disabled")}.");
         }
 
         return Task.FromResult(isEnabled);

@@ -19,4 +19,12 @@ public sealed class GitHubActionsEscaperTests
     [TestMethod]
     public void EscapeData_ReturnsEmptyForEmpty()
         => Assert.AreEqual(string.Empty, GitHubActionsEscaper.EscapeData(string.Empty));
+
+    [TestMethod]
+    public void EscapeProperty_EscapesPercentNewlinesColonAndComma()
+        => Assert.AreEqual("a%25b%0Ac%0Dd%3Ae%2Cf", GitHubActionsEscaper.EscapeProperty("a%b\nc\rd:e,f"));
+
+    [TestMethod]
+    public void EscapeProperty_LeavesPlainTextUntouched()
+        => Assert.AreEqual("Test failed", GitHubActionsEscaper.EscapeProperty("Test failed"));
 }
