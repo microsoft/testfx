@@ -385,6 +385,48 @@ public sealed class UnitTestRunnerTests : TestContainer
         contextsAllocatedForSecondRun.Should().BeLessThan(contextsAllocatedForFirstRun);
     }
 
+    public async Task RunSingleTestShouldDeferClassCleanupContextAllocationToLastTestInClass()
+    {
+        Type type = typeof(DummyTestClassWithCleanupMethods);
+        TestMethod testMethod1 = CreateTestMethod("TestMethod", type.FullName!, "A", displayName: null);
+        TestMethod testMethod2 = CreateTestMethod("TestMethod2", type.FullName!, "A", displayName: null);
+        TestMethod testMethod3 = CreateTestMethod("TestMethod3", type.FullName!, "A", displayName: null);
+        var unitTestElement1 = new UnitTestElement(testMethod1);
+        var unitTestElement2 = new UnitTestElement(testMethod2);
+        var unitTestElement3 = new UnitTestElement(testMethod3);
+        UnitTestRunner unitTestRunner = CreateUnitTestRunner([unitTestElement1, unitTestElement2, unitTestElement3]);
+
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A"))
+            .Returns(Assembly.GetExecutingAssembly());
+
+        DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () => { };
+        DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody = () => { };
+
+        // Run the first test to warm up assembly/class initialize (slow path, sets cached results).
+        TestResult[] firstResults = await unitTestRunner.RunSingleTestAsync(unitTestElement1, _testRunParameters, null!);
+        firstResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+
+        // Second test (non-last): both assembly-init and class-init take the fast path (no contexts),
+        // and the class-cleanup context is NOT allocated (deferred to the last test).
+        int countBeforeSecond = _testablePlatformServiceProvider.GetTestContextCallCount;
+        TestResult[] secondResults = await unitTestRunner.RunSingleTestAsync(unitTestElement2, _testRunParameters, null!);
+        secondResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int allocationsForSecond = _testablePlatformServiceProvider.GetTestContextCallCount - countBeforeSecond;
+
+        // Third test (last in class): takes fast paths for init, but allocates a class-cleanup context
+        // and an assembly-cleanup context. Allocation count must exceed the middle test's count.
+        int countBeforeThird = _testablePlatformServiceProvider.GetTestContextCallCount;
+        TestResult[] thirdResults = await unitTestRunner.RunSingleTestAsync(unitTestElement3, _testRunParameters, null!);
+        thirdResults[0].Outcome.Should().Be(UnitTestOutcome.Passed);
+        int allocationsForThird = _testablePlatformServiceProvider.GetTestContextCallCount - countBeforeThird;
+
+        // The last-test run allocates exactly two more contexts than a non-last test: the class-cleanup
+        // context and the assembly-cleanup context, both of which are deferred from all non-last tests.
+        // Asserting the exact delta (rather than a loose "greater than") catches the regression this test
+        // guards against, where a non-last test mistakenly allocates the deferred class-cleanup context.
+        allocationsForThird.Should().Be(allocationsForSecond + 2);
+    }
+
     #endregion
 
     #region private helpers
@@ -498,6 +540,12 @@ public sealed class UnitTestRunnerTests : TestContainer
 
         [TestMethod]
         public void TestMethod() => TestMethodBody?.Invoke(TestContext);
+
+        [TestMethod]
+        public void TestMethod2() => TestMethodBody?.Invoke(TestContext);
+
+        [TestMethod]
+        public void TestMethod3() => TestMethodBody?.Invoke(TestContext);
     }
 
     private class DummyTestClassAttribute : TestClassAttribute;

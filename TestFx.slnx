@@ -49,6 +49,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Logging/Microsoft.Testing.Extensions.Logging.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.MSBuild/Microsoft.Testing.Extensions.MSBuild.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.OpenTelemetry/Microsoft.Testing.Extensions.OpenTelemetry.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Extensions.PackagedApp/Microsoft.Testing.Extensions.PackagedApp.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Retry/Microsoft.Testing.Extensions.Retry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.Telemetry/Microsoft.Testing.Extensions.Telemetry.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Extensions.TrxReport.Abstractions/Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" />
