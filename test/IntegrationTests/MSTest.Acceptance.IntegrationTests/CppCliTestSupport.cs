@@ -14,8 +14,10 @@ internal static class CppCliTestSupport
 {
     // The code-coverage profiler environment variables the acceptance host injects; inheriting them into a
     // nested .NET Framework test host breaks the run, so they are stripped from the child process environment.
-    private static readonly string[] CodeCoverageEnvironmentVariables =
-    [
+    // IDE0028 (collection expression) is suppressed: a collection expression cannot carry the comparer.
+#pragma warning disable IDE0028 // Simplify collection initialization
+    private static readonly HashSet<string> CodeCoverageEnvironmentVariables = new(StringComparer.OrdinalIgnoreCase)
+    {
         "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
         "MicrosoftInstrumentationEngine_ConfigPath64_VanguardInstrumentationProfiler",
         "CORECLR_PROFILER_PATH_32",
@@ -31,7 +33,8 @@ internal static class CppCliTestSupport
         "MicrosoftInstrumentationEngine_LogLevel",
         "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
         "MicrosoftInstrumentationEngine_FileLogPath",
-    ];
+    };
+#pragma warning restore IDE0028 // Simplify collection initialization
 
     /// <summary>
     /// Returns the installation path of a Visual Studio install that has the MSVC C++ toolset (needed to
@@ -86,7 +89,7 @@ internal static class CppCliTestSupport
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             string key = (string)entry.Key;
-            if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
+            if (CodeCoverageEnvironmentVariables.Contains(key))
             {
                 continue;
             }
