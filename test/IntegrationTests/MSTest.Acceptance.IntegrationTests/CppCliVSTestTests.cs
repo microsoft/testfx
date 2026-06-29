@@ -38,7 +38,14 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
             return;
         }
 
-        string msbuildExe = await FindMsbuildWithVsWhereAsync(cancellationToken);
+        // Derive MSBuild from the same VS install we validated above, so the C++ targets/toolset are
+        // guaranteed available (locating MSBuild independently could pick a different install on multi-VS machines).
+        string? msbuildExe = CppCliTestSupport.TryGetMSBuildPathFromVsInstall(vsInstallPath);
+        if (msbuildExe is null)
+        {
+            Assert.Inconclusive($"Skipping: MSBuild.exe was not found under the located Visual Studio install '{vsInstallPath}'.");
+            return;
+        }
 
         // C++/CLI projects cannot consume managed assemblies from a NuGet PackageReference (NuGet only wires
         // build/native assets into a vcxproj, not lib/*.dll references), so we extract the freshly-built
@@ -81,8 +88,15 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
         // Run the managed C++/CLI assembly through VSTest using the freshly-built MSTest adapter. We use the
         // vstest.console.exe bundled with the located VS install (rather than the Microsoft.TestPlatform NuGet
         // package) so the test is self-contained and does not depend on that package being in the NuGet cache.
+        // A VS install with the VC toolset (e.g. Build Tools) may not carry the Test Platform, so treat a
+        // missing vstest.console.exe as an environment capability gap and skip rather than fail.
         string vstestConsolePath = Path.Combine(vsInstallPath, "Common7", "IDE", "Extensions", "TestPlatform", "vstest.console.exe");
-        Assert.IsTrue(File.Exists(vstestConsolePath), $"vstest.console.exe was not found at '{vstestConsolePath}'.");
+        if (!File.Exists(vstestConsolePath))
+        {
+            Assert.Inconclusive($"Skipping: vstest.console.exe was not found under the located Visual Studio install '{vsInstallPath}'.");
+            return;
+        }
+
         using var runCommandLine = new CommandLine();
         int runExitCode = await runCommandLine.RunAsyncAndReturnExitCodeAsync(
             $"\"{vstestConsolePath}\" \"{testDll}\" /TestAdapterPath:\"{adapterNet462Dir}\" /Platform:x64",
@@ -135,7 +149,7 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
     <CLRSupport>true</CLRSupport>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <CharacterSet>Unicode</CharacterSet>

@@ -41,7 +41,14 @@ public sealed class CppCliMtpTests : AcceptanceTestBase<NopAssetFixture>
             return;
         }
 
-        string msbuildExe = await FindMsbuildWithVsWhereAsync(cancellationToken);
+        // Derive MSBuild from the same VS install we validated above, so the C++ targets/toolset are
+        // guaranteed available (locating MSBuild independently could pick a different install on multi-VS machines).
+        string? msbuildExe = CppCliTestSupport.TryGetMSBuildPathFromVsInstall(vsInstallPath);
+        if (msbuildExe is null)
+        {
+            Assert.Inconclusive($"Skipping: MSBuild.exe was not found under the located Visual Studio install '{vsInstallPath}'.");
+            return;
+        }
 
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -170,7 +177,7 @@ public class HarvestPlaceholder
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
     <CLRSupport>true</CLRSupport>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <CharacterSet>Unicode</CharacterSet>

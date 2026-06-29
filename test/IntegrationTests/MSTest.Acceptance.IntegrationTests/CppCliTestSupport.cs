@@ -65,6 +65,18 @@ internal static class CppCliTestSupport
     }
 
     /// <summary>
+    /// Returns the path to <c>MSBuild.exe</c> inside the given Visual Studio install. Deriving MSBuild from
+    /// the same install that was validated to contain the VC toolset (rather than locating it independently)
+    /// guarantees the C++ targets/toolset are available when building the <c>.vcxproj</c> on machines with
+    /// multiple Visual Studio instances. Returns <see langword="null"/> when not found.
+    /// </summary>
+    public static string? TryGetMSBuildPathFromVsInstall(string vsInstallPath)
+    {
+        string msbuildPath = Path.Combine(vsInstallPath, "MSBuild", "Current", "Bin", "MSBuild.exe");
+        return File.Exists(msbuildPath) ? msbuildPath : null;
+    }
+
+    /// <summary>
     /// Builds a copy of the current process environment with the code-coverage profiler variables removed,
     /// for use as a child-process environment (pass with <c>cleanDefaultEnvironmentVariableIfCustomAreProvided: true</c>).
     /// </summary>
