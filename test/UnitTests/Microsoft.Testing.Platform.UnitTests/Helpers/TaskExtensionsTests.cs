@@ -71,7 +71,6 @@ public sealed class TaskExtensionsTests
     }
 
     [TestMethod]
-    [Ignore("https://github.com/microsoft/testfx/issues/6907")]
     public async Task CancellationAsync_ObserveException_Succeeds()
     {
         ManualResetEvent waitException = new(false);
@@ -84,14 +83,13 @@ public sealed class TaskExtensionsTests
                     waitException.Set();
                     throw new InvalidOperationException();
                 }, TestContext.CancellationToken).WithCancellationAsync(token));
-#if !NETFRAMEWORK // Polyfill bug in Task.WaitAsync implementation :/
         Assert.AreEqual(token, ex.CancellationToken);
-#endif
-        waitException.WaitOne();
+        Assert.IsTrue(
+            waitException.WaitOne(TimeSpan.FromSeconds(30)),
+            "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     [TestMethod]
-    [Ignore("https://github.com/microsoft/testfx/issues/6907")]
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
     {
         ManualResetEvent waitException = new(false);
@@ -113,7 +111,9 @@ public sealed class TaskExtensionsTests
                 }
             }).WithCancellationAsync(token));
         Assert.AreEqual(token, ex.CancellationToken);
-        waitException.WaitOne();
+        Assert.IsTrue(
+            waitException.WaitOne(TimeSpan.FromSeconds(30)),
+            "Inner task did not reach the exception-throw point within the allotted time.");
     }
 
     private static async Task<string> DoSomething()

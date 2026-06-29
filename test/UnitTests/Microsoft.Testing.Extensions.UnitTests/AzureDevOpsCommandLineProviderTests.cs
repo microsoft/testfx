@@ -6,6 +6,7 @@ using Microsoft.Testing.Extensions.Reporting;
 using Microsoft.Testing.Extensions.UnitTests.Helpers;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Extensions.UnitTests;
 
@@ -79,19 +80,64 @@ public sealed class AzureDevOpsCommandLineProviderTests
     }
 
     [TestMethod]
-    public async Task ValidateCommandLineOptionsAsync_ReturnsValid_WhenAzureDevOpsDependentOptionsAreConfiguredCorrectlyAsync()
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenSummaryIsUsedWithoutAzureDevOpsAsync()
     {
         AzureDevOpsCommandLineProvider provider = new();
         ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
         {
-            [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky] = [],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory] = ["14"],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile] = ["quarantine.txt"],
-            [AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity] = ["warning"],
+            [AzureDevOpsCommandLineOptions.AzureDevOpsSummary] = [],
         })).ConfigureAwait(false);
 
-        Assert.IsTrue(validationResult.IsValid);
-        Assert.IsNull(validationResult.ErrorMessage);
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsSummaryRequiresAzureDevOps, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenStackFrameFilterIsUsedWithoutAzureDevOpsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter] = ["^MyCompany\\."],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsStackFrameFilterRequiresAzureDevOps, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenStackFrameFilterRegexIsInvalidAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["[unclosed"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.Contains("[unclosed", validationResult.ErrorMessage ?? string.Empty);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenStackFrameFilterHasTooManyPatternsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter);
+        string[] patterns = Enumerable.Range(0, AzureDevOpsCommandLineProvider.MaxStackFrameFilterPatterns + 1)
+            .Select(i => $"^Foo{i}\\.")
+            .ToArray();
+
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, patterns).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.Contains(AzureDevOpsCommandLineProvider.MaxStackFrameFilterPatterns.ToString(System.Globalization.CultureInfo.InvariantCulture), validationResult.ErrorMessage ?? string.Empty);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_ForValidStackFrameFilterRegexAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsStackFrameFilter);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["^MyCompany\\.Testing\\."]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
     }
 }

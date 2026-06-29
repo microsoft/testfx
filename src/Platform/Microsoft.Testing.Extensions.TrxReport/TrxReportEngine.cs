@@ -68,7 +68,7 @@ internal sealed partial class TrxReportEngine
     }
 
     public async Task<(string FileName, string? Warning)> GenerateReportAsync(IReadOnlyList<TrxTestResult> testResults, string testHostCrashInfo = "", bool isTestHostCrashed = false)
-        => await RetryWhenIOExceptionAsync(async () =>
+        => await ReportFileWriterHelper.RetryWhenIOExceptionAsync(_clock, async () =>
         {
             string testAppModule = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 
@@ -90,29 +90,6 @@ internal sealed partial class TrxReportEngine
 
             // If the user added the trxFileName the runDeploymentRoot would stay the same, We think it's a bug but I found that same behavior on vstest
             string runDeploymentRoot = AddTestSettings(testRun, testRunName);
-            bool isFileNameExplicitlyProvided;
-            string trxFileName;
-            if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
-            {
-                // The argument may be a bare file name, a relative path or an absolute path. Placeholders
-                // are resolved first against the whole input. Only the leaf file name is sanitized for
-                // invalid characters — the directory portion is treated as a literal path so that it can
-                // contain path separators, drive letters or UNC prefixes. Invalid characters in the
-                // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
-                // the OS and will surface as an IOException at file creation time.
-                string resolved = ResolveTrxFileNamePlaceholders(fileName[0]);
-                string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
-                string sanitizedFileName = ReplaceInvalidFileNameChars(Path.GetFileName(resolved));
-                trxFileName = directoryPart.Length == 0
-                    ? sanitizedFileName
-                    : Path.Combine(directoryPart, sanitizedFileName);
-                isFileNameExplicitlyProvided = true;
-            }
-            else
-            {
-                trxFileName = $"{runDeploymentRoot}.trx";
-                isFileNameExplicitlyProvided = false;
-            }
 
             var testDefinitions = new XElement("TestDefinitions");
             var testEntries = new XElement("TestEntries");
@@ -143,69 +120,70 @@ internal sealed partial class TrxReportEngine
                 node.Name = node.Parent!.Name.Namespace + node.Name.LocalName;
             }
 
-            string outputDirectory = _configuration.GetTestResultDirectory();
+            string finalFileName = ResolveTrxOutputPath(testAppModule);
 
-            // Path.Combine short-circuits when the second argument is rooted, so an absolute trxFileName
-            // overrides the test results directory while a validated relative one (including one with
-            // subdirectories, but not parent traversal) stays nested under it.
-            string finalFileName = Path.Combine(outputDirectory, trxFileName);
+            bool fileAlreadyExisted = _fileSystem.ExistFile(finalFileName);
 
-            // Ensure intermediate directories exist when the user-provided file name introduced
-            // sub-directories or pointed at an absolute path under a directory that doesn't exist yet.
-            string? finalDirectory = Path.GetDirectoryName(finalFileName);
-            if (!RoslynString.IsNullOrEmpty(finalDirectory))
-            {
-                _fileSystem.CreateDirectory(finalDirectory);
-            }
-
-            bool isFileNameExplicitlyProvidedAndFileExists = isFileNameExplicitlyProvided && _fileSystem.ExistFile(finalFileName);
-
+            // Always overwrite (FileMode.Create), regardless of whether the file name was explicitly
+            // provided or generated from the default <asm>_<tfm>_<arch>.trx shape. Emit a warning when
+            // overwriting so users have a single, predictable rule to reason about.
             // Note that we need to dispose the IFileStream, not the inner stream.
             // IFileStream implementations will be responsible to dispose their inner stream.
-            using IFileStream stream = _fileSystem.NewFileStream(finalFileName, isFileNameExplicitlyProvided ? FileMode.Create : FileMode.CreateNew);
+            using (IFileStream stream = _fileSystem.NewFileStream(finalFileName, FileMode.Create))
+            {
 #if NETCOREAPP
-            await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
+                await document.SaveAsync(stream.Stream, SaveOptions.None, _cancellationToken).ConfigureAwait(false);
 #else
-            document.Save(stream.Stream, SaveOptions.None);
+                document.Save(stream.Stream, SaveOptions.None);
 #endif
-            return isFileNameExplicitlyProvidedAndFileExists
+            }
+
+            return fileAlreadyExisted
                 ? (finalFileName, string.Format(CultureInfo.InvariantCulture, ExtensionResources.TrxFileExistsAndWillBeOverwritten, finalFileName))
                 : (finalFileName, null);
         }).ConfigureAwait(false);
 
-    private async Task<(string FileName, string? Warning)> RetryWhenIOExceptionAsync(Func<Task<(string FileName, string? Warning)>> func)
+    private string ResolveTrxOutputPath(string testAppModule)
     {
-        DateTimeOffset firstTryTime = _clock.UtcNow;
-        bool throwIOException = false;
-        while (true)
+        string reportFileName;
+        if (_commandLineOptionsService.TryGetOptionArgumentList(TrxReportGeneratorCommandLine.TrxReportFileNameOptionName, out string[]? fileName))
         {
-            try
-            {
-                return await func().ConfigureAwait(false);
-            }
-            catch (IOException)
-            {
-                // In case of file with the same name we retry with a new name.
-                if (throwIOException)
-                {
-                    throw;
-                }
-            }
-
-            // We try for 5 seconds to create a file with a unique name.
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(5))
-            {
-                throwIOException = true;
-            }
+            // The argument may be a bare file name, a relative path or an absolute path. Placeholders
+            // are resolved first against the whole input. Only the leaf file name is sanitized for
+            // invalid characters — the directory portion is treated as a literal path so that it can
+            // contain path separators, drive letters or UNC prefixes. Invalid characters in the
+            // directory portion (e.g. introduced by an unexpected placeholder value) are deferred to
+            // the OS and will surface as an IOException at file creation time.
+            string template = ReportEngineBase.GetProvidedFileName(fileName);
+            string processName = Path.GetFileNameWithoutExtension(testAppModule);
+            string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
+            reportFileName = ReportFileNameHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow);
         }
-    }
+        else
+        {
+            // Default file name uses the deterministic <asm>_<tfm>_<arch>.trx shape so reruns are
+            // discoverable and multi-target/multi-arch matrices don't collide on disk. A second
+            // run into the same TestResults folder overwrites the previous file (with a warning),
+            // matching the behavior of an explicitly-provided file name.
+            reportFileName = ReportEngineBase.BuildDefaultFileName(testAppModule, "trx");
+        }
 
-    private string ResolveTrxFileNamePlaceholders(string template)
-    {
-        string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-        string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
-        return ArtifactNamingHelper.ResolveTemplate(template, replacements);
+        string outputDirectory = _configuration.GetTestResultDirectory();
+
+        // Path.Combine short-circuits when the second argument is rooted, so an absolute reportFileName
+        // overrides the test results directory while a validated relative one (including one with
+        // subdirectories, but not parent traversal) stays nested under it.
+        string finalPath = Path.Combine(outputDirectory, reportFileName);
+
+        // Ensure intermediate directories exist when the user-provided file name introduced
+        // sub-directories or pointed at an absolute path under a directory that doesn't exist yet.
+        string? finalDirectory = Path.GetDirectoryName(finalPath);
+        if (!RoslynString.IsNullOrEmpty(finalDirectory))
+        {
+            _fileSystem.CreateDirectory(finalDirectory);
+        }
+
+        return finalPath;
     }
 
     private readonly record struct SummaryCounts(int Passed, int Failed, int Skipped, int Timedout);

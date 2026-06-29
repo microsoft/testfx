@@ -5,37 +5,23 @@
 
 using System.Data.OleDb;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for OLE DB.
 /// </summary>
-internal sealed class OleDataConnection : TestDataConnectionSql
+internal sealed class OleDataConnection : MSSqlCapableConnection
 {
-    private readonly bool _isMSSql;
-
     public OleDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
     {
-        // Need open connection to get Connection.Provider.
-        DebugEx.Assert(IsOpen(), "The connection must be open!");
-
-        // Fill m_isMSSql.
-        _isMSSql = Connection != null && IsMSSql(Connection.Provider);
     }
 
     public new OleDbCommandBuilder CommandBuilder => (OleDbCommandBuilder)base.CommandBuilder;
 
     public new OleDbConnection Connection => (OleDbConnection)base.Connection;
 
-    /// <summary>
-    /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
-    /// </summary>
-    public override void GetQuoteLiterals() => GetQuoteLiteralsHelper();
-
-    public override string? GetDefaultSchema() => _isMSSql ? GetDefaultSchemaMSSql() : base.GetDefaultSchema();
+    protected override string? GetProviderNameForMSSqlDetection() => Connection.Provider;
 
     protected override SchemaMetaData[] GetSchemaMetaData()
     {
@@ -54,39 +40,16 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         return [data];
     }
 
-    protected override string QuoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.QuoteIdentifier(identifier, Connection);
-    }
-
-    protected override string UnquoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.UnquoteIdentifier(identifier, Connection);
-    }
-
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {
         OleDbConnectionStringBuilder oleDbBuilder = [with(connectionString)];
 
-        string fileName = oleDbBuilder.DataSource;
-
-        if (StringEx.IsNullOrEmpty(fileName))
-        {
-            return connectionString;
-        }
-        else
-        {
-            // Fix-up magic file paths
-            string? fixedFilePath = FixPath(fileName, dataFolders);
-            if (fixedFilePath != null)
-            {
-                oleDbBuilder.DataSource = fixedFilePath;
-            }
-
-            return oleDbBuilder.ConnectionString;
-        }
+        return FixConnectionStringFilePath(
+            oleDbBuilder,
+            connectionString,
+            () => oleDbBuilder.DataSource,
+            fixedFilePath => oleDbBuilder.DataSource = fixedFilePath,
+            dataFolders);
     }
 }
 

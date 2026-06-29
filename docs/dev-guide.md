@@ -8,7 +8,7 @@ To build and test all functionalities of MSTest, we recommend installing [Visual
 
 - `.NET desktop development`
 - `Universal Windows Platform development`
-- `.Net Core cross-platform development`
+- `.NET Core cross-platform development`
 
 ## Recommended workflow
 
@@ -66,7 +66,7 @@ For Linux and macOS:
 
 ### Common building options
 
-By default, the script generates a *Debug* build type, which is not optimized code and includes asserts. As its name suggests, this makes it easier and friendlier to debug the code. If you want to make performance measurements, you ought to build the *Release* version instead, which doesn't have any assets and has all code optimizations enabled. Likewise, if you plan on running tests, the *Release* configuration is more suitable since it's considerably faster than the *Debug* one. For this, you add the flag `-configuration release` (or `-c release`). For example:
+By default, the script generates a *Debug* build type, which is not optimized code and includes asserts. As its name suggests, this makes it easier and friendlier to debug the code. If you want to make performance measurements, you ought to build the *Release* version instead, which doesn't have any asserts and has all code optimizations enabled. Likewise, if you plan on running tests, the *Release* configuration is more suitable since it's considerably faster than the *Debug* one. For this, you add the flag `-configuration release` (or `-c release`). For example:
 
 For Windows:
 
@@ -125,6 +125,7 @@ with
 | bin               | Build output of each project.                          |
 | obj               | Intermediate directory for each project.               |
 | packages          | NuGet packages produced by all projects in the repo.   |
+| TestResults       | Test results produced by test runs.                    |
 | SymStore          | Storage for converted Windows PDBs                     |
 | log               | Build binary log and other logs.                       |
 | tmp               | Temp files generated during build.                     |

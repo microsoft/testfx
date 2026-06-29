@@ -56,45 +56,40 @@ public class ParameterizedTestTests : AcceptanceTestBase<ParameterizedTestTests.
             """);
 
         // progress causes flakiness. See https://github.com/microsoft/testfx/pull/4930#issuecomment-2648506466
-        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests --no-progress", cancellationToken: TestContext.CancellationToken);
+        // TestHost.ExecuteAsync already injects --progress off, so no need to pass it here.
+        testHostResult = await testHost.ExecuteAsync("--filter ClassName=TestDataRowTests", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 9, skipped: 15);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 12, skipped: 12);
         // If this assert fails with difference showing only missing double quotes, then we are using the wrong value
         // of DynamicDataAttribute.TestIdGenerationStrategy.
         // If the failure is .NET Framework only, then it's very likely to be linked to AppDomain.
         // Each AppDomain has its own version of static state. If DynamicDataAttribute.TestIdGenerationStrategy is set
         // from one AppDomain, but is read from another, it's not going to be correct.
-        testHostResult.AssertOutputMatchesRegex("""
-            skipped TestDataRowSingleParameterFolded \("TestDataRowSingleParameterFolded - Ignoring"\) \(\d+ms\)
+        testHostResult.AssertOutputMatchesRegex($"""
+            skipped TestDataRowSingleParameterFolded \("TestDataRowSingleParameterFolded - Ignoring"\) {AcceptanceAssert.DurationPattern}
               Ignore reason for second row - TestDataRowSingleParameterFolded
-            skipped Display name for third row - TestDataRowSingleParameterFolded \(\d+ms\)
+            skipped Display name for third row - TestDataRowSingleParameterFolded {AcceptanceAssert.DurationPattern}
               Ignore reason for third row - TestDataRowSingleParameterFolded
-            skipped TestDataRowSingleParameterUnfolded \("TestDataRowSingleParameterUnfolded - Ignoring"\) \(\d+ms\)
+            skipped TestDataRowSingleParameterUnfolded \("TestDataRowSingleParameterUnfolded - Ignoring"\) {AcceptanceAssert.DurationPattern}
               Ignore reason for second row - TestDataRowSingleParameterUnfolded
-            skipped Display name for third row - TestDataRowSingleParameterUnfolded \(\d+ms\)
+            skipped Display name for third row - TestDataRowSingleParameterUnfolded {AcceptanceAssert.DurationPattern}
               Ignore reason for third row - TestDataRowSingleParameterUnfolded
-            skipped Display name for fourth row - TestDataRowSingleParameterUnfolded \(\d+ms\)
-              Ignore reason for third row - TestDataRowSingleParameterUnfolded
-            skipped TestDataRowTwoParametersFolded \("TestDataRowTwoParametersFolded - Ignoring1","Ignoring2"\) \(\d+ms\)
+            skipped TestDataRowTwoParametersFolded \("TestDataRowTwoParametersFolded - Ignoring1","Ignoring2"\) {AcceptanceAssert.DurationPattern}
               Ignore reason for second row - TestDataRowTwoParametersFolded
-            skipped Display name for third row - TestDataRowTwoParametersFolded \(\d+ms\)
+            skipped Display name for third row - TestDataRowTwoParametersFolded {AcceptanceAssert.DurationPattern}
               Ignore reason for third row - TestDataRowTwoParametersFolded
-            skipped TestDataRowTwoParametersUnfolded \("TestDataRowTwoParametersUnfolded - Ignoring1","Ignoring2"\) \(\d+ms\)
+            skipped TestDataRowTwoParametersUnfolded \("TestDataRowTwoParametersUnfolded - Ignoring1","Ignoring2"\) {AcceptanceAssert.DurationPattern}
               Ignore reason for second row - TestDataRowTwoParametersUnfolded
-            skipped Display name for third row - TestDataRowTwoParametersUnfolded \(\d+ms\)
+            skipped Display name for third row - TestDataRowTwoParametersUnfolded {AcceptanceAssert.DurationPattern}
               Ignore reason for third row - TestDataRowTwoParametersUnfolded
-            skipped Display name for fourth row - TestDataRowTwoParametersUnfolded \(\d+ms\)
-              Ignore reason for third row - TestDataRowTwoParametersUnfolded
-            skipped TestDataRowParameterIsTupleFolded \(\(TestDataRowParameterIsTupleFolded - Ignoring1, Ignoring2\)\) \(\d+ms\)
+            skipped TestDataRowParameterIsTupleFolded \(\(TestDataRowParameterIsTupleFolded - Ignoring1, Ignoring2\)\) {AcceptanceAssert.DurationPattern}
               Ignore reason for second row - TestDataRowParameterIsTupleFolded
-            skipped Display name for third row - TestDataRowParameterIsTupleFolded \(\d+ms\)
+            skipped Display name for third row - TestDataRowParameterIsTupleFolded {AcceptanceAssert.DurationPattern}
               Ignore reason for third row - TestDataRowParameterIsTupleFolded
-            skipped TestDataRowParameterIsTupleUnfolded \(\(TestDataRowParameterIsTupleUnfolded - Ignoring1, Ignoring2\)\) \(\d+ms\)
+            skipped TestDataRowParameterIsTupleUnfolded \(\(TestDataRowParameterIsTupleUnfolded - Ignoring1, Ignoring2\)\) {AcceptanceAssert.DurationPattern}
               Ignore reason for second row - TestDataRowParameterIsTupleUnfolded
-            skipped Display name for third row - TestDataRowParameterIsTupleUnfolded \(\d+ms\)
-              Ignore reason for third row - TestDataRowParameterIsTupleUnfolded
-            skipped Display name for fourth row - TestDataRowParameterIsTupleUnfolded \(\d+ms\)
+            skipped Display name for third row - TestDataRowParameterIsTupleUnfolded {AcceptanceAssert.DurationPattern}
               Ignore reason for third row - TestDataRowParameterIsTupleUnfolded
             """);
     }

@@ -16,6 +16,10 @@ permissions:
 imports:
   - shared/review-shared.md
 
+# The expert-reviewer agent fans out into many dimension sub-agents on
+# claude-opus-4.6, so the default 1000 AI-credit budget is too low (see #9115).
+max-ai-credits: 2000
+
 safe-outputs:
   noop:
     report-as-issue: false

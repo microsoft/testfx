@@ -37,6 +37,8 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
         <LangVersion>preview</LangVersion>
+        <!-- We provide our own Main, so disable the SDK-generated entry point. -->
+        <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
     </PropertyGroup>
 
     <ItemGroup>
@@ -50,6 +52,13 @@ public class ForwardCompatibilityTests : AcceptanceTestBase<ForwardCompatibility
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$PreviousExtensionVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$PreviousExtensionVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$PreviousExtensionVersion$" />
+        <!--
+            Microsoft.Testing.Platform.MSBuild ships the auto-loaded MSBuildConsumer extension.
+            Pinning it to an older version exercises the scenario where a newer
+            Microsoft.Testing.Platform must still load the older MSBuildConsumer binary without
+            crashing on removed-but-still-referenced internal types (e.g. TestRequestExecutionTimeInfo).
+        -->
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$PreviousExtensionVersion$" />
     </ItemGroup>
 </Project>
 
@@ -60,6 +69,7 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.MSBuild;
 using Microsoft.Testing.Platform.Services;
 
 public class Program
@@ -78,6 +88,12 @@ public class Program
         builder.AddRetryProvider();
         builder.AddAppInsightsTelemetryProvider();
         builder.AddTrxReportProvider();
+        // The MSBuildConsumer is constructed unconditionally when its extension is registered,
+        // even when the MSBuild integration is not active. Registering it here ensures we
+        // exercise the type-load path that previously broke when the platform removed the
+        // internal TestRequestExecutionTimeInfo type that older MSBuildConsumer binaries
+        // reference in their DataTypesConsumed array.
+        builder.AddMSBuild();
 
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();

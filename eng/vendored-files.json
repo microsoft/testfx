@@ -17,24 +17,9 @@
       ]
     },
     {
-      "id": "source-gen-system-polyfills",
-      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SystemPolyfills.cs",
-      "notes": "Nullable attribute polyfills for source generator. Only NotNullWhenAttribute is mirrored locally; combined with a locally-defined IsExternalInit shim. Originally referenced retired dotnet/coreclr@60f1e626 -- successor file lives in dotnet/runtime with the same content.",
-      "sources": [
-        {
-          "repo": "dotnet/runtime",
-          "ref": "main",
-          "path": "src/libraries/System.Private.CoreLib/src/System/Diagnostics/CodeAnalysis/NullableAttributes.cs",
-          "baseline_ref_sha": "906c53718074c669286fd5b0cd88bc7a56a0cd10",
-          "baseline_blob_sha": "78908b119ae07e92f7e89fe507eb0fc69b21fa99",
-          "scope": "NotNullWhenAttribute only; combined with locally-defined IsExternalInit"
-        }
-      ]
-    },
-    {
-      "id": "source-gen-symbol-visibility",
-      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/SymbolVisibility.cs",
-      "notes": "Verbatim copy with namespace adjustment. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk.",
+      "id": "analyzers-symbol-visibility",
+      "local_path": "src/Analyzers/MSTest.Analyzers/RoslynAnalyzerHelpers/SymbolVisibility.cs",
+      "notes": "Verbatim copy with namespace adjustment. Previously sourced from dotnet/roslyn-analyzers, which was archived and moved into dotnet/sdk. The former MSTest.SourceGeneration copy was removed (#8586) in favor of a locally-authored SymbolAccessibilityHelper; this analyzers copy of the same upstream file remains the tracked vendored source.",
       "sources": [
         {
           "repo": "dotnet/sdk",
@@ -192,7 +177,7 @@
     {
       "id": "platform-ci-environment-detector",
       "local_path": "src/Platform/Microsoft.Testing.Platform/Helpers/CIEnvironmentDetector.cs",
-      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection.",
+      "notes": "Adapted from dotnet CLI telemetry CI detection. Maintained per https://learn.microsoft.com/dotnet/core/tools/telemetry#continuous-integration-detection. This file is the single source of truth: it is linked into MSTest.TestFramework via src/TestFramework/TestFramework/TestFramework.csproj and toggled via the TESTFRAMEWORK_CI_DETECTOR define.",
       "sources": [
         {
           "repo": "dotnet/sdk",
@@ -295,24 +280,9 @@
       ]
     },
     {
-      "id": "testframework-ci-environment-detector",
-      "local_path": "src/TestFramework/TestFramework/Internal/CIEnvironmentDetector.cs",
-      "notes": "Independent in-tree copy of the CI detector (test-framework variant exposing an IEnvironment-backed Instance) sharing the rules with the platform copy.",
-      "sources": [
-        {
-          "repo": "dotnet/sdk",
-          "ref": "main",
-          "path": "src/Cli/Microsoft.DotNet.Cli.Definitions/Telemetry/CIEnvironmentDetectorForTelemetry.cs",
-          "baseline_ref_sha": "1ab3ae8e0338cdd06b3974959c5802ccc5a85978",
-          "baseline_blob_sha": "e10e1fc2cd973c6123fd983b16a8f0c1e9191c31",
-          "scope": "CI detection rules and environment variable lists"
-        }
-      ]
-    },
-    {
-      "id": "source-gen-equatable-array",
-      "local_path": "src/Analyzers/MSTest.SourceGeneration/Helpers/EquatableArray{T}.cs",
-      "notes": "Value-equality wrapper over ImmutableArray<T> for incremental source generator caching, ported from ComputeSharp.",
+      "id": "shared-equatable-array",
+      "local_path": "src/Analyzers/Shared/EquatableArray.cs",
+      "notes": "Value-equality wrapper over ImmutableArray<T> for incremental source generator caching, ported from ComputeSharp. Shared across the MSTest source generators (#9118).",
       "sources": [
         {
           "repo": "Sergio0694/ComputeSharp",

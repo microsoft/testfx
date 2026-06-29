@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
@@ -206,6 +207,312 @@ internal sealed partial class JsonConfigurationSource
             return entries;
         }
 
+        /// <summary>
+        /// Enumerates the <c>commandLineOptions</c> section of the loaded testconfig.json file as a
+        /// list of typed entries, applying the strict schema documented at
+        /// <see cref="PlatformConfigurationConstants.CommandLineOptionsSectionName"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Supported per-option JSON shapes:
+        /// <list type="bullet">
+        ///   <item><description><c>"foo": "bar"</c> — scalar argument (single value).</description></item>
+        ///   <item><description><c>"foo": true</c> — presence marker, equivalent to <c>--foo</c> on the CLI.</description></item>
+        ///   <item><description><c>"foo": false</c> — explicit disable; surfaced via <see cref="JsonCommandLineOptionEntry.IsDisabled"/>.</description></item>
+        ///   <item><description><c>"foo": ["a", "b"]</c> — multi-value argument list.</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// Rejected shapes (throw <see cref="FormatException"/>):
+        /// <list type="bullet">
+        ///   <item><description>Nested objects like <c>"foo": { "bar": "x" }</c>.</description></item>
+        ///   <item><description>Array of objects like <c>"foo": [ { "bar": "x" } ]</c>.</description></item>
+        ///   <item><description>Mixing scalar and indexed entries for the same option name (defensive guard; cannot happen from JSON input but possible if a custom provider mutates the underlying maps).</description></item>
+        /// </list>
+        /// </para>
+        /// <para>
+        /// Empty containers (<c>"foo": []</c>) are skipped (treated as absent). Empty objects (<c>"foo": {}</c>)
+        /// are rejected because that shape is otherwise indistinguishable from a malformed nested entry.
+        /// </para>
+        /// </remarks>
+        internal IReadOnlyList<JsonCommandLineOptionEntry> EnumerateCommandLineOptions()
+        {
+            const string sectionName = PlatformConfigurationConstants.CommandLineOptionsSectionName;
+
+            Dictionary<string, string?> singleValueData = _singleValueData ?? [];
+            Dictionary<string, string?> propertyToAllChildren = _propertyToAllChildren ?? [];
+
+            if (singleValueData.TryGetValue(sectionName, out string? sectionScalar))
+            {
+                if (sectionScalar is null)
+                {
+                    if (propertyToAllChildren.TryGetValue(sectionName, out string? emptyRaw)
+                        && emptyRaw is not null
+                        && StartsWithChar(emptyRaw, '['))
+                    {
+                        ThrowSectionMustBeAnObject(sectionName);
+                    }
+
+                    return [];
+                }
+
+                ThrowSectionMustBeAnObject(sectionName);
+            }
+
+            if (!propertyToAllChildren.TryGetValue(sectionName, out string? sectionRaw))
+            {
+                return [];
+            }
+
+            if (sectionRaw is not null && StartsWithChar(sectionRaw, '['))
+            {
+                ThrowSectionMustBeAnObject(sectionName);
+            }
+
+            string sectionPrefix = sectionName + PlatformConfigurationConstants.KeyDelimiter;
+
+            // Collect scalar/indexed data per option name. JSON storage is case-insensitive elsewhere in
+            // the platform (see TryGetCommandLineOptionFromProviders), so we use OrdinalIgnoreCase here
+            // to keep the grouping consistent (and so options like "Timeout" vs "timeout" are treated as
+            // one entry rather than silently producing two separate validations).
+            var byOption = new Dictionary<string, OptionBuilder>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (KeyValuePair<string, string?> kvp in singleValueData)
+            {
+                if (!kvp.Key.StartsWith(sectionPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string remainder = kvp.Key.Substring(sectionPrefix.Length);
+
+                int firstColon = remainder.IndexOf(PlatformConfigurationConstants.KeyDelimiter, StringComparison.Ordinal);
+                string optionName;
+                string? subKey;
+
+                if (firstColon < 0)
+                {
+                    optionName = remainder;
+                    subKey = null;
+                }
+                else
+                {
+                    optionName = remainder.Substring(0, firstColon);
+                    subKey = remainder.Substring(firstColon + 1);
+                }
+
+                if (!byOption.TryGetValue(optionName, out OptionBuilder builder))
+                {
+                    builder = default;
+                }
+
+                if (subKey is null)
+                {
+                    if (kvp.Value is null)
+                    {
+                        // Empty container at the option key. The parser cannot tell the difference between
+                        // {} and [] at write time, so we disambiguate via the raw text recorded for object
+                        // values. Empty arrays are silently dropped (matches runtime behavior — no entries
+                        // means "absent"); empty objects are rejected as the user almost certainly meant a
+                        // typo and the entire commandLineOptions section is supposed to hold leaf values.
+                        if (propertyToAllChildren.TryGetValue(kvp.Key, out string? rawEntry)
+                            && rawEntry is not null
+                            && StartsWithChar(rawEntry, '{'))
+                        {
+                            ThrowEntryMustBeScalarOrArray(kvp.Key, sectionName);
+                        }
+
+                        // Empty array — treat as absent.
+                        continue;
+                    }
+
+                    if (builder.Scalar is not null)
+                    {
+                        // Two scalars at the same key cannot happen through valid JSON (duplicate key
+                        // would have failed earlier in JsonConfigurationFileParser). Treat this as a
+                        // schema violation if it ever occurs.
+                        ThrowEntryMustBeScalarOrArray(kvp.Key, sectionName);
+                    }
+
+                    builder.Scalar = kvp.Value;
+                }
+                else
+                {
+                    // Indexed entry. The sub-key MUST be a single non-negative integer; anything else
+                    // (a name, or a name plus more colons, or an integer plus more colons) implies a
+                    // nested object or an array of objects, neither of which is supported.
+                    int nestedColon = subKey.IndexOf(PlatformConfigurationConstants.KeyDelimiter, StringComparison.Ordinal);
+                    if (nestedColon >= 0)
+                    {
+                        ThrowEntryMustBeScalarOrArray(kvp.Key, sectionName);
+                    }
+
+                    if (!int.TryParse(subKey, NumberStyles.None, CultureInfo.InvariantCulture, out int idx))
+                    {
+                        ThrowEntryMustBeScalarOrArray(kvp.Key, sectionName);
+                    }
+
+                    if (kvp.Value is null)
+                    {
+                        // An indexed slot was an empty object/array — reject (arrays must hold scalars).
+                        ThrowEntryMustBeScalarOrArray(kvp.Key, sectionName);
+                    }
+
+                    builder.Indexed ??= [];
+                    builder.Indexed[idx] = kvp.Value!;
+                }
+
+                byOption[optionName] = builder;
+            }
+
+            List<JsonCommandLineOptionEntry> result = [];
+            foreach (KeyValuePair<string, OptionBuilder> entry in byOption)
+            {
+                string optionName = entry.Key;
+                OptionBuilder builder = entry.Value;
+
+                if (builder.Scalar is not null && builder.Indexed is { Count: > 0 })
+                {
+                    // Defensive: cannot happen through valid JSON input.
+                    ThrowEntryMustBeScalarOrArray(sectionPrefix + optionName, sectionName);
+                }
+
+                if (builder.Scalar is not null)
+                {
+                    if (bool.TryParse(builder.Scalar, out bool boolValue))
+                    {
+                        result.Add(new JsonCommandLineOptionEntry(optionName, [], isDisabled: !boolValue));
+                    }
+                    else
+                    {
+                        result.Add(new JsonCommandLineOptionEntry(optionName, [builder.Scalar], isDisabled: false));
+                    }
+                }
+                else if (builder.Indexed is { Count: > 0 } indexed)
+                {
+                    // JSON arrays always serialize to contiguous indices starting at 0, but verify
+                    // defensively so a malformed in-memory mutation cannot silently truncate.
+                    string[] args = new string[indexed.Count];
+                    int expected = 0;
+                    foreach (KeyValuePair<int, string> kvp in indexed)
+                    {
+                        if (kvp.Key != expected)
+                        {
+                            ThrowEntryMustBeScalarOrArray(sectionPrefix + optionName, sectionName);
+                        }
+
+                        args[expected++] = kvp.Value;
+                    }
+
+                    result.Add(new JsonCommandLineOptionEntry(optionName, args, isDisabled: false));
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Rewrites scalar <c>commandLineOptions:&lt;name&gt;</c> entries to the indexed shape
+        /// (<c>commandLineOptions:&lt;name&gt;:0</c>) for options registered with
+        /// <see cref="ArgumentArity.Min"/> &gt;= 1, using <paramref name="optionByName"/> as the
+        /// option registry.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The CLI-backed configuration provider stores zero-arity flags at the bare option key and
+        /// arg-bearing options under indexed keys (one per argument). The JSON provider cannot
+        /// distinguish these shapes at parse time because the user freely writes either
+        /// <c>"foo": "value"</c> (scalar) or <c>"foo": ["value"]</c> (array). For arg-bearing
+        /// options that always require at least one argument, a scalar value is always the first
+        /// argument — never a presence marker. Storing it under the indexed key normalizes the
+        /// shape so both <see cref="EnumerateCommandLineOptions"/> and
+        /// <see cref="AggregatedConfiguration.TryGetCommandLineOptionFromProviders"/> see one
+        /// consistent representation.
+        /// </para>
+        /// <para>
+        /// In particular, this fixes the JSON scalar/bool ambiguity from #6349/#8830: a value like
+        /// <c>"my-option": "true"</c> for an arg-bearing option used to be misinterpreted as a
+        /// presence marker (zero arguments) instead of being passed as the first argument value.
+        /// </para>
+        /// <para>
+        /// Optional-arg options (<c>Min == 0 &amp;&amp; Max &gt;= 1</c>) are left untouched because
+        /// either interpretation (presence vs. scalar argument) is semantically valid; users who
+        /// need to disambiguate should use the explicit array form.
+        /// </para>
+        /// </remarks>
+        internal void NormalizeCommandLineOptionScalars(IReadOnlyDictionary<string, CommandLineOption> optionByName)
+        {
+            if (_singleValueData is null || _singleValueData.Count == 0)
+            {
+                return;
+            }
+
+            const string sectionName = PlatformConfigurationConstants.CommandLineOptionsSectionName;
+            string sectionPrefix = sectionName + PlatformConfigurationConstants.KeyDelimiter;
+
+            List<(string OldKey, string NewKey, string Value)>? rewrites = null;
+
+            foreach (KeyValuePair<string, string?> kvp in _singleValueData)
+            {
+                if (!kvp.Key.StartsWith(sectionPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Bare key only: "commandLineOptions:<name>" with no further colon. Indexed entries
+                // already use the canonical shape and are not subject to the scalar/bool ambiguity.
+                string remainder = kvp.Key.Substring(sectionPrefix.Length);
+                if (remainder.Length == 0
+                    || remainder.IndexOf(PlatformConfigurationConstants.KeyDelimiter, StringComparison.Ordinal) >= 0)
+                {
+                    continue;
+                }
+
+                // A null value at the bare key represents an empty object/array; the schema
+                // validator in EnumerateCommandLineOptions will reject it later. Skip here so we
+                // never promote a placeholder to an indexed slot.
+                if (kvp.Value is null)
+                {
+                    continue;
+                }
+
+                if (!optionByName.TryGetValue(remainder, out CommandLineOption? option))
+                {
+                    // Unknown option name. Leave alone so the unknown-option validator pass can
+                    // surface a clear error referencing testconfig.json.
+                    continue;
+                }
+
+                if (option.Arity.Min < 1)
+                {
+                    continue;
+                }
+
+                string newKey = kvp.Key + PlatformConfigurationConstants.KeyDelimiter + "0";
+
+                // Defensive: if the indexed slot already exists, the JSON contained both a scalar
+                // and an array entry for the same option, which the schema validator will flag as
+                // malformed. Don't clobber.
+                if (_singleValueData.ContainsKey(newKey))
+                {
+                    continue;
+                }
+
+                (rewrites ??= []).Add((kvp.Key, newKey, kvp.Value));
+            }
+
+            if (rewrites is null)
+            {
+                return;
+            }
+
+            foreach ((string oldKey, string newKey, string value) in rewrites)
+            {
+                _singleValueData.Remove(oldKey);
+                _singleValueData[newKey] = value;
+            }
+        }
+
         private static bool StartsWithChar(string text, char c)
         {
             for (int i = 0; i < text.Length; i++)
@@ -219,11 +526,42 @@ internal sealed partial class JsonConfigurationSource
             return false;
         }
 
+        [DoesNotReturn]
         private void ThrowSectionMustBeAnObject(string sectionName)
             => throw new FormatException(string.Format(
                 CultureInfo.InvariantCulture,
                 PlatformResources.JsonConfigurationSectionMustBeAnObjectErrorMessage,
                 sectionName,
                 ConfigurationFile ?? "<unknown>"));
+
+        [DoesNotReturn]
+        private void ThrowEntryMustBeScalarOrArray(string fullKey, string sectionName)
+        {
+            // Callers pass the full flattened configuration key (e.g. "commandLineOptions:foo" or
+            // "commandLineOptions:foo:0"). The resource message reads "The entry '{0}' under section
+            // '{1}'..." so strip the leading "<sectionName>:" prefix to keep {0} as the entry name
+            // relative to the section (e.g. "foo" or "foo:0") and avoid the redundant/confusing
+            // "The entry 'commandLineOptions:foo' under section 'commandLineOptions'..." rendering.
+            string entryName = fullKey;
+            string prefix = sectionName + PlatformConfigurationConstants.KeyDelimiter;
+            if (entryName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                entryName = entryName.Substring(prefix.Length);
+            }
+
+            throw new FormatException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.JsonCommandLineOptionsEntryMustBeScalarOrArrayErrorMessage,
+                entryName,
+                sectionName,
+                ConfigurationFile ?? "<unknown>"));
+        }
+
+        private struct OptionBuilder
+        {
+            public string? Scalar { get; set; }
+
+            public SortedList<int, string>? Indexed { get; set; }
+        }
     }
 }

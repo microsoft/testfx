@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Combinatorial.MSTest;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 public abstract class AcceptanceTestBase
@@ -14,8 +16,12 @@ public abstract class AcceptanceTestBase
 
         MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework.");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Platform.");
-        MSTestEngineVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.Engine.");
+        MSTestSourceGenerationVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "MSTest.SourceGeneration.");
         MicrosoftTestingExtensionsLoggingVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.Logging.");
+        MicrosoftTestingExtensionsCtrfReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.CtrfReport.");
+        MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
+        MicrosoftTestingExtensionsPackagedAppVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
+        MicrosoftTestingExtensionsVideoRecorderVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
     }
 
     internal static string RID { get; }
@@ -29,13 +35,21 @@ public abstract class AcceptanceTestBase
 
     public static string MSTestVersion { get; private set; }
 
-    public static string MSTestEngineVersion { get; private set; }
+    public static string MSTestSourceGenerationVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     public static string MicrosoftTestingPlatformVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsLoggingVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsCtrfReportVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsJUnitReportVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsPackagedAppVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsVideoRecorderVersion { get; private set; }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
@@ -64,20 +78,6 @@ public abstract class AcceptanceTestBase
 
         string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
-    }
-
-    internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)> GetBuildMatrixTfmBuildVerbConfiguration()
-    {
-        foreach (string tfm in TargetFrameworks.All)
-        {
-            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
-            {
-                foreach (Verb verb in Enum.GetValues<Verb>())
-                {
-                    yield return new(tfm, compilationMode, verb);
-                }
-            }
-        }
     }
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
@@ -117,6 +117,41 @@ public abstract class AcceptanceTestBase
         foreach ((string MultiTfm, BuildConfiguration BuildConfiguration) entry in GetBuildMatrixMultiTfmBuildConfiguration())
         {
             yield return new(entry.MultiTfm, entry.BuildConfiguration, true);
+        }
+    }
+
+    /// <summary>
+    /// Gets the metadata modes each acceptance assertion should run against. By default the runtime
+    /// reflection path and both source-generated paths (<c>MSTest.SourceGeneration</c> and
+    /// <c>MSTest.AotReflection.SourceGeneration</c>) are exercised; the source-gen modes are dropped
+    /// when globally disabled via the kill-switch.
+    /// </summary>
+    internal static MetadataMode[] MetadataModesToRun { get; }
+        = AcceptanceSourceGen.IsGloballyDisabled
+            ? [MetadataMode.Reflection]
+            : [MetadataMode.Reflection, MetadataMode.SourceGeneration, MetadataMode.AotSourceGeneration];
+
+    /// <summary>
+    /// DynamicData source: every <see cref="TargetFrameworks.All"/> TFM combined with every applicable
+    /// <see cref="MetadataModesToRun"/> mode. Source generation is .NET-only, so .NET Framework TFMs
+    /// (net4x) are paired with <see cref="MetadataMode.Reflection"/> only.
+    /// <para>
+    /// This cross-parameter filter (net4x → reflection only) cannot be expressed with independent
+    /// <c>[CombinatorialData]</c> parameter providers, so it stays a bespoke data source. Matrices
+    /// without such a dependency should instead use <c>[CombinatorialData]</c> with
+    /// <see cref="MetadataModeValuesAttribute"/> (and <see cref="AllTargetFrameworksAttribute"/> when
+    /// a TFM axis is needed).
+    /// </para>
+    /// </summary>
+    public static IEnumerable<object[]> AllTfmsAndMetadataModes()
+    {
+        foreach (string tfm in TargetFrameworks.All)
+        {
+            // Source generation is .NET-only, so .NET Framework TFMs are paired with reflection only.
+            foreach (MetadataMode mode in MetadataModesToRun.Where(mode => mode == MetadataMode.Reflection || TargetFrameworks.Net.Contains(tfm)))
+            {
+                yield return [tfm, mode];
+            }
         }
     }
 
@@ -212,4 +247,35 @@ public class UnitTest1
     [SuppressMessage("Design", "CA1000:Do not declare static members on generic types", Justification = "Fine in this context")]
     public static void ClassCleanup()
         => AssetFixture.Dispose();
+}
+
+/// <summary>
+/// A <see cref="ICombinatorialValuesProvider"/> that yields every target framework in
+/// <see cref="TargetFrameworks.All"/> (the OS-dependent set, which includes .NET Framework on Windows).
+/// Apply it to a <see langword="string"/> parameter of a <c>[CombinatorialData]</c> test method to combine
+/// over all target frameworks without hand-writing a bespoke build-matrix data source.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+internal sealed class AllTargetFrameworksAttribute : Attribute, ICombinatorialValuesProvider
+{
+    // TargetFrameworks.All is never mutated, so it's safe to hand the same array back on every call.
+    public object?[] GetValues(ParameterInfo _) => TargetFrameworks.All;
+}
+
+/// <summary>
+/// A <see cref="ICombinatorialValuesProvider"/> that yields every metadata mode under test
+/// (<see cref="AcceptanceTestBase.MetadataModesToRun"/>): the runtime reflection path and, unless
+/// disabled via the source-gen kill-switch, both source-generated paths. Apply it to a
+/// <see cref="MetadataMode"/> parameter of a <c>[CombinatorialData]</c> test method so the same
+/// assertions run against every metadata path. Prefer it over auto-expanding the enum, which would
+/// ignore the kill-switch and always emit all three values.
+/// </summary>
+[AttributeUsage(AttributeTargets.Parameter)]
+internal sealed class MetadataModeValuesAttribute : Attribute, ICombinatorialValuesProvider
+{
+    // MetadataModesToRun never changes during a run, so box it into an object?[] once and hand the
+    // same array back on every call to avoid repeated allocations during combinatorial expansion.
+    private static readonly object?[] BoxedValues = [.. AcceptanceTestBase.MetadataModesToRun.Cast<object?>()];
+
+    public object?[] GetValues(ParameterInfo _) => BoxedValues;
 }

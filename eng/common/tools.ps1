@@ -596,9 +596,10 @@ function InitializeNuGetPackageCachePath() {
     # use global cache in dev builds to avoid cost of downloading packages.
     # For directory normalization, see also: https://github.com/NuGet/Home/issues/7968
     if ($useGlobalNuGetCache) {
-      $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages\'
+      $userProfile = if (IsWindowsPlatform) { $env:UserProfile } else { $env:HOME }
+      $env:NUGET_PACKAGES = [IO.Path]::Combine($userProfile, '.nuget', 'packages') + [IO.Path]::DirectorySeparatorChar
     } else {
-      $env:NUGET_PACKAGES = Join-Path $RepoRoot '.packages\'
+      $env:NUGET_PACKAGES = [IO.Path]::Combine($RepoRoot, '.packages') + [IO.Path]::DirectorySeparatorChar
     }
   }
 
@@ -741,7 +742,9 @@ function MSBuild() {
       ExitWithExitCode 1
     }
 
-    if ($nodeReuse) {
+    # Node reuse must be disabled in CI builds unless explicitly opted in via MSBUILD_NODEREUSE_ENABLED.
+    # Internal testing only; this env var will be replaced with a switch (https://github.com/dotnet/arcade/issues/17013) and must not be depended on.
+    if ($nodeReuse -and $env:MSBUILD_NODEREUSE_ENABLED -ne "1") {
       Write-PipelineTelemetryError -Category 'Build' -Message 'Node reuse must be disabled in CI build.'
       ExitWithExitCode 1
     }

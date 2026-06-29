@@ -119,9 +119,11 @@
   </resheader>
   <data name="CannotFindExpectedCrashDumpFile" xml:space="preserve">
     <value>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</value>
+    <comment>0 is the expected crash dump file path. Do not localize file pattern {Locked="*.dmp"}.</comment>
   </data>
   <data name="CannotFindExpectedCrashReportFile" xml:space="preserve">
     <value>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</value>
+    <comment>{0} is the expected crash report file path. {1} is the crash report file search pattern.</comment>
   </data>
   <data name="CrashDumpArtifactDescription" xml:space="preserve">
     <value>The testhost process crash dump file</value>
@@ -131,15 +133,19 @@
   </data>
   <data name="CrashDumpDescription" xml:space="preserve">
     <value>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</value>
+    <comment>Do not localize target framework moniker {Locked="net6.0+"}.</comment>
   </data>
   <data name="CrashDumpDisplayName" xml:space="preserve">
     <value>Crash dump</value>
   </data>
   <data name="CrashDumpFileNameOptionDescription" xml:space="preserve">
-    <value>Specify the name of the dump file</value>
+    <value>Specify the name of the dump file.
+Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</value>
+    <comment>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</comment>
   </data>
   <data name="CrashDumpInvalidEnvironmentVariableValueErrorMessage" xml:space="preserve">
     <value>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</value>
+    <comment>{0} is the environment variable name. {1} is the expected value. {2} is the actual value.</comment>
   </data>
   <data name="CrashDumpSequenceArtifactDescription" xml:space="preserve">
     <value>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</value>
@@ -149,6 +155,7 @@
   </data>
   <data name="CrashDumpSequenceFileReadError" xml:space="preserve">
     <value>Failed to read the crash sequence file '{0}': {1}</value>
+    <comment>{0} is the crash sequence file path. {1} is the error message.</comment>
   </data>
   <data name="CrashDumpTestsRunningAtCrash" xml:space="preserve">
     <value>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</value>
@@ -157,44 +164,57 @@
     <value>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</value>
+    <comment>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</comment>
   </data>
   <data name="CrashSequenceOptionInvalidArgument" xml:space="preserve">
     <value>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+    <comment>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</comment>
   </data>
   <data name="MissingCrashDumpMainOption" xml:space="preserve">
     <value>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</value>
+    <comment>Do not localize option names {Locked="--crashdump"}{Locked="--crash-report"}.</comment>
   </data>
   <data name="CrashDumpNotSupportedInNonNetCoreErrorMessage" xml:space="preserve">
     <value>Crash dump feature is only available in .NET (Core)</value>
+    <comment>Do not localize {Locked=".NET (Core)"}.</comment>
   </data>
   <data name="CrashDumpOptionDescription" xml:space="preserve">
     <value>[net6.0+ only] Generate a dump file if the test process crashes</value>
+    <comment>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</comment>
   </data>
   <data name="CrashDumpProcessCrashed" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</value>
+    <comment>{0} is the crashed test host process ID.</comment>
   </data>
   <data name="CrashDumpProcessCrashedDumpAndReportFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a dump file and crash report were generated</value>
+    <comment>{0} is the crashed test host process ID.</comment>
   </data>
   <data name="CrashDumpProcessCrashedDumpFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a dump file was generated</value>
+    <comment>{0} is the crashed test host process ID.</comment>
   </data>
   <data name="CrashDumpProcessCrashedReportFileCreated" xml:space="preserve">
     <value>Test host process with PID '{0}' crashed, a crash report was generated</value>
+    <comment>{0} is the crashed test host process ID.</comment>
   </data>
   <data name="CrashDumpTypeOptionDescription" xml:space="preserve">
     <value>Specify the type of the dump.
 Valid values are 'Mini', 'Heap', 'Triage' or 'Full'. Default type is 'Full'.
 For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</value>
+    <comment>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</comment>
   </data>
   <data name="CrashDumpTypeOptionInvalidType" xml:space="preserve">
     <value>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</value>
+    <comment>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</comment>
   </data>
   <data name="CrashDumpTypeOptionTooManyArguments" xml:space="preserve">
     <value>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</value>
+    <comment>Do not localize option name {Locked="--crashdump-type"} or example command {Locked="--crashdump-type Heap"}.</comment>
   </data>
   <data name="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage" xml:space="preserve">
     <value>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</value>
+    <comment>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}.</comment>
   </data>
   <data name="CrashReportArtifactDescription" xml:space="preserve">
     <value>The testhost process crash report file</value>
@@ -204,20 +224,26 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
   </data>
   <data name="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage" xml:space="preserve">
     <value>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</value>
+    <comment>Do not localize option name {Locked="--crash-report-if-supported"} or runtime name {Locked=".NET Framework"}.</comment>
   </data>
   <data name="CrashReportIfSupportedIgnoredOnWindowsInfoMessage" xml:space="preserve">
     <value>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</value>
+    <comment>Do not localize option name {Locked="--crash-report-if-supported"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</comment>
   </data>
   <data name="CrashReportIfSupportedOptionDescription" xml:space="preserve">
     <value>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</value>
+    <comment>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</comment>
   </data>
   <data name="CrashReportNotSupportedOnWindowsErrorMessage" xml:space="preserve">
     <value>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</value>
+    <comment>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</comment>
   </data>
   <data name="CrashReportOptionDescription" xml:space="preserve">
     <value>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</value>
+    <comment>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, platforms {Locked="Linux"}{Locked="macOS"}{Locked="Windows"}, format name {Locked="JSON"}, runtime name {Locked=".NET"}, target framework versions {Locked=".NET 7+"}{Locked=".NET 6+"}, or issue reference {Locked="dotnet/runtime#80191"}.</comment>
   </data>
   <data name="UnsupportedRequestTypeErrorMessage" xml:space="preserve">
     <value>Requests of type '{0}' is not supported</value>
+    <comment>{0} is the unsupported request type name.</comment>
   </data>
 </root>

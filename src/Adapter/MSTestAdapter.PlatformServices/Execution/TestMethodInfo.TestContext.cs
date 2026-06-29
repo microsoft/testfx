@@ -32,7 +32,17 @@ internal partial class TestMethodInfo
         {
             if (Parent.TestContextProperty != null && Parent.TestContextProperty.CanWrite)
             {
-                Parent.TestContextProperty.SetValue(classInstance, TestContext);
+                // Reflection-free fast path: use the source-generated setter when available;
+                // otherwise fall back to PropertyInfo.SetValue (reflection mode).
+                Action<object?, object?>? sourceGeneratedSetter = PlatformServiceProvider.Instance.ReflectionOperations.GetPropertySetter(Parent.TestContextProperty);
+                if (sourceGeneratedSetter is not null)
+                {
+                    sourceGeneratedSetter(classInstance, TestContext);
+                }
+                else
+                {
+                    Parent.TestContextProperty.SetValue(classInstance, TestContext);
+                }
             }
 
             return true;

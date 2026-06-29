@@ -15,6 +15,7 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
+[StackTraceHidden]
 internal sealed class ConsoleTestHost(
     ServiceProvider serviceProvider,
     Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
@@ -55,7 +56,7 @@ internal sealed class ConsoleTestHost(
         ITestFramework testFramework;
         using (ServiceProvider.GetPlatformOTelService()?.StartActivity("CreateTestFramework"))
         {
-            testFramework = await _buildTestFrameworkAsync(new(
+            testFramework = await _buildTestFrameworkAsync(new TestFrameworkBuilderData(
                 ServiceProvider,
                 new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
                 testFrameworkInvoker,
@@ -65,8 +66,7 @@ internal sealed class ConsoleTestHost(
                 _testFrameworkManager,
                 _testHostManager,
                 new MessageBusProxy(),
-                ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
-                false)).ConfigureAwait(false);
+                ServiceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))).ConfigureAwait(false);
         }
 
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();

@@ -1,8 +1,12 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.Testing.Framework.SourceGeneration.Helpers;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
+/// <summary>
+/// Canonical source-generator indentation helper. This file is linked by
+/// MSTest.AotReflection.SourceGeneration so both generators use deterministic newlines.
+/// </summary>
 internal sealed class IndentedStringBuilder
 {
     private readonly StringBuilder _builder = new();
@@ -12,73 +16,77 @@ internal sealed class IndentedStringBuilder
 
     public int IndentationLevel { get; internal set; }
 
-    public void Append(char value)
+    public IndentedStringBuilder Append(string value)
     {
         MaybeAppendIndent();
         _builder.Append(value);
         _needsIndent = false;
+
+        return this;
     }
 
-    public void Append(string value)
-    {
-        MaybeAppendIndent();
-        _builder.Append(value);
-        _needsIndent = false;
-    }
-
-    public void AppendLine()
+    public IndentedStringBuilder AppendLine()
     {
         _builder.Append(Constants.NewLine);
         _needsIndent = true;
+
+        return this;
     }
 
-    public void AppendLine(char value)
+    public IndentedStringBuilder AppendLine(string value)
     {
-        MaybeAppendIndent().Append(value).Append(Constants.NewLine);
+        MaybeAppendIndent();
+        _builder.Append(value);
+        _builder.Append(Constants.NewLine);
         _needsIndent = true;
+
+        return this;
     }
 
-    public void AppendLine(string value)
+    public IDisposable Block(string? header = null)
     {
-        MaybeAppendIndent().Append(value).Append(Constants.NewLine);
-        _needsIndent = true;
-    }
-
-    public void AppendUnindentedLine(string value)
-        => _builder.Append(value).Append(Constants.NewLine);
-
-    public IDisposable AppendBlock(string? value = null, char? closingBraceSuffixChar = null)
-    {
-        if (value is not null)
+        if (header is not null)
         {
-            AppendLine(value);
+            AppendLine(header);
         }
 
-        AppendLine('{');
+        AppendLine("{");
         IndentationLevel++;
 
         return new DisposableAction(() =>
         {
             IndentationLevel--;
-            Append('}');
-            if (closingBraceSuffixChar is not null)
-            {
-                Append(closingBraceSuffixChar.Value);
-            }
-
-            AppendLine();
+            AppendLine("}");
         });
     }
 
     public override string ToString() => _builder.ToString();
 
-    private StringBuilder MaybeAppendIndent()
+    private void MaybeAppendIndent()
     {
         if (_needsIndent)
         {
             _builder.Append(' ', IndentationLevel * 4);
+            _needsIndent = false;
         }
+    }
 
-        return _builder;
+    private sealed class DisposableAction : IDisposable
+    {
+        private readonly Action _action;
+        private bool _disposed;
+
+        public DisposableAction(Action action) => _action = action;
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            _action();
+        }
     }
 }

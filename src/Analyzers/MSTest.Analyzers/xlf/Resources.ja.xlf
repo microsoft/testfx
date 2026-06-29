@@ -20,7 +20,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[AssemblyCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- ジェネリック クラスで宣言することはできません
+- ジェネリック class で宣言することはできません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -30,22 +30,22 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型はクラスである必要があります
-- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- クラスを 'static' にすることはできません
-- クラスは '[TestClass]' (または派生属性) でマークする必要があります
-- クラスをジェネリックにすることはできません。</target>
-        <note />
+- 型は class である必要があります
+- class は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- class を 'static' にすることはできません
+- class は '[TestClass]' (または派生属性) でマークする必要があります
+- class をジェネリックにすることはできません。</target>
+        <note>{Locked="[DiscoverInternals]"}{Locked="[AssemblyCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
         <source>AssemblyCleanup method '{0}' signature is invalid</source>
         <target state="translated">AssemblyCleanup メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name. {Locked="AssemblyCleanup"}</note>
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
         <source>AssemblyCleanup methods should have valid layout</source>
         <target state="translated">AssemblyCleanup メソッドには有効なレイアウトが必要です</target>
-        <note />
+        <note>{Locked="AssemblyCleanup"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
         <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
@@ -65,7 +65,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[AssemblyInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
-- ジェネリック クラスで宣言することはできません
+- ジェネリック class で宣言することはできません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -75,27 +75,27 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型はクラスである必要があります
-- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- クラスを 'static' にすることはできません
-- クラスは '[TestClass]' (または派生属性) でマークする必要があります
-- クラスをジェネリックにすることはできません。</target>
-        <note />
+- 型は class である必要があります
+- class は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- class を 'static' にすることはできません
+- class は '[TestClass]' (または派生属性) でマークする必要があります
+- class をジェネリックにすることはできません。</target>
+        <note>{Locked="[AssemblyInitialize]"}{Locked="[DiscoverInternals]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
         <source>AssemblyInitialize method '{0}' signature is invalid</source>
         <target state="translated">AssemblyInitialize メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name. {Locked="AssemblyInitialize"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
         <source>AssemblyInitialize methods should have valid layout</source>
         <target state="translated">AssemblyInitialize メソッドには有効なレイアウトが必要です</target>
-        <note />
+        <note>{Locked="AssemblyInitialize"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
         <target state="translated">追加のアサーションによる null チェックを推奨する</target>
-        <note />
+        <note>{Locked="null"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
         <source>Avoid conditional access in assertions</source>
@@ -104,13 +104,13 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
         <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="translated">'Assert.AreEqual'、'Assert.AreNotEqual'、'Assert.AreSame'、および 'Assert.AreNotSame' では、必要な値が最初に渡され、実際の値が 2 番目の引数として渡される必要があります。</target>
-        <note />
+        <target state="translated">'Assert.AreEqual'、'Assert.AreNotEqual'、'Assert.AreSame'、および 'Assert.AreNotSame' では、expected 値が最初に渡され、actual 値が 2 番目の引数として渡される必要があります。</target>
+        <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
         <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
         <target state="translated">アサーション引数は正しい順序で渡す必要があります。'actual' 引数と 'expected'/'notExpected' 引数がスワップされました。</target>
-        <note />
+        <note>{Locked="actual"}{Locked="expected"}{Locked="notExpected"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
         <source>Assertion arguments should be passed in the correct order</source>
@@ -120,72 +120,72 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="AvoidAssertAreEqualOnCollectionsDescription">
         <source>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</source>
         <target state="translated">`Assert.AreEqual` と `Assert.AreNotEqual` は `EqualityComparer&lt;T&gt;.Default` を使用します。コレクションのような型では、これはシーケンス要素を比較するのではなく、型自体の等価性のセマンティクスに依存します。そのため、通常は `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` または `Assert.AreEquivalent`/`Assert.AreNotEquivalent` の方が適しています。</target>
-        <note />
+        <note>{Locked="EqualityComparer&lt;T&gt;.Default"}{Locked="Assert.AreNotSequenceEqual"}{Locked="Assert.AreSequenceEqual"}{Locked="Assert.AreNotEquivalent"}{Locked="Assert.AreEquivalent"}{Locked="Assert.AreNotEqual"}{Locked="Assert.AreEqual"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsMessageFormat">
         <source>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</source>
         <target state="translated">{1} の `{0}` (IEnumerable&lt;T&gt; を実装する型) では、要素ごとのシーケンス比較は行われません。順序付きの要素ごとの比較には `Assert.AreSequenceEqual`、順序なしの比較には `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)`、詳細な構造比較には `Assert.AreEquivalent` を使用します。</target>
-        <note />
+        <note>{0} is the current assert method call. {1} is the collection type name. {Locked="Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)"}{Locked="Assert.AreSequenceEqual"}{Locked="Assert.AreEquivalent"}{Locked="IEnumerable&lt;T&gt;"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsTitle">
         <source>Avoid Assert.AreEqual on collection types</source>
         <target state="translated">コレクション型では Assert.AreEqual を使用しない</target>
-        <note />
+        <note>{Locked="Assert.AreEqual"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesDescription">
         <source>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</source>
         <target state="translated">値の型を比較するときは、'Assert.AreSame'/'Assert.AreNotSame' の代わりに 'Assert.AreEqual'/'Assert.AreNotEqual' を使用してください。値の型を 'Assert.AreSame'/'Assert.AreNotSame' に渡すとボックス化されます (新しいオブジェクトが作成されます)。'Assert.AreSame'/'Assert.AreNotSame' は参照による比較を行うため、ボックス化が発生すると 'Assert.AreSame' は失敗し、'Assert.AreNotSame' は常に渡されます。</target>
-        <note />
+        <note>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesMessageFormat">
         <source>Use '{0}' instead of '{1}' when comparing value types</source>
         <target state="translated">値の型を比較するときに '{1}' の代わりに '{0}' を使用する</target>
-        <note />
+        <note>{0} is the preferred assertion method name. {1} is the current assertion method name.</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesTitle">
         <source>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</source>
         <target state="translated">値型に 'Assert.AreSame' または 'Assert.AreNotSame' を使用しないでください</target>
-        <note />
+        <note>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeMessageFormat">
         <source>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</source>
         <target state="translated">既定の自動検出動作を使用するには、'DynamicDataSourceType' 引数を削除してください</target>
-        <note />
+        <note>{Locked="DynamicDataSourceType"}</note>
       </trans-unit>
       <trans-unit id="AvoidExplicitDynamicDataSourceTypeTitle">
         <source>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</source>
         <target state="translated">明示的な 'DynamicDataSourceType' を渡さず、既定の自動検出動作を使用してください</target>
-        <note />
+        <note>{Locked="DynamicDataSourceType"}</note>
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsDescription">
         <source>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</source>
         <target state="translated">テスト メソッドまたはテスト フィクスチャ内で、'Thread.Sleep'、'Task.Wait'、'Task.WaitAll'、'Task.WaitAny'、または 'Task&lt;TResult&gt;.Result' を使用して現在のスレッドを同期的にブロックすると、不安定化の一般的な原因になります。また、テスト フレームワークが、協調的なスケジューリングを必要とする SynchronizationContext 上でテストを実行する場合、デッドロックを引き起こす可能性があります。時間ベースの待機には 'await Task.Delay' を、タスクの結果を観察するには 'await' を使用します。</target>
-        <note />
+        <note>{Locked="Task&lt;TResult&gt;.Result"}{Locked="Thread.Sleep"}{Locked="Task.WaitAll"}{Locked="Task.WaitAny"}{Locked="Task.Delay"}{Locked="Task.Wait"}{Locked="await"}{Locked="await Task.Delay"}</note>
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsMessageFormat">
         <source>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</source>
         <target state="translated">テスト コード内での '{0}' の使用はテストの不安定化を引き起こす可能性があるため避け、'await Task.Delay' やタスクの'await' などの非同期の代替手段を検討してください</target>
-        <note />
+        <note>{0} is the synchronous blocking call. {Locked="Task.Delay"}{Locked="await"}{Locked="await Task.Delay"}</note>
       </trans-unit>
       <trans-unit id="AvoidThreadSleepAndTaskWaitInTestsTitle">
         <source>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</source>
         <target state="translated">テスト コードでは、'Thread.Sleep'、'Task.Wait'、'Task.WaitAll'、'Task.WaitAny'、'Task&lt;TResult&gt;.Result' などの同期的にブロックする呼び出しは避けてください</target>
-        <note />
+        <note>{Locked="Task&lt;TResult&gt;.Result"}{Locked="Thread.Sleep"}{Locked="Task.WaitAll"}{Locked="Task.WaitAny"}{Locked="Task.Wait"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextDescription">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</source>
         <target state="translated">'async void' メソッド、ローカル関数、またはラムダ内ではアサートしないでください。このコンテキストでスローされる例外は、ハンドルされない例外になります。.NET Frameworkで VSTest を使用すると、警告なしに飲み込まれるようになります。最新の .NET で Microsoft.Testing.Platform または VSTest を使用すると、プロセスがクラッシュする可能性があります。</target>
-        <note />
+        <note>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextMessageFormat">
         <source>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</source>
         <target state="translated">'async void' メソッド、ローカル関数、またはラムダはテストに失敗しない可能性があるため、内部でアサートしないでください</target>
-        <note />
+        <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextTitle">
         <source>Do not assert inside 'async void' contexts</source>
         <target state="translated">'async void' コンテキスト内でアサートしないでください</target>
-        <note />
+        <note>{Locked="async void"}{Locked="void"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
         <source>Methods marked with '[ClassCleanup]' should follow the following layout to be valid:
@@ -207,7 +207,7 @@ The type declaring these methods should also respect the following rules:
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[ClassCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- 'InheritanceBehavior' モードが設定されていないと、ジェネリック クラスで宣言できません
+- 'InheritanceBehavior' モードが設定されていないと、ジェネリック class で宣言できません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -215,26 +215,26 @@ The type declaring these methods should also respect the following rules:
 - ジェネリックにすることはできません
 - パラメーターを受け取らないか、'TestContext' 型の 1 つのパラメーターを受け取る必要があります
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります
-- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定しない必要があります
+- class が 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定する必要があります
+- class が 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターを指定しない必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型はクラスである必要があります
-- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- クラスを 'static' にすることはできません
-- クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
-- クラスをジェネリックにすることはできません。</target>
-        <note />
+- 型は class である必要があります
+- class は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- class を 'static' にすることはできません
+- class が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
+- class をジェネリックにすることはできません。</target>
+        <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
         <source>ClassCleanup method '{0}' signature is invalid</source>
         <target state="translated">ClassCleanup メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name. {Locked="ClassCleanup"}</note>
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidTitle">
         <source>ClassCleanup methods should have valid layout</source>
         <target state="translated">ClassCleanup メソッドには有効なレイアウトが必要です</target>
-        <note />
+        <note>{Locked="ClassCleanup"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
         <source>Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
@@ -256,7 +256,7 @@ The type declaring these methods should also respect the following rules:
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[ClassInitialize]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- 'InheritanceBehavior' モードが設定されていないと、ジェネリック クラスで宣言できません
+- 'InheritanceBehavior' モードが設定されていないと、ジェネリック class で宣言できません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -264,26 +264,81 @@ The type declaring these methods should also respect the following rules:
 - ジェネリックにすることはできません
 - 'TestContext' 型のパラメーターを 1 つ受け取る必要があります
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
-- クラスが 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定する必要があります
-- クラスが 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定しない必要があります
+- class が 'abstract' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定する必要があります
+- class が 'sealed' である場合は 'InheritanceBehavior.BeforeEachDerivedClass' 属性パラメーターーを指定しない必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型はクラスである必要があります
-- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- クラスを 'static' にすることはできません
-- クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
-- クラスをジェネリックにすることはできません。</target>
-        <note />
+- 型は class である必要があります
+- class は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- class を 'static' にすることはできません
+- class が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります
+- class をジェネリックにすることはできません。</target>
+        <note>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
         <source>ClassInitialize method '{0}' signature is invalid</source>
         <target state="translated">ClassInitialize メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name. {Locked="ClassInitialize"}</note>
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidTitle">
         <source>ClassInitialize methods should have valid layout</source>
         <target state="translated">ClassInitialize メソッドには有効なレイアウトが必要です</target>
-        <note />
+        <note>{Locked="ClassInitialize"}</note>
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertMessageFormat">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</source>
+        <target state="translated">'CollectionAssert.{1}' の代わりに 'Assert.{0}' を使用する</target>
+        <note>{0} is the preferred Assert method name. {1} is the current CollectionAssert method name. {Locked="CollectionAssert"}{Locked="Assert"}</note>
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert' instead of 'CollectionAssert'</source>
+        <target state="translated">'CollectionAssert' の代わりに 'Assert' を使用する</target>
+        <note>{Locked="CollectionAssert"}{Locked="Assert"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidDescription">
+        <source>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</source>
+        <target state="translated">'[MemberCondition]' 属性で参照されるメンバーは、参照先の型に存在し、'public static' で、'bool' を返し、(メソッドの場合は) パラメーターなしである必要があります。これらの規則に違反すると、属性は実行時に例外をスローします。このアナライザーは、ビルド時に同じ問題を検出するため、入力ミスやリファクタリングによってテストのゲート処理が気づかないうちに機能しなくなる事態を回避できます。</target>
+        <note>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotFound">
+        <source>'[MemberCondition]' member '{0}.{1}' cannot be found</source>
+        <target state="translated">'[MemberCondition]' メンバー '{0}.{1}' が見つかりません</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotPublic">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</source>
+        <target state="translated">'[MemberCondition]' で参照されるメンバー '{0}.{1}' は 'public' である必要があります</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberNotStatic">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</source>
+        <target state="translated">'[MemberCondition]' で参照されるメンバー '{0}.{1}' は 'static' である必要があります</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongKind">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</source>
+        <target state="translated">'[MemberCondition]' で参照されるメンバー '{0}.{1}' は、プロパティ、フィールド、またはパラメーターなしのメソッドである必要があります</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType">
+        <source>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</source>
+        <target state="translated">'[MemberCondition]' で参照されるメンバー '{0}.{1}' は 'bool' を返す必要があります</target>
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_MethodHasParameters">
+        <source>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</source>
+        <target state="translated">'[MemberCondition]' で参照されるメソッド '{0}.{1}' はパラメーターなしである必要があります</target>
+        <note>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable">
+        <source>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</source>
+        <target state="translated">'[MemberCondition]' で参照されるプロパティ '{0}.{1}' にはゲッターが必要です</target>
+        <note>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</note>
+      </trans-unit>
+      <trans-unit id="MemberConditionShouldBeValidTitle">
+        <source>'[MemberCondition]' arguments should be valid</source>
+        <target state="translated">'[MemberCondition]' 引数は有効である必要があります</target>
+        <note>{Locked="[MemberCondition]"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
         <source>DataRow entry should have the following layout to be valid:
@@ -294,52 +349,52 @@ The type declaring these methods should also respect the following rules:
 - テスト メソッドにのみ設定する必要があります。
 - 引数の数はメソッドの引数の数と一致させる必要があります。
 - 引数の型は、メソッドの引数の型と一致させる必要があります。</target>
-        <note />
+        <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
         <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
         <target state="translated">DataRow 引数の数は、メソッド パラメーター数 (コンストラクター引数: {0}、メソッド パラメーター: {1}) と一致させる必要があります</target>
-        <note />
+        <note>{0} is the number of constructor arguments. {1} is the number of method parameters. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument types do not match method parameter types. {0}</source>
         <target state="translated">DataRow 引数の型がメソッド パラメーターの型と一致しません。 {0}</target>
-        <note />
+        <note>{0} is the argument type mismatch details. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ParameterMismatch">
         <source>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</source>
         <target state="translated">パラメーター '{0}' の型は '{1}' が想定されていますが、指定された値の型は '{2}' です</target>
-        <note />
+        <note>{0} is the parameter name. {1} is the expected parameter type. {2} is the provided value type.</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes">
         <source>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</source>
         <target state="translated">ジェネリック パラメーター '{0}' に 2 つの競合する型が見つかりました。競合する型は '{1}' で '{2}'。</target>
-        <note />
+        <note>{0} is the generic type parameter name. {1} and {2} are the conflicting type names.</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved">
         <source>The type of the generic parameter '{0}' could not be inferred.</source>
         <target state="translated">ジェネリック パラメーター '{0}' の型を推論できませんでした。</target>
-        <note />
+        <note>{0} is the generic type parameter name.</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
         <source>DataRow should only be set on a test method</source>
         <target state="translated">DataRow はテスト メソッドにのみ設定する必要があります</target>
-        <note />
+        <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
         <target state="translated">DataRow は有効である必要があります</target>
-        <note />
+        <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFix">
         <source>Use 'Assert.{0}' instead</source>
         <target state="translated">代わりに 'Assert.{0}' を使用する</target>
-        <note />
+        <note>{0} is the assert method name. {Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionFixAllTitle">
         <source>Use proper Assert methods for all negated assertions</source>
         <target state="translated">否定されたすべてのアサーションに適切な Assert メソッドを使用する</target>
-        <note />
+        <note>{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
         <source>Do not negate boolean assertions, instead use the opposite assertion</source>
@@ -353,13 +408,13 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
         <source>Do not store TestContext in a static member</source>
-        <target state="translated">静的メンバーに TestContext を格納しない</target>
-        <note />
+        <target state="translated">static メンバーに TestContext を格納しない</target>
+        <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
         <source>Do not store TestContext in a static member</source>
-        <target state="translated">静的メンバーに TestContext を格納しない</target>
-        <note />
+        <target state="translated">static メンバーに TestContext を格納しない</target>
+        <note>{Locked="TestContext"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseShadowingDescription">
         <source>Shadowing test members could cause testing issues (such as NRE).</source>
@@ -368,8 +423,8 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="DoNotUseShadowingMessageFormat">
         <source>Member '{0}' already exists in the base class</source>
-        <target state="translated">メンバー '{0}' は既に基本クラスに存在します</target>
-        <note />
+        <target state="translated">メンバー '{0}' は既に基本 class に存在します</target>
+        <note>{0} is the member name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseShadowingTitle">
         <source>Do not use shadowing</source>
@@ -379,27 +434,27 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="DoNotUseSystemDescriptionAttributeDescription">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</source>
         <target state="translated">'System.ComponentModel.DescriptionAttribute' はテストのコンテキストでは効果がないため、代わりに 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' を使用する必要がある可能性があります。</target>
-        <note />
+        <note>{Locked="Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute"}{Locked="System.ComponentModel.DescriptionAttribute"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeMessageFormat">
         <source>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</source>
         <target state="translated">'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' を使用する予定でしたか?</target>
-        <note />
+        <note>{Locked="Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseSystemDescriptionAttributeTitle">
         <source>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</source>
         <target state="translated">'System.ComponentModel.DescriptionAttribute' はテスト メソッドに影響しません</target>
-        <note />
+        <note>{Locked="System.ComponentModel.DescriptionAttribute"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowMessageFormat">
         <source>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</source>
         <target state="translated">'DataRow' 属性を複製しないでください。これは通常、コピー/貼り付けエラーです。属性インデックスは '{0}' と '{1}' です。</target>
-        <note />
+        <note>{0} is the first duplicate attribute index. {1} is the second duplicate attribute index. {Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DuplicateDataRowTitle">
         <source>Avoid duplicated 'DataRow' entries</source>
         <target state="translated">重複する 'DataRow' エントリを回避する</target>
-        <note />
+        <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidDescription">
         <source>'DynamicData' entry should have the following layout to be valid:
@@ -410,87 +465,87 @@ The type declaring these methods should also respect the following rules:
 - テスト メソッドにのみ設定する必要があります。
 - メンバーは、指定された型で定義する必要があります。
 - DynamicDataSourceType.Method が指定されている場合はメンバーはメソッド、それ以外の場合はプロパティである必要があります。</target>
-        <note />
+        <note>{Locked="DynamicDataSourceType.Method"}{Locked="DynamicData"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DataMemberSignature">
         <source>'[DynamicData]' data member '{0}.{1}' signature is invalid</source>
         <target state="translated">'[DynamicData]' データ メンバー '{0}.{1}' の署名が無効です</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the data member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature">
         <source>'[DynamicData]' display name method '{0}.{1}' signature is invalid</source>
         <target state="translated">'[DynamicData]' 表示名メソッド '{0}.{1}' の署名が無効です</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the display name method name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberMethod">
         <source>'[DynamicData]' member '{0}.{1}' should be a method</source>
         <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はメソッドである必要があります</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberNotFound">
         <source>'[DynamicData]' member '{0}.{1}' cannot be found</source>
         <target state="translated">'[DynamicData]' メンバー '{0}.{1}' が見つかりません</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_MemberType">
         <source>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</source>
         <target state="translated">'[DynamicData]' の参照されるメンバー '{0}.{1}' は、'IEnumerable&lt;object[]&gt;'、'IEnumerable&lt;Tuple&gt;`、'IEnumerable&lt;ValueTuple&gt;' のいずれかを返す必要があります</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="IEnumerable&lt;ValueTuple&gt;"}{Locked="IEnumerable&lt;object[]&gt;"}{Locked="IEnumerable&lt;Tuple&gt;"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_OnTestMethod">
         <source>'[DynamicData]' should only be set on a test method</source>
         <target state="translated">'[DynamicData]' はテスト メソッドでのみ設定する必要があります</target>
-        <note />
+        <note>{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeField">
         <source>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</source>
         <target state="translated">'[DynamicData]' のメンバー '{0}.{1}' はフィールドであるため、'DynamicDataSourceType.AutoDetect' または 'DynamicDataSourceType.Field' を使用する必要があります (明示的に指定しない場合は既定で自動検出され、これが推奨されます)</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Field"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod">
         <source>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</source>
         <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はメソッドであるため、'DynamicDataSourceType.AutoDetect' または 'DynamicDataSourceType.Method' を使用する必要があります (自動検出は明示的に指定されていない場合の既定値であり、推奨されます)</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Method"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField">
         <source>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</source>
         <target state="translated">'[DynamicData]' のメンバー '{0}.{1}' は、プロパティ、メソッド、フィールドではありません。サポートされているのは、プロパティ、メソッド、フィールドのみです。</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod">
         <source>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</source>
         <target state="translated">メンバー '{0}.{1}' '[DynamicData]' プロパティでもメソッドでもありません。プロパティとメソッドのみがサポートされています。</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty">
         <source>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</source>
         <target state="translated">'[DynamicData]' メンバー '{0}.{1}' はプロパティであるため、'DynamicDataSourceType.AutoDetect' または 'DynamicDataSourceType.Property' を使用する必要があります (自動検出は明示的に指定されていない場合の既定値であり、推奨されます)</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Property"}{Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidMessageFormat_TooManyMembers">
         <source>'[DynamicData]' member '{0}.{1}' is found more than once</source>
         <target state="translated">'[DynamicData]' メンバー '{0}.{1}' が複数回見つかりました</target>
-        <note />
+        <note>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</note>
       </trans-unit>
       <trans-unit id="DynamicDataShouldBeValidTitle">
         <source>DynamicData should be valid</source>
         <target state="translated">DynamicData は有効である必要があります</target>
-        <note />
+        <note>{Locked="DynamicData"}</note>
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenDescription">
         <source>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</source>
-        <target state="translated">CancellationToken パラメーターを受け入れるオーバーロードを持つ非同期メソッドを呼び出す場合は、TestContext.CancellationToken でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
-        <note />
+        <target state="translated">CancellationToken パラメーターを受け入れるオーバーロードを持つ async メソッドを呼び出す場合は、TestContext.CancellationToken でオーバーロードを使用して協調的な取り消しを有効にし、テスト タイムアウトを考慮します。</target>
+        <note>{Locked="TestContext.CancellationToken"}{Locked="CancellationToken"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenMessageFormat">
         <source>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</source>
         <target state="translated">CancellationToken を受け取り、'TestContext.CancellationToken' を渡すオーバーロードの使用を検討してください</target>
-        <note />
+        <note>{Locked="TestContext.CancellationToken"}{Locked="CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="FlowTestContextCancellationTokenTitle">
         <source>Flow TestContext.CancellationToken to async operations</source>
-        <target state="translated">TestContext.CancellationToken を非同期操作にフローする</target>
-        <note />
+        <target state="translated">TestContext.CancellationToken を async 操作にフローする</target>
+        <note>{Locked="TestContext.CancellationToken"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidDescription">
         <source>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
@@ -510,7 +565,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
         <target state="translated">'[GlobalTestInitialize]' または '[GlobalTestCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- ジェネリック クラスで宣言することはできません
+- ジェネリック class で宣言することはできません
 - 'public' である必要があります
 - 'static' である必要があります
 - 'async void' にすることはできません
@@ -520,47 +575,47 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型はクラスである必要があります
--クラスは 'public' である必要があります
-- クラスを 'static' にすることはできません
-- クラスは '[TestClass]' (または派生属性) でマークする必要があります
-- クラスをジェネリックにすることはできません。</target>
-        <note />
+- 型は class である必要があります
+-class は 'public' である必要があります
+- class を 'static' にすることはできません
+- class は '[TestClass]' (または派生属性) でマークする必要があります
+- class をジェネリックにすることはできません。</target>
+        <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
         <source>Global test fixture method '{0}' signature is invalid</source>
         <target state="translated">グローバル テスト フィクスチャ メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidTitle">
         <source>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</source>
         <target state="translated">GlobalTestInitialize および GlobalTestCleanup メソッドには有効なレイアウトが必要です</target>
-        <note />
+        <note>{Locked="GlobalTestInitialize"}{Locked="GlobalTestCleanup"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationDescription">
         <source>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</source>
-        <target state="translated">テスト メソッドまたはテスト クラスに適用される '[Ignore]' 属性には、テストまたはクラスが無視される理由を説明する、空でないメッセージを含める必要があります。正当化メッセージがあると、スキップされたテストのトリアージがしやすくなり、レビュー担当者が意図を理解しやすくなり、テストが静かに無効化されたままになるのを防げます。</target>
-        <note />
+        <target state="translated">テスト メソッドまたはテスト class に適用される '[Ignore]' 属性には、テストまたは class が無視される理由を説明する、空でないメッセージを含める必要があります。正当化メッセージがあると、スキップされたテストのトリアージがしやすくなり、レビュー担当者が意図を理解しやすくなり、テストが静かに無効化されたままになるのを防げます。</target>
+        <note>{Locked="[Ignore]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationMessageFormat">
         <source>'[Ignore]' should specify a message explaining why '{0}' is ignored</source>
         <target state="translated">'[Ignore]' では、'{0}' を無視する理由を説明するメッセージを指定する必要があります</target>
-        <note />
+        <note>{0} is the ignored target name. {Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="IgnoreShouldHaveJustificationTitle">
         <source>'[Ignore]' should specify a justification</source>
         <target state="translated">'[Ignore]' は理由を指定する必要があります</target>
-        <note />
+        <note>{Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueDescription">
         <source>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</source>
         <target state="translated">Contains、StartsWith、EndsWith などのメソッドは、条件が満たされたかどうかを示すブール値を返します。これらの戻り値を無視するのは間違いである可能性が高いです。</target>
-        <note />
+        <note>{Locked="StartsWith"}{Locked="Contains"}{Locked="EndsWith"}</note>
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueMessageFormat">
         <source>The return value of '{0}' should not be ignored</source>
         <target state="translated">'{0}' の戻り値は無視しないでください</target>
-        <note />
+        <note>{0} is the string method name.</note>
       </trans-unit>
       <trans-unit id="IgnoreStringMethodReturnValueTitle">
         <source>Do not ignore the return value of string methods</source>
@@ -570,102 +625,117 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">常に失敗している 'Assert.{0}' アサートの代わりに 'Assert.Fail' を使用する。</target>
-        <note />
+        <note>{0} is the assert method name. {Locked="Assert.Fail"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
         <target state="translated">常に失敗しているアサートの代わりに 'Assert.Fail' を使用する</target>
-        <note />
+        <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionDescription">
         <source>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</source>
-        <target state="translated">非同期コードからの例外を検証する場合は、GetAwaiter().GetResult() で非同期操作をブロックするのではなく、非同期アサーション メソッドを使用します。</target>
-        <note />
+        <target state="translated">asynchronous コードからの例外を検証する場合は、GetAwaiter().GetResult() で async操作をブロックするのではなく、asynchronous アサーション メソッドを使用します。</target>
+        <note>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionMessageFormat">
         <source>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</source>
-        <target state="translated">非同期呼び出しをブロックする代わりに、'Assert.{0}' ではなく 'Assert.{1}' を使用します</target>
-        <note />
+        <target state="translated">async 呼び出しをブロックする代わりに、'Assert.{0}' ではなく 'Assert.{1}' を使用します</target>
+        <note>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferAsyncAssertionTitle">
         <source>Prefer async assertion methods</source>
-        <target state="translated">非同期アサーション メソッドを優先する</target>
-        <note />
+        <target state="translated">async アサーション メソッドを優先する</target>
+        <note>{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerDescription">
         <source>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</source>
         <target state="translated">'DataTestMethodAttribute' は廃止されており、'TestMethodAttribute' に対して追加の機能は提供しません。パラメーター化されたテストを含むすべてのテスト メソッドには、'TestMethodAttribute' を使用してください。</target>
-        <note />
+        <note>{Locked="DataTestMethodAttribute"}{Locked="TestMethodAttribute"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat">
         <source>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</source>
         <target state="translated">'DataTestMethod' は廃止されました。代わりに 'TestMethod' を使用してください。</target>
-        <note />
+        <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
       </trans-unit>
       <trans-unit id="PreferTestMethodOverDataTestMethodAnalyzerTitle">
         <source>Prefer 'TestMethod' over 'DataTestMethod'</source>
         <target state="translated">'DataTestMethod' よりも 'TestMethod' を優先する</target>
+        <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodDisplayNameDescription">
+        <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
+        <target state="new">Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</target>
+        <note>{Locked="DisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodDisplayNameMessageFormat">
+        <source>The 'DisplayName' is the same as the test method name '{0}' and can be removed</source>
+        <target state="new">The 'DisplayName' is the same as the test method name '{0}' and can be removed</target>
+        <note>{0} is the test method name. {Locked="DisplayName"}</note>
+      </trans-unit>
+      <trans-unit id="RedundantTestMethodDisplayNameTitle">
+        <source>Test method should not specify a display name equal to its name</source>
+        <target state="new">Test method should not specify a display name equal to its name</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
         <source>Review or remove the assertion as its condition is known to be always true</source>
-        <target state="translated">アサーションの条件が常に TRUE であることが判明しているため、アサーションを確認または削除してください</target>
-        <note />
+        <target state="translated">アサーションの条件が常に true であることが判明しているため、アサーションを確認または削除してください</target>
+        <note>{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerTitle">
         <source>Assertion condition is always true</source>
-        <target state="translated">アサーション条件は常に TRUE です</target>
-        <note />
+        <target state="translated">アサーション条件は常に true です</target>
+        <note>{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
         <target state="translated">TestInitialize メソッドよりもコンストラクターを優先する</target>
-        <note />
+        <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeTitle">
         <source>Prefer constructors over TestInitialize methods</source>
         <target state="translated">TestInitialize メソッドよりもコンストラクターを優先する</target>
-        <note />
+        <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
         <source>Prefer 'Dispose' over TestCleanup methods</source>
         <target state="translated">TestCleanup メソッドよりも 'Dispose' を優先する</target>
-        <note />
+        <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupTitle">
         <source>Prefer 'Dispose' over TestCleanup methods</source>
         <target state="translated">TestCleanup メソッドよりも 'Dispose' を優先する</target>
-        <note />
+        <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
         <source>Prefer TestCleanup over 'Dispose' methods</source>
         <target state="translated">'Dispose' メソッドよりも TestCleanup を優先する</target>
-        <note />
+        <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeTitle">
         <source>Prefer TestCleanup over 'Dispose' methods</source>
         <target state="translated">'Dispose' メソッドよりも TestCleanup を優先する</target>
-        <note />
+        <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
         <source>Prefer TestInitialize methods over constructors</source>
         <target state="translated">コンストラクターよりも TestInitialize メソッドを優先する</target>
-        <note />
+        <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorTitle">
         <source>Prefer TestInitialize methods over constructors</source>
         <target state="translated">コンストラクターよりも TestInitialize メソッドを優先する</target>
-        <note />
+        <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerDescription">
         <source>Public methods should be test methods (marked with `[TestMethod]`).</source>
         <target state="translated">パブリック メソッドはテスト メソッドである必要があります ('[TestMethod]' でマーク)。</target>
-        <note />
+        <note>{Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerFormat">
         <source>Public method '{0}' should be a test method</source>
         <target state="translated">パブリック メソッド '{0}' はテスト メソッドである必要があります</target>
-        <note />
+        <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerTitle">
         <source>Public methods should be test methods</source>
@@ -674,13 +744,13 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
-        <target state="translated">テスト プロジェクトでは、テスト クラスのみをパブリックとしてマークすることをお勧めします。</target>
-        <note />
+        <target state="translated">テスト プロジェクトでは、テスト クラスのみを public としてマークすることをお勧めします。</target>
+        <note>{Locked="public"}</note>
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassMessageFormat">
         <source>Public type '{0}' should be marked with '[TestClass]' or changed to 'internal'</source>
         <target state="translated">パブリック型 '{0}' は '[TestClass]' でマークするか、'internal' に変更する必要があります</target>
-        <note />
+        <note>{0} is the type name. {Locked="[TestClass]"}{Locked="internal"}</note>
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassTitle">
         <source>Public types should be test classes</source>
@@ -690,62 +760,62 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="StringAssertToAssertMessageFormat">
         <source>Use 'Assert.{0}' instead of 'StringAssert.{1}'</source>
         <target state="translated">'StringAssert.{1}' の代わりに 'Assert.{0}' を使用します</target>
-        <note />
+        <note>{0} is the preferred Assert method name. {1} is the current StringAssert method name. {Locked="StringAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert' instead of 'StringAssert'</source>
         <target state="translated">'StringAssert' の代わりに 'Assert' を使用</target>
-        <note />
+        <note>{Locked="StringAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat">
         <source>Test class '{0}' should be valid</source>
-        <target state="translated">テスト クラス '{0}' は有効である必要があります</target>
-        <note />
+        <target state="translated">テスト class '{0}' は有効である必要があります</target>
+        <note>{0} is the test class name. {Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidMessageFormat">
         <source>Property 'TestContext' should be valid</source>
         <target state="translated">プロパティ 'TestContext' は有効である必要があります</target>
-        <note />
+        <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationMessageFormat">
         <source>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</source>
-        <target state="translated">TestMethodAttribute 派生クラス '{0}' は、CallerFilePath パラメーターと CallerLineNumber パラメーターをコンストラクターに追加する必要があります</target>
-        <note />
+        <target state="translated">TestMethodAttribute 派生 class '{0}' は、CallerFilePath パラメーターと CallerLineNumber パラメーターをコンストラクターに追加する必要があります</target>
+        <note>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldPropagateSourceInformationTitle">
         <source>TestMethodAttribute derived class should propagate source information</source>
-        <target state="translated">TestMethodAttribute 派生クラスはソース情報を伝達する必要があります</target>
-        <note />
+        <target state="translated">TestMethodAttribute 派生 class はソース情報を伝達する必要があります</target>
+        <note>{Locked="TestMethodAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat">
         <source>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</source>
         <target state="translated">文字列引数を TestMethodAttribute に渡す代わりに 'DisplayName' プロパティを使用する</target>
-        <note />
+        <note>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle">
         <source>TestMethodAttribute should set DisplayName correctly</source>
         <target state="translated">TestMethodAttribute は DisplayName を正しく設定する必要があります</target>
-        <note />
+        <note>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat">
         <source>Test method '{0}' signature is invalid</source>
         <target state="translated">テスト メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyDescription">
         <source>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</source>
         <target state="translated">TestContext.CancellationToken は、TestContext.CancellationTokenSource.Token と比較して、より直接的に取り消しトークンにアクセスできます。</target>
-        <note />
+        <note>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyMessageFormat">
         <source>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</source>
-        <target state="translated">'TestContext.CancellationTokenSource.Token' の代わりに 'TestContext.Cancellation.Token' を使用する</target>
-        <note />
+        <target state="translated">'TestContext.CancellationTokenSource.Token' の代わりに 'TestContext.CancellationToken' を使用する</target>
+        <note>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyTitle">
         <source>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</source>
-        <target state="translated">TestContext.CancellationTokenSource.Token の代わりに TestContext.Cancellation.Token を使用する</target>
-        <note />
+        <target state="translated">TestContext.CancellationTokenSource.Token の代わりに TestContext.CancellationToken を使用する</target>
+        <note>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
@@ -756,7 +826,7 @@ The type declaring these methods should also respect the following rules:
 - 'public' である必要があります ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
 - 'static' にすることはできません ('AssemblyInitialize' メソッドおよび/または 'AssemblyCleanup' メソッドのみが含まれる場合は除きます)
 - ジェネリックにすることはできません。</target>
-        <note />
+        <note>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
         <source>Test classes should have valid layout</source>
@@ -765,18 +835,18 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</source>
-        <target state="translated">テスト クラスには、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
-        <note />
+        <target state="translated">テスト class には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
+        <note>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</source>
-        <target state="translated">テスト クラス '{0}' には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
-        <note />
+        <target state="translated">テスト class '{0}' には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialize]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
+        <note>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="translated">テスト クラスにはテスト メソッドが必要です</target>
-        <note />
+        <target state="translated">テスト class にはテスト メソッドが必要です</target>
+        <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
         <source>Methods marked with '[TestCleanup]' should follow the following layout to be valid:
@@ -805,32 +875,32 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型はクラスである必要があります
-- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- クラスを 'static' にすることはできません
--クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
-        <note />
+- 型は class である必要があります
+- class は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- class を 'static' にすることはできません
+-class が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
+        <note>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
         <source>TestCleanup method '{0}' signature is invalid</source>
         <target state="translated">TestCleanup メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name. {Locked="TestCleanup"}</note>
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
         <source>TestCleanup method should have valid layout</source>
         <target state="translated">TestCleanup メソッドには有効なレイアウトが必要です</target>
-        <note />
+        <note>{Locked="TestCleanup"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
         <source>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</source>
-        <target state="translated">'TestContext' は、コンストラクターで割り当てられた非静的プロパティであるか、MSTest によって設定される必要があります。MSTest で設定するには、次のレイアウトに従う必要があります:
+        <target state="translated">'TestContext' は、コンストラクターで割り当てられた非 static プロパティであるか、MSTest によって設定される必要があります。MSTest で設定するには、次のレイアウトに従う必要があります:
 - '[assembly: DiscoverInternals]' 属性が設定されているかどうかに関係なく、'public' である必要があります。
 - 'static' にすることはできません
 - セッターが必要です。</target>
-        <note />
+        <note>{Locked="TestContext"}{Locked="MSTest"}{Locked="public"}{Locked="static"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidTitle">
         <source>Test context property should have valid layout</source>
@@ -864,21 +934,21 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
 
 これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型はクラスである必要があります
-- クラスは 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
-- クラスを 'static' にすることはできません
--クラスが 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
-        <note />
+- 型は class である必要があります
+- class は 'public' または 'internal' である必要があります (テスト プロジェクトが '[DiscoverInternals]' 属性を使用している場合)
+- class を 'static' にすることはできません
+-class が 'sealed' の場合は、'[TestClass]' (または派生属性) でマークする必要があります。</target>
+        <note>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
         <source>TestInitialize method '{0}' signature is invalid</source>
         <target state="translated">TestInitialize メソッド '{0}' シグネチャが無効です</target>
-        <note />
+        <note>{0} is the method name. {Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
         <source>TestInitialize method should have valid layout</source>
         <target state="translated">TestInitialize メソッドには有効なレイアウトが必要です</target>
-        <note />
+        <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
@@ -897,7 +967,7 @@ The type declaring these methods should also respect the following rules:
 - 戻り値の型は 'void'、'Task'、または 'ValueTask' である必要があります
 - 'async void' にすることはできません
 - 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。</target>
-        <note />
+        <note>{Locked="[TestMethod]"}{Locked="ValueTask"}{Locked="MSTest"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
@@ -907,12 +977,12 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
         <source>Test methods should not be ignored (marked with '[Ignore]').</source>
         <target state="translated">テスト メソッドを無視することはできません ('[Ignore]' でマークされます)。</target>
-        <note />
+        <note>{Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
         <source>Test method '{0}' should not be ignored</source>
         <target state="translated">テスト メソッド '{0}' を無視することはできません</target>
-        <note />
+        <note>{0} is the method name.</note>
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
         <source>Test method should not be ignored</source>
@@ -922,82 +992,82 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassDescription">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</source>
         <target state="translated">'[TestMethod]' を含む型は '[TestClass]' でマークする必要があります。そうしないとテスト メソッドは暗黙的に無視されます。</target>
-        <note />
+        <note>{Locked="[TestMethod]"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassMessageFormat">
         <source>Type '{0}' contains test methods and should be marked with '[TestClass]'</source>
         <target state="translated">型 '{0}' にはテスト メソッドが含まれており、'[TestClass]' でマークする必要があります</target>
-        <note />
+        <note>{0} is the type name. {Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="TypeContainingTestMethodShouldBeATestClassTitle">
         <source>Type containing '[TestMethod]' should be marked with '[TestClass]'</source>
         <target state="translated">'[TestMethod]' を含む型は '[TestClass]' でマークする必要があります</target>
-        <note />
+        <note>{Locked="[TestMethod]"}{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="translated">非同期テスト フィクスチャには 'Async' サフィックスは不要です</target>
-        <note />
+        <target state="translated">Asynchronous テスト フィクスチャには 'Async' サフィックスは不要です</target>
+        <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="translated">非同期テスト メソッドには 'Async' サフィックスは不要です</target>
-        <note />
+        <target state="translated">Asynchronous テスト メソッドには 'Async' サフィックスは不要です</target>
+        <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">
         <source>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</source>
         <target state="translated">AssemblyInitialize メソッドと ClassInitialize メソッドに対する MSTest には TestContext パラメーターが必要です</target>
-        <note />
+        <note>{Locked="AssemblyInitialize"}{Locked="ClassInitialize"}{Locked="TestContext"}{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] は、[TestMethod] でマークされたメソッドにのみ設定できます</target>
-        <note />
+        <note>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] は、[TestMethod] でマークされたメソッドにのみ設定できます</target>
-        <note />
+        <note>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassMessageFormat">
         <source>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</source>
         <target state="translated">'ConditionBaseAttribute' から派生する属性 '{0}' は、'TestClassAttribute' でマークされたクラスでのみ使用する必要があります</target>
-        <note />
+        <note>{0} is the attribute name. {Locked="ConditionBaseAttribute"}{Locked="TestClassAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseConditionBaseWithTestClassTitle">
         <source>Use 'ConditionBaseAttribute' on test classes</source>
         <target state="translated">テスト クラスで 'ConditionBaseAttribute' を使用する</target>
-        <note />
+        <note>{Locked="ConditionBaseAttribute"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutDescription">
         <source>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</source>
         <target state="translated">'CooperativeCancellation = true' を明示的にを設定せずに '[Timeout]' を使用することは推奨されません。将来のバージョンでは、協調的キャンセルが既定の動作になります。推奨される動作をオプトインし、破壊的な変更を避けるために、'CooperativeCancellation = true' を設定します。</target>
-        <note />
+        <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutMessageFormat">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</source>
         <target state="translated">'[Timeout]' と共に 'CooperativeCancellation = true' を使用して、協調的キャンセルの動作を有効にします</target>
-        <note />
+        <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutTitle">
         <source>Use 'CooperativeCancellation = true' with '[Timeout]'</source>
         <target state="translated">'[Timeout]' と共に 'CooperativeCancellation = true' を使用する</target>
-        <note />
+        <note>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassMessageFormat">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="translated">'[DeploymentItem]' は、テスト クラスまたはテスト メソッドでのみ指定できます</target>
-        <note />
+        <target state="translated">'[DeploymentItem]' は、テスト class またはテスト メソッドでのみ指定できます</target>
+        <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseDeploymentItemWithTestMethodOrTestClassTitle">
         <source>'[DeploymentItem]' can be specified only on test class or test method</source>
-        <target state="translated">'[DeploymentItem]' は、テスト クラスまたはテスト メソッドでのみ指定できます</target>
-        <note />
+        <target state="translated">'[DeploymentItem]' は、テスト class またはテスト メソッドでのみ指定できます</target>
+        <note>{Locked="[DeploymentItem]"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
         <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
         <target state="translated">既定では、MSTest は同じアセンブリ内でテストを順番に実行するため、重大なパフォーマンス制限が生じる可能性があります。アセンブリ属性 '[Parallelize]' を有効にして並列でテストを実行するか、アセンブリが並列化できないことがわかっている場合は、アセンブリ レベル属性 '[DoNotParallelize]' を明示的に使用することをお勧めします。</target>
-        <note />
+        <note>{Locked="[DoNotParallelize]"}{Locked="[Parallelize]"}{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerMessageFormat">
         <source>Explicitly enable or disable tests parallelization</source>
@@ -1012,67 +1082,67 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseProperAssertMethodsMessageFormat">
         <source>Use 'Assert.{0}' instead of 'Assert.{1}'</source>
         <target state="translated">'Assert.{1}' の代わりに 'Assert.{0}' を使用する</target>
-        <note />
+        <note>{0} is the preferred assert method name. {1} is the current assert method name. {Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsTitle">
         <source>Use proper 'Assert' methods</source>
         <target state="translated">適切な 'Assert' メソッドを使用する</target>
-        <note />
+        <note>{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodMessageFormat">
         <source>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</source>
-        <target state="translated">'RetryBaseAttribute' から派生する属性は、テスト メソッドまたはテスト クラスでのみ指定できます</target>
-        <note />
+        <target state="translated">'RetryBaseAttribute' から派生する属性は、テスト メソッドまたはテスト class でのみ指定できます</target>
+        <note>{Locked="RetryBaseAttribute"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="UseRetryWithTestMethodTitle">
         <source>Use retry attribute on test method or test class</source>
-        <target state="translated">テスト メソッドまたはテスト クラスで retry 属性を使用する</target>
-        <note />
+        <target state="translated">テスト メソッドまたはテスト class で retry 属性を使用する</target>
+        <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageTitle">
         <source>TestContext property cannot be accessed in this context</source>
         <target state="translated">このコンテキストでは TestContext プロパティにアクセスできません</target>
-        <note />
+        <note>{Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageMessageFormat">
         <source>TestContext property '{0}' cannot be accessed in '{1}' method</source>
         <target state="translated">TestContext プロパティ '{0}' に '{1}' メソッドでアクセスできません</target>
-        <note />
+        <note>{0} is the TestContext property name. {1} is the lifecycle method name. {Locked="TestContext"}</note>
       </trans-unit>
       <trans-unit id="TestContextPropertyUsageDescription">
         <source>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</source>
         <target state="translated">TestContext プロパティの一部はテストの実行中にのみ使用でき、assenbly initialize、class initialize、class cleanup、または assembly cleanup メソッドではアクセスできません。</target>
-        <note />
+        <note>{Locked="TestContext"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementDescription">
         <source>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</source>
         <target state="translated">Assert.Throws メソッドには 1 つのステートメントまたは式のみを含める必要があります。複数のステートメントは誤解を招く可能性があります。最初のステートメントがスローされた場合、後続のステートメントは実行されません。スローされない場合は、Assert.Throws の外部に移動する必要があります。</target>
-        <note />
+        <note>{Locked="Assert.Throws"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementMessageFormat">
         <source>Assert.Throws should contain only a single statement/expression</source>
         <target state="translated">Assert.Throws には 1 つのステートメントまたは式のみを含める必要があります</target>
-        <note />
+        <note>{Locked="Assert.Throws"}</note>
       </trans-unit>
       <trans-unit id="AssertThrowsShouldContainSingleStatementTitle">
         <source>Assert.Throws should contain only a single statement/expression</source>
         <target state="translated">Assert.Throws には 1 つのステートメントまたは式のみを含める必要があります</target>
-        <note />
+        <note>{Locked="Assert.Throws"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksTitle">
         <source>Do not use asserts in catch blocks</source>
         <target state="translated">catch ブロックでアサートを使用しないでください</target>
-        <note />
+        <note>{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksMessageFormat">
         <source>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</source>
         <target state="translated">例外がスローされない場合、テストに失敗しない可能性があるため、catch ブロックでアサートを使用しないでください</target>
-        <note />
+        <note>{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertsInCatchBlocksDescription">
         <source>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</source>
-        <target state="translated">catch ブロックでアサートを使用すると、例外がスローされず、catch ブロックが実行されなくてもテストが成功するため、問題があります。'Assert.Throws'、'Assert.ThrowsExactly'、'Assert.ThrowsAsync'、または 'Assert.ThrowsExactlyAsync' を使用して例外がスローされたことを確認し、try-catch ブロックを使用せずにキャッチされた例外に対して追加のアサートを実行します。ルールでは、'throw new AssertFailedException(...)' と 'throw new AssertInconclusiveException(...)' にもフラグが設定されます('Assert.Fail' および 'Assert.Inconclusive' の下書き形式)。'Assert.Inconclusive' (および 'throw new AssertInconclusiveException(...)') は、フィルター処理された catch ('catch (...) when (...)') 内で使用すると除外されます。キャッチされた失敗を不確定な結果に降格することは、catch ブロックなしで表現できない唯一のユース ケースであるためです。その他の意図的なバイパス (たとえば、ランタイム ビルドのメッセージをエラーにアタッチする) の場合は、"#pragma 警告の無効化MSTEST0058' を使用して診断を抑制します。</target>
-        <note />
+        <target state="translated">catch ブロックでアサートを使用すると、例外がスローされず、catch ブロックが実行されなくてもテストが成功するため、問題があります。'Assert.Throws'、'Assert.ThrowsExactly'、'Assert.ThrowsAsync'、または 'Assert.ThrowsExactlyAsync' を使用して例外がスローされたことを確認し、try-catch ブロックを使用せずにキャッチされた例外に対して追加のアサートを実行します。ルールでは、'throw new AssertFailedException(...)' と 'throw new AssertInconclusiveException(...)' にもフラグが設定されます('Assert.Fail' および 'Assert.Inconclusive' の下書き形式)。'Assert.Inconclusive' (および 'throw new AssertInconclusiveException(...)') は、フィルター処理された catch ('catch (...) when (...)') 内で使用すると除外されます。キャッチされた失敗を不確定な結果に降格することは、catch ブロックなしで表現できない唯一のユース ケースであるためです。その他の意図的なバイパス (たとえば、ランタイム ビルドのメッセージをエラーにアタッチする) の場合は、"#pragma warning disable MSTEST0058' を使用して診断を抑制します。</target>
+        <note>{Locked="#pragma warning disable MSTEST0058"}{Locked="AssertInconclusiveException"}{Locked="Assert.ThrowsExactlyAsync"}{Locked="AssertFailedException"}{Locked="Assert.ThrowsExactly"}{Locked="Assert.Inconclusive"}{Locked="Assert.ThrowsAsync"}{Locked="Assert.Throws"}{Locked="Assert.Fail"}{Locked="throw new AssertFailedException(...)"}{Locked="throw new AssertInconclusiveException(...)"}{Locked="catch"}</note>
       </trans-unit>
       <trans-unit id="DoNotUseParallelizeAndDoNotParallelizeTogetherDescription">
         <source>An assembly should have either '[Parallelize]' or '[DoNotParallelize]' attribute, but not both. Having both attributes creates an ambiguous configuration. When both are present, '[DoNotParallelize]' takes precedence and parallelization will be disabled.</source>
@@ -1092,17 +1162,17 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckTitle">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
         <target state="translated">早期リターンまたは 'Assert.Inconclusive' を含む 'RuntimeInformation.IsOSPlatform' 呼び出しの代わりに '[OSCondition]' 属性を使用します</target>
-        <note />
+        <note>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat">
         <source>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</source>
         <target state="translated">早期リターンまたは 'Assert.Inconclusive' を含む 'RuntimeInformation.IsOSPlatform' 呼び出しの代わりに '[OSCondition]' 属性を使用します</target>
-        <note />
+        <note>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckDescription">
         <source>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</source>
         <target state="translated">早期リターンまたは 'Assert.Inconclusive' を含む 'RuntimeInformation.IsOSPlatform' を使用するテスト メソッドでは、代わりに '[OSCondition]' 属性を使用してください。この属性は、OS 固有のテスト要件を指定するための、より宣言的かつ検出しやすい方法を提供します。</target>
-        <note />
+        <note>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</note>
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeTitle">
         <source>Avoid duplicate test method attributes</source>
@@ -1112,27 +1182,27 @@ The type declaring these methods should also respect the following rules:
       <trans-unit id="DuplicateTestMethodAttributeMessageFormat">
         <source>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</source>
         <target state="translated">テスト メソッド '{0}' には、'TestMethodAttribute' を継承する複数の属性があります。テスト メソッド属性は 1 つだけ使用してください。</target>
-        <note />
+        <note>{0} is the test method name. {Locked="TestMethodAttribute"}</note>
       </trans-unit>
       <trans-unit id="DuplicateTestMethodAttributeDescription">
         <source>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</source>
         <target state="translated">テスト メソッドでは、'TestMethodAttribute' またはそれを継承する属性が必ず 1 つだけマークされている必要があります。このような属性が複数存在する場合、リフレクションによって返された最初の属性のみが使用されます。</target>
-        <note />
+        <note>{Locked="TestMethodAttribute"}</note>
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersTitle">
         <source>Avoid using 'out' or 'ref' parameters in test methods</source>
         <target state="translated">テスト メソッドで 'out' または 'ref' パラメーターを使用しないでください</target>
-        <note />
+        <note>{Locked="out"}{Locked="ref"}</note>
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersMessageFormat">
         <source>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</source>
         <target state="translated">テスト メソッド '{0}' には 'out' または 'ref' パラメーターがあり、サポートは今後のメジャー バージョンで削除される予定です</target>
-        <note />
+        <note>{0} is the test method name. {Locked="out"}{Locked="ref"}</note>
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersDescription">
         <source>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</source>
         <target state="translated">'out' パラメーターと 'ref' パラメーターはテスト メソッドに値を追加しないため、安全に通常のパラメーターに置き換えることができます。</target>
-        <note />
+        <note>{Locked="out"}{Locked="ref"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidTitle">
         <source>Test classes should have valid constructors</source>
@@ -1141,13 +1211,13 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidMessageFormat">
         <source>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</source>
-        <target state="translated">テスト クラス '{0}' に有効なコンストラクターがありません。有効なコンストラクターは、'public' で、パラメーターがないもの、または 'TestContext' 型のパラメーター 1 個を取るものです。</target>
-        <note />
+        <target state="translated">テスト class '{0}' に有効なコンストラクターがありません。有効なコンストラクターは、'public' で、パラメーターがないもの、または 'TestContext' 型のパラメーター 1 個を取るものです。</target>
+        <note>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestClassConstructorShouldBeValidDescription">
         <source>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</source>
-        <target state="translated">テスト クラスには、パラメーターなし、または単一の TestContext パラメーターを受け取るパブリック コンストラクターが必要です。これにより、テスト フレームワークはテスト クラスを適切にインスタンス化できます。</target>
-        <note />
+        <target state="translated">テスト class には、パラメーターなし、または単一の TestContext パラメーターを受け取る public コンストラクターが必要です。これにより、テスト フレームワークはテスト class を適切にインスタンス化できます。</target>
+        <note>{Locked="TestContext"}{Locked="public"}{Locked="class"}</note>
       </trans-unit>
     </body>
   </file>

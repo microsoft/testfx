@@ -20,6 +20,15 @@ public sealed class TestingPlatformSelfRegisteredExtensions : Build.Utilities.Ta
     private const string FSharpLanguageSymbol = "F#";
     private const string VBLanguageSymbol = "VB";
 
+    private const string EmbeddedAttributeDefinition = """
+        namespace Microsoft.CodeAnalysis
+        {
+            internal sealed partial class EmbeddedAttribute : global::System.Attribute
+            {
+            }
+        }
+        """;
+
     private readonly IFileSystem _fileSystem;
 
     /// <summary>
@@ -211,6 +220,7 @@ static Contoso.BuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.Test
 //------------------------------------------------------------------------------
 
 [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+[global::Microsoft.CodeAnalysis.Embedded]
 internal static class SelfRegisteredExtensions
 {
     public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
@@ -218,6 +228,8 @@ internal static class SelfRegisteredExtensions
         {{extensionsFragments}}
     }
 }
+
+{{EmbeddedAttributeDefinition}}
 """
                 : $$"""
 //------------------------------------------------------------------------------
@@ -229,6 +241,7 @@ internal static class SelfRegisteredExtensions
 namespace {{rootNamespace}}
 {
     [global::System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage]
+    [global::Microsoft.CodeAnalysis.Embedded]
     internal static class SelfRegisteredExtensions
     {
         public static void AddSelfRegisteredExtensions(this global::Microsoft.Testing.Platform.Builder.ITestApplicationBuilder builder, string[] args)
@@ -237,6 +250,8 @@ namespace {{rootNamespace}}
         }
     }
 }
+
+{{EmbeddedAttributeDefinition}}
 """;
         }
         else if (language == VBLanguageSymbol)

@@ -5,7 +5,6 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Telemetry;
@@ -22,6 +21,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     private readonly bool _isDiscovery;
     private int _failedTestsCount;
     private int _totalRanTests;
+    private int _skippedTestsCount;
     private bool _testAdapterTestSessionFailure;
 
     public TestApplicationResult(
@@ -37,7 +37,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         _policiesService = policiesService;
         if (otelService is not null)
         {
-            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService, environment);
+            _openTelemetryResultHandler = new OpenTelemetryResultHandler(otelService);
         }
 
         _isDiscovery = _commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey);
@@ -80,10 +80,17 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         {
             case DiscoveredTestNodeStateProperty:
                 _openTelemetryResultHandler?.NotifyDiscovered();
+                // In discovery mode, discovered tests count toward the "ran" total.
+                if (_isDiscovery)
+                {
+                    _totalRanTests++;
+                }
+
                 break;
 
             case PassedTestNodeStateProperty passed:
                 _openTelemetryResultHandler?.NotifyPassed(message.TestNode, passed);
+                _totalRanTests++;
                 break;
 
             case FailedTestNodeStateProperty:
@@ -93,10 +100,28 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             case CancelledTestNodeStateProperty:
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
                 _openTelemetryResultHandler?.NotifyFailed(message.TestNode, executionState);
+                _failedTestsCount++;
+                _totalRanTests++;
                 break;
 
             case SkippedTestNodeStateProperty skipped:
                 _openTelemetryResultHandler?.NotifySkipped(message.TestNode, skipped);
+                _skippedTestsCount++;
+                // DESIGN: Skipped tests are intentionally excluded from `_totalRanTests`. Whether an all-skipped
+                // run is treated as "ran nothing" depends on the `--zero-tests-policy` option resolved in
+                // `GetProcessExitCode`:
+                //   - `allow-skipped` (#9385, the default): skipped count as run, so only a run where nothing was
+                //     discovered (`_totalRanTests == 0 && _skippedTestsCount == 0`) yields exit code
+                //     `ExitCode.ZeroTests` (8). An all-skipped run succeeds.
+                //   - `strict`: skipped don't count, so an all-skipped (or zero-test) run leaves
+                //     `_totalRanTests == 0` and yields exit code 8. This is the original behavior from #3216 / #3243
+                //     ("Skipped tests count as not run") which surfaced the common "invalid filter ran nothing" mistake.
+                // The documented blunt opt-out for any of exit code 8 remains `--ignore-exit-code 8`.
+                //
+                // Two other layers mirror this decision and must stay in lockstep:
+                //   - TerminalTestReporter.Summary.cs / TestRunSummaryHelper (`allTestsWereSkipped`)
+                //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
+                // Do not change this without revisiting those sites and the design discussion above.
                 break;
 
             case InProgressTestNodeStateProperty:
@@ -106,34 +131,6 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
             default:
                 _openTelemetryResultHandler?.NotifyUnknown();
                 break;
-        }
-
-        Type outcomeType = executionState.GetType();
-        if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, outcomeType) != -1)
-        {
-            _failedTestsCount++;
-        }
-
-        if (_isDiscovery
-            && Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeDiscoveredProperties, outcomeType) != -1)
-        {
-            _totalRanTests++;
-        }
-
-        // DESIGN: Skipped tests are intentionally excluded from `_totalRanTests`.
-        // `WellKnownTestNodeTestRunOutcomeProperties` does not contain `SkippedTestNodeStateProperty`, so an
-        // all-skipped (or zero-test) run leaves `_totalRanTests == 0` and yields exit code `ExitCode.ZeroTests` (8)
-        // in `GetProcessExitCode`. This is the strict default chosen in #3216 / #3243 ("Skipped tests count as not
-        // run") to surface the common "invalid filter ran nothing" mistake. The documented opt-out for users who
-        // legitimately expect all-skipped runs is `--ignore-exit-code 8`.
-        //
-        // Two other layers mirror this decision and must stay in lockstep:
-        //   - TerminalTestReporter.Summary.cs (`allTestsWereSkipped`)
-        //   - Microsoft.Testing.Platform.MSBuild InvokeTestingPlatformTask (run-summary verdict)
-        // Do not relax this without revisiting those sites and the design discussion above.
-        else if (Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeProperties, outcomeType) != -1)
-        {
-            _totalRanTests++;
         }
 
         return Task.CompletedTask;
@@ -146,7 +143,16 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCode.Success && _testAdapterTestSessionFailure ? ExitCode.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
-        exitCode = exitCode == ExitCode.Success && _totalRanTests == 0 ? ExitCode.ZeroTests : exitCode;
+
+        // Determine whether the run should be treated as having executed zero tests. Skipped tests are excluded
+        // from `_totalRanTests`. Under the default `allow-skipped` policy (#9385) skipped tests count as run, so only
+        // a run that discovered nothing at all counts as zero tests; under `strict` an all-skipped run also counts
+        // as zero tests.
+        ZeroTestsPolicy zeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions);
+        bool ranZeroTests = zeroTestsPolicy == ZeroTestsPolicy.AllowSkipped
+            ? _totalRanTests == 0 && _skippedTestsCount == 0
+            : _totalRanTests == 0;
+        exitCode = exitCode == ExitCode.Success && ranZeroTests ? ExitCode.ZeroTests : exitCode;
 
         if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
         {

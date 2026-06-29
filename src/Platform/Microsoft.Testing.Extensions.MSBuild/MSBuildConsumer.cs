@@ -78,13 +78,47 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
             return;
         }
 
-        TimingProperty? timingProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TimingProperty>();
+        // Collect required properties in a single zero-allocation GetStructEnumerator() pass.
+        // TestNodeStateProperty is an O(1) cached field on PropertyBag (see SingleOrDefault) so
+        // only the TimingProperty/TestFileLocationProperty lookups actually walk the linked list;
+        // we replace those 2 walks with 1 here. We also preserve PropertyBag.SingleOrDefault's
+        // throw-on-duplicate invariant for those two property types so malformed messages still
+        // fail fast instead of silently dropping later instances.
+        TestNodeStateProperty? stateProperty = null;
+        TimingProperty? timingProperty = null;
+        TestFileLocationProperty? testFileLocationProperty = null;
+
+        PropertyBag.PropertyBagEnumerator enumerator = testNodeStateChanged.TestNode.Properties.GetStructEnumerator();
+        while (enumerator.MoveNext())
+        {
+            switch (enumerator.Current)
+            {
+                case TestNodeStateProperty s when stateProperty is null:
+                    stateProperty = s;
+                    break;
+                case TimingProperty t:
+                    if (timingProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(TimingProperty)}'.");
+                    }
+
+                    timingProperty = t;
+                    break;
+                case TestFileLocationProperty f:
+                    if (testFileLocationProperty is not null)
+                    {
+                        throw new InvalidOperationException($"Found multiple properties of type '{typeof(TestFileLocationProperty)}'.");
+                    }
+
+                    testFileLocationProperty = f;
+                    break;
+            }
+        }
+
         string? duration = timingProperty is null ? null :
             ToHumanReadableDuration(timingProperty.GlobalTiming.Duration.TotalMilliseconds);
 
-        TestFileLocationProperty? testFileLocationProperty = testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
-
-        switch (testNodeStateChanged.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>())
+        switch (stateProperty)
         {
             case ErrorTestNodeStateProperty errorState:
                 await HandleFailuresAsync(
@@ -172,7 +206,8 @@ internal sealed class MSBuildConsumer : IDataConsumer, ITestSessionLifetimeHandl
 
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks != null);
         ApplicationStateGuard.Ensure(_msBuildTestApplicationLifecycleCallbacks.PipeClient != null);
-        var runSummaryInfoRequest = new RunSummaryInfoRequest(_totalTests, _totalFailedTests, _totalPassedTests, _totalSkippedTests, duration);
+        bool allowSkipped = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions) == ZeroTestsPolicy.AllowSkipped;
+        var runSummaryInfoRequest = new RunSummaryInfoRequest(_totalTests, _totalFailedTests, _totalPassedTests, _totalSkippedTests, duration, allowSkipped);
         await _msBuildTestApplicationLifecycleCallbacks.PipeClient.RequestReplyAsync<RunSummaryInfoRequest, VoidResponse>(runSummaryInfoRequest, cancellationToken).ConfigureAwait(false);
     }
 

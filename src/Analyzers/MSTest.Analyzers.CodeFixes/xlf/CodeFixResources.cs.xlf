@@ -5,77 +5,77 @@
       <trans-unit id="AddCallerInfoParametersFix">
         <source>Add '[CallerFilePath]' and '[CallerLineNumber]' parameters</source>
         <target state="translated">Přidat parametry [CallerFilePath] a [CallerLineNumber]</target>
-        <note />
+        <note>{Locked="[CallerLineNumber]"}{Locked="[CallerFilePath]"}</note>
       </trans-unit>
       <trans-unit id="AddIgnoreJustificationFix">
         <source>Add a placeholder justification to '[Ignore]'</source>
         <target state="translated">Přidat zástupné odůvodnění do „[Ignore]“</target>
-        <note />
+        <note>{Locked="[Ignore]"}</note>
       </trans-unit>
       <trans-unit id="AddTestClassFix">
         <source>Add '[TestClass]'</source>
         <target state="translated">Přidat [TestClass]</target>
-        <note />
+        <note>{Locked="[TestClass]"}</note>
       </trans-unit>
       <trans-unit id="AddTestMethodAttributeFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Přidat [TestMethod]</target>
-        <note />
+        <note>{Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessFix">
         <source>Move conditional access in assertion to separate 'Assert.IsNotNull' check</source>
         <target state="translated">Přesunout podmíněný přístup v kontrolním výrazu, aby se oddělila kontrola Assert.IsNotNull</target>
-        <note />
+        <note>{Locked="Assert.IsNotNull"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsEquivalentFix">
-        <source>Replace with `Assert.{0}`</source>
-        <target state="translated">Nahraďte výrazem `Assert.{0}`</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AvoidAssertAreEqualOnCollectionsInAnyOrderFix">
-        <source>Replace with `Assert.{0}(..., SequenceOrder.InAnyOrder)`</source>
-        <target state="translated">Nahraďte výrazem `Assert.{0}(..., SequenceOrder.InAnyOrder)`</target>
-        <note />
+        <source>Use deep structural comparison ('Assert.{0}')</source>
+        <target state="translated">Použít hloubkové strukturální porovnání (Assert.{0})</target>
+        <note>{0} is the replacement Assert method name. {Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreEqualOnCollectionsOrderedFix">
-        <source>Replace with `Assert.{0}` (ordered)</source>
-        <target state="translated">Nahraďte výrazem `Assert.{0}` (seřazeno)</target>
-        <note />
+        <source>Use ordered, element-wise comparison ('Assert.{0}')</source>
+        <target state="translated">Použít seřazené porovnání podle elementů (Assert.{0})</target>
+        <note>{0} is the replacement Assert method name. {Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="AvoidAssertAreSameWithValueTypesFix">
         <source>Use '{0}'</source>
         <target state="translated">Použít {0}</target>
-        <note />
+        <note>{0} is the replacement assert method name.</note>
       </trans-unit>
       <trans-unit id="AvoidOutParameterOnAssertIsInstanceOfTypeFix">
         <source>Use assignment instead of 'out' parameter</source>
         <target state="translated">Použít přiřazení místo parametru out</target>
-        <note />
+        <note>{Locked="out"}</note>
       </trans-unit>
       <trans-unit id="AvoidOutRefTestMethodParametersFix">
         <source>Remove 'out' and 'ref' modifiers</source>
         <target state="translated">Odebrat modifikátory out a ref</target>
-        <note />
+        <note>{Locked="out"}{Locked="ref"}</note>
       </trans-unit>
       <trans-unit id="AvoidUsingAssertsInAsyncVoidContextFix">
         <source>Change return type to 'Task'</source>
         <target state="translated">Změňte návratový typ na Task.</target>
-        <note />
+        <note>{Locked="Task"}</note>
       </trans-unit>
       <trans-unit id="ChangeMethodAccessibilityToPrivateFix">
         <source>Change method accessibility to 'private'</source>
         <target state="translated">Změnit přístupnost metody na private</target>
-        <note />
+        <note>{Locked="private"}</note>
       </trans-unit>
       <trans-unit id="ChangeStructToClassAndAddTestClassFix">
         <source>Change to 'class' and add '[TestClass]'</source>
         <target state="translated">Změňte na class a přidejte [TestClass]</target>
-        <note />
+        <note>{Locked="[TestClass]"}{Locked="class"}</note>
+      </trans-unit>
+      <trans-unit id="CollectionAssertToAssertTitle">
+        <source>Use 'Assert.{0}' instead of 'CollectionAssert'</source>
+        <target state="translated">Použijte Assert.{0} namísto CollectionAssert</target>
+        <note>{0} is the replacement Assert method name. {Locked="CollectionAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="FixAssertionArgsOrder">
         <source>Fix actual/expected arguments order</source>
-        <target state="translated">Opravit pořadí skutečných/očekávaných argumentů</target>
-        <note />
+        <target state="translated">Opravit pořadí actual/expected argumentů</target>
+        <note>{Locked="actual"}{Locked="expected"}</note>
       </trans-unit>
       <trans-unit id="FixSignatureCodeFix">
         <source>Fix signature</source>
@@ -85,67 +85,72 @@
       <trans-unit id="PassCancellationTokenFix">
         <source>Pass 'TestContext.CancellationToken' argument to method call</source>
         <target state="translated">Předat argument TestContext.CancellationToken volání metody</target>
-        <note />
+        <note>{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="RemoveClassCleanupBehaviorArgumentFix">
         <source>Remove 'ClassCleanupBehavior' argument</source>
         <target state="translated">Odebrat argument ClassCleanupBehavior</target>
-        <note />
+        <note>{Locked="ClassCleanupBehavior"}</note>
       </trans-unit>
       <trans-unit id="RemoveDuplicateDataRowFix">
         <source>Remove duplicate 'DataRow'</source>
         <target state="translated">Odebrat duplicitní „DataRow“</target>
-        <note />
+        <note>{Locked="DataRow"}</note>
       </trans-unit>
       <trans-unit id="RemoveDuplicateTestMethodAttributeFix">
         <source>Remove duplicate TestMethod attribute</source>
         <target state="translated">Odebrat duplicitní atribut TestMethod</target>
-        <note />
+        <note>{Locked="TestMethod"}</note>
       </trans-unit>
       <trans-unit id="RemoveDynamicDataSourceTypeFix">
         <source>Remove 'DynamicDataSourceType' parameter to use default 'AutoDetect'</source>
         <target state="translated">Pokud chcete použít výchozí AutoDetect, odeberte parametr DynamicDataSourceType.</target>
-        <note />
+        <note>{Locked="DynamicDataSourceType"}{Locked="AutoDetect"}</note>
+      </trans-unit>
+      <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">
+        <source>Remove redundant 'DisplayName'</source>
+        <target state="new">Remove redundant 'DisplayName'</target>
+        <note>{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
         <source>Replace 'DataTestMethod' with 'TestMethod'</source>
         <target state="translated">Nahradit DataTestMethod hodnotou TestMethod</target>
-        <note />
+        <note>{Locked="DataTestMethod"}{Locked="TestMethod"}</note>
       </trans-unit>
       <trans-unit id="ReplaceWithConstructorFix">
         <source>Replace TestInitialize method with constructor</source>
         <target state="translated">Nahradit metodu TestInitialize konstruktorem</target>
-        <note />
+        <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="ReplaceWithDisposeFix">
         <source>Replace TestCleanup with Dispose method</source>
         <target state="translated">Nahradit TestCleanup metodou Dispose</target>
-        <note />
+        <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="ReplaceWithFailAssertionFix">
         <source>Replace the assertion with 'Assert.Fail()'</source>
         <target state="translated">Nahradit kontrolní výraz za Assert.Fail()</target>
-        <note />
+        <note>{Locked="Assert.Fail"}</note>
       </trans-unit>
       <trans-unit id="ReplaceWithTestCleanuFix">
         <source>Replace 'Dispose' with a TestCleanup method</source>
         <target state="translated">Nahradit metodu Dispose metodou TestCleanup</target>
-        <note />
+        <note>{Locked="TestCleanup"}{Locked="Dispose"}</note>
       </trans-unit>
       <trans-unit id="ReplaceWithTestInitializeFix">
         <source>Replace constructor with TestInitialize method</source>
         <target state="translated">Nahradit konstruktor metodou TestInitialize</target>
-        <note />
+        <note>{Locked="TestInitialize"}</note>
       </trans-unit>
       <trans-unit id="StringAssertToAssertTitle">
         <source>Use 'Assert.{0}' instead of 'StringAssert'</source>
         <target state="translated">Použijte Assert.{0}místo StringAssert</target>
-        <note />
+        <note>{0} is the replacement Assert method name. {Locked="StringAssert"}{Locked="Assert"}</note>
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidFix">
         <source>Fix test class signature</source>
-        <target state="translated">Oprava podpisu testovací třídy</target>
-        <note />
+        <target state="translated">Oprava podpisu testovací class</target>
+        <note>{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidFix">
         <source>Fix test context</source>
@@ -160,52 +165,52 @@
       <trans-unit id="TransformExecuteToExecuteAsyncFix">
         <source>Transform 'Execute' override to 'ExecuteAsync'</source>
         <target state="translated">Transformovat přepsání Execute na ExecuteAsync</target>
-        <note />
+        <note>{Locked="ExecuteAsync"}{Locked="Execute"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncAssertionFix">
         <source>Use async assertion</source>
         <target state="translated">Použít asynchronní kontrolní výraz</target>
-        <note />
+        <note>{Locked="async"}</note>
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodFix">
         <source>Add '[TestMethod]'</source>
         <target state="translated">Přidat [TestMethod]</target>
-        <note />
+        <note>{Locked="[TestMethod]"}</note>
       </trans-unit>
       <trans-unit id="UseContainsKeyInsteadOfContainsFix">
         <source>Use 'ContainsKey' instead of 'Contains'</source>
         <target state="translated">Použijte ContainsKey místo Contains</target>
-        <note />
+        <note>{Locked="ContainsKey"}{Locked="Contains"}</note>
       </trans-unit>
       <trans-unit id="UseCancellationTokenPropertyFix">
         <source>Use 'TestContext.CancellationToken' instead</source>
         <target state="translated">Místo toho použít argument TestContext.CancellationToken</target>
-        <note />
+        <note>{Locked="TestContext.CancellationToken"}</note>
       </trans-unit>
       <trans-unit id="UseCooperativeCancellationForTimeoutFix">
         <source>Use 'CooperativeCancellation = true'</source>
         <target state="translated">Použijte „CooperativeCancellation = true“</target>
-        <note />
+        <note>{Locked="CooperativeCancellation = true"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="UseDisplayNamePropertyInsteadOfStringArgumentFix">
         <source>Use 'DisplayName' property instead of string argument</source>
         <target state="translated">Místo řetězcového argumentu použijte vlastnost DisplayName</target>
-        <note />
+        <note>{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="UseMSTestDescriptionAttributeInsteadFix">
         <source>Use MSTest 'Description' attribute instead</source>
         <target state="translated">Místo toho použijte atribut MSTest Description.</target>
-        <note />
+        <note>{Locked="Description"}{Locked="MSTest"}</note>
       </trans-unit>
       <trans-unit id="UseProperAssertMethodsFix">
         <source>Use '{0}'</source>
         <target state="translated">Použít {0}</target>
-        <note />
+        <note>{0} is the replacement assert method name.</note>
       </trans-unit>
       <trans-unit id="UseOSConditionAttributeInsteadOfRuntimeCheckFix">
         <source>Use '[OSCondition]' attribute</source>
         <target state="translated">Použít atribut [OSCondition]</target>
-        <note />
+        <note>{Locked="[OSCondition]"}</note>
       </trans-unit>
     </body>
   </file>

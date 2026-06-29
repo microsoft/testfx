@@ -36,8 +36,8 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Engine" Version="$(MSTestAOTVersion)" />
     <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
   </ItemGroup>
 

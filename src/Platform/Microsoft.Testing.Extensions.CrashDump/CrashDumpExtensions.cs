@@ -34,7 +34,8 @@ public static class CrashDumpExtensions
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetCommandLineOptions(),
                 crashDumpGeneratorConfiguration,
-                serviceProvider.GetLoggerFactory()));
+                serviceProvider.GetLoggerFactory(),
+                serviceProvider.GetClock()));
 
         builder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider
             => new CrashDumpProcessLifetimeHandler(

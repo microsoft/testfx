@@ -20,7 +20,7 @@ public sealed class TestApplicationResultTests : IDisposable
     public void Dispose() => _testApplicationResult.Dispose();
 
     [TestMethod]
-    public async Task GetProcessExitCodeAsync_If_All_Skipped_Returns_ZeroTestsRan()
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_ByDefault_Returns_Success()
     {
         await _testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -31,7 +31,31 @@ public sealed class TestApplicationResultTests : IDisposable
                 Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
             }), CancellationToken.None);
 
-        Assert.AreEqual((int)ExitCode.ZeroTests, _testApplicationResult.GetProcessExitCode());
+        // Default policy is 'allow-skipped', so an all-skipped run is treated as successful.
+        Assert.AreEqual((int)ExitCode.Success, _testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_With_StrictPolicy_Returns_ZeroTestsRan()
+    {
+        using TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyStrictArgument]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid("id"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]
@@ -47,6 +71,52 @@ public sealed class TestApplicationResultTests : IDisposable
             }), CancellationToken.None);
 
         Assert.AreEqual((int)ExitCode.ZeroTests, _testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCodeAsync_If_All_Skipped_With_AllowSkippedPolicy_Returns_Success()
+    {
+        using TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyAllowSkippedArgument]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid("id"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(SkippedTestNodeStateProperty.CachedInstance),
+            }), CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.Success, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
+    public async Task GetProcessExitCodeAsync_If_No_Tests_With_AllowSkippedPolicy_Returns_ZeroTestsRan()
+    {
+        using TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.ZeroTestsPolicyOptionKey, [PlatformCommandLineProvider.ZeroTestsPolicyAllowSkippedArgument]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new TestNode
+            {
+                Uid = new TestNodeUid("id"),
+                DisplayName = "DisplayName",
+                Properties = new PropertyBag(),
+            }), CancellationToken.None);
+
+        Assert.AreEqual((int)ExitCode.ZeroTests, testApplicationResult.GetProcessExitCode());
     }
 
     [TestMethod]

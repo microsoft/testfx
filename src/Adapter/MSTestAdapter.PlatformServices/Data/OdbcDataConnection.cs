@@ -5,36 +5,23 @@
 
 using System.Data.Odbc;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for ODBC.
 /// </summary>
-internal sealed class OdbcDataConnection : TestDataConnectionSql
+internal sealed class OdbcDataConnection : MSSqlCapableConnection
 {
-    private readonly bool _isMSSql;
-
     public OdbcDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
     {
-        // Need open connection to get Connection.Driver.
-        DebugEx.Assert(IsOpen(), "The connection must be open!");
-
-        _isMSSql = Connection != null && IsMSSql(Connection.Driver);
     }
 
     public new OdbcCommandBuilder CommandBuilder => (OdbcCommandBuilder)base.CommandBuilder;
 
     public new OdbcConnection Connection => (OdbcConnection)base.Connection;
 
-    /// <summary>
-    /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
-    /// </summary>
-    public override void GetQuoteLiterals() => GetQuoteLiteralsHelper();
-
-    public override string? GetDefaultSchema() => _isMSSql ? GetDefaultSchemaMSSql() : base.GetDefaultSchema();
+    protected override string? GetProviderNameForMSSqlDetection() => Connection.Driver;
 
     protected override SchemaMetaData[] GetSchemaMetaData()
     {
@@ -60,46 +47,20 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         return [data1, data2];
     }
 
-    protected override string QuoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.QuoteIdentifier(identifier, Connection);  // Must pass connection.
-    }
-
-    protected override string UnquoteIdentifier(string identifier)
-    {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
-        return CommandBuilder.UnquoteIdentifier(identifier, Connection);  // Must pass connection.
-    }
-
     // Need to fix up excel connections
     private static string FixConnectionString(string connectionString, List<string> dataFolders)
     {
         OdbcConnectionStringBuilder builder = [with(connectionString)];
 
         // only fix this for excel
-        if (!string.Equals(builder.Dsn, "Excel Files", StringComparison.Ordinal))
-        {
-            return connectionString;
-        }
-
-        string? fileName = builder["dbq"] as string;
-
-        if (StringEx.IsNullOrEmpty(fileName))
-        {
-            return connectionString;
-        }
-        else
-        {
-            // Fix-up magic file paths
-            string? fixedFilePath = FixPath(fileName, dataFolders);
-            if (fixedFilePath != null)
-            {
-                builder["dbq"] = fixedFilePath;
-            }
-
-            return builder.ConnectionString;
-        }
+        return !string.Equals(builder.Dsn, "Excel Files", StringComparison.Ordinal)
+            ? connectionString
+            : FixConnectionStringFilePath(
+                builder,
+                connectionString,
+                () => builder["dbq"] as string,
+                fixedFilePath => builder["dbq"] = fixedFilePath,
+                dataFolders);
     }
 }
 #endif

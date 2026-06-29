@@ -7,6 +7,20 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 internal static class AcceptanceAssert
 {
+    /// <summary>
+    /// Regex fragment (including the surrounding parentheses) that matches a test duration as rendered in the
+    /// platform output, e.g. <c>(040ms)</c>, <c>(1s 040ms)</c>, <c>(2m 03s 040ms)</c> or <c>(1h 02m 03s 040ms)</c>.
+    /// </summary>
+    /// <remarks>
+    /// The duration format (see <c>HumanReadableDurationFormatter</c> in Microsoft.Testing.Platform) grows additional
+    /// leading parts (seconds, minutes, hours, days) as the elapsed time increases. A naive <c>\(\d+ms\)</c> pattern
+    /// only matches sub-second durations and is a frequent source of timing flakiness on slower machines (often macOS,
+    /// sometimes Windows) where a test that usually runs in a few hundred milliseconds occasionally takes over a second
+    /// and is rendered as <c>(1s 040ms)</c>. Always use this constant when asserting on output that contains a duration
+    /// instead of hard-coding <c>\(\d+ms\)</c>.
+    /// </remarks>
+    public const string DurationPattern = @"\((?:\d+d )?(?:\d+h )?(?:\d+m )?(?:\d+s )?\d+ms\)";
+
     public static void AssertExitCodeIs(this TestHostResult testHostResult, int exitCode, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
         => Assert.AreEqual(exitCode, testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
@@ -122,7 +136,7 @@ internal static class AcceptanceAssert
     public static void AssertStandardErrorContains(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
        => Assert.Contains(value, testHostResult.StandardError, StringComparison.Ordinal, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
-    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, bool allSkippedIsZeroTests = false, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
     {
         int totalTests = failed + passed + skipped;
         string result = minimumNumberOfTests != null && totalTests < minimumNumberOfTests
@@ -131,7 +145,7 @@ internal static class AcceptanceAssert
                 ? "Aborted"
                 : failed > 0
                     ? "Failed!"
-                    : totalTests == 0 || totalTests == skipped
+                    : totalTests == 0 || (allSkippedIsZeroTests && totalTests == skipped)
                         ? "Zero tests ran"
                         : "Passed!";
 

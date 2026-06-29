@@ -312,7 +312,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="propertiesToMerge">The properties to merge in. May be <see langword="null"/>.</param>
     internal void MergeProperties(IReadOnlyDictionary<string, object?>? propertiesToMerge)
     {
-        if (propertiesToMerge is null)
+        if (propertiesToMerge is null or { Count: 0 })
         {
             return;
         }
@@ -343,6 +343,12 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// stored on a <c>TestAssemblyInfo</c> / <c>TestClassInfo</c> and later merged into other
     /// contexts via <see cref="MergeProperties(IReadOnlyDictionary{string, object?}?)"/>.
     /// <para>
+    /// Returns <see langword="null"/> when there are no non-label properties to capture
+    /// (the common case when <c>AssemblyInitialize</c> / <c>ClassInitialize</c> do not set
+    /// properties on <c>TestContext</c>). <see cref="MergeProperties"/> already handles a
+    /// <see langword="null"/> argument as a no-op, so callers need not special-case this.
+    /// </para>
+    /// <para>
     /// The snapshot is shallow: keys and value references are copied as-is. Reference-type
     /// values stored in the bag (e.g. a mocked file system, a connection pool, a list) are
     /// shared across every context the snapshot is later merged into. Mutations of those
@@ -358,15 +364,15 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// thread-affinity expectation of <c>AssemblyInitialize</c> / <c>ClassInitialize</c>.
     /// </para>
     /// </summary>
-    /// <returns>A read-only snapshot of the current properties.</returns>
-    internal IReadOnlyDictionary<string, object?> CaptureLifecycleProperties()
+    /// <returns>
+    /// A read-only snapshot of the current properties (excluding per-context labels), or
+    /// <see langword="null"/> if there are no such properties to snapshot.
+    /// </returns>
+    internal IReadOnlyDictionary<string, object?>? CaptureLifecycleProperties()
     {
-        Dictionary<string, object?> snapshot;
+        Dictionary<string, object?>? snapshot = null;
         lock (_propertiesLock)
         {
-#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
-            snapshot = new Dictionary<string, object?>(_properties.Count);
-#pragma warning restore IDE0028
             foreach (KeyValuePair<string, object?> kvp in _properties)
             {
                 if (kvp.Key == FullyQualifiedTestClassNameLabel || kvp.Key == TestNameLabel)
@@ -374,11 +380,14 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
                     continue;
                 }
 
+#pragma warning disable IDE0028 // Collection initialization can be simplified - capacity hint is intentional.
+                snapshot ??= new Dictionary<string, object?>(_properties.Count);
+#pragma warning restore IDE0028
                 snapshot[kvp.Key] = kvp.Value;
             }
         }
 
-        return new ReadOnlyDictionary<string, object?>(snapshot);
+        return snapshot is null ? null : new ReadOnlyDictionary<string, object?>(snapshot);
     }
 
     /// <summary>

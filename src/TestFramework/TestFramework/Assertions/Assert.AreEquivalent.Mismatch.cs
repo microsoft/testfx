@@ -9,6 +9,7 @@ public sealed partial class Assert
     /// A single structural mismatch found by <see cref="EquivalenceComparer"/>, carrying the dotted
     /// member path, a localized reason summary, and any expected/actual snippets to render.
     /// </summary>
+    [StackTraceHidden]
     private sealed class EquivalenceMismatch
     {
         private EquivalenceMismatch(string path, string reason, string? expectedText, string? actualText, bool isComparisonFailure)

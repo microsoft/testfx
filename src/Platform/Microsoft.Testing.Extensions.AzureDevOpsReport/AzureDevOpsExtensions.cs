@@ -33,6 +33,37 @@ public static class AzureDevOpsExtensions
                     serviceProvider.GetTestApplicationModuleInfo(),
                     serviceProvider.GetLoggerFactory()));
 
+        var compositeSummaryReporter =
+            new CompositeExtensionFactory<AzureDevOpsSummaryReporter>(serviceProvider =>
+                new AzureDevOpsSummaryReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetConfiguration(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetFileSystem(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
+        var compositeSlowTestReporter =
+            new CompositeExtensionFactory<AzureDevOpsSlowTestReporter>(serviceProvider =>
+                new AzureDevOpsSlowTestReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTask(),
+                    serviceProvider.GetClock(),
+                    serviceProvider.GetLoggerFactory(),
+                    historyService ??= CreateHistoryService(serviceProvider)));
+
+        var compositeLogGroupReporter =
+            new CompositeExtensionFactory<AzureDevOpsLogGroupReporter>(serviceProvider =>
+                new AzureDevOpsLogGroupReporter(
+                    serviceProvider.GetCommandLineOptions(),
+                    serviceProvider.GetEnvironment(),
+                    serviceProvider.GetOutputDevice(),
+                    serviceProvider.GetTestApplicationModuleInfo(),
+                    serviceProvider.GetLoggerFactory()));
+
         var compositeTestResultsPublisher =
             new CompositeExtensionFactory<AzureDevOpsTestResultsPublisher>(serviceProvider =>
                new AzureDevOpsTestResultsPublisher(
@@ -60,11 +91,20 @@ public static class AzureDevOpsExtensions
                 historyService);
         });
         builder.TestHost.AddDataConsumer(compositeArtifactUploader);
+        builder.TestHost.AddDataConsumer(compositeSummaryReporter);
+        builder.TestHost.AddDataConsumer(compositeSlowTestReporter);
         builder.TestHost.AddDataConsumer(compositeTestResultsPublisher);
+        builder.TestHost.AddDataConsumer(compositeLogGroupReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
             historyService ??= CreateHistoryService(serviceProvider));
         builder.TestHost.AddTestSessionLifetimeHandler(compositeArtifactUploader);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSlowTestReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeTestResultsPublisher);
+
+        // Registered last so its OnTestSessionFinishingAsync (the closing ##[endgroup]) runs after
+        // the other AzDO handlers' finishing callbacks, ensuring the group wraps all their output.
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeLogGroupReporter);
         builder.CommandLine.AddProvider(() => new AzureDevOpsCommandLineProvider());
     }
 

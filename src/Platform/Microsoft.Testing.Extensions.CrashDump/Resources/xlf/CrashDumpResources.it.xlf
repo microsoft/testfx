@@ -5,12 +5,12 @@
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
         <target state="translated">Il file di dump di arresto anomalo '{0}' previsto non è stato trovato. Tutti i file corrispondenti al criterio '*.dmp' verranno copiati nella cartella dei risultati.</target>
-        <note />
+        <note>0 is the expected crash dump file path. Do not localize file pattern {Locked="*.dmp"}.</note>
       </trans-unit>
       <trans-unit id="CannotFindExpectedCrashReportFile">
         <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
         <target state="translated">Il file del rapporto di arresto anomalo ''{0}'' previsto non è stato trovato. Tutti i file corrispondenti al criterio ''{1}'' verranno copiati nella cartella dei risultati</target>
-        <note />
+        <note>{0} is the expected crash report file path. {1} is the crash report file search pattern.</note>
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
@@ -25,7 +25,7 @@
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
         <target state="translated">[solo net6.0+] Generazione di file di dump di arresto anomalo quando il processo di esecuzione del test si arresta in modo imprevisto</target>
-        <note />
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
@@ -33,44 +33,46 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpFileNameOptionDescription">
-        <source>Specify the name of the dump file</source>
-        <target state="translated">Specificare il nome del file di dump</target>
-        <note />
+        <source>Specify the name of the dump file.
+Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
+        <target state="new">Specify the name of the dump file.
+Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</target>
+        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
         <target state="translated">La variabile di ambiente '{0}' avrebbe dovuto essere impostata su '{1}' ma il valore è '{2}'</target>
-        <note />
+        <note>{0} is the environment variable name. {1} is the expected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
         <target state="translated">La funzionalità dump di arresto anomalo del sistema è disponibile solo in .NET (Core)</target>
-        <note />
+        <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
         <target state="translated">[solo net6.0+ ] Generazione di un file di dump in caso di arresto anomalo del processo di test</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
         <target state="translated">Il processo host di test con PID ''{0}'' si è arrestato in modo anomalo, ma gli artefatti di diagnostica previsti non sono stati prodotti</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
         <target state="translated">Processo host di test con arresto anomalo del PID ''{0}''. Sono stati generati un file di dump e un report di arresto anomalo</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">Il processo host di test con PID '{0}' si è arrestato in modo anomalo. È stato generato un file di dump</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
         <target state="translated">Processo host di test con arresto anomalo del PID ''{0}''. È stato generato un report di arresto anomalo</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
@@ -85,7 +87,7 @@
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">Non è possibile leggere il file della sequenza di arresto anomalo ''{0}'': {1}</target>
-        <note />
+        <note>{0} is the crash sequence file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -99,22 +101,22 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">Specificare il tipo di dump.
 I valori validi sono 'Mini', 'Heap', 'Triage' o 'Full'. Il tipo predefinito è 'Full'.
 Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
         <target state="translated">'{0}' non è un tipo di dump valido. Le opzioni valide sono 'Mini', 'Heap', 'Triage' e 'Full'</target>
-        <note />
+        <note>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
         <target state="translated">'--crashdump-type' prevede un singolo tipo di dump come argomento (ad esempio '--crashdump-type Heap')</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"} or example command {Locked="--crashdump-type Heap"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
         <target state="translated">'--crash-report' e '--crash-report-if-supported' si escludono a vicenda. Usare '--crash-report-if-supported' per acconsentire esplicitamente a un report di arresto anomalo del sistema che viene ignorato automaticamente nelle piattaforme in cui non è supportato oppure '--crash-report' per eseguire rapidamente l'operazione quando l'opzione non può essere rispettata.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
@@ -129,27 +131,27 @@ Per altre informazioni, visitare https://learn.microsoft.com/dotnet/core/diagnos
       <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
         <target state="translated">'--crash-report-if-supported' è stato specificato ma viene ignorato in questo runtime: il .NET Framework testhost non supporta il meccanismo di dump di arresto anomalo del sistema basato sul runtime/report di arresto anomalo del sistema. Non verrà generato alcun file di report sugli arresti anomali del sistema.</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"} or runtime name {Locked=".NET Framework"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
         <target state="translated">'--crash-report-if-supported' è stato specificato ma viene ignorato in questa piattaforma: il runtime .NET ignora le variabili di ambiente 'DOTNET_EnableCrashReport' e 'DOTNET_EnableCrashReportOnly' sottostanti in Windows (vedere https://github.com/dotnet/runtime/issues/80191). Non verrà generato alcun file di report sugli arresti anomali del sistema.</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
         <target state="translated">Uguale a '--crash-report', ma ignorato automaticamente (con un messaggio informativo) nelle piattaforme in cui la generazione del rapporto di arresto anomalo non è supportata. Usare questa opzione per mantenere la stessa riga di comando tra matrici CI che includono Windows. Si escludono a vicenda con '--crash-report'.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
         <target state="translated">''--crash-report'' non è supportato in Windows perché il runtime .NET ignora le variabili di ambiente ''DOTNET_EnableCrashReport'' e ''DOTNET_EnableCrashReportOnly'' sottostanti in questa piattaforma. Vedere https://github.com/dotnet/runtime/issues/80191. Usare '--crash-report-if-supported' per ignorare automaticamente l'opzione in Windows oppure '--crashdump' per generare un file di dump di arresto anomalo del sistema.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
         <target state="translated">[Solo Linux/macOS] Generare un report di arresto anomalo JSON quando il processo di test si arresta in modo anomalo. Combinare con ''--crashdump'' per generare anche un file di dump. Richiede .NET 7+ se usato da solo; .NET 6+ in combinazione con ''--crashdump''. Questo requisito di runtime non viene applicato dallo strumento: nei runtime non supportati non verrà generato alcun rapporto di arresto anomalo. Non supportato in Windows a causa di una limitazione del runtime .NET (dotnet/runtime#80191); usare '--crash-report-if-supported' per ignorare automaticamente l'opzione.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, platforms {Locked="Linux"}{Locked="macOS"}{Locked="Windows"}, format name {Locked="JSON"}, runtime name {Locked=".NET"}, target framework versions {Locked=".NET 7+"}{Locked=".NET 6+"}, or issue reference {Locked="dotnet/runtime#80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
@@ -158,22 +160,22 @@ Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (al
         <target state="translated">Controllare se un file di sequenza che elenca i test avviati e terminati durante la sessione di test viene generato insieme al dump di arresto anomalo del sistema o al report di arresto anomalo del sistema.
 Il file consente di identificare i test in esecuzione al momento dell'arresto anomalo senza dover esaminare il dump.
 I valori validi sono ''on'' (impostazione predefinita; accetta anche ''true'', 'enable'', ''1'') o ''off'' (accetta anche ''false'', ''disable'', ''0'').</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">--crash-sequence prevede un singolo parametro con valore ''on'' (o ''true'', ''enable'', ''1'') o ''off'' (o ''false'', ''disable'', ''0'').</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
         <target state="translated">Sono stati specificati uno o più parametri di dump di arresto anomalo del sistema, ma non sono stati abilitati i dump di arresto anomalo del sistema. Aggiungere --crashdump o --crash-report alla riga di comando.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crashdump"}{Locked="--crash-report"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Le richieste di tipo '{0}' non sono supportate</target>
-        <note />
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
     </body>
   </file>

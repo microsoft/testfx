@@ -1,25 +1,94 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// Captures <see cref="TestProgressState"/> that was rendered to screen, so we can only partially update the screen on next update.
 /// </summary>
+[Embedded]
 internal sealed class AnsiTerminalTestProgressFrame
 {
     private const int MaxColumn = 250;
 
-    public int Width { get; }
+    // Pre-computed ANSI escape sequences for the duration-only update hot path.
+    // Re-computing them via AnsiCodes methods on every render tick allocates a new string each time.
+    private static readonly string SetCursorHorizontalMaxColumn = AnsiCodes.SetCursorHorizontal(MaxColumn);
+    private static readonly string[] MoveCursorBackwardCache = CreateMoveCursorBackwardCache();
 
-    public int Height { get; }
+    private static string[] CreateMoveCursorBackwardCache()
+    {
+        // Duration strings are at most 16 chars ("(1d 23h 59m 59s)" with parens).
+        // A cache of 17 slots (indices 0-16) covers every realistic case with zero allocation.
+        const int cacheSize = 17;
+        string[] cache = new string[cacheSize];
+        cache[0] = string.Empty;
+        for (int i = 1; i < cacheSize; i++)
+        {
+            cache[i] = AnsiCodes.MoveCursorBackward(i);
+        }
 
-    public List<RenderedProgressItem>? RenderedLines { get; set; }
+        return cache;
+    }
+
+    // Reusable working buffers for GenerateLinesToRender, cached across render ticks on the same frame
+    // object to eliminate 4+ per-tick heap allocations (3 arrays + 1 List, plus the sort comparer).
+    private readonly List<object> _linesToRenderBuffer = [];
+    private readonly ProgressCountComparer _progressCountComparer = new();
+    private TestProgressState[] _progressItemsBuffer = [];
+    private int[] _sortedIndicesBuffer = [];
+    private List<TestDetailState>?[] _detailItemsBuffer = [];
+
+    // Pooled RenderedProgressItem instances — reused across render ticks to avoid per-line heap allocations.
+    // RenderedLinesCount tracks how many entries are valid in the current frame; the array itself is never
+    // shrunk so slots from previous (higher-watermark) ticks remain available for reuse.
+    private RenderedProgressItem[] _renderedLines = [];
+
+    public int Width { get; private set; }
+
+    public int Height { get; private set; }
+
+    public int RenderedLinesCount { get; private set; }
 
     public AnsiTerminalTestProgressFrame(int width, int height)
     {
         Width = Math.Min(width, MaxColumn);
         Height = height;
+    }
+
+    /// <summary>
+    /// Resets this frame for reuse as the next render target, avoiding a heap allocation per render tick.
+    /// </summary>
+    internal void Reset(int width, int height)
+    {
+        Width = Math.Min(width, MaxColumn);
+        Height = height;
+        RenderedLinesCount = 0;
+        _linesToRenderBuffer.Clear();
+    }
+
+    /// <summary>
+    /// Returns the next available <see cref="RenderedProgressItem"/> slot, growing the pool on demand.
+    /// Increments <see cref="RenderedLinesCount"/> so the slot is considered active.
+    /// </summary>
+    private RenderedProgressItem GetOrAllocateNextSlot()
+    {
+        int idx = RenderedLinesCount++;
+        if ((uint)idx >= (uint)_renderedLines.Length)
+        {
+            int newSize = _renderedLines.Length == 0 ? 8 : _renderedLines.Length * 2;
+            if (newSize <= idx)
+            {
+                newSize = idx + 1;
+            }
+
+            Array.Resize(ref _renderedLines, newSize);
+        }
+
+        _renderedLines[idx] ??= new RenderedProgressItem();
+        return _renderedLines[idx];
     }
 
     public void AppendTestWorkerProgress(TestProgressState progress, RenderedProgressItem currentLine, AnsiTerminal terminal)
@@ -196,11 +265,11 @@ internal sealed class AnsiTerminalTestProgressFrame
         //   quickly determine if the detail has changed since the last render.
 
         // Don't go up if we did not render any lines in previous frame or we already cleared them.
-        if (previousFrame.RenderedLines != null && previousFrame.RenderedLines.Count > 0)
+        if (previousFrame.RenderedLinesCount > 0)
         {
             // Move cursor back to 1st line of progress.
             // + 2 because we output and empty line right below.
-            terminal.MoveCursorUp(previousFrame.RenderedLines.Count + 2);
+            terminal.MoveCursorUp(previousFrame.RenderedLinesCount + 2);
         }
 
         // When there is nothing to render, don't write empty lines, e.g. when we start the test run, and then we kick off build
@@ -211,22 +280,21 @@ internal sealed class AnsiTerminalTestProgressFrame
         }
 
         int i;
-        RenderedLines = [with(progress.Length * 2)];
         List<object> progresses = GenerateLinesToRender(progress);
 
         for (i = 0; i < progresses.Count; i++)
         {
             object item = progresses[i];
 
-            if (previousFrame.RenderedLines != null && previousFrame.RenderedLines.Count > i)
+            if (previousFrame.RenderedLinesCount > i)
             {
                 if (item is TestProgressState progressItem)
                 {
-                    var currentLine = new RenderedProgressItem(progressItem.Id, progressItem.Version);
-                    RenderedLines.Add(currentLine);
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(progressItem.Id, progressItem.Version);
 
                     // We have a line that was rendered previously, compare it and decide how to render.
-                    RenderedProgressItem previouslyRenderedLine = previousFrame.RenderedLines[i];
+                    RenderedProgressItem previouslyRenderedLine = previousFrame._renderedLines[i];
                     if (previouslyRenderedLine.ProgressId == progressItem.Id && previouslyRenderedLine.ProgressVersion == progressItem.Version)
                     {
                         // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
@@ -234,34 +302,37 @@ internal sealed class AnsiTerminalTestProgressFrame
 
                         if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
                         {
-                            // Duration is the same length rewrite just it.
-                            terminal.SetCursorHorizontal(MaxColumn);
-                            terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
-                            currentLine.RenderedDurationLength = durationString.Length;
+                            // Duration is the same length: rewrite just the duration cell.
+                            // Use pre-computed escape sequences to avoid per-tick string allocations.
+                            int durLen = durationString.Length;
+                            terminal.Append(SetCursorHorizontalMaxColumn);
+                            terminal.Append(durLen < MoveCursorBackwardCache.Length ? MoveCursorBackwardCache[durLen] : AnsiCodes.MoveCursorBackward(durLen));
+                            terminal.Append(durationString);
+                            currentLine.RenderedDurationLength = durLen;
                         }
                         else
                         {
                             // Duration is not the same length (it is longer because time moves only forward), we need to re-render the whole line
                             // to avoid writing the duration over the last portion of text: my.dll (1s) -> my.d (1m 1s)
-                            terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                            terminal.Append(AnsiCodes.CsiEraseInLine);
                             AppendTestWorkerProgress(progressItem, currentLine, terminal);
                         }
                     }
                     else
                     {
                         // These lines are different or the line was updated. Render the whole line.
-                        terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
                         AppendTestWorkerProgress(progressItem, currentLine, terminal);
                     }
                 }
 
                 if (item is TestDetailState detailItem)
                 {
-                    var currentLine = new RenderedProgressItem(detailItem.Id, detailItem.Version);
-                    RenderedLines.Add(currentLine);
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(detailItem.Id, detailItem.Version);
 
                     // We have a line that was rendered previously, compare it and decide how to render.
-                    RenderedProgressItem previouslyRenderedLine = previousFrame.RenderedLines[i];
+                    RenderedProgressItem previouslyRenderedLine = previousFrame._renderedLines[i];
                     if (previouslyRenderedLine.ProgressId == detailItem.Id && previouslyRenderedLine.ProgressVersion == detailItem.Version)
                     {
                         // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
@@ -269,23 +340,26 @@ internal sealed class AnsiTerminalTestProgressFrame
 
                         if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
                         {
-                            // Duration is the same length rewrite just it.
-                            terminal.SetCursorHorizontal(MaxColumn);
-                            terminal.Append($"{AnsiCodes.SetCursorHorizontal(MaxColumn)}{AnsiCodes.MoveCursorBackward(durationString.Length)}{durationString}");
-                            currentLine.RenderedDurationLength = durationString.Length;
+                            // Duration is the same length: rewrite just the duration cell.
+                            // Use pre-computed escape sequences to avoid per-tick string allocations.
+                            int durLen = durationString.Length;
+                            terminal.Append(SetCursorHorizontalMaxColumn);
+                            terminal.Append(durLen < MoveCursorBackwardCache.Length ? MoveCursorBackwardCache[durLen] : AnsiCodes.MoveCursorBackward(durLen));
+                            terminal.Append(durationString);
+                            currentLine.RenderedDurationLength = durLen;
                         }
                         else
                         {
                             // Duration is not the same length (it is longer because time moves only forward), we need to re-render the whole line
                             // to avoid writing the duration over the last portion of text: my.dll (1s) -> my.d (1m 1s)
-                            terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                            terminal.Append(AnsiCodes.CsiEraseInLine);
                             AppendTestWorkerDetail(detailItem, currentLine, terminal);
                         }
                     }
                     else
                     {
                         // These lines are different or the line was updated. Render the whole line.
-                        terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}");
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
                         AppendTestWorkerDetail(detailItem, currentLine, terminal);
                     }
                 }
@@ -295,15 +369,15 @@ internal sealed class AnsiTerminalTestProgressFrame
                 // We are rendering more lines than we rendered in previous frame
                 if (item is TestProgressState progressItem)
                 {
-                    var currentLine = new RenderedProgressItem(progressItem.Id, progressItem.Version);
-                    RenderedLines.Add(currentLine);
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(progressItem.Id, progressItem.Version);
                     AppendTestWorkerProgress(progressItem, currentLine, terminal);
                 }
 
                 if (item is TestDetailState detailItem)
                 {
-                    var currentLine = new RenderedProgressItem(detailItem.Id, detailItem.Version);
-                    RenderedLines.Add(currentLine);
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(detailItem.Id, detailItem.Version);
                     AppendTestWorkerDetail(detailItem, currentLine, terminal);
                 }
             }
@@ -315,53 +389,116 @@ internal sealed class AnsiTerminalTestProgressFrame
         }
 
         // We rendered more lines in previous frame. Clear them.
-        if (previousFrame.RenderedLines != null && i < previousFrame.RenderedLines.Count)
+        if (i < previousFrame.RenderedLinesCount)
         {
-            terminal.Append($"{AnsiCodes.CSI}{AnsiCodes.EraseInDisplay}");
+            terminal.Append(AnsiCodes.CsiEraseInDisplay);
         }
     }
 
     private List<object> GenerateLinesToRender(TestProgressState?[] progress)
     {
-        var linesToRender = new List<object>(progress.Length);
-
         // Note: We want to render the list of active tests, but this can easily fill up the full screen.
         // As such, we should balance the number of active tests shown per project.
         // We do this by distributing the remaining lines for each projects.
-        TestProgressState[] progressItems = [.. progress.OfType<TestProgressState>()];
-        int linesToDistribute = (int)(Height * 0.7) - 1 - progressItems.Length;
-        var detailItems = new IEnumerable<TestDetailState>[progressItems.Length];
-        IEnumerable<int> sortedItemsIndices = Enumerable.Range(0, progressItems.Length).OrderBy(i => progressItems[i].TestNodeResultsState?.Count ?? 0);
 
-        foreach (int sortedItemIndex in sortedItemsIndices)
+        // Collect non-null progress items without LINQ OfType allocation.
+        int itemCount = 0;
+        for (int j = 0; j < progress.Length; j++)
         {
-            detailItems[sortedItemIndex] = progressItems[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(
-                linesToDistribute / progressItems.Length)
-                ?? [];
+            if (progress[j] is not null)
+            {
+                itemCount++;
+            }
         }
 
-        for (int progressI = 0; progressI < progressItems.Length; progressI++)
+        // Grow cached working buffers when more capacity is needed; never shrink to avoid churn.
+        if (_progressItemsBuffer.Length < itemCount)
         {
-            linesToRender.Add(progressItems[progressI]);
-            linesToRender.AddRange(detailItems[progressI]);
+            _progressItemsBuffer = new TestProgressState[itemCount];
+            _sortedIndicesBuffer = new int[itemCount];
+            _detailItemsBuffer = new List<TestDetailState>?[itemCount];
         }
 
-        return linesToRender;
+        int idx = 0;
+        for (int j = 0; j < progress.Length; j++)
+        {
+            if (progress[j] is not null)
+            {
+                _progressItemsBuffer[idx++] = progress[j]!;
+            }
+        }
+
+        int linesToDistribute = (int)(Height * 0.7) - 1 - itemCount;
+
+        // Sort indices by detail count ascending to distribute lines fairly,
+        // without LINQ Enumerable.Range + OrderBy allocation.
+        for (int j = 0; j < itemCount; j++)
+        {
+            _sortedIndicesBuffer[j] = j;
+        }
+
+        // _progressCountComparer is a cached instance — no per-tick allocation.
+        _progressCountComparer.Buffer = _progressItemsBuffer;
+        Array.Sort(_sortedIndicesBuffer, 0, itemCount, _progressCountComparer);
+
+        // Only populate detail buffers when there is a positive line budget per item.
+        // GetRunningTasks(0) would compute itemsToTake = -1 and throw inside RemoveRange,
+        // and there's no point asking for details we cannot display anyway.
+        int linesPerItem = itemCount > 0 ? linesToDistribute / itemCount : 0;
+        if (linesPerItem > 0)
+        {
+            for (int j = 0; j < itemCount; j++)
+            {
+                int sortedItemIndex = _sortedIndicesBuffer[j];
+                _detailItemsBuffer[sortedItemIndex] = _progressItemsBuffer[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(linesPerItem);
+            }
+        }
+
+        for (int progressI = 0; progressI < itemCount; progressI++)
+        {
+            _linesToRenderBuffer.Add(_progressItemsBuffer[progressI]);
+            if (_detailItemsBuffer[progressI] is { } details)
+            {
+                _linesToRenderBuffer.AddRange(details);
+                _detailItemsBuffer[progressI] = null; // release to avoid holding stale GC roots
+            }
+
+            // Release the progress item reference too so completed workers can be collected
+            // even when this frame instance is kept alive across ticks.
+            _progressItemsBuffer[progressI] = null!;
+        }
+
+        return _linesToRenderBuffer;
     }
 
-    public void Clear() => RenderedLines?.Clear();
+    public void Clear() => RenderedLinesCount = 0;
+
+    /// <summary>
+    /// Reusable comparer for sorting progress-item indices by running-task count.
+    /// Cached as a field to avoid new allocations on every render tick.
+    /// </summary>
+    private sealed class ProgressCountComparer : IComparer<int>
+    {
+        internal TestProgressState[] Buffer { get; set; } = [];
+
+        public int Compare(int a, int b)
+            => (Buffer[a].TestNodeResultsState?.Count ?? 0)
+                .CompareTo(Buffer[b].TestNodeResultsState?.Count ?? 0);
+    }
 
     internal sealed class RenderedProgressItem
     {
-        public RenderedProgressItem(long id, long version)
+        /// <summary>Resets this instance for reuse with new identity and version values.</summary>
+        internal void Reset(long id, long version)
         {
             ProgressId = id;
             ProgressVersion = version;
+            RenderedDurationLength = 0;
         }
 
-        public long ProgressId { get; }
+        public long ProgressId { get; private set; }
 
-        public long ProgressVersion { get; }
+        public long ProgressVersion { get; private set; }
 
         public int RenderedDurationLength { get; set; }
     }

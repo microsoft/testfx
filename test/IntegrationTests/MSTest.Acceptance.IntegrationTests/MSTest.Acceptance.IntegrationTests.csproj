@@ -25,9 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Combinatorial.MSTest" />
     <PackageReference Include="MSBuild.StructuredLogger" />
     <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
     <PackageReference Include="Nerdbank.MessagePack" />
+    <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
+    <PackageReference Include="MessagePack" />
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 
@@ -39,9 +42,29 @@
     <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
   </ItemGroup>
 
-  <!-- Packages needed for the test assets but that we don't want to reference -->
+  <!--
+    Dependabot anchors for the packages bundled by MSTest.Sdk (Microsoft.Playwright.MSTest.v4,
+    Aspire.Hosting.Testing). The Aspire entry doubles as the download that stages its nupkg for
+    test assets (see CopyNuGetPackagesForTestAssets below); the Playwright entry is the Dependabot
+    anchor only. These packages are baked into the shipped SDK templates (Sdk/Features/*.targets)
+    and are otherwise referenced only there (which Dependabot doesn't restore), so without a
+    graph-visible reference from a repo project their Central Package Management PackageVersion
+    entries in Directory.Packages.props are "orphans" that Dependabot ignores (it only updates
+    package versions that are actually referenced by a restored project).
+
+    We use PackageDownload (NOT a PackageReference with ExcludeAssets="all") deliberately:
+    ExcludeAssets="all" removes the reference from the dependency graph Dependabot reads, so the
+    package stays invisible to it and never gets bumped (Aspire only kept updating because it ALSO
+    had this PackageDownload; the equivalent Playwright anchor with ExcludeAssets="all" silently did
+    nothing, see #9362). PackageDownload puts the package into the restore (so Dependabot proposes
+    bumps) without flowing any of its assets (compile/runtime/build, e.g. Playwright's browser
+    install) into this test project. The _ValidateBundledSdkFeatureVersions target in
+    Directory.Packages.props then guards the matching version properties (MicrosoftPlaywrightVersion,
+    AspireHostingTestingVersion) against drift after a bump.
+  -->
   <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
+    <PackageDownload Include="Microsoft.Playwright.MSTest.v4" Version="[$(MicrosoftPlaywrightVersion)]" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">

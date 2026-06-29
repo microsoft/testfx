@@ -5,12 +5,12 @@
       <trans-unit id="CannotFindExpectedCrashDumpFile">
         <source>Expected crash dump file '{0}' could not be found, all files matching the '*.dmp' pattern will be copied to the result folder</source>
         <target state="translated">Nebyl nalezen očekávaný soubor výpisu stavu systému {0}. Všechny soubory odpovídající vzoru *.dmp budou zkopírovány do složky výsledků.</target>
-        <note />
+        <note>0 is the expected crash dump file path. Do not localize file pattern {Locked="*.dmp"}.</note>
       </trans-unit>
       <trans-unit id="CannotFindExpectedCrashReportFile">
         <source>Expected crash report file '{0}' could not be found, all files matching the '{1}' pattern will be copied to the result folder</source>
         <target state="translated">Nebyl nalezen očekávaný soubor zprávy o chybovém ukončení {0}. Do složky s výsledky budou zkopírovány všechny soubory odpovídající vzoru {1}.</target>
-        <note />
+        <note>{0} is the expected crash report file path. {1} is the crash report file search pattern.</note>
       </trans-unit>
       <trans-unit id="CrashDumpArtifactDescription">
         <source>The testhost process crash dump file</source>
@@ -25,7 +25,7 @@
       <trans-unit id="CrashDumpDescription">
         <source>[net6.0+ only] Produce crash dump files when the test execution process crashes unexpectedly</source>
         <target state="translated">[Pouze net6.0+ ] Vytvořit soubory výpisu stavu systému při neočekávaném chybovém ukončení procesu provádění testu</target>
-        <note />
+        <note>Do not localize target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpDisplayName">
         <source>Crash dump</source>
@@ -33,44 +33,46 @@
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpFileNameOptionDescription">
-        <source>Specify the name of the dump file</source>
-        <target state="translated">Zadejte název souboru výpisu paměti.</target>
-        <note />
+        <source>Specify the name of the dump file.
+Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
+        <target state="new">Specify the name of the dump file.
+Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</target>
+        <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
         <source>Environment variable '{0}' should have been set to '{1}' but value is '{2}'</source>
         <target state="translated">Proměnná prostředí {0} by měla být nastavená na {1}, ale hodnota je {2}.</target>
-        <note />
+        <note>{0} is the environment variable name. {1} is the expected value. {2} is the actual value.</note>
       </trans-unit>
       <trans-unit id="CrashDumpNotSupportedInNonNetCoreErrorMessage">
         <source>Crash dump feature is only available in .NET (Core)</source>
         <target state="translated">Funkce výpisu stavu systému je k dispozici pouze v rozhraní .NET (Core).</target>
-        <note />
+        <note>Do not localize {Locked=".NET (Core)"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpOptionDescription">
         <source>[net6.0+ only] Generate a dump file if the test process crashes</source>
         <target state="translated">[Pouze net6.0+ ] Vygenerovat soubor výpisu paměti v případě chybového ukončení procesu testu</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump"} or target framework moniker {Locked="net6.0+"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashed">
         <source>Test host process with PID '{0}' crashed, but the expected diagnostic artifact(s) were not produced</source>
         <target state="translated">Došlo k chybovému ukončení hostitelského procesu testu s PID {0}, ale nebyly vygenerovány očekávané diagnostické artefakty.</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpAndReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file and crash report were generated</source>
         <target state="translated">Došlo k chybovému ukončení hostitelského procesu testu s PID {0}. Byl vygenerován soubor výpisu paměti a zpráva o chybovém ukončení.</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedDumpFileCreated">
         <source>Test host process with PID '{0}' crashed, a dump file was generated</source>
         <target state="translated">Hostitelský proces testu s identifikátorem PID {0} byl chybově ukončen. Byl vygenerován soubor výpisu paměti.</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpProcessCrashedReportFileCreated">
         <source>Test host process with PID '{0}' crashed, a crash report was generated</source>
         <target state="translated">Došlo k chybovému ukončení hostitelského procesu testu s PID {0}. Byla vygenerována zpráva o chybovém ukončení.</target>
-        <note />
+        <note>{0} is the crashed test host process ID.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceArtifactDescription">
         <source>The list of tests that started and ended during the test session, used to identify the tests that were running at the time of the crash</source>
@@ -85,7 +87,7 @@
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">Nepodařilo se přečíst soubor sekvence chybových ukončení {0}: {1}.</target>
-        <note />
+        <note>{0} is the crash sequence file path. {1} is the error message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>
@@ -99,22 +101,22 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
         <target state="translated">Určete typ výpisu paměti.
 Platné hodnoty jsou Mini, Heap, Triage a Full. Výchozí typ je Full.
 Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps</target>
-        <note />
+        <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
         <target state="translated">{0} není platný typ výpisu paměti. Platné možnosti jsou Mini, Heap, Triage a Full.</target>
-        <note />
+        <note>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
-        <target state="translated">--hangdump-type očekává jako argument jeden typ výpisu paměti (například --hangdump-type Heap).</target>
-        <note />
+        <target state="translated">--crashdump-type očekává jako argument jeden typ výpisu paměti (například --crashdump-type Heap).</target>
+        <note>Do not localize option name {Locked="--crashdump-type"} or example command {Locked="--crashdump-type Heap"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage">
         <source>'--crash-report' and '--crash-report-if-supported' are mutually exclusive. Use '--crash-report-if-supported' to opt into a best-effort crash report that is silently skipped on platforms where it is not supported, or '--crash-report' to fail fast when the option cannot be honored.</source>
         <target state="translated">--crash-report a --crash-report-if-supported se vzájemně vylučují. Pomocí --crash-report-if-supported zapnete hlášení o chybovém ukončení podle nejlepšího úsilí, které se na platformách, kde není podporováno, potichu přeskočí, nebo pomocí --crash-report zajistíte selhání při první příležitosti, když tuto možnost nelze respektovat.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportArtifactDescription">
         <source>The testhost process crash report file</source>
@@ -129,51 +131,51 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
       <trans-unit id="CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this runtime: the .NET Framework testhost does not support the runtime-based crash dump / crash report mechanism. No crash report file will be produced.</source>
         <target state="translated">Parametr --crash-report-if-supported byl zadán, ale na tomto modulu runtime se ignoruje: hostitel testhost v .NET Frameworku nepodporuje mechanismus výpisu paměti při chybě nebo hlášení o selhání založený na modulu runtime. Nebude vytvořen žádný soubor zprávy o selhání.</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"} or runtime name {Locked=".NET Framework"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedIgnoredOnWindowsInfoMessage">
         <source>'--crash-report-if-supported' was specified but is being ignored on this platform: the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on Windows (see https://github.com/dotnet/runtime/issues/80191). No crash report file will be produced.</source>
         <target state="translated">Parametr --crash-report-if-supported byl zadán, ale na této platformě se ignoruje: modul runtime .NET ignoruje podkladové proměnné prostředí DOTNET_EnableCrashReport a DOTNET_EnableCrashReportOnly ve Windows (viz https://github.com/dotnet/runtime/issues/80191). Nebude vytvořen žádný soubor zprávy o selhání.</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-report-if-supported"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportIfSupportedOptionDescription">
         <source>Same as '--crash-report' but silently ignored (with an informational message) on platforms where crash report generation is not supported. Use this option to keep the same command line across CI matrices that include Windows. Mutually exclusive with '--crash-report'.</source>
         <target state="translated">Totéž jako --crash-report, ale na platformách, kde se generování hlášení o chybovém ukončení nepodporuje, se potichu ignoruje s informační zprávou. Tuto možnost použijte, pokud chcete zachovat stejný příkazový řádek napříč maticemi CI, které zahrnují Windows. Vzájemně se vylučuje s --crash-report.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"} or platform name {Locked="Windows"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportNotSupportedOnWindowsErrorMessage">
         <source>'--crash-report' is not supported on Windows because the .NET runtime ignores the underlying 'DOTNET_EnableCrashReport' and 'DOTNET_EnableCrashReportOnly' environment variables on this platform. See https://github.com/dotnet/runtime/issues/80191. Use '--crash-report-if-supported' to silently skip the option on Windows, or '--crashdump' to generate a crash dump file instead.</source>
         <target state="translated">Parametr --crash-report není ve Windows podporován, protože modul runtime .NET na této platformě ignoruje podkladové proměnné prostředí DOTNET_EnableCrashReport a DOTNET_EnableCrashReportOnly. Podrobnosti najdete na https://github.com/dotnet/runtime/issues/80191. Pokud chcete parametr ve Windows přeskočit bez upozornění, použijte --crash-report-if-supported, nebo k vygenerování souboru výpisu paměti místo toho použijte --crashdump.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, environment variable names {Locked="DOTNET_EnableCrashReport"}{Locked="DOTNET_EnableCrashReportOnly"}, platform name {Locked="Windows"}, runtime name {Locked=".NET"}, or link {Locked="https://github.com/dotnet/runtime/issues/80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashReportOptionDescription">
         <source>[Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.</source>
         <target state="translated">[Pouze Linux/macOS] Při chybovém ukončení testovacího procesu vygeneruje zprávu o chybovém ukončení ve formátu JSON. Pokud chcete vygenerovat také soubor výpisu paměti, zkombinujte s parametrem --crashdump. Pokud se používá samostatně, vyžaduje .NET 7+; při kombinaci s parametrem --crashdump vyžaduje .NET 6+. Tento požadavek na modul runtime není nástrojem vynucován: v případě nepodporovaných modulů runtime nebude vygenerována žádná zpráva o chybovém ukončení. Nepodporuje se ve Windows kvůli omezení modulu runtime .NET (dotnet/runtime#80191); pokud chcete v tomto případě parametr přeskočit bez upozornění, použijte --crash-report-if-supported.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crash-report"}{Locked="--crash-report-if-supported"}{Locked="--crashdump"}, platforms {Locked="Linux"}{Locked="macOS"}{Locked="Windows"}, format name {Locked="JSON"}, runtime name {Locked=".NET"}, target framework versions {Locked=".NET 7+"}{Locked=".NET 6+"}, or issue reference {Locked="dotnet/runtime#80191"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionDescription">
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="translated">Určuje, zda se spolu s výpisem stavu systému při chybovém ukončení nebo sestavou o chybovém ukončení vygeneruje soubor sekvence uvádějící testy spuštěné a ukončené během testovací relace.
-Soubor umožňuje identifikovat testy, které byly spuštěny v době chybového ukončení, aniž by bylo nutné kontrolovat výpis paměti.
-Platné hodnoty jsou on (výchozí; přijímá také hodnoty true, enable, 1) nebo off (přijímá také hodnoty false, disable, 0).</target>
-        <note />
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
         <target state="translated">Přepínač --crash-sequence očekává jeden parametr s hodnotou on (nebo true, enable, 1) nebo off (nebo false, disable, 0).</target>
-        <note />
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
       </trans-unit>
       <trans-unit id="MissingCrashDumpMainOption">
         <source>You specified one or more crash dump parameters but did not enable crash dumps. Add --crashdump or --crash-report to the command line.</source>
         <target state="translated">Zadali jste jeden nebo více parametrů výpisu paměti, ale výpisy paměti jste nepovolili. Přidejte do příkazového řádku přepínač --crashdump nebo --crash-report.</target>
-        <note />
+        <note>Do not localize option names {Locked="--crashdump"}{Locked="--crash-report"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRequestTypeErrorMessage">
         <source>Requests of type '{0}' is not supported</source>
         <target state="translated">Žádosti typu {0} nejsou podporovány.</target>
-        <note />
+        <note>{0} is the unsupported request type name.</note>
       </trans-unit>
     </body>
   </file>

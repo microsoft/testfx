@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -17,10 +18,23 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IRuntimeFeature _runtimeFeature;
+    private readonly IConfiguration? _configuration;
 
     public CommandLineHandler(CommandLineParseResult parseResult, IReadOnlyCollection<ICommandLineOptionsProvider> extensionsCommandLineOptionsProviders,
         IReadOnlyCollection<ICommandLineOptionsProvider> systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo,
         IRuntimeFeature runtimeFeature)
+        : this(parseResult, extensionsCommandLineOptionsProviders, systemCommandLineOptionsProviders, testApplicationModuleInfo, runtimeFeature, configuration: null)
+    {
+    }
+
+    // Issue #6349: the unified read model is keyed on IConfiguration. When the platform owns
+    // the construction (TestHostBuilder -> CommandLineManager.BuildAsync), the configuration is
+    // supplied so IsOptionSet/TryGetOptionArgumentList consult both the CLI and testconfig.json.
+    // When configuration is null (e.g. ad-hoc unit-test construction), we fall back to the
+    // legacy parse-result-only behavior.
+    internal CommandLineHandler(CommandLineParseResult parseResult, IReadOnlyCollection<ICommandLineOptionsProvider> extensionsCommandLineOptionsProviders,
+        IReadOnlyCollection<ICommandLineOptionsProvider> systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo,
+        IRuntimeFeature runtimeFeature, IConfiguration? configuration)
     {
         ParseResult = parseResult;
         ExtensionsCommandLineOptionsProviders = extensionsCommandLineOptionsProviders;
@@ -28,6 +42,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         CommandLineOptionsProviders = systemCommandLineOptionsProviders.Union(extensionsCommandLineOptionsProviders);
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _runtimeFeature = runtimeFeature;
+        _configuration = configuration;
     }
 
     public IEnumerable<ICommandLineOptionsProvider> CommandLineOptionsProviders { get; }
@@ -214,10 +229,14 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
     }
 
     public bool IsOptionSet(string optionName)
-        => ParseResult.IsOptionSet(optionName);
+        => _configuration is not null
+            ? _configuration.IsCommandLineOptionSet(optionName)
+            : ParseResult.IsOptionSet(optionName);
 
-    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments) =>
-        ParseResult.TryGetOptionArgumentList(optionName, out arguments);
+    public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
+        => _configuration is not null
+            ? _configuration.TryGetCommandLineOptionArguments(optionName, out arguments)
+            : ParseResult.TryGetOptionArgumentList(optionName, out arguments);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 

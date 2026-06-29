@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
+  <file datatype="xml" source-language="en" target-language="it" original="../ExtensionResources.resx">
+    <body>
+      <trans-unit id="PackagedAppExtensionDescription">
+        <source>Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</source>
+        <target state="new">Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppExtensionDisplayName">
+        <source>Packaged app test host launcher</source>
+        <target state="new">Packaged app test host launcher</target>
+        <note />
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

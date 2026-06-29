@@ -30,18 +30,20 @@ internal static partial class PlatformResources
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal static string GetResourceString(string resourceKey) => ResourceManager.GetString(resourceKey, null)!;
 
-    internal static string @UnexpectedStateErrorMessage => GetResourceString("UnexpectedStateErrorMessage");
-
-    internal static string @UnreachableLocationErrorMessage => GetResourceString("UnreachableLocationErrorMessage");
-
     internal static string @InternalLoopAsyncDidNotExitSuccessfullyErrorMessage => GetResourceString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage");
 
 #if IS_MTP_UNIT_TESTS
+    internal static string @ActiveTestsRunning_FullTestsCount => GetResourceString("ActiveTestsRunning_FullTestsCount");
+
+    internal static string @ActiveTestsRunning_MoreTestsCount => GetResourceString("ActiveTestsRunning_MoreTestsCount");
+
     internal static string @PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage => GetResourceString("PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage");
 
     internal static string @PlatformCommandLineDiscoverTestsInvalidArgument => GetResourceString("PlatformCommandLineDiscoverTestsInvalidArgument");
 
     internal static string @PlatformCommandLineServerInvalidArgument => GetResourceString("PlatformCommandLineServerInvalidArgument");
+
+    internal static string @PlatformCommandLineZeroTestsPolicyInvalidArgument => GetResourceString("PlatformCommandLineZeroTestsPolicyInvalidArgument");
 
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
 
@@ -51,11 +53,29 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests => GetResourceString("PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests");
 
+    internal static string @OnlyOneFilterSupported => GetResourceString("OnlyOneFilterSupported");
+
     internal static string @PlatformCommandLineMinimumExpectedTestsOptionSingleArgument => GetResourceString("PlatformCommandLineMinimumExpectedTestsOptionSingleArgument");
 
     internal static string @PlatformCommandLinePortOptionSingleArgument => GetResourceString("PlatformCommandLinePortOptionSingleArgument");
 
     internal static string @PlatformCommandLineTimeoutArgumentErrorMessage => GetResourceString("PlatformCommandLineTimeoutArgumentErrorMessage");
+
+    internal static string @Aborted => GetResourceString("Aborted");
+
+    internal static string @ZeroTestsRan => GetResourceString("ZeroTestsRan");
+
+    internal static string @Failed => GetResourceString("Failed");
+
+    internal static string @Passed => GetResourceString("Passed");
+
+    internal static string @TotalLowercase => GetResourceString("TotalLowercase");
+
+    internal static string @FailedLowercase => GetResourceString("FailedLowercase");
+
+    internal static string @SucceededLowercase => GetResourceString("SucceededLowercase");
+
+    internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
 #endif
 
 #endif

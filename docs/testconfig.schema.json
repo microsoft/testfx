@@ -1,0 +1,269 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/microsoft/testfx/main/docs/testconfig.schema.json",
+  "title": "MSTest / Microsoft.Testing.Platform testconfig.json",
+  "description": "Configuration file consumed by Microsoft.Testing.Platform (MTP) and MSTest. The file is named 'testconfig.json' (or '<AssemblyName>.testconfig.json' once it is copied next to the test executable). See https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-configure.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to this JSON schema, enabling editor completion and validation."
+    },
+    "mstest": {
+      "$ref": "#/definitions/mstest"
+    },
+    "platformOptions": {
+      "$ref": "#/definitions/platformOptions"
+    },
+    "environmentVariables": {
+      "type": "object",
+      "description": "Environment variables to apply to the test host process. Mirrors the <EnvironmentVariables> element of legacy .runsettings. Declaring at least one entry opts the run into the test host controller process model. Do not store secrets here.",
+      "additionalProperties": {
+        "type": ["string", "number", "boolean", "null"]
+      }
+    }
+  },
+  "additionalProperties": true,
+  "definitions": {
+    "mstest": {
+      "type": "object",
+      "description": "MSTest-specific settings. This is the JSON equivalent of the <MSTest> (or <MSTestV2>) section of a .runsettings file.",
+      "additionalProperties": false,
+      "properties": {
+        "timeout": {
+          "type": "object",
+          "description": "Timeouts (in milliseconds) for tests and fixture methods.",
+          "additionalProperties": false,
+          "properties": {
+            "test": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Default timeout, in milliseconds, applied to every test method. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "assemblyInitialize": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [AssemblyInitialize] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "assemblyCleanup": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [AssemblyCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "classInitialize": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [ClassInitialize] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "classCleanup": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [ClassCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "testInitialize": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [TestInitialize] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "testCleanup": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [TestCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "useCooperativeCancellation": {
+              "type": "boolean",
+              "description": "When true, MSTest uses cooperative cancellation for timeouts instead of aborting the thread. Defaults to false."
+            }
+          }
+        },
+        "execution": {
+          "type": "object",
+          "description": "Test execution behavior settings.",
+          "additionalProperties": false,
+          "properties": {
+            "randomizeTestOrder": {
+              "type": "boolean",
+              "description": "When true, randomizes the order in which tests run. Defaults to false. Mutually exclusive with 'orderTestsByNameInClass'."
+            },
+            "randomTestOrderSeed": {
+              "type": "integer",
+              "description": "Seed used when 'randomizeTestOrder' is true, to make the randomized order reproducible."
+            },
+            "mapInconclusiveToFailed": {
+              "type": "boolean",
+              "description": "When true, inconclusive test outcomes are reported as failures. Defaults to false."
+            },
+            "mapNotRunnableToFailed": {
+              "type": "boolean",
+              "description": "When true, not-runnable test outcomes are reported as failures. Defaults to true."
+            },
+            "treatDiscoveryWarningsAsErrors": {
+              "type": "boolean",
+              "description": "When true, warnings raised during test discovery are treated as errors. Defaults to false."
+            },
+            "considerEmptyDataSourceAsInconclusive": {
+              "type": "boolean",
+              "description": "When true, a data-driven test whose data source yields no rows is reported as inconclusive instead of failing. Defaults to false."
+            },
+            "launchDebuggerOnAssertionFailure": {
+              "type": "string",
+              "description": "Controls whether the debugger is launched when an assertion fails.",
+              "enum": ["Disabled", "Enabled", "EnabledExcludingCI"]
+            },
+            "executionApartmentState": {
+              "type": "string",
+              "description": "COM apartment state used to run tests. Defaults to MTA. STA is only honored on Windows.",
+              "enum": ["STA", "MTA"]
+            },
+            "disableAppDomain": {
+              "type": "boolean",
+              "description": "When true, disables AppDomain creation (.NET Framework only). Defaults to false."
+            },
+            "collectSourceInformation": {
+              "type": "boolean",
+              "description": "When true, source file and line information is collected during discovery. Defaults to true."
+            },
+            "orderTestsByNameInClass": {
+              "type": "boolean",
+              "description": "When true, tests within a class run in alphabetical order by name. Defaults to false. Mutually exclusive with 'randomizeTestOrder'."
+            }
+          }
+        },
+        "parallelism": {
+          "type": "object",
+          "description": "Test parallelization settings.",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "When true, enables test parallelization. Defaults to false."
+            },
+            "workers": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Number of worker threads used for parallelization. 0 means use the number of logical processors."
+            },
+            "scope": {
+              "type": "string",
+              "description": "Granularity at which tests are parallelized. Use 'class' to run classes in parallel or 'method' to run individual methods in parallel.",
+              "enum": ["class", "method", "ClassLevel", "MethodLevel"]
+            }
+          }
+        },
+        "output": {
+          "type": "object",
+          "description": "Output and diagnostics settings.",
+          "additionalProperties": false,
+          "properties": {
+            "captureTrace": {
+              "type": "boolean",
+              "description": "When true, captures Debug and Trace output during test execution. Defaults to true."
+            }
+          }
+        },
+        "deployment": {
+          "type": "object",
+          "description": "Test deployment settings.",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "When true, deployment is enabled. Defaults to true."
+            },
+            "deployTestSourceDependencies": {
+              "type": "boolean",
+              "description": "When true, dependencies of the test source are deployed. Defaults to true."
+            },
+            "deleteDeploymentDirectoryAfterTestRunIsComplete": {
+              "type": "boolean",
+              "description": "When true, the deployment directory is deleted after the test run completes. Defaults to true."
+            }
+          }
+        },
+        "assemblyResolution": {
+          "type": "array",
+          "description": "Additional directories probed when resolving test assembly dependencies (.NET Framework only).",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path"],
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Directory to probe. Environment variables (for example %HOMEDRIVE%) and relative paths are supported."
+              },
+              "includeSubDirectories": {
+                "type": ["boolean", "string"],
+                "description": "When true, subdirectories of 'path' are also probed. Defaults to false."
+              }
+            }
+          }
+        },
+        "orderTestsByNameInClass": {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Deprecated. Use 'execution.orderTestsByNameInClass' instead. When true, tests within a class run in alphabetical order by name. Defaults to false. Mutually exclusive with 'execution.randomizeTestOrder'."
+        }
+      }
+    },
+    "platformOptions": {
+      "type": "object",
+      "description": "Microsoft.Testing.Platform host options.",
+      "additionalProperties": true,
+      "properties": {
+        "resultDirectory": {
+          "type": "string",
+          "description": "Directory where test results are written."
+        },
+        "currentWorkingDirectory": {
+          "type": "string",
+          "description": "Working directory of the platform process."
+        },
+        "testHostWorkingDirectory": {
+          "type": "string",
+          "description": "Working directory of the test host process."
+        },
+        "exitProcessOnUnhandledException": {
+          "type": "boolean",
+          "description": "When true, the process exits when an unhandled exception is observed. Defaults to false."
+        },
+        "telemetry": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "isDevelopmentRepository": {
+              "type": "boolean",
+              "description": "Marks the repository as a development repository for telemetry purposes."
+            }
+          }
+        },
+        "testHostControllersManager": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "singleConnectionNamedPipeServer": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "waitConnectionTimeoutSeconds": {
+                  "type": "number",
+                  "description": "Seconds to wait for the test host to connect to the named pipe server."
+                }
+              }
+            },
+            "namedPipeClient": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "connectTimeoutSeconds": {
+                  "type": "number",
+                  "description": "Seconds to wait for the named pipe client to connect."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

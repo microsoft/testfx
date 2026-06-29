@@ -17,6 +17,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge;
 /// <summary>
 /// Represents a base class for bridged test frameworks (support of Microsoft.Testing.Platform while supporting VSTest like APIs).
 /// </summary>
+[StackTraceHidden]
 public abstract class VSTestBridgedTestFrameworkBase : ITestFramework, IDataProducer
 {
     private readonly ITrxReportCapability? _trxReportCapability;

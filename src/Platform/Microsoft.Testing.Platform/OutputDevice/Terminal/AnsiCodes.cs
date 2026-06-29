@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 /// <summary>
 /// A collection of standard ANSI/VT100 control codes.
 /// </summary>
+[Embedded]
 internal static class AnsiCodes
 {
     /// <summary>
@@ -90,12 +93,24 @@ internal static class AnsiCodes
     public const string EraseInDisplay = "J";
 
     /// <summary>
+    /// Shortcut for <see cref="CSI"/> + <see cref="EraseInDisplay"/> — clears from cursor to end of screen.
+    /// Prefer this constant over inline string interpolation to avoid per-call heap allocation.
+    /// </summary>
+    public const string CsiEraseInDisplay = CSI + EraseInDisplay;
+
+    /// <summary>
     /// Clears everything from cursor to the end of the current line.
     /// </summary>
     /// <remarks>
     /// Print <see cref="CSI"/><see cref="EraseInLine"/> to clear.
     /// </remarks>
     public const string EraseInLine = "K";
+
+    /// <summary>
+    /// Shortcut for <see cref="CSI"/> + <see cref="EraseInLine"/> — clears from cursor to end of current line.
+    /// Prefer this constant over inline string interpolation to avoid per-call heap allocation.
+    /// </summary>
+    public const string CsiEraseInLine = CSI + EraseInLine;
 
     /// <summary>
     /// Hides the cursor.

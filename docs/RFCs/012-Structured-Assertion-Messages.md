@@ -307,8 +307,9 @@ Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
 Assertion failed. Expected exception of exact type ArgumentException but caught InvalidOperationException.
 
 expected type:    System.ArgumentException
-actual type:      System.InvalidOperationException
 actual exception: System.InvalidOperationException: Operation is not valid due to the current state of the object.
+                     at MyApp.Service.Validate(String input) in Service.cs:line 42
+                     at MyTests.ValidationTests.InvalidInput_ShouldThrow() in ValidationTests.cs:line 18
 
 Assert.ThrowsExactly<ArgumentException>(() => Validate(input))
    at MyTests.ValidationTests.InvalidInput_ShouldThrow() in ValidationTests.cs:line 18
@@ -679,8 +680,9 @@ Assertion failed. Expected exception of type ArgumentException (or derived) but 
 Assertion failed. Expected exception of type ArgumentException (or derived) but caught InvalidOperationException.
 
 expected type:    System.ArgumentException (or derived)
-actual type:      System.InvalidOperationException
 actual exception: System.InvalidOperationException: Operation is not valid due to the current state of the object.
+                     at MyApp.Service.Validate(String input) in Service.cs:line 42
+                     at MyTests.ValidationTests.InvalidInput_ShouldThrow() in ValidationTests.cs:line 18
 ```
 
 #### Assert.ThrowsExactly (no exception thrown)
@@ -695,8 +697,9 @@ Assertion failed. Expected exception of exact type ArgumentException but no exce
 Assertion failed. Expected exception of exact type ArgumentException but caught ArgumentNullException.
 
 expected type:    System.ArgumentException
-actual type:      System.ArgumentNullException
 actual exception: System.ArgumentNullException: Value cannot be null.
+                     at MyApp.Service.Validate(String input) in Service.cs:line 42
+                     at MyTests.ValidationTests.InvalidInput_ShouldThrow() in ValidationTests.cs:line 18
 ```
 
 #### Assert.ThrowsAsync / Assert.ThrowsExactlyAsync

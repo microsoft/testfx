@@ -12,21 +12,43 @@
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-    <AspireHostingTestingVersion>13.2.1</AspireHostingTestingVersion>
+    <!-- AspireHostingTestingVersion is consumed by the build and baked into the shipped MSTest.Sdk
+         template. It MUST be kept in sync with the literal Aspire.Hosting.Testing PackageVersion
+         declared near the bottom of this file (the one Dependabot updates). The
+         _ValidateBundledSdkFeatureVersions target there fails the build if the two drift apart. -->
+    <AspireHostingTestingVersion>13.4.6</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
+    <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers pinned to a daily build (5.5.x).
+         The last stable release (3.3.4, 2022) lacks newer RS0017/RS0026/RS0036 fixes that testfx's
+         public-API surface tracking depends on. Promote back to the next stable 5.x once one ships.
+         Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.5.0-2.26224.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>18.4.0</MicrosoftNETTestSdkVersion>
-    <MicrosoftPlaywrightVersion>1.58.0</MicrosoftPlaywrightVersion>
+    <!-- MicrosoftPlaywrightVersion is consumed by the build and baked into the shipped MSTest.Sdk
+         template. It MUST be kept in sync with the literal Microsoft.Playwright.MSTest.v4
+         PackageVersion declared near the bottom of this file (the one Dependabot updates). The
+         _ValidateBundledSdkFeatureVersions target there fails the build if the two drift apart. -->
+    <MicrosoftPlaywrightVersion>1.60.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
+    <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that
+         opt into UseInternalTestFramework via TestFramework.ForTestingMSTest); there is no public
+         stable release on nuget.org. Promote when the internal feed ships a non-preview version.
+         Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
     <MicrosoftTestingInternalFrameworkVersion>1.5.0-preview.24577.4</MicrosoftTestingInternalFrameworkVersion>
     <SystemThreadingTasksExtensionsVersion>4.5.4</SystemThreadingTasksExtensionsVersion>
+    <!-- System.Memory flows in transitively (via System.Reflection.Metadata / System.Collections.Immutable)
+         at 4.5.5, whose .NETFramework assembly version is 4.0.1.2. We pin it explicitly to 4.6.3
+         (assembly 4.0.5.0) so the .NETFramework adapter assemblies reference 4.0.5.0. Hosts that unify
+         System.Memory to 4.0.5.0 (e.g. Visual Studio) and run the adapter without applying a binding
+         redirect (the VSTest test host uses its own config) cannot otherwise load the 4.0.1.2 reference. -->
+    <SystemMemoryVersion>4.6.3</SystemMemoryVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.3-beta1.24423.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
@@ -61,11 +83,11 @@
     <PackageVersion Include="Microsoft.Win32.Registry" Version="5.0.0" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.8.251003001" />
     <PackageVersion Include="OpenTelemetry" Version="1.15.3" />
-    <PackageVersion Include="System.Text.Json" Version="8.0.5" />
+    <PackageVersion Include="System.Memory" Version="$(SystemMemoryVersion)" />
+    <PackageVersion Include="System.Text.Json" Version="10.0.8" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
-    <PackageVersion Include="Codecov" Version="1.12.3" />
     <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
     <PackageVersion Include="NUnit" Version="4.6.0" />
@@ -77,6 +99,9 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.VisualBasic.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="9.0.4" />
+    <!-- Third-party (community) package that brings xUnit.Combinatorial-style [CombinatorialData] support to
+         MSTest. Used by the acceptance tests to replace bespoke build-matrix DynamicData helpers. -->
+    <PackageVersion Include="Combinatorial.MSTest" Version="2.0.0" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <!-- Previously pinned to 4.18.4 to avoid SponsorLink (4.20.0–4.20.x); resolved in 4.20.72 -->
     <PackageVersion Include="Moq" Version="4.20.72" />
@@ -88,18 +113,75 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageVersion Include="Polly" Version="8.6.6" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.24.84" />
-    <!-- This comes transitively via StreamJsonRpc, but we want to upgrade it to fix a security vulnerability -->
+    <PackageVersion Include="StreamJsonRpc" Version="2.25.29" />
+    <!--
+      Nerdbank.MessagePack and MessagePack both come transitively via StreamJsonRpc, but we pin them
+      here to pick up versions that fix security vulnerabilities in the transitive versions shipped
+      by StreamJsonRpc.
+
+      IMPORTANT: Central Package Management only pins the version when a project actually declares a
+      <PackageReference> for the package. Any project that references StreamJsonRpc (directly or via
+      a ProjectReference chain) must ALSO add explicit <PackageReference Include="Nerdbank.MessagePack" />
+      AND <PackageReference Include="MessagePack" /> entries, otherwise the transitive (vulnerable)
+      versions get restored. See PR #9120 / #9124 for context.
+    -->
     <PackageVersion Include="Nerdbank.MessagePack" Version="1.2.4" />
+    <PackageVersion Include="MessagePack" Version="3.1.7" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="9.0.4" />
+    <PackageVersion Include="xunit.v3.mtp-v2" Version="3.2.2" />
   </ItemGroup>
   <!--
-    Declare below packages that we will be referenced through MSTest.Sdk but don't have direct reference.
-    This allows dependabot to suggest updates.
+    Declare below packages that are bundled through MSTest.Sdk (baked into the shipped SDK
+    templates) and are not otherwise consumed by a restored project, so that Dependabot can
+    discover and update them. They are referenced only inside the SDK feature targets
+    (Sdk/Features/*.targets, which Dependabot doesn't restore); their only graph-visible reference
+    from a repo project restore is the inert anchor described in condition 2 below.
+
+    Two conditions must BOTH hold for Dependabot to bump one of these, and missing either one
+    silently stops the updates:
+
+      1. The version MUST be a literal here (not an MSBuild property such as
+         $(MicrosoftPlaywrightVersion)): Dependabot does not update a Central Package Management
+         PackageVersion whose Version is an MSBuild property interpolation.
+         See dependabot/dependabot-core#5812 and dependabot/dependabot-core#7183.
+
+      2. The package MUST appear in the repo's restore graph via a graph-visible reference:
+         Dependabot only updates a CPM PackageVersion that is actually referenced by a project;
+         an "orphan" PackageVersion (declared here but referenced nowhere) is ignored. Because
+         these packages are only baked into the shipped SDK templates (Sdk/Features/*.targets)
+         and never referenced by a built project, we add inert anchor references in
+         test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj.
+         The anchor MUST be a PackageDownload, NOT a PackageReference with ExcludeAssets="all":
+         ExcludeAssets="all" removes the reference from the dependency graph Dependabot reads, so
+         the package stays invisible and never gets bumped. PackageDownload keeps it in the restore
+         graph (so Dependabot proposes bumps) without flowing any of its assets into the project.
+         Without a graph-visible anchor Dependabot never proposed bumps (see #9362).
+
+    Each literal version is duplicated as the matching *Version property (defined near the top of
+    this file) which is the value actually consumed by the build and baked into the MSTest.Sdk
+    template (see MSTest.Sdk.csproj). The two cannot be unified because the consuming property must
+    be a plain scalar (an item transform such as @(PackageVersion->...) stored in a property is not
+    expanded and breaks string concatenation, e.g. MSB4012), while Dependabot needs the literal on
+    the PackageVersion. The _ValidateBundledSdkFeatureVersions target below fails the build if the
+    property and the PackageVersion ever drift apart (e.g. after Dependabot bumps only the
+    PackageVersion), so the duplication can never ship out of sync.
     -->
   <ItemGroup Label="Declared by MSTest.Sdk but not used directly">
-    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="$(MicrosoftPlaywrightVersion)" />
+    <PackageVersion Include="Aspire.Hosting.Testing" Version="13.4.6" />
+    <PackageVersion Include="Microsoft.Playwright.MSTest.v4" Version="1.60.0" />
   </ItemGroup>
+  <Target Name="_ValidateBundledSdkFeatureVersions"
+          BeforeTargets="CollectPackageReferences;GenerateNuspec;Build;Pack"
+          Condition=" '$(MSBuildProjectName)' == 'MSTest.Sdk' ">
+    <PropertyGroup>
+      <_AspireHostingTestingPackageVersion>@(PackageVersion->WithMetadataValue('Identity', 'Aspire.Hosting.Testing')->'%(Version)')</_AspireHostingTestingPackageVersion>
+      <_MicrosoftPlaywrightPackageVersion>@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Playwright.MSTest.v4')->'%(Version)')</_MicrosoftPlaywrightPackageVersion>
+    </PropertyGroup>
+    <Error Condition=" '$(AspireHostingTestingVersion)' != '$(_AspireHostingTestingPackageVersion)' "
+           Text="AspireHostingTestingVersion ('$(AspireHostingTestingVersion)') is out of sync with the 'Aspire.Hosting.Testing' PackageVersion ('$(_AspireHostingTestingPackageVersion)') in Directory.Packages.props. Update the AspireHostingTestingVersion property to match (Dependabot only updates the PackageVersion)." />
+    <Error Condition=" '$(MicrosoftPlaywrightVersion)' != '$(_MicrosoftPlaywrightPackageVersion)' "
+           Text="MicrosoftPlaywrightVersion ('$(MicrosoftPlaywrightVersion)') is out of sync with the 'Microsoft.Playwright.MSTest.v4' PackageVersion ('$(_MicrosoftPlaywrightPackageVersion)') in Directory.Packages.props. Update the MicrosoftPlaywrightVersion property to match (Dependabot only updates the PackageVersion)." />
+  </Target>
 </Project>

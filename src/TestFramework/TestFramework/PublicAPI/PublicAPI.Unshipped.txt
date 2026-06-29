@@ -1,10 +1,35 @@
 #nullable enable
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AddValueFormatter(System.Func<System.Func<object?, string!>!, System.Func<object?, string!>!>! factory) -> System.IDisposable!
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AddValueFormatter<T>(System.Func<T, string?>! formatter) -> System.IDisposable!
 [MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Scope() -> System.IDisposable!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.AssemblyFixtureProviderAttribute(System.Type! fixtureType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute.FixtureType.get -> System.Type!
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.get -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceEmptyDataSourceExceptionInfo
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceEmptyDataSourceExceptionInfo.GetPropertyOrMethodContainerTypeNameForEmptyDataSourceException(System.Reflection.MethodInfo! testMethodInfo) -> string?
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSourceEmptyDataSourceExceptionInfo.GetPropertyOrMethodNameForEmptyDataSourceException() -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(System.Type! conditionType, string! conditionMemberName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.MemberConditionAttribute(System.Type! conditionType, string! conditionMemberName, params string![]! additionalConditionMemberNames) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionMemberNames.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.ConditionType.get -> System.Type!
+override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.MemberConditionAttribute.IsConditionMet.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.Arguments.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, string! executable) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, string! executable, params string![]! arguments) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(string! executable) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.ExecutableConditionAttribute(string! executable, params string![]! arguments) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.Executable.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.TimeoutSeconds.get -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.TimeoutSeconds.set -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.ExecutableConditionAttribute.IsConditionMet.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InAnyOrder = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder
 Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder.InOrder = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.SequenceOrder

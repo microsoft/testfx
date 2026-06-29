@@ -17,9 +17,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Combinatorial.MSTest" />
     <PackageReference Include="MSBuild.StructuredLogger" />
     <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
     <PackageReference Include="Nerdbank.MessagePack" />
+    <!-- Transitive dependency of StreamJsonRpc, pinned to fix a security vulnerability -->
+    <PackageReference Include="MessagePack" />
     <PackageReference Include="StreamJsonRpc" />
   </ItemGroup>
 

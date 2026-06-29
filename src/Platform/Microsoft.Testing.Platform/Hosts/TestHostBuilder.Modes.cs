@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Internal.Framework;
@@ -49,6 +49,18 @@ internal sealed partial class TestHostBuilder
         {
             if (pushOnlyProtocol.IsServerMode)
             {
+                // Always perform the handshake (even though we are about to print help) so that
+                // dotnet test on the SDK side can validate the test host's execution mode and
+                // detect mismatches such as --help being injected via RunArguments during a
+                // normal run. The handshake is needed for the SDK to know that the test host
+                // is in help mode, so it can ignore any incoming CommandLineOptionMessages.
+                bool isProtocolCompatible = await pushOnlyProtocol.IsCompatibleProtocolAsync(HandshakeMessageHostTypes.TestHost).ConfigureAwait(false);
+                if (!isProtocolCompatible)
+                {
+                    CompleteBuilderActivity(context.BuilderActivity, nameof(InformativeCommandLineHost));
+                    return new InformativeCommandLineHost((int)ExitCode.IncompatibleProtocolVersion, context.ServiceProvider);
+                }
+
                 await pushOnlyProtocol.HelpInvokedAsync().ConfigureAwait(false);
             }
             else
@@ -128,7 +140,7 @@ internal sealed partial class TestHostBuilder
         }
 
         PassiveNode? passiveNode = null;
-        if (context.HasServerFlag && context.IsJsonRpcProtocol)
+        if (context.IsJsonRpcProtocol)
         {
             IMessageHandlerFactory messageHandlerFactory = ServerModeManager.Build(context.ServiceProvider);
             passiveNode = new PassiveNode(
@@ -202,7 +214,7 @@ internal sealed partial class TestHostBuilder
 #pragma warning restore CS0618 // Type or member is obsolete
         context.ServiceProvider.AddServices(testApplicationLifecycleCallback);
 
-        return context.HasServerFlag && context.IsJsonRpcProtocol
+        return context.IsJsonRpcProtocol
             ? await BuildServerTestHostAsync(context, testControllerConnection).ConfigureAwait(false)
             : await BuildConsoleTestHostAsync(context, testControllerConnection).ConfigureAwait(false);
     }

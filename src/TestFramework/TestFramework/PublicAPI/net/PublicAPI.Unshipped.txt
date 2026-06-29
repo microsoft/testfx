@@ -1,1 +1,28 @@
 #nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.ArchitectureConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ConditionMode mode, Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures architectures) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.ArchitectureConditionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures architectures) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<TItem>.AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, System.Memory<TItem> collection, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<TItem>.AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, System.ReadOnlyMemory<TItem> collection, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<TItem>.AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, System.ReadOnlySpan<TItem> collection, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<TItem>.AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, int count, System.Span<TItem> collection, out bool shouldAppend) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Arm = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Arm64 = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Armv6 = 128 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.LoongArch64 = 64 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Ppc64le = 256 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.S390x = 32 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.Wasm = 16 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.X64 = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures.X86 = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestArchitectures
+override Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.GroupName.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.ArchitectureConditionAttribute.IsConditionMet.get -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Memory<T> collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Memory<T> collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.ReadOnlyMemory<T> collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.ReadOnlyMemory<T> collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.ReadOnlySpan<T> collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.ReadOnlySpan<T> collection, string? message = "", string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Span<T> collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Span<T> collection, string? message = "", string! collectionExpression = "") -> void

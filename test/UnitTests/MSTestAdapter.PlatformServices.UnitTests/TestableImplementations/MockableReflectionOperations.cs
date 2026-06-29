@@ -52,6 +52,15 @@ internal sealed class MockableReflectionOperations(Mock<IReflectionOperations> m
 
     public object? CreateInstance(Type type, object?[] parameters) => mock.Object.CreateInstance(type, parameters);
 
+    public Func<object?, object?[]?, object?>? GetTestMethodInvoker(MethodInfo method)
+        => mock.Object.GetTestMethodInvoker(method);
+
+    public Func<object?[]?, object>? GetConstructorInvoker(Type type)
+        => mock.Object.GetConstructorInvoker(type);
+
+    public Action<object?, object?>? GetPropertySetter(PropertyInfo property)
+        => mock.Object.GetPropertySetter(property);
+
     // Higher-level generic methods → filter results from mock's GetCustomAttributes
     public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute

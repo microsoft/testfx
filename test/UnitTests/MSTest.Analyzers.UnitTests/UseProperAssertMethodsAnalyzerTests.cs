@@ -4701,6 +4701,286 @@ public sealed class UseProperAssertMethodsAnalyzerTests
             fixedCode);
     }
 
+#if NET8_0_OR_GREATER
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithSpanLengthNonZero()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    {|#0:Assert.AreEqual(3, span.Length)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    Assert.HasCount(3, span);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithReadOnlySpanLengthNonZero()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    ReadOnlySpan<int> span = new int[] { 1, 2, 3 };
+                    {|#0:Assert.AreEqual(3, span.Length)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    ReadOnlySpan<int> span = new int[] { 1, 2, 3 };
+                    Assert.HasCount(3, span);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithMemoryLengthNonZero()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Memory<int> memory = new int[] { 1, 2, 3 };
+                    {|#0:Assert.AreEqual(3, memory.Length)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Memory<int> memory = new int[] { 1, 2, 3 };
+                    Assert.HasCount(3, memory);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithReadOnlyMemoryLengthNonZero()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    ReadOnlyMemory<int> memory = new int[] { 1, 2, 3 };
+                    {|#0:Assert.AreEqual(3, memory.Length)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    ReadOnlyMemory<int> memory = new int[] { 1, 2, 3 };
+                    Assert.HasCount(3, memory);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithSpanLengthZero_SuggestsHasCountNotIsEmpty()
+    {
+        // Span/Memory have no IsEmpty overload, so even for an expected count of 0 we suggest
+        // Assert.HasCount(0, span) rather than Assert.IsEmpty(span).
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    {|#0:Assert.AreEqual(0, span.Length)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    Assert.HasCount(0, span);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("HasCount", "AreEqual"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertIsTrueWithSpanLengthGreaterThanZero_UsesIsGreaterThanNotIsNotEmpty()
+    {
+        // Span/Memory have no IsNotEmpty overload, so 'span.Length > 0' must NOT be rewritten to
+        // Assert.IsNotEmpty(span). It still flows through the generic integer-comparison path,
+        // which suggests Assert.IsGreaterThan(0, span.Length).
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    {|#0:Assert.IsTrue(span.Length > 0)|};
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    Assert.IsGreaterThan(0, span.Length);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.DiagnosticIgnoringAdditionalLocations().WithLocation(0).WithArguments("IsGreaterThan", "IsTrue"),
+            fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualWithSpanLengthNonIntExpected_NoDiagnostic()
+    {
+        // Assert.HasCount takes int, so a non-int expected value compared against span.Length
+        // must not be rewritten (there is no matching HasCount overload).
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Span<int> span = new int[] { 1, 2, 3 };
+                    long longCount = 3L;
+                    int? nullableCount = 3;
+                    Assert.AreEqual(longCount, span.Length);
+                    Assert.AreEqual(nullableCount, span.Length);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+#endif
+
     [TestMethod]
     public async Task WhenAssertIsTrueWithLinqContainsAndComparer()
     {

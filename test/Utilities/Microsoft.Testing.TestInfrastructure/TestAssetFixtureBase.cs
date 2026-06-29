@@ -23,6 +23,36 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
     private readonly TempDirectory _tempDirectory = new();
     private bool _disposedValue;
 
+    /// <summary>
+    /// The metadata modes every acceptance asset is built under by default, in addition to the
+    /// always-built <see cref="MetadataMode.Reflection"/> build. This is <b>opt-out</b>: a source-gen
+    /// survey across the whole acceptance corpus showed every asset except <c>FrameworkOnlyTests</c>
+    /// builds cleanly under <see cref="MetadataMode.SourceGeneration"/>, so it is on by default and a
+    /// failing build throws (see <see cref="InitializeAsync"/>).
+    /// <para>
+    /// <see cref="MetadataMode.AotSourceGeneration"/> is intentionally not part of the default yet: it
+    /// has not been validated across the whole corpus, so fixtures that want it (and run tests against
+    /// it) opt in explicitly via <see cref="SourceGenMetadataModes"/>.
+    /// </para>
+    /// </summary>
+    private static readonly IReadOnlyList<MetadataMode> DefaultSourceGenMetadataModes = [MetadataMode.SourceGeneration];
+
+    /// <summary>
+    /// Override to change which source-gen metadata modes this fixture builds, in addition to the
+    /// always-built <see cref="MetadataMode.Reflection"/> build. Defaults to
+    /// <see cref="DefaultSourceGenMetadataModes"/> (opt-out). A mode returned here is expected to build
+    /// successfully; a failed build throws with the captured build output (see <see cref="InitializeAsync"/>).
+    /// <para>
+    /// Return an empty list to opt an asset out entirely — for assets that genuinely cannot build under
+    /// source generation (for example <c>FrameworkOnlyTests</c>, which references only the test
+    /// framework and not the adapter that carries the source-generated metadata hook). Note this only
+    /// governs which variants are <i>built</i>; an asset's tests still run reflection-only unless the
+    /// test methods are parameterized by <c>MetadataMode</c> and threaded through
+    /// <c>TestHost.LocateFrom</c>.
+    /// </para>
+    /// </summary>
+    protected virtual IReadOnlyList<MetadataMode> SourceGenMetadataModes => DefaultSourceGenMetadataModes;
+
     public string GetAssetPath(string assetID)
         => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
@@ -35,6 +65,31 @@ public abstract class TestAssetFixtureBase : ITestAssetFixture
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build {testAsset.TargetAssetPath} -c Release", callerMemberName: assetName, cancellationToken: cancellationToken);
         testAsset.DotnetResult = result;
         _testAssets.TryAdd(assetId, testAsset);
+
+        // For each source-gen metadata mode the fixture builds (opt-out: see SourceGenMetadataModes,
+        // which defaults to SourceGeneration), build a variant with the matching generator injected,
+        // into an isolated bin/<sub> + obj/<sub> output, so the source-generated metadata path is at
+        // least compiled (and, for parameterized fixtures, exercised). The build is run with
+        // failIfReturnValueIsNotZero:false so we can surface the captured output if it fails (rather
+        // than the less actionable default exception from DotnetCli.RunAsync).
+        if (!AcceptanceSourceGen.IsGloballyDisabled)
+        {
+            foreach (MetadataMode mode in SourceGenMetadataModes)
+            {
+                string sourceGenArgs = await AcceptanceSourceGen.PrepareBuildArgumentsAsync(testAsset.TargetAssetPath, mode);
+                DotnetMuxerResult sourceGenResult = await DotnetCli.RunAsync(
+                    $"build {testAsset.TargetAssetPath} -c Release {sourceGenArgs}",
+                    failIfReturnValueIsNotZero: false,
+                    callerMemberName: $"{assetName}_{AcceptanceSourceGen.GetOutputSubFolder(mode)}",
+                    cancellationToken: cancellationToken);
+
+                if (sourceGenResult.ExitCode != 0)
+                {
+                    throw new InvalidOperationException(
+                        $"The {mode} build of acceptance asset '{assetName}' failed with exit code {sourceGenResult.ExitCode}.{Environment.NewLine}{sourceGenResult}");
+                }
+            }
+        }
     }
 
     /// <summary>

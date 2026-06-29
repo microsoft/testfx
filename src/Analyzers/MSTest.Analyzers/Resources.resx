@@ -134,12 +134,15 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</value>
+    <comment>{Locked="[DiscoverInternals]"}{Locked="[AssemblyCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</comment>
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' signature is invalid</value>
+    <comment>{0} is the method name. {Locked="AssemblyCleanup"}</comment>
   </data>
   <data name="AssemblyCleanupShouldBeValidTitle" xml:space="preserve">
     <value>AssemblyCleanup methods should have valid layout</value>
+    <comment>{Locked="AssemblyCleanup"}</comment>
   </data>
   <data name="AssemblyInitializeShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
@@ -158,24 +161,30 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</value>
+    <comment>{Locked="[AssemblyInitialize]"}{Locked="[DiscoverInternals]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</comment>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>AssemblyInitialize method '{0}' signature is invalid</value>
+    <comment>{0} is the method name. {Locked="AssemblyInitialize"}</comment>
   </data>
   <data name="AssemblyInitializeShouldBeValidTitle" xml:space="preserve">
     <value>AssemblyInitialize methods should have valid layout</value>
+    <comment>{Locked="AssemblyInitialize"}</comment>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessMessageFormat" xml:space="preserve">
     <value>Prefer adding an additional assertion that checks for null</value>
+    <comment>{Locked="null"}</comment>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessTitle" xml:space="preserve">
     <value>Avoid conditional access in assertions</value>
   </data>
   <data name="AssertionArgsShouldBePassedInCorrectOrderDescription" xml:space="preserve">
     <value>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</value>
+    <comment>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}{Locked="actual"}{Locked="expected"}</comment>
   </data>
   <data name="AssertionArgsShouldBePassedInCorrectOrderMessageFormat" xml:space="preserve">
     <value>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</value>
+    <comment>{Locked="actual"}{Locked="expected"}{Locked="notExpected"}</comment>
   </data>
   <data name="AssertionArgsShouldBePassedInCorrectOrderTitle" xml:space="preserve">
     <value>Assertion arguments should be passed in the correct order</value>
@@ -199,12 +208,15 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</value>
+    <comment>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</comment>
   </data>
   <data name="ClassCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>ClassCleanup method '{0}' signature is invalid</value>
+    <comment>{0} is the method name. {Locked="ClassCleanup"}</comment>
   </data>
   <data name="ClassCleanupShouldBeValidTitle" xml:space="preserve">
     <value>ClassCleanup methods should have valid layout</value>
+    <comment>{Locked="ClassCleanup"}</comment>
   </data>
   <data name="ClassInitializeShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with '[ClassInitialize]' should follow the following layout to be valid:
@@ -225,33 +237,42 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</value>
+    <comment>{Locked="InheritanceBehavior.BeforeEachDerivedClass"}{Locked="[DiscoverInternals]"}{Locked="[ClassInitialize]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</comment>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>ClassInitialize method '{0}' signature is invalid</value>
+    <comment>{0} is the method name. {Locked="ClassInitialize"}</comment>
   </data>
   <data name="ClassInitializeShouldBeValidTitle" xml:space="preserve">
     <value>ClassInitialize methods should have valid layout</value>
+    <comment>{Locked="ClassInitialize"}</comment>
   </data>
   <data name="DataRowShouldBeValidDescription" xml:space="preserve">
     <value>DataRow entry should have the following layout to be valid:
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</value>
+    <comment>{Locked="DataRow"}</comment>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch" xml:space="preserve">
     <value>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</value>
+    <comment>{0} is the number of constructor arguments. {1} is the number of method parameters. {Locked="DataRow"}</comment>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
     <value>DataRow argument types do not match method parameter types. {0}</value>
+    <comment>{0} is the argument type mismatch details. {Locked="DataRow"}</comment>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_ParameterMismatch" xml:space="preserve">
     <value>Parameter '{0}' expects type '{1}', but the provided value has type '{2}'</value>
+    <comment>{0} is the parameter name. {1} is the expected parameter type. {2} is the provided value type.</comment>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
     <value>DataRow should only be set on a test method</value>
+    <comment>{Locked="DataRow"}</comment>
   </data>
   <data name="DataRowShouldBeValidTitle" xml:space="preserve">
     <value>DataRow should be valid</value>
+    <comment>{Locked="DataRow"}</comment>
   </data>
   <data name="DoNotNegateBooleanAssertionMessageFormat" xml:space="preserve">
     <value>Do not negate boolean assertions, instead use the opposite assertion</value>
@@ -261,54 +282,70 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="DoNotStoreStaticTestContextAnalyzerMessageFormat" xml:space="preserve">
     <value>Do not store TestContext in a static member</value>
+    <comment>{Locked="TestContext"}{Locked="static"}</comment>
   </data>
   <data name="DoNotStoreStaticTestContextAnalyzerTitle" xml:space="preserve">
     <value>Do not store TestContext in a static member</value>
+    <comment>{Locked="TestContext"}{Locked="static"}</comment>
   </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</value>
+    <comment>{0} is the assert method name. {Locked="Assert.Fail"}{Locked="Assert"}</comment>
   </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsTitle" xml:space="preserve">
     <value>Use 'Assert.Fail' instead of an always-failing assert</value>
+    <comment>{Locked="Assert.Fail"}</comment>
   </data>
   <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
+    <comment>{Locked="TestInitialize"}</comment>
   </data>
   <data name="PreferConstructorOverTestInitializeTitle" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
+    <comment>{Locked="TestInitialize"}</comment>
   </data>
   <data name="PreferDisposeOverTestCleanupMessageFormat" xml:space="preserve">
     <value>Prefer 'Dispose' over TestCleanup methods</value>
+    <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
   </data>
   <data name="PreferDisposeOverTestCleanupTitle" xml:space="preserve">
     <value>Prefer 'Dispose' over TestCleanup methods</value>
+    <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
   </data>
   <data name="PreferTestCleanupOverDisposeMessageFormat" xml:space="preserve">
     <value>Prefer TestCleanup over 'Dispose' methods</value>
+    <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
   </data>
   <data name="PreferTestCleanupOverDisposeTitle" xml:space="preserve">
     <value>Prefer TestCleanup over 'Dispose' methods</value>
+    <comment>{Locked="TestCleanup"}{Locked="Dispose"}</comment>
   </data>
   <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
+    <comment>{Locked="TestInitialize"}</comment>
   </data>
   <data name="PreferTestInitializeOverConstructorTitle" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
+    <comment>{Locked="TestInitialize"}</comment>
   </data>
   <data name="PublicMethodShouldBeTestMethodAnalyzerDescription" xml:space="preserve">
     <value>Public methods should be test methods (marked with `[TestMethod]`).</value>
+    <comment>{Locked="[TestMethod]"}</comment>
   </data>
   <data name="PublicMethodShouldBeTestMethodAnalyzerFormat" xml:space="preserve">
     <value>Public method '{0}' should be a test method</value>
+    <comment>{0} is the method name.</comment>
   </data>
   <data name="PublicMethodShouldBeTestMethodAnalyzerTitle" xml:space="preserve">
     <value>Public methods should be test methods</value>
   </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
+    <comment>{Locked="public"}</comment>
   </data>
   <data name="PublicTypeShouldBeTestClassMessageFormat" xml:space="preserve">
     <value>Public type '{0}' should be marked with '[TestClass]' or changed to 'internal'</value>
+    <comment>{0} is the type name. {Locked="[TestClass]"}{Locked="internal"}</comment>
   </data>
   <data name="PublicTypeShouldBeTestClassTitle" xml:space="preserve">
     <value>Public types should be test classes</value>
@@ -318,18 +355,22 @@ The type declaring these methods should also respect the following rules:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</value>
+    <comment>{Locked="AssemblyInitialize"}{Locked="AssemblyCleanup"}{Locked="[TestClass]"}{Locked="MSTest"}{Locked="public"}{Locked="internal"}{Locked="static"}</comment>
   </data>
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
   </data>
   <data name="TestClassShouldHaveTestMethodDescription" xml:space="preserve">
     <value>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'.</value>
+    <comment>{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</comment>
   </data>
   <data name="TestClassShouldHaveTestMethodMessageFormat" xml:space="preserve">
     <value>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialize]' and/or '[AssemblyCleanup]'</value>
+    <comment>{0} is the test class name. {Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="static"}{Locked="class"}</comment>
   </data>
   <data name="TestClassShouldHaveTestMethodTitle" xml:space="preserve">
     <value>Test class should have test method</value>
+    <comment>{Locked="class"}</comment>
   </data>
   <data name="TestCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with '[TestCleanup]' should follow the following layout to be valid:
@@ -347,21 +388,26 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</value>
+    <comment>{Locked="[DiscoverInternals]"}{Locked="[TestCleanup]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</comment>
   </data>
   <data name="TestCleanupShouldBeValidMessageFormat" xml:space="preserve">
     <value>TestCleanup method '{0}' signature is invalid</value>
+    <comment>{0} is the method name. {Locked="TestCleanup"}</comment>
   </data>
   <data name="TestCleanupShouldBeValidTitle" xml:space="preserve">
     <value>TestCleanup method should have valid layout</value>
+    <comment>{Locked="TestCleanup"}</comment>
   </data>
   <data name="TestContextShouldBeValidDescription" xml:space="preserve">
     <value>'TestContext' should be a non-static property assigned in constructor or set by MSTest. To be set by MSTest, it should follow the layout:
 - it should be 'public' regardless of whether '[assembly: DiscoverInternals]' attribute is set or not.
 - it should not be 'static'
 - it should have a setter.</value>
+    <comment>{Locked="TestContext"}{Locked="MSTest"}{Locked="public"}{Locked="static"}</comment>
   </data>
   <data name="TestContextShouldBeValidMessageFormat" xml:space="preserve">
     <value>Property 'TestContext' should be valid</value>
+    <comment>{Locked="TestContext"}</comment>
   </data>
   <data name="TestContextShouldBeValidTitle" xml:space="preserve">
     <value>Test context property should have valid layout</value>
@@ -382,12 +428,15 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public' or 'internal' (if the test project is using the '[DiscoverInternals]' attribute)
 -The class shouldn't be 'static'
 -If the class is 'sealed', it should be marked with '[TestClass]' (or a derived attribute).</value>
+    <comment>{Locked="[DiscoverInternals]"}{Locked="[TestInitialize]"}{Locked="[TestClass]"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="sealed"}{Locked="async"}{Locked="class"}</comment>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat" xml:space="preserve">
     <value>TestInitialize method '{0}' signature is invalid</value>
+    <comment>{0} is the method name. {Locked="TestInitialize"}</comment>
   </data>
   <data name="TestInitializeShouldBeValidTitle" xml:space="preserve">
     <value>TestInitialize method should have valid layout</value>
+    <comment>{Locked="TestInitialize"}</comment>
   </data>
   <data name="TestMethodShouldBeValidDescription" xml:space="preserve">
     <value>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
@@ -398,39 +447,49 @@ The type declaring these methods should also respect the following rules:
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</value>
+    <comment>{Locked="[TestMethod]"}{Locked="ValueTask"}{Locked="MSTest"}{Locked="Task"}{Locked="public"}{Locked="internal"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="abstract"}{Locked="async"}</comment>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat" xml:space="preserve">
     <value>Test method '{0}' signature is invalid</value>
+    <comment>{0} is the method name.</comment>
   </data>
   <data name="TestMethodShouldBeValidTitle" xml:space="preserve">
     <value>Test methods should have valid layout</value>
   </data>
   <data name="TestMethodShouldNotBeIgnoredAnalyzerDescription" xml:space="preserve">
     <value>Test methods should not be ignored (marked with '[Ignore]').</value>
+    <comment>{Locked="[Ignore]"}</comment>
   </data>
   <data name="TestMethodShouldNotBeIgnoredAnalyzerFormat" xml:space="preserve">
     <value>Test method '{0}' should not be ignored</value>
+    <comment>{0} is the method name.</comment>
   </data>
   <data name="TestMethodShouldNotBeIgnoredAnalyzerTitle" xml:space="preserve">
     <value>Test method should not be ignored</value>
   </data>
   <data name="UseAsyncSuffixTestFixtureMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test fixture methods do not require the 'Async' suffix</value>
+    <comment>{Locked="'Async'"}</comment>
   </data>
   <data name="UseAsyncSuffixTestMethodSuppressorJustification" xml:space="preserve">
     <value>Asynchronous test methods do not require the 'Async' suffix</value>
+    <comment>{Locked="'Async'"}</comment>
   </data>
   <data name="UnusedParameterSuppressorJustification" xml:space="preserve">
     <value>TestContext parameter is required by MSTest for AssemblyInitialize and ClassInitialize methods</value>
+    <comment>{Locked="AssemblyInitialize"}{Locked="ClassInitialize"}{Locked="TestContext"}{Locked="MSTest"}</comment>
   </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
+    <comment>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</comment>
   </data>
   <data name="UseAttributeOnTestMethodAnalyzerTitle" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
+    <comment>{0} is the attribute name without brackets. {Locked="[TestMethod]"}</comment>
   </data>
   <data name="UseParallelizeAttributeAnalyzerDescription" xml:space="preserve">
     <value>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</value>
+    <comment>{Locked="[DoNotParallelize]"}{Locked="[Parallelize]"}{Locked="MSTest"}</comment>
   </data>
   <data name="UseParallelizeAttributeAnalyzerMessageFormat" xml:space="preserve">
     <value>Explicitly enable or disable tests parallelization</value>
@@ -440,204 +499,276 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassTitle" xml:space="preserve">
     <value>Type containing '[TestMethod]' should be marked with '[TestClass]'</value>
+    <comment>{Locked="[TestMethod]"}{Locked="[TestClass]"}</comment>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassDescription" xml:space="preserve">
     <value>Type containing '[TestMethod]' should be marked with '[TestClass]', otherwise the test method will be silently ignored.</value>
+    <comment>{Locked="[TestMethod]"}{Locked="[TestClass]"}</comment>
   </data>
   <data name="TypeContainingTestMethodShouldBeATestClassMessageFormat" xml:space="preserve">
     <value>Type '{0}' contains test methods and should be marked with '[TestClass]'</value>
+    <comment>{0} is the type name. {Locked="[TestClass]"}</comment>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeTitle" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect on test methods</value>
+    <comment>{Locked="System.ComponentModel.DescriptionAttribute"}</comment>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeMessageFormat" xml:space="preserve">
     <value>Did you mean to be using 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute'?</value>
+    <comment>{Locked="Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute"}</comment>
   </data>
   <data name="DoNotUseSystemDescriptionAttributeDescription" xml:space="preserve">
     <value>'System.ComponentModel.DescriptionAttribute' has no effect in the context of tests and you likely wanted to use 'Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute' instead.</value>
+    <comment>{Locked="Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute"}{Locked="System.ComponentModel.DescriptionAttribute"}</comment>
   </data>
   <data name="ReviewAlwaysTrueAssertConditionAnalyzerTitle" xml:space="preserve">
     <value>Assertion condition is always true</value>
+    <comment>{Locked="true"}</comment>
   </data>
   <data name="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat" xml:space="preserve">
     <value>Review or remove the assertion as its condition is known to be always true</value>
+    <comment>{Locked="true"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidTitle" xml:space="preserve">
     <value>DynamicData should be valid</value>
+    <comment>{Locked="DynamicData"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidDescription" xml:space="preserve">
     <value>'DynamicData' entry should have the following layout to be valid:
 - should only be set on a test method;
 - member should be defined on the type specified;
 - member should be a method if DynamicDataSourceType.Method is specified or a property otherwise.</value>
+    <comment>{Locked="DynamicDataSourceType.Method"}{Locked="DynamicData"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
     <value>'[DynamicData]' should only be set on a test method</value>
+    <comment>{Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberNotFound" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' cannot be found</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_TooManyMembers" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is found more than once</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeProperty" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is a property so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Property' (auto detect is the default when not specified explicitly, and is recommended)</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Property"}{Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' should be a method</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_MemberType" xml:space="preserve">
     <value>'[DynamicData]' referenced member '{0}.{1}' should return 'IEnumerable&lt;object[]&gt;', 'IEnumerable&lt;Tuple&gt;` or 'IEnumerable&lt;ValueTuple&gt;'</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="IEnumerable&lt;ValueTuple&gt;"}{Locked="IEnumerable&lt;object[]&gt;"}{Locked="IEnumerable&lt;Tuple&gt;"}{Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is a method so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Method' (auto detect is the default when not specified explicitly, and is recommended)</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Method"}{Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeField" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is a field so you should use 'DynamicDataSourceType.AutoDetect' or 'DynamicDataSourceType.Field' (auto detect is the default when not specified explicitly, and is recommended)</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="DynamicDataSourceType.AutoDetect"}{Locked="DynamicDataSourceType.Field"}{Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_DisplayMethodSignature" xml:space="preserve">
     <value>'[DynamicData]' display name method '{0}.{1}' signature is invalid</value>
+    <comment>{0} is the containing type name. {1} is the display name method name. {Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_DataMemberSignature" xml:space="preserve">
     <value>'[DynamicData]' data member '{0}.{1}' signature is invalid</value>
+    <comment>{0} is the containing type name. {1} is the data member name. {Locked="[DynamicData]"}</comment>
   </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassTitle" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
+    <comment>{Locked="[DeploymentItem]"}{Locked="class"}</comment>
   </data>
   <data name="UseDeploymentItemWithTestMethodOrTestClassMessageFormat" xml:space="preserve">
     <value>'[DeploymentItem]' can be specified only on test class or test method</value>
+    <comment>{Locked="[DeploymentItem]"}{Locked="class"}</comment>
   </data>
   <data name="TestClassShouldBeValidMessageFormat" xml:space="preserve">
     <value>Test class '{0}' should be valid</value>
+    <comment>{0} is the test class name. {Locked="class"}</comment>
   </data>
   <data name="DoNotUseShadowingDescription" xml:space="preserve">
     <value>Shadowing test members could cause testing issues (such as NRE).</value>
   </data>
   <data name="DoNotUseShadowingMessageFormat" xml:space="preserve">
     <value>Member '{0}' already exists in the base class</value>
+    <comment>{0} is the member name. {Locked="class"}</comment>
   </data>
   <data name="DoNotUseShadowingTitle" xml:space="preserve">
     <value>Do not use shadowing</value>
   </data>
   <data name="UseProperAssertMethodsTitle" xml:space="preserve">
     <value>Use proper 'Assert' methods</value>
+    <comment>{Locked="Assert"}</comment>
   </data>
   <data name="UseProperAssertMethodsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'Assert.{1}'</value>
+    <comment>{0} is the preferred assert method name. {1} is the current assert method name. {Locked="Assert"}</comment>
   </data>
   <data name="StringAssertToAssertTitle" xml:space="preserve">
     <value>Use 'Assert' instead of 'StringAssert'</value>
+    <comment>{Locked="StringAssert"}{Locked="Assert"}</comment>
   </data>
   <data name="StringAssertToAssertMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of 'StringAssert.{1}'</value>
+    <comment>{0} is the preferred Assert method name. {1} is the current StringAssert method name. {Locked="StringAssert"}{Locked="Assert"}</comment>
+  </data>
+  <data name="CollectionAssertToAssertTitle" xml:space="preserve">
+    <value>Use 'Assert' instead of 'CollectionAssert'</value>
+    <comment>{Locked="CollectionAssert"}{Locked="Assert"}</comment>
+  </data>
+  <data name="CollectionAssertToAssertMessageFormat" xml:space="preserve">
+    <value>Use 'Assert.{0}' instead of 'CollectionAssert.{1}'</value>
+    <comment>{0} is the preferred Assert method name. {1} is the current CollectionAssert method name. {Locked="CollectionAssert"}{Locked="Assert"}</comment>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentNotResolved" xml:space="preserve">
     <value>The type of the generic parameter '{0}' could not be inferred.</value>
+    <comment>{0} is the generic type parameter name.</comment>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_GenericTypeArgumentConflictingTypes" xml:space="preserve">
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
+    <comment>{0} is the generic type parameter name. {1} and {2} are the conflicting type names.</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyOrMethod" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is not a property nor a method. Only properties and methods are supported.</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</comment>
   </data>
   <data name="DynamicDataShouldBeValidMessageFormat_SourceTypeNotPropertyMethodOrField" xml:space="preserve">
     <value>'[DynamicData]' member '{0}.{1}' is not a property, method, or field. Only properties, methods, and fields are supported.</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[DynamicData]"}</comment>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesTitle" xml:space="preserve">
     <value>Don't use 'Assert.AreSame' or 'Assert.AreNotSame' with value types</value>
+    <comment>{Locked="Assert.AreNotSame"}{Locked="Assert.AreSame"}</comment>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesMessageFormat" xml:space="preserve">
     <value>Use '{0}' instead of '{1}' when comparing value types</value>
+    <comment>{0} is the preferred assertion method name. {1} is the current assertion method name.</comment>
   </data>
   <data name="AvoidAssertAreSameWithValueTypesDescription" xml:space="preserve">
     <value>Use 'Assert.AreEqual'/'Assert.AreNotEqual' instead of 'Assert.AreSame'/'Assert.AreNotSame' when comparing value types. Passing a value type to 'Assert.AreSame'/'Assert.AreNotSame' will be boxed (creating a new object). Because 'Assert.AreSame'/'Assert.AreNotSame' does the comparison by reference, 'Assert.AreSame' will fail when boxing happens, and 'Assert.AreNotSame' will always pass.</value>
+    <comment>{Locked="Assert.AreNotEqual"}{Locked="Assert.AreNotSame"}{Locked="Assert.AreEqual"}{Locked="Assert.AreSame"}</comment>
   </data>
   <data name="AvoidAssertAreEqualOnCollectionsTitle" xml:space="preserve">
     <value>Avoid Assert.AreEqual on collection types</value>
+    <comment>{Locked="Assert.AreEqual"}</comment>
   </data>
   <data name="AvoidAssertAreEqualOnCollectionsMessageFormat" xml:space="preserve">
     <value>`{0}` on {1} (which implements IEnumerable&lt;T&gt;) does not perform element-wise sequence comparison. Use `Assert.AreSequenceEqual` for ordered element-wise comparison, `Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)` for unordered, or `Assert.AreEquivalent` for deep structural comparison.</value>
+    <comment>{0} is the current assert method call. {1} is the collection type name. {Locked="Assert.AreSequenceEqual(..., SequenceOrder.InAnyOrder)"}{Locked="Assert.AreSequenceEqual"}{Locked="Assert.AreEquivalent"}{Locked="IEnumerable&lt;T&gt;"}</comment>
   </data>
   <data name="AvoidAssertAreEqualOnCollectionsDescription" xml:space="preserve">
     <value>`Assert.AreEqual` and `Assert.AreNotEqual` use `EqualityComparer&lt;T&gt;.Default`. For collection-like types this relies on the type's own equality semantics instead of comparing sequence elements, so `Assert.AreSequenceEqual`/`Assert.AreNotSequenceEqual` or `Assert.AreEquivalent`/`Assert.AreNotEquivalent` are usually the better fit.</value>
+    <comment>{Locked="EqualityComparer&lt;T&gt;.Default"}{Locked="Assert.AreNotSequenceEqual"}{Locked="Assert.AreSequenceEqual"}{Locked="Assert.AreNotEquivalent"}{Locked="Assert.AreEquivalent"}{Locked="Assert.AreNotEqual"}{Locked="Assert.AreEqual"}</comment>
   </data>
   <data name="AvoidUsingAssertsInAsyncVoidContextTitle" xml:space="preserve">
     <value>Do not assert inside 'async void' contexts</value>
+    <comment>{Locked="async void"}{Locked="void"}{Locked="async"}</comment>
   </data>
   <data name="AvoidUsingAssertsInAsyncVoidContextMessageFormat" xml:space="preserve">
     <value>Do not assert inside 'async void' methods, local functions, or lambdas because they may not fail the test</value>
+    <comment>{Locked="async void"}{Locked="void"}{Locked="async"}</comment>
   </data>
   <data name="AvoidUsingAssertsInAsyncVoidContextDescription" xml:space="preserve">
     <value>Do not assert inside 'async void' methods, local functions, or lambdas. Exceptions that are thrown in this context will be unhandled exceptions. When using VSTest under .NET Framework, they will be silently swallowed. When using Microsoft.Testing.Platform or VSTest under modern .NET, they may crash the process.</value>
+    <comment>{Locked="Microsoft.Testing.Platform"}{Locked=".NET Framework"}{Locked="VSTest"}{Locked=".NET"}{Locked="async void"}{Locked="void"}{Locked="async"}</comment>
   </data>
   <data name="UseConditionBaseWithTestClassTitle" xml:space="preserve">
     <value>Use 'ConditionBaseAttribute' on test classes</value>
+    <comment>{Locked="ConditionBaseAttribute"}</comment>
   </data>
   <data name="UseConditionBaseWithTestClassMessageFormat" xml:space="preserve">
     <value>The attribute '{0}' which derives from 'ConditionBaseAttribute' should be used only on classes marked with `TestClassAttribute`</value>
+    <comment>{0} is the attribute name. {Locked="ConditionBaseAttribute"}{Locked="TestClassAttribute"}</comment>
   </data>
   <data name="DuplicateDataRowTitle" xml:space="preserve">
     <value>Avoid duplicated 'DataRow' entries</value>
+    <comment>{Locked="DataRow"}</comment>
   </data>
   <data name="DuplicateDataRowMessageFormat" xml:space="preserve">
     <value>Do not duplicate 'DataRow' attributes. This is usually a copy/paste error. The attribute indices are '{0}' and '{1}'.</value>
+    <comment>{0} is the first duplicate attribute index. {1} is the second duplicate attribute index. {Locked="DataRow"}</comment>
   </data>
   <data name="UseRetryWithTestMethodTitle" xml:space="preserve">
     <value>Use retry attribute on test method or test class</value>
+    <comment>{Locked="class"}</comment>
   </data>
   <data name="UseRetryWithTestMethodMessageFormat" xml:space="preserve">
     <value>An attribute that derives from 'RetryBaseAttribute' can be specified only on a test method or a test class</value>
+    <comment>{Locked="RetryBaseAttribute"}{Locked="class"}</comment>
   </data>
   <data name="PreferTestMethodOverDataTestMethodAnalyzerTitle" xml:space="preserve">
     <value>Prefer 'TestMethod' over 'DataTestMethod'</value>
+    <comment>{Locked="DataTestMethod"}{Locked="TestMethod"}</comment>
   </data>
   <data name="PreferTestMethodOverDataTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>'DataTestMethod' is obsolete. Use 'TestMethod' instead.</value>
+    <comment>{Locked="DataTestMethod"}{Locked="TestMethod"}</comment>
   </data>
   <data name="PreferTestMethodOverDataTestMethodAnalyzerDescription" xml:space="preserve">
     <value>'DataTestMethodAttribute' is obsolete and provides no additional functionality over 'TestMethodAttribute'. Use 'TestMethodAttribute' for all test methods, including parameterized tests.</value>
+    <comment>{Locked="DataTestMethodAttribute"}{Locked="TestMethodAttribute"}</comment>
   </data>
   <data name="UseCooperativeCancellationForTimeoutTitle" xml:space="preserve">
     <value>Use 'CooperativeCancellation = true' with '[Timeout]'</value>
+    <comment>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</comment>
   </data>
   <data name="UseCooperativeCancellationForTimeoutMessageFormat" xml:space="preserve">
     <value>Use 'CooperativeCancellation = true' with '[Timeout]' to enable cooperative cancellation behavior</value>
+    <comment>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</comment>
   </data>
   <data name="UseCooperativeCancellationForTimeoutDescription" xml:space="preserve">
     <value>Using '[Timeout]' without explicitly setting 'CooperativeCancellation = true' is discouraged. In a future version, cooperative cancellation will become the default behavior. Set 'CooperativeCancellation = true' to opt into the recommended behavior and avoid breaking changes.</value>
+    <comment>{Locked="CooperativeCancellation = true"}{Locked="[Timeout]"}{Locked="true"}</comment>
   </data>
   <data name="TestContextPropertyUsageTitle" xml:space="preserve">
     <value>TestContext property cannot be accessed in this context</value>
+    <comment>{Locked="TestContext"}</comment>
   </data>
   <data name="TestContextPropertyUsageMessageFormat" xml:space="preserve">
     <value>TestContext property '{0}' cannot be accessed in '{1}' method</value>
+    <comment>{0} is the TestContext property name. {1} is the lifecycle method name. {Locked="TestContext"}</comment>
   </data>
   <data name="TestContextPropertyUsageDescription" xml:space="preserve">
     <value>Some TestContext properties are only available during test execution and cannot be accessed in assembly initialize, class initialize, class cleanup, or assembly cleanup methods.</value>
+    <comment>{Locked="TestContext"}{Locked="class"}</comment>
   </data>
   <data name="FlowTestContextCancellationTokenTitle" xml:space="preserve">
     <value>Flow TestContext.CancellationToken to async operations</value>
+    <comment>{Locked="TestContext.CancellationToken"}{Locked="async"}</comment>
   </data>
   <data name="FlowTestContextCancellationTokenMessageFormat" xml:space="preserve">
     <value>Consider using the overload that accepts a CancellationToken and pass 'TestContext.CancellationToken'</value>
+    <comment>{Locked="TestContext.CancellationToken"}{Locked="CancellationToken"}</comment>
   </data>
   <data name="FlowTestContextCancellationTokenDescription" xml:space="preserve">
     <value>When calling async methods that have overloads accepting a CancellationToken parameter, prefer using the overload with TestContext.CancellationToken to enable cooperative cancellation and respect test timeouts.</value>
+    <comment>{Locked="TestContext.CancellationToken"}{Locked="CancellationToken"}{Locked="async"}</comment>
   </data>
   <data name="AssertThrowsShouldContainSingleStatementTitle" xml:space="preserve">
     <value>Assert.Throws should contain only a single statement/expression</value>
+    <comment>{Locked="Assert.Throws"}</comment>
   </data>
   <data name="AssertThrowsShouldContainSingleStatementMessageFormat" xml:space="preserve">
     <value>Assert.Throws should contain only a single statement/expression</value>
+    <comment>{Locked="Assert.Throws"}</comment>
   </data>
   <data name="AssertThrowsShouldContainSingleStatementDescription" xml:space="preserve">
     <value>Assert.Throws methods should contain only a single statement or expression. Multiple statements can be misleading - if the first statement throws, subsequent statements are never executed; if it doesn't throw, it should be moved outside the Assert.Throws.</value>
+    <comment>{Locked="Assert.Throws"}</comment>
   </data>
   <data name="GlobalTestFixtureShouldBeValidTitle" xml:space="preserve">
     <value>GlobalTestInitialize and GlobalTestCleanup methods should have valid layout</value>
+    <comment>{Locked="GlobalTestInitialize"}{Locked="GlobalTestCleanup"}</comment>
   </data>
   <data name="GlobalTestFixtureShouldBeValidMessageFormat" xml:space="preserve">
     <value>Global test fixture method '{0}' signature is invalid</value>
+    <comment>{0} is the method name.</comment>
   </data>
   <data name="GlobalTestFixtureShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
@@ -656,57 +787,74 @@ The type declaring these methods should also respect the following rules:
 -The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</value>
+    <comment>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</comment>
   </data>
   <data name="AvoidExplicitDynamicDataSourceTypeTitle" xml:space="preserve">
     <value>Avoid passing an explicit 'DynamicDataSourceType' and use the default auto detect behavior</value>
+    <comment>{Locked="DynamicDataSourceType"}</comment>
   </data>
   <data name="AvoidExplicitDynamicDataSourceTypeMessageFormat" xml:space="preserve">
     <value>Remove the 'DynamicDataSourceType' argument to use the default auto detect behavior</value>
+    <comment>{Locked="DynamicDataSourceType"}</comment>
   </data>
   <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyTitle" xml:space="preserve">
     <value>TestMethodAttribute should set DisplayName correctly</value>
+    <comment>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</comment>
   </data>
   <data name="TestMethodAttributeShouldSetDisplayNameCorrectlyMessageFormat" xml:space="preserve">
     <value>Use the 'DisplayName' property instead of passing a string argument to TestMethodAttribute</value>
+    <comment>{Locked="TestMethodAttribute"}{Locked="DisplayName"}</comment>
   </data>
   <data name="TestMethodAttributeShouldPropagateSourceInformationTitle" xml:space="preserve">
     <value>TestMethodAttribute derived class should propagate source information</value>
+    <comment>{Locked="TestMethodAttribute"}{Locked="class"}</comment>
   </data>
   <data name="TestMethodAttributeShouldPropagateSourceInformationMessageFormat" xml:space="preserve">
     <value>TestMethodAttribute derived class '{0}' should add CallerFilePath and CallerLineNumber parameters to its constructor</value>
+    <comment>{0} is the derived TestMethodAttribute class name. {Locked="TestMethodAttribute"}{Locked="CallerLineNumber"}{Locked="CallerFilePath"}{Locked="class"}</comment>
   </data>
   <data name="UseCancellationTokenPropertyTitle" xml:space="preserve">
     <value>Use TestContext.CancellationToken instead of TestContext.CancellationTokenSource.Token</value>
+    <comment>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</comment>
   </data>
   <data name="UseCancellationTokenPropertyMessageFormat" xml:space="preserve">
     <value>Use 'TestContext.CancellationToken' instead of 'TestContext.CancellationTokenSource.Token'</value>
+    <comment>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</comment>
   </data>
   <data name="UseCancellationTokenPropertyDescription" xml:space="preserve">
     <value>TestContext.CancellationToken provides a more direct way to access the cancellation token compared to TestContext.CancellationTokenSource.Token.</value>
+    <comment>{Locked="TestContext.CancellationTokenSource.Token"}{Locked="TestContext.CancellationToken"}</comment>
   </data>
   <data name="IgnoreStringMethodReturnValueTitle" xml:space="preserve">
     <value>Do not ignore the return value of string methods</value>
   </data>
   <data name="IgnoreStringMethodReturnValueMessageFormat" xml:space="preserve">
     <value>The return value of '{0}' should not be ignored</value>
+    <comment>{0} is the string method name.</comment>
   </data>
   <data name="IgnoreStringMethodReturnValueDescription" xml:space="preserve">
     <value>Methods like Contains, StartsWith, and EndsWith return boolean values that indicate whether the condition was met. Ignoring these return values is likely a mistake.</value>
+    <comment>{Locked="StartsWith"}{Locked="Contains"}{Locked="EndsWith"}</comment>
   </data>
   <data name="DoNotNegateBooleanAssertionFix" xml:space="preserve">
     <value>Use 'Assert.{0}' instead</value>
+    <comment>{0} is the assert method name. {Locked="Assert"}</comment>
   </data>
   <data name="DoNotNegateBooleanAssertionFixAllTitle" xml:space="preserve">
     <value>Use proper Assert methods for all negated assertions</value>
+    <comment>{Locked="Assert"}</comment>
   </data>
   <data name="AvoidAssertsInCatchBlocksTitle" xml:space="preserve">
     <value>Do not use asserts in catch blocks</value>
+    <comment>{Locked="catch"}</comment>
   </data>
   <data name="AvoidAssertsInCatchBlocksMessageFormat" xml:space="preserve">
     <value>Do not use asserts in catch blocks because they may not fail the test if no exception is thrown</value>
+    <comment>{Locked="catch"}</comment>
   </data>
   <data name="AvoidAssertsInCatchBlocksDescription" xml:space="preserve">
     <value>Using asserts in catch blocks is problematic because the test will pass even if no exception is thrown and the catch block is never executed. Use 'Assert.Throws', 'Assert.ThrowsExactly', 'Assert.ThrowsAsync' or 'Assert.ThrowsExactlyAsync' to verify that an exception is thrown, and then make additional assertions on the caught exception without using the try-catch block. The rule also flags 'throw new AssertFailedException(...)' and 'throw new AssertInconclusiveException(...)' (the desugared forms of 'Assert.Fail' and 'Assert.Inconclusive'). 'Assert.Inconclusive' (and 'throw new AssertInconclusiveException(...)') is exempt when used inside a filtered catch ('catch (...) when (...)'), because demoting a caught failure to an Inconclusive outcome is the only use case that cannot be expressed without a catch block. For other intentional bypasses (for example, attaching a runtime-built message to the failure), suppress the diagnostic with '#pragma warning disable MSTEST0058'.</value>
+    <comment>{Locked="#pragma warning disable MSTEST0058"}{Locked="AssertInconclusiveException"}{Locked="Assert.ThrowsExactlyAsync"}{Locked="AssertFailedException"}{Locked="Assert.ThrowsExactly"}{Locked="Assert.Inconclusive"}{Locked="Assert.ThrowsAsync"}{Locked="Assert.Throws"}{Locked="Assert.Fail"}{Locked="throw new AssertFailedException(...)"}{Locked="throw new AssertInconclusiveException(...)"}{Locked="catch"}</comment>
   </data>
   <data name="DoNotUseParallelizeAndDoNotParallelizeTogetherTitle" xml:space="preserve">
     <value>Do not use both '[Parallelize]' and '[DoNotParallelize]' attributes</value>
@@ -722,65 +870,131 @@ The type declaring these methods should also respect the following rules:
   </data>
   <data name="UseOSConditionAttributeInsteadOfRuntimeCheckTitle" xml:space="preserve">
     <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</comment>
   </data>
   <data name="UseOSConditionAttributeInsteadOfRuntimeCheckMessageFormat" xml:space="preserve">
     <value>Use '[OSCondition]' attribute instead of 'RuntimeInformation.IsOSPlatform' calls with early return or 'Assert.Inconclusive'</value>
+    <comment>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</comment>
   </data>
   <data name="UseOSConditionAttributeInsteadOfRuntimeCheckDescription" xml:space="preserve">
     <value>Test methods that use 'RuntimeInformation.IsOSPlatform' with early return or 'Assert.Inconclusive' should use the '[OSCondition]' attribute instead. This attribute provides a more declarative and discoverable way to specify OS-specific test requirements.</value>
+    <comment>{Locked="RuntimeInformation.IsOSPlatform"}{Locked="Assert.Inconclusive"}{Locked="[OSCondition]"}</comment>
   </data>
   <data name="DuplicateTestMethodAttributeTitle" xml:space="preserve">
     <value>Avoid duplicate test method attributes</value>
   </data>
   <data name="DuplicateTestMethodAttributeMessageFormat" xml:space="preserve">
     <value>Test method '{0}' has multiple attributes that inherit from 'TestMethodAttribute'. Only one test method attribute should be used.</value>
+    <comment>{0} is the test method name. {Locked="TestMethodAttribute"}</comment>
   </data>
   <data name="DuplicateTestMethodAttributeDescription" xml:space="preserve">
     <value>A test method should be marked with exactly one attribute that is or inherits from 'TestMethodAttribute'. When multiple such attributes are present, only the first one returned by reflection will be used.</value>
+    <comment>{Locked="TestMethodAttribute"}</comment>
   </data>
   <data name="AvoidOutRefTestMethodParametersTitle" xml:space="preserve">
     <value>Avoid using 'out' or 'ref' parameters in test methods</value>
+    <comment>{Locked="out"}{Locked="ref"}</comment>
   </data>
   <data name="AvoidOutRefTestMethodParametersMessageFormat" xml:space="preserve">
     <value>Test method '{0}' has 'out' or 'ref' parameters for which support will be dropped in a future major version</value>
+    <comment>{0} is the test method name. {Locked="out"}{Locked="ref"}</comment>
   </data>
   <data name="AvoidOutRefTestMethodParametersDescription" xml:space="preserve">
     <value>'out' and 'ref' parameters add no value in test methods and they can safely be replaced by normal parameters.</value>
+    <comment>{Locked="out"}{Locked="ref"}</comment>
   </data>
   <data name="TestClassConstructorShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid constructors</value>
   </data>
   <data name="TestClassConstructorShouldBeValidMessageFormat" xml:space="preserve">
     <value>Test class '{0}' does not have a valid constructor. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</value>
+    <comment>{0} is the test class name. {Locked="TestContext"}{Locked="public"}{Locked="class"}</comment>
   </data>
   <data name="TestClassConstructorShouldBeValidDescription" xml:space="preserve">
     <value>Test classes must have a public constructor that is either parameterless or accepts a single TestContext parameter. This allows the test framework to instantiate the test class properly.</value>
+    <comment>{Locked="TestContext"}{Locked="public"}{Locked="class"}</comment>
   </data>
   <data name="AvoidThreadSleepAndTaskWaitInTestsTitle" xml:space="preserve">
     <value>Avoid synchronously blocking calls such as 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' in test code</value>
+    <comment>{Locked="Task&lt;TResult&gt;.Result"}{Locked="Thread.Sleep"}{Locked="Task.WaitAll"}{Locked="Task.WaitAny"}{Locked="Task.Wait"}</comment>
   </data>
   <data name="AvoidThreadSleepAndTaskWaitInTestsMessageFormat" xml:space="preserve">
     <value>Avoid '{0}' in test code as it can cause test flakiness; consider an asynchronous alternative such as 'await Task.Delay' or 'await' the task</value>
+    <comment>{0} is the synchronous blocking call. {Locked="Task.Delay"}{Locked="await"}{Locked="await Task.Delay"}</comment>
   </data>
   <data name="AvoidThreadSleepAndTaskWaitInTestsDescription" xml:space="preserve">
     <value>Synchronously blocking the current thread with 'Thread.Sleep', 'Task.Wait', 'Task.WaitAll', 'Task.WaitAny' or 'Task&lt;TResult&gt;.Result' inside test methods or test fixtures is a common source of flakiness and can also deadlock when the test framework runs tests on a SynchronizationContext that requires cooperative scheduling. Prefer 'await Task.Delay' for time-based waits and 'await' the task to observe its result.</value>
+    <comment>{Locked="Task&lt;TResult&gt;.Result"}{Locked="Thread.Sleep"}{Locked="Task.WaitAll"}{Locked="Task.WaitAny"}{Locked="Task.Delay"}{Locked="Task.Wait"}{Locked="await"}{Locked="await Task.Delay"}</comment>
   </data>
   <data name="PreferAsyncAssertionTitle" xml:space="preserve">
     <value>Prefer async assertion methods</value>
+    <comment>{Locked="async"}</comment>
   </data>
   <data name="PreferAsyncAssertionMessageFormat" xml:space="preserve">
     <value>Use 'Assert.{0}' instead of blocking an async call in 'Assert.{1}'</value>
+    <comment>{0} is the async assert method name. {1} is the blocking assert method name. {Locked="Assert"}{Locked="async"}</comment>
   </data>
   <data name="PreferAsyncAssertionDescription" xml:space="preserve">
     <value>When verifying exceptions from asynchronous code, use the async assertion methods instead of blocking the asynchronous operation with GetAwaiter().GetResult().</value>
+    <comment>{Locked="GetAwaiter().GetResult()"}{Locked="async"}</comment>
   </data>
   <data name="IgnoreShouldHaveJustificationTitle" xml:space="preserve">
     <value>'[Ignore]' should specify a justification</value>
+    <comment>{Locked="[Ignore]"}</comment>
   </data>
   <data name="IgnoreShouldHaveJustificationMessageFormat" xml:space="preserve">
     <value>'[Ignore]' should specify a message explaining why '{0}' is ignored</value>
+    <comment>{0} is the ignored target name. {Locked="[Ignore]"}</comment>
   </data>
   <data name="IgnoreShouldHaveJustificationDescription" xml:space="preserve">
     <value>An '[Ignore]' attribute applied to a test method or test class should include a non-empty message explaining why the test or class is ignored. A justification message makes it easier to triage skipped tests, helps reviewers understand the intent, and prevents tests from being silently disabled forever.</value>
+    <comment>{Locked="[Ignore]"}{Locked="class"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidTitle" xml:space="preserve">
+    <value>'[MemberCondition]' arguments should be valid</value>
+    <comment>{Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidDescription" xml:space="preserve">
+    <value>The members referenced by a '[MemberCondition]' attribute must exist on the referenced type, be 'public static', return 'bool', and (for methods) be parameterless. The attribute throws at runtime when these rules are violated; this analyzer surfaces the same problems at build time so typos and refactors do not silently break test gating.</value>
+    <comment>{Locked="[MemberCondition]"}{Locked="public static"}{Locked="bool"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberNotFound" xml:space="preserve">
+    <value>'[MemberCondition]' member '{0}.{1}' cannot be found</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberNotPublic" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must be 'public'</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="public"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberNotStatic" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must be 'static'</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="static"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberWrongKind" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must be a property, field, or parameterless method</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MemberWrongReturnType" xml:space="preserve">
+    <value>'[MemberCondition]' referenced member '{0}.{1}' must return 'bool'</value>
+    <comment>{0} is the containing type name. {1} is the member name. {Locked="[MemberCondition]"}{Locked="bool"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_MethodHasParameters" xml:space="preserve">
+    <value>'[MemberCondition]' referenced method '{0}.{1}' must be parameterless</value>
+    <comment>{0} is the containing type name. {1} is the method name. {Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="MemberConditionShouldBeValidMessageFormat_PropertyNotReadable" xml:space="preserve">
+    <value>'[MemberCondition]' referenced property '{0}.{1}' must have a getter</value>
+    <comment>{0} is the containing type name. {1} is the property name. {Locked="[MemberCondition]"}</comment>
+  </data>
+  <data name="RedundantTestMethodDisplayNameTitle" xml:space="preserve">
+    <value>Test method should not specify a display name equal to its name</value>
+  </data>
+  <data name="RedundantTestMethodDisplayNameMessageFormat" xml:space="preserve">
+    <value>The 'DisplayName' is the same as the test method name '{0}' and can be removed</value>
+    <comment>{0} is the test method name. {Locked="DisplayName"}</comment>
+  </data>
+  <data name="RedundantTestMethodDisplayNameDescription" xml:space="preserve">
+    <value>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</value>
+    <comment>{Locked="DisplayName"}</comment>
   </data>
 </root>

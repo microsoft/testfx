@@ -119,354 +119,450 @@
   </resheader>
   <data name="CannotFindFile" xml:space="preserve">
     <value>Could not find file '{0}'.</value>
+    <comment>{0} is the file path.</comment>
   </data>
   <data name="Common_CannotBeNullOrEmpty" xml:space="preserve">
     <value>The parameter should not be null or empty.</value>
+    <comment>{Locked="null"}</comment>
   </data>
   <data name="DeploymentErrorBadDeploymentItem" xml:space="preserve">
     <value>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</value>
+    <comment>{0} is the deployment item path. {1} is the output directory.</comment>
   </data>
   <data name="DeploymentErrorFailedToAccesOutputDirectory" xml:space="preserve">
     <value>Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}</value>
+    <comment>{0} is the deployment item path. {1} is the output directory. {2} is the exception type. {3} is the exception message.</comment>
   </data>
   <data name="DeploymentErrorFailedToAccessFile" xml:space="preserve">
     <value>Test Run deployment issue: Failed to access the file '{0}': {1}: {2}</value>
+    <comment>{0} is the file path. {1} is the exception type. {2} is the exception message.</comment>
   </data>
   <data name="DeploymentErrorFailedToCopyWithOverwrite" xml:space="preserve">
     <value>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</value>
+    <comment>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</comment>
   </data>
   <data name="DeploymentErrorFailedToDeployDependencies" xml:space="preserve">
     <value>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</value>
+    <comment>{0} is the test storage or source path. {1} is the exception details.</comment>
   </data>
   <data name="DeploymentErrorFailedToGetFileForDeploymentItem" xml:space="preserve">
     <value>Test Run deployment issue: Failed to get the file for {0}: {1}: {2}</value>
+    <comment>{0} is the deployment item description. {1} is the exception type. {2} is the exception message.</comment>
   </data>
   <data name="DeploymentErrorGettingSatellite" xml:space="preserve">
     <value>Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}</value>
+    <comment>{0} is the deployment item. {1} is the exception type. {2} is the exception message.</comment>
   </data>
   <data name="DeploymentItem" xml:space="preserve">
     <value>deployment item '{0}'</value>
+    <comment>{0} is the deployment item path.</comment>
   </data>
   <data name="DeploymentItemContainsInvalidCharacters" xml:space="preserve">
     <value>Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.</value>
+    <comment>{0} is the deployment item path. {1} is the output directory.</comment>
   </data>
   <data name="DeploymentItemOutputDirectoryCannotBeNull" xml:space="preserve">
     <value>Invalid deployment item: the output directory cannot be null.</value>
+    <comment>{Locked="null"}</comment>
   </data>
   <data name="DeploymentItemOutputDirectoryMustBeRelative" xml:space="preserve">
     <value>Invalid deployment item: the specified output directory '{0}' is not relative.</value>
+    <comment>{0} is the output directory.</comment>
   </data>
   <data name="DeploymentItemPathCannotBeNullOrEmpty" xml:space="preserve">
     <value>Invalid deployment item: the path must contain at least one character.</value>
   </data>
   <data name="DeploymentItemWithOutputDirectory" xml:space="preserve">
     <value>deployment item '{0}' (output directory '{1}')</value>
+    <comment>{0} is the deployment item path. {1} is the output directory.</comment>
   </data>
   <data name="InvalidSettingsXmlElement" xml:space="preserve">
     <value>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</value>
+    <comment>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</comment>
   </data>
   <data name="MissingDeploymentDependency" xml:space="preserve">
     <value>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</value>
+    <comment>{0} is the assembly or module name. {1} is the reason the dependency was not found.</comment>
   </data>
   <data name="MissingDeploymentDependencyWithoutReason" xml:space="preserve">
     <value>Test Run deployment issue: The assembly or module '{0}' was not found.</value>
+    <comment>{0} is the assembly or module name.</comment>
   </data>
   <data name="TestRunName" xml:space="preserve">
     <value>{0}_{1} {2}</value>
+    <comment>{0} is the deployment folder prefix. {1} is the user name. {2} is the date/time and process id suffix.</comment>
   </data>
   <data name="UTA_DataSourceConfigurationSectionMissing" xml:space="preserve">
     <value>Data source '{0}' cannot be found in the test configuration settings</value>
+    <comment>{0} is the data source name.</comment>
   </data>
   <data name="UTA_ErrorDataConnectionFailed" xml:space="preserve">
     <value>The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}</value>
+    <comment>{0} is the error details. {Locked="http://go.microsoft.com/fwlink/?LinkId=62412"}{Locked="MSDN"}</comment>
   </data>
   <data name="WrongNumberOfObjects" xml:space="preserve">
     <value>Wrong number of objects for permutation. Should be greater than zero.</value>
   </data>
   <data name="InvalidValue" xml:space="preserve">
     <value>Invalid value '{0}' for runsettings entry '{1}', setting will be ignored.</value>
+    <comment>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</comment>
+  </data>
+  <data name="InvalidTimeoutValue" xml:space="preserve">
+    <value>Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</value>
+    <comment>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</comment>
   </data>
   <data name="AssemblyCleanupTimedOut" xml:space="preserve">
     <value>Assembly cleanup method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the assembly cleanup method name. {2} is the timeout in milliseconds.</comment>
   </data>
   <data name="AssemblyCleanupWasCancelled" xml:space="preserve">
     <value>Assembly cleanup method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the assembly cleanup method name.</comment>
   </data>
   <data name="AssemblyInitializeTimedOut" xml:space="preserve">
     <value>Assembly initialize method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the assembly initialize method name. {2} is the timeout in milliseconds.</comment>
   </data>
   <data name="AssemblyInitializeWasCancelled" xml:space="preserve">
     <value>Assembly initialize method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the assembly initialize method name.</comment>
   </data>
   <data name="AttachmentSetDisplayName" xml:space="preserve">
     <value>MSTestAdapterV2</value>
+    <comment>{Locked="MSTestAdapterV2"}</comment>
   </data>
   <data name="CannotEnumerateIDataSourceAttribute" xml:space="preserve">
     <value>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</value>
-    <comment>{0}: TypeName with namespace,
-{1}: Method name,
-{2}: Exception details</comment>
+    <comment>{0} is the type name with namespace. {1} is the method name. {2} is the exception details. {Locked="IDataSource"}</comment>
   </data>
   <data name="CannotExpandIDataSourceAttribute" xml:space="preserve">
     <value>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</value>
-    <comment>{0}: TypeName with namespace, 
-{1}: Method name,
-{2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</comment>
+    <comment>{0} is the type name with namespace. {1} is the method name. {2} is the row expansion warning. {Locked="IDataSource"}{Locked="CannotExpandIDataSourceAttribute_DuplicateDisplayName"}{Locked="CannotExpandIDataSourceAttribute_CannotSerialize"}</comment>
   </data>
   <data name="CannotExpandIDataSourceAttribute_CannotSerialize" xml:space="preserve">
     <value>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</value>
-    <comment>{0}: Zero based index if an element inside of an array,
-{1}: Test name</comment>
+    <comment>{0} is the zero-based data row index. {1} is the test name. {Locked="IDataSource"}{Locked="TestDataSourceDiscovery"}{Locked="DuringExecution"}</comment>
   </data>
   <data name="CannotRunTestArgumentsMismatchError" xml:space="preserve">
     <value>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</value>
+    <comment>{0} is the declaring type full name. {1} is the method name. {2} is the expected parameter count. {3} is the expected parameter type list. {4} is the received argument count. {5} is the received argument type list.</comment>
   </data>
   <data name="CannotRunTestMethodNoDataError" xml:space="preserve">
     <value>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</value>
+    <comment>{0} is the declaring type full name. {1} is the method name. {Locked="[DataRow]"}{Locked="[DynamicData]"}{Locked="ITestDataSource"}</comment>
   </data>
   <data name="ClassCleanupTimedOut" xml:space="preserve">
     <value>Class cleanup method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the class cleanup method name. {2} is the timeout in milliseconds.</comment>
   </data>
   <data name="ClassCleanupWasCancelled" xml:space="preserve">
     <value>Class cleanup method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the class cleanup method name.</comment>
   </data>
   <data name="ClassInitializeTimedOut" xml:space="preserve">
     <value>Class initialize method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the class initialize method name. {2} is the timeout in milliseconds.</comment>
   </data>
   <data name="ClassInitializeWasCancelled" xml:space="preserve">
     <value>Class initialize method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the class initialize method name.</comment>
   </data>
   <data name="CouldNotInspectTypeDuringDiscovery" xml:space="preserve">
     <value>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}' because {2}.</value>
+    <comment>{0} is the class name. {1} is the assembly path. {2} is the failure reason. {Locked="MSTestAdapter"}</comment>
   </data>
   <data name="DataDrivenResultDisplayName" xml:space="preserve">
     <value>{0} (Data Row {1})</value>
+    <comment>{0} is the test display name. {1} is the data row index.</comment>
   </data>
   <data name="DebugTraceBanner" xml:space="preserve">
     <value>Debug Trace:</value>
   </data>
   <data name="DiscoveryWarning" xml:space="preserve">
     <value>[MSTest][Discovery][{0}] {1}</value>
+    <comment>{0} is the source path. {1} is the discovery warning message. {Locked="[MSTest][Discovery]"}</comment>
   </data>
   <data name="DuplicateConfigurationError" xml:space="preserve">
     <value>Both '.runsettings' and '.testconfig.json' files have been detected. Please select only one of these test configuration files.</value>
+    <comment>{Locked=".runsettings"}{Locked=".testconfig.json"}</comment>
   </data>
   <data name="ExceptionOccuredWhileGettingTheExceptionDescription" xml:space="preserve">
     <value>"{0}": (Failed to get exception description due to an exception of type "{1}".</value>
-    <comment>{0}: Type of the original exception that we're trying to get the description of.
-{1}: Thrown exception</comment>
+    <comment>{0} is the type of the original exception. {1} is the thrown exception type.</comment>
   </data>
   <data name="Execution_Test_Cancelled" xml:space="preserve">
     <value>Test '{0}' was canceled</value>
+    <comment>{0} is the test name.</comment>
   </data>
   <data name="Execution_Test_Timeout" xml:space="preserve">
     <value>Test '{0}' timed out after {1}ms</value>
+    <comment>{0} is the test name. {1} is the timeout in milliseconds.</comment>
   </data>
   <data name="FailedToGetCustomAttribute" xml:space="preserve">
     <value>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</value>
-    <comment>{0}: Attribute full type name.
-{1}: Exception description</comment>
+    <comment>{0} is the attribute full type name. {1} is the exception description.</comment>
   </data>
   <data name="GenericParameterCantBeInferred" xml:space="preserve">
     <value>The type of the generic parameter '{0}' could not be inferred.</value>
+    <comment>{0} is the generic parameter name.</comment>
   </data>
   <data name="GenericParameterCantBeInferredBecauseNoArguments" xml:space="preserve">
     <value>The generic test method '{0}' doesn't have arguments, so the generic parameter cannot be inferred.</value>
+    <comment>{0} is the generic test method name.</comment>
   </data>
   <data name="GenericParameterConflict" xml:space="preserve">
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
+    <comment>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</comment>
   </data>
   <data name="InvalidParallelScopeValue" xml:space="preserve">
     <value>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</value>
-    <comment>{Locked="Scope"}</comment>
+    <comment>{0} is the invalid scope value. {1} is the supported scope list. {Locked="Scope"}</comment>
   </data>
   <data name="InvalidParallelWorkersValue" xml:space="preserve">
     <value>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</value>
-    <comment>{Locked="Workers"}</comment>
+    <comment>{0} is the invalid worker count. {Locked="Workers"}</comment>
   </data>
   <data name="InvalidSettingsXmlAttribute" xml:space="preserve">
     <value>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</value>
+    <comment>{0} is the settings element name. {1} is the unexpected XML attribute name. {Locked="XmlAttribute"}</comment>
   </data>
   <data name="OlderTFMVersionFound" xml:space="preserve">
     <value>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</value>
+    <comment>{Locked="MSTestV2"}{Locked=".runsettings"}</comment>
   </data>
   <data name="SourcesNotSupported" xml:space="preserve">
     <value>Running tests in any of the provided sources is not supported for the selected platform</value>
   </data>
   <data name="TestAssembly_FileDoesNotExist" xml:space="preserve">
     <value>File does not exist: {0}</value>
+    <comment>{0} is the file path.</comment>
   </data>
   <data name="TestCleanupTimedOut" xml:space="preserve">
     <value>Test cleanup method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the test cleanup method name. {2} is the timeout in milliseconds.</comment>
   </data>
   <data name="TestCleanupWasCancelled" xml:space="preserve">
     <value>Test cleanup method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the test cleanup method name.</comment>
   </data>
   <data name="TestContextMessageBanner" xml:space="preserve">
     <value>TestContext Messages:</value>
+    <comment>{Locked="TestContext"}</comment>
   </data>
   <data name="TestInitializeTimedOut" xml:space="preserve">
     <value>Test initialize method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the test initialize method name. {2} is the timeout in milliseconds.</comment>
   </data>
   <data name="TestInitializeWasCancelled" xml:space="preserve">
     <value>Test initialize method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the test initialize method name.</comment>
   </data>
   <data name="TestNotFound" xml:space="preserve">
     <value>Test method {0} was not found.</value>
+    <comment>{0} is the test method name.</comment>
   </data>
   <data name="TestParallelizationBanner" xml:space="preserve">
     <value>Test Parallelization enabled for {0} (Workers: {1}, Scope: {2})</value>
-    <comment>{Locked="Workers"}{Locked="Scope"}</comment>
+    <comment>{0} is the test source path. {1} is the worker count. {2} is the parallelization scope. {Locked="Workers"}{Locked="Scope"}</comment>
   </data>
   <data name="RandomTestOrderBanner" xml:space="preserve">
     <value>Random test order enabled (Seed: {0}). Set 'RandomTestOrderSeed' to reproduce this order.</value>
-    <comment>{Locked="Seed"}{Locked="RandomTestOrderSeed"}</comment>
+    <comment>{0} is the random test order seed. {Locked="Seed"}{Locked="RandomTestOrderSeed"}</comment>
   </data>
   <data name="RandomTestOrderAndOrderTestsByNameInClassConflict" xml:space="preserve">
     <value>Both 'RandomizeTestOrder' and 'OrderTestsByNameInClass' are set. 'OrderTestsByNameInClass' will be ignored.</value>
     <comment>{Locked="RandomizeTestOrder"}{Locked="OrderTestsByNameInClass"}</comment>
   </data>
+  <data name="DeprecatedFlatOrderTestsByNameInClassKey" xml:space="preserve">
+    <value>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</value>
+    <comment>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</comment>
+  </data>
   <data name="UTA_AssemblyCleanupMethodWasUnsuccesful" xml:space="preserve">
     <value>Assembly Cleanup method {0}.{1} failed. Error Message: {2}. StackTrace: {3}</value>
+    <comment>{0} is the declaring type name. {1} is the assembly cleanup method name. {2} is the error message. {3} is the stack trace.</comment>
   </data>
   <data name="UTA_AssemblyInitMethodThrows" xml:space="preserve">
     <value>Assembly Initialization method {0}.{1} threw exception. {2}: {3}. Aborting test execution.</value>
+    <comment>{0} is the declaring type name. {1} is the assembly initialization method name. {2} is the exception type. {3} is the exception message.</comment>
   </data>
   <data name="UTA_ClassCleanupMethodWasUnsuccesful" xml:space="preserve">
     <value>Class Cleanup method {0}.{1} failed. Error Message: {2}. Stack Trace: {3}</value>
+    <comment>{0} is the declaring type name. {1} is the class cleanup method name. {2} is the error message. {3} is the stack trace.</comment>
   </data>
   <data name="UTA_ClassInitMethodThrows" xml:space="preserve">
     <value>Class Initialization method {0}.{1} threw exception. {2}: {3}.</value>
+    <comment>{0} is the declaring type name. {1} is the class initialization method name. {2} is the exception type. {3} is the exception message.</comment>
   </data>
   <data name="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature" xml:space="preserve">
     <value>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
+    <comment>{0} is the declaring type name. {1} is the method name. {Locked="static"}{Locked="public"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</comment>
   </data>
   <data name="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature" xml:space="preserve">
     <value>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
+    <comment>{0} is the declaring type name. {1} is the method name. {Locked="static"}{Locked="public"}{Locked="TestContext"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</comment>
   </data>
   <data name="UTA_CleanupMethodThrows" xml:space="preserve">
     <value>TestCleanup method {0}.{1} threw exception. {2}.</value>
+    <comment>{0} is the declaring type name. {1} is the test cleanup method name. {2} is the exception details. {Locked="TestCleanup"}</comment>
   </data>
   <data name="UTA_CleanupMethodThrowsGeneralError" xml:space="preserve">
     <value>Error calling Test Cleanup method for test class {0}: {1}</value>
+    <comment>{0} is the test class name. {1} is the exception message.</comment>
   </data>
   <data name="UTA_EndOfInnerExceptionTrace" xml:space="preserve">
     <value>--- End of inner exception stack trace ---</value>
   </data>
   <data name="UTA_ErrorIncorrectTestMethodSignature" xml:space="preserve">
     <value>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</value>
+    <comment>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</comment>
   </data>
   <data name="UTA_ErrorInValidTestContextSignature" xml:space="preserve">
     <value>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</value>
+    <comment>{0} is the test class name. {Locked="UTA031"}{Locked="TestContext"}{Locked="non-static"}{Locked="public"}{Locked="public TestContext TestContext"}</comment>
   </data>
   <data name="UTA_ErrorInvalidTimeout" xml:space="preserve">
     <value>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be an integer value greater than 0.</value>
+    <comment>{0} is the declaring type name. {1} is the method name. {Locked="UTA054"}{Locked="Timeout"}</comment>
   </data>
   <data name="UTA_ErrorMultiAssemblyClean" xml:space="preserve">
     <value>UTA014: {0}: Cannot define more than one method with the AssemblyCleanup attribute inside an assembly.</value>
+    <comment>{0} is the declaring type full name. {Locked="UTA014"}{Locked="AssemblyCleanup"}</comment>
   </data>
   <data name="UTA_ErrorMultiAssemblyInit" xml:space="preserve">
     <value>UTA013: {0}: Cannot define more than one method with the AssemblyInitialize attribute inside an assembly.</value>
+    <comment>{0} is the declaring type full name. {Locked="UTA013"}{Locked="AssemblyInitialize"}</comment>
   </data>
   <data name="UTA_AssemblyFixtureProviderTypeIsGeneric" xml:space="preserve">
     <value>UTA070: Type '{0}' referenced by [AssemblyFixtureProvider] must not be generic.</value>
+    <comment>{0} is the fixture provider type name. {Locked="UTA070"}{Locked="[AssemblyFixtureProvider]"}</comment>
   </data>
   <data name="UTA_AssemblyFixtureProviderTypeReflectionFailed" xml:space="preserve">
     <value>UTA071: Failed to enumerate methods on type '{0}' referenced by [AssemblyFixtureProvider]. {1}</value>
+    <comment>{0} is the fixture provider type name. {1} is the exception details. {Locked="UTA071"}{Locked="[AssemblyFixtureProvider]"}</comment>
   </data>
   <data name="UTA_AssemblyFixtureProviderLoadFailed" xml:space="preserve">
     <value>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</value>
+    <comment>{0} is the assembly path. {1} is the exception details. {Locked="UTA072"}{Locked="[AssemblyFixtureProvider]"}</comment>
   </data>
   <data name="UTA_ErrorMultiClassClean" xml:space="preserve">
     <value>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</value>
+    <comment>{0} is the test class full name. {Locked="UTA026"}{Locked="ClassCleanup"}</comment>
   </data>
   <data name="UTA_ErrorMultiClassInit" xml:space="preserve">
     <value>UTA025: {0}: Cannot define more than one method with the ClassInitialize attribute inside a class.</value>
+    <comment>{0} is the test class full name. {Locked="UTA025"}{Locked="ClassInitialize"}</comment>
   </data>
   <data name="UTA_ErrorMultiClean" xml:space="preserve">
     <value>UTA024: {0}: Cannot define more than one method with the TestCleanup attribute.</value>
+    <comment>{0} is the test class full name. {Locked="UTA024"}{Locked="TestCleanup"}</comment>
   </data>
   <data name="UTA_ErrorMultiInit" xml:space="preserve">
     <value>UTA018: {0}: Cannot define more than one method with the TestInitialize attribute.</value>
+    <comment>{0} is the test class full name. {Locked="UTA018"}{Locked="TestInitialize"}</comment>
   </data>
   <data name="UTA_ErrorNonPublicTestClass" xml:space="preserve">
     <value>UTA001: TestClass attribute defined on non-public class {0}</value>
+    <comment>{0} is the test class full name. {Locked="UTA001"}{Locked="TestClass"}</comment>
   </data>
   <data name="UTA_ErrorTestClassIsGenericNonAbstract" xml:space="preserve">
     <value>TestClass attribute defined on generic non-abstract class {0}</value>
+    <comment>{0} is the test class full name. {Locked="TestClass"}</comment>
   </data>
   <data name="UTA_ExecuteThrewException" xml:space="preserve">
     <value>An unhandled exception was thrown by the 'Execute' method. Please report this error to the author of the attribute '{0}'.
 {1}</value>
+    <comment>{0} is the attribute type name. {1} is the exception details. {Locked="Execute"}</comment>
   </data>
   <data name="UTA_FailedToGetTestMethodException" xml:space="preserve">
     <value>Failed to obtain the exception thrown by test method {0}.{1}.</value>
+    <comment>{0} is the declaring type name. {1} is the test method name.</comment>
   </data>
   <data name="UTA_InitMethodThrows" xml:space="preserve">
     <value>Initialization method {0}.{1} threw exception. {2}.</value>
+    <comment>{0} is the declaring type name. {1} is the initialization method name. {2} is the exception details.</comment>
   </data>
   <data name="UTA_InstanceCreationError" xml:space="preserve">
     <value>Unable to create instance of class {0}. Error: {1}.</value>
+    <comment>{0} is the test class name. {1} is the error message.</comment>
   </data>
   <data name="UTA_MethodDoesNotExists" xml:space="preserve">
     <value>Method {0}.{1} does not exist.</value>
+    <comment>{0} is the declaring type name. {1} is the method name.</comment>
   </data>
   <data name="UTA_MultipleAttributesOnTestMethod" xml:space="preserve">
     <value>The test method '{0}.{1}' has multiple attributes derived from '{2}' defined on it. Only one such attribute is allowed.</value>
+    <comment>{0} is the declaring type name. {1} is the test method name. {2} is the attribute base type name.</comment>
   </data>
   <data name="UTA_MultipleAttributesOnTestClass" xml:space="preserve">
     <value>The test class '{0}' has multiple attributes derived from '{1}' defined on it. Only one such attribute is allowed.</value>
+    <comment>{0} is the test class name. {1} is the attribute base type name.</comment>
   </data>
   <data name="UTA_NoTestResult" xml:space="preserve">
     <value>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</value>
+    <comment>{Locked="TestMethodAttribute"}</comment>
   </data>
   <data name="UTA_NoValidConstructor" xml:space="preserve">
     <value>Cannot find a valid constructor for test class '{0}'. Valid constructors are 'public' and either parameterless or with one parameter of type 'TestContext'.</value>
+    <comment>{0} is the test class name. {Locked="public"}{Locked="TestContext"}</comment>
   </data>
   <data name="UTA_TestContextLoadError" xml:space="preserve">
     <value>Unable to find property {0}.TestContext. Error:{1}.</value>
+    <comment>{0} is the test class name. {1} is the error message. {Locked="TestContext"}</comment>
   </data>
   <data name="UTA_TestContextSetError" xml:space="preserve">
     <value>Unable to set TestContext property for the class {0}. Error: {1}.</value>
+    <comment>{0} is the test class name. {1} is the error message. {Locked="TestContext"}</comment>
   </data>
   <data name="UTA_TestContextTypeMismatchLoadError" xml:space="preserve">
     <value>The {0}.TestContext has incorrect type.</value>
+    <comment>{0} is the test class name. {Locked="TestContext"}</comment>
   </data>
   <data name="UTA_TestInitializeAndCleanupMethodHasWrongSignature" xml:space="preserve">
     <value>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
+    <comment>{0} is the declaring type name. {1} is the method name. {Locked="non-static"}{Locked="public"}{Locked="Task"}{Locked="ValueTask"}{Locked="async-await"}</comment>
   </data>
   <data name="UTA_TestMethodThrows" xml:space="preserve">
     <value>Test method {0}.{1} threw exception:
 {2}</value>
+    <comment>{0} is the declaring type name. {1} is the test method name. {2} is the exception details.</comment>
   </data>
   <data name="UTA_TypeLoadError" xml:space="preserve">
     <value>Unable to get type {0}. Error: {1}.</value>
+    <comment>{0} is the type name. {1} is the error message.</comment>
   </data>
   <data name="UTA_UserCodeThrewNullValueException" xml:space="preserve">
     <value>The called code threw an exception that was caught, but the exception value was null</value>
+    <comment>{Locked="null"}</comment>
   </data>
   <data name="UTA_WrongThread" xml:space="preserve">
     <value>{0} For UWP projects, if you are using UI objects in test consider using [UITestMethod] attribute instead of [TestMethod] to execute test in UI thread.</value>
+    <comment>{0} is the original error message. {Locked="UWP"}{Locked="[UITestMethod]"}{Locked="[TestMethod]"}</comment>
   </data>
   <data name="UTF_FailedToGetExceptionMessage" xml:space="preserve">
     <value>(Failed to get the message for an exception of type {0} due to an exception.)</value>
+    <comment>{0} is the exception type name.</comment>
   </data>
   <data name="STAIsOnlySupportedOnWindowsWarning" xml:space="preserve">
     <value>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</value>
+    <comment>{Locked="Runsettings"}{Locked="&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;"}{Locked="STA"}</comment>
   </data>
   <data name="VersionMismatchBetweenAdapterAndFramework" xml:space="preserve">
     <value>'MSTest.TestAdapter' and 'MSTest.TestFramework' must have the same version. Found 'MSTest.TestAdapter' version '{0}' and 'MSTest.TestFramework' version '{1}'. Please make sure that the versions of  'MSTest.TestAdapter' and 'MSTest.TestFramework' NuGet packages have the same version.</value>
+    <comment>{0} is the MSTest.TestAdapter version. {1} is the MSTest.TestFramework version. {Locked="MSTest.TestAdapter"}{Locked="MSTest.TestFramework"}{Locked="NuGet"}</comment>
   </data>
   <data name="DiscoveryErrors" xml:space="preserve">
     <value>Discovery failed for source '{0}' with {1} errors:
 {2}</value>
+    <comment>{0} is the source path. {1} is the error count. {2} is the error details.</comment>
   </data>
   <data name="UTA_OutRefParametersNotSupported" xml:space="preserve">
     <value>Warning: Test method '{0}.{1}' has 'out' or 'ref' parameters which are not supported and may be disallowed in a future version of MSTest.</value>
+    <comment>{0} is the declaring type name. {1} is the test method name. {Locked="out"}{Locked="ref"}{Locked="MSTest"}</comment>
   </data>
   <data name="DuplicateAttributeError" xml:space="preserve">
     <value>Only one attribute of type '{0}' is allowed, but multiple were found.</value>
+    <comment>{0} is the attribute type name.</comment>
   </data>
 </root>
