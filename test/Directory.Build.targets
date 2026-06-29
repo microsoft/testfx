@@ -26,6 +26,20 @@
          lines with historical p95/p99. It requires the report-azdo option (added above) and the OAuth access
          token, and silently no-ops when TF_BUILD is not 'true' or no token is available, so gate it on $(TF_BUILD). -->
     <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history 30</TestingPlatformCommandLineArguments>
+    <!-- Dogfood the report-azdo-slow-test-history sub-options so their wiring and the
+         'requires report-azdo-slow-test-history' validation cross-check stay covered in CI. The values match
+         the extension defaults (min-sample 10, multiplier 3.0), so they don't change which tests get flagged
+         as slow; they only keep the option surface exercised. They require report-azdo-slow-test-history
+         (added above, also TF_BUILD-gated), so gate them on $(TF_BUILD) too. -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history-min-sample 10</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history-multiplier 3</TestingPlatformCommandLineArguments>
+    <!-- Dogfood the Azure DevOps flaky-history annotator (pairs with report-azdo above). It queries the
+         pipeline's own test history for the last 30 days and decorates reported failures with flakiness
+         context. It only annotates: it never demotes a failure to a warning (that is the separate
+         report-azdo-demote-known-flaky option, intentionally left off so a genuine regression is never
+         hidden). Like report-azdo-slow-test-history it silently no-ops without TF_BUILD or an OAuth access
+         token, so gate it on $(TF_BUILD). -->
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-flaky-history 30</TestingPlatformCommandLineArguments>
     <!-- Dogfood the JUnit report extension (Microsoft.Testing.Extensions.JUnitReport). The .xml files end up in
          $(ResultsDirectory) (Arcade default) alongside the TRX files so they are picked up by the AzDO
          PublishTestResults task and any external JUnit consumer. -->
