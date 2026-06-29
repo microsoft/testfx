@@ -125,7 +125,7 @@ internal sealed class VideoRecorderSessionHandler :
 
         // A node carries a single state property in practice; use FirstOrDefault rather than
         // SingleOrDefault so a malformed producer can't throw out of the consumer pump.
-        TestNodeStateProperty? state = update.TestNode.Properties.OfType<TestNodeStateProperty>().FirstOrDefault();
+        TestNodeStateProperty? state = update.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
         if (state is null)
         {
             return Task.CompletedTask;
@@ -477,7 +477,7 @@ internal sealed class VideoRecorderSessionHandler :
 
     private (DateTimeOffset Start, DateTimeOffset End) ResolveTiming(TestNodeUpdateMessage update, string testUid)
     {
-        TimingProperty? timing = update.TestNode.Properties.OfType<TimingProperty>().FirstOrDefault();
+        TimingProperty? timing = update.TestNode.Properties.FirstOrDefault<TimingProperty>();
         if (timing is not null)
         {
             return (timing.GlobalTiming.StartTime, timing.GlobalTiming.EndTime);
