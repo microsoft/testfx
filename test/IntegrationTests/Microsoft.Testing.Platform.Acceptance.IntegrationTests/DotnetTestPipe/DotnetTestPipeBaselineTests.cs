@@ -25,14 +25,14 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
 
     public TestContext TestContext { get; set; } = null!;
 
-    // The test host (testfx) now advertises both protocol 1.0.0 and 1.1.0. The 1.1.0 bump signals
-    // that TerminalOutputDevice is no longer plugged in under the pipe protocol (see
-    // microsoft/testfx#7161 and dotnet/sdk#51615). This mirrors ProtocolConstants.SupportedVersions
-    // on the host side.
-    private const string HostAdvertisedProtocolVersions = "1.0.0;1.1.0";
+    // The test host (testfx) now advertises protocol 1.0.0, 1.1.0 and 1.2.0. The 1.1.0 bump signalled
+    // that TerminalOutputDevice is no longer plugged in under the pipe protocol (microsoft/testfx#7161
+    // and dotnet/sdk#51615); 1.2.0 added AzureDevOpsLogMessage forwarding. This mirrors
+    // ProtocolConstants.SupportedVersions on the host side.
+    private const string HostAdvertisedProtocolVersions = "1.0.0;1.1.0;1.2.0";
 
     [TestMethod]
-    public async Task DotnetTestPipe_TestAppAdvertises100And110_NegotiatesDownToV100WithOldSdk()
+    public async Task DotnetTestPipe_TestAppAdvertisesAllSupportedVersions_NegotiatesDownToV100WithOldSdk()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
@@ -50,7 +50,7 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
         Assert.AreEqual(
             HostAdvertisedProtocolVersions,
             appVersions,
-            "The test app should advertise both 1.0.0 and 1.1.0 once the TerminalOutputDevice bump landed.");
+            "The test app should advertise 1.0.0, 1.1.0 and 1.2.0 once the AzureDevOpsLogMessage forwarding bump landed.");
 
         Assert.AreEqual(
             FakeDotnetTestSdk.DefaultSupportedProtocolVersions,
@@ -64,11 +64,11 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
 
-        // The fake SDK advertises both versions, so negotiation should pick the highest mutually
-        // supported version: 1.1.0.
+        // The fake SDK advertises up to 1.1.0, so negotiation should pick the highest mutually
+        // supported version: 1.1.0 (even though the host also supports 1.2.0).
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
             testHost,
-            supportedProtocolVersions: HostAdvertisedProtocolVersions,
+            supportedProtocolVersions: "1.0.0;1.1.0",
             cancellationToken: TestContext.CancellationToken);
 
         Assert.IsNotNull(result.ReceivedHandshake, "Test app never sent a handshake message.");

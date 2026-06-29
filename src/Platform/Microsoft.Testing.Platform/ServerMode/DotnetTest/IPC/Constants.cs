@@ -92,10 +92,21 @@ internal static class ProtocolConstants
     // When both sides advertise 1.1.0 and we negotiate to that version, the SDK can keep its
     // live output enabled.
     //
-    // NOTE: The no-op output device is installed for all pipe-protocol connections, regardless
-    // of the negotiated protocol version. With an old SDK that only supports 1.0.0, both sides
-    // will produce no live output (the SDK suppresses its TerminalTestReporter to avoid colliding
-    // with the host output it expected before this change). Users must update to an SDK that
-    // negotiates 1.1.0 to see live output via the SDK's TerminalTestReporter.
-    internal const string SupportedVersions = "1.0.0;1.1.0";
+    // 1.2.0 adds the AzureDevOpsLogMessage: under the pipe protocol the host installs a no-op output
+    // device (see below), so any Azure DevOps logging commands (##[group], ##vso[...]) produced by the
+    // AzureDevOpsReport extension would otherwise be swallowed. When both sides negotiate 1.2.0 the host
+    // forwards those marked lines to the SDK over the pipe, and the SDK writes them verbatim to its
+    // TerminalTestReporter so they reach the pipeline log. An older SDK that only negotiates 1.1.0 never
+    // receives the message (the host gates forwarding on the negotiated version), so it stays compatible.
+    //
+    // NOTE: Under the pipe protocol the host installs a no-op output device for regular output
+    // regardless of the negotiated protocol version (the SDK's TerminalTestReporter owns user-facing
+    // output). The sole exception is when running on an Azure DevOps agent with a negotiated version of
+    // 1.2.0 or later: the host then installs a forwarder that still discards regular output but relays
+    // Azure DevOps logging commands as AzureDevOpsLogMessage (see OutputDeviceManager.BuildAsync).
+    // With an old SDK that only supports 1.0.0, both sides will produce no live output (the SDK
+    // suppresses its TerminalTestReporter to avoid colliding with the host output it expected before
+    // this change). Users must update to an SDK that negotiates 1.1.0 to see live output via the SDK's
+    // TerminalTestReporter.
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0";
 }

@@ -63,7 +63,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         await reporter.ConsumeAsync(CreateProducer(), CreatePassed("t1"), CancellationToken.None).ConfigureAwait(false);
         await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
     }
 
     [TestMethod]
@@ -157,7 +157,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
         Assert.Contains("MyAssembly", written);
 
-        string[] lines = GetFormattedLines();
+        string[] lines = GetCommandLines();
         Assert.HasCount(1, lines);
         Assert.StartsWith("##vso[task.uploadsummary]", lines[0]);
         Assert.Contains("azdo-summary-", lines[0]);
@@ -198,8 +198,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
     private static IDataProducer CreateProducer() => new TestProducer();
 
-    private string[] GetFormattedLines()
-        => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
+    private string[] GetCommandLines()
+        => [.. _outputData.OfType<AzureDevOpsCommandOutputDeviceData>().Select(data => data.Text)];
 
     private string[] GetWarnings()
         => [.. _outputData.OfType<WarningMessageOutputDeviceData>().Select(output => output.Message)];

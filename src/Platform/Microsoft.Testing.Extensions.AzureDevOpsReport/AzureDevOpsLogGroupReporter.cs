@@ -84,7 +84,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
 
             string name = $"{_testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown"} ({_targetFrameworkMoniker.Value})";
             string line = $"##[group]{AzDoEscaper.Escape(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.LogGroupHeader, name))}";
-            await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = true;
         }
         catch (OperationCanceledException)
@@ -108,7 +108,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
                 return;
             }
 
-            await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("##[endgroup]"), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData("##[endgroup]"), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = false;
         }
         catch (OperationCanceledException)

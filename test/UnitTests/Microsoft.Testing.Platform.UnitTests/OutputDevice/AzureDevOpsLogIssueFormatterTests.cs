@@ -111,4 +111,37 @@ public sealed class AzureDevOpsLogIssueFormatterTests
 
         Assert.IsTrue(AzureDevOpsLogIssueFormatter.IsAzureDevOpsEnvironment(environment.Object));
     }
+
+    [DataRow("off")]
+    [DataRow("false")]
+    [DataRow("0")]
+    [TestMethod]
+    public void IsAzureDevOpsAgent_IgnoresOptOutAndReturnsTrueWhenTfBuildIsTrue(string optOutValue)
+    {
+        // The opt-out only governs the platform's automatic ##vso[task.logissue] emission; the explicit
+        // --report-azdo extension output (which is what the passthrough device forwards) must stay enabled.
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("true");
+        environment.Setup(e => e.GetEnvironmentVariable("TESTINGPLATFORM_AZDO_OUTPUT")).Returns(optOutValue);
+
+        Assert.IsTrue(AzureDevOpsLogIssueFormatter.IsAzureDevOpsAgent(environment.Object));
+    }
+
+    [TestMethod]
+    public void IsAzureDevOpsAgent_ReturnsFalseWhenTfBuildIsAbsent()
+    {
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(e => e.GetEnvironmentVariable(It.IsAny<string>())).Returns((string?)null);
+
+        Assert.IsFalse(AzureDevOpsLogIssueFormatter.IsAzureDevOpsAgent(environment.Object));
+    }
+
+    [TestMethod]
+    public void IsAzureDevOpsAgent_ReturnsFalseWhenTfBuildIsFalse()
+    {
+        var environment = new Mock<IEnvironment>();
+        environment.Setup(e => e.GetEnvironmentVariable("TF_BUILD")).Returns("false");
+
+        Assert.IsFalse(AzureDevOpsLogIssueFormatter.IsAzureDevOpsAgent(environment.Object));
+    }
 }

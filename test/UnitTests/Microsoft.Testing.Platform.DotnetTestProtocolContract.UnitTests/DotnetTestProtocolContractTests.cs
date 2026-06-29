@@ -37,6 +37,7 @@ public sealed class DotnetTestProtocolContractTests
             [TestSessionEventFieldsId.MessagesSerializerId] = nameof(TestSessionEventFieldsId),
             [HandshakeMessageFieldsId.MessagesSerializerId] = nameof(HandshakeMessageFieldsId),
             [TestInProgressMessagesFieldsId.MessagesSerializerId] = nameof(TestInProgressMessagesFieldsId),
+            [AzureDevOpsLogMessageFieldsId.MessagesSerializerId] = nameof(AzureDevOpsLogMessageFieldsId),
         };
 
         Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
@@ -51,6 +52,7 @@ public sealed class DotnetTestProtocolContractTests
         Assert.AreEqual(nameof(TestSessionEventFieldsId), serializerIds[8]);
         Assert.AreEqual(nameof(HandshakeMessageFieldsId), serializerIds[9]);
         Assert.AreEqual(nameof(TestInProgressMessagesFieldsId), serializerIds[10]);
+        Assert.AreEqual(nameof(AzureDevOpsLogMessageFieldsId), serializerIds[11]);
     }
 
     [TestMethod]
@@ -138,6 +140,6 @@ public sealed class DotnetTestProtocolContractTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0", versions[0]);
     }
 }

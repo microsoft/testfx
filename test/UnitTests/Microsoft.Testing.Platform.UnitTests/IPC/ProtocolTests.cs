@@ -32,6 +32,32 @@ public sealed class ProtocolTests
     }
 
     [TestMethod]
+    public void AzureDevOpsLogMessageSerializeDeserialize()
+    {
+        object serializer = new AzureDevOpsLogMessageSerializer();
+        var message = new AzureDevOpsLogMessage("MyExecId", "MyInstId", "##[group]Tests: MyAssembly (net9.0)");
+
+        AzureDevOpsLogMessage actual = RoundTrip(serializer, message);
+
+        Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
+        Assert.AreEqual(message.InstanceId, actual.InstanceId);
+        Assert.AreEqual(message.LogText, actual.LogText);
+    }
+
+    [TestMethod]
+    public void AzureDevOpsLogMessageSerializeDeserialize_WithNullOptionalFields()
+    {
+        object serializer = new AzureDevOpsLogMessageSerializer();
+        var message = new AzureDevOpsLogMessage(null, null, "##[endgroup]");
+
+        AzureDevOpsLogMessage actual = RoundTrip(serializer, message);
+
+        Assert.IsNull(actual.ExecutionId);
+        Assert.IsNull(actual.InstanceId);
+        Assert.AreEqual("##[endgroup]", actual.LogText);
+    }
+
+    [TestMethod]
     public void DiscoveredTestMessagesSerializeDeserialize()
     {
         object serializer = new DiscoveredTestMessagesSerializer();
@@ -360,6 +386,7 @@ public sealed class ProtocolTests
             [TestSessionEventFieldsId.MessagesSerializerId] = nameof(TestSessionEventFieldsId),
             [HandshakeMessageFieldsId.MessagesSerializerId] = nameof(HandshakeMessageFieldsId),
             [TestInProgressMessagesFieldsId.MessagesSerializerId] = nameof(TestInProgressMessagesFieldsId),
+            [AzureDevOpsLogMessageFieldsId.MessagesSerializerId] = nameof(AzureDevOpsLogMessageFieldsId),
         };
 
         Assert.AreEqual(nameof(VoidResponseFieldsId), serializerIds[0]);
@@ -374,6 +401,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(TestSessionEventFieldsId), serializerIds[8]);
         Assert.AreEqual(nameof(HandshakeMessageFieldsId), serializerIds[9]);
         Assert.AreEqual(nameof(TestInProgressMessagesFieldsId), serializerIds[10]);
+        Assert.AreEqual(nameof(AzureDevOpsLogMessageFieldsId), serializerIds[11]);
     }
 
     // The SessionEventTypes byte values flow over IPC to dotnet test in the dotnet/sdk repository.
@@ -429,6 +457,6 @@ public sealed class ProtocolTests
         // Indirect through a collection so the MSTest analyzer does not flag the comparison of a compile-time
         // constant as "always true" (MSTEST0032).
         string[] versions = [ProtocolConstants.SupportedVersions];
-        Assert.AreEqual("1.0.0;1.1.0", versions[0]);
+        Assert.AreEqual("1.0.0;1.1.0;1.2.0", versions[0]);
     }
 }
