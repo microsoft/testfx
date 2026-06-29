@@ -434,11 +434,6 @@
         <target state="translated">Vous ne pouvez pas passer à la fois « --treenode-filter » et « --filter-uid ». Cette action n’est pas prise en charge.</target>
         <note>{Locked="--treenode-filter"}{Locked="--filter-uid"}</note>
       </trans-unit>
-      <trans-unit id="OnlyOneTestHostLauncherSupported">
-        <source>Only one test host launcher can be registered.</source>
-        <target state="new">Only one test host launcher can be registered.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
         <target state="translated">Réussite</target>
