@@ -54,16 +54,28 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 
         // Use the repo-local SDK consistently with the build step (DotnetMuxer). The
         // configuration must match the one used by DotnetMuxer so that --no-build finds the
-        // binaries that were actually produced. WorkingDirectory is pinned to the test asset so
-        // relative outputs (TestResults, logs, temp files) stay inside the generated asset rather
-        // than polluting the runner's current directory between scenarios.
-        ProcessStartInfo psi = new(dotnet, $"test \"{projectDir}\" --no-build --configuration {_buildConfiguration}")
+        // binaries that were actually produced. --no-restore is added because the build step
+        // already restored; restoring here would fold NuGet work into the measured wall-clock
+        // time and skew the server-mode signal. -p:SuppressNETCoreSdkPreviewMessage=true keeps
+        // output consistent with DotnetCli when running a preview SDK. WorkingDirectory is pinned
+        // to the test asset so relative outputs (TestResults, logs, temp files) stay inside the
+        // generated asset rather than polluting the runner's current directory between scenarios.
+        ProcessStartInfo psi = new(dotnet, $"test \"{projectDir}\" --no-build --no-restore --configuration {_buildConfiguration} -p:SuppressNETCoreSdkPreviewMessage=true")
         {
             UseShellExecute = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             WorkingDirectory = projectDir,
         };
+
+        // Strip ambient environment variables that the test infrastructure isolates (diagnostics,
+        // dotnet-test execution IDs, NO_COLOR, LLM/agent detection, minidump, telemetry, ...) so the
+        // measured run is reproducible and not influenced by the shell or CI agent it runs under,
+        // matching the isolation DotnetCli applies.
+        foreach (string toSkip in WellKnownEnvironmentVariables.ToSkipEnvironmentVariables)
+        {
+            psi.EnvironmentVariables.Remove(toSkip);
+        }
 
         psi.EnvironmentVariables["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
         psi.EnvironmentVariables["DOTNET_ROOT"] = Path.Combine(root, ".dotnet");
