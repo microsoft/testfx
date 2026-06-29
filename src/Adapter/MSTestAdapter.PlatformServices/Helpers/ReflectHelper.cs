@@ -6,6 +6,7 @@ using System.Security;
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -145,41 +146,7 @@ internal class ReflectHelper
     /// <param name="owningType">The reflected type that owns <paramref name="categoryAttributeProvider"/>.</param>
     /// <returns>Categories defined.</returns>
     internal static string[] GetTestCategories(MemberInfo categoryAttributeProvider, Type owningType)
-    {
-        Attribute[] methodAttributes = GetCustomAttributesCached(categoryAttributeProvider);
-        Attribute[] typeAttributes = GetCustomAttributesCached(owningType);
-        Attribute[] assemblyAttributes = GetCustomAttributesCached(owningType.Assembly);
-
-        // Avoid LINQ iterator allocations by iterating the cached attribute arrays directly.
-        // This follows the same allocation-free pattern used by GetTestPropertiesAsTraits.
-        List<string>? categories = null;
-
-        foreach (Attribute attribute in methodAttributes)
-        {
-            if (attribute is TestCategoryBaseAttribute categoryAttr)
-            {
-                (categories ??= []).AddRange(categoryAttr.TestCategories);
-            }
-        }
-
-        foreach (Attribute attribute in typeAttributes)
-        {
-            if (attribute is TestCategoryBaseAttribute categoryAttr)
-            {
-                (categories ??= []).AddRange(categoryAttr.TestCategories);
-            }
-        }
-
-        foreach (Attribute attribute in assemblyAttributes)
-        {
-            if (attribute is TestCategoryBaseAttribute categoryAttr)
-            {
-                (categories ??= []).AddRange(categoryAttr.TestCategories);
-            }
-        }
-
-        return categories is null ? [] : [.. categories];
-    }
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetTestCategories(categoryAttributeProvider, owningType);
 
     /// <summary>
     /// Gets the parallelization level set on an assembly.
@@ -232,52 +199,7 @@ internal class ReflectHelper
     /// <param name="testPropertyProvider">The member to inspect.</param>
     /// <returns>List of traits.</returns>
     internal static Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
-    {
-        Attribute[] attributesFromMethod = GetCustomAttributesCached(testPropertyProvider);
-        Attribute[] attributesFromClass = testPropertyProvider.ReflectedType is { } testClass ? GetCustomAttributesCached(testClass) : [];
-        int countTestPropertyAttribute = 0;
-        foreach (Attribute attribute in attributesFromMethod)
-        {
-            if (attribute is TestPropertyAttribute)
-            {
-                countTestPropertyAttribute++;
-            }
-        }
-
-        foreach (Attribute attribute in attributesFromClass)
-        {
-            if (attribute is TestPropertyAttribute)
-            {
-                countTestPropertyAttribute++;
-            }
-        }
-
-        if (countTestPropertyAttribute == 0)
-        {
-            // This is the common case that we optimize for. This method used to be an iterator (uses yield return) which is allocating unnecessarily in common cases.
-            return [];
-        }
-
-        var traits = new Trait[countTestPropertyAttribute];
-        int index = 0;
-        foreach (Attribute attribute in attributesFromMethod)
-        {
-            if (attribute is TestPropertyAttribute testProperty)
-            {
-                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
-            }
-        }
-
-        foreach (Attribute attribute in attributesFromClass)
-        {
-            if (attribute is TestPropertyAttribute testProperty)
-            {
-                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
-            }
-        }
-
-        return traits;
-    }
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetTestPropertiesAsTraits(testPropertyProvider);
 
     /// <summary>
     /// Get attribute defined on a method which is of given type of subtype of given type.
