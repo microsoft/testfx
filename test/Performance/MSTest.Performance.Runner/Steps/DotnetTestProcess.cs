@@ -31,7 +31,6 @@ namespace MSTest.Performance.Runner.Steps;
 /// </remarks>
 internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 {
-    private static readonly string s_root = RootFinder.Find();
     private readonly string _reportFileName;
     private readonly BuildConfiguration _buildConfiguration;
     private readonly int _numberOfRun;
@@ -49,7 +48,8 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
-        string dotnet = Path.Combine(s_root, ".dotnet", $"dotnet{Constants.ExecutableExtension}");
+        string root = RootFinder.Find();
+        string dotnet = Path.Combine(root, ".dotnet", $"dotnet{Constants.ExecutableExtension}");
         string projectDir = payload.TestAsset.TargetAssetPath;
 
         // Use the repo-local SDK consistently with the build step (DotnetMuxer). The
@@ -66,8 +66,8 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
         };
 
         psi.EnvironmentVariables["DOTNET_CLI_TELEMETRY_OPTOUT"] = "1";
-        psi.EnvironmentVariables["DOTNET_ROOT"] = Path.Combine(s_root, ".dotnet");
-        psi.EnvironmentVariables["DOTNET_INSTALL_DIR"] = Path.Combine(s_root, ".dotnet");
+        psi.EnvironmentVariables["DOTNET_ROOT"] = Path.Combine(root, ".dotnet");
+        psi.EnvironmentVariables["DOTNET_INSTALL_DIR"] = Path.Combine(root, ".dotnet");
         psi.EnvironmentVariables["DOTNET_SKIP_FIRST_TIME_EXPERIENCE"] = "1";
         psi.EnvironmentVariables["DOTNET_MULTILEVEL_LOOKUP"] = "0";
 
