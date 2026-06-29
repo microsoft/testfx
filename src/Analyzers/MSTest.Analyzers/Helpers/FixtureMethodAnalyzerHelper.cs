@@ -120,6 +120,18 @@ internal static class FixtureMethodAnalyzerHelper
             (rule, parameterMode),
             requireTestContextSymbol: parameterMode == FixtureParameterMode.MustHaveTestContext);
 
+    internal static void RegisterAssemblyFixtureAnalyzer(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        DiagnosticDescriptor rule,
+        FixtureParameterMode parameterMode)
+        => RegisterFixtureMethodSymbolAction(
+            context,
+            fixtureAttributeMetadataName,
+            static (symbolContext, symbols, state) => AnalyzeAssemblyFixtureMethod(symbolContext, symbols, state.rule, state.parameterMode),
+            (rule, parameterMode),
+            requireTestContextSymbol: parameterMode == FixtureParameterMode.MustHaveTestContext);
+
     internal static void AnalyzeInstanceFixtureMethod(
         SymbolAnalysisContext context,
         FixtureMethodSymbols symbols,
@@ -144,13 +156,35 @@ internal static class FixtureMethodAnalyzerHelper
         FixtureParameterMode parameterMode)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        if (!methodSymbol.HasAttribute(symbols.FixtureAttributeSymbol))
+        {
+            return;
+        }
+
         bool isInheritanceModeSet = methodSymbol.IsInheritanceModeSet(symbols.InheritanceBehaviorSymbol, symbols.FixtureAttributeSymbol);
-        if (methodSymbol.HasAttribute(symbols.FixtureAttributeSymbol)
-            && ((!methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: true,
+        if ((!methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: true,
                 allowGenericType: isInheritanceModeSet, parameterMode, symbols.TestContextSymbol,
                 symbols.TestClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
-                || (!isInheritanceModeSet && methodSymbol.ContainingType.IsAbstract)
-                || (isInheritanceModeSet && methodSymbol.ContainingType.IsSealed)))
+            || (!isInheritanceModeSet && methodSymbol.ContainingType.IsAbstract)
+            || (isInheritanceModeSet && methodSymbol.ContainingType.IsSealed))
+        {
+            context.ReportDiagnostic(isFixable
+                ? methodSymbol.CreateDiagnostic(rule, methodSymbol.Name)
+                : methodSymbol.CreateDiagnostic(rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
+        }
+    }
+
+    internal static void AnalyzeAssemblyFixtureMethod(
+        SymbolAnalysisContext context,
+        FixtureMethodSymbols symbols,
+        DiagnosticDescriptor rule,
+        FixtureParameterMode parameterMode)
+    {
+        var methodSymbol = (IMethodSymbol)context.Symbol;
+        if (methodSymbol.HasAttribute(symbols.FixtureAttributeSymbol)
+            && !methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: true,
+                allowGenericType: false, parameterMode, symbols.TestContextSymbol,
+                symbols.TestClassAttributeSymbol, fixtureAllowInheritedTestClass: false, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(rule, methodSymbol.Name)
