@@ -32,7 +32,7 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
     private const string HostAdvertisedProtocolVersions = "1.0.0;1.1.0;1.2.0";
 
     [TestMethod]
-    public async Task DotnetTestPipe_TestAppAdvertises100And110_NegotiatesDownToV100WithOldSdk()
+    public async Task DotnetTestPipe_TestAppAdvertisesAllSupportedVersions_NegotiatesDownToV100WithOldSdk()
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);

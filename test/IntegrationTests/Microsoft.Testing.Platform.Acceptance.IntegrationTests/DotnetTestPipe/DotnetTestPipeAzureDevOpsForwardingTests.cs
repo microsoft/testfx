@@ -99,11 +99,15 @@ public sealed class DotnetTestPipeAzureDevOpsForwardingTests : AcceptanceTestBas
         var testHost = TestInfrastructure.TestHost.LocateFrom(
             AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
 
-        // 1.2.0 is negotiated, but without TF_BUILD the host is not on an Azure DevOps agent, so the
-        // AzureDevOpsReport extension produces nothing and the forwarder stays a no-op.
+        // 1.2.0 is negotiated, but TF_BUILD=false means the host is not on an Azure DevOps agent, so the
+        // AzureDevOpsReport extension produces nothing and the forwarder stays a no-op. We set TF_BUILD
+        // explicitly to "false" rather than leaving it unset because CI itself runs on an Azure DevOps
+        // agent (where TF_BUILD=true is inherited), which would otherwise make this scenario impossible to
+        // exercise.
         FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
             testHost,
             extraArguments: "--report-azdo",
+            environmentVariables: new Dictionary<string, string?> { ["TF_BUILD"] = "false" },
             supportedProtocolVersions: HostAdvertisedProtocolVersions,
             cancellationToken: TestContext.CancellationToken);
 
