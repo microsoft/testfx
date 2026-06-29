@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
@@ -11,9 +11,6 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestFramework.nuspec</NuspecFile>
-    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestFramework.NonWindows.nuspec</NuspecFile>
-    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.TestFramework</PackageId>
     <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
     <PackageDescription>
@@ -28,7 +25,10 @@
       - UWP 10.0.16299
       - UWP 10.0.17763 with .NET 9+
     </PackageDescription>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
     <NoWarn>$(NoWarn);NU5100</NoWarn>
+    <!-- Package has non-standard lib/ layout (bundles TestFramework.dll from ProjectReference) -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -61,6 +61,22 @@
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" />
   </ItemGroup>
 
+  <!--
+    MSTest.Analyzers is a dependency for CONSUMERS of this NuGet package, but must NOT
+    run during build of the source repo (it would flag intentional internal patterns).
+    We declare it with PrivateAssets="all" to block transitive flow during build,
+    then override at pack time so it appears in the output .nupkg dependency list.
+  -->
+  <ItemGroup>
+    <PackageReference Include="MSTest.Analyzers" PrivateAssets="all" ExcludeAssets="all" />
+  </ItemGroup>
+
+  <Target Name="_UnprivatizeAnalyzersForPack" BeforeTargets="_GetPackageDependencies">
+    <ItemGroup>
+      <PackageReference Update="MSTest.Analyzers" PrivateAssets="none" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
@@ -79,9 +95,55 @@
     <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
 
-  <ItemGroup Label="NuGet">
-    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
-    <NuspecProperty Include="SystemThreadingTasksExtensionsVersion=$(SystemThreadingTasksExtensionsVersion)" />
+  <!-- Pack: build targets -->
+  <ItemGroup Label="Pack - build" Condition=" '$(OS)' == 'Windows_NT' ">
+    <None Include="build\netstandard2.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\netstandard2.0" />
+    <None Include="build\net462\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net462" />
+    <None Include="build\uap10.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\uap10.0" />
+    <None Include="build\net8.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net8.0" />
+    <None Include="build\net9.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net9.0" />
+  </ItemGroup>
+  <ItemGroup Label="Pack - build" Condition=" '$(OS)' != 'Windows_NT' ">
+    <None Include="build\netstandard2.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\netstandard2.0" />
+    <None Include="build\net8.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net8.0" />
+    <None Include="build\net9.0\MSTest.TestFramework.targets" Pack="true" PackagePath="build\net9.0" />
+  </ItemGroup>
+
+  <!-- Pack: buildTransitive targets -->
+  <ItemGroup Label="Pack - buildTransitive" Condition=" '$(OS)' == 'Windows_NT' ">
+    <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\netstandard2.0" />
+    <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net462" Link="buildTransitive\net462\MSTest.TestFramework.targets" />
+    <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\uap10.0" Link="buildTransitive\uap10.0\MSTest.TestFramework.targets" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net8.0" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net9.0" Link="buildTransitive\net9.0\MSTest.TestFramework.targets" />
+  </ItemGroup>
+  <ItemGroup Label="Pack - buildTransitive" Condition=" '$(OS)' != 'Windows_NT' ">
+    <None Include="buildTransitive\others\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\netstandard2.0" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net8.0" />
+    <None Include="buildTransitive\net8.0AndLater\MSTest.TestFramework.targets" Pack="true" PackagePath="buildTransitive\net9.0" Link="buildTransitive\net9.0\MSTest.TestFramework.targets" />
+  </ItemGroup>
+
+  <!-- Pack: Extensions DLLs into buildTransitive (net8.0+) -->
+  <ItemGroup Label="Pack - Extensions" Condition=" '$(OS)' == 'Windows_NT' ">
+    <None Include="$(OutputPath)net8.0\MSTest.TestFramework.Extensions.dll" Pack="true" PackagePath="buildTransitive\net8.0" />
+    <None Include="$(OutputPath)net8.0\MSTest.TestFramework.Extensions.xml" Pack="true" PackagePath="buildTransitive\net8.0" />
+    <None Include="$(OutputPath)net8.0-windows10.0.18362.0\MSTest.TestFramework.Extensions.dll" Pack="true" PackagePath="buildTransitive\net8.0\winui" />
+    <None Include="$(OutputPath)net8.0-windows10.0.18362.0\MSTest.TestFramework.Extensions.xml" Pack="true" PackagePath="buildTransitive\net8.0\winui" />
+    <None Include="$(OutputPath)net9.0\MSTest.TestFramework.Extensions.dll" Pack="true" PackagePath="buildTransitive\net9.0" />
+    <None Include="$(OutputPath)net9.0\MSTest.TestFramework.Extensions.xml" Pack="true" PackagePath="buildTransitive\net9.0" />
+    <None Include="$(OutputPath)net9.0-windows10.0.17763.0\MSTest.TestFramework.Extensions.dll" Pack="true" PackagePath="buildTransitive\net9.0\uwp" />
+    <None Include="$(OutputPath)net9.0-windows10.0.17763.0\MSTest.TestFramework.Extensions.xml" Pack="true" PackagePath="buildTransitive\net9.0\uwp" />
+  </ItemGroup>
+  <ItemGroup Label="Pack - Extensions" Condition=" '$(OS)' != 'Windows_NT' ">
+    <None Include="$(OutputPath)net8.0\MSTest.TestFramework.Extensions.dll" Pack="true" PackagePath="buildTransitive\net8.0" />
+    <None Include="$(OutputPath)net8.0\MSTest.TestFramework.Extensions.xml" Pack="true" PackagePath="buildTransitive\net8.0" />
+    <None Include="$(OutputPath)net9.0\MSTest.TestFramework.Extensions.dll" Pack="true" PackagePath="buildTransitive\net9.0" />
+    <None Include="$(OutputPath)net9.0\MSTest.TestFramework.Extensions.xml" Pack="true" PackagePath="buildTransitive\net9.0" />
+  </ItemGroup>
+
+  <!-- Pack: source files (add pack metadata to existing Compile items) -->
+  <ItemGroup Label="Pack - source">
+    <Compile Update="@(Compile)" Pack="true" PackagePath="src/%(RecursiveDir)" />
   </ItemGroup>
 
   <ItemGroup>

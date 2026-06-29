@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="97613040-23E9-4712-BA5D-3B1534504735" >
+      <DisplayName>Microsoft.Testing.Extensions.GitHubActionsReport</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.GitHubActionsReport.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+</Project>
