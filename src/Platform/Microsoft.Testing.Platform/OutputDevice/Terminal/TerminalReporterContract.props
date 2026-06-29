@@ -16,14 +16,21 @@
       command-line specific - the SDK has its own CLI) and TerminalResources.cs (the hand-written [Embedded]
       accessor used by in-repo IVT-linked consumers; standalone consumers compile the resx instead - see below).
 
-      The reporter + rendering + state types are [Microsoft.CodeAnalysis.Embedded], so a consumer that also
-      references Microsoft.Testing.Platform never sees them as conflicting types. The small platform abstractions
-      in this set (IConsole/IStopwatch/IColor/SystemConsole/SystemConsoleColor/SystemStopwatch) are NOT embedded -
-      they are foundational, platform-wide types used far beyond the terminal. A consumer that compiles this
-      contract AND references Microsoft.Testing.Platform will therefore get benign CS0436 conflict warnings for
-      those types (the compiler uses the locally-compiled copy); such consumers should suppress CS0436 (the
-      in-repo standalone test does). A consumer that does NOT reference Microsoft.Testing.Platform - the real
-      target, e.g. dotnet/sdk's 'dotnet test' - sees no conflict at all.
+      The reporter + rendering + state types are [Microsoft.CodeAnalysis.Embedded], so they are NOT exported by
+      Microsoft.Testing.Platform; a consumer that also references the platform compiles its own (single-source)
+      copy and never sees a conflict. The small internal platform abstractions in this set (IConsole/IStopwatch/
+      SystemConsole/SystemStopwatch + RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser/
+      TestRunSummaryHelper/ZeroTestsPolicy) are 'internal' and not exported either (no InternalsVisibleTo to an
+      external consumer), so they also never conflict.
+
+      The exception is IColor and SystemConsoleColor: those two ARE shipped *public* API of Microsoft.Testing.Platform
+      (Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Fore/BackgroundColor), so a consumer that
+      ALSO references the platform would get CS0436 'conflicts with imported type' for them. They are public API, so
+      they cannot be made [Embedded]/internal in the platform. Instead, when the consumer references
+      Microsoft.Testing.Platform we DROP the duplicated copies (see the _RemoveTerminalReporter* target below) and let
+      the single reporter use of 'SystemConsoleColor?' (TerminalTestReporter.Messaging.cs) bind to the platform's
+      public types - no CS0436 and no consumer-side NoWarn. A consumer that does NOT reference the platform keeps the
+      copies and compiles standalone. The NuGet source package applies the same drop in its build/ props.
 
     USAGE
       Import this file from any project that needs the reporter source. Microsoft.Testing.Platform itself does
@@ -58,8 +65,14 @@
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\IStopwatch.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemConsole.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemStopwatch.cs" />
-    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\IColor.cs" />
-    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SystemConsoleColor.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\IColor.cs">
+      <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
+      <PlatformPublicColorAbstraction>true</PlatformPublicColorAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SystemConsoleColor.cs">
+      <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
+      <PlatformPublicColorAbstraction>true</PlatformPublicColorAbstraction>
+    </TerminalReporterContractSource>
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TargetFrameworkParser.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TestRunSummaryHelper.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\CommandLine\ZeroTestsPolicy.cs" />
@@ -76,5 +89,29 @@
          Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources so the reporter source resolves it. -->
     <EmbeddedResource Include="@(TerminalReporterContractResource)" GenerateSource="true" />
   </ItemGroup>
+
+  <!--
+    IColor and SystemConsoleColor are shipped *public* API of Microsoft.Testing.Platform. When the consumer of this
+    contract ALSO references Microsoft.Testing.Platform, compiling local copies would raise CS0436 (conflicts with the
+    imported public types). Drop the local copies in that case so the reporter's single 'SystemConsoleColor?' use
+    binds to the platform's public types instead - no CS0436, no NoWarn. A consumer that does NOT reference the
+    platform keeps the copies and compiles standalone. The NuGet source package applies the same drop in its build/
+    props for external consumers.
+  -->
+  <Target Name="_RemoveTerminalReporterDuplicatePublicColorAbstractions"
+          AfterTargets="ResolveReferences"
+          BeforeTargets="CoreCompile"
+          Condition=" '$(TerminalReporterContractCompile)' != 'false' ">
+    <ItemGroup>
+      <_TerminalReporterPlatformRef Include="@(ReferencePath)" Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_TerminalReporterReferencesPlatform>false</_TerminalReporterReferencesPlatform>
+      <_TerminalReporterReferencesPlatform Condition=" '@(_TerminalReporterPlatformRef)' != '' ">true</_TerminalReporterReferencesPlatform>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_TerminalReporterReferencesPlatform)' == 'true' ">
+      <Compile Remove="@(Compile)" Condition=" '%(Compile.PlatformPublicColorAbstraction)' == 'true' " />
+    </ItemGroup>
+  </Target>
 
 </Project>
