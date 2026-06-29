@@ -15,7 +15,8 @@
     <!-- AspireHostingTestingVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Aspire.Hosting.Testing PackageVersion
          declared near the bottom of this file (the one Dependabot updates). The
-         _ValidateBundledSdkFeatureVersions target there fails the build if the two drift apart. -->
+         _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
+         the two drift apart. -->
     <AspireHostingTestingVersion>13.4.6</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
@@ -34,7 +35,8 @@
     <!-- MicrosoftPlaywrightVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Microsoft.Playwright.MSTest.v4
          PackageVersion declared near the bottom of this file (the one Dependabot updates). The
-         _ValidateBundledSdkFeatureVersions target there fails the build if the two drift apart. -->
+         _ValidateBundledSdkFeatureVersions target (in Directory.Build.targets) fails the build if
+         the two drift apart. -->
     <MicrosoftPlaywrightVersion>1.60.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingExtensionsFakesVersion>18.1.1</MicrosoftTestingExtensionsFakesVersion>
     <!-- Microsoft.Testing.Internal.Framework is an internal-only NuGet (consumed by tests that

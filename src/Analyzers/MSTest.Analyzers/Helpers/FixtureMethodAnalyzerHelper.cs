@@ -50,7 +50,8 @@ internal static class FixtureMethodAnalyzerHelper
         => RegisterFixtureMethodSymbolAction(
             context,
             fixtureAttributeMetadataName,
-            (symbolContext, symbols) => AnalyzeInstanceFixtureMethod(symbolContext, symbols, rule));
+            static (symbolContext, symbols, rule) => AnalyzeInstanceFixtureMethod(symbolContext, symbols, rule),
+            rule);
 
     internal static void RegisterFixtureMethodSymbolAction(
         AnalysisContext context,

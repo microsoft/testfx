@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Immutable;
+using System.Linq;
 
 using Microsoft.CodeAnalysis;
 
@@ -24,8 +24,8 @@ public sealed class AnalyzerCategoryGovernanceTests
     [TestMethod]
     public void AvoidThreadSleepAndTaskWaitInTests_UsesPerformanceCategory()
     {
-        ImmutableArray<DiagnosticDescriptor> diagnostics = new AvoidThreadSleepAndTaskWaitInTestsAnalyzer().SupportedDiagnostics;
-        Assert.AreEqual(1, diagnostics.Length);
-        Assert.AreEqual(PerformanceCategory, diagnostics[0].Category);
+        DiagnosticDescriptor descriptor = new AvoidThreadSleepAndTaskWaitInTestsAnalyzer().SupportedDiagnostics
+            .Single(d => d.Id == "MSTEST0067");
+        Assert.AreEqual(PerformanceCategory, descriptor.Category);
     }
 }
