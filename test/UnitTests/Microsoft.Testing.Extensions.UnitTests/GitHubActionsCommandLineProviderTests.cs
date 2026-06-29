@@ -49,4 +49,14 @@ public sealed class GitHubActionsCommandLineProviderTests
 
         Assert.IsTrue(validationResult.IsValid);
     }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenStepSummaryValueIsNotOnOrOffAsync()
+    {
+        GitHubActionsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
 }

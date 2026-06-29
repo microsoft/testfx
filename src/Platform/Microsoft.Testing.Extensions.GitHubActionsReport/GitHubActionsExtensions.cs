@@ -27,6 +27,15 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetLoggerFactory()));
 
+        var compositeSummaryReporter = new CompositeExtensionFactory<GitHubActionsSummaryReporter>(serviceProvider =>
+            new GitHubActionsSummaryReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                serviceProvider.GetLoggerFactory()));
+
         builder.TestHost.AddDataConsumer(serviceProvider =>
             new GitHubActionsAnnotationReporter(
                 serviceProvider.GetCommandLineOptions(),
@@ -35,6 +44,8 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetOutputDevice(),
                 serviceProvider.GetLoggerFactory()));
 
+        builder.TestHost.AddDataConsumer(compositeSummaryReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
     }
