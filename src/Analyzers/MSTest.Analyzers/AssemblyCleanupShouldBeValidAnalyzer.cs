@@ -3,8 +3,6 @@
 
 using System.Collections.Immutable;
 
-using Analyzer.Utilities.Extensions;
-
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -35,28 +33,10 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodAnalyzerHelper.RegisterFixtureMethodSymbolAction(
+        FixtureMethodAnalyzerHelper.RegisterAssemblyFixtureAnalyzer(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute,
-            AnalyzeSymbol);
-    }
-
-    private static void AnalyzeSymbol(
-        SymbolAnalysisContext context,
-        FixtureMethodAnalyzerHelper.FixtureMethodSymbols symbols)
-    {
-        var methodSymbol = (IMethodSymbol)context.Symbol;
-
-        if (!methodSymbol.HasAttribute(symbols.FixtureAttributeSymbol))
-        {
-            return;
-        }
-
-        if (!methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: true, allowGenericType: false, FixtureParameterMode.OptionalTestContext, symbols.TestContextSymbol, symbols.TestClassAttributeSymbol, fixtureAllowInheritedTestClass: false, out bool isFixable))
-        {
-            context.ReportDiagnostic(isFixable
-                ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
-                : methodSymbol.CreateDiagnostic(Rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
-        }
+            Rule,
+            FixtureParameterMode.OptionalTestContext);
     }
 }
