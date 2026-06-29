@@ -237,11 +237,13 @@ internal sealed class UnitTestRunner
                 }
             }
 
-            testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
-
             _classCleanupManager.MarkTestComplete(testMethod, out bool isLastTestInClass);
             if (isLastTestInClass)
             {
+                // Defer TestContextImplementation allocation to only the last test in each class,
+                // saving one dict-copy + CancellationTokenRegistration per non-last test.
+                testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+
                 if (testMethodInfo is not null)
                 {
                     // Flow properties set during AssemblyInitialize and ClassInitialize so the
@@ -276,6 +278,10 @@ internal sealed class UnitTestRunner
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true &&
                 _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
             {
+                // testContextForClassCleanup is guaranteed non-null here: ShouldRunEndOfAssemblyCleanup
+                // becomes true only after MarkClassComplete, which is called exclusively inside the
+                // isLastTestInClass block above — where testContextForClassCleanup is allocated.
+                DebugEx.Assert(testContextForClassCleanup is not null, "testContextForClassCleanup should not be null when running assembly cleanup.");
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
 
                 // Flow properties set during AssemblyInitialize so the AssemblyCleanup method
