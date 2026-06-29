@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.PackagedApp.Resources;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
@@ -35,11 +36,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 {
     public string Uid => nameof(PackagedAppTestHostLauncher);
 
-    public string Version => "1.0.0";
+    public string Version => ExtensionVersion.DefaultSemVer;
 
-    public string DisplayName => "Packaged app test host launcher";
+    public string DisplayName => ExtensionResources.PackagedAppExtensionDisplayName;
 
-    public string Description => "Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.";
+    public string Description => ExtensionResources.PackagedAppExtensionDescription;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

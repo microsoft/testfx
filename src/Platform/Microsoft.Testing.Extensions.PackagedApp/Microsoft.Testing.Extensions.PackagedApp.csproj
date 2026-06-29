@@ -5,9 +5,8 @@
     <!-- The packaged-app launcher uses modern Process APIs (ArgumentList, WaitForExitAsync,
          Kill(entireProcessTree)) and targets runtime hosts, so it ships only for .NET. -->
     <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
-    <!-- Cancel default license (MIT) and set license as packaged license file -->
-    <PackageLicenseExpression />
-    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <GenerateBuildInfo>true</GenerateBuildInfo>
+    <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
     <!-- This extension consumes the experimental ITestHostLauncher extension point. -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
     <!-- Early preview/experimental package: keep an experimental (alpha) version even in official builds. -->
@@ -42,7 +41,6 @@ This package extends Microsoft Testing Platform to deploy and launch a packaged 
       <Pack>true</Pack>
       <PackagePath>buildMultiTargeting</PackagePath>
     </Content>
-    <Content Include="$(RepoRoot)/LICENSE.PLATFORMTOOLS.txt" Pack="true" PackagePath="License.txt" />
     <TfmSpecificPackageFile Include="buildTransitive/**">
       <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
     </TfmSpecificPackageFile>
