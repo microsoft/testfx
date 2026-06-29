@@ -42,6 +42,9 @@ internal sealed class SystemProcess : IProcess, IDisposable
     public Task WaitForExitAsync()
         => _process.WaitForExitAsync();
 
+    public Task WaitForExitAsync(CancellationToken cancellationToken)
+        => _process.WaitForExitAsync(cancellationToken);
+
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     public void Kill()

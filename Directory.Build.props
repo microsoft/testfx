@@ -87,6 +87,13 @@
     -->
     <MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>1.0.0</MicrosoftTestingExtensionsOpenTelemetryVersionPrefix>
 
+    <MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsPackagedAppPreReleaseVersionLabel>
+
+    <!--
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsPackagedAppVersionPrefix>1.0.0</MicrosoftTestingExtensionsPackagedAppVersionPrefix>
+
     <MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsVideoRecorderPreReleaseVersionLabel>
 
     <!--

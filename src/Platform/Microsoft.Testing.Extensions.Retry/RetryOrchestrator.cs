@@ -352,7 +352,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 testHostProcess.Exited -= exitedHandler;
             }
 
-            await testHostProcess.WaitForExitAsync().ConfigureAwait(false);
+            await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
 
             exitCodes.Add(testHostProcess.ExitCode);
             if (testHostProcess.ExitCode != (int)ExitCode.Success)
