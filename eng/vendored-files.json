@@ -273,7 +273,7 @@
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHashShared.cs",
-          "baseline_ref_sha": "ff08290b777d78822cc4505bf7308d33b9735705",
+          "baseline_ref_sha": "c366a53872872cbcafd5145a23038659ac3815c3",
           "baseline_blob_sha": "0f8a6dfa2e75409a23cc2a793c64596556235e81",
           "scope": "entire file"
         }
