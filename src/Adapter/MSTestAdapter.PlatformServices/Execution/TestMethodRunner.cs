@@ -108,12 +108,34 @@ internal sealed class TestMethodRunner
         DebugEx.Assert(_test != null, "Test should not be null.");
         DebugEx.Assert(_testMethodInfo.MethodInfo != null, "Test method should not be null.");
 
-        List<TestResult> results = [];
         if (_testMethodInfo.Executor == null)
         {
             throw ApplicationStateGuard.Unreachable();
         }
 
+        // Fast path for non-data-driven tests (the common case).
+        // A single attribute scan replaces the two scans done by TryExecuteDataSourceBasedTestsAsync and
+        // TryExecuteFoldedDataDrivenTestsAsync, and avoids allocating a List<TestResult> that would
+        // immediately be spread back into a TestResult[].
+        if (_test.DataType != DynamicDataType.ITestDataSource && !IsDataDrivenTest())
+        {
+            _testContext.SetDisplayName(_test.DisplayName);
+            TestResult[] testResults = await ExecuteTestAsync(_testContext, _testMethodInfo).ConfigureAwait(false);
+
+            foreach (TestResult testResult in testResults)
+            {
+                if (StringEx.IsNullOrWhiteSpace(testResult.DisplayName))
+                {
+                    testResult.DisplayName = _test.DisplayName;
+                }
+            }
+
+            _testContext.SetOutcome(GetAggregateOutcome(testResults));
+            return testResults;
+        }
+
+        // Slow path for data-driven tests.
+        List<TestResult> results = [];
         bool isDataDriven = false;
         if (_test.DataType == DynamicDataType.ITestDataSource)
         {
@@ -137,6 +159,9 @@ internal sealed class TestMethodRunner
         }
         else
         {
+            // IsDataDrivenTest() returned true but neither Try...Async method handled the test
+            // (e.g., multiple DataSourceAttributes → TryExecuteDataSourceBasedTestsAsync returns false).
+            // Execute as a normal non-data-driven test, preserving existing behavior.
             _testContext.SetDisplayName(_test.DisplayName);
             TestResult[] testResults = await ExecuteTestAsync(_testContext, _testMethodInfo).ConfigureAwait(false);
 
@@ -174,6 +199,26 @@ internal sealed class TestMethodRunner
         }
 
         return [.. results];
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if this test method has a <see cref="DataSourceAttribute"/> or
+    /// implements <see cref="UTF.ITestDataSource"/>, indicating it requires the data-driven execution path.
+    /// A single attribute-cache pass checks for both, replacing the two separate scans that would otherwise
+    /// be performed by <see cref="TryExecuteDataSourceBasedTestsAsync"/> and
+    /// <see cref="TryExecuteFoldedDataDrivenTestsAsync"/>.
+    /// </summary>
+    private bool IsDataDrivenTest()
+    {
+        foreach (Attribute attribute in PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributesCached(_testMethodInfo.MethodInfo))
+        {
+            if (attribute is DataSourceAttribute or UTF.ITestDataSource)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task<bool> TryExecuteDataSourceBasedTestsAsync(List<TestResult> results)
@@ -476,7 +521,7 @@ internal sealed class TestMethodRunner
     /// </summary>
     /// <param name="results">Results.</param>
     /// <returns>Aggregate outcome.</returns>
-    private static UnitTestOutcome GetAggregateOutcome(List<TestResult> results)
+    private static UnitTestOutcome GetAggregateOutcome(IReadOnlyList<TestResult> results)
     {
         // In case results are not present, set outcome as unknown.
         if (results.Count == 0)
