@@ -130,8 +130,21 @@ internal sealed class TestMethodRunner
                 }
             }
 
-            _testContext.SetOutcome(GetAggregateOutcome(testResults));
-            return testResults;
+            UnitTestOutcome fastPathOutcome = GetAggregateOutcome(testResults);
+            _testContext.SetOutcome(fastPathOutcome);
+
+            // Set a result in case no result is present, preserving the safeguard from the slow path
+            // (ExecuteAsync dereferences result[0] in its finally block).
+            return testResults.Length == 0
+                ?
+                [
+                    new TestResult
+                    {
+                        Outcome = fastPathOutcome,
+                        TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+                    },
+                ]
+                : testResults;
         }
 
         // Slow path for data-driven tests.
