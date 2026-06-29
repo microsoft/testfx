@@ -122,8 +122,17 @@ $$"""
       MicrosoftTestingPlatformEntryPoint, SelfRegisteredExtensions) be double-compiled into this build.
       Re-exclude them here. This runs in CustomBeforeMicrosoftCommonProps (before the SDK seeds
       DefaultItemExcludes), so the SDK appends its own excludes after ours.
+
+      The nested '**/obj/**;**/bin/**' globs matter for multi-project assets. The reflection build (which
+      always runs first, into the default bin/Release) leaves a referenced project's outputs on disk, e.g.
+      'SomeRef/bin/Release/<tfm>/*.dll'. When this (later) source-gen build evaluates the host project, the
+      SDK's default item globs would otherwise pull those stray DLLs in as None/Content items, and RAR then
+      treats a wrong-TFM copy (for example a net10.0 'MSTest.TestFramework.Extensions.dll', assembly version
+      9.0.0.0) as a candidate for the net8.0 leg -> MSB3277, which MSBuildTreatWarningsAsErrors promotes to an
+      error. The root-level 'bin/**;obj/**' does not match the nested 'SomeRef/bin/**', so exclude nested
+      bin/obj as well to keep a referenced project's leftover reflection outputs out of this build's globs.
     -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**;**/obj/**;**/bin/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
     <!--
