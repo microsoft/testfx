@@ -49,29 +49,28 @@
     Package Management PackageVersion entries in Directory.Packages.props are "orphans" that
     Dependabot ignores unless a project references them.
 
-    Two item kinds work together here:
+    The PackageReference (with ExcludeAssets="all") is the Dependabot ANCHOR: Dependabot reads the
+    PackageReference XML node to discover the dependency and bump its CPM PackageVersion.
+    ExcludeAssets="all" only stops the package's assets (compile/runtime/build, e.g. Playwright's
+    browser install) from flowing into this test project - it does NOT hide the reference from
+    Dependabot. A PackageDownload does NOT work as the anchor: Dependabot does not read
+    PackageDownload items at all (dependabot/dependabot-core#2502). Using PackageDownload as the
+    anchor is exactly why Playwright silently stopped updating - see #9362 / #9452.
 
-      * The PackageReference (with ExcludeAssets="all") is the Dependabot ANCHOR. Dependabot reads
-        the PackageReference XML node to discover the dependency and bump its CPM PackageVersion.
-        ExcludeAssets="all" only stops the package's assets (compile/runtime/build, e.g. Playwright's
-        browser install) from flowing into this test project - it does NOT hide the reference from
-        Dependabot. A PackageDownload does NOT work as the anchor: Dependabot does not read
-        PackageDownload items at all (dependabot/dependabot-core#2502). Using PackageDownload as the
-        anchor is exactly why Playwright silently stopped updating - see #9362 / #9452.
-
-      * The PackageDownload (Version="[$(...)]") stages the package nupkg into the global packages
-        folder (Aspire's is consumed by CopyNuGetPackagesForTestAssets below) and ties the *Version
-        property to the package so Dependabot rewrites the property alongside the PackageVersion.
-
-    The _ValidateBundledSdkFeatureVersions target in Directory.Build.targets then guards the matching
-    version properties (MicrosoftPlaywrightVersion, AspireHostingTestingVersion) against drift after
-    a bump.
+    Dependabot only bumps the literal PackageVersion in Directory.Packages.props, not the matching
+    *Version property the build consumes; the _ValidateBundledSdkFeatureVersions target in
+    Directory.Build.targets fails the build if the two drift apart, so a maintainer reconciles the
+    property in the Dependabot PR.
   -->
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" ExcludeAssets="all" />
     <PackageReference Include="Microsoft.Playwright.MSTest.v4" ExcludeAssets="all" />
+  </ItemGroup>
+
+  <!-- Packages needed to stage nupkgs for the generated test assets (see
+       CopyNuGetPackagesForTestAssets below) but that we don't want to reference. -->
+  <ItemGroup>
     <PackageDownload Include="Aspire.Hosting.Testing" Version="[$(AspireHostingTestingVersion)]" />
-    <PackageDownload Include="Microsoft.Playwright.MSTest.v4" Version="[$(MicrosoftPlaywrightVersion)]" />
   </ItemGroup>
 
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
