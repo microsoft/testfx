@@ -584,9 +584,11 @@ internal sealed class UnitTestRunner
     }
 
     /// <summary>
-    /// Handles the bookkeeping (class-cleanup countdown, end-of-assembly cleanup) for a test that
-    /// was filtered out by a <see cref="ITestFilter"/>. Mirrors the tail of <see cref="RunSingleTestAsync"/>
-    /// without ever requiring <c>testMethodInfo</c>, since the filter ran before any type was loaded.
+    /// Handles the bookkeeping (class-cleanup countdown, class cleanup, end-of-assembly cleanup) for a
+    /// test that was filtered out by a <see cref="ITestFilter"/>. Mirrors the tail of
+    /// <see cref="RunSingleTestAsync"/>. The filtered-out test never loaded its own type, but if a
+    /// sibling test of the same class already ran in this worker the class was initialized and still
+    /// owes its <c>[ClassCleanup]</c>, so it is executed here when this is the last test of the class.
     /// </summary>
     private async Task<TestResult[]> FinishFilteredOutTestAsync(
         TestMethod testMethod,
@@ -598,8 +600,53 @@ internal sealed class UnitTestRunner
         _classCleanupManager.MarkTestComplete(testMethod, out bool isLastTestInClass);
         if (isLastTestInClass)
         {
-            // No class cleanup possible: we never loaded the test type, so there's nothing to
-            // execute. Still mark the class as complete so end-of-assembly cleanup is gated correctly.
+            // The class-cleanup countdown spans the full (pre-filter) set of tests, so the "last test
+            // in class" can land on a filtered-out test. The filtered-out test itself never loaded the
+            // type, but a SIBLING test of the same class may have run earlier in this worker — which
+            // means [ClassInitialize] already executed and [ClassCleanup] is still owed. We must run it
+            // here; otherwise the class leaks its cleanup whenever its last-in-order test is dropped.
+            //
+            // _lastRunnableTestByClass is populated only for classes that both have an executable
+            // cleanup method AND ran at least one non-filtered test in this worker, so its presence is
+            // exactly the signal that the type is already loaded and cleanup is pending. Resolving the
+            // test method info therefore hits the TypeCache and never loads a new type.
+            if (_lastRunnableTestByClass.TryGetValue(testMethod.FullClassName, out UnitTestElement? lastRunnableTest))
+            {
+                TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(lastRunnableTest.TestMethod);
+                if (testMethodInfo is not null)
+                {
+                    ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                    try
+                    {
+                        // Flow properties set during AssemblyInitialize and ClassInitialize so the
+                        // ClassCleanup method observes them, mirroring the run path in RunSingleTestAsync.
+                        var classCleanupImpl = (TestContextImplementation)testContextForClassCleanup.Context;
+                        classCleanupImpl.MergeProperties(testMethodInfo.Parent.Parent.PostAssemblyInitProperties);
+                        classCleanupImpl.MergeProperties(testMethodInfo.Parent.PostClassInitProperties);
+
+                        // Note: filterResult is empty for a dropped test, so any TestContext output
+                        // written by a *successful* [ClassCleanup] is not attached to a result here
+                        // (RunClassCleanupAsync only flushes TestContext output onto an existing result).
+                        // Console output is unaffected — it goes to process stdout, which the test host
+                        // still surfaces. A *failing* cleanup produces its own result, handled below.
+                        TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, filterResult).ConfigureAwait(false);
+                        if (cleanupResult is not null)
+                        {
+                            // The current test was filtered out (no result of its own), so a class
+                            // cleanup failure must be attached to the last real test that ran in the class.
+                            cleanupResult.AssociatedUnitTestElement = lastRunnableTest;
+                            filterResult = [.. filterResult, cleanupResult];
+                        }
+                    }
+                    finally
+                    {
+                        (testContextForClassCleanup as IDisposable)?.Dispose();
+                    }
+                }
+            }
+
+            // Mark the class as complete so end-of-assembly cleanup is gated correctly. Done after the
+            // class cleanup above so assembly cleanup never runs before this class is fully torn down.
             _classCleanupManager.MarkClassComplete(testMethod.FullClassName);
         }
 
