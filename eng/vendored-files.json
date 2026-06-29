@@ -198,8 +198,8 @@
           "repo": "dotnet/sdk",
           "ref": "main",
           "path": "src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs",
-          "baseline_ref_sha": "1ab3ae8e0338cdd06b3974959c5802ccc5a85978",
-          "baseline_blob_sha": "94cd49826baadaa10154f13d71a7e2ede224b663",
+          "baseline_ref_sha": "bcafbe92a30b1866bd17789759c9941761bf6b49",
+          "baseline_blob_sha": "0682d3bf641c49fe17b4a0de4d48929b36ab87e1",
           "scope": "LLM/agent detection rules"
         }
       ]
@@ -228,8 +228,8 @@
           "repo": "dotnet/msbuild",
           "ref": "main",
           "path": "src/Framework/NativeMethods.cs",
-          "baseline_ref_sha": "fd084bd416a21d504b5d9bb19c0a1ca83c33533d",
-          "baseline_blob_sha": "915cf0673e4f49f2e7bc286592c036d23441321e",
+          "baseline_ref_sha": "8243f3a898b4d160cfca7619ed3f48ca7f9a4b00",
+          "baseline_blob_sha": "de45ea0bc217e2bc11cfb0fe19c876a4b2dba413",
           "scope": "QueryIsScreenAndTryEnableAnsiColorCodes and supporting console-mode P/Invokes"
         }
       ]
@@ -273,8 +273,8 @@
           "repo": "dotnet/runtime",
           "ref": "main",
           "path": "src/libraries/System.IO.Hashing/src/System/IO/Hashing/XxHashShared.cs",
-          "baseline_ref_sha": "62dfdbff84a97796938836c60697287fc6161aa1",
-          "baseline_blob_sha": "00f1f919a93c706cbd41a2a2e9d62f26c74b6f92",
+          "baseline_ref_sha": "c366a53872872cbcafd5145a23038659ac3815c3",
+          "baseline_blob_sha": "0f8a6dfa2e75409a23cc2a793c64596556235e81",
           "scope": "entire file"
         }
       ]
@@ -287,7 +287,7 @@
         {
           "repo": "Sergio0694/ComputeSharp",
           "ref": "main",
-          "path": "src/ComputeSharp.SourceGeneration/Helpers/EquatableArray%7BT%7D.cs",
+          "path": "src/ComputeSharp.SourceGeneration/Helpers/EquatableArray{T}.cs",
           "baseline_ref_sha": "c3e9ad4faada0d67a122c0e458cf3978993cf6c5",
           "baseline_blob_sha": "b63b1c8773635ffc132b728d5711acc40aae97e3",
           "scope": "entire struct"
