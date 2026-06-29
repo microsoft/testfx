@@ -96,6 +96,81 @@ public sealed class PropertyBagTests
     }
 
     [TestMethod]
+    public void FirstOrDefault_Should_Return_TestNodeStateProperty_WhenPresent()
+    {
+        PropertyBag property = new();
+        property.Add(PassedTestNodeStateProperty.CachedInstance);
+
+        // Exercises the _testNodeStateProperty fast path.
+        Assert.AreEqual(PassedTestNodeStateProperty.CachedInstance, property.FirstOrDefault<TestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenTestNodeStateProperty_NotPresent()
+    {
+        PropertyBag property = new();
+        property.Add(new DummyProperty());
+
+        // Exercises the IsAssignableFrom early-return without walking the linked list.
+        Assert.IsNull(property.FirstOrDefault<TestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenSubtype_NotPresent()
+    {
+        PropertyBag property = new();
+        property.Add(new FailedTestNodeStateProperty());
+
+        // Exercises the subtype guard: asking for a different TestNodeStateProperty subtype must return null.
+        Assert.IsNull(property.FirstOrDefault<PassedTestNodeStateProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_CorrectObject_WhenSingleMatchExists()
+    {
+        PropertyBag property = new();
+        DummyProperty prop = new();
+        property.Add(prop);
+        property.Add(PassedTestNodeStateProperty.CachedInstance);
+
+        Assert.AreEqual(prop, property.FirstOrDefault<DummyProperty>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_FirstObject_WhenMultipleMatchesExist()
+    {
+        PropertyBag property = new();
+        DummyProperty prop1 = new();
+        DummyProperty prop2 = new();
+        property.Add(prop1);
+        property.Add(prop2);
+
+        // Unlike SingleOrDefault, FirstOrDefault must NOT throw when multiple matches exist.
+        DummyProperty? result = property.FirstOrDefault<DummyProperty>();
+        Assert.IsNotNull(result);
+        Assert.IsTrue(result == prop1 || result == prop2);
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenNoMatchExists()
+    {
+        PropertyBag property = new();
+        property.Add(new DummyProperty());
+
+        // Exercises the linked-list miss path.
+        Assert.IsNull(property.FirstOrDefault<DummyProperty2>());
+    }
+
+    [TestMethod]
+    public void FirstOrDefault_Should_Return_Null_WhenBagIsEmpty()
+    {
+        PropertyBag property = new();
+
+        Assert.IsNull(property.FirstOrDefault<DummyProperty>());
+        Assert.IsNull(property.FirstOrDefault<TestNodeStateProperty>());
+    }
+
+    [TestMethod]
     public void Single_Should_Return_CorrectObject()
     {
         PropertyBag property = new();
