@@ -36,6 +36,15 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetTestApplicationModuleInfo(),
                 serviceProvider.GetLoggerFactory()));
 
+        var compositeSlowTestReporter = new CompositeExtensionFactory<GitHubActionsSlowTestReporter>(serviceProvider =>
+            new GitHubActionsSlowTestReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTask(),
+                serviceProvider.GetClock(),
+                serviceProvider.GetLoggerFactory()));
+
         builder.TestHost.AddDataConsumer(serviceProvider =>
             new GitHubActionsAnnotationReporter(
                 serviceProvider.GetCommandLineOptions(),
@@ -46,6 +55,8 @@ public static class GitHubActionsExtensions
 
         builder.TestHost.AddDataConsumer(compositeSummaryReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
+        builder.TestHost.AddDataConsumer(compositeSlowTestReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSlowTestReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
     }

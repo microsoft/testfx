@@ -80,6 +80,24 @@
     <value>Failed to write the GitHub Actions job summary to '{0}': {1}</value>
     <comment>{0} is the file path, {1} is the error message.</comment>
   </data>
+  <data name="SlowTestNoticesOptionDescription" xml:space="preserve">
+    <value>Enable or disable GitHub Actions slow-test notices ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}</comment>
+  </data>
+  <data name="SlowTestThresholdOptionDescription" xml:space="preserve">
+    <value>The number of seconds a test may run before a GitHub Actions slow-test notice is emitted. Defaults to 60.</value>
+  </data>
+  <data name="SlowTestNoticeTitle" xml:space="preserve">
+    <value>Slow test: {0}</value>
+    <comment>{0} is the fully qualified test name.</comment>
+  </data>
+  <data name="SlowTestStillRunning" xml:space="preserve">
+    <value>{0} still running after {1}s</value>
+    <comment>{0} is the fully qualified test name, {1} is the elapsed seconds.</comment>
+  </data>
+  <data name="InvalidSlowTestThreshold" xml:space="preserve">
+    <value>Invalid value '{0}'. The slow-test threshold must be a positive integer number of seconds.</value>
+  </data>
   <data name="DisplayName" xml:space="preserve">
     <value>GitHub Actions report generator</value>
   </data>
