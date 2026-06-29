@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -17,6 +16,11 @@ internal sealed class HtmlReportEngine : ReportEngineBase
     private const string DataPlaceholder = "/*__MTP_DATA__*/null";
     private const string GeneratorVersionPlaceholder = "__MTP_GENERATOR_VERSION__";
 
+    public HtmlReportEngine(ReportEngineContext context)
+        : base(context)
+    {
+    }
+
     public HtmlReportEngine(
         IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -28,7 +32,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-        : base(
+        : this(new(
             fileSystem,
             testApplicationModuleInfo,
             environment,
@@ -38,7 +42,7 @@ internal sealed class HtmlReportEngine : ReportEngineBase
             testFramework,
             testStartTime,
             exitCode,
-            cancellationToken)
+            cancellationToken))
     {
     }
 
@@ -47,26 +51,9 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 
     private async Task<(string FileName, string? Warning)> GenerateReportCoreAsync(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
-
-        bool fileNameExplicitlyProvided = _commandLineOptions.TryGetOptionArgumentList(
+        (string finalPath, _) = ResolveOutputPath(
             HtmlReportGeneratorCommandLine.HtmlReportFileNameOptionName,
-            out string[]? providedFileName);
-
-        string fileName = fileNameExplicitlyProvided
-            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName("html");
-
-        string outputDirectory = _configuration.GetTestResultDirectory();
-        // Path.Combine short-circuits when the second argument is rooted, so an absolute
-        // user-provided file name overrides the test results directory while validated
-        // relative paths stay nested under it.
-        string finalPath = Path.Combine(outputDirectory, fileName);
-        string? finalDirectory = Path.GetDirectoryName(finalPath);
-        if (!RoslynString.IsNullOrEmpty(finalDirectory))
-        {
-            _fileSystem.CreateDirectory(finalDirectory);
-        }
+            "html");
 
         string template = LoadTemplate();
         string json = BuildJson(results, finishTime);
@@ -105,11 +92,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
 #endif
     }
-
-#pragma warning disable IDE0051 // Accessed by unit tests through reflection.
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
-#pragma warning restore IDE0051
 
     private static string LoadTemplate()
     {

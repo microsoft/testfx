@@ -27,6 +27,25 @@ An MTP struct (`ArgumentArity.cs`) that defines the minimum and maximum number o
 
 A shared static helper compiled into MTP extensions via file linking (no NuGet service registration or InternalsVisibleTo required) that provides template-based naming for test artifact files (dump files, report files, etc.). Templates are strings containing `{placeholder}` tokens (case-sensitive, lowercase): `{pname}` (process name), `{pid}` (process ID), `{asm}` (entry-assembly name), `{tfm}` (target framework moniker, best-effort runtime detection), `{arch}` (process architecture), and `{time}` (high-precision UTC timestamp). Custom per-call overrides can replace default placeholder values via a `Dictionary<string, string>`. Used directly by the [HangDump](#hangdump) and [CrashDump](#crashdump) extensions, and indirectly by the report extensions ([HtmlReport](#htmlreport), [JUnitReport](#junitreport), and [TrxReport](#trxreport)) via the shared `ReportFileNameHelper`. The legacy `%p` pattern is not handled here; it is substituted by the [HangDump](#hangdump) extension as a separate post-processing step for backward compatibility. The [CrashDump](#crashdump) consumer passes the .NET runtime's `%e` and `%p` placeholders as the `processName` and `processId` arguments so `{pname}` and `{pid}` resolve to `%e` and `%p` respectively — those are then expanded by the runtime's `createdump` at crash-write time (the testhost PID is not yet known when the environment variables are configured).
 
+### AssemblyFixtureProviderAttribute
+
+An MSTest assembly-level attribute (`[assembly: AssemblyFixtureProvider(typeof(T))]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that enables cross-assembly assembly fixtures. When applied to a library assembly, it causes any `[AssemblyInitialize]` and `[AssemblyCleanup]` methods on the specified `FixtureType` to be discovered and executed once per consuming test assembly that loads the library at runtime. This allows shared test infrastructure (e.g., database setup, container lifecycle) to be co-located in a test-helper library rather than repeated across every test project. Local `[AssemblyInitialize]`/`[AssemblyCleanup]` declarations always take precedence over provider-contributed ones; the attribute may be applied multiple times on the same assembly to expose multiple fixture types; and it can also be applied on the consuming test assembly to opt into fixtures from a third-party library. Introduced in [PR #8677](https://github.com/microsoft/testfx/pull/8677).
+
+### Assert.Scope (soft assertions)
+
+An experimental MSTest feature (`[MSTESTEXP]`) that defers assertion failures instead of throwing immediately. Calling `Assert.Scope()` returns an `IDisposable` scope; while the scope is active, assertion failures are collected rather than thrown. When the scope is disposed, all collected failures are reported together as a single `AssertFailedException`. Nesting scopes is not allowed. `Assert.Fail()` and `Assert.Inconclusive()` still throw immediately inside a scope; all other assertions participate in soft collection. Use this to check multiple conditions in one test pass without stopping on the first failure:
+
+```csharp
+using (Assert.Scope())
+{
+    Assert.AreEqual(1, actual.X);  // collected, execution continues
+    Assert.AreEqual(2, actual.Y);  // collected, execution continues
+}
+// Dispose() throws a single AssertFailedException containing all failures
+```
+
+See `docs/RFCs/011-Soft-Assertions-Nullability-Design.md` for the nullability-annotation design decisions.
+
 ### AzureDevOpsReport
 
 An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
@@ -171,6 +190,10 @@ A meta-package that bundles `MSTest.TestFramework`, `MSTest.TestAdapter`, and `M
 
 A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MSTest test projects to be published with Native AOT (`PublishAot=true`) or trimming (`PublishTrimmed=true`) without IL2026/IL3050 warnings or `MissingMethodException` failures at runtime. At compile time the generator scans all `[TestClass]`-decorated types and emits a `[ModuleInitializer]`-decorated registration method containing `[DynamicDependency]` hints and a pre-resolved `MethodInfo` dictionary, replacing the per-startup `Assembly.GetTypes()` and `Type.GetMethods()` reflection scans. Adoption requires only a `<PackageReference>` to `MSTest.SourceGeneration`; existing test code needs no changes. Several shapes are outside the generator's current scope (generic test classes, inherited `[TestClass]`, `file`-local types, etc.) — see `docs/source-generator/design.md` for the full scope and known limitations.
 
+### MSTestParallelizeScope / MSTestParallelizeWorkers
+
+MSBuild properties that let users opt in to MSTest assembly-level parallelization without authoring a C# source file. Setting `<MSTestParallelizeScope>` emits `[assembly: Parallelize(Scope = ExecutionScope.X)]`; setting `<MSTestParallelizeWorkers>` emits `[assembly: Parallelize(Workers = N)]`; both together emit `[assembly: Parallelize(Scope = …, Workers = …)]`. Setting scope to `None` emits `[assembly: DoNotParallelize]` instead. Both properties require `GenerateAssemblyInfo` to be `true` and act via the standard `AssemblyAttribute` MSBuild item. Introduced in [PR #8233](https://github.com/microsoft/testfx/pull/8233).
+
 ### MTP
 
 See **Microsoft.Testing.Platform**.
@@ -182,6 +205,10 @@ A lightweight, extensible test platform for .NET that serves as a modern alterna
 ### Microsoft.Testing.Platform.AI
 
 A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility abstractions for Microsoft.Testing.Platform. It defines the [IChatClientProvider](#ichatclientprovider) interface and leverages [Microsoft.Extensions.AI](https://www.nuget.org/packages/Microsoft.Extensions.AI) types so that test frameworks and extensions can consume Large Language Model (LLM) capabilities — flaky test analysis, crash dump analysis, test failure root-cause analysis, and more — without implementing provider-specific logic. This package ships the **abstractions only**; an AI provider implementation such as [Microsoft.Testing.Extensions.AzureFoundry](#azurefoundry) must also be registered to supply actual AI capabilities. See `docs/microsoft.testing.platform/001-AI-Extensibility.md` for the design RFC.
+
+### Microsoft.Testing.Extensions.Logging
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See `docs/RFCs/013-Microsoft-Extensions-Bridges.md` for the design.
 
 ## N
 
@@ -235,6 +262,12 @@ An MTP extension (`Microsoft.Testing.Extensions.Retry`) that automatically re-ru
 
 Request for Comments document in the `docs/RFCs/` folder. RFCs describe design decisions, proposed features, and implementation details for MSTest and MTP.
 
+## S
+
+### SequenceOrder
+
+A public enum in `Microsoft.VisualStudio.TestTools.UnitTesting` that controls whether elements must appear in the same position when comparing sequences with `Assert.AreSequenceEqual` and `Assert.AreNotSequenceEqual`. Values: `InOrder` (0, default) — elements must appear in the same order in both sequences (LINQ `SequenceEqual` semantics); `InAnyOrder` (1) — elements may appear in any order, but each element must appear the same number of times in both sequences (multiset equality). Introduced in [PR #8334](https://github.com/microsoft/testfx/pull/8334).
+
 ## T
 
 ### TestArchitectures
@@ -271,7 +304,7 @@ The XML-based test result file format used by Visual Studio, Azure DevOps, and `
 
 ### TreeNodeFilter
 
-An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against test node properties to select which tests to run. Filter expressions support Boolean algebra: `&` (AND), `|` (OR), `!` (NOT), and property comparisons (e.g., `FullyQualifiedName~MyTest`). Internally, filter expressions are parsed into a `FilterExpression` tree and evaluated recursively.
+An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against test node properties to select which tests to run. Filter expressions support Boolean algebra: `&` (AND), `|` (OR), `!` (NOT), and property comparisons (e.g., `/**[Tag=Smoke]`). Wildcard patterns (`*`) are supported in both path segments and property values. Internally, filter expressions are parsed into a `FilterExpression` tree and evaluated recursively.
 
 ## V
 

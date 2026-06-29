@@ -35,6 +35,23 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
 
     private DateTimeOffset? _testStartTime;
 
+    protected ReportGeneratorBase(IServiceProvider serviceProvider, string optionName)
+        : this(
+            (serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider))).GetConfiguration(),
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetRequiredService<IFileSystem>(),
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetMessageBus(),
+            serviceProvider.GetSystemClock(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetOutputDevice(),
+            serviceProvider.GetTestFramework(),
+            serviceProvider.GetTestApplicationProcessExitCode(),
+            serviceProvider.GetLoggerFactory().CreateLogger<TGenerator>(),
+            optionName)
+    {
+    }
+
     protected ReportGeneratorBase(
         IConfiguration configuration,
         ICommandLineOptions commandLineOptions,
@@ -95,6 +112,22 @@ internal abstract class ReportGeneratorBase<TGenerator, TCapturedTestResult> :
     protected IEnvironment Environment { get; }
 
     protected ITestFramework TestFramework { get; }
+
+    protected ReportEngineContext CreateReportEngineContext(
+        DateTimeOffset testStartTime,
+        int exitCode,
+        CancellationToken cancellationToken)
+        => new(
+            FileSystem,
+            TestApplicationModuleInfo,
+            Environment,
+            CommandLineOptions,
+            Configuration,
+            Clock,
+            TestFramework,
+            testStartTime,
+            exitCode,
+            cancellationToken);
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(_isEnabled);

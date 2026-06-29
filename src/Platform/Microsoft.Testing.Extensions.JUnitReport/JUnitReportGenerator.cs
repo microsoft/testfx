@@ -2,15 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.JUnitReport.Resources;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Logging;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.JUnitReport;
 
@@ -25,31 +17,8 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
     // for a given consumer instance, so Dictionary<TKey, TValue> is safe here without locking.
     private readonly Dictionary<string, TestResultCapture.ParentChainEntry> _parentChain = [];
 
-    public JUnitReportGenerator(
-        IConfiguration configuration,
-        ICommandLineOptions commandLineOptions,
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IMessageBus messageBus,
-        IClock clock,
-        IEnvironment environment,
-        IOutputDevice outputDevice,
-        ITestFramework testFramework,
-        ITestApplicationProcessExitCode testApplicationProcessExitCode,
-        ILogger<JUnitReportGenerator> logger)
-        : base(
-            configuration,
-            commandLineOptions,
-            fileSystem,
-            testApplicationModuleInfo,
-            messageBus,
-            clock,
-            environment,
-            outputDevice,
-            testFramework,
-            testApplicationProcessExitCode,
-            logger,
-            JUnitReportGeneratorCommandLine.JUnitReportOptionName)
+    public JUnitReportGenerator(IServiceProvider serviceProvider)
+        : base(serviceProvider, JUnitReportGeneratorCommandLine.JUnitReportOptionName)
     {
     }
 
@@ -93,18 +62,5 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-    {
-        var engine = new JUnitReportEngine(
-            FileSystem,
-            TestApplicationModuleInfo,
-            Environment,
-            CommandLineOptions,
-            Configuration,
-            Clock,
-            TestFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken);
-        return engine.GenerateReportAsync(tests, _parentChain);
-    }
+        => new JUnitReportEngine(CreateReportEngineContext(testStartTime, exitCode, cancellationToken)).GenerateReportAsync(tests, _parentChain);
 }

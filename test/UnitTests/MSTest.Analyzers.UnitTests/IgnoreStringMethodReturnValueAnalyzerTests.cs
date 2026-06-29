@@ -156,4 +156,72 @@ public sealed class IgnoreStringMethodReturnValueAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenExplicitDiscardAssignment_NoDiagnostic()
+    {
+        string code = """
+            public class TestClass
+            {
+                public void TestMethod()
+                {
+                    string str = "Hello World";
+
+                    // Discard assignment: outer operation is ISimpleAssignmentOperation, not IInvocationOperation,
+                    // so the analyzer's early-return guard fires and no diagnostic is reported.
+                    _ = str.Contains("Hello");
+                    _ = str.StartsWith("Hello");
+                    _ = str.EndsWith("World");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenStringMethodReturnValueIgnoredInsideLambda_Diagnostic()
+    {
+        string code = """
+            using System;
+
+            public class TestClass
+            {
+                public void TestMethod()
+                {
+                    string str = "Hello World";
+
+                    // ExpressionStatement inside a lambda block body is still an ExpressionStatement
+                    // operation, so the analyzer fires inside the lambda just as it does at method level.
+                    Action action = () => { [|str.Contains("Hello")|]; };
+                    Action action2 = () => { [|str.StartsWith("World")|]; };
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenStringMethodResultUsedAsReceiverForChainedCall_NoDiagnostic()
+    {
+        string code = """
+            public class TestClass
+            {
+                public void TestMethod()
+                {
+                    string str = "Hello World";
+
+                    // The ExpressionStatement's outermost operation is GetHashCode() (on System.Boolean),
+                    // not Contains/StartsWith/EndsWith on System.String, so no diagnostic is reported.
+                    // The string method's return value IS used — as the receiver of GetHashCode().
+                    str.Contains("Hello").GetHashCode();
+                    str.StartsWith("Hello").GetHashCode();
+                    str.EndsWith("World").GetHashCode();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

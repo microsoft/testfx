@@ -38,6 +38,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// no positional constructor needs to be updated when new properties land.
 /// </para>
 /// </remarks>
+[Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public sealed class TestFilterContext
 {
     /// <summary>

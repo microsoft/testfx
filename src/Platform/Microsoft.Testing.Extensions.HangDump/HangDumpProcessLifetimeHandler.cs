@@ -309,7 +309,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                     if (!p.HasExited)
                     {
                         p.Kill();
-                        await p.WaitForExitAsync().ConfigureAwait(false);
+                        await p.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
                     }
                 }
                 catch (Exception e)

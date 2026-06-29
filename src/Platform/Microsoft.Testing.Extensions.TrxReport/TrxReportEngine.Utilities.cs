@@ -11,9 +11,6 @@ internal sealed partial class TrxReportEngine
         // This is both for directory names and for Data Warehouse.
         date.ToString("yyyy-MM-dd HH:mm:ss.fffffff", DateTimeFormatInfo.InvariantInfo);
 
-    private static string ReplaceInvalidFileNameChars(string fileName)
-        => ReportFileNameSanitizer.ReplaceInvalidFileNameChars(fileName);
-
     private static Guid GuidFromString(string data)
     {
         byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));

@@ -10,6 +10,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplem
 
 using TestFramework.ForTestingMSTest;
 
+#pragma warning disable MSTESTEXP // Programmatic test-filter API is experimental; exercised here under test.
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TypeCacheTestFilterProviderTests : TestContainer

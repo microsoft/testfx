@@ -200,17 +200,52 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
             ? type
             : _fallback.GetType(assembly, typeName);
 
-    // Category A: TypeConstructorsInvoker is not populated by today's emitter, so this
-    // method always falls through. When it is populated in the future, the invoker path
-    // avoids both Activator.CreateInstance and the trim-unfriendly constructor reflection.
+    // Category A: TypeConstructorsInvoker is now populated by the AOT emitter (via the
+    // MSTestReflectionMetadata registry). When present, the invoker path avoids both
+    // Activator.CreateInstance and the trim-unfriendly constructor reflection. Falls back
+    // to reflection for types the generator did not register (open generics, cross-assembly).
     public object? CreateInstance(Type type, object?[] parameters)
     {
         SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
-        if (!data.TypeConstructorsInvoker.TryGetValue(type, out SourceGeneratedReflectionDataProvider.ConstructorInvoker[]? invokers))
-        {
-            return _fallback.CreateInstance(type, parameters);
-        }
+        return data.TypeConstructorsInvoker.TryGetValue(type, out SourceGeneratedReflectionDataProvider.ConstructorInvoker[]? invokers)
+            && TryInvokeMatchingConstructor(invokers, parameters, out object? instance)
+                ? instance
+                : _fallback.CreateInstance(type, parameters);
+    }
 
+    // Returns a delegate that constructs `type` via the source-generated constructor invoker,
+    // or null when the generator did not register the type (caller falls back to reflection).
+    // The delegate routes through CreateInstance so a no-match still falls back to reflection
+    // (Activator.CreateInstance) instead of throwing.
+    public Func<object?[]?, object>? GetConstructorInvoker(Type type)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypeConstructorsInvoker.TryGetValue(type, out SourceGeneratedReflectionDataProvider.ConstructorInvoker[]? invokers) && invokers.Length > 0
+            ? args => CreateInstance(type, args ?? [])!
+            : null;
+    }
+
+    public Func<object?, object?[]?, object?>? GetTestMethodInvoker(MethodInfo method)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypeMethodInvokers.TryGetValue(method, out Func<object?, object?[]?, object?>? invoker)
+            ? invoker
+            : null;
+    }
+
+    public Action<object?, object?>? GetPropertySetter(PropertyInfo property)
+    {
+        SourceGeneratedReflectionDataProvider data = DataProvider.GetSnapshot();
+        return data.TypePropertySetters.TryGetValue(property, out Action<object?, object?>? setter)
+            ? setter
+            : null;
+    }
+
+    private static bool TryInvokeMatchingConstructor(
+        SourceGeneratedReflectionDataProvider.ConstructorInvoker[] invokers,
+        object?[] parameters,
+        out object? instance)
+    {
         foreach (SourceGeneratedReflectionDataProvider.ConstructorInvoker invoker in invokers)
         {
             if (invoker.Parameters.Length != parameters.Length)
@@ -241,33 +276,63 @@ internal sealed class SourceGeneratedReflectionOperations : IReflectionOperation
 
             if (matches)
             {
-                return invoker.Invoker(parameters);
+                instance = invoker.Invoker(parameters);
+                return true;
             }
         }
 
-        return _fallback.CreateInstance(type, parameters);
+        instance = null;
+        return false;
     }
 
     public bool IsAttributeDefined<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => attributeProvider is null
-            ? throw new ArgumentNullException(nameof(attributeProvider))
-            : GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().Any();
+    {
+        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
+        {
+            if (attr is TAttribute)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     public TAttribute? GetFirstAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
-        => GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().FirstOrDefault();
+    {
+        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
+        {
+            if (attr is TAttribute match)
+            {
+                return match;
+            }
+        }
+
+        return null;
+    }
 
     public TAttribute? GetSingleAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider)
         where TAttribute : Attribute
     {
-        TAttribute[] matches = [.. GetCustomAttributesCached(attributeProvider).OfType<TAttribute>().Take(2)];
-        return matches.Length switch
+        TAttribute? first = null;
+        foreach (Attribute attr in GetCustomAttributesCached(attributeProvider))
         {
-            0 => null,
-            1 => matches[0],
-            _ => throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Found multiple attributes of type '{0}' when only one was expected.", typeof(TAttribute))),
-        };
+            if (attr is not TAttribute match)
+            {
+                continue;
+            }
+
+            if (first is not null)
+            {
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Found multiple attributes of type '{0}' when only one was expected.", typeof(TAttribute)));
+            }
+
+            first = match;
+        }
+
+        return first;
     }
 
     public IEnumerable<TAttributeType> GetAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider)

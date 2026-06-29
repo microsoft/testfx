@@ -5,6 +5,8 @@ using AwesomeAssertions;
 
 using TestFramework.ForTestingMSTest;
 
+#pragma warning disable MSTESTEXP // Programmatic test-filter API is experimental; exercised here under test.
+
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Filtering;
 
 public class TestFilterResultTests : TestContainer

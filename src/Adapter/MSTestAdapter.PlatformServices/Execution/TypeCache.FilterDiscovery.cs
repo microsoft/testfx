@@ -4,6 +4,11 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+// The programmatic test-filter types (ITestFilter, TestFilterProviderAttribute) are [Experimental]
+// public API. This file is part of the adapter implementation of that feature, so consuming them
+// here is intentional.
+#pragma warning disable MSTESTEXP
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed partial class TypeCache

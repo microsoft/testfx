@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -16,6 +15,11 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
     private const string CtrfReportFormat = "CTRF";
     private const string CtrfSpecVersion = "0.0.0";
 
+    public CtrfReportEngine(ReportEngineContext context)
+        : base(context)
+    {
+    }
+
     public CtrfReportEngine(
         IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -27,7 +31,7 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-        : base(
+        : this(new(
             fileSystem,
             testApplicationModuleInfo,
             environment,
@@ -37,7 +41,7 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
             testFramework,
             testStartTime,
             exitCode,
-            cancellationToken)
+            cancellationToken))
     {
     }
 
@@ -46,26 +50,9 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
 
     private async Task<(string FileName, string? Warning)> GenerateReportCoreAsync(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        _cancellationToken.ThrowIfCancellationRequested();
-
-        bool fileNameExplicitlyProvided = _commandLineOptions.TryGetOptionArgumentList(
+        (string finalPath, bool fileNameExplicitlyProvided) = ResolveOutputPath(
             CtrfReportGeneratorCommandLine.CtrfReportFileNameOptionName,
-            out string[]? providedFileName);
-
-        string fileName = fileNameExplicitlyProvided
-            ? ResolveProvidedFileName(GetProvidedFileName(providedFileName))
-            : BuildDefaultFileName(finishTime);
-
-        string outputDirectory = _configuration.GetTestResultDirectory();
-        // Path.Combine short-circuits when the second argument is rooted, so an absolute
-        // user-provided file name overrides the test results directory while validated
-        // relative paths stay nested under it.
-        string finalPath = Path.Combine(outputDirectory, fileName);
-        string? finalDirectory = Path.GetDirectoryName(finalPath);
-        if (!RoslynString.IsNullOrEmpty(finalDirectory))
-        {
-            _fileSystem.CreateDirectory(finalDirectory);
-        }
+            () => BuildDefaultFileName(finishTime));
 
         byte[] bytes = BuildCtrfJson(results, finishTime);
 

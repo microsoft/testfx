@@ -41,6 +41,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = false)]
+[Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public sealed class TestFilterProviderAttribute : Attribute
 {
     /// <summary>

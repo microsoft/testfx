@@ -30,6 +30,9 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string ResultDirectoryOptionKey = "results-directory";
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
+    public const string ZeroTestsPolicyOptionKey = "zero-tests-policy";
+    public const string ZeroTestsPolicyStrictArgument = "strict";
+    public const string ZeroTestsPolicyAllowSkippedArgument = "allow-skipped";
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
     public const string ConfigFileOptionKey = "config-file";
@@ -44,6 +47,8 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
     public const string DotnetTestCliProtocolName = "dotnettestcli";
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
+
+    private static readonly string SupportedZeroTestsPolicyValues = $"'{ZeroTestsPolicyStrictArgument}', '{ZeroTestsPolicyAllowSkippedArgument}'";
 
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
@@ -60,6 +65,7 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         new(DiagnosticVerbosityOptionKey, PlatformResources.PlatformCommandLineDiagnosticVerbosityOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         MinimumExpectedTests,
+        new(ZeroTestsPolicyOptionKey, PlatformResources.PlatformCommandLineZeroTestsPolicyOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true),
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
@@ -158,6 +164,14 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             }
         }
 
+        if (commandOption.Name == ZeroTestsPolicyOptionKey
+            && arguments is [string zeroTestsPolicyArgument]
+            && !ZeroTestsPolicyStrictArgument.Equals(zeroTestsPolicyArgument, StringComparison.OrdinalIgnoreCase)
+            && !ZeroTestsPolicyAllowSkippedArgument.Equals(zeroTestsPolicyArgument, StringComparison.OrdinalIgnoreCase))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineZeroTestsPolicyInvalidArgument, zeroTestsPolicyArgument, SupportedZeroTestsPolicyValues));
+        }
+
         // Now validate the minimum expected tests option
         return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }
@@ -173,6 +187,13 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
         ApplicationStateGuard.Ensure(commandLineOptions.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
         return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
+
+    public static ZeroTestsPolicy GetZeroTestsPolicy(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(ZeroTestsPolicyOptionKey, out string[]? arguments)
+            && arguments is { Length: 1 }
+            && ZeroTestsPolicyStrictArgument.Equals(arguments[0], StringComparison.OrdinalIgnoreCase)
+                ? ZeroTestsPolicy.Strict
+                : ZeroTestsPolicy.AllowSkipped;
 
     public static bool IsListTestsJsonOutput(ICommandLineOptions commandLineOptions)
         => commandLineOptions.TryGetOptionArgumentList(DiscoverTestsOptionKey, out string[]? arguments)
@@ -204,6 +225,12 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
             && commandLineOptions.IsOptionSet(MinimumExpectedTestsOptionKey))
         {
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
+        }
+
+        if (commandLineOptions.IsOptionSet(FilterUidOptionKey)
+            && commandLineOptions.IsOptionSet(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter))
+        {
+            return ValidationResult.InvalidTask(PlatformResources.OnlyOneFilterSupported);
         }
 
         // The '--server dotnettestcli' protocol path requires '--dotnet-test-pipe' to connect to the

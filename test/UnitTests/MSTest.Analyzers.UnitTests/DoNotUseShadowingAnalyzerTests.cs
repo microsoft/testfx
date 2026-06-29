@@ -381,4 +381,73 @@ public sealed class DoNotUseShadowingAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassShadowsGrandparentMemberThroughIntermediateClass_Diagnostic()
+    {
+        // Shadowing of a grandparent member through an intermediate class (that does not
+        // redeclare the member) is reported, as the full inheritance chain is considered.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class GrandparentClass
+            {
+                public void Method() { }
+            }
+
+            public class IntermediateClass : GrandparentClass
+            {
+            }
+
+            [TestClass]
+            public class DerivedClass : IntermediateClass
+            {
+                public void [|Method|]() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasSamePropertyNameAsBaseClassButDifferentType_NoDiagnostic()
+    {
+        // A property with the same name but a different type is not considered shadowing,
+        // so no diagnostic is reported.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                public int Property { get; }
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public new string Property { get; }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasSameFieldNameAsBaseClass_NoDiagnostic()
+    {
+        // Field hiding is not reported; only shadowed methods and properties trigger a diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            public class BaseClass
+            {
+                public int Field = 0;
+            }
+
+            [TestClass]
+            public class DerivedClass : BaseClass
+            {
+                public new int Field = 0;
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

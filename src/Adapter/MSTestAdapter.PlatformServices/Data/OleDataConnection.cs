@@ -5,24 +5,16 @@
 
 using System.Data.OleDb;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for OLE DB.
 /// </summary>
-internal sealed class OleDataConnection : TestDataConnectionSql
+internal sealed class OleDataConnection : MSSqlCapableConnection
 {
-    private readonly bool _isMSSql;
-
     public OleDataConnection(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
     {
-        // Need open connection to get Connection.Provider.
-        DebugEx.Assert(IsOpen(), "The connection must be open!");
-
-        _isMSSql = Connection != null && IsMSSql(GetProviderNameForMSSqlDetection());
     }
 
     public new OleDbCommandBuilder CommandBuilder => (OleDbCommandBuilder)base.CommandBuilder;
@@ -30,13 +22,6 @@ internal sealed class OleDataConnection : TestDataConnectionSql
     public new OleDbConnection Connection => (OleDbConnection)base.Connection;
 
     protected override string? GetProviderNameForMSSqlDetection() => Connection.Provider;
-
-    /// <summary>
-    /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
-    /// </summary>
-    public override void GetQuoteLiterals() => GetQuoteLiteralsHelper();
-
-    public override string? GetDefaultSchema() => _isMSSql ? GetDefaultSchemaMSSql() : base.GetDefaultSchema();
 
     protected override SchemaMetaData[] GetSchemaMetaData()
     {

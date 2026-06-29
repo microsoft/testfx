@@ -133,6 +133,49 @@ internal static class MethodInfoExtensions
                     methodInfo.Name));
         }
 
+        // Reflection-free fast path: when the source generator registered a direct invoker for this
+        // method, call it instead of MethodInfo.Invoke. The registry invoker always returns a
+        // non-null Task (Task.CompletedTask for void/sync methods), so the unwrap below resolves via
+        // the `Task t` arm; the switch is shared with the reflection path for shape consistency.
+        // Generic methods are never source-generated, so they always fall through to reflection.
+        Func<object?, object?[]?, object?>? sourceGeneratedInvoker = PlatformServiceProvider.Instance.ReflectionOperations.GetTestMethodInvoker(methodInfo);
+        if (sourceGeneratedInvoker is not null)
+        {
+            object?[]? sourceGeneratedArguments = TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(arguments, methodParameters)
+                ? [arguments]
+                : arguments;
+
+            // The emitted invoker indexes its arguments positionally, so an argument-count mismatch
+            // (e.g. a runtime data source supplying the wrong number of values) would throw an opaque
+            // IndexOutOfRangeException. Mirror the reflection path's friendly diagnostic instead. We
+            // only validate the count here — a type mismatch surfaces as the test's own exception and
+            // must not be reinterpreted as an arguments error.
+            int expectedParameterCount = methodParameters?.Length ?? 0;
+            int providedArgumentCount = sourceGeneratedArguments?.Length ?? 0;
+            if (expectedParameterCount != providedArgumentCount)
+            {
+                throw new TestFailedException(
+                    UnitTestOutcome.Error,
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        Resource.CannotRunTestArgumentsMismatchError,
+                        methodInfo.DeclaringType!.FullName,
+                        methodInfo.Name,
+                        expectedParameterCount,
+                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? []),
+                        providedArgumentCount,
+                        string.Join(", ", sourceGeneratedArguments?.Select(a => a?.GetType().Name ?? "null") ?? [])));
+            }
+
+            object? sourceGeneratedResult = sourceGeneratedInvoker(classInstance, sourceGeneratedArguments);
+            return sourceGeneratedResult switch
+            {
+                null => null,
+                Task t => t,
+                _ => TryGetTaskFromValueTaskAsync(sourceGeneratedResult),
+            };
+        }
+
         object? invokeResult;
 
         if (TestDataSourceHelpers.IsDataConsideredSingleArgumentValue(arguments, methodParameters))

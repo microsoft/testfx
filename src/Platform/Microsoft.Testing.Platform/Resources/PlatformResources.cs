@@ -43,6 +43,8 @@ internal static partial class PlatformResources
 
     internal static string @PlatformCommandLineServerInvalidArgument => GetResourceString("PlatformCommandLineServerInvalidArgument");
 
+    internal static string @PlatformCommandLineZeroTestsPolicyInvalidArgument => GetResourceString("PlatformCommandLineZeroTestsPolicyInvalidArgument");
+
     internal static string @PlatformCommandLineDotnetTestCliRequiresPipe => GetResourceString("PlatformCommandLineDotnetTestCliRequiresPipe");
 
     internal static string @PlatformCommandLineExitOnProcessExitSingleArgument => GetResourceString("PlatformCommandLineExitOnProcessExitSingleArgument");
@@ -50,6 +52,8 @@ internal static partial class PlatformResources
     internal static string @PlatformCommandLineDiagnosticOptionIsMissing => GetResourceString("PlatformCommandLineDiagnosticOptionIsMissing");
 
     internal static string @PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests => GetResourceString("PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests");
+
+    internal static string @OnlyOneFilterSupported => GetResourceString("OnlyOneFilterSupported");
 
     internal static string @PlatformCommandLineMinimumExpectedTestsOptionSingleArgument => GetResourceString("PlatformCommandLineMinimumExpectedTestsOptionSingleArgument");
 

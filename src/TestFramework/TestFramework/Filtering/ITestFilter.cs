@@ -29,6 +29,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// <c>[Ignore]</c>; an ignored test is still ignored.
 /// </para>
 /// </remarks>
+[Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public interface ITestFilter
 {
     /// <summary>

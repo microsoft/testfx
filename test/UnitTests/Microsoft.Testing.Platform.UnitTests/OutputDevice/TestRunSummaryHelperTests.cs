@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 
@@ -22,8 +23,20 @@ public sealed class TestRunSummaryHelperTests
         => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests: 0, failedTests: 0, skippedTests: 0, wasCancelled: false, minimumExpectedTests: 0));
 
     [TestMethod]
-    public void IsRunFailed_WhenAllTestsSkipped_ReturnsTrue()
-        => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0));
+    public void IsRunFailed_WhenAllTestsSkipped_WithStrictPolicy_ReturnsTrue()
+        => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0, ZeroTestsPolicy.Strict));
+
+    [TestMethod]
+    public void IsRunFailed_WhenAllTestsSkipped_ByDefault_ReturnsFalse()
+        => Assert.IsFalse(TestRunSummaryHelper.IsRunFailed(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0));
+
+    [TestMethod]
+    public void IsRunFailed_WhenAllTestsSkipped_WithAllowSkippedPolicy_ReturnsFalse()
+        => Assert.IsFalse(TestRunSummaryHelper.IsRunFailed(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0, ZeroTestsPolicy.AllowSkipped));
+
+    [TestMethod]
+    public void IsRunFailed_WhenZeroTests_WithAllowSkippedPolicy_ReturnsTrue()
+        => Assert.IsTrue(TestRunSummaryHelper.IsRunFailed(totalTests: 0, failedTests: 0, skippedTests: 0, wasCancelled: false, minimumExpectedTests: 0, ZeroTestsPolicy.AllowSkipped));
 
     [TestMethod]
     public void IsRunFailed_WhenCancelled_ReturnsTrue()
@@ -47,8 +60,20 @@ public sealed class TestRunSummaryHelperTests
     }
 
     [TestMethod]
-    public void GetVerdictText_WhenAllTestsSkipped_ReturnsZeroTestsRan()
-        => Assert.AreEqual(PlatformResources.ZeroTestsRan, TestRunSummaryHelper.GetVerdictText(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0));
+    public void GetVerdictText_WhenAllTestsSkipped_WithStrictPolicy_ReturnsZeroTestsRan()
+        => Assert.AreEqual(PlatformResources.ZeroTestsRan, TestRunSummaryHelper.GetVerdictText(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0, zeroTestsPolicy: ZeroTestsPolicy.Strict));
+
+    [TestMethod]
+    public void GetVerdictText_WhenAllTestsSkipped_ByDefault_ReturnsPassed()
+        => Assert.AreEqual($"{PlatformResources.Passed}!", TestRunSummaryHelper.GetVerdictText(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0));
+
+    [TestMethod]
+    public void GetVerdictText_WhenAllTestsSkipped_WithAllowSkippedPolicy_ReturnsPassed()
+        => Assert.AreEqual($"{PlatformResources.Passed}!", TestRunSummaryHelper.GetVerdictText(totalTests: 5, failedTests: 0, skippedTests: 5, wasCancelled: false, minimumExpectedTests: 0, zeroTestsPolicy: ZeroTestsPolicy.AllowSkipped));
+
+    [TestMethod]
+    public void GetVerdictText_WhenZeroTests_WithAllowSkippedPolicy_ReturnsZeroTestsRan()
+        => Assert.AreEqual(PlatformResources.ZeroTestsRan, TestRunSummaryHelper.GetVerdictText(totalTests: 0, failedTests: 0, skippedTests: 0, wasCancelled: false, minimumExpectedTests: 0, zeroTestsPolicy: ZeroTestsPolicy.AllowSkipped));
 
     [TestMethod]
     public void GetVerdictText_WhenZeroTests_ReturnsZeroTestsRan()

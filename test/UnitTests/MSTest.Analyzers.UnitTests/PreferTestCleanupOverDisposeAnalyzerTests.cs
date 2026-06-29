@@ -189,4 +189,74 @@ public sealed class PreferTestCleanupOverDisposeAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassHasFullDisposePattern_OnlyParameterlessDisposeDiagnostic()
+    {
+        // In the full dispose pattern, only the parameterless Dispose() that implements IDisposable
+        // should be flagged; Dispose(bool disposing) should not, as it has a parameter.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                public void [|Dispose|]()
+                {
+                    Dispose(true);
+                    GC.SuppressFinalize(this);
+                }
+
+                protected virtual void Dispose(bool disposing)
+                {
+                    // Cleanup resources
+                }
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                    Dispose(true);
+                    GC.SuppressFinalize(this);
+                }
+
+                protected virtual void Dispose(bool disposing)
+                {
+                    // Cleanup resources
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasBothDisposeAndTestCleanup_DiagnosticOnDispose()
+    {
+        // Even when a [TestCleanup] method already exists, Dispose() is still flagged —
+        // users should not implement both patterns simultaneously.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass : IDisposable
+            {
+                [TestCleanup]
+                public void Cleanup() { }
+
+                public void [|Dispose|]() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

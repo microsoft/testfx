@@ -16,12 +16,17 @@
     <ProjectCapability Include="TestContainer" />
   </ItemGroup>
 
-  <!-- Add assembly attribute metadata for reflection usage -->
+  <!-- Add assembly attribute metadata for reflection usage. -->
+  <!-- This is an inner-build-only concern: in the cross-targeting (outer) build of a multi-targeted -->
+  <!-- project, '$(TargetFramework)' is empty and no assembly is produced, so AssemblyMetadata items -->
+  <!-- are inert there and must not be emitted. -->
   <ItemGroup>
-    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application" Value="true" Condition=" '$(IsTestingPlatformApplication)' == 'true' " />
+    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application" Value="true" Condition=" '$(TargetFramework)' != '' AND '$(IsTestingPlatformApplication)' == 'true' " />
   </ItemGroup>
 
-  <Target Name="_MTPAddArguments" BeforeTargets="ComputeRunArguments">
+  <!-- 'dotnet run' only ever drives an inner build, so this target is an inner-build-only concern. -->
+  <!-- Guarding on a non-empty '$(TargetFramework)' keeps it out of the cross-targeting (outer) build. -->
+  <Target Name="_MTPAddArguments" BeforeTargets="ComputeRunArguments" Condition=" '$(TargetFramework)' != '' ">
     <PropertyGroup>
       <RunArguments Condition=" '$(TestingPlatformCommandLineArguments)' != '' ">$(RunArguments) $(TestingPlatformCommandLineArguments)</RunArguments>
     </PropertyGroup>

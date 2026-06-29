@@ -157,10 +157,10 @@ Další informace najdete na https://learn.microsoft.com/dotnet/core/diagnostics
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="translated">Určuje, zda se spolu s výpisem stavu systému při chybovém ukončení nebo sestavou o chybovém ukončení vygeneruje soubor sekvence uvádějící testy spuštěné a ukončené během testovací relace.
-Soubor umožňuje identifikovat testy, které byly spuštěny v době chybového ukončení, aniž by bylo nutné kontrolovat výpis paměti.
-Platné hodnoty jsou on (výchozí; přijímá také hodnoty true, enable, 1) nebo off (přijímá také hodnoty false, disable, 0).</target>
-        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}.</note>
+        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
+The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
+Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">
         <source>--crash-sequence expects a single parameter with value 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>

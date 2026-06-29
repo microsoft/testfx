@@ -42,6 +42,11 @@ internal static class TestClassModelBuilder
 
         string leafFqn = typeSymbol.ToDisplayString(FullyQualifiedFormat);
 
+        // Generated registration lives in the leaf type's (the compilation's) assembly, so attribute
+        // materializability is judged from there — even for members inherited from a base type in
+        // another assembly.
+        IAssemblySymbol consumingAssembly = typeSymbol.ContainingAssembly;
+
         for (INamedTypeSymbol? current = typeSymbol;
              current is not null && current.SpecialType != SpecialType.System_Object;
              current = current.BaseType)
@@ -52,7 +57,7 @@ internal static class TestClassModelBuilder
             // its members (e.g. base-declared [ClassInitialize]/[TestContext]) via [DynamicDependency]
             // under trimming / Native AOT. Members are folded into the leaf model, but the trimmer
             // only keeps members of the concrete type unless the base is rooted explicitly too.
-            if (!isLeaf && !current.IsGenericType && IsTypeReachableFromGeneratedCode(current))
+            if (!isLeaf && !current.IsGenericType && SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(current))
             {
                 baseTypes.Add(current.ToDisplayString(FullyQualifiedFormat));
             }
@@ -73,7 +78,7 @@ internal static class TestClassModelBuilder
                         string key = BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
-                            TestMethodModel model = BuildMethod(method);
+                            TestMethodModel model = BuildMethod(method, consumingAssembly);
                             methodsByKey[key] = model;
                             methods.Add(model);
                         }
@@ -83,7 +88,7 @@ internal static class TestClassModelBuilder
                         when !property.IsIndexer && IsAccessibleFromConsumer(property):
                         if (!propertiesByName.ContainsKey(property.Name))
                         {
-                            TestPropertyModel model = BuildProperty(property);
+                            TestPropertyModel model = BuildProperty(property, consumingAssembly);
                             propertiesByName[property.Name] = model;
                             properties.Add(model);
                         }
@@ -92,6 +97,17 @@ internal static class TestClassModelBuilder
                     case IMethodSymbol { MethodKind: MethodKind.Constructor, IsStatic: false } ctor
                         when isLeaf && ctor.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
                         if (TryReportUnsupportedMethod(ctor, leafFqn, diagnostics))
+                        {
+                            break;
+                        }
+
+                        // MSTest only ever instantiates a test class through a parameterless ctor or a
+                        // single-TestContext ctor (the adapter's TypeCache prefers the TestContext ctor and
+                        // otherwise takes the parameterless one). Registering any other shape would be dead
+                        // — and, because the runtime matches invokers by argument type, an extra compatible
+                        // overload (e.g. ctor(object)) could be picked over the intended one. Only emit the
+                        // two supported shapes so the type-level lookup stays unambiguous.
+                        if (!IsSupportedTestClassConstructor(ctor))
                         {
                             break;
                         }
@@ -113,31 +129,8 @@ internal static class TestClassModelBuilder
             Constructors: new EquatableArray<TestConstructorModel>(ctors.ToImmutable()),
             Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
-            Attributes: BuildAttributes(typeSymbol.GetAttributes()),
+            Attributes: BuildAttributes(typeSymbol.GetAttributes(), consumingAssembly),
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
-    }
-
-    // The generated registration lives in the same assembly as the test class, so a type is
-    // reachable when it (and every enclosing type) is at least internal and not file-local.
-    private static bool IsTypeReachableFromGeneratedCode(INamedTypeSymbol type)
-    {
-        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
-        {
-            if (current.IsFileLocal)
-            {
-                return false;
-            }
-
-            switch (current.DeclaredAccessibility)
-            {
-                case Accessibility.Private:
-                case Accessibility.Protected:
-                case Accessibility.ProtectedAndInternal:
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     private static bool IsTestMethodAttributePresent(IMethodSymbol method)
@@ -245,7 +238,7 @@ internal static class TestClassModelBuilder
         return sb.ToString();
     }
 
-    private static TestMethodModel BuildMethod(IMethodSymbol method)
+    private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
     {
         ITypeSymbol returnType = method.ReturnType;
         string returnTypeFqn = returnType.ToDisplayString(FullyQualifiedFormat);
@@ -269,7 +262,7 @@ internal static class TestClassModelBuilder
             ReturnsVoid: returnsVoid,
             IsTestMethod: IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
-            Attributes: BuildAttributes(inheritedAttributes),
+            Attributes: BuildAttributes(inheritedAttributes, consumingAssembly),
             DataRows: BuildDataRows(inheritedAttributes));
     }
 
@@ -328,7 +321,7 @@ internal static class TestClassModelBuilder
         return new EquatableArray<DataRowModel>(builder.ToImmutable());
     }
 
-    private static TestPropertyModel BuildProperty(IPropertySymbol property)
+    private static TestPropertyModel BuildProperty(IPropertySymbol property, IAssemblySymbol consumingAssembly)
         => new(
             Name: property.Name,
             FullyQualifiedType: property.Type.ToDisplayString(FullyQualifiedFormat),
@@ -343,8 +336,11 @@ internal static class TestClassModelBuilder
                 or Accessibility.Internal
                 or Accessibility.ProtectedOrInternal,
             },
-            HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public },
-            Attributes: BuildAttributes(CollectInheritedAttributes(property)));
+            // An init-only setter has public DeclaredAccessibility but cannot be assigned outside an
+            // object initializer, so emitting `instance.Prop = value` would not compile (CS8852);
+            // treat it as non-settable so the adapter falls back to reflection (PropertyInfo.SetValue).
+            HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public, IsInitOnly: false },
+            Attributes: BuildAttributes(CollectInheritedAttributes(property), consumingAssembly));
 
     // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
     // overridden-member chain, honor AttributeUsageAttribute.Inherited, and keep only the
@@ -477,6 +473,14 @@ internal static class TestClassModelBuilder
 
     private readonly record struct AttributeUsageMetadata(bool Inherited, bool AllowMultiple);
 
+    private static bool IsSupportedTestClassConstructor(IMethodSymbol constructor)
+    {
+        ImmutableArray<IParameterSymbol> parameters = constructor.Parameters;
+        return parameters.Length == 0
+            || (parameters.Length == 1
+                && parameters[0].Type.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext");
+    }
+
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {
         if (method.Parameters.IsDefaultOrEmpty)
@@ -495,17 +499,28 @@ internal static class TestClassModelBuilder
     }
 
     public static EquatableArray<AttributeApplicationModel> BuildAttributes(
-        ImmutableArray<AttributeData> attributes)
+        ImmutableArray<AttributeData> attributes,
+        IAssemblySymbol consumingAssembly)
         => attributes.IsDefaultOrEmpty
             ? EquatableArray<AttributeApplicationModel>.Empty
             : attributes
-                .Select(BuildAttribute)
+                .Select(attribute => BuildAttribute(attribute, consumingAssembly))
                 .WhereNotNull()
                 .ToEquatableArray();
 
-    private static AttributeApplicationModel? BuildAttribute(AttributeData attribute)
+    private static AttributeApplicationModel? BuildAttribute(AttributeData attribute, IAssemblySymbol consumingAssembly)
     {
         if (attribute.AttributeClass is not { } attributeClass)
+        {
+            return null;
+        }
+
+        // Safener: only materialize attributes the generated code can actually reconstruct with
+        // `new T(...)`. Anything that would not compile from the consuming assembly (inaccessible
+        // attribute type or constructor, or an argument referencing an inaccessible type) is omitted
+        // so the adapter falls back to runtime reflection for it. Omission is always safe; emitting
+        // an un-compilable expression would break the build.
+        if (!IsAttributeMaterializable(attribute, attributeClass, consumingAssembly))
         {
             return null;
         }
@@ -518,6 +533,77 @@ internal static class TestClassModelBuilder
             ConstructorArguments: ctorArgs.ToEquatableArray(),
             NamedArguments: namedArgs.ToEquatableArray());
     }
+
+    private static bool IsAttributeMaterializable(AttributeData attribute, INamedTypeSymbol attributeClass, IAssemblySymbol consumingAssembly)
+        // The attribute type (and every enclosing type) must be referenceable; the constructor the
+        // generated `new T(...)` binds to must be callable (a null AttributeConstructor — Roslyn could
+        // not resolve it — is treated as not materializable); and every argument type the emitter
+        // writes out (enum casts, typeof targets, typed nulls, nested array elements) must also be
+        // referenceable.
+        => IsTypeReferenceableFrom(attributeClass, consumingAssembly)
+            && attribute.AttributeConstructor is { } constructor
+            && IsMemberAccessibleFrom(constructor.DeclaredAccessibility, constructor.ContainingType, consumingAssembly)
+            && attribute.ConstructorArguments.All(argument => AreArgumentTypesReferenceable(argument, consumingAssembly))
+            && attribute.NamedArguments.All(named => AreArgumentTypesReferenceable(named.Value, consumingAssembly));
+
+    private static bool AreArgumentTypesReferenceable(TypedConstant constant, IAssemblySymbol consumingAssembly)
+        => constant.Kind switch
+        {
+            TypedConstantKind.Array => constant.Values.All(element => AreArgumentTypesReferenceable(element, consumingAssembly)),
+
+            // typeof(X): the target type must be referenceable. Non-named targets (arrays, type
+            // parameters) are conservatively rejected.
+            TypedConstantKind.Type => constant.Value is null
+                || (constant.Value is INamedTypeSymbol typeofTarget && IsTypeReferenceableFrom(typeofTarget, consumingAssembly)),
+
+            // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type must be
+            // referenceable. Untyped values (Type is null) are plain literals.
+            _ => constant.Type is not INamedTypeSymbol namedType
+                || IsTypeReferenceableFrom(namedType, consumingAssembly),
+        };
+
+    private static bool IsTypeReferenceableFrom(INamedTypeSymbol type, IAssemblySymbol consumingAssembly)
+    {
+        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.IsFileLocal)
+            {
+                return false;
+            }
+
+            if (!IsMemberAccessibleFrom(current.DeclaredAccessibility, current.ContainingAssembly, consumingAssembly))
+            {
+                return false;
+            }
+        }
+
+        // Also require every generic type argument to be referenceable (e.g. a closed generic
+        // attribute type argument that is itself inaccessible).
+        return type.TypeArguments
+            .OfType<INamedTypeSymbol>()
+            .All(namedArgument => IsTypeReferenceableFrom(namedArgument, consumingAssembly));
+    }
+
+    private static bool IsMemberAccessibleFrom(Accessibility accessibility, INamedTypeSymbol containingType, IAssemblySymbol consumingAssembly)
+        => IsMemberAccessibleFrom(accessibility, containingType.ContainingAssembly, consumingAssembly);
+
+    private static bool IsMemberAccessibleFrom(Accessibility accessibility, IAssemblySymbol? declaringAssembly, IAssemblySymbol consumingAssembly)
+        => accessibility switch
+        {
+            Accessibility.Public => true,
+
+            // Generated code lives in the consuming assembly, so internal / protected-internal members
+            // are reachable only when declared in that same assembly (we do not rely on InternalsVisibleTo).
+            Accessibility.Internal or Accessibility.ProtectedOrInternal =>
+                declaringAssembly is not null && SymbolEqualityComparer.Default.Equals(declaringAssembly, consumingAssembly),
+
+            // NotApplicable shows up for compiler-synthesized symbols in well-formed source; treat as reachable.
+            Accessibility.NotApplicable => true,
+
+            // Private, Protected, and ProtectedAndInternal ("private protected") are never reachable
+            // from the generated (non-derived) call site.
+            _ => false,
+        };
 
     private static TypedConstantModel ToModel(TypedConstant constant)
         => constant switch

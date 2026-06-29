@@ -12,6 +12,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// value each) or the parameterized <see cref="Skip(string)"/> factory to create explicit results.
 /// The default value also represents <see cref="Run"/>.
 /// </remarks>
+[Experimental("MSTESTEXP", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
 public readonly struct TestFilterResult : IEquatable<TestFilterResult>
 {
     private TestFilterResult(TestFilterAction action, string? skipReason)

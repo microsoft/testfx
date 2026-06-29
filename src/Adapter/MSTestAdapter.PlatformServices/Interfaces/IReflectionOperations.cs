@@ -45,6 +45,37 @@ internal interface IReflectionOperations
     object? CreateInstance(Type type, object?[] parameters);
 
     /// <summary>
+    /// Gets a delegate that invokes <paramref name="method"/> directly (without
+    /// <c>MethodInfo.Invoke</c>), or <see langword="null"/> when no source-generated invoker is
+    /// available and the caller must fall back to reflection.
+    /// The source-generated delegate returns a non-null <see cref="Task"/> representing the method's
+    /// completion: <c>void</c> / synchronous methods yield <see cref="Task.CompletedTask"/>, a
+    /// <see cref="System.Threading.Tasks.ValueTask"/> is converted to a <see cref="Task"/>, and any
+    /// return value is discarded.
+    /// </summary>
+    /// <param name="method">The test or fixture method to invoke.</param>
+    /// <returns>An invoker delegate, or <see langword="null"/> in reflection mode.</returns>
+    Func<object?, object?[]?, object?>? GetTestMethodInvoker(MethodInfo method);
+
+    /// <summary>
+    /// Gets a delegate that constructs an instance of <paramref name="type"/> directly (without
+    /// <see cref="Activator.CreateInstance(Type, object[])"/> or <c>ConstructorInfo.Invoke</c>),
+    /// or <see langword="null"/> when no source-generated invoker is available.
+    /// </summary>
+    /// <param name="type">The test class type to instantiate.</param>
+    /// <returns>A constructor invoker delegate, or <see langword="null"/> in reflection mode.</returns>
+    Func<object?[]?, object>? GetConstructorInvoker(Type type);
+
+    /// <summary>
+    /// Gets a delegate that assigns <paramref name="property"/> directly (without
+    /// <see cref="PropertyInfo.SetValue(object, object)"/>), or <see langword="null"/> when no
+    /// source-generated setter is available.
+    /// </summary>
+    /// <param name="property">The property to set (today: the <c>TestContext</c> property).</param>
+    /// <returns>A setter delegate, or <see langword="null"/> in reflection mode.</returns>
+    Action<object?, object?>? GetPropertySetter(PropertyInfo property);
+
+    /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it.
     /// </summary>
     /// <typeparam name="TAttribute">Attribute to search for.</typeparam>

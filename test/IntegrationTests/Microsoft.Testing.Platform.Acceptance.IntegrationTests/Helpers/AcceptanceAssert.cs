@@ -136,7 +136,7 @@ internal static class AcceptanceAssert
     public static void AssertStandardErrorContains(this TestHostResult testHostResult, string value, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
        => Assert.Contains(value, testHostResult.StandardError, StringComparison.Ordinal, GenerateFailedAssertionMessage(testHostResult, callerMemberName: callerMemberName, callerFilePath: callerFilePath, callerLineNumber: callerLineNumber));
 
-    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
+    public static void AssertOutputContainsSummary(this TestHostResult testHostResult, int failed, int passed, int skipped, bool? aborted = false, int? minimumNumberOfTests = null, bool allSkippedIsZeroTests = false, [CallerMemberName] string? callerMemberName = null, [CallerFilePath] string? callerFilePath = null, [CallerLineNumber] int callerLineNumber = 0)
     {
         int totalTests = failed + passed + skipped;
         string result = minimumNumberOfTests != null && totalTests < minimumNumberOfTests
@@ -145,7 +145,7 @@ internal static class AcceptanceAssert
                 ? "Aborted"
                 : failed > 0
                     ? "Failed!"
-                    : totalTests == 0 || totalTests == skipped
+                    : totalTests == 0 || (allSkippedIsZeroTests && totalTests == skipped)
                         ? "Zero tests ran"
                         : "Passed!";
 

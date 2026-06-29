@@ -44,6 +44,7 @@ This package provides the C# source generators that emit reflection metadata so 
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\Shared\EquatableArray.cs" Link="Shared\EquatableArray.cs" />
     <Compile Include="..\Shared\SymbolAccessibilityHelper.cs" Link="Shared\SymbolAccessibilityHelper.cs" />
+    <Compile Include="..\Shared\SourceGenModeHelper.cs" Link="Shared\SourceGenModeHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>

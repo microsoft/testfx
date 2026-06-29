@@ -232,4 +232,24 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestClassHasStaticConstructor_NoDiagnostic()
+    {
+        // Static constructors are not instance constructors; the analyzer only flags
+        // explicit parameterless instance constructors.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                static MyTestClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }

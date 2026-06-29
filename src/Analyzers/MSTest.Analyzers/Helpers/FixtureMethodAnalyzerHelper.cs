@@ -10,6 +10,9 @@ namespace MSTest.Analyzers.Helpers;
 
 internal static class FixtureMethodAnalyzerHelper
 {
+    internal static LocalizableResourceString CreateResourceString(string resourceName)
+        => new(resourceName, Resources.ResourceManager, typeof(Resources));
+
     internal static bool TryGetFixtureMethodSymbols(
         Compilation compilation,
         string fixtureAttributeMetadataName,
@@ -35,6 +38,18 @@ internal static class FixtureMethodAnalyzerHelper
     }
 
     internal static void RegisterFixtureMethodSymbolAction(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        Action<SymbolAnalysisContext, FixtureMethodSymbols> analyzeSymbolAction,
+        bool requireTestContextSymbol = false)
+        => context.RegisterCompilationStartAction(context =>
+            RegisterFixtureMethodSymbolAction(
+                context,
+                fixtureAttributeMetadataName,
+                analyzeSymbolAction,
+                requireTestContextSymbol));
+
+    internal static void RegisterFixtureMethodSymbolAction(
         CompilationStartAnalysisContext context,
         string fixtureAttributeMetadataName,
         Action<SymbolAnalysisContext, FixtureMethodSymbols> analyzeSymbolAction,
@@ -51,6 +66,60 @@ internal static class FixtureMethodAnalyzerHelper
             SymbolKind.Method);
     }
 
+    internal static void RegisterFixtureMethodSymbolAction<TState>(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        Action<SymbolAnalysisContext, FixtureMethodSymbols, TState> analyzeSymbolAction,
+        TState state,
+        bool requireTestContextSymbol = false)
+        => context.RegisterCompilationStartAction(context =>
+            RegisterFixtureMethodSymbolAction(
+                context,
+                fixtureAttributeMetadataName,
+                analyzeSymbolAction,
+                state,
+                requireTestContextSymbol));
+
+    internal static void RegisterFixtureMethodSymbolAction<TState>(
+        CompilationStartAnalysisContext context,
+        string fixtureAttributeMetadataName,
+        Action<SymbolAnalysisContext, FixtureMethodSymbols, TState> analyzeSymbolAction,
+        TState state,
+        bool requireTestContextSymbol = false)
+    {
+        if (!TryGetFixtureMethodSymbols(context.Compilation, fixtureAttributeMetadataName, out FixtureMethodSymbols symbols)
+            || (requireTestContextSymbol && symbols.TestContextSymbol is null))
+        {
+            return;
+        }
+
+        context.RegisterSymbolAction(
+            symbolContext => analyzeSymbolAction(symbolContext, symbols, state),
+            SymbolKind.Method);
+    }
+
+    internal static void RegisterInstanceFixtureAnalyzer(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        DiagnosticDescriptor rule)
+        => RegisterFixtureMethodSymbolAction(
+            context,
+            fixtureAttributeMetadataName,
+            static (symbolContext, symbols, rule) => AnalyzeInstanceFixtureMethod(symbolContext, symbols, rule),
+            rule);
+
+    internal static void RegisterAssemblyFixtureAnalyzer(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        DiagnosticDescriptor rule,
+        FixtureParameterMode parameterMode)
+        => RegisterFixtureMethodSymbolAction(
+            context,
+            fixtureAttributeMetadataName,
+            static (symbolContext, symbols, state) => AnalyzeAssemblyFixtureMethod(symbolContext, symbols, state.rule, state.parameterMode),
+            (rule, parameterMode),
+            requireTestContextSymbol: parameterMode == FixtureParameterMode.MustHaveTestContext);
+
     internal static void AnalyzeInstanceFixtureMethod(
         SymbolAnalysisContext context,
         FixtureMethodSymbols symbols,
@@ -61,6 +130,24 @@ internal static class FixtureMethodAnalyzerHelper
             && !methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: false,
                 allowGenericType: true, FixtureParameterMode.MustNotHaveTestContext, testContextSymbol: null,
                 symbols.TestClassAttributeSymbol, fixtureAllowInheritedTestClass: true, out bool isFixable))
+        {
+            context.ReportDiagnostic(isFixable
+                ? methodSymbol.CreateDiagnostic(rule, methodSymbol.Name)
+                : methodSymbol.CreateDiagnostic(rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
+        }
+    }
+
+    internal static void AnalyzeAssemblyFixtureMethod(
+        SymbolAnalysisContext context,
+        FixtureMethodSymbols symbols,
+        DiagnosticDescriptor rule,
+        FixtureParameterMode parameterMode)
+    {
+        var methodSymbol = (IMethodSymbol)context.Symbol;
+        if (methodSymbol.HasAttribute(symbols.FixtureAttributeSymbol)
+            && !methodSymbol.HasValidFixtureMethodSignature(symbols.TaskSymbol, symbols.ValueTaskSymbol, symbols.CanDiscoverInternals, shouldBeStatic: true,
+                allowGenericType: false, parameterMode, symbols.TestContextSymbol,
+                symbols.TestClassAttributeSymbol, fixtureAllowInheritedTestClass: false, out bool isFixable))
         {
             context.ReportDiagnostic(isFixable
                 ? methodSymbol.CreateDiagnostic(rule, methodSymbol.Name)

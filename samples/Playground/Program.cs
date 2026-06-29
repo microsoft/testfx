@@ -40,6 +40,10 @@ public class Program
             testApplicationBuilder.AddMSTest(() => [Assembly.GetEntryAssembly()!]);
             testApplicationBuilder.AddCrashDumpProvider();
 
+            // Add the video recorder. Run with --capture-video to record the screen
+            // (one video per test by default; --capture-video-granularity session for one video).
+            testApplicationBuilder.AddVideoRecorderProvider();
+
             // Add Chat client provider
             // testApplicationBuilder.AddAzureOpenAIChatClientProvider();
 
