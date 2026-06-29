@@ -118,7 +118,7 @@ public sealed class GitHubActionsSlowTestReporterTests
         environmentMock.Setup(x => x.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions ? "true" : null);
 
         return new GitHubActionsSlowTestReporter(
-            new FakeCommandLineOptions(options ?? new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)),
+            new FakeCommandLineOptions(options ?? []),
             environmentMock.Object,
             outputDevice,
             new NonRunningTask(),
