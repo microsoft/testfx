@@ -113,16 +113,6 @@ internal static class FixtureMethodAnalyzerHelper
             SymbolKind.Method);
     }
 
-    internal static void RegisterInstanceFixtureAnalyzer(
-        AnalysisContext context,
-        string fixtureAttributeMetadataName,
-        DiagnosticDescriptor rule)
-        => RegisterFixtureMethodSymbolAction(
-            context,
-            fixtureAttributeMetadataName,
-            static (symbolContext, symbols, rule) => AnalyzeInstanceFixtureMethod(symbolContext, symbols, rule),
-            rule);
-
     internal static void AnalyzeInstanceFixtureMethod(
         SymbolAnalysisContext context,
         FixtureMethodSymbols symbols,
