@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections;
 using System.IO.Compression;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -32,7 +31,7 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
         // Classic C++/CLI (.NET Framework '/clr') only needs the MSVC toolset; the dedicated C++/CLI-support
         // component is for '/clr:netcore'. The toolset is absent on SDK-only build legs, so when it is missing
         // we make the test inconclusive rather than fail.
-        string? vsInstallPath = await TryFindVsInstallWithCppToolsetAsync(cancellationToken);
+        string? vsInstallPath = await CppCliTestSupport.TryFindVsInstallWithCppToolsetAsync(cancellationToken);
         if (vsInstallPath is null)
         {
             Assert.Inconclusive("Skipping: no Visual Studio install with the MSVC C++ toolset (Microsoft.VisualStudio.Component.VC.Tools.x86.x64) was found.");
@@ -60,7 +59,7 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
         // The acceptance host itself runs under a code-coverage profiler; those COR_*/CORECLR_* environment
         // variables would be inherited by the nested .NET Framework test host and break the VSTest run, so we
         // build a clean environment (everything except the code-coverage variables) for the child processes.
-        Dictionary<string, string?> cleanEnvironment = BuildEnvironmentWithoutCodeCoverage();
+        Dictionary<string, string?> cleanEnvironment = CppCliTestSupport.BuildEnvironmentWithoutCodeCoverage();
 
         // Build the C++/CLI test assembly with full Visual Studio MSBuild; the dotnet SDK muxer cannot build a vcxproj.
         string vcxproj = Path.Combine(testAsset.TargetAssetPath, $"{AssetName}.vcxproj");
@@ -106,31 +105,6 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
         Assert.Contains("Booleans_Work", output);
     }
 
-    private static async Task<string?> TryFindVsInstallWithCppToolsetAsync(CancellationToken cancellationToken)
-    {
-        string vswherePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
-            "Microsoft Visual Studio",
-            "Installer",
-            "vswhere.exe");
-        if (!File.Exists(vswherePath))
-        {
-            return null;
-        }
-
-        using var commandLine = new CommandLine();
-        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{vswherePath}\" -latest -prerelease -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath",
-            cancellationToken: cancellationToken);
-        if (exitCode != 0)
-        {
-            return null;
-        }
-
-        string installPath = commandLine.StandardOutput.Trim();
-        return string.IsNullOrEmpty(installPath) ? null : installPath;
-    }
-
     private static string ExtractShippingPackage(TempDirectory destination, string packageId, string version)
     {
         string nupkg = Path.Combine(Constants.ArtifactsPackagesShipping, $"{packageId}.{version}.nupkg");
@@ -139,44 +113,6 @@ public sealed class CppCliVSTestTests : AcceptanceTestBase<NopAssetFixture>
         string target = Path.Combine(destination.Path, packageId);
         ZipFile.ExtractToDirectory(nupkg, target);
         return target;
-    }
-
-    // The code-coverage profiler environment variables the acceptance host injects; inheriting them into the
-    // nested .NET Framework VSTest host breaks the run, so they are stripped from the child process environment.
-    private static readonly string[] CodeCoverageEnvironmentVariables =
-    [
-        "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
-        "MicrosoftInstrumentationEngine_ConfigPath64_VanguardInstrumentationProfiler",
-        "CORECLR_PROFILER_PATH_32",
-        "CORECLR_PROFILER_PATH_64",
-        "CORECLR_ENABLE_PROFILING",
-        "CORECLR_PROFILER",
-        "COR_PROFILER_PATH_32",
-        "COR_PROFILER_PATH_64",
-        "COR_ENABLE_PROFILING",
-        "COR_PROFILER",
-        "CODE_COVERAGE_SESSION_NAME",
-        "CODE_COVERAGE_PIPE_PATH",
-        "MicrosoftInstrumentationEngine_LogLevel",
-        "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
-        "MicrosoftInstrumentationEngine_FileLogPath",
-    ];
-
-    private static Dictionary<string, string?> BuildEnvironmentWithoutCodeCoverage()
-    {
-        var environmentVariables = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
-        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-        {
-            string key = (string)entry.Key;
-            if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            environmentVariables[key] = entry.Value?.ToString();
-        }
-
-        return environmentVariables;
     }
 
     private const string SourceCode = """
