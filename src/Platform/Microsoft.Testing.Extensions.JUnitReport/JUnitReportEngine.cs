@@ -17,6 +17,11 @@ internal sealed class JUnitReportEngine : ReportEngineBase
     // an additional ceiling on the rendered string to keep the XML output bounded.
     internal const int MaxTestPathLength = 64 * 1024;
 
+    public JUnitReportEngine(ReportEngineContext context)
+        : base(context)
+    {
+    }
+
     public JUnitReportEngine(
         IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -28,7 +33,7 @@ internal sealed class JUnitReportEngine : ReportEngineBase
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-        : base(
+        : this(new(
             fileSystem,
             testApplicationModuleInfo,
             environment,
@@ -38,12 +43,7 @@ internal sealed class JUnitReportEngine : ReportEngineBase
             testFramework,
             testStartTime,
             exitCode,
-            cancellationToken)
-    {
-    }
-
-    public JUnitReportEngine(ReportEngineContext context)
-        : base(context)
+            cancellationToken))
     {
     }
 

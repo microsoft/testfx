@@ -62,8 +62,5 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-    {
-        var engine = new JUnitReportEngine(CreateEngineContext(testStartTime, exitCode, cancellationToken));
-        return engine.GenerateReportAsync(tests, _parentChain);
-    }
+        => new JUnitReportEngine(CreateReportEngineContext(testStartTime, exitCode, cancellationToken)).GenerateReportAsync(tests, _parentChain);
 }

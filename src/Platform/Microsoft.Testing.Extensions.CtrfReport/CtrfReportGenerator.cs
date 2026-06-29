@@ -37,8 +37,5 @@ internal sealed class CtrfReportGenerator : ReportGeneratorBase<CtrfReportGenera
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-    {
-        var engine = new CtrfReportEngine(CreateEngineContext(testStartTime, exitCode, cancellationToken));
-        return engine.GenerateReportAsync(tests);
-    }
+        => new CtrfReportEngine(CreateReportEngineContext(testStartTime, exitCode, cancellationToken)).GenerateReportAsync(tests);
 }

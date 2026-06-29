@@ -15,6 +15,11 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
     private const string CtrfReportFormat = "CTRF";
     private const string CtrfSpecVersion = "0.0.0";
 
+    public CtrfReportEngine(ReportEngineContext context)
+        : base(context)
+    {
+    }
+
     public CtrfReportEngine(
         IFileSystem fileSystem,
         ITestApplicationModuleInfo testApplicationModuleInfo,
@@ -26,7 +31,7 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
         DateTimeOffset testStartTime,
         int exitCode,
         CancellationToken cancellationToken)
-        : base(
+        : this(new(
             fileSystem,
             testApplicationModuleInfo,
             environment,
@@ -36,12 +41,7 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
             testFramework,
             testStartTime,
             exitCode,
-            cancellationToken)
-    {
-    }
-
-    public CtrfReportEngine(ReportEngineContext context)
-        : base(context)
+            cancellationToken))
     {
     }
 

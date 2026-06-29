@@ -10,12 +10,74 @@ using Polyfills;
 
 namespace Microsoft.Testing.Extensions.VideoRecorder;
 
-/// <summary>
-/// ffmpeg process lifecycle (launch, monitor, tear down), output capture, command-line argument
-/// construction, and executable discovery for <see cref="FfmpegVideoRecorder"/>.
-/// </summary>
 internal sealed partial class FfmpegVideoRecorder
 {
+    /// <summary>
+    /// Reads the finalized segments from the segment list, ordered by their position in the
+    /// recording timeline. The segment currently being written is not listed until it is finalized,
+    /// so it is naturally excluded.
+    /// </summary>
+    public IReadOnlyList<VideoSegment> ReadSegments()
+    {
+        string? listPath = _segmentListPath;
+        string? directory = SegmentDirectory;
+        if (listPath is null || directory is null || !File.Exists(listPath))
+        {
+            return [];
+        }
+
+        var segments = new List<VideoSegment>();
+        string[] lines;
+        try
+        {
+            lines = File.ReadAllLines(listPath);
+        }
+        catch (IOException)
+        {
+            return segments;
+        }
+
+        foreach (string line in lines)
+        {
+            string[] parts = line.Split(',');
+            if (parts.Length < 3
+                || !double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double start)
+                || !double.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double end))
+            {
+                continue;
+            }
+
+            string path = Path.IsPathRooted(parts[0]) ? parts[0] : Path.Combine(directory, parts[0]);
+            if (File.Exists(path) && new FileInfo(path).Length > 0)
+            {
+                segments.Add(new VideoSegment(path, start, end));
+            }
+        }
+
+        return segments;
+    }
+
+    /// <summary>
+    /// Returns the tail of recent ffmpeg output filtered to error-like lines, for diagnostics.
+    /// </summary>
+    public string DescribeLastFfmpegError()
+    {
+        string[] lines = _recentFfmpegOutput.ToArray();
+        if (lines.Length == 0)
+        {
+            return "No ffmpeg output was captured.";
+        }
+
+        string[] errors = Array.FindAll(
+            lines,
+            line => line.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0
+                || line.IndexOf("denied", StringComparison.OrdinalIgnoreCase) >= 0
+                || line.IndexOf("Could not", StringComparison.OrdinalIgnoreCase) >= 0
+                || line.IndexOf("Failed", StringComparison.OrdinalIgnoreCase) >= 0);
+
+        return errors.Length > 0 ? string.Join(" | ", errors) : lines[lines.Length - 1];
+    }
+
     private async Task<bool> RunFfmpegAsync(string arguments, CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo(FfmpegPath!, arguments)
@@ -66,6 +128,7 @@ internal sealed partial class FfmpegVideoRecorder
     {
         while (_recentFfmpegOutput.TryDequeue(out _))
         {
+            // Drain the queue; the dequeued values are intentionally discarded.
         }
     }
 #endif
@@ -90,6 +153,7 @@ internal sealed partial class FfmpegVideoRecorder
         _recentFfmpegOutput.Enqueue(e.Data);
         while (_recentFfmpegOutput.Count > 8 && _recentFfmpegOutput.TryDequeue(out _))
         {
+            // Trim the oldest entries; the dequeued values are intentionally discarded.
         }
     }
 

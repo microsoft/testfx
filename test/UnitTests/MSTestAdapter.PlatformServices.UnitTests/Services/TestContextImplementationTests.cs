@@ -471,6 +471,16 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.Properties["Key"].Should().Be("Original");
     }
 
+    public void MergePropertiesShouldIgnoreEmptyDictionary()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+        _testContextImplementation.Properties["Key"] = "Original";
+
+        _testContextImplementation.MergeProperties(new Dictionary<string, object?>());
+
+        _testContextImplementation.Properties["Key"].Should().Be("Original");
+    }
+
     public void MergePropertiesShouldNotOverwritePerContextLabels()
     {
         _testMethod.Setup(tm => tm.FullClassName).Returns("A.C.M");
@@ -497,14 +507,26 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.Properties["UserKey"] = "UserValue";
         _testContextImplementation.Properties["AnotherKey"] = 7;
 
-        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+        IReadOnlyDictionary<string, object?>? snapshot = _testContextImplementation.CaptureLifecycleProperties();
 
+        snapshot.Should().NotBeNull();
         snapshot.Should().ContainKey("UserKey");
-        snapshot["UserKey"].Should().Be("UserValue");
+        snapshot!["UserKey"].Should().Be("UserValue");
         snapshot.Should().ContainKey("AnotherKey");
-        snapshot["AnotherKey"].Should().Be(7);
+        snapshot!["AnotherKey"].Should().Be(7);
         snapshot.Should().NotContainKey("FullyQualifiedTestClassName");
         snapshot.Should().NotContainKey("TestName");
+    }
+
+    public void CaptureLifecyclePropertiesShouldReturnNullWhenNoNonLabelPropertiesExist()
+    {
+        _testContextImplementation = CreateTestContextImplementation();
+
+        // Context has no properties at all; no labels were seeded because the ITestMethod mock is
+        // unconfigured (FullClassName/Name return null) and testClassFullName is null.
+        IReadOnlyDictionary<string, object?>? snapshot = _testContextImplementation.CaptureLifecycleProperties();
+
+        snapshot.Should().BeNull();
     }
 
     public void CaptureLifecyclePropertiesShouldReturnSnapshotIndependentOfTheLiveBag()
@@ -512,13 +534,14 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation = CreateTestContextImplementation();
         _testContextImplementation.Properties["Key"] = "OriginalValue";
 
-        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+        IReadOnlyDictionary<string, object?>? snapshot = _testContextImplementation.CaptureLifecycleProperties();
 
         // Mutating the live bag must not affect the snapshot.
         _testContextImplementation.Properties["Key"] = "ChangedValue";
         _testContextImplementation.Properties["NewKey"] = "NewValue";
 
-        snapshot["Key"].Should().Be("OriginalValue");
+        snapshot.Should().NotBeNull();
+        snapshot!["Key"].Should().Be("OriginalValue");
         snapshot.Should().NotContainKey("NewKey");
     }
 
@@ -528,13 +551,14 @@ public class TestContextImplementationTests : TestContainer
         var bag = new List<int> { 1 };
         _testContextImplementation.Properties["RefKey"] = bag;
 
-        IReadOnlyDictionary<string, object?> snapshot = _testContextImplementation.CaptureLifecycleProperties();
+        IReadOnlyDictionary<string, object?>? snapshot = _testContextImplementation.CaptureLifecycleProperties();
 
         // The snapshot is shallow: the snapshot's value and the live bag share the same instance.
         // Mutating the instance must therefore be visible through both. This guards the documented
         // contract on CaptureLifecycleProperties from accidentally regressing to a deep copy.
+        snapshot.Should().NotBeNull();
         bag.Add(2);
-        ((List<int>)snapshot["RefKey"]!).Should().BeEquivalentTo(new[] { 1, 2 });
+        ((List<int>)snapshot!["RefKey"]!).Should().BeEquivalentTo(new[] { 1, 2 });
     }
 
     public void CaptureLifecyclePropertiesAndMergePropertiesShouldNotLockOnExposedPropertyBag()

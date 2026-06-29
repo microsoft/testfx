@@ -3,11 +3,6 @@
 
 namespace Microsoft.Testing.Extensions.VideoRecorder;
 
-/// <summary>
-/// Windows-specific, DPI-aware window-region detection and the P/Invoke surface it relies on. Split
-/// out of the main <see cref="FfmpegVideoRecorder"/> file because it is platform-specific and self
-/// contained.
-/// </summary>
 internal sealed partial class FfmpegVideoRecorder
 {
     // Resolves the screen rectangle of the window to capture so gdigrab can record just that
