@@ -385,8 +385,8 @@ public sealed class DoNotUseShadowingAnalyzerTests
     [TestMethod]
     public async Task WhenTestClassShadowsGrandparentMemberThroughIntermediateClass_Diagnostic()
     {
-        // GetBaseMembers walks the full inheritance chain, so shadowing of a grandparent
-        // member through an intermediate class (that does not redeclare the member) is detected.
+        // Shadowing of a grandparent member through an intermediate class (that does not
+        // redeclare the member) is reported, as the full inheritance chain is considered.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             public class GrandparentClass
@@ -411,8 +411,8 @@ public sealed class DoNotUseShadowingAnalyzerTests
     [TestMethod]
     public async Task WhenTestClassHasSamePropertyNameAsBaseClassButDifferentType_NoDiagnostic()
     {
-        // IsMemberShadowing requires the property types to match via SymbolEqualityComparer.
-        // A property with the same name but a different type is not considered shadowing.
+        // A property with the same name but a different type is not considered shadowing,
+        // so no diagnostic is reported.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             public class BaseClass
@@ -433,8 +433,7 @@ public sealed class DoNotUseShadowingAnalyzerTests
     [TestMethod]
     public async Task WhenTestClassHasSameFieldNameAsBaseClass_NoDiagnostic()
     {
-        // IsMemberShadowing only handles IMethodSymbol and IPropertySymbol; fields (IFieldSymbol)
-        // fall through to the final 'return false', so no diagnostic is reported for field hiding.
+        // Field hiding is not reported; only shadowed methods and properties trigger a diagnostic.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             public class BaseClass
