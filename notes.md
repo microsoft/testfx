@@ -34,15 +34,17 @@
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
-3. **Analyzer edge cases (ongoing)** — Continue with analyzers with few tests. Next candidates:
-   - `UseCooperativeCancellationForTimeoutAnalyzerTests` (33 tests) — possible additional fixture method scenarios
-   - `UseParallelizeAttributeAnalyzerTests` (7 tests) — well covered relative to complexity
-   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — abstract class / non-TestClass scenarios
+3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. Next candidates:
+   - `UseCooperativeCancellationForTimeoutAnalyzerTests` (14 tests) — covered relative to complexity
+   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — covered relative to complexity
+   - `PreferConstructorOverTestInitializeAnalyzerTests` (15 tests) — covered relative to complexity
+   - `DuplicateTestMethodAttributeAnalyzerTests` (23 tests) — possible additional scenarios
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-06-29 | Task 3 (UseAttributeOnTestMethodAnalyzer MSTEST0007 edge cases: DataTestMethod early-return, OSCondition ConditionBase subclass), Task 4 (verified PR #9489 merged), Task 7 (Monthly Issue Jun) |
 | 2026-06-28 | Task 3 (DoNotUseShadowingAnalyzer MSTEST0036 edge cases: multi-level inheritance, property type mismatch, field shadowing), Task 7 (Monthly Issue Jun) |
 | 2026-06-27 | Task 3 (TestContextPropertyUsageAnalyzer MSTEST0048 edge cases: non-TestContext type guard, lambda ContainingSymbol behavior), Task 7 (Monthly Issue Jun) |
 | 2026-06-26 | Task 4 (verified PRs #9438 and #9410 merged), Task 3 (IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment, lambda block body, chained receiver), Task 7 (Monthly Issue Jun) |
@@ -75,11 +77,12 @@
 
 ## Last Run
 
-2026-06-28 23:18 UTC
+2026-06-29 23:16 UTC
 
 ## Completed Work
 
-- PR (pending) for DoNotUseShadowingAnalyzer MSTEST0036 edge cases (2026-06-28) — multi-level inheritance walk, property type mismatch guard, field symbol fallthrough; 21/21 pass
+- PR (pending) for UseAttributeOnTestMethodAnalyzer MSTEST0007 edge cases (2026-06-29) — [DataTestMethod] early-return path, [OSCondition] non-Ignore ConditionBase fires ConditionBaseRule with concrete class name; 39/39 pass
+- PR #9489 merged (2026-06-29 by Evangelink) — DoNotUseShadowingAnalyzer MSTEST0036 edge cases: multi-level inheritance walk, property type mismatch guard, field symbol fallthrough
 - PR #9481 merged (2026-06-28 by Evangelink) — TestContextPropertyUsageAnalyzer MSTEST0048: non-TestContext type guard, lambda ContainingSymbol behavior
 - PR #9468 merged (2026-06-28 by Evangelink) — IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment (no diagnostic), lambda block body (diagnostic), chained receiver (no diagnostic)
 - PR #9438 merged (2026-06-26 by Evangelink) — UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type
