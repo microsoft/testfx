@@ -214,12 +214,12 @@ public sealed partial class PropertyBag
     }
 
     /// <summary>
-    /// Returns the first property of the <typeparamref name="TProperty"/> type, or <see langword="null"/> if none is found.
+    /// Returns the first property of the <typeparamref name="TProperty"/> type, or default if none is found.
     /// Unlike <see cref="SingleOrDefault{TProperty}"/>, this method does not throw when multiple properties of the
     /// same type are present — it simply returns the first one encountered.
     /// </summary>
     /// <typeparam name="TProperty">The type of the property.</typeparam>
-    /// <returns>The first property of the given type, or <see langword="null"/> if none is found.</returns>
+    /// <returns>The first property of the given type, or default if none is found.</returns>
     public TProperty? FirstOrDefault<TProperty>()
         where TProperty : IProperty
     {
