@@ -25,7 +25,8 @@ safe-outputs:
     report-as-issue: false
   create-code-scanning-alert:
     driver: "Malicious Code Scanner"
-  threat-detection: false
+  threat-detection:
+    continue-on-error: true
 
 ---
 
