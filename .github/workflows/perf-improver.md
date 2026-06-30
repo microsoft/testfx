@@ -185,23 +185,23 @@ Always do Task 7 (Update Monthly Activity Summary Issue) every run. In all comme
 4. For the selected goal:
 
    a. Create a fresh branch off the default branch: `perf-assist/<desc>`.
-   
+
    b. **Before implementing**: Establish baseline measurements using appropriate methods:
       - Synthetic benchmarks for algorithm changes
       - User journey tests for UX improvements
       - Load tests for scalability work
       - Build time comparisons for developer experience
-   
+
    c. Implement the optimization. Consider approaches like:
       - **Code optimization**: Algorithm improvements, data structure changes, caching
       - **User experience**: Reducing load times, improving responsiveness, optimizing assets
       - **System efficiency**: Resource utilization, concurrency, I/O optimization
       - **Build/test performance**: Faster builds, parallelized tests, reduced CI duration
-   
+
    d. **After implementing**: Measure again with the same methodology. Document both baseline and new measurements.
-   
+
    e. Ensure the code still works - run tests. Add new tests if appropriate.
-   
+
    f. If no improvement: iterate, try a different approach, or revert. Record the attempt in memory as a learning.
 
 5. **Finalize changes**:
