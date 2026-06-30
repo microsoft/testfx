@@ -4,14 +4,6 @@
     <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
-    <!--
-      No NoWarn;CS0436 needed: this project compiles its OWN copy of the shared reporter source while also
-      transitively referencing Microsoft.Testing.Platform via the MSTest runner. The only public types that would
-      otherwise conflict - IColor and SystemConsoleColor (public API of Microsoft.Testing.Platform) - are dropped by
-      TerminalReporterContract.props when the platform is referenced, so the reporter binds to the platform's public
-      copies. The remaining shared abstractions are internal and not exported (no InternalsVisibleTo here), so they
-      never conflict.
-    -->
   </PropertyGroup>
 
   <ItemGroup>
