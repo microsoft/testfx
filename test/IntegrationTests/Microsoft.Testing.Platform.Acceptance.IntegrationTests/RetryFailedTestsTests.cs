@@ -41,7 +41,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         if (!failOnly)
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
-            testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+            testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
 
@@ -57,12 +57,12 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         else
         {
             testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
-            testHostResult.AssertOutputContains("Tests suite failed in all 4 attempts");
-            testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
-            testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 2/4");
-            testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 3/4");
-            testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 4/4");
-            testHostResult.AssertOutputDoesNotContain("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 5/4");
+            testHostResult.AssertOutputContains("Retry summary: Failed! after 4/4 attempts");
+            testHostResult.AssertOutputContains("Retry: attempt 1/4 failed - 1 failing test(s), retrying");
+            testHostResult.AssertOutputContains("Retry: attempt 2/4 failed - 1 failing test(s), retrying");
+            testHostResult.AssertOutputContains("Retry: attempt 3/4 failed - 1 failing test(s), retrying");
+            // The final (4th) attempt is reported by the summary verdict, not by an amber "retrying" line.
+            testHostResult.AssertOutputDoesNotContain("Retry: attempt 4/4 failed");
             testHostResult.AssertOutputContains("Failed! -");
         }
     }
@@ -89,7 +89,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
     }
 
     [TestMethod]
@@ -129,7 +129,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         else
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
-            testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+            testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
         }
@@ -161,7 +161,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         else
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
-            testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+            testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
         }
@@ -225,7 +225,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             Assert.Contains("Test run summary: Passed!", logFileContents);
             Assert.Contains("total: 3", logFileContents);
             Assert.Contains("succeeded: 3", logFileContents);
-            Assert.Contains("Tests suite completed successfully in 1 attempts", logFileContents);
+            Assert.Contains("Retry summary: Passed! on the first attempt (no retries needed)", logFileContents);
         }
     }
 
@@ -249,8 +249,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
-        testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
+        testHostResult.AssertOutputContains("Retry: attempt 1/4 failed - 1 failing test(s), retrying");
 
         // Verify that the retry attempt only ran the failed test (UID 1).
         // The TRX in the top-level results directory (not under Retries/) is from the last attempt.
@@ -286,8 +286,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
-        testHostResult.AssertOutputContains("Tests suite failed, total failed tests: 1, exit code: 2, attempt: 1/4");
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
+        testHostResult.AssertOutputContains("Retry: attempt 1/4 failed - 1 failing test(s), retrying");
 
         // Verify that the first attempt honored the treenode-filter.
         string[] retryTrxFiles = Directory.GetFiles(Path.Combine(resultDirectory, "Retries"), "*.trx", SearchOption.AllDirectories);
@@ -337,7 +337,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
         testHostResult.AssertOutputDoesNotContain("Minimum expected tests policy violation");
     }
 
