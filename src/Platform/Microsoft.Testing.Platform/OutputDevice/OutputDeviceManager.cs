@@ -23,22 +23,22 @@ internal sealed class PlatformOutputDeviceManager
         // user-facing output, so the host must not produce console output of its own. See #7161
         // and dotnet/sdk#51615 for the broader context.
         //
-        // Outside Azure DevOps there is nothing to forward, so we keep the pure no-op device. Under
-        // Azure DevOps the AzureDevOpsReport extension produces logging commands (##[group],
-        // ##vso[...]) that must still reach the pipeline log; DotnetTestPassthroughOutputDevice
-        // forwards those marked lines to the SDK over the protocol while discarding everything else.
-        // The forwarder gates on the agent only (TF_BUILD), NOT the TESTINGPLATFORM_AZDO_OUTPUT opt-out:
-        // that opt-out is scoped to the platform's automatic ##vso[task.logissue] emission, and honoring
-        // it here would make multi-assembly forwarding inconsistent with single-assembly runs (where the
-        // extension's output is gated on TF_BUILD alone).
+        // DotnetTestPassthroughOutputDevice discards informational output exactly like a no-op device, but
+        // forwards two classes of host message to the SDK over the protocol so they are not swallowed in
+        // multi-assembly runs:
+        //   - Warning/error host messages (WarningMessageOutputDeviceData / ErrorMessageOutputDeviceData) as
+        //     DisplayMessage (protocol 1.3.0+). This covers hang/crash dump diagnostics, retry summaries, and
+        //     generic extension/framework warnings and errors — regardless of environment.
+        //   - Azure DevOps logging commands (##[group], ##vso[...]) produced by the AzureDevOpsReport extension as
+        //     AzureDevOpsLogMessage (protocol 1.2.0+). The extension only produces these on an Azure DevOps agent
+        //     (TF_BUILD), so off-agent that branch is naturally inert; the device itself is installed everywhere so
+        //     the warning/error forwarding above is not gated on the agent. The Azure DevOps forwarder gates on the
+        //     agent only (TF_BUILD), NOT the TESTINGPLATFORM_AZDO_OUTPUT opt-out: that opt-out is scoped to the
+        //     platform's automatic ##vso[task.logissue] emission, and honoring it here would make multi-assembly
+        //     forwarding inconsistent with single-assembly runs.
         if (isPipeProtocol)
         {
-            IPlatformOutputDevice pipeProtocolOutputDevice =
-                AzureDevOpsLogIssueFormatter.IsAzureDevOpsAgent(serviceProvider.GetEnvironment())
-                    ? new DotnetTestPassthroughOutputDevice(serviceProvider)
-                    : new NopPlatformOutputDevice();
-
-            return new ProxyOutputDevice(pipeProtocolOutputDevice, serverModeOutputDevice: null);
+            return new ProxyOutputDevice(new DotnetTestPassthroughOutputDevice(serviceProvider), serverModeOutputDevice: null);
         }
 
         // SetPlatformOutputDevice isn't public yet. Before exposing it, we should decide

@@ -41,6 +41,7 @@ internal static class DotnetTestPipeProtocol
         public const int HandshakeMessage = 9;
         public const int TestInProgressMessages = 10;
         public const int AzureDevOpsLogMessage = 11;
+        public const int DisplayMessage = 12;
     }
 
     public static class HandshakeProperties
@@ -77,6 +78,21 @@ internal static class DotnetTestPipeProtocol
         public const ushort ExecutionId = 1;
         public const ushort InstanceId = 2;
         public const ushort LogText = 3;
+    }
+
+    public static class DisplayMessageFields
+    {
+        public const ushort ExecutionId = 1;
+        public const ushort InstanceId = 2;
+        public const ushort Level = 3;
+        public const ushort Text = 4;
+    }
+
+    public static class DisplayMessageLevels
+    {
+        public const byte Information = 0;
+        public const byte Warning = 1;
+        public const byte Error = 2;
     }
 
     /// <summary>
@@ -265,6 +281,57 @@ internal static class DotnetTestPipeProtocol
         }
 
         return (executionId, instanceId, logText);
+    }
+
+    /// <summary>
+    /// Decodes the body of a <see cref="SerializerIds.DisplayMessage"/> frame.
+    /// Format: <c>ushort fieldCount; (ushort fieldId, int fieldSize, payload)*fieldCount</c>
+    /// where the id fields and the text are length-prefixed UTF-8 strings and Level is a single byte.
+    /// Returns <c>null</c> for absent string fields and <c>null</c> for an absent Level.
+    /// </summary>
+    public static (string? ExecutionId, string? InstanceId, byte? Level, string? Text) DecodeDisplayMessageBody(byte[] body)
+    {
+        string? executionId = null;
+        string? instanceId = null;
+        byte? level = null;
+        string? text = null;
+
+        using MemoryStream stream = new(body, writable: false);
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+
+            switch (fieldId)
+            {
+                case DisplayMessageFields.ExecutionId:
+                    executionId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case DisplayMessageFields.InstanceId:
+                    instanceId = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                case DisplayMessageFields.Level:
+                    level = (byte)stream.ReadByte();
+
+                    // Level is a single byte today, but advance past any extra bytes the wire format may
+                    // carry so subsequent fields stay aligned.
+                    if (fieldSize > 1)
+                    {
+                        stream.Seek(fieldSize - 1, SeekOrigin.Current);
+                    }
+
+                    break;
+                case DisplayMessageFields.Text:
+                    text = ReadFixedSizeString(stream, fieldSize);
+                    break;
+                default:
+                    stream.Seek(fieldSize, SeekOrigin.Current);
+                    break;
+            }
+        }
+
+        return (executionId, instanceId, level, text);
     }
 
     /// <summary>

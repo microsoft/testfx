@@ -92,6 +92,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     // SDK (1.0.0/1.1.0) never receives an unknown message id.
     public bool IsLogForwardingSupported { get; private set; }
 
+    // True once the handshake negotiated protocol version 1.3.0 or later, which is when the SDK is able to
+    // receive generic DisplayMessage forwards (warning/error host diagnostics). The host gates forwarding on this
+    // so an older SDK (<= 1.2.0) never receives an unknown message id.
+    public bool IsDisplayMessageForwardingSupported { get; private set; }
+
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
@@ -130,9 +135,9 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) is true)
         {
             bool isCompatible = IsVersionCompatible(protocolVersion, supportedProtocolVersions);
-            IsLogForwardingSupported = isCompatible
-                && Version.TryParse(protocolVersion, out Version? negotiatedVersion)
-                && negotiatedVersion >= new Version(1, 2, 0);
+            bool versionParsed = Version.TryParse(protocolVersion, out Version? negotiatedVersion);
+            IsLogForwardingSupported = isCompatible && versionParsed && negotiatedVersion >= new Version(1, 2, 0);
+            IsDisplayMessageForwardingSupported = isCompatible && versionParsed && negotiatedVersion >= new Version(1, 3, 0);
             return isCompatible;
         }
 
@@ -173,6 +178,10 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
             case AzureDevOpsLogMessage azureDevOpsLogMessage:
                 await dotnetTestPipeClient.RequestReplyAsync<AzureDevOpsLogMessage, VoidResponse>(azureDevOpsLogMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+                break;
+
+            case DisplayMessage displayMessage:
+                await dotnetTestPipeClient.RequestReplyAsync<DisplayMessage, VoidResponse>(displayMessage, _cancellationTokenSource.CancellationToken).ConfigureAwait(false);
                 break;
         }
     }
