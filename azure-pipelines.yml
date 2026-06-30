@@ -51,7 +51,7 @@ variables:
   #   --report-azdo-slow-test-history 30 — query the pipeline's own test history (last 30 days) and lower the
   #     per-test 'still running' threshold for historically fast tests. Mirrors the Debug path in
   #     test/Directory.Build.targets so Debug and Release dogfood the same AzDO surface.
-  #   --report-azdo-slow-test-history-min-sample 10 / --report-azdo-slow-test-history-multiplier 3 — exercise
+  #   --report-azdo-slow-test-history-min-sample 10 / --report-azdo-slow-test-history-multiplier 3.0 — exercise
   #     the slow-test-history sub-options and their 'requires report-azdo-slow-test-history' validation. Values
   #     match the extension defaults, so they don't change which tests are flagged; they only keep the option
   #     surface covered.
@@ -60,11 +60,11 @@ variables:
   #     report-azdo-demote-known-flaky option, intentionally left off so a genuine regression is never hidden).
   #   --hangdump --hangdump-timeout 15m — dump a module that hangs past 15 minutes.
   # The report-azdo history options (slow-test-history, flaky-history) authenticate via the SYSTEM_ACCESSTOKEN
-  # secret, which is intentionally NOT mapped onto these public test steps; they silently no-op without it, so
-  # here they exercise the option parsing/validation surface only. They run end-to-end where a token is present.
+  # secret. It is now mapped onto the public Test/TestRelease steps below; fork PR builds don't receive the
+  # secret so the history service silently no-ops there, while trusted-branch builds exercise it end-to-end.
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _ReleaseUnitTestReportArgs
-    value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
+    value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
 
 stages:
 

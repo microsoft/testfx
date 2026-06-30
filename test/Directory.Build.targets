@@ -32,7 +32,7 @@
          as slow; they only keep the option surface exercised. They require report-azdo-slow-test-history
          (added above, also TF_BUILD-gated), so gate them on $(TF_BUILD) too. -->
     <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history-min-sample 10</TestingPlatformCommandLineArguments>
-    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history-multiplier 3</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments Condition=" '$(TF_BUILD)' == 'true' ">$(TestingPlatformCommandLineArguments) --report-azdo-slow-test-history-multiplier 3.0</TestingPlatformCommandLineArguments>
     <!-- Dogfood the Azure DevOps flaky-history annotator (pairs with report-azdo above). It queries the
          pipeline's own test history for the last 30 days and decorates reported failures with flakiness
          context. It only annotates: it never demotes a failure to a warning (that is the separate
