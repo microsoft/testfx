@@ -37,30 +37,23 @@ NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.Platfo
 - PR #9450 merged (2026-06-26): Add Linux job to nightly perf-timing workflow
 - PR #9461 merged (2026-06-29): Defer class-cleanup TestContextImplementation allocation to last test only
 - PR #9478 merged (2026-06-28): Skip Dictionary + ReadOnlyDictionary alloc in CaptureLifecycleProperties when empty
+- PR #9486 merged (2026-06-29): Add dotnet test server-mode scenario to performance runner
+- PR #9507 merged (2026-06-29): Avoid List<TestResult> allocation in RunTestMethodAsync non-data-driven fast path
 
 ## Open Work
 
-- Branch perf-assist/dotnet-test-server-mode-scenario — PR #9486 (submitted 2026-06-28)
-  - Adds DotnetTestProcess step + Scenario1_DotnetTest_PlainProcess pipeline
-  - Measures MTP server-mode (JSON-RPC / named-pipe) wall-clock timing via dotnet test --no-build
-  - Name contains "PlainProcess" so auto-captured by existing nightly filter *PlainProcess*
-  - Addresses efficiency-improver issue #9480
-  - Status: open, blocked (needs review)
-
-- Branch perf-assist/skip-list-alloc-non-data-driven — PR submitted 2026-06-29 (number TBD)
-  - Avoids List<TestResult> + spread array allocation for every non-data-driven test (common case)
-  - Single combined attribute scan (IsDataDrivenTest) replaces 2 sequential scans
-  - GetAggregateOutcome widened from List<TestResult> to IReadOnlyList<TestResult>
-  - ~3 heap allocations saved per non-data-driven test; ~80KB fewer allocs per 1K-test run
+- Branch perf-assist/skip-tcs-alloc-no-exec-context — PR submitted 2026-06-30 (number TBD)
+  - Fast path in ExecuteTestAsync when no ExecutionContext (no AssemblyInitialize/ClassInitialize)
+  - Skips TaskCompletionSource<TestResult[]> + async-lambda closure + Action delegate allocs
+  - ~96 KB fewer allocations per 1K-test run without lifecycle init methods
   - Status: awaiting CI
 
 ## Optimization Backlog
 
 Priority | Item
 ---------|-----
-Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450, #9461, #9478 merged
-Pending | PR #9486 — dotnet test server-mode scenario for perf runner (awaiting review)
-Pending | PR (2026-06-29) — skip List<TestResult> alloc in RunTestMethodAsync non-data-driven fast path
+Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450, #9461, #9478, #9486, #9507 merged
+Pending | PR (2026-06-30) — skip TCS bridge in ExecuteTestAsync when ctx == null (awaiting CI)
 Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
 Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
 Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
@@ -74,24 +67,24 @@ Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallb
 - efficiency-improver bot also operates on this repo — check for duplicate opportunities before creating PRs
 - Acceptance tests need -pack first; unit tests do not
 - DotnetTestProcess step: TotalProcessorTime = parent dotnet only; ElapsedTime is the primary user-visible metric
-- RunTestMethodAsync: IsDataDrivenTest() does single attribute-cache scan (DataSourceAttribute or ITestDataSource); DataType==ITestDataSource is set only for DynamicDataAttribute at discovery time; other ITestDataSource implementors handled by TryExecuteFoldedDataDrivenTestsAsync
+- RunTestMethodAsync: fast path now covers both non-data-driven and null-ctx cases
+- ExecuteTestAsync TCS bridge: only needed when TestClassInfo.ExecutionContext or TestAssemblyInfo.ExecutionContext is non-null (i.e., when [AssemblyInitialize]/[ClassInitialize] captured an ExecutionContext)
 
 ## Task Schedule (last run dates)
 
 - Task 1 (Commands): 2026-06-25
-- Task 2 (Identify): 2026-06-29 ✓ this run
-- Task 3 (Implement): 2026-06-29 ✓ this run
-- Task 4 (Maintain PRs): 2026-06-29 ✓ this run
+- Task 2 (Identify): 2026-06-30 ✓ this run
+- Task 3 (Implement): 2026-06-30 ✓ this run
+- Task 4 (Maintain PRs): 2026-06-30 ✓ this run
 - Task 5 (Comment issues): 2026-06-28
 - Task 6 (Infra): 2026-06-28
-- Task 7 (Monthly Summary): 2026-06-29 ✓ this run (issue #9258)
+- Task 7 (Monthly Summary): 2026-06-30 ✓ this run (issue #9258)
 
 ## Monthly Activity Issue
 
 Issue #9258: [perf-improver] Monthly Activity 2026-06 (open)
-Last updated: 2026-06-29 run 28380470299
+Last updated: 2026-06-30 run 28451010621
 
 ## Backlog Cursor
 
-Scanned RunTestMethodAsync hot path — identified and implemented List<TestResult> fast path.
-Next: consider Task 5 (comment on performance issues) or Task 6 (perf measurement infra).
+Implemented TCS fast path in ExecuteTestAsync. Next: Task 5 (comment on performance issues) or Task 6 (infra).
