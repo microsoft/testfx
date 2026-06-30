@@ -59,7 +59,14 @@ internal class TestMethodValidator
 
         if (!isValidTestMethod)
         {
-            string message = IsGenericValueTaskReturnType(testMethodInfo)
+            // Only emit the targeted ValueTask<T> message when the return type is the actual reason the method
+            // is invalid. If the method is also inaccessible/static/abstract, the generic signature message is
+            // more accurate, otherwise the user could "fix" the return type and still have an invalid method.
+            bool isInvalidOnlyBecauseOfReturnType = isAccessible
+                && testMethodInfo is { IsAbstract: false, IsStatic: false }
+                && IsGenericValueTaskReturnType(testMethodInfo);
+
+            string message = isInvalidOnlyBecauseOfReturnType
                 ? string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericValueTaskReturnType, type.FullName, testMethodInfo.Name)
                 : string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectTestMethodSignature, type.FullName, testMethodInfo.Name);
             warnings.Add(message);

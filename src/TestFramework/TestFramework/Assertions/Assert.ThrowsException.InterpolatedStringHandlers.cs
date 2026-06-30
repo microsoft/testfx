@@ -170,8 +170,10 @@ public sealed partial class Assert
             // The interpolated string handler pattern requires deciding 'shouldAppend' synchronously in the
             // constructor (the compiler skips evaluating the interpolation holes entirely when it is false).
             // Determining whether the assertion fails requires running the action, so the awaited task is
-            // observed synchronously here. The async core uses ConfigureAwait(false) throughout.
-            _state = IsThrowsAsyncFailingAsync<TException>(action, isStrictType: false).GetAwaiter().GetResult();
+            // observed synchronously here. The work is offloaded to the thread pool via Task.Run so that the
+            // action's awaits never try to resume on a captured SynchronizationContext (UI thread, etc.) that
+            // is being blocked by GetResult(), which would otherwise deadlock.
+            _state = Task.Run(() => IsThrowsAsyncFailingAsync<TException>(action, isStrictType: false)).GetAwaiter().GetResult();
             shouldAppend = _state.FailureKind != ThrowsFailureKind.NotFailing;
             if (shouldAppend)
             {
@@ -225,8 +227,10 @@ public sealed partial class Assert
             // The interpolated string handler pattern requires deciding 'shouldAppend' synchronously in the
             // constructor (the compiler skips evaluating the interpolation holes entirely when it is false).
             // Determining whether the assertion fails requires running the action, so the awaited task is
-            // observed synchronously here. The async core uses ConfigureAwait(false) throughout.
-            _state = IsThrowsAsyncFailingAsync<TException>(action, isStrictType: true).GetAwaiter().GetResult();
+            // observed synchronously here. The work is offloaded to the thread pool via Task.Run so that the
+            // action's awaits never try to resume on a captured SynchronizationContext (UI thread, etc.) that
+            // is being blocked by GetResult(), which would otherwise deadlock.
+            _state = Task.Run(() => IsThrowsAsyncFailingAsync<TException>(action, isStrictType: true)).GetAwaiter().GetResult();
             shouldAppend = _state.FailureKind != ThrowsFailureKind.NotFailing;
             if (shouldAppend)
             {

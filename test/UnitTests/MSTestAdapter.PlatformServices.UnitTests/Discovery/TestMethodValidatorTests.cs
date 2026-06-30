@@ -163,6 +163,20 @@ public class TestMethodValidatorTests : TestContainer
         _warnings[0].Should().Contain("ValueTask<T>");
     }
 
+    public void IsValidTestMethodShouldReportGenericSignatureWarningWhenGenericValueTaskMethodIsAlsoInvalidForAnotherReason()
+    {
+        SetupTestMethod();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
+            "StaticMethodWithGenericValueTaskReturnType",
+            BindingFlags.Static | BindingFlags.Public)!;
+
+        // The method is invalid because it is static; the targeted ValueTask<T> message must NOT be used here,
+        // otherwise the user could "fix" the return type and still have an invalid (static) method.
+        _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().NotContain("ValueTask<T>");
+    }
+
     public void IsValidTestMethodShouldReturnTrueForMethodsWithVoidReturnType()
     {
         SetupTestMethod();
@@ -243,6 +257,8 @@ internal abstract class DummyTestClass
     public ValueTask MethodWithValueTaskReturnType() => default;
 
     public ValueTask<int> MethodWithGenericValueTaskReturnType() => default;
+
+    public static ValueTask<int> StaticMethodWithGenericValueTaskReturnType() => default;
 
     public int MethodWithIntReturnType() => 0;
 

@@ -307,6 +307,10 @@ public sealed partial class Assert
         where TException : Exception
     {
         TelemetryCollector.TrackAssertionCall("Assert.ThrowsAsync");
+
+        // Note: unlike the string / Func<Exception?, string> message overloads (which return a faulted task),
+        // assertion failure throws synchronously here because the action has already been run in the
+        // interpolated-string-handler constructor. For await-only callers the observable behaviour is identical.
         return Task.FromResult(message.ComputeAssertion(actionExpression));
     }
 
@@ -317,6 +321,10 @@ public sealed partial class Assert
         where TException : Exception
     {
         TelemetryCollector.TrackAssertionCall("Assert.ThrowsExactlyAsync");
+
+        // Note: unlike the string / Func<Exception?, string> message overloads (which return a faulted task),
+        // assertion failure throws synchronously here because the action has already been run in the
+        // interpolated-string-handler constructor. For await-only callers the observable behaviour is identical.
         return Task.FromResult(message.ComputeAssertion(actionExpression));
     }
 }

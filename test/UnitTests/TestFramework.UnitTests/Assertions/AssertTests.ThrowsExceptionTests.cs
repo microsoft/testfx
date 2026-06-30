@@ -373,6 +373,17 @@ public partial class AssertTests
                 """);
     }
 
+    public async Task ThrowsAsync_WithInterpolation_RendersMessageOnWrongExceptionType()
+    {
+        Func<Task> action = async () => await Assert.ThrowsAsync<ArgumentNullException>(() => Task.FromException(new InvalidOperationException()), $"context: {42}");
+        (await action.Should().ThrowAsync<AssertFailedException>())
+            .Which.Message.Should().Match(
+                """
+                Assertion failed. Expected exception of type ArgumentNullException (or derived) but caught InvalidOperationException.
+                context: 42*
+                """);
+    }
+
     public async Task ThrowsExactlyAsync_WithInterpolation_DoesNotEvaluateMessageOnSuccess()
     {
         bool wasMessageEvaluated = false;
@@ -397,6 +408,17 @@ public partial class AssertTests
                 context: 42
 
                 Assert.ThrowsExactlyAsync<ArgumentNullException>(() => Task.CompletedTask)
+                """);
+    }
+
+    public async Task ThrowsExactlyAsync_WithInterpolation_RendersMessageOnWrongExceptionType()
+    {
+        Func<Task> action = async () => await Assert.ThrowsExactlyAsync<ArgumentNullException>(() => Task.FromException(new ArgumentOutOfRangeException("p")), $"context: {42}");
+        (await action.Should().ThrowAsync<AssertFailedException>())
+            .Which.Message.Should().Match(
+                """
+                Assertion failed. Expected exception of exact type ArgumentNullException but caught ArgumentOutOfRangeException.
+                context: 42*
                 """);
     }
 
