@@ -186,3 +186,14 @@ internal static class AzureDevOpsLogMessageFieldsId
     public const ushort InstanceId = 2;
     public const ushort LogText = 3;
 }
+
+[Embedded]
+internal static class DisplayMessageFieldsId
+{
+    public const int MessagesSerializerId = 12;
+
+    public const ushort ExecutionId = 1;
+    public const ushort InstanceId = 2;
+    public const ushort Level = 3;
+    public const ushort Text = 4;
+}
