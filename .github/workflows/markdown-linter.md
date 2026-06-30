@@ -51,7 +51,7 @@ jobs:
         VALIDATE_MARKDOWN: "true"
       id: super-linter
       name: Super-linter
-      uses: super-linter/super-linter@v8.6.0
+      uses: super-linter/super-linter@v8.7.0
     - id: check-results
       name: Check for linting issues
       run: |

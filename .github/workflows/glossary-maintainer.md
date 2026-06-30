@@ -214,7 +214,7 @@ If you made any changes to the glossary:
 
 **Use safe-outputs create-pull-request** to create a PR with:
 
-**PR Title Format**: 
+**PR Title Format**:
 - Daily: `[docs] Update glossary - daily scan`
 - Weekly: `[docs] Update glossary - weekly full scan`
 
