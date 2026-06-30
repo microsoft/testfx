@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.VideoRecorder.Resources;
@@ -76,7 +76,7 @@ internal sealed class VideoRecorderCommandLineProvider : CommandLineOptionsProvi
             commandLineOptions,
             [ArgsOptionName, SourceOptionName, GranularityOptionName, MaxDurationOptionName, ChaptersOptionName],
             EnableOptionName,
-            string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.SubOptionsRequireEnable, EnableOptionName))
+            () => string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.SubOptionsRequireEnable, EnableOptionName))
         ?? ValidationResult.ValidTask;
 
     private static Task<ValidationResult> ValidateAllowedValuesAsync(string optionName, string value, string[] allowed)

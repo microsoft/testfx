@@ -42,11 +42,11 @@ internal sealed class RetryCommandLineOptionsProvider : CommandLineOptionsProvid
         => commandLineOptions.IsOptionSet(RetryFailedTestsMaxPercentageOptionName) && commandLineOptions.IsOptionSet(RetryFailedTestsMaxTestsOptionName)
             ? ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage, RetryFailedTestsMaxPercentageOptionName, RetryFailedTestsMaxTestsOptionName))
             : RequiresMainOption(commandLineOptions, [RetryFailedTestsMaxPercentageOptionName], RetryFailedTestsOptionName,
-                string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxPercentageOptionName, RetryFailedTestsOptionName))
+                () => string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxPercentageOptionName, RetryFailedTestsOptionName))
             ?? RequiresMainOption(commandLineOptions, [RetryFailedTestsMaxTestsOptionName], RetryFailedTestsOptionName,
-                string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxTestsOptionName, RetryFailedTestsOptionName))
+                () => string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxTestsOptionName, RetryFailedTestsOptionName))
             ?? RequiresMainOption(commandLineOptions, [RetryFailedTestsDelayOptionName], RetryFailedTestsOptionName,
-                string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsDelayOptionName, RetryFailedTestsOptionName))
+                () => string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsDelayOptionName, RetryFailedTestsOptionName))
             ?? ValidationResult.ValidTask;
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)

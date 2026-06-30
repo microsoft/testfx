@@ -87,7 +87,7 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
             commandLineOptions,
             [HangDumpTimeoutOptionName, HangDumpFileNameOptionName, HangDumpTypeOptionName, HangDumpTypeIfSupportedOptionName],
             HangDumpOptionName,
-            ExtensionResources.MissingHangDumpMainOption)
+            () => ExtensionResources.MissingHangDumpMainOption)
         ?? (commandLineOptions.IsOptionSet(HangDumpTypeOptionName) && commandLineOptions.IsOptionSet(HangDumpTypeIfSupportedOptionName)
             ? ValidationResult.InvalidTask(ExtensionResources.HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage)
             : ValidationResult.ValidTask);

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
@@ -61,7 +61,7 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
     /// <remarks>
     /// Callers typically use the null-coalescing operator to fall through to further checks:
     /// <code>
-    /// return RequiresMainOption(options, subOptionNames, mainOptionName, errorMessage)
+    /// return RequiresMainOption(options, subOptionNames, mainOptionName, errorMessageFactory)
     ///     ?? ValidationResult.ValidTask;
     /// </code>
     /// </remarks>
@@ -70,11 +70,11 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
         ICommandLineOptions options,
         string[] subOptionNames,
         string mainOptionName,
-        string errorMessage)
+        Func<string> errorMessageFactory)
     {
         bool anySubOption = subOptionNames.Any(options.IsOptionSet);
         return anySubOption && !options.IsOptionSet(mainOptionName)
-            ? ValidationResult.InvalidTask(errorMessage)
+            ? ValidationResult.InvalidTask(errorMessageFactory())
             : null;
     }
 
@@ -85,7 +85,7 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
     /// <remarks>
     /// Callers typically use the null-coalescing operator to fall through to further checks:
     /// <code>
-    /// return RequiresMainOption(options, subOptionNames, mainOptionNames, errorMessage)
+    /// return RequiresMainOption(options, subOptionNames, mainOptionNames, errorMessageFactory)
     ///     ?? ValidationResult.ValidTask;
     /// </code>
     /// </remarks>
@@ -94,12 +94,12 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
         ICommandLineOptions options,
         string[] subOptionNames,
         string[] mainOptionNames,
-        string errorMessage)
+        Func<string> errorMessageFactory)
     {
         bool anySubOption = subOptionNames.Any(options.IsOptionSet);
         bool anyMainOption = mainOptionNames.Any(options.IsOptionSet);
         return anySubOption && !anyMainOption
-            ? ValidationResult.InvalidTask(errorMessage)
+            ? ValidationResult.InvalidTask(errorMessageFactory())
             : null;
     }
 

@@ -55,7 +55,7 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
             commandLineOptions,
             [CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpCommandLineOptions.CrashSequenceOptionName],
             [CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName],
-            CrashDumpResources.MissingCrashDumpMainOption)
+            () => CrashDumpResources.MissingCrashDumpMainOption)
         ?? (AreCrashReportOptionsMutuallyExclusive(commandLineOptions)
             ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage)
             : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
