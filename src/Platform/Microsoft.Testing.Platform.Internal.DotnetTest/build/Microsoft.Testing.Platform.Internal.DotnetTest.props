@@ -48,4 +48,29 @@
     <Using Include="System.Text.RegularExpressions" />
   </ItemGroup>
 
+  <!--
+    IColor and SystemConsoleColor (shipped in contentFiles/cs/any/TerminalReporter/) are *public* API of
+    Microsoft.Testing.Platform. A consumer that references both this source package and Microsoft.Testing.Platform
+    would otherwise get CS0436 'type conflicts with imported type' for them. When the platform is referenced, drop the
+    duplicated copies so the reporter's single 'SystemConsoleColor?' use binds to the platform's public types - no
+    CS0436, no consumer-side NoWarn. A consumer that does NOT reference the platform keeps the copies and compiles
+    them standalone. Mirrors src/Platform/Microsoft.Testing.Platform/OutputDevice/Terminal/TerminalReporterContract.props.
+  -->
+  <Target Name="_RemoveDotnetTestDuplicatePublicColorAbstractions"
+          AfterTargets="ResolveReferences"
+          BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_DotnetTestPlatformRef Remove="@(_DotnetTestPlatformRef)" />
+      <_DotnetTestPlatformRef Include="@(ReferencePath)" Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' " />
+    </ItemGroup>
+    <PropertyGroup>
+      <_DotnetTestReferencesPlatform>false</_DotnetTestReferencesPlatform>
+      <_DotnetTestReferencesPlatform Condition=" '@(_DotnetTestPlatformRef)' != '' ">true</_DotnetTestReferencesPlatform>
+    </PropertyGroup>
+    <ItemGroup Condition=" '$(_DotnetTestReferencesPlatform)' == 'true' ">
+      <Compile Remove="@(Compile)"
+               Condition=" ('%(Compile.Filename)' == 'IColor' or '%(Compile.Filename)' == 'SystemConsoleColor') and ('%(Compile.NuGetPackageId)' == 'Microsoft.Testing.Platform.Internal.DotnetTest' or $([System.String]::Copy('%(Compile.Identity)').ToLowerInvariant().Contains('microsoft.testing.platform.internal.dotnettest'))) " />
+    </ItemGroup>
+  </Target>
+
 </Project>
