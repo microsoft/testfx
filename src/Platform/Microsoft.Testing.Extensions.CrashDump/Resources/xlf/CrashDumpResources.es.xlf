@@ -104,9 +104,9 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
         <note>Do not localize option name {Locked="--crashdump-type"}, dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}, or link {Locked="https://learn.microsoft.com/dotnet/core/diagnostics/collect-dumps-crash#types-of-mini-dumps"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
-        <source>'{0}' is not a valid dump type. Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are {1}</target>
-        <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
+        <source>'{0}' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'</source>
+        <target state="translated">"{0}" no es un tipo de volcado válido. Las opciones válidas son "Mini", "Heap", "Triage" y "Full"</target>
+        <note>0 is the invalid dump type. Do not localize dump type values {Locked="Mini"}{Locked="Heap"}{Locked="Triage"}{Locked="Full"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">
         <source>'--crashdump-type' expects a single dump type as argument (e.g. '--crashdump-type Heap')</source>
