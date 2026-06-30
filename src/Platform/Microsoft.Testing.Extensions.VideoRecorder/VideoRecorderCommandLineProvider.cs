@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Extensions.VideoRecorder;
 /// <summary>
 /// Provides the command-line options that enable and control the video recorder.
 /// </summary>
-internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProvider
+internal sealed class VideoRecorderCommandLineProvider : CommandLineOptionsProviderBase
 {
     public const string EnableOptionName = "capture-video";
     public const string SourceOptionName = "capture-video-source";
@@ -37,17 +37,7 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
     private static readonly string[] GranularityValues = [GranularityTest, GranularitySession];
     private static readonly string[] ChaptersValues = [ChaptersOn, ChaptersOff];
 
-    public string Uid => nameof(VideoRecorderCommandLineProvider);
-
-    public string Version => ExtensionVersion.DefaultSemVer;
-
-    public string DisplayName => VideoRecorderResources.ExtensionDisplayName;
-
-    public string Description => VideoRecorderResources.CommandLineProviderDescription;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() =>
+    private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
         new CommandLineOption(EnableOptionName, VideoRecorderResources.OptionDescriptionCaptureVideo, ArgumentArity.ZeroOrOne, isHidden: false),
         new CommandLineOption(SourceOptionName, VideoRecorderResources.OptionDescriptionSource, ArgumentArity.ExactlyOne, isHidden: false),
@@ -57,7 +47,17 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
         new CommandLineOption(ChaptersOptionName, VideoRecorderResources.OptionDescriptionChapters, ArgumentArity.ExactlyOne, isHidden: false),
     ];
 
-    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+    public VideoRecorderCommandLineProvider()
+        : base(
+            nameof(VideoRecorderCommandLineProvider),
+            ExtensionVersion.DefaultSemVer,
+            VideoRecorderResources.ExtensionDisplayName,
+            VideoRecorderResources.CommandLineProviderDescription,
+            CachedCommandLineOptions)
+    {
+    }
+
+    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => arguments.Length == 0
             ? ValidationResult.ValidTask
             : commandOption.Name switch
@@ -71,18 +71,13 @@ internal sealed class VideoRecorderCommandLineProvider : ICommandLineOptionsProv
                 _ => ValidationResult.ValidTask,
             };
 
-    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-    {
-        bool anySubOption = commandLineOptions.IsOptionSet(ArgsOptionName)
-            || commandLineOptions.IsOptionSet(SourceOptionName)
-            || commandLineOptions.IsOptionSet(GranularityOptionName)
-            || commandLineOptions.IsOptionSet(MaxDurationOptionName)
-            || commandLineOptions.IsOptionSet(ChaptersOptionName);
-
-        return anySubOption && !commandLineOptions.IsOptionSet(EnableOptionName)
-            ? ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.SubOptionsRequireEnable, EnableOptionName))
-            : ValidationResult.ValidTask;
-    }
+    public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+        => RequiresMainOption(
+            commandLineOptions,
+            [ArgsOptionName, SourceOptionName, GranularityOptionName, MaxDurationOptionName, ChaptersOptionName],
+            EnableOptionName,
+            string.Format(CultureInfo.CurrentCulture, VideoRecorderResources.SubOptionsRequireEnable, EnableOptionName))
+        ?? ValidationResult.ValidTask;
 
     private static Task<ValidationResult> ValidateAllowedValuesAsync(string optionName, string value, string[] allowed)
         => allowed.Contains(value, StringComparer.OrdinalIgnoreCase)

@@ -53,4 +53,53 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
 
     public virtual Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => ValidationResult.ValidTask;
+
+    /// <summary>
+    /// Returns an invalid <see cref="Task{ValidationResult}"/> when any of the <paramref name="subOptionNames"/>
+    /// is set but <paramref name="mainOptionName"/> is not, otherwise returns <see langword="null"/>.
+    /// </summary>
+    /// <remarks>
+    /// Callers typically use the null-coalescing operator to fall through to further checks:
+    /// <code>
+    /// return RequiresMainOption(options, subOptionNames, mainOptionName, errorMessage)
+    ///     ?? ValidationResult.ValidTask;
+    /// </code>
+    /// </remarks>
+    [SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods", Justification = "This is not meant to be an async await call but rather a task helper")]
+    protected static Task<ValidationResult>? RequiresMainOption(
+        ICommandLineOptions options,
+        string[] subOptionNames,
+        string mainOptionName,
+        string errorMessage)
+    {
+        bool anySubOption = subOptionNames.Any(options.IsOptionSet);
+        return anySubOption && !options.IsOptionSet(mainOptionName)
+            ? ValidationResult.InvalidTask(errorMessage)
+            : null;
+    }
+
+    /// <summary>
+    /// Returns an invalid <see cref="Task{ValidationResult}"/> when any of the <paramref name="subOptionNames"/>
+    /// is set but none of the <paramref name="mainOptionNames"/> is set, otherwise returns <see langword="null"/>.
+    /// </summary>
+    /// <remarks>
+    /// Callers typically use the null-coalescing operator to fall through to further checks:
+    /// <code>
+    /// return RequiresMainOption(options, subOptionNames, mainOptionNames, errorMessage)
+    ///     ?? ValidationResult.ValidTask;
+    /// </code>
+    /// </remarks>
+    [SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods", Justification = "This is not meant to be an async await call but rather a task helper")]
+    protected static Task<ValidationResult>? RequiresMainOption(
+        ICommandLineOptions options,
+        string[] subOptionNames,
+        string[] mainOptionNames,
+        string errorMessage)
+    {
+        bool anySubOption = subOptionNames.Any(options.IsOptionSet);
+        bool anyMainOption = mainOptionNames.Any(options.IsOptionSet);
+        return anySubOption && !anyMainOption
+            ? ValidationResult.InvalidTask(errorMessage)
+            : null;
+    }
 }
