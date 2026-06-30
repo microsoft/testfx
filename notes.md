@@ -39,73 +39,40 @@
    - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — covered relative to complexity
    - `PreferConstructorOverTestInitializeAnalyzerTests` (15 tests) — covered relative to complexity
    - `DuplicateTestMethodAttributeAnalyzerTests` (23 tests) — possible additional scenarios
+   - `GlobalTestFixtureShouldBeValidAnalyzerTests` — done 2026-06-30 (generic class, struct, derived TestClass attribute)
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
-| 2026-06-29 | Task 3 (UseAttributeOnTestMethodAnalyzer MSTEST0007 edge cases: DataTestMethod early-return, OSCondition ConditionBase subclass), Task 4 (verified PR #9489 merged), Task 7 (Monthly Issue Jun) |
-| 2026-06-28 | Task 3 (DoNotUseShadowingAnalyzer MSTEST0036 edge cases: multi-level inheritance, property type mismatch, field shadowing), Task 7 (Monthly Issue Jun) |
-| 2026-06-27 | Task 3 (TestContextPropertyUsageAnalyzer MSTEST0048 edge cases: non-TestContext type guard, lambda ContainingSymbol behavior), Task 7 (Monthly Issue Jun) |
-| 2026-06-26 | Task 4 (verified PRs #9438 and #9410 merged), Task 3 (IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment, lambda block body, chained receiver), Task 7 (Monthly Issue Jun) |
-| 2026-06-25 | Task 3 (UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type), Task 7 (Monthly Issue Jun) |
-| 2026-06-24 | Task 3 (RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard), Task 7 (Monthly Issue Jun) |
-| 2026-06-23 | Task 3 (PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-22 | Task 3 (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases: TestInitialize method, non-TestContext symbol, parameter receiver), Task 7 (Monthly Issue Jun) |
-| 2026-06-21 | Task 3 (RedundantTestMethodDisplayNameAnalyzer custom-derived attribute + UseAsyncSuffix suppressors negative boundary cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-20 | Task 3 (UnusedParameterSuppressor MSTEST0047 edge cases: TestMethod+TestContext not suppressed, AssemblyInitialize+non-TestContext not suppressed), Task 7 (Monthly Issue Jun) |
-| 2026-06-19 | Task 3 (AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases: enum/struct/nullable), Task 4 (verify open PRs), Task 7 (Monthly Issue Jun) |
-| 2026-06-17 | Task 3 (TestContextShouldBeValidAnalyzer MSTEST0005 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-16 | Task 3 (DuplicateDataRowAnalyzer MSTEST0042 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-15 | Task 3 (MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-13 | Task 3 (UseConditionBaseWithTestClassAnalyzer MSTEST0041 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-12 | Task 3 (TypeContainingTestMethodShouldBeATestClassAnalyzer MSTEST0030 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-11 | Task 3 (TestClassShouldHaveTestMethodAnalyzer MSTEST0016 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-10 | Task 3 (DoNotUseSystemDescriptionAttributeAnalyzer MSTEST0031 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-09 | Task 3 (UseDeploymentItemWithTestMethodOrTestClass MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-08 | Task 3 (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-07 | Task 3 (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-06 | Task 3 (PreferTestMethodOverDataTestMethodAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-05 | Task 3 (TestMethodShouldNotBeIgnoredAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-04 | Task 3 (NonNullableReferenceNotInitializedSuppressor edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-03 | Task 3 (DoNotStoreStaticTestContextAnalyzer edge cases), Task 7 (Monthly Issue Jun) |
-| 2026-06-02 | Task 2 (opportunities), Task 3 (Assert.StartsWith/EndsWith tests), Task 7 (Monthly Issue Jun) |
-| 2026-06-01 | Task 3 (VB tests — constraint violation, removed), Task 7 (Monthly Issue Jun) |
-| 2026-05-31 | Task 3 (MSTEST0041 edge cases), Task 7 (Monthly Issue) |
-| 2026-05-30 | Task 3 (MSTEST0067 edge cases), Task 7 (Monthly Issue) |
-| 2026-05-29 | Task 1 (Discovery), Task 2 (Opportunities), Task 7 (Monthly Issue) |
+| 2026-06-30 | Task 3 (GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 edge cases: generic class, struct, derived TestClass attribute), Task 7 |
+| 2026-06-29 | Task 3 (UseAttributeOnTestMethodAnalyzer MSTEST0007: DataTestMethod early-return, OSCondition ConditionBase subclass), Task 4, Task 7 |
+| 2026-06-28 | Task 3 (DoNotUseShadowingAnalyzer MSTEST0036: multi-level inheritance, property type mismatch, field shadowing), Task 7 |
+| 2026-06-27 | Task 3 (TestContextPropertyUsageAnalyzer MSTEST0048: non-TestContext type guard, lambda ContainingSymbol), Task 7 |
+| 2026-06-26 | Task 4 (verified PRs #9438, #9410 merged), Task 3 (IgnoreStringMethodReturnValue edge cases), Task 7 |
+| 2026-06-25 | Task 3 (UseExecuteAsyncOverrideFixer edge cases), Task 7 |
+| 2026-06-24 | Task 3 (RemoveClassCleanupBehaviorArgumentFixer edge cases), Task 7 |
+| 2026-06-23 | Task 3 (PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor), Task 7 |
+| 2026-06-22 | Task 3 (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases), Task 7 |
+| 2026-06-21 | Task 3 (RedundantTestMethodDisplayName + UseAsyncSuffix suppressors), Task 7 |
+| 2026-06-20 | Task 3 (UnusedParameterSuppressor MSTEST0047 edge cases), Task 7 |
+| (pre-06-20) | Task 3 for analyzers: MSTEST0038, MSTEST0005, MSTEST0042, MSTEST0070, MSTEST0041, MSTEST0030, MSTEST0016, MSTEST0031, MSTEST0035, MSTEST0004, MSTEST0035, PreferTestMethod, IgnoreNotIgnored, NonNullableSuppressor, DoNotStoreStaticCtx, Assert.StartsWith/EndsWith |
 
 ## Last Run
 
-2026-06-29 23:16 UTC
+2026-06-30 23:21 UTC
 
-## Completed Work
+## Completed Work (recent)
 
-- PR (pending) for UseAttributeOnTestMethodAnalyzer MSTEST0007 edge cases (2026-06-29) — [DataTestMethod] early-return path, [OSCondition] non-Ignore ConditionBase fires ConditionBaseRule with concrete class name; 39/39 pass
-- PR #9489 merged (2026-06-29 by Evangelink) — DoNotUseShadowingAnalyzer MSTEST0036 edge cases: multi-level inheritance walk, property type mismatch guard, field symbol fallthrough
-- PR #9481 merged (2026-06-28 by Evangelink) — TestContextPropertyUsageAnalyzer MSTEST0048: non-TestContext type guard, lambda ContainingSymbol behavior
-- PR #9468 merged (2026-06-28 by Evangelink) — IgnoreStringMethodReturnValueAnalyzer edge cases: discard assignment (no diagnostic), lambda block body (diagnostic), chained receiver (no diagnostic)
-- PR #9438 merged (2026-06-26 by Evangelink) — UseExecuteAsyncOverrideFixer edge cases: no public modifier, zero params, wrong param type
-- PR #9410 merged (2026-06-25 by Evangelink) — RemoveClassCleanupBehaviorArgumentFixer edge cases: first-arg ordering, non-attribute context guard
-- PR #9382 merged (2026-06-24 by Evangelink) — PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases: full dispose pattern, Dispose+TestCleanup coexistence, static constructor
-- PR #9355 merged (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases) — merged 2026-06-23 by Evangelink
-- PR #9314 merged (async-suffix suppressors + redundant display name edge cases) — merged 2026-06-22 by Evangelink
-- PR #9301 merged (UnusedParameterSuppressor MSTEST0047 edge cases) — merged 2026-06-21 by Evangelink
-- PR (merged) for AvoidAssertAreSameWithValueTypesAnalyzer MSTEST0038 edge cases — enum/struct/nullable types; in main branch
-- PR #9223 merged (TestContextShouldBeValidAnalyzer MSTEST0005 edge cases) — merged 2026-06-18
-- PR #9199 merged (DuplicateDataRowAnalyzer MSTEST0042 edge cases) — merged 2026-06-17
-- PR #9164 merged (MemberConditionShouldBeValidAnalyzer MSTEST0070 edge cases) — merged 2026-06-16
-- PR #9103 merged (UseConditionBaseWithTestClassAnalyzer MSTEST0041 edge cases) — merged 2026-06-14
-- PR #9092 merged (TypeContainingTestMethodShouldBeATestClassAnalyzer MSTEST0030 edge cases) — merged 2026-06-13
-- PR #9061 merged (TestClassShouldHaveTestMethodAnalyzer MSTEST0016 edge cases) — merged 2026-06-12
-- PR #9020 merged (DoNotUseSystemDescriptionAttributeAnalyzer MSTEST0031 edge cases) — merged 2026-06-11
-- PR #8977 merged (UseDeploymentItemWithTestMethodOrTestClass MSTEST0035 edge cases) — merged 2026-06-10
-- PR #8941 merged (PublicTypeShouldBeTestClassAnalyzer MSTEST0004 edge cases) — merged 2026-06-09
-- PR #8909 merged (UseRetryWithTestMethodAnalyzer MSTEST0035 edge cases) — merged 2026-06-08
-- PR #8885 merged (PreferTestMethodOverDataTestMethodAnalyzer edge cases) — merged 2026-06-07
-- PR #8869 merged (TestMethodShouldNotBeIgnoredAnalyzer edge cases) — merged 2026-06-07
-- PR #8837 merged (NonNullableReferenceNotInitializedSuppressor edge cases)
-- PR #8809 merged (DoNotStoreStaticTestContextAnalyzer edge cases)
-- PR #8781 merged (Assert.StartsWith/EndsWith StringComparison overloads and null handling)
-- PR #8721 merged (MSTEST0041 abstract method edge case)
-- PR #8706 merged (MSTEST0067 AvoidThreadSleepAndTaskWaitInTests edge cases)
+- PR (pending) for GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 edge cases (2026-06-30) — generic class, struct, derived TestClass attribute; 18/18 pass
+- PR (pending) for UseAttributeOnTestMethodAnalyzer MSTEST0007 edge cases (2026-06-29) — DataTestMethod early-return, OSCondition ConditionBase; 39/39 pass
+- PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036 (multi-level inheritance, property type mismatch, field fallthrough)
+- PR #9481 merged — TestContextPropertyUsageAnalyzer MSTEST0048 (non-TestContext guard, lambda ContainingSymbol)
+- PR #9468 merged — IgnoreStringMethodReturnValueAnalyzer (discard, lambda block body, chained receiver)
+- PR #9438 merged — UseExecuteAsyncOverrideFixer (no public modifier, zero params, wrong param type)
+- PR #9410 merged — RemoveClassCleanupBehaviorArgumentFixer (first-arg ordering, non-attribute context guard)
+- PR #9382 merged — PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases
+- PR #9355 merged — UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases
+- PR #9314 merged — async-suffix suppressors + redundant display name edge cases
+- PR #9301 merged — UnusedParameterSuppressor MSTEST0047 edge cases
+- PRs #9223, #9199, #9164, #9103, #9092, #9061, #9020, #8977, #8941, #8909, #8885, #8869, #8837, #8809, #8781, #8721, #8706 — all merged
