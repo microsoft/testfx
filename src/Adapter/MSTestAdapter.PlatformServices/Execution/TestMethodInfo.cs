@@ -60,7 +60,17 @@ internal partial class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets the parameter types of the test method.
     /// </summary>
-    public ParameterInfo[] ParameterTypes => MethodInfo.GetParameters();
+    /// <remarks>
+    /// Lazy-cached: <c>MethodInfo.GetParameters()</c> returns a fresh array copy on every call
+    /// (CLR safety guarantee), so caching avoids N redundant copies for data-driven tests with N rows.
+    /// This cached array is shared across internal call sites and MUST NOT be mutated. The explicit
+    /// <see cref="ITestMethod.ParameterTypes"/> implementation hands external consumers a fresh copy to
+    /// preserve the previous "fresh array per call" behavior and protect the cache from mutation.
+    /// </remarks>
+    public ParameterInfo[] ParameterTypes => field ??= MethodInfo.GetParameters();
+
+    /// <inheritdoc />
+    ParameterInfo[] ITestMethod.ParameterTypes => (ParameterInfo[])ParameterTypes.Clone();
 
     /// <summary>
     /// Gets the return type of the test method.

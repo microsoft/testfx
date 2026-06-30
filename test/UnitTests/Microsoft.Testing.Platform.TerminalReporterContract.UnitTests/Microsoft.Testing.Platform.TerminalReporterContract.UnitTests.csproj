@@ -4,13 +4,6 @@
     <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
-    <!--
-      CS0436: this project compiles its OWN copy of the shared reporter source (incl. small abstractions like
-      IColor/SystemConsoleColor that are NOT [Embedded]), while also transitively referencing
-      Microsoft.Testing.Platform via the MSTest runner. The compiler correctly uses the locally-defined copy; the
-      conflict warning is expected and benign for an independent source consumer, so we suppress it here.
-    -->
-    <NoWarn>$(NoWarn);CS0436</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

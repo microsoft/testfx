@@ -36,11 +36,20 @@ must have:
 - **`ImplicitUsings` enabled** — the build props supplies the extra global usings the shared source relies on
   (`System.Text`, `System.Runtime.CompilerServices`, `System.Runtime.Versioning`, …) when implicit usings are on.
 - **A `LangVersion` that supports the `field` keyword** (preview/latest).
-- **The `Microsoft.CodeAnalysis.EmbeddedAttribute` polyfill** — dotnet/sdk already defines it (for its copied IPC
-  transport); other consumers must supply a tiny internal copy.
+- **The `Microsoft.CodeAnalysis.EmbeddedAttribute` polyfill** — shipped by this package as source, so it is always
+  available (dotnet/sdk also defines its own for its copied IPC transport; the `internal sealed partial` polyfill
+  merges harmlessly).
 - **XliffTasks** (only for localized satellites) — dotnet/sdk has it via Arcade.
 
 The wire-contract source is zero-dependency and needs none of the above.
+
+> ℹ️ The terminal reporter ships a couple of small abstractions that also live in Microsoft.Testing.Platform. The
+> internal ones (`IConsole`/`IStopwatch`/`System*`) are not exported by the platform, so they never conflict. The two
+> that are *public* platform API — `IColor` and `SystemConsoleColor` — would conflict (`CS0436`) for a consumer that
+> *also* references Microsoft.Testing.Platform, so the package's `build/` props **drops** those two copies when the
+> platform is referenced and lets the reporter bind to the platform's public types. The result: a consumer that
+> references Microsoft.Testing.Platform needs **no** `NoWarn;CS0436`, and a consumer that does not keeps the copies and
+> compiles standalone.
 
 ## Scope
 

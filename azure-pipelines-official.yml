@@ -152,6 +152,11 @@ extends:
                 env:
                   TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
                   DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+                  # Expose the build's OAuth token so the report-azdo history options (slow-test-history /
+                  # flaky-history injected by test/Directory.Build.targets) can query this pipeline's own
+                  # test-result history. Secret variables are not auto-exposed to scripts, so the explicit
+                  # mapping is required; the history service no-ops if the token or endpoints are unavailable.
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
               - task: CopyFiles@2
                 displayName: 'Copy binlogs'
@@ -245,6 +250,11 @@ extends:
                 env:
                   TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: 5m
                   DOTNET_ROOT: $(Build.SourcesDirectory)/.dotnet
+                  # Expose the build's OAuth token so the report-azdo history options (slow-test-history /
+                  # flaky-history injected by test/Directory.Build.targets) can query this pipeline's own
+                  # test-result history. Secret variables are not auto-exposed to scripts, so the explicit
+                  # mapping is required; the history service no-ops if the token or endpoints are unavailable.
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'

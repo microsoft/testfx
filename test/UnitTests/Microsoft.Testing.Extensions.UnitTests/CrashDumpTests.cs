@@ -44,7 +44,7 @@ public sealed class CrashDumpTests
 
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, ["invalid"]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
-        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, "invalid"), validateOptionsResult.ErrorMessage);
+        Assert.AreEqual(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, "invalid", "'Mini', 'Heap', 'Triage', 'Full'"), validateOptionsResult.ErrorMessage);
     }
 
     [TestMethod]

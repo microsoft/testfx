@@ -153,28 +153,10 @@ internal sealed partial class MSTestSettings
                         reader.SkipToNextElement();
                         break;
                     case "TESTTIMEOUT":
-                        string testTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(testTimeout, out int parsedTestTimeout) && parsedTestTimeout > 0)
-                        {
-                            settings.TestTimeout = parsedTestTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, testTimeout, "TestTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "TestTimeout", logger, v => settings.TestTimeout = v);
                         break;
                     case "ASSEMBLYCLEANUPTIMEOUT":
-                        string assemblyCleanupTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(assemblyCleanupTimeout, out int parsedAssemblyCleanupTimeout) && parsedAssemblyCleanupTimeout > 0)
-                        {
-                            settings.AssemblyCleanupTimeout = parsedAssemblyCleanupTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, assemblyCleanupTimeout, "AssemblyCleanupTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "AssemblyCleanupTimeout", logger, v => settings.AssemblyCleanupTimeout = v);
                         break;
                     case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
                         string considerEmptyDataSourceAsInconclusive = reader.ReadInnerXml();
@@ -189,64 +171,19 @@ internal sealed partial class MSTestSettings
 
                         break;
                     case "ASSEMBLYINITIALIZETIMEOUT":
-                        string assemblyInitializeTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(assemblyInitializeTimeout, out int parsedAssemblyInitializeTimeout) && parsedAssemblyInitializeTimeout > 0)
-                        {
-                            settings.AssemblyInitializeTimeout = parsedAssemblyInitializeTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, assemblyInitializeTimeout, "AssemblyInitializeTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "AssemblyInitializeTimeout", logger, v => settings.AssemblyInitializeTimeout = v);
                         break;
                     case "CLASSINITIALIZETIMEOUT":
-                        string classInitializeTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(classInitializeTimeout, out int parsedClassInitializeTimeout) && parsedClassInitializeTimeout > 0)
-                        {
-                            settings.ClassInitializeTimeout = parsedClassInitializeTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, classInitializeTimeout, "ClassInitializeTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "ClassInitializeTimeout", logger, v => settings.ClassInitializeTimeout = v);
                         break;
                     case "CLASSCLEANUPTIMEOUT":
-                        string classCleanupTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(classCleanupTimeout, out int parsedClassCleanupTimeout) && parsedClassCleanupTimeout > 0)
-                        {
-                            settings.ClassCleanupTimeout = parsedClassCleanupTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, classCleanupTimeout, "ClassCleanupTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "ClassCleanupTimeout", logger, v => settings.ClassCleanupTimeout = v);
                         break;
                     case "TESTINITIALIZETIMEOUT":
-                        string testInitializeTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(testInitializeTimeout, out int parsedTestInitializeTimeout) && parsedTestInitializeTimeout > 0)
-                        {
-                            settings.TestInitializeTimeout = parsedTestInitializeTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, testInitializeTimeout, "TestInitializeTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "TestInitializeTimeout", logger, v => settings.TestInitializeTimeout = v);
                         break;
                     case "TESTCLEANUPTIMEOUT":
-                        string testCleanupTimeout = reader.ReadInnerXml();
-                        if (int.TryParse(testCleanupTimeout, out int parsedTestCleanupTimeout) && parsedTestCleanupTimeout > 0)
-                        {
-                            settings.TestCleanupTimeout = parsedTestCleanupTimeout;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, testCleanupTimeout, "TestCleanupTimeout"));
-                        }
-
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "TestCleanupTimeout", logger, v => settings.TestCleanupTimeout = v);
                         break;
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         string cooperativeCancellationTimeout = reader.ReadInnerXml();
@@ -317,6 +254,18 @@ internal sealed partial class MSTestSettings
         }
 
         return settings;
+    }
+
+    private static void ParseTimeoutSetting(string rawValue, string settingName, IMessageLogger? logger, Action<int> setSetting)
+    {
+        if (int.TryParse(rawValue, out int result) && result > 0)
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, rawValue, settingName));
+        }
     }
 
     private static bool TryParseEnum<T>(string value, out T result)
