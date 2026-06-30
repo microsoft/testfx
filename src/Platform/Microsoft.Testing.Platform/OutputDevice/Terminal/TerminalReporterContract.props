@@ -24,7 +24,7 @@
       external consumer), so they also never conflict.
 
       The exception is IColor and SystemConsoleColor: those two ARE shipped *public* API of Microsoft.Testing.Platform
-      (Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.Fore/BackgroundColor), so a consumer that
+      (Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.ForegroundColor/BackgroundColor), so a consumer that
       ALSO references the platform would get CS0436 'conflicts with imported type' for them. They are public API, so
       they cannot be made [Embedded]/internal in the platform. Instead, when the consumer references
       Microsoft.Testing.Platform we DROP the duplicated copies (see the _RemoveTerminalReporter* target below) and let
@@ -103,6 +103,7 @@
           BeforeTargets="CoreCompile"
           Condition=" '$(TerminalReporterContractCompile)' != 'false' ">
     <ItemGroup>
+      <_TerminalReporterPlatformRef Remove="@(_TerminalReporterPlatformRef)" />
       <_TerminalReporterPlatformRef Include="@(ReferencePath)" Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' " />
     </ItemGroup>
     <PropertyGroup>

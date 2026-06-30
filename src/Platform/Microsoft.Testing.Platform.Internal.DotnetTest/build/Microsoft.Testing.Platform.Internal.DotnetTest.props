@@ -60,6 +60,7 @@
           AfterTargets="ResolveReferences"
           BeforeTargets="CoreCompile">
     <ItemGroup>
+      <_DotnetTestPlatformRef Remove="@(_DotnetTestPlatformRef)" />
       <_DotnetTestPlatformRef Include="@(ReferencePath)" Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' " />
     </ItemGroup>
     <PropertyGroup>
