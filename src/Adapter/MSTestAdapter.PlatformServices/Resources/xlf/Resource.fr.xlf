@@ -408,6 +408,11 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <target state="translated">L'adaptateur de test unitaire n'a pas réussi à se connecter à la source de données ou à lire les données. Pour plus d'informations sur le dépannage de l'erreur, consultez "Résolution des problèmes liés aux tests unitaires pilotés par les données" (http://go.microsoft.com/fwlink/?LinkId=62412) dans MSDN Library. Détails de l'erreur : {0}</target>
         <note>{0} is the error details. {Locked="http://go.microsoft.com/fwlink/?LinkId=62412"}{Locked="MSDN"}</note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
+        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</target>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
+      </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
         <target state="translated">UTA031 : la classe {0} n'a pas de propriété TestContext valide. TestContext doit être de type TestContext, doit être non-static et doit être public. Par exemple : public TestContext TestContext.</target>

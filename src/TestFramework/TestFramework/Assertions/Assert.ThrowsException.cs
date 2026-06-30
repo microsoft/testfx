@@ -299,4 +299,24 @@ public sealed partial class Assert
     public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, Func<Exception?, string> messageBuilder, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
         where TException : Exception
         => ThrowsExceptionAsync<TException>(action, isStrictType: true, messageBuilder, actionExpression);
+
+    /// <inheritdoc cref="ThrowsAsync{TException}(System.Func{System.Threading.Tasks.Task}, string, string)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static Task<TException> ThrowsAsync<TException>(Func<Task> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertNonStrictThrowsAsyncInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+        where TException : Exception
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.ThrowsAsync");
+        return Task.FromResult(message.ComputeAssertion(actionExpression));
+    }
+
+    /// <inheritdoc cref="ThrowsExactlyAsync{TException}(System.Func{System.Threading.Tasks.Task}, string, string)" />
+#pragma warning disable IDE0060 // Remove unused parameter - https://github.com/dotnet/roslyn/issues/76578
+    public static Task<TException> ThrowsExactlyAsync<TException>(Func<Task> action, [InterpolatedStringHandlerArgument(nameof(action))] ref AssertThrowsExactlyAsyncInterpolatedStringHandler<TException> message, [CallerArgumentExpression(nameof(action))] string actionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+        where TException : Exception
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.ThrowsExactlyAsync");
+        return Task.FromResult(message.ComputeAssertion(actionExpression));
+    }
 }

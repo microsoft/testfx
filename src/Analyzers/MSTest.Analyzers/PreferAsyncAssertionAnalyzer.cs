@@ -68,7 +68,6 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
         if (
             !SymbolEqualityComparer.Default.Equals(targetMethod.ContainingType, assertSymbol) ||
             targetMethod.Name is not ("Throws" or "ThrowsExactly") ||
-            HasInterpolatedStringHandlerParameter(targetMethod) ||
             context.ContainingSymbol is not IMethodSymbol containingMethod ||
             !containingMethod.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testMethodAttributeSymbol)) ||
             IsUnsupportedVoidTestMethod(containingMethod) ||
@@ -87,10 +86,6 @@ public sealed class PreferAsyncAssertionAnalyzer : DiagnosticAnalyzer
 
         context.ReportDiagnostic(operation.CreateDiagnostic(Rule, targetMethod.Name + "Async", targetMethod.Name));
     }
-
-    private static bool HasInterpolatedStringHandlerParameter(IMethodSymbol targetMethod)
-        => targetMethod.Parameters.Any(static parameter =>
-            parameter.Type.GetAttributes().Any(static attr => attr.AttributeClass?.Name == "InterpolatedStringHandlerAttribute"));
 
     private static bool IsUnsupportedVoidTestMethod(IMethodSymbol containingMethod)
         => containingMethod.ReturnsVoid &&
