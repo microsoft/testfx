@@ -42,6 +42,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
         {
             testHostResult.AssertExitCodeIs(ExitCode.Success);
             testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
+            testHostResult.AssertOutputContains("  flaky: 1");
+            testHostResult.AssertOutputContains("  total: 3 (+1 retried)");
             testHostResult.AssertOutputContains("Failed! -");
             testHostResult.AssertOutputContains("Passed! -");
 
@@ -63,6 +65,7 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             testHostResult.AssertOutputContains("Retry: attempt 3/4 failed - 1 failing test(s), retrying");
             // The final (4th) attempt is reported by the summary verdict, not by an amber "retrying" line.
             testHostResult.AssertOutputDoesNotContain("Retry: attempt 4/4 failed");
+            testHostResult.AssertOutputContains("  failed: 1");
             testHostResult.AssertOutputContains("Failed! -");
         }
     }
@@ -224,6 +227,8 @@ public class RetryFailedTestsTests : AcceptanceTestBase<RetryFailedTestsTests.Te
             string logFileContents = File.ReadAllText(logFile);
             Assert.Contains("Test run summary: Passed!", logFileContents);
             Assert.Contains("total: 3", logFileContents);
+            // Zero-retry runs must not advertise a retried suffix on the total line.
+            Assert.DoesNotContain("retried)", logFileContents);
             Assert.Contains("succeeded: 3", logFileContents);
             Assert.Contains("Retry summary: Passed! on the first attempt (no retries needed)", logFileContents);
         }

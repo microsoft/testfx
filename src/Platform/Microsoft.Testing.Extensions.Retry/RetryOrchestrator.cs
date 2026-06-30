@@ -596,20 +596,22 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         }
     }
 
-    // Renders a retry delay the same way the --retry-failed-tests-delay option accepts it (e.g. '500ms', '1s')
-    // so the displayed wait is consistent with how the user configured it.
+    // Renders a retry delay the same way the --retry-failed-tests-delay option accepts it (e.g. '500ms', '1s',
+    // '1500ms') so the displayed wait is consistent with how the user configured it. The output is always a single
+    // value + unit that TimeSpanParser round-trips, and uses InvariantCulture so it never varies by locale.
     private static string FormatDelay(TimeSpan delay)
         => delay.TotalMilliseconds < 1000
-            ? string.Format(CultureInfo.CurrentCulture, "{0}ms", (int)delay.TotalMilliseconds)
-            : delay.TotalSeconds < 60 && delay.Milliseconds == 0
-                ? string.Format(CultureInfo.CurrentCulture, "{0}s", (int)delay.TotalSeconds)
-                : delay.ToString("c", CultureInfo.CurrentCulture);
+            ? string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)delay.TotalMilliseconds)
+            : delay.Milliseconds == 0
+                ? string.Format(CultureInfo.InvariantCulture, "{0}s", (long)delay.TotalSeconds)
+                : string.Format(CultureInfo.InvariantCulture, "{0}ms", (long)delay.TotalMilliseconds);
 
-    // Compact, human-friendly duration for the retry summary (milliseconds / seconds / minutes-seconds).
+    // Compact, human-friendly duration for the retry summary, mirroring the platform terminal style
+    // (e.g. '240ms', '1s 240ms', '2m 03s'). InvariantCulture keeps the numeric separators stable across locales.
     private static string FormatDuration(TimeSpan duration)
         => duration.TotalSeconds < 1
-            ? string.Format(CultureInfo.CurrentCulture, "{0}ms", (int)duration.TotalMilliseconds)
+            ? string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)duration.TotalMilliseconds)
             : duration.TotalMinutes < 1
-                ? string.Format(CultureInfo.CurrentCulture, "{0:0.000}s", duration.TotalSeconds)
-                : string.Format(CultureInfo.CurrentCulture, "{0}m {1:00}s", (int)duration.TotalMinutes, duration.Seconds);
+                ? string.Format(CultureInfo.InvariantCulture, "{0}s {1:000}ms", duration.Seconds, duration.Milliseconds)
+                : string.Format(CultureInfo.InvariantCulture, "{0}m {1:00}s", (int)duration.TotalMinutes, duration.Seconds);
 }
