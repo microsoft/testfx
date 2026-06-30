@@ -111,5 +111,4 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
                 formatString,
                 value,
                 string.Join(", ", allowedValues.Select(v => $"'{v}'"))));
-
 }
