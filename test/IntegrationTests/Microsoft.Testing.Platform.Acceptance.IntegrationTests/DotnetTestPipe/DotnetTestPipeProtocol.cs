@@ -312,13 +312,22 @@ internal static class DotnetTestPipeProtocol
                     instanceId = ReadFixedSizeString(stream, fieldSize);
                     break;
                 case DisplayMessageFields.Level:
-                    level = (byte)stream.ReadByte();
-
-                    // Level is a single byte today, but advance past any extra bytes the wire format may
-                    // carry so subsequent fields stay aligned.
-                    if (fieldSize > 1)
+                    // Respect the declared field size and handle truncation explicitly: only read a Level byte
+                    // when the field actually carries one (fieldSize >= 1 and a byte is available), then skip any
+                    // extra bytes a future wire revision may add so subsequent fields stay aligned. ReadByte
+                    // returns -1 at end-of-stream, so guard against it rather than casting -1 to a byte.
+                    if (fieldSize >= 1)
                     {
-                        stream.Seek(fieldSize - 1, SeekOrigin.Current);
+                        int read = stream.ReadByte();
+                        if (read >= 0)
+                        {
+                            level = (byte)read;
+                        }
+
+                        if (fieldSize > 1)
+                        {
+                            stream.Seek(fieldSize - 1, SeekOrigin.Current);
+                        }
                     }
 
                     break;

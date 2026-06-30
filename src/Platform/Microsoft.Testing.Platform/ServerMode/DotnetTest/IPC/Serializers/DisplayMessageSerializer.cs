@@ -55,6 +55,15 @@ internal sealed class DisplayMessageSerializer : NamedPipeSerializer<DisplayMess
 
                 case DisplayMessageFieldsId.Level:
                     level = ReadByte(stream);
+
+                    // Level is a single byte today, but honor the declared field size so that a future
+                    // protocol revision that widens it (or a frame that reports a different size) does not
+                    // leave extra bytes unread and misalign the remaining fields.
+                    if (fieldSize > 1)
+                    {
+                        SetPosition(stream, stream.Position + (fieldSize - 1));
+                    }
+
                     break;
 
                 case DisplayMessageFieldsId.Text:
