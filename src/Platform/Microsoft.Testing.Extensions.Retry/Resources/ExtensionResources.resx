@@ -132,16 +132,49 @@
     <value>Percentage failed threshold is {0}% and {1}% tests failed ({2}/{3})</value>
     <comment>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</comment>
   </data>
-  <data name="MoveFiles" xml:space="preserve">
-    <value>
-=====================
-Moving last attempt asset files to the default result directory
-=====================
-</value>
+  <data name="RetryArtifactsMoved" xml:space="preserve">
+    <value>Retry: moved {0} result file(s) to '{1}'</value>
+    <comment>{0} is the number of files moved. {1} is the destination result directory.</comment>
   </data>
-  <data name="MovingFileToLocation" xml:space="preserve">
-    <value>Moving file '{0}' to '{1}'</value>
-    <comment>{0} is the source file path. {1} is the destination file path.</comment>
+  <data name="RetryAttemptFailedWillRetry" xml:space="preserve">
+    <value>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</value>
+    <comment>{0} is the current attempt number. {1} is the total number of attempts. {2} is the number of failing tests in this attempt.</comment>
+  </data>
+  <data name="RetryWaitingBeforeNextAttempt" xml:space="preserve">
+    <value>Retry: waiting {0} before attempt {1}/{2}</value>
+    <comment>{0} is the delay (e.g. '1s'). {1} is the next attempt number. {2} is the total number of attempts.</comment>
+  </data>
+  <data name="RetrySummaryPassed" xml:space="preserve">
+    <value>Retry summary: Passed! after {0}/{1} attempts</value>
+    <comment>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</comment>
+  </data>
+  <data name="RetrySummaryPassedNoRetry" xml:space="preserve">
+    <value>Retry summary: Passed! on the first attempt (no retries needed)</value>
+    <comment>Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</comment>
+  </data>
+  <data name="RetrySummaryFailed" xml:space="preserve">
+    <value>Retry summary: Failed! after {0}/{1} attempts</value>
+    <comment>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</comment>
+  </data>
+  <data name="RetrySummaryFailedLine" xml:space="preserve">
+    <value>  failed: {0}</value>
+    <comment>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</comment>
+  </data>
+  <data name="RetrySummaryFlakyLine" xml:space="preserve">
+    <value>  flaky: {0}</value>
+    <comment>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</comment>
+  </data>
+  <data name="RetrySummaryTotalLine" xml:space="preserve">
+    <value>  total: {0}</value>
+    <comment>{0} is the total number of tests in the suite. Two leading spaces and the lowercase 'total:' label mirror the platform run summary.</comment>
+  </data>
+  <data name="RetrySummaryRetriedSuffix" xml:space="preserve">
+    <value> (+{0} retried)</value>
+    <comment>{0} is the number of test executions that were retried. Appended to the total line, mirroring the platform '(+N retried)' suffix.</comment>
+  </data>
+  <data name="RetrySummaryDurationLine" xml:space="preserve">
+    <value>  duration: {0}</value>
+    <comment>{0} is the total retry orchestration duration. Two leading spaces and the lowercase 'duration:' label mirror the platform run summary.</comment>
   </data>
   <data name="RetryFailedTestsCannotStartProcessErrorMessage" xml:space="preserve">
     <value>Failed to start process '{0}'</value>
@@ -201,28 +234,6 @@ Moving last attempt asset files to the default result directory
   <data name="TestHostProcessExitedBeforeRetryCouldConnect" xml:space="preserve">
     <value>Test host process exited before the retry service could connect to it. Exit code: {0}</value>
     <comment>{0} is the test host process exit code.</comment>
-  </data>
-  <data name="TestSuiteCompletedSuccessfully" xml:space="preserve">
-    <value>
-=====================
-Tests suite completed successfully in {0} attempts
-=====================</value>
-    <comment>{0} is the total attempt count.</comment>
-  </data>
-  <data name="TestSuiteFailed" xml:space="preserve">
-    <value>
-=====================
-Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
-=====================
-</value>
-    <comment>{0} is the failed tests count. {1} is the exit code. {2} is the current attempt number. {3} is the total attempt count.</comment>
-  </data>
-  <data name="TestSuiteFailedInAllAttempts" xml:space="preserve">
-    <value>
-=====================
-Tests suite failed in all {0} attempts
-=====================</value>
-    <comment>{0} is the total attempt count.</comment>
   </data>
   <data name="TestSuiteFailedWithWrongExitCode" xml:space="preserve">
     <value>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</value>

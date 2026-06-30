@@ -102,4 +102,14 @@ internal abstract class CommandLineOptionsProviderBase : ICommandLineOptionsProv
             ? ValidationResult.InvalidTask(errorMessage)
             : null;
     }
+
+    protected static Task<ValidationResult> ValidateAllowedValuesAsync(string value, string[] allowedValues, string formatString)
+        => allowedValues.Contains(value, StringComparer.OrdinalIgnoreCase)
+            ? ValidationResult.ValidTask
+            : ValidationResult.InvalidTask(string.Format(
+                CultureInfo.InvariantCulture,
+                formatString,
+                value,
+                string.Join(", ", allowedValues.Select(v => $"'{v}'"))));
+
 }

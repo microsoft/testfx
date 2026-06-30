@@ -48,4 +48,45 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
 
         serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
     }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithWarningButNoConnection_IsSwallowedWithoutThrowing()
+    {
+        // A warning message is recognized as forwardable (so the connection is looked up), but with no dotnet
+        // test connection resolved there is nothing to forward to and the message is dropped.
+        var serviceProvider = new Mock<IServiceProvider>();
+        serviceProvider.Setup(p => p.GetService(typeof(IPushOnlyProtocol))).Returns(null!);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new WarningMessageOutputDeviceData("a warning"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithErrorButNoConnection_IsSwallowedWithoutThrowing()
+    {
+        // An error message is recognized as forwardable (so the connection is looked up), but with no dotnet
+        // test connection resolved there is nothing to forward to and the message is dropped.
+        var serviceProvider = new Mock<IServiceProvider>();
+        serviceProvider.Setup(p => p.GetService(typeof(IPushOnlyProtocol))).Returns(null!);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new ErrorMessageOutputDeviceData("an error"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithInformationalText_IsSwallowedWithoutResolvingTheConnection()
+    {
+        // Plain informational text (not an Azure DevOps marker, not a warning/error) must be discarded as
+        // early as NopPlatformOutputDevice would, without touching the service provider.
+        var serviceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new TextOutputDeviceData("just some info"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(It.IsAny<Type>()), Times.Never);
+    }
 }

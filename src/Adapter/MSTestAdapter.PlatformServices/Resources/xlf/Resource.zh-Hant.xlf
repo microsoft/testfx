@@ -408,6 +408,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">單元測試配接器無法連接至資料來源或無法讀取資料。如需為此錯誤進行疑難排解的詳細資訊，請參閱 MSDN Library 上的＜如何: 建立資料驅動型單元測試＞(http://go.microsoft.com/fwlink/?LinkId=62412)。錯誤詳細資料: {0}</target>
         <note>{0} is the error details. {Locked="http://go.microsoft.com/fwlink/?LinkId=62412"}{Locked="MSDN"}</note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
+        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</target>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
+      </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
         <target state="translated">UTA031: 類別 {0}不具備有效的 TestContext 屬性。TestContext 必須是 TestContext 類型、必須是 non-static 的，而且必須是 public 的。例如: public TestContext TestContext。</target>

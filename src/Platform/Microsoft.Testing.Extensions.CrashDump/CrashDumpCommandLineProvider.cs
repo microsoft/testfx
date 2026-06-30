@@ -33,12 +33,12 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName
-            && !DumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
+        if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName)
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, arguments[0]));
+            return ValidateAllowedValuesAsync(arguments[0], DumpTypeOptions, CrashDumpResources.CrashDumpTypeOptionInvalidType);
         }
-        else if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName
+
+        if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName
             && !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0]))
         {
             return ValidationResult.InvalidTask(CrashDumpResources.CrashSequenceOptionInvalidArgument);
