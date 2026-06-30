@@ -191,7 +191,7 @@ public sealed class JUnitReportMTPRetryExtensionTests : AcceptanceTestBase<JUnit
 
         // Test fails the first time then passes on retry — orchestrator should succeed.
         testHostResult.AssertExitCodeIs(ExitCode.Success);
-        testHostResult.AssertOutputContains("Tests suite completed successfully in 2 attempts");
+        testHostResult.AssertOutputContains("Retry summary: Passed! after 2/4 attempts");
 
         // Each attempt is a separate test-host child process and produces its own JUnit XML file.
         string[] junitFiles = Directory.GetFiles(resultDirectory, "*.xml", SearchOption.AllDirectories);

@@ -634,7 +634,7 @@ public sealed class PreferAsyncAssertionAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenAssertionUsesInterpolatedStringHandlerOverload_NoDiagnostic()
+    public async Task WhenAssertionUsesInterpolatedStringHandlerOverload_CodeFixUsesAsyncAssertion()
     {
         string code = """
             using System;
@@ -647,7 +647,7 @@ public sealed class PreferAsyncAssertionAnalyzerTests
                 [TestMethod]
                 public void MyTestMethod()
                 {
-                    Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult(), $"Message {GetMessage()}");
+                    [|Assert.ThrowsExactly<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult(), $"Message {GetMessage()}")|];
                 }
 
                 private Task BarAsync() => Task.CompletedTask;
@@ -655,7 +655,70 @@ public sealed class PreferAsyncAssertionAnalyzerTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => BarAsync(), $"Message {GetMessage()}");
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+                private string GetMessage() => "message";
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsUsesInterpolatedStringHandlerOverload_CodeFixUsesAsyncAssertion()
+    {
+        string code = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    [|Assert.Throws<InvalidOperationException>(() => BarAsync().GetAwaiter().GetResult(), $"Message {GetMessage()}")|];
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+                private string GetMessage() => "message";
+            }
+            """;
+
+        string fixedCode = """
+            using System;
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async Task MyTestMethod()
+                {
+                    await Assert.ThrowsAsync<InvalidOperationException>(() => BarAsync(), $"Message {GetMessage()}");
+                }
+
+                private Task BarAsync() => Task.CompletedTask;
+                private string GetMessage() => "message";
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 
     [TestMethod]

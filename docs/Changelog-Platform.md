@@ -40,6 +40,9 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add testconfig.json JSON schema for SchemaStore publication and IDE validation by @Evangelink in [#9405](https://github.com/microsoft/testfx/pull/9405)
 * Add experimental `IBlockingDataConsumer` marker interface for synchronous inline data consumption by @Evangelink in [#9426](https://github.com/microsoft/testfx/pull/9426)
 * Add experimental `Microsoft.Testing.Extensions.VideoRecorder` extension for screen recording during test runs (requires ffmpeg; `--capture-video` opt-in) by @Evangelink in [#9377](https://github.com/microsoft/testfx/pull/9377)
+* Add experimental `ITestHostLauncher` extension point and `Microsoft.Testing.Extensions.PackagedApp` reference extension for packaged app test host deployment by @Evangelink in [#9454](https://github.com/microsoft/testfx/pull/9454)
+* Forward Azure DevOps logging commands over the dotnet test pipe for multi-assembly test runs by @Evangelink in [#9463](https://github.com/microsoft/testfx/pull/9463)
+* Add `PropertyBag.FirstOrDefault<TProperty>()` for efficient single-property lookup without per-call array allocation by @Evangelink in [#9488](https://github.com/microsoft/testfx/pull/9488)
 
 ### Fixed
 

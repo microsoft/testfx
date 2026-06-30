@@ -140,6 +140,43 @@ public class TestMethodValidatorTests : TestContainer
         _testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings).Should().BeTrue();
     }
 
+    public void IsValidTestMethodShouldReturnTrueForMethodsWithValueTaskReturnType()
+    {
+        SetupTestMethod();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
+            "MethodWithValueTaskReturnType",
+            BindingFlags.Instance | BindingFlags.Public)!;
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, _type, _warnings).Should().BeTrue();
+        _warnings.Count.Should().Be(0);
+    }
+
+    public void IsValidTestMethodShouldReturnFalseAndReportTargetedWarningForGenericValueTaskReturnType()
+    {
+        SetupTestMethod();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
+            "MethodWithGenericValueTaskReturnType",
+            BindingFlags.Instance | BindingFlags.Public)!;
+
+        _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().Contain("ValueTask<T>");
+    }
+
+    public void IsValidTestMethodShouldReportGenericSignatureWarningWhenGenericValueTaskMethodIsAlsoInvalidForAnotherReason()
+    {
+        SetupTestMethod();
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
+            "StaticMethodWithGenericValueTaskReturnType",
+            BindingFlags.Static | BindingFlags.Public)!;
+
+        // The method is invalid because it is static; the targeted ValueTask<T> message must NOT be used here,
+        // otherwise the user could "fix" the return type and still have an invalid (static) method.
+        _testMethodValidator.IsValidTestMethod(methodInfo, typeof(DummyTestClass), _warnings).Should().BeFalse();
+        _warnings.Should().ContainSingle();
+        _warnings[0].Should().NotContain("ValueTask<T>");
+    }
+
     public void IsValidTestMethodShouldReturnTrueForMethodsWithVoidReturnType()
     {
         SetupTestMethod();
@@ -216,6 +253,12 @@ internal abstract class DummyTestClass
     public async Task AsyncMethodWithTaskReturnType() => await Task.Delay(TimeSpan.Zero);
 
     public Task MethodWithTaskReturnType() => Task.Delay(TimeSpan.Zero);
+
+    public ValueTask MethodWithValueTaskReturnType() => default;
+
+    public ValueTask<int> MethodWithGenericValueTaskReturnType() => default;
+
+    public static ValueTask<int> StaticMethodWithGenericValueTaskReturnType() => default;
 
     public int MethodWithIntReturnType() => 0;
 

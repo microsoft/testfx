@@ -26,3 +26,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expec
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.ReadOnlySpan<T> collection, string? message = "", string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Span<T> collection, ref Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<T> message, string! collectionExpression = "") -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HasCount<T>(int expected, System.Span<T> collection, string? message = "", string! collectionExpression = "") -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsAsyncInterpolatedStringHandler<TException>.AppendFormatted(System.ReadOnlySpan<char> value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsAsyncInterpolatedStringHandler<TException>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyAsyncInterpolatedStringHandler<TException>.AppendFormatted(System.ReadOnlySpan<char> value, int alignment = 0, string? format = null) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyAsyncInterpolatedStringHandler<TException>.AppendFormatted(System.ReadOnlySpan<char> value) -> void
