@@ -83,18 +83,14 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
     }
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-    {
-        bool hasHangDumpSubOption = commandLineOptions.IsOptionSet(HangDumpTimeoutOptionName) ||
-            commandLineOptions.IsOptionSet(HangDumpFileNameOptionName) ||
-            commandLineOptions.IsOptionSet(HangDumpTypeOptionName) ||
-            commandLineOptions.IsOptionSet(HangDumpTypeIfSupportedOptionName);
-
-        return hasHangDumpSubOption && !commandLineOptions.IsOptionSet(HangDumpOptionName)
-            ? ValidationResult.InvalidTask(ExtensionResources.MissingHangDumpMainOption)
-            : commandLineOptions.IsOptionSet(HangDumpTypeOptionName) && commandLineOptions.IsOptionSet(HangDumpTypeIfSupportedOptionName)
-                ? ValidationResult.InvalidTask(ExtensionResources.HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage)
-                : ValidationResult.ValidTask;
-    }
+        => RequiresMainOption(
+            commandLineOptions,
+            [HangDumpTimeoutOptionName, HangDumpFileNameOptionName, HangDumpTypeOptionName, HangDumpTypeIfSupportedOptionName],
+            HangDumpOptionName,
+            () => ExtensionResources.MissingHangDumpMainOption)
+        ?? (commandLineOptions.IsOptionSet(HangDumpTypeOptionName) && commandLineOptions.IsOptionSet(HangDumpTypeIfSupportedOptionName)
+            ? ValidationResult.InvalidTask(ExtensionResources.HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage)
+            : ValidationResult.ValidTask);
 
     // Returns true when 'value' (an already-validated entry from the full hang dump type set)
     // is available on the current runtime, i.e. when --hangdump-type would have accepted it.
