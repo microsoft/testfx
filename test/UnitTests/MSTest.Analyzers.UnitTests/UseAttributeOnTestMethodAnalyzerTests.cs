@@ -240,7 +240,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenMethodIsMarkedWithDataTestMethodAndTestAttribute_NoDiagnosticAsync()
+    public async Task WhenMethodIsMarkedWithDataTestMethodAndOwnerAttribute_NoDiagnosticAsync()
     {
         // DataTestMethod inherits TestMethodAttribute — the analyzer exits early on any
         // method decorated with a TestMethod subclass, including the standard DataTestMethod.
