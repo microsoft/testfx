@@ -18,8 +18,6 @@
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <!-- Nothing in lib but that's expected -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
-    <!-- This is a packaging-only project - suppress build output from package -->
-    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
