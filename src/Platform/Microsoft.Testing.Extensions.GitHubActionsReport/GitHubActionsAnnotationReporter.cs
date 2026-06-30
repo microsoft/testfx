@@ -119,7 +119,13 @@ internal sealed class GitHubActionsAnnotationReporter :
             _logger.LogTrace($"Showing failure annotation '{line}'.");
         }
 
-        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
+        // Prepend a newline so the '::error' workflow command always starts at column 0 on its own line.
+        // In CI the terminal output device runs in SimpleAnsi mode and emits a color reset ('\e[m') WITHOUT a
+        // trailing newline after the preceding colored "failed" test block. Emitting the annotation directly
+        // would yield "\e[m::error ..." and GitHub only recognizes a workflow command when the line begins
+        // with '::', so the dangling reset would silently drop the annotation. The leading newline pushes the
+        // reset onto its own (ignored) line and keeps the annotation parseable.
+        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData($"\n{line}"), cancellationToken).ConfigureAwait(false);
     }
 
     internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger)
