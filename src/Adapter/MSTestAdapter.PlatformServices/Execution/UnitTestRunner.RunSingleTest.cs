@@ -184,13 +184,11 @@ internal sealed partial class UnitTestRunner
                     TestResult? cleanupResult = await testMethodInfo.Parent.RunClassCleanupAsync(testContextForClassCleanup, result).ConfigureAwait(false);
                     if (cleanupResult is not null)
                     {
-                        if (notRunnableResult is not null)
+                        // Current test is ignored, and we have a class cleanup failure. We need to attach to the right test.
+                        if (notRunnableResult is not null &&
+                            _lastRunnableTestByClass.TryGetValue(testMethod.FullClassName, out UnitTestElement? lastRunnableUnitTest))
                         {
-                            // Current test is ignored, and we have a class cleanup failure. We need to attach to the right test.
-                            if (_lastRunnableTestByClass.TryGetValue(testMethod.FullClassName, out UnitTestElement? lastRunnableUnitTest))
-                            {
-                                cleanupResult.AssociatedUnitTestElement = lastRunnableUnitTest;
-                            }
+                            cleanupResult.AssociatedUnitTestElement = lastRunnableUnitTest;
                         }
 
                         result = [.. result, cleanupResult];
@@ -204,12 +202,12 @@ internal sealed partial class UnitTestRunner
             }
 
             if (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true &&
-                _classCleanupManager.ShouldRunEndOfAssemblyCleanup)
+                _classCleanupManager.ShouldRunEndOfAssemblyCleanup &&
+                testContextForClassCleanup is not null)
             {
                 // testContextForClassCleanup is guaranteed non-null here: ShouldRunEndOfAssemblyCleanup
                 // becomes true only after MarkClassComplete, which is called exclusively inside the
                 // isLastTestInClass block above — where testContextForClassCleanup is allocated.
-                DebugEx.Assert(testContextForClassCleanup is not null, "testContextForClassCleanup should not be null when running assembly cleanup.");
                 testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
 
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);

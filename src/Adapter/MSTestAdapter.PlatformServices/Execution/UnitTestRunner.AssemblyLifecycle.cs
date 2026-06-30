@@ -27,8 +27,9 @@ internal sealed partial class UnitTestRunner
         }
         finally
         {
+            result ??= new TestResult { Outcome = UnitTestOutcome.Error };
             var testContextImpl = testContext.Context as TestContextImplementation;
-            result!.LogOutput = testContextImpl?.GetAndClearOutput();
+            result.LogOutput = testContextImpl?.GetAndClearOutput();
             result.LogError = testContextImpl?.GetAndClearError();
             result.DebugTrace = testContextImpl?.GetAndClearTrace();
             result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
