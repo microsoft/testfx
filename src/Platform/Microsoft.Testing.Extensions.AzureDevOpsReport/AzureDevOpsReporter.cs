@@ -69,7 +69,7 @@ internal sealed class AzureDevOpsReporter :
         _outputDisplay = outputDisplay;
         _historyService = historyService;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
-        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
     }
 
     public Type[] DataTypesConsumed { get; } =

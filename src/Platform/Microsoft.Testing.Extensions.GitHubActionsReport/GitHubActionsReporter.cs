@@ -35,7 +35,7 @@ internal sealed class GitHubActionsReporter :
         _outputDisplay = outputDisplay;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _logger = loggerFactory.CreateLogger<GitHubActionsReporter>();
-        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerWithRuntimeFallback();
     }
 
     /// <inheritdoc />

@@ -69,7 +69,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
             && artifactNameArguments is [string artifactName]
                 ? artifactName
                 : null;
-        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker);
+        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
     }
 
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage), typeof(FileArtifact)];

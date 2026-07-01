@@ -63,7 +63,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _logger = loggerFactory.CreateLogger<AzureDevOpsSummaryReporter>();
         _isEnabled = commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsSummary);
-        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker);
+        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
     }
 
     public Type[] DataTypesConsumed { get; } = [typeof(TestNodeUpdateMessage)];
