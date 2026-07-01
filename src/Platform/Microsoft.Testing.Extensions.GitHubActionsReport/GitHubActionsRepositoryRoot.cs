@@ -29,6 +29,10 @@ internal static class GitHubActionsRepositoryRoot
 
     internal static /* for testing */ string? FindGitRoot()
     {
+        // This intentionally mirrors the test-infrastructure RootFinder.Find() walk (from AppContext.BaseDirectory
+        // up to the drive root, looking for a '.git' directory or worktree file) but returns null instead of
+        // throwing when nothing is found, so a reporter running outside a git checkout degrades to "no source
+        // location" rather than failing. RootFinder also lives in test utilities, so it is deliberately not reused.
         if (s_cachedGitRoot is not null)
         {
             return s_cachedGitRoot;
