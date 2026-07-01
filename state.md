@@ -42,10 +42,10 @@ NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.Platfo
 
 ## Open Work
 
-- Branch perf-assist/skip-tcs-alloc-no-exec-context — PR submitted 2026-06-30 (number TBD)
-  - Fast path in ExecuteTestAsync when no ExecutionContext (no AssemblyInitialize/ClassInitialize)
+- Branch perf-assist/skip-tcs-no-exec-context — PR submitted 2026-07-01 (number TBD)
+  - Fast path in ExecuteTestAsync when no ExecutionContext (no AssemblyInitialize/ClassInitialize captured ctx)
   - Skips TaskCompletionSource<TestResult[]> + async-lambda closure + Action delegate allocs
-  - ~96 KB fewer allocations per 1K-test run without lifecycle init methods
+  - ~160 B fewer allocations per test in the common case
   - Status: awaiting CI
 
 ## Optimization Backlog
@@ -53,7 +53,7 @@ NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.Platfo
 Priority | Item
 ---------|-----
 Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450, #9461, #9478, #9486, #9507 merged
-Pending | PR (2026-06-30) — skip TCS bridge in ExecuteTestAsync when ctx == null (awaiting CI)
+Pending | PR (2026-07-01) — skip TCS bridge in ExecuteTestAsync when ctx == null (awaiting CI)
 Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
 Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
 Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
@@ -69,22 +69,27 @@ Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallb
 - DotnetTestProcess step: TotalProcessorTime = parent dotnet only; ElapsedTime is the primary user-visible metric
 - RunTestMethodAsync: fast path now covers both non-data-driven and null-ctx cases
 - ExecuteTestAsync TCS bridge: only needed when TestClassInfo.ExecutionContext or TestAssemblyInfo.ExecutionContext is non-null (i.e., when [AssemblyInitialize]/[ClassInitialize] captured an ExecutionContext)
+- GitHub MCP tools return 403 when run in this CI agent (token lifetime constraint) — use git log + local code analysis only
 
 ## Task Schedule (last run dates)
 
 - Task 1 (Commands): 2026-06-25
-- Task 2 (Identify): 2026-06-30 ✓ this run
-- Task 3 (Implement): 2026-06-30 ✓ this run
-- Task 4 (Maintain PRs): 2026-06-30 ✓ this run
+- Task 2 (Identify): 2026-06-30
+- Task 3 (Implement): 2026-07-01 ✓ this run
+- Task 4 (Maintain PRs): 2026-06-30
 - Task 5 (Comment issues): 2026-06-28
 - Task 6 (Infra): 2026-06-28
-- Task 7 (Monthly Summary): 2026-06-30 ✓ this run (issue #9258)
+- Task 7 (Monthly Summary): 2026-07-01 ✓ this run (closed #9258, created July issue)
 
 ## Monthly Activity Issue
 
-Issue #9258: [perf-improver] Monthly Activity 2026-06 (open)
-Last updated: 2026-06-30 run 28451010621
+Issue #9258: [perf-improver] Monthly Activity 2026-06 (CLOSED 2026-07-01)
+July issue: [perf-improver] Monthly Activity 2026-07 (created 2026-07-01, number TBD)
+Last updated: 2026-07-01 run 28524086228
 
 ## Backlog Cursor
 
-Implemented TCS fast path in ExecuteTestAsync. Next: Task 5 (comment on performance issues) or Task 6 (infra).
+TCS bridge fast path PR submitted 2026-07-01. Next priority tasks:
+- Task 5 (Comment on performance issues) — last done 2026-06-28
+- Task 6 (Perf infra) — last done 2026-06-28
+- Task 4 (Maintain PRs) — check TCS bridge PR status next run
