@@ -31,7 +31,7 @@ internal static class TestNodeIdentity
         // Walk the PropertyBag once with the zero-allocation struct enumerator, avoiding the LINQ
         // iterator/boxed-enumerator allocations that OfType<T>().FirstOrDefault(...) would incur.
         // Short-circuit as soon as the preferred TestMethodIdentifierProperty is found; otherwise
-        // remember the VSTest fully-qualified name as a fallback.
+        // remember the first VSTest fully-qualified name as a fallback.
         string? fullyQualifiedName = null;
         using PropertyBag.PropertyBagEnumerator enumerator = testNode.Properties.GetStructEnumerator();
         while (enumerator.MoveNext())
@@ -41,7 +41,7 @@ internal static class TestNodeIdentity
                 case TestMethodIdentifierProperty testMethodIdentifier:
                     return FormatFullyQualifiedName(testMethodIdentifier);
 
-                case SerializableKeyValuePairStringProperty { Key: FullyQualifiedNamePropertyKey } kvp:
+                case SerializableKeyValuePairStringProperty { Key: FullyQualifiedNamePropertyKey } kvp when fullyQualifiedName is null:
                     fullyQualifiedName = kvp.Value;
                     break;
             }
