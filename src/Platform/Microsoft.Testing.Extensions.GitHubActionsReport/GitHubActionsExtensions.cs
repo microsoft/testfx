@@ -38,6 +38,14 @@ public static class GitHubActionsExtensions
                 serviceProvider.GetClock(),
                 serviceProvider.GetLoggerFactory()));
 
+        var compositeReporter = new CompositeExtensionFactory<GitHubActionsReporter>(serviceProvider =>
+            new GitHubActionsReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                serviceProvider.GetLoggerFactory()));
+
         builder.TestHost.AddDataConsumer(serviceProvider =>
             new GitHubActionsAnnotationReporter(
                 serviceProvider.GetCommandLineOptions(),
@@ -50,13 +58,11 @@ public static class GitHubActionsExtensions
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
         builder.TestHost.AddDataConsumer(compositeSlowTestReporter);
         builder.TestHost.AddTestSessionLifetimeHandler(compositeSlowTestReporter);
-        builder.TestHost.AddTestSessionLifetimeHandler(serviceProvider =>
-            new GitHubActionsReporter(
-                serviceProvider.GetCommandLineOptions(),
-                serviceProvider.GetEnvironment(),
-                serviceProvider.GetOutputDevice(),
-                serviceProvider.GetTestApplicationModuleInfo(),
-                serviceProvider.GetLoggerFactory()));
+
+        // Register the group reporter last, as both a data consumer (no-op) and a session-lifetime handler, so its
+        // closing '::endgroup::' is ordered into the consumer phase after every other reporter's final output.
+        builder.TestHost.AddDataConsumer(compositeReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
         builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
     }
 }
