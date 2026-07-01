@@ -49,15 +49,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Microsoft.NET.Test.Sdk package is referenced by build system, so omitting it. -->
-    <!-- VSTest is packaging props/targets in build directory of the NuGet package instead of buildTransitive -->
-    <!-- To ensure that this flows to consumers of MSTest metapackage, we set PrivateAssets to none (by default, PrivateAssets includes "build") -->
-    <!-- If VSTest moves from build to buildTransitive, the PrivateAssets here can/should be removed. -->
-    <!-- Currently, VSTest isn't able to move from build to buildTransitive -->
-    <!-- See: https://github.com/microsoft/vstest/pull/3879, -->
-    <!--      https://github.com/microsoft/vstest/issues/4098 -->
-    <!--      https://github.com/microsoft/vstest/pull/4104 -->
-    <PackageReference Include="Microsoft.NET.Test.Sdk" VersionOverride="$(MicrosoftNETTestSdkVersion)" Condition="'$(TargetFramework)' != '$(UwpMinimum)'" PrivateAssets="none" />
+    <!--
+      Microsoft.NET.Test.Sdk (the classic VSTest runner, which drags in Microsoft.TestPlatform.TestHost and the
+      rest of the VSTest execution stack) is intentionally NOT referenced. MSTest runs as a
+      Microsoft.Testing.Platform (MTP) application and does not need the VSTest testhost/runner. Dropping it keeps
+      the MSTest package's only VSTest-lineage dependency down to Microsoft.TestPlatform.ObjectModel, which flows
+      transitively through Microsoft.Testing.Extensions.VSTestBridge (plus the source-only, non-flowing
+      Microsoft.TestPlatform.Filter.Source). MTP build integration is provided by Microsoft.Testing.Platform.MSBuild
+      (flowed via MSTest.TestAdapter), not by Microsoft.NET.Test.Sdk. -->
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
   </ItemGroup>
 
