@@ -23,6 +23,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     private NamedPipeClient? _dotnetTestPipeClient;
 
+    private NamedPipeClient? _serverControlPipeClient;
+    private Task? _serverControlListenerTask;
+    private CancellationTokenSource? _serverControlListenerCts;
+    private string? _serverControlPipeName;
+    private int _cancelRequested;
+
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
     public DotnetTestConnection(CommandLineHandler commandLineHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
@@ -97,6 +103,12 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     // so an older SDK (<= 1.2.0) never receives an unknown message id.
     public bool IsDisplayMessageForwardingSupported { get; private set; }
 
+    // True once the SDK advertised a reverse "server control" pipe name in its handshake reply. When set, the
+    // test host opens a NamedPipeClient to that pipe and parks a long-poll so the SDK can push a
+    // ServerControlMessage (e.g. CancelSession) at any time. The feature is gated on the presence of the handshake
+    // property (a capability), not on the negotiated version string, so an older SDK simply never enables it.
+    public bool IsServerControlChannelSupported { get; private set; }
+
     public async Task<bool> IsCompatibleProtocolAsync(string hostType, IReadOnlyDictionary<byte, string>? additionalHandshakeProperties = null)
     {
         RoslynDebug.Assert(_dotnetTestPipeClient is not null);
@@ -131,6 +143,13 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         IsIDE = response.Properties?.TryGetValue(HandshakeMessagePropertyNames.IsIDE, out string? isIDEValue) == true &&
             bool.TryParse(isIDEValue, out bool isIDE) &&
             isIDE;
+
+        if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.ServerControlPipeName, out string? serverControlPipeName) == true &&
+            !RoslynString.IsNullOrEmpty(serverControlPipeName))
+        {
+            _serverControlPipeName = serverControlPipeName;
+            IsServerControlChannelSupported = true;
+        }
 
         if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.SupportedProtocolVersions, out string? protocolVersion) is true)
         {
@@ -186,7 +205,146 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         }
     }
 
-    public Task OnExitAsync() => Task.CompletedTask;
+    /// <summary>
+    /// Opens the reverse "server control" pipe the SDK advertised during the handshake and parks a long-poll
+    /// <see cref="WaitForServerControlRequest"/> on it. The SDK completes that request with a
+    /// <see cref="ServerControlMessage"/> whenever it wants to signal the test host (today only
+    /// <see cref="ServerControlKinds.CancelSession"/>). On cancel - or when the control pipe drops, which means
+    /// the host went away - <paramref name="onCancelSessionRequestedAsync"/> is invoked exactly once so the caller
+    /// can stop the run cooperatively (preferring a graceful stop so trx/artifacts are still produced).
+    /// </summary>
+    /// <param name="onCancelSessionRequestedAsync">
+    /// The reaction to a server-initiated cancel. It receives the test application cancellation token.
+    /// </param>
+    /// <remarks>
+    /// This is best-effort: if the control pipe cannot be established the test run continues unaffected (the
+    /// feature simply stays off). Callers should only invoke this after a successful handshake and when
+    /// <see cref="IsServerControlChannelSupported"/> is <see langword="true"/>.
+    /// </remarks>
+    public async Task StartServerControlChannelAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync)
+    {
+        if (!IsServerControlChannelSupported || RoslynString.IsNullOrEmpty(_serverControlPipeName) || _serverControlPipeClient is not null)
+        {
+            return;
+        }
 
-    public void Dispose() => _dotnetTestPipeClient?.Dispose();
+        _serverControlListenerCts = CancellationTokenSource.CreateLinkedTokenSource(_cancellationTokenSource.CancellationToken);
+
+        // exitProcessOnConnectionLoss: false - a dropped control pipe must not kill the test host; the listener
+        // turns it into a cooperative cancel instead.
+        var controlClient = new NamedPipeClient(_serverControlPipeName, _environment, exitProcessOnConnectionLoss: false);
+        controlClient.RegisterAllSerializers();
+
+        try
+        {
+            // Bound the connect so a misbehaving SDK that advertises a pipe it never listens on cannot hang the run.
+            using var connectCts = CancellationTokenSource.CreateLinkedTokenSource(_serverControlListenerCts.Token);
+            connectCts.CancelAfter(TimeSpan.FromSeconds(30));
+            await controlClient.ConnectAsync(connectCts.Token).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Best-effort: failing to establish the control channel degrades to "no server-initiated cancel"
+            // rather than breaking the test run.
+            controlClient.Dispose();
+            return;
+        }
+
+        _serverControlPipeClient = controlClient;
+        _serverControlListenerTask = Task.Run(
+            () => ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, _serverControlListenerCts.Token));
+    }
+
+    private async Task ListenForServerControlAsync(NamedPipeClient controlClient, Func<CancellationToken, Task> onCancelSessionRequestedAsync, CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                ServerControlMessage message = await controlClient.RequestReplyAsync<WaitForServerControlRequest, ServerControlMessage>(
+                    WaitForServerControlRequest.CachedInstance, cancellationToken).ConfigureAwait(false);
+
+                if (message.Kind == ServerControlKinds.CancelSession)
+                {
+                    await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+                    return;
+                }
+
+                // Unknown control kind (forward-compat): ignore it and keep parking for the next signal.
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // We are shutting down (dispose or app cancellation) - nothing to do.
+        }
+        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            // The control pipe dropped while the session was still live => the host went away. Treat it as a
+            // cooperative cancel so we still try to wind down and report whatever completed.
+            await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Cancellation raced with a pipe error; ignore.
+        }
+    }
+
+    private async Task RequestCancelOnceAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync)
+    {
+        if (Interlocked.Exchange(ref _cancelRequested, 1) != 0)
+        {
+            return;
+        }
+
+        await onCancelSessionRequestedAsync(_cancellationTokenSource.CancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task OnExitAsync()
+    {
+#if NET
+        if (_serverControlListenerCts is { } cts)
+        {
+            await cts.CancelAsync().ConfigureAwait(false);
+        }
+#else
+#pragma warning disable VSTHRD103 // CancellationTokenSource.CancelAsync is not available on this target framework.
+        _serverControlListenerCts?.Cancel();
+#pragma warning restore VSTHRD103
+#endif
+
+        if (_serverControlListenerTask is { } listenerTask)
+        {
+            try
+            {
+                await listenerTask.ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // The listener swallows its own expected exceptions; anything reaching here happened during
+                // shutdown and must not fail the exit path.
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        _serverControlListenerCts?.Cancel();
+
+        if (_serverControlListenerTask is { } listenerTask)
+        {
+            try
+            {
+                // Bounded wait: cancelling the linked token unblocks the parked read quickly. Never hang exit.
+                listenerTask.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception)
+            {
+                // Best-effort shutdown.
+            }
+        }
+
+        _serverControlPipeClient?.Dispose();
+        _serverControlListenerCts?.Dispose();
+        _dotnetTestPipeClient?.Dispose();
+    }
 }

@@ -197,3 +197,17 @@ internal static class DisplayMessageFieldsId
     public const ushort Level = 3;
     public const ushort Text = 4;
 }
+
+[Embedded]
+internal static class WaitForServerControlRequestFieldsId
+{
+    public const int MessagesSerializerId = 13;
+}
+
+[Embedded]
+internal static class ServerControlMessageFieldsId
+{
+    public const int MessagesSerializerId = 14;
+
+    public const ushort Kind = 1;
+}

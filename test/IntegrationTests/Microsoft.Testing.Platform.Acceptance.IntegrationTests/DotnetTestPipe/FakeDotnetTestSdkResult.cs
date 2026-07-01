@@ -16,13 +16,17 @@ internal sealed class FakeDotnetTestSdkResult
         IReadOnlyList<RawMessage> receivedMessages,
         Dictionary<byte, string>? receivedHandshake,
         Dictionary<byte, string>? sentHandshakeReply,
-        string? negotiatedProtocolVersion)
+        string? negotiatedProtocolVersion,
+        bool serverControlPipeConnected = false,
+        bool serverCancelSent = false)
     {
         TestHostResult = testHostResult;
         ReceivedMessages = receivedMessages;
         ReceivedHandshake = receivedHandshake;
         SentHandshakeReply = sentHandshakeReply;
         NegotiatedProtocolVersion = negotiatedProtocolVersion;
+        ServerControlPipeConnected = serverControlPipeConnected;
+        ServerCancelSent = serverCancelSent;
     }
 
     /// <summary>The process-level result: exit code, captured stdout, captured stderr.</summary>
@@ -40,6 +44,12 @@ internal sealed class FakeDotnetTestSdkResult
 
     /// <summary>The version the fake SDK selected from the test app's advertised list, or null/empty if none.</summary>
     public string? NegotiatedProtocolVersion { get; }
+
+    /// <summary>True when the test app connected back to the reverse server-control pipe the SDK advertised.</summary>
+    public bool ServerControlPipeConnected { get; }
+
+    /// <summary>True when the fake SDK pushed a CancelSession control message to the test app.</summary>
+    public bool ServerCancelSent { get; }
 
     /// <summary>Returns all frames whose serializer ID matches <paramref name="serializerId"/>.</summary>
     public IEnumerable<RawMessage> MessagesWithSerializerId(int serializerId)

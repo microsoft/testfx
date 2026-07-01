@@ -61,6 +61,23 @@ internal static class HandshakeMessagePropertyNames
     // dotnet test in the SDK) can understand why an orchestrator is participating
     // in the run. The value is the orchestrator extension Uid.
     internal const byte OrchestratorFeature = 11;
+
+    // Carries the OS-level name of the reverse "server control" pipe. Only ever sent by the SDK
+    // (dotnet test) in its handshake reply. Its presence is the capability signal for
+    // server-initiated session cancellation: when the test host sees a non-empty value it opens a
+    // NamedPipeClient to that pipe and parks a long-poll WaitForServerControlRequest so the SDK can
+    // push a ServerControlMessage (e.g. CancelSession) at any time - even while the test host is
+    // otherwise silent. An older SDK never sends this property, so the feature stays disabled.
+    internal const byte ServerControlPipeName = 12;
+}
+
+[Embedded]
+internal static class ServerControlKinds
+{
+    // The kind of a ServerControlMessage the SDK pushes to the test host over the reverse control pipe.
+    // Values must stay stable (they flow over IPC to dotnet test). Reserve additional values for future
+    // signals (drain, pause, ...).
+    internal const byte CancelSession = 1;
 }
 
 [Embedded]
@@ -128,5 +145,12 @@ internal static class ProtocolConstants
     // output (the SDK suppresses its TerminalTestReporter to avoid colliding with the host output it expected
     // before this change). Users must update to an SDK that negotiates 1.1.0 to see live output via the SDK's
     // TerminalTestReporter.
-    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0";
+    // 1.4.0 adds the reverse "server control" channel used for server-initiated session cancellation. When the
+    // SDK advertises a ServerControlPipeName in its handshake reply, the test host opens a NamedPipeClient to that
+    // pipe and parks a long-poll WaitForServerControlRequest; the SDK completes it with a ServerControlMessage
+    // (e.g. CancelSession) whenever it wants the test host to stop cooperatively (global --maximum-failed-tests,
+    // --timeout, ...). The feature is gated on the presence of the handshake property (a capability), not on this
+    // version string, so an older SDK that never advertises the pipe leaves the feature disabled. The version is
+    // still bumped so the negotiated-version state advances in lockstep.
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0";
 }
