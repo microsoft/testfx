@@ -10,6 +10,7 @@
       "src\\Platform\\Microsoft.Testing.Extensions.AzureFoundry\\Microsoft.Testing.Extensions.AzureFoundry.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.CrashDump\\Microsoft.Testing.Extensions.CrashDump.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.CtrfReport\\Microsoft.Testing.Extensions.CtrfReport.csproj",
+      "src\\Platform\\Microsoft.Testing.Extensions.GitHubActionsReport\\Microsoft.Testing.Extensions.GitHubActionsReport.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.HangDump\\Microsoft.Testing.Extensions.HangDump.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.HotReload\\Microsoft.Testing.Extensions.HotReload.csproj",
       "src\\Platform\\Microsoft.Testing.Extensions.HtmlReport\\Microsoft.Testing.Extensions.HtmlReport.csproj",
