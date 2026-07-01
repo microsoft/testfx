@@ -22,6 +22,7 @@ public abstract class AcceptanceTestBase
         MicrosoftTestingExtensionsJUnitReportVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.JUnitReport.");
         MicrosoftTestingExtensionsPackagedAppVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.PackagedApp.");
         MicrosoftTestingExtensionsVideoRecorderVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, "Microsoft.Testing.Extensions.VideoRecorder.");
+        MicrosoftTestingExtensionsAzureFoundryVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesNonShipping, "Microsoft.Testing.Extensions.AzureFoundry.");
     }
 
     internal static string RID { get; }
@@ -50,6 +51,8 @@ public abstract class AcceptanceTestBase
     public static string MicrosoftTestingExtensionsPackagedAppVersion { get; private set; }
 
     public static string MicrosoftTestingExtensionsVideoRecorderVersion { get; private set; }
+
+    public static string MicrosoftTestingExtensionsAzureFoundryVersion { get; private set; }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
