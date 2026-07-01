@@ -13,7 +13,7 @@ Introduce an **artifact post-processing** mechanism for Microsoft.Testing.Platfo
 
 The design has two layers that ship in order:
 
-1. **A typed, invocation-agnostic engine contract `IArtifactPostProcessor`** plus a **user-facing `ITool`** per well-known kind (e.g. `merge-trx`). Both delegate to one shared merge engine. This layer delivers value immediately, is discoverable (`--list-tools`), user-runnable from a shell, and needs **zero SDK or protocol changes**.
+1. **A typed, invocation-agnostic engine contract `IArtifactPostProcessor`** plus a **user-facing `ITool`** per well-known kind (e.g. `merge-trx`). Both delegate to one shared merge engine. This layer delivers value immediately, is discoverable (listed under "Registered tools:" by `--info`), user-runnable from a shell, and needs **zero SDK or protocol changes** (it does need a small platform API change — promoting `ITool` to public, see §7.2).
 2. **SDK auto-orchestration in `dotnet test`.** After all modules finish, the SDK elects an already-built app per artifact kind and relaunches it once to perform the merge, then swaps the merged output into the run summary. The election is computed **in-memory from data the SDK already has** (handshake-advertised capabilities plus the artifacts that already streamed live over the `dotnet-test` pipe), and the merged outputs flow **back over that same existing pipe** so they re-enter the normal reporter path.
 
 It addresses [dotnet/sdk#47613](https://github.com/dotnet/sdk/issues/47613) and is related to [#7345](https://github.com/microsoft/testfx/issues/7345), [#7471](https://github.com/microsoft/testfx/issues/7471), and [#6586](https://github.com/microsoft/testfx/issues/6586).
@@ -59,10 +59,10 @@ MTP has no equivalent today, and it does **not** need to reproduce VSTest's disk
 | **Module** | The test app binary the user references (`*.dll` or AOT exe). |
 | **Artifact** | Any file produced by an extension and reported via `SessionFileArtifact` / `FileArtifactMessages`. |
 | **Orchestrator** | The `dotnet test` process in the SDK that spawns test apps and consumes their IPC. |
-| **Engine** | The format-specific merge implementation (e.g. `TrxReportEngine.MergeAsync`). Invocation-agnostic. |
+| **Engine** | The format-specific merge implementation (e.g. a new `TrxReportEngine` file-merge entry point). Invocation-agnostic. |
 | **Post-processor** | An `IArtifactPostProcessor` extension that wraps an engine for one or more artifact kinds. |
 | **Dispatcher tool** | A platform-owned internal `ITool` that routes manifest inputs to the registered post-processors in a relaunched host. |
-| **User tool** | A per-extension public `ITool` (e.g. `merge-trx`) that lets a user run the same engine from a shell. |
+| **User tool** | A per-extension `ITool` (e.g. `merge-trx`) that lets a user run the same engine from a shell. Requires `ITool` to be promoted to public (§7.2). |
 | **Election** | The orchestrator's decision of which test app to relaunch to perform a given post-processing job. |
 | **Kind** | A producer-asserted, reverse-DNS identifier for an artifact format (e.g. `microsoft.testing.trx`). Primary matching key. |
 
@@ -73,8 +73,8 @@ The recommendation is a **layered** design. The layers are independent, so the p
 | Piece | What it is | Depends on protocol change? | Depends on SDK change? | Ships in |
 | --- | --- | --- | --- | --- |
 | `IArtifactPostProcessor` engine contract | Typed, invocation-agnostic merge contract (experimental-gated) | No | No | Phase 1 |
-| Shared engine (`TrxReportEngine.MergeAsync`) | The actual merge implementation | No | No | Phase 1 |
-| User tool (`merge-trx`) | Public `ITool`, discoverable, runnable from a shell | No | No | Phase 1 |
+| Shared engine (new `TrxReportEngine` file-merge path) | The actual merge implementation (new logic) | No | No | Phase 1 |
+| User tool (`merge-trx`) | `ITool` (needs `ITool` promoted to public), discoverable via `--info`, runnable from a shell | No | No | Phase 1 |
 | `Kind` tagging on `SessionFileArtifact` / `FileArtifactMessages` | Optional producer metadata | Additive (skip-unknown) | No | Phase 2 |
 | Handshake capability advertisement | Two extra semicolon-joined strings in `HandshakeMessage` | Additive | No | Phase 2 |
 | In-memory election | SDK computes plan from data it already has | No | Yes | Phase 2 |
@@ -82,9 +82,9 @@ The recommendation is a **layered** design. The layers are independent, so the p
 
 **Phase 1 is the recommended starting point for implementation.** It delivers the user-visible value in [#7345](https://github.com/microsoft/testfx/issues/7345) (a real, single merged TRX), is fully testable inside testfx with no SDK dependency, is the discoverable/non-hidden path users asked for, and builds the shared engine that every later layer reuses.
 
-**Why a tool as the orchestration primitive (over a new reserved switch).** Post-processing is already a non-test execution path. `--tool` is the platform's existing, documented non-test path — it has a defined lifecycle, an exit-code convention, and shipping precedent (`TrxCompareTool` registers `ms-trxcompare`). Reusing it means the manual and automated routes are the *same mechanism*, we avoid inventing `--internal-post-process-artifacts` and threading it through the mutually-exclusive-modes table, and we keep one code path to test. The only real drawback — a registered tool can appear in `--list-tools` — is solved by an "internal tool" flag mirroring the existing `IsHidden` used for hidden command-line options.
+**Why a tool as the orchestration primitive (over a new reserved switch).** Post-processing is already a non-test execution path. `--tool` is the platform's existing, documented non-test path — it has a defined lifecycle, an exit-code convention, and shipping precedent (`TrxCompareTool` registers `ms-trxcompare`). Reusing it means the manual and automated routes are the *same mechanism*, we avoid inventing `--internal-post-process-artifacts` and threading it through the mutually-exclusive-modes table, and we keep one code path to test. Note that `ITool`, `IToolsManager.AddTool`, and `TestApplicationBuilder.Tools` are `internal` today (the `ms-trxcompare` precedent only compiles via an `InternalsVisibleTo` grant to the first-party TRX assembly); Phase 1a must promote them to public (experimental-gated) so third-party extensions (Phase 3/4) can ship tools at all. The only real drawback — a registered tool is listed under "Registered tools:" by `--info` — is solved by an "internal tool" flag mirroring the existing `IsHidden` used for hidden command-line options.
 
-**Why results flow back over the existing pipe (over a bespoke result JSON swap).** `dotnet test` already keeps a persistent `DotnetTestConnection` to each host and already receives `FileArtifactMessages` live. If the relaunched dispatcher reports the merged artifact via the *same* `FileArtifactMessage`, it re-enters the normal reporter/summary pipeline with no special-case `SnapshotArtifacts`/`RemoveArtifacts`/`ArtifactAdded` swap on the SDK side, and it is the natural hook for future UI (live "merging..." progress) without inventing a new channel.
+**Why results flow back over the existing pipe (over a bespoke result JSON swap).** `dotnet test` already keeps a persistent `DotnetTestConnection` to each host and already receives `FileArtifactMessages` live. If the relaunched dispatcher reports the merged artifact via the *same* `FileArtifactMessage`, it re-enters the normal reporter/summary pipeline. The SDK still collapses the consumed originals and surfaces the merged file (via `RemoveArtifacts`/`ArtifactAdded`), but through that normal path — what the pipe removes is the *bespoke result-JSON parse/swap*, not those reporter calls. Reusing the pipe is also the natural hook for future UI (live "merging..." progress) without inventing a new channel.
 
 ## 6. High-level architecture
 
@@ -136,7 +136,7 @@ Namespace: `Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing`.
 
 The contract is **invocation-agnostic**: nothing in it assumes whether a user tool, a dispatcher tool, or (a future) live-channel host called it. That independence is what lets the orchestration decision evolve without reworking the contract, and it is why the contract can ship in Phase 1.
 
-The contract is introduced under MTP's **experimental** diagnostic-id mechanism (like `ITestHostLauncher` in RFC 017) so it is not frozen before the SDK consumer in Phase 2 lands.
+The contract is introduced under MTP's **experimental** diagnostic-id mechanism (like `ITestHostLauncher` in the TestHost Launcher RFC, 017) so it is not frozen before the SDK consumer in Phase 2 lands.
 
 ```csharp
 [Experimental("MTPEXP", UrlFormat = "https://aka.ms/mtp/experimental/{0}")]
@@ -187,6 +187,8 @@ public sealed record ProcessedArtifact(
     string? Description);
 ```
 
+> **Public-API note (no `init`).** testfx bans `init` accessors on *new* public API. C# positional records synthesize `{ get; init; }`, so if `InputArtifact` / `ProcessedArtifact` are public they must instead be declared with get-only auto-properties and an explicit constructor (the positional form above is shorthand for readability only). Alternatively keep the DTOs `internal` and expose only the interface. This must be settled at API-review time, not discovered there.
+
 #### Why a Kind, not just file extension?
 
 - **File extensions collide across formats.** `.xml` is JUnit, NUnit3, custom; `.json` is everywhere. The orchestrator should never need to inspect content to disambiguate.
@@ -208,6 +210,8 @@ The election algorithm (§7.5) leans on a structural fact worth stating explicit
 
 ### 7.2 Shared engine and the user-facing tool (Phase 1)
 
+> **Platform prerequisite.** `ITool`, `IToolsManager.AddTool`, and `TestApplicationBuilder.Tools` are `internal` today. The `ms-trxcompare` precedent only works because `Microsoft.Testing.Extensions.TrxReport` has an `InternalsVisibleTo` grant from the platform. First-party TRX (Phase 1b) can therefore ship immediately, but the user-tool story for **third-party** extensions (Phase 3 code coverage, Phase 4 coverlet) and Goal 2/3 require promoting these members to **public** (experimental-gated, recorded in `PublicAPI.Unshipped.txt`). This is a Phase 1a platform work item.
+
 Every extension that ships an `IArtifactPostProcessor` factors the actual merge into a **shared engine** and ships two thin wrappers over it:
 
 - `TrxArtifactPostProcessor : IArtifactPostProcessor` — used by SDK auto-orchestration.
@@ -218,15 +222,15 @@ dotnet run --project A.Tests.csproj -- --tool merge-trx \
     --input "./results/**/*.trx" --output ./merged.trx
 ```
 
-Both delegate to the same `TrxReportEngine.MergeAsync` core, so the manual and automated paths produce byte-identical output.
+Both delegate to the same `TrxReportEngine` file-merge core, so the manual and automated paths produce byte-identical output. Note this merge core is **new logic**: today `TrxReportEngine` is an instance class whose only entry point (`GenerateReportAsync`) *builds* a TRX from in-memory results — it does not merge existing TRX *files*. Phase 1a adds a file-parse-and-merge path (shared by both wrappers).
 
 This is the piece that satisfies Goal 3 and the reason Phase 1 is worth shipping on its own:
 
-- **Users can do it themselves.** It is a real, discoverable tool (`--list-tools`), not a hidden feature. CI scripts that reassemble artifacts from multiple agents, `--no-build` download-then-merge pipelines, and "re-merge after hand-editing one TRX" all work without re-running tests.
-- **No SDK and no protocol dependency.** It compiles, tests, and ships entirely inside testfx.
+- **Users can do it themselves.** It is a real tool, listed under "Registered tools:" by `--info` (there is no `--list-tools` switch today), not a hidden feature. CI scripts that reassemble artifacts from multiple agents, `--no-build` download-then-merge pipelines, and "re-merge after hand-editing one TRX" all work without re-running tests.
+- **No SDK and no protocol dependency.** Beyond the Phase 1a `ITool`-visibility change, it compiles, tests, and ships entirely inside testfx.
 - **It is the foundation.** Every later layer (the dispatcher tool, the SDK election) reuses the exact same engine, so building the tool first de-risks everything downstream.
 
-Recommendation: ship a user tool for every well-known kind (TRX first, then code coverage, Cobertram). An extension may ship the processor without the tool, or vice-versa — the two wrappers are decoupled.
+Recommendation: ship a user tool for every well-known kind (TRX first, then code coverage, Cobertura). An extension may ship the processor without the tool, or vice-versa — the two wrappers are decoupled.
 
 ### 7.3 Producer-side Kind tagging (Phase 2)
 
@@ -286,7 +290,7 @@ while any(not g.covered for g in groups):
         covered_group_count(a, groups),
         produced_input_count(a, groups),
         tfm_order(a.tfm),
-        -lexical(a.path)))
+        lexical(a.path)))   # ascending, deterministic (matches Appendix A.3)
     assign(app, [g for g in groups if not g.covered and app in g.candidates])
 return plan
 ```
@@ -356,7 +360,7 @@ The relaunched host runs a **platform-owned dispatcher `ITool`** (`internal-merg
 4. Calls each matched processor's `ProcessAsync` once.
 5. Reports each merged `ProcessedArtifact` back over the connected `dotnet-test` pipe as a `FileArtifactMessage`, and surfaces per-processor errors, then exits.
 
-The dispatcher tool is marked **internal** (a flag mirroring command-line `IsHidden`) so it does not appear in the user-facing `--list-tools`. A user would never type `--tool internal-merge-artifacts --manifest ...`; the non-hidden manual value comes entirely from the per-extension user tools in §7.2, which ship regardless of this decision.
+The dispatcher tool is marked **internal** (a flag mirroring command-line `IsHidden`) so it is not listed under "Registered tools:" by `--info`. A user would never type `--tool internal-merge-artifacts --manifest ...`; the non-hidden manual value comes entirely from the per-extension user tools in §7.2, which ship regardless of this decision.
 
 > **Composition note (main implementation task).** Today `--tool` mode and `--server dotnettestcli --dotnet-test-pipe` mode are built as separate hosts (`ToolsTestHost` vs the normal path that wires `DotnetTestConnection`). Making a tool host *also* establish the `dotnet-test` pipe so it can emit `FileArtifactMessage` is the central platform-side task for Phase 2. If that composition proves costly, the transitional fallback in §7.7 (a manifest-in/result-JSON-out dispatcher with an SDK-side swap) lets Phase 2 land without it, and the pipe re-entry becomes a follow-up.
 
@@ -395,7 +399,7 @@ Manifest (orchestrator -> dispatcher):
 
 **Transitional result path: result JSON.** If the pipe-composition task in §7.6 is deferred, the dispatcher writes a result JSON (path supplied in the manifest) and the SDK performs the swap. This keeps the same typed contract and the same manifest; only the *return channel* changes. Keeping the manifest/result schema `schemaVersion`-versioned means the return channel can switch from files to the pipe without touching `IArtifactPostProcessor`.
 
-Dispatcher exit codes (final values chosen to not overlap existing MTP exit codes — see §12):
+Dispatcher exit codes (final values to be finalized so they don't overlap existing MTP `ExitCode` values — see §12 Q11):
 
 | Code | Meaning |
 | --- | --- |
@@ -452,7 +456,7 @@ The orchestrator emits one telemetry event per `dotnet test` run summarizing: co
 
 | Phase | Repo | Deliverable | Blocked by |
 | --- | --- | --- | --- |
-| 1a | testfx | `IArtifactPostProcessor` contract (experimental) + shared `TrxReportEngine.MergeAsync`. | — |
+| 1a | testfx | `IArtifactPostProcessor` contract (experimental); new `TrxReportEngine` file-merge path; **promote `ITool`/`AddTool`/`Tools` to public** (experimental, `PublicAPI.Unshipped.txt`). | — |
 | 1b | testfx | `TrxArtifactPostProcessor` + user tool `merge-trx` in `Microsoft.Testing.Extensions.TrxReport`. | 1a |
 | 2a | testfx | `Kind` on `SessionFileArtifact` / `FileArtifactMessages`; handshake advertisement; producers tag their outputs. | 1a |
 | 2b | testfx | Platform-owned dispatcher tool `internal-merge-artifacts` + tool-host-over-pipe composition. | 2a |
@@ -466,7 +470,7 @@ The orchestrator emits one telemetry event per `dotnet test` run summarizing: co
 
 ### testfx
 
-- Unit tests for `TrxArtifactPostProcessor` / `TrxReportEngine.MergeAsync`:
+- Unit tests for `TrxArtifactPostProcessor` / the new `TrxReportEngine` file-merge path:
   - 0 inputs -> `null`; 1 input -> `null` (no merge needed).
   - N inputs same TFM -> merged TRX schema-valid, counters summed, attachment URIs preserved.
   - Inputs with duplicate test ids -> dedup (or namespace) deterministically.
@@ -503,7 +507,7 @@ The first draft invoked the merge via a new reserved, hidden command-line switch
 The original design was fully fire-and-forget: write a manifest, launch a child, child writes a result JSON, exits; no live channel. But `dotnet test` already keeps a **persistent bidirectional-capable named pipe** to every host for the whole run (`DotnetTestConnection`), and artifacts **already stream over it live** (`FileArtifactMessages`). So:
 
 - The SDK already has the input list; the manifest re-serializes data it already received (§7.7).
-- Reporting merged artifacts back over that pipe as `FileArtifactMessage` removes the special-case `SnapshotArtifacts` / `RemoveArtifacts` / result-JSON swap on the SDK side, because merged outputs re-enter the same reporter pipeline as in-run artifacts.
+- Reporting merged artifacts back over that pipe as `FileArtifactMessage` removes the bespoke **result-JSON parse/swap** on the SDK side, because merged outputs re-enter the same reporter pipeline as in-run artifacts. (The SDK still collapses the consumed originals and surfaces the merged file via `RemoveArtifacts`/`ArtifactAdded`, but through that normal path.)
 - It is the natural home for future UI (live "merging... (3/12)" progress, incremental/partial results) without inventing a new channel.
 
 The one genuine gap: the pipe is host->SDK for *data* today; the SDK cannot push a request to the host. But the handshake **response** already carries SDK->host data (`IsIDE`, negotiated versions), so the plumbing to extend it is precedented. For v1 we still hand inputs to the child as a manifest argument (no new SDK->host request needed) and only use the pipe for the *return* of merged artifacts. Net: reusing the pipe is **less** total surface than a parallel result-file swap, not more — the opposite of how the original draft framed it.
@@ -547,6 +551,8 @@ One might avoid a relaunch by keeping an elected host process alive at end-of-ru
 - **Phasing:** contract + TRX engine + TRX user tool first (testfx-only); Kind/handshake/dispatcher next; SDK consumer after; MS CC and others on their own cadence.
 
 ## 14. Appendix A — illustrative code sketches
+
+> These are **illustrative**. In particular, `TrxReportEngine.MergeAsync(string[], string, CancellationToken)` is shown as a static helper for brevity; the real Phase 1a work adds a file-parse-and-merge entry point to `TrxReportEngine` (an instance class today whose only method builds a TRX from in-memory results). The exact signature/shape is an implementation detail. If `InputArtifact`/`ProcessedArtifact` are made public, they must avoid synthesized `init` accessors (see the note in §7.1).
 
 ### A.1 `TrxArtifactPostProcessor` (in Microsoft.Testing.Extensions.TrxReport)
 
