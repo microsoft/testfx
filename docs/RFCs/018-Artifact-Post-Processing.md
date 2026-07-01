@@ -541,7 +541,7 @@ One might avoid a relaunch by keeping an elected host process alive at end-of-ru
 ## 13. Decisions summary (what this RFC currently proposes)
 
 - **Engine contract:** typed, invocation-agnostic `IArtifactPostProcessor` keyed on `SupportedKinds` (reverse-DNS) with `SupportedFileExtensionsFallback`, shipped experimental.
-- **Manual path (Phase 1, ship first):** a user-facing `ITool` per well-known kind (`merge-trx`, ...) sharing the same engine. Discoverable, non-hidden, zero SDK/protocol dependency.
+- **Manual path (Phase 1, ship first):** a user-facing `ITool` per well-known kind (`merge-trx`, ...) sharing the same engine. Discoverable via `--info`, non-hidden, zero SDK/protocol dependency (one platform-API change: promote `ITool` to public — Phase 1a).
 - **Producer side:** `SessionFileArtifact` / `FileArtifactMessages` gain an optional `Kind` string.
 - **Discovery:** capabilities advertised in `HandshakeMessage` (two semicolon-separated lists: kinds + legacy extensions).
 - **Election:** computed in-memory from data the SDK already has (handshake + live artifacts); minimal set-cover, relaunching the fewest apps that cover all mergeable kinds; arch-constrained for binary kinds.
