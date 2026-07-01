@@ -109,13 +109,16 @@ internal sealed class AzureDevOpsReporter :
             EnsureEnabledConfigurationLoaded();
         }
 
+        bool annotationsEnabled = AzureDevOpsConstants.IsFeatureKnobEnabled(_commandLine, AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations);
+
         if (_logger.IsEnabled(LogLevel.Trace))
         {
             _logger.LogTrace($"{AzureDevOpsConstants.TfBuildEnvironmentVariableName} environment variable is {(isEnabledByEnvVariable ? "enabled. Will report errors to Azure DevOps, because we are running in CI." : "disabled. Will not report errors to Azure DevOps.")}");
             _logger.LogTrace($"Severity is set to '{_severity ?? "error"}', you can override it by using --report-azdo-severity parameter.");
+            _logger.LogTrace($"Failure annotations are {(annotationsEnabled ? "enabled" : "disabled")}, you can toggle them by using --report-azdo-annotations parameter.");
         }
 
-        return Task.FromResult(isEnabledByEnvVariable);
+        return Task.FromResult(isEnabledByEnvVariable && annotationsEnabled);
     }
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
