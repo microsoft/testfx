@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -89,7 +89,7 @@ public class TestMethodFilterTests : TestContainer
     public void GetFilterExpressionForNullRunContextReturnsNull()
     {
         TestableTestExecutionRecorder recorder = new();
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(null, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(null, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
         filterHasError.Should().BeFalse();
@@ -100,7 +100,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableRunContext runContext = new(() => dummyFilterExpression);
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().Be(dummyFilterExpression);
         filterHasError.Should().BeFalse();
@@ -114,7 +114,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => dummyFilterExpression);
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().Be(dummyFilterExpression);
         filterHasError.Should().BeFalse();
@@ -127,7 +127,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
         filterHasError.Should().BeFalse();
@@ -137,7 +137,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableRunContext runContext = new(() => throw new TestPlatformFormatException("DummyException"));
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
         filterHasError.Should().BeTrue();
@@ -152,7 +152,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
         filterHasError.Should().BeTrue();
