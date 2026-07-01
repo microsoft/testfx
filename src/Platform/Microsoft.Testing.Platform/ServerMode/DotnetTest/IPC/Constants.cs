@@ -68,6 +68,15 @@ internal static class HandshakeMessagePropertyNames
     // NamedPipeClient to that pipe and parks a long-poll WaitForServerControlRequest so the SDK can
     // push a ServerControlMessage (e.g. CancelSession) at any time - even while the test host is
     // otherwise silent. An older SDK never sends this property, so the feature stays disabled.
+    //
+    // SDK-side contract (duplicated by hand in dotnet/sdk - keep in sync):
+    //   * Every process that performs the handshake and receives this property (test host, test host
+    //     controller, orchestrator) opens its own client to the advertised name, so the SDK must be able to
+    //     accept one control connection per connecting process (e.g. one server instance per process, or a
+    //     distinct pipe name advertised per handshake reply).
+    //   * The SDK MUST keep the control pipe open for the whole data session. The test host treats an early
+    //     pipe drop as "host gone => cancel", so closing the control pipe before the data session ends would be
+    //     interpreted as a cancellation.
     internal const byte ServerControlPipeName = 12;
 }
 
