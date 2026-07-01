@@ -5,58 +5,46 @@ using Microsoft.Testing.Extensions.GitHubActionsReport;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
+using Moq;
+
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
 public sealed class GitHubActionsAnnotationReporterTests
 {
     [TestMethod]
-    public void GetErrorAnnotation_ReportsFirstExistingFileWithLineColTitleAndEscaping()
+    public void GetErrorAnnotation_ReportsResolvedFileWithLineColTitleAndEscaping()
     {
-        Exception error;
-        try
-        {
-            throw new Exception("this is an error\nwith\rnewline");
-        }
-        catch (Exception ex)
-        {
-            error = ex;
-        }
+        Exception error = CaptureException("this is an error\nwith\rnewline", out int throwLine);
 
-        var logger = new NoopLogger();
-        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", null, error, GitHubActionsRepositoryRoot.FindGitRoot(), new SystemFileSystem(), logger);
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
+            "MyNamespace.MyTest", explanation: null, error, GitHubActionsRepositoryRoot.FindGitRoot(), CreateFileSystemWhereEveryFileExists(), new NoopLogger());
 
-        Assert.AreEqual(
-            "::error file=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/GitHubActionsAnnotationReporterTests.cs,line=19,col=1,title=Test failed%3A MyNamespace.MyTest::this is an error%0Awith%0Dnewline",
-            text);
+        // The line is computed dynamically (from where the throw actually executes) rather than hard-coded, and the
+        // file existence is mocked, so the assertion does not depend on this file's exact layout or the physical
+        // repo checkout.
+        Assert.IsTrue(text.StartsWith("::error file=", StringComparison.Ordinal), text);
+        Assert.Contains($"GitHubActionsAnnotationReporterTests.cs,line={throwLine},col=1,title=Test failed%3A MyNamespace.MyTest::", text);
+        Assert.IsTrue(text.EndsWith("this is an error%0Awith%0Dnewline", StringComparison.Ordinal), text);
     }
 
     [TestMethod]
     public void GetErrorAnnotation_PrefersExplanationOverExceptionMessage()
     {
-        Exception error;
-        try
-        {
-            throw new Exception("exception message");
-        }
-        catch (Exception ex)
-        {
-            error = ex;
-        }
+        Exception error = CaptureException("exception message", out int throwLine);
 
-        var logger = new NoopLogger();
-        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", "Some custom reason\nwith\rnewline", error, GitHubActionsRepositoryRoot.FindGitRoot(), new SystemFileSystem(), logger);
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
+            "MyNamespace.MyTest", "Some custom reason\nwith\rnewline", error, GitHubActionsRepositoryRoot.FindGitRoot(), CreateFileSystemWhereEveryFileExists(), new NoopLogger());
 
-        Assert.AreEqual(
-            "::error file=test/UnitTests/Microsoft.Testing.Extensions.UnitTests/GitHubActionsAnnotationReporterTests.cs,line=40,col=1,title=Test failed%3A MyNamespace.MyTest::Some custom reason%0Awith%0Dnewline",
-            text);
+        Assert.IsTrue(text.StartsWith("::error file=", StringComparison.Ordinal), text);
+        Assert.Contains($"GitHubActionsAnnotationReporterTests.cs,line={throwLine},col=1,title=Test failed%3A MyNamespace.MyTest::", text);
+        Assert.IsTrue(text.EndsWith("Some custom reason%0Awith%0Dnewline", StringComparison.Ordinal), text);
     }
 
     [TestMethod]
     public void GetErrorAnnotation_FallsBackToTitleOnly_WhenNoSourceLocation()
     {
-        var logger = new NoopLogger();
-        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", "boom", exception: null, repoRoot: null, new SystemFileSystem(), logger);
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", "boom", exception: null, repoRoot: null, CreateFileSystemWhereEveryFileExists(), new NoopLogger());
 
         Assert.AreEqual("::error title=Test failed%3A MyNamespace.MyTest::boom", text);
     }
@@ -64,10 +52,34 @@ public sealed class GitHubActionsAnnotationReporterTests
     [TestMethod]
     public void GetErrorAnnotation_UsesFallbackMessage_WhenNoExplanationOrException()
     {
-        var logger = new NoopLogger();
-        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", explanation: null, exception: null, repoRoot: null, new SystemFileSystem(), logger);
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", explanation: null, exception: null, repoRoot: null, CreateFileSystemWhereEveryFileExists(), new NoopLogger());
 
         Assert.IsTrue(text.StartsWith("::error title=Test failed%3A MyNamespace.MyTest::", StringComparison.Ordinal), text);
+    }
+
+    // Throws (and catches) an exception, reporting the exact line of the throw statement so tests can assert the
+    // resolved line without hard-coding a physical number that shifts whenever code above changes.
+    private static Exception CaptureException(string message, out int throwLine)
+    {
+        throwLine = 0;
+        try
+        {
+            throwLine = CurrentLine() + 1;
+            throw new Exception(message);
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+    }
+
+    private static int CurrentLine([CallerLineNumber] int line = 0) => line;
+
+    private static IFileSystem CreateFileSystemWhereEveryFileExists()
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.ExistFile(It.IsAny<string>())).Returns(true);
+        return fileSystem.Object;
     }
 
     private sealed class NoopLogger : ILogger
