@@ -330,7 +330,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
     protected override void SerializeCore(TestResultMessages objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 

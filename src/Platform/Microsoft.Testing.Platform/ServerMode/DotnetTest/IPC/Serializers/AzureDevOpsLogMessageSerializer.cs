@@ -64,7 +64,7 @@ internal sealed class AzureDevOpsLogMessageSerializer : NamedPipeSerializer<Azur
 
     protected override void SerializeCore(AzureDevOpsLogMessage objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 
