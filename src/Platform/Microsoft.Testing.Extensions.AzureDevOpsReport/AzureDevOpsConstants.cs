@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.Reporting;
+using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
@@ -34,4 +36,14 @@ internal static class AzureDevOpsConstants
             environment.GetEnvironmentVariable(TfBuildEnvironmentVariableName),
             TfBuildEnabledValue,
             StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Returns whether an individual <c>on|off</c> feature knob is enabled. A knob is enabled unless it
+    /// is explicitly set to <c>off</c> (case-insensitive), so every feature defaults to <c>on</c> once
+    /// the extension itself is active.
+    /// </summary>
+    public static bool IsFeatureKnobEnabled(ICommandLineOptions commandLineOptions, string knobOptionName)
+        => !(commandLineOptions.TryGetOptionArgumentList(knobOptionName, out string[]? arguments)
+            && arguments is [string value]
+            && string.Equals(value, AzureDevOpsCommandLineOptions.OptionOff, StringComparison.OrdinalIgnoreCase));
 }

@@ -59,6 +59,20 @@ public sealed class AzureDevOpsLogGroupReporterTests
     }
 
     [TestMethod]
+    public async Task IsEnabledAsync_ReturnsFalse_WhenGroupsExplicitlyOffAsync()
+    {
+        AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true, groups: ["off"]);
+        Assert.IsFalse(await reporter.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task IsEnabledAsync_ReturnsTrue_WhenGroupsExplicitlyOnAsync()
+    {
+        AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true, groups: ["on"]);
+        Assert.IsTrue(await reporter.IsEnabledAsync());
+    }
+
+    [TestMethod]
     public async Task SessionStarting_EmitsGroupHeaderWithAssemblyAndTfmAsync()
     {
         AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true);
@@ -121,11 +135,16 @@ public sealed class AzureDevOpsLogGroupReporterTests
                 Properties = new PropertyBag(state),
             });
 
-    private AzureDevOpsLogGroupReporter CreateReporter(bool enabled, bool tfBuild)
+    private AzureDevOpsLogGroupReporter CreateReporter(bool enabled, bool tfBuild, string[]? groups = null)
     {
         Dictionary<string, string[]> options = enabled
             ? new Dictionary<string, string[]> { [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [] }
             : [];
+        if (groups is not null)
+        {
+            options[AzureDevOpsCommandLineOptions.AzureDevOpsGroups] = groups;
+        }
+
         _ = _environmentMock.Setup(e => e.GetEnvironmentVariable(AzureDevOpsConstants.TfBuildEnvironmentVariableName))
             .Returns(tfBuild ? AzureDevOpsConstants.TfBuildEnabledValue : null);
         return new AzureDevOpsLogGroupReporter(

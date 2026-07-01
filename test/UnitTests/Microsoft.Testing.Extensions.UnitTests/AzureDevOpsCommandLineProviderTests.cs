@@ -106,6 +106,72 @@ public sealed class AzureDevOpsCommandLineProviderTests
     }
 
     [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenAnnotationsIsUsedWithoutAzureDevOpsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations] = ["off"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsAnnotationsRequiresAzureDevOps, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsInvalid_WhenGroupsIsUsedWithoutAzureDevOpsAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        ValidationResult validationResult = await provider.ValidateCommandLineOptionsAsync(new TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [AzureDevOpsCommandLineOptions.AzureDevOpsGroups] = ["off"],
+        })).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+        Assert.AreEqual(AzureDevOpsResources.AzureDevOpsGroupsRequiresAzureDevOps, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenGroupsValueIsNotOnOrOffAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsGroups);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_WhenGroupsValueIsOffAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsGroups);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["off"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenAnnotationsValueIsNotOnOrOffAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["maybe"]).ConfigureAwait(false);
+
+        Assert.IsFalse(validationResult.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArgumentsAsync_ReturnsValid_WhenAnnotationsValueIsOnAsync()
+    {
+        AzureDevOpsCommandLineProvider provider = new();
+        CommandLineOption option = provider.GetCommandLineOptions().Single(o => o.Name == AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations);
+        ValidationResult validationResult = await provider.ValidateOptionArgumentsAsync(option, ["on"]).ConfigureAwait(false);
+
+        Assert.IsTrue(validationResult.IsValid, validationResult.ErrorMessage);
+    }
+
+    [TestMethod]
     public async Task ValidateOptionArgumentsAsync_ReturnsInvalid_WhenStackFrameFilterRegexIsInvalidAsync()
     {
         AzureDevOpsCommandLineProvider provider = new();

@@ -69,7 +69,8 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
             _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
-            && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment));
+            && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment)
+            && AzureDevOpsConstants.IsFeatureKnobEnabled(_commandLineOptions, AzureDevOpsCommandLineOptions.AzureDevOpsGroups));
 
     // No-op: this consumer subscribes to data only to be ordered in the consumer phase at session
     // end (see the type-level remarks). It does not act on individual messages.
