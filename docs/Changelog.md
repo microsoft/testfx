@@ -37,6 +37,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add MSTEST0071 analyzer and code fix for redundant test method display name by @Evangelink in [#9272](https://github.com/microsoft/testfx/pull/9272)
 * Add [ExecutableConditionAttribute] to conditionally run tests based on tool availability by @Evangelink in [#9369](https://github.com/microsoft/testfx/pull/9369)
 * Move `orderTestsByNameInClass` testconfig.json key to `mstest:execution:orderTestsByNameInClass` (flat `mstest:orderTestsByNameInClass` still works but emits a deprecation warning) by @Evangelink in [#9430](https://github.com/microsoft/testfx/pull/9430)
+* Add experimental `ITestFilter` / `[TestFilterProviderAttribute]` for programmatic per-test filtering (before any class is loaded) by @Evangelink in [#8896](https://github.com/microsoft/testfx/pull/8896)
 
 ### Fixed
 
@@ -51,6 +52,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Flag `Assert.AreEqual(x, x)` / `AreSame(x, x)` / `AreNotEqual(x, x)` / `AreNotSame(x, x)` by @Evangelink in [#9088](https://github.com/microsoft/testfx/pull/9088)
 * Remove redundant `actual type:` line from Assert.Throws\* failure message by @Evangelink in [#9195](https://github.com/microsoft/testfx/pull/9195)
 * Include full exception (stack trace + inner exceptions) in Assert.Throws\* failure messages by @Evangelink in [#9212](https://github.com/microsoft/testfx/pull/9212)
+* Fix `[ClassCleanup]` resource leak when `ITestFilter` drops the last test of an initialized class by @Evangelink in [#9503](https://github.com/microsoft/testfx/pull/9503)
 
 ## <a name="4.2.3" />[4.2.3] - 2026-05-14
 

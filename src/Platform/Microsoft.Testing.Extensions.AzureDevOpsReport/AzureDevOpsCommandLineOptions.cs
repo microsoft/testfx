@@ -6,8 +6,10 @@ namespace Microsoft.Testing.Extensions.Reporting;
 internal static class AzureDevOpsCommandLineOptions
 {
     public const string AzureDevOpsOptionName = "report-azdo";
+    public const string AzureDevOpsAnnotations = "report-azdo-annotations";
     public const string AzureDevOpsDemoteKnownFlaky = "report-azdo-demote-known-flaky";
     public const string AzureDevOpsFlakyHistory = "report-azdo-flaky-history";
+    public const string AzureDevOpsGroups = "report-azdo-groups";
     public const string AzureDevOpsQuarantineFile = "report-azdo-quarantine-file";
     public const string AzureDevOpsReportSeverity = "report-azdo-severity";
     public const string AzureDevOpsSlowTestHistory = "report-azdo-slow-test-history";
@@ -25,6 +27,9 @@ internal static class AzureDevOpsCommandLineOptions
     public const string AzureDevOpsUploadArtifactsModeTagsOnly = "tags-only";
     public const string PublishAzureDevOpsRunNameOptionName = "publish-azdo-run-name";
     public const string PublishAzureDevOpsTestResultsOptionName = "publish-azdo-test-results";
+
+    public const string OptionOn = "on";
+    public const string OptionOff = "off";
 
     public const int SlowTestHistoryDefaultMinSample = 10;
     public const double SlowTestHistoryDefaultMultiplier = 3.0;

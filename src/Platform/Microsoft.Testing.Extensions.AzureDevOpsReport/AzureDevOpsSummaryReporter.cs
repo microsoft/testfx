@@ -239,7 +239,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
             }
 
             string line = $"##vso[task.uploadsummary]{AzDoEscaper.Escape(path)}";
-            await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {

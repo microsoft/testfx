@@ -39,30 +39,15 @@ internal sealed class RetryCommandLineOptionsProvider : CommandLineOptionsProvid
     }
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-    {
-        if (commandLineOptions.IsOptionSet(RetryFailedTestsMaxPercentageOptionName) && commandLineOptions.IsOptionSet(RetryFailedTestsMaxTestsOptionName))
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage, RetryFailedTestsMaxPercentageOptionName, RetryFailedTestsMaxTestsOptionName));
-        }
-
-        if (commandLineOptions.IsOptionSet(RetryFailedTestsMaxPercentageOptionName) && !commandLineOptions.IsOptionSet(RetryFailedTestsOptionName))
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxPercentageOptionName, RetryFailedTestsOptionName));
-        }
-
-        if (commandLineOptions.IsOptionSet(RetryFailedTestsMaxTestsOptionName) && !commandLineOptions.IsOptionSet(RetryFailedTestsOptionName))
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxTestsOptionName, RetryFailedTestsOptionName));
-        }
-
-        if (commandLineOptions.IsOptionSet(RetryFailedTestsDelayOptionName) && !commandLineOptions.IsOptionSet(RetryFailedTestsOptionName))
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsDelayOptionName, RetryFailedTestsOptionName));
-        }
-
-        // No problem found
-        return ValidationResult.ValidTask;
-    }
+        => commandLineOptions.IsOptionSet(RetryFailedTestsMaxPercentageOptionName) && commandLineOptions.IsOptionSet(RetryFailedTestsMaxTestsOptionName)
+            ? ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage, RetryFailedTestsMaxPercentageOptionName, RetryFailedTestsMaxTestsOptionName))
+            : RequiresMainOption(commandLineOptions, [RetryFailedTestsMaxPercentageOptionName], RetryFailedTestsOptionName,
+                () => string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxPercentageOptionName, RetryFailedTestsOptionName))
+            ?? RequiresMainOption(commandLineOptions, [RetryFailedTestsMaxTestsOptionName], RetryFailedTestsOptionName,
+                () => string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsMaxTestsOptionName, RetryFailedTestsOptionName))
+            ?? RequiresMainOption(commandLineOptions, [RetryFailedTestsDelayOptionName], RetryFailedTestsOptionName,
+                () => string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage, RetryFailedTestsDelayOptionName, RetryFailedTestsOptionName))
+            ?? ValidationResult.ValidTask;
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {

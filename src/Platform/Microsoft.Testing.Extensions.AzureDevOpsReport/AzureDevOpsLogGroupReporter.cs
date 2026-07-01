@@ -69,7 +69,8 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
             _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
-            && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment));
+            && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment)
+            && AzureDevOpsConstants.IsFeatureKnobEnabled(_commandLineOptions, AzureDevOpsCommandLineOptions.AzureDevOpsGroups));
 
     // No-op: this consumer subscribes to data only to be ordered in the consumer phase at session
     // end (see the type-level remarks). It does not act on individual messages.
@@ -84,7 +85,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
 
             string name = $"{_testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown"} ({_targetFrameworkMoniker.Value})";
             string line = $"##[group]{AzDoEscaper.Escape(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.LogGroupHeader, name))}";
-            await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = true;
         }
         catch (OperationCanceledException)
@@ -108,7 +109,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
                 return;
             }
 
-            await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("##[endgroup]"), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData("##[endgroup]"), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = false;
         }
         catch (OperationCanceledException)

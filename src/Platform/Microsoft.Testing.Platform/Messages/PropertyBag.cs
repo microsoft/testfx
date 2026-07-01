@@ -214,6 +214,44 @@ public sealed partial class PropertyBag
     }
 
     /// <summary>
+    /// Returns the first property of the <typeparamref name="TProperty"/> type, or default if none is found.
+    /// Unlike <see cref="SingleOrDefault{TProperty}"/>, this method does not throw when multiple properties of the
+    /// same type are present — it simply returns the first one encountered.
+    /// </summary>
+    /// <typeparam name="TProperty">The type of the property.</typeparam>
+    /// <returns>The first property of the given type, or default if none is found.</returns>
+    public TProperty? FirstOrDefault<TProperty>()
+        where TProperty : IProperty
+    {
+        if (_testNodeStateProperty is TProperty testNodeStateProperty)
+        {
+            return testNodeStateProperty;
+        }
+
+        // We don't want to walk the linked list if we know that we're looking for a TestNodeStateProperty.
+        if (typeof(TestNodeStateProperty).IsAssignableFrom(typeof(TProperty)))
+        {
+            return default;
+        }
+
+        // Direct linked-list walk: avoids the array allocation from OfType<T>() and the subsequent
+        // LINQ FirstOrDefault() call.  Early-returns on the first match so no duplicate tracking
+        // is needed (unlike SingleOrDefault<T>()).
+        Property? current = _property;
+        while (current is not null)
+        {
+            if (current.Current is TProperty match)
+            {
+                return match;
+            }
+
+            current = current.Next;
+        }
+
+        return default;
+    }
+
+    /// <summary>
     /// Returns the only property of the <typeparamref name="TProperty"/> type, and throws an exception if there is not exactly one element.
     /// </summary>
     /// <typeparam name="TProperty">The type of the property.</typeparam>

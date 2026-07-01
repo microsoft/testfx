@@ -313,8 +313,13 @@ fake-precise 0–100 number.
 ### Step 3 — Build the note
 
 One short sentence per test (≤ 120 chars) that states the single most
-important reason for the grade. If a test is clean, the note may simply
-read `No issues found.` — do not invent weaknesses to balance the note.
+important reason for the grade **and, whenever the test is not already
+flawless, a concrete suggestion of improvement**. Phrase the suggestion
+as a brief actionable hint (e.g. `… — consider asserting the returned
+value, not just non-null.`). Only when a test is genuinely clean with
+nothing to improve may the note read `No issues found.` — do not invent
+weaknesses to balance the note, but do surface a real improvement when
+one exists, even for A-grade tests.
 
 ### Step 4 — Post the comment
 
@@ -345,21 +350,17 @@ issue, and the single most important recommendation. -->
 
 <table>
   <thead>
-    <tr><th>Δ</th><th>Test</th><th>Grade</th><th>Band</th><th>Notes</th></tr>
+    <tr><th>Grade</th><th>Test</th><th>Notes</th></tr>
   </thead>
   <tbody>
     <tr>
-      <td>new</td>
-      <td><code>ClassName.<br>Method_<br>WhenSomething_<br>ReturnsValue</code></td>
-      <td>A</td>
-      <td>90–100</td>
+      <td>A (90–100)</td>
+      <td>new <code>ClassName.<br>Method_<br>WhenSomething_<br>ReturnsValue</code></td>
       <td>…</td>
     </tr>
     <tr>
-      <td>mod</td>
-      <td><code>ClassName.<br>OtherMethod</code></td>
-      <td>C</td>
-      <td>70–79</td>
+      <td>C (70–79)</td>
+      <td>mod <code>ClassName.<br>OtherMethod</code></td>
       <td>…</td>
     </tr>
   </tbody>
@@ -380,15 +381,21 @@ Rules for the table:
   the table in `<colgroup>` / `<col>` for column-width hints — those
   tags are not on gh-aw's allowlist and will leak into the rendered
   comment as literal text. Use the per-cell `<br>` strategy described
-  for column 2 instead to keep the Test column from blowing out the
-  layout.
-- **Column 1 (Δ / status)**: keep it tiny — `new`, `mod`, or empty (no
-  parentheses, no backticks). Omit (leave blank) if the diff context does
-  not make the distinction clear from `git log` on the file at HEAD. The
-  header is the single character `Δ` (change indicator) so the column is
-  not anonymous to screen readers.
-- **Column 2 (Test)** — the cell content must wrap aggressively so the
+  for the Test column instead to keep it from blowing out the layout.
+- **Column 1 (Grade)**: a single merged cell combining the letter grade
+  and the score band as `A (90–100)`, `B (80–89)`, `C (70–79)`,
+  `D (60–69)`, or `F (0–59)`. Do **not** split grade and band into two
+  columns, and do **not** emit a fake-precise 0–100 number.
+- **Column 2 (Test)** — prefix the test name with the Δ / change status,
+  then the wrapped name. The cell content must wrap aggressively so the
   Test column does not blow out the table width:
+  - **Prefix with the change status**: emit `new`, `mod`, or nothing as
+    a small prefix immediately before the `<code>` span (no parentheses,
+    no backticks), e.g. `new <code>ClassName.<br>Method</code>`. Keep the
+    prefix **outside** the `<code>` span so it is not part of the
+    copy-paste name. Omit the prefix (leave only the code span) if the
+    diff context does not make the distinction clear from `git log` on
+    the file at HEAD.
   - **Drop the namespace.** Show only `ClassName.MethodName`, never the
     full `Namespace.ClassName.MethodName`. Disambiguate in the Notes
     column only if two graded methods would otherwise collide.
@@ -408,6 +415,8 @@ Rules for the table:
     Do **not** alter the underlying name — keep every character
     (including the trailing `_`); the `<br>` only changes the visual
     layout, not the copy-paste text.
+- **Column 3 (Notes)**: the one-line note from Step 3, including a
+  concrete suggestion of improvement whenever one exists.
 
 **Important**: Emit **only one** `add-comment` call. The workflow is
 configured with `hide-older-comments: true`, so re-runs will replace any

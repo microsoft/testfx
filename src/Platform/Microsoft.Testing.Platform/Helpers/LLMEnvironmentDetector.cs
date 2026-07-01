@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-// Adapted from https://github.com/dotnet/sdk/tree/eaad2a6f937b2c8d9247c53d71b57204f5d127b2/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
+// Adapted from https://github.com/dotnet/sdk/tree/bcafbe92a30b1866bd17789759c9941761bf6b49/src/Cli/dotnet/Telemetry/LLMEnvironmentDetectorForTelemetry.cs
 // Diverged from the upstream telemetry-only version so detection results can drive
 // user-facing platform defaults (ANSI mode, banner, --show-stdout/--show-stderr).
 // IMPORTANT: keep the environment-variable list below in sync with
@@ -14,18 +14,23 @@ internal sealed class LLMEnvironmentDetector
 {
     private static readonly EnvironmentDetectionRuleWithResult<string>[] DetectionRules =
     [
+        // Cowork (Claude Code cowork mode) - placed before Claude so the more specific variable is listed first
+        new EnvironmentDetectionRuleWithResult<string>("cowork", new AnyPresentEnvironmentRule("CLAUDE_CODE_IS_COWORK")),
         // Claude Code
-        new EnvironmentDetectionRuleWithResult<string>("claude", new AnyPresentEnvironmentRule("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")),
+        new EnvironmentDetectionRuleWithResult<string>("claude", new AnyPresentEnvironmentRule("CLAUDECODE", "CLAUDE_CODE", "CLAUDE_CODE_ENTRYPOINT")),
         // Cursor AI
-        new EnvironmentDetectionRuleWithResult<string>("cursor", new AnyPresentEnvironmentRule("CURSOR_EDITOR", "CURSOR_AI")),
+        new EnvironmentDetectionRuleWithResult<string>("cursor", new AnyPresentEnvironmentRule("CURSOR_EDITOR", "CURSOR_AI", "CURSOR_TRACE_ID", "CURSOR_AGENT")),
         // Gemini
-        new EnvironmentDetectionRuleWithResult<string>("gemini", new BooleanEnvironmentRule("GEMINI_CLI")),
-        // GitHub Copilot (legacy gh extension: GITHUB_COPILOT_CLI_MODE=true; new Copilot CLI: GH_COPILOT_WORKING_DIRECTORY or COPILOT_CLI is set)
-        new EnvironmentDetectionRuleWithResult<string>("copilot", new AnyMatchEnvironmentRule(
-            new BooleanEnvironmentRule("GITHUB_COPILOT_CLI_MODE"),
-            new AnyPresentEnvironmentRule("GH_COPILOT_WORKING_DIRECTORY", "COPILOT_CLI"))),
+        new EnvironmentDetectionRuleWithResult<string>("gemini", new AnyPresentEnvironmentRule("GEMINI_CLI")),
+        // GitHub Copilot CLI (legacy gh extension: GITHUB_COPILOT_CLI_MODE; new Copilot CLI: GH_COPILOT_WORKING_DIRECTORY, COPILOT_CLI, COPILOT_MODEL, COPILOT_ALLOW_ALL, or COPILOT_GITHUB_TOKEN is set).
+        new EnvironmentDetectionRuleWithResult<string>("copilot-cli", new AnyPresentEnvironmentRule(
+            "GITHUB_COPILOT_CLI_MODE", "GH_COPILOT_WORKING_DIRECTORY", "COPILOT_CLI", "COPILOT_MODEL", "COPILOT_ALLOW_ALL", "COPILOT_GITHUB_TOKEN")),
+        // GitHub Copilot agent mode in VS Code, which sets AI_AGENT=github_copilot_vscode_agent and COPILOT_AGENT=1 on the terminals it runs commands in.
+        new EnvironmentDetectionRuleWithResult<string>("copilot-vscode", new AnyMatchEnvironmentRule(
+            new EnvironmentVariableValueRule("AI_AGENT", "github_copilot_vscode_agent"),
+            new AnyPresentEnvironmentRule("COPILOT_AGENT"))),
         // Codex CLI
-        new EnvironmentDetectionRuleWithResult<string>("codex", new AnyPresentEnvironmentRule("CODEX_CLI", "CODEX_SANDBOX")),
+        new EnvironmentDetectionRuleWithResult<string>("codex", new AnyPresentEnvironmentRule("CODEX_CLI", "CODEX_SANDBOX", "CODEX_CI", "CODEX_THREAD_ID")),
         // Aider
         new EnvironmentDetectionRuleWithResult<string>("aider", new EnvironmentVariableValueRule("OR_APP_NAME", "Aider")),
         // Plandex
@@ -35,25 +40,31 @@ internal sealed class LLMEnvironmentDetector
         // Qwen Code
         new EnvironmentDetectionRuleWithResult<string>("qwen", new AnyPresentEnvironmentRule("QWEN_CODE")),
         // Droid
-        new EnvironmentDetectionRuleWithResult<string>("droid", new BooleanEnvironmentRule("DROID_CLI")),
+        new EnvironmentDetectionRuleWithResult<string>("droid", new AnyPresentEnvironmentRule("DROID_CLI")),
         // OpenCode
         new EnvironmentDetectionRuleWithResult<string>("opencode", new AnyPresentEnvironmentRule("OPENCODE_AI")),
         // Zed AI
         new EnvironmentDetectionRuleWithResult<string>("zed", new AnyPresentEnvironmentRule("ZED_ENVIRONMENT", "ZED_TERM")),
         // Kimi CLI
-        new EnvironmentDetectionRuleWithResult<string>("kimi", new BooleanEnvironmentRule("KIMI_CLI")),
+        new EnvironmentDetectionRuleWithResult<string>("kimi", new AnyPresentEnvironmentRule("KIMI_CLI")),
         // OpenHands
         new EnvironmentDetectionRuleWithResult<string>("openhands", new EnvironmentVariableValueRule("OR_APP_NAME", "OpenHands")),
         // Goose
-        new EnvironmentDetectionRuleWithResult<string>("goose", new AnyPresentEnvironmentRule("GOOSE_TERMINAL")),
+        new EnvironmentDetectionRuleWithResult<string>("goose", new AnyPresentEnvironmentRule("GOOSE_TERMINAL", "GOOSE_PROVIDER")),
         // Cline
         new EnvironmentDetectionRuleWithResult<string>("cline", new AnyPresentEnvironmentRule("CLINE_TASK_ID")),
         // Roo Code
         new EnvironmentDetectionRuleWithResult<string>("roo", new AnyPresentEnvironmentRule("ROO_CODE_TASK_ID")),
         // Windsurf
         new EnvironmentDetectionRuleWithResult<string>("windsurf", new AnyPresentEnvironmentRule("WINDSURF_SESSION")),
+        // Replit
+        new EnvironmentDetectionRuleWithResult<string>("replit", new AnyPresentEnvironmentRule("REPL_ID")),
+        // Augment
+        new EnvironmentDetectionRuleWithResult<string>("augment", new AnyPresentEnvironmentRule("AUGMENT_AGENT")),
+        // Antigravity
+        new EnvironmentDetectionRuleWithResult<string>("antigravity", new AnyPresentEnvironmentRule("ANTIGRAVITY_AGENT")),
         // (proposed) generic flag for Agentic usage
-        new EnvironmentDetectionRuleWithResult<string>("generic_agent", new BooleanEnvironmentRule("AGENT_CLI")),
+        new EnvironmentDetectionRuleWithResult<string>("generic_agent", new AnyPresentEnvironmentRule("AGENT_CLI")),
     ];
 
     private readonly IEnvironment _environment;
@@ -83,45 +94,6 @@ internal sealed class LLMEnvironmentDetector
         /// <param name="environment">The environment abstraction to use for reading environment variables.</param>
         /// <returns>True if the rule matches the current environment; otherwise, false.</returns>
         public abstract bool IsMatch(IEnvironment environment);
-    }
-
-    /// <summary>
-    /// Rule that matches when any of the specified environment variables is set to "true".
-    /// </summary>
-    private sealed class BooleanEnvironmentRule : EnvironmentDetectionRule
-    {
-        private readonly string[] _variables;
-
-        public BooleanEnvironmentRule(params string[] variables)
-            => _variables = variables ?? throw new ArgumentNullException(nameof(variables));
-
-        public override bool IsMatch(IEnvironment environment)
-            => _variables.Any(variable => EnvironmentVariableParser.ParseBool(environment.GetEnvironmentVariable(variable), defaultValue: false));
-    }
-
-    private static class EnvironmentVariableParser
-    {
-        public static bool ParseBool(string? str, bool defaultValue)
-        {
-            if (str is "1" ||
-                string.Equals(str, "true", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(str, "yes", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(str, "on", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            if (str is "0" ||
-                string.Equals(str, "false", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(str, "no", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(str, "off", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            // Not set to a known value, return default value.
-            return defaultValue;
-        }
     }
 
     /// <summary>

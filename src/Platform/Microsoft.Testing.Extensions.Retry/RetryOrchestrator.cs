@@ -156,6 +156,15 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
 
+        // Retry summary accounting (single-assembly). The orchestrator only learns each attempt's failed UID set and
+        // the total number of tests that ran, so the richer passed/skipped split stays in the per-attempt child
+        // summaries; here we reconcile the attempts into one headline (mirroring the platform run summary idiom).
+        var orchestrationStopwatch = Stopwatch.StartNew();
+        int suiteTotalTests = 0;
+        int firstAttemptFailedTests = 0;
+        int finalFailedTests = 0;
+        int retriedExecutions = 0;
+
         // Parse the delay once before the loop since command-line options don't change.
         TimeSpan? retryDelay = null;
         if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, out string[]? retryDelayArgs)
@@ -171,7 +180,13 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
             if (attemptCount > 1 && retryDelay is { } delay)
             {
-                await logger.LogDebugAsync($"Waiting {delay:c} before retry attempt {attemptCount}").ConfigureAwait(false);
+                await outputDevice.DisplayAsync(
+                    this,
+                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryWaitingBeforeNextAttempt, FormatDelay(delay), attemptCount, userMaxRetryCount + 1))
+                    {
+                        ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGray },
+                    },
+                    cancellationToken).ConfigureAwait(false);
                 await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             }
 
@@ -355,6 +370,16 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
 
             exitCodes.Add(testHostProcess.ExitCode);
+
+            int failedThisAttempt = retryFailedTestsPipeServer.FailedUID?.Count ?? 0;
+            if (attemptCount == 1)
+            {
+                // The first attempt runs the full suite, so its total is the suite size that the final summary
+                // reconciles against; its failed set is the upper bound for the "flaky" (failed-then-passed) count.
+                suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan;
+                firstAttemptFailedTests = failedThisAttempt;
+            }
+
             if (testHostProcess.ExitCode != (int)ExitCode.Success)
             {
                 if (testHostProcess.ExitCode != (int)ExitCode.AtLeastOneTestFailed)
@@ -364,7 +389,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     break;
                 }
 
-                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
+                finalFailedTests = failedThisAttempt;
 
                 // Check thresholds
                 if (attemptCount == 1)
@@ -409,25 +434,75 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                     }
                 }
 
+                // Only announce an attempt as "retrying" when another attempt will actually follow; the final
+                // failed attempt is reported by the summary verdict instead. Amber (not red) keeps mid-run
+                // failures visually "expected", reserving red for the give-up summary.
+                bool willRetry = attemptCount < userMaxRetryCount + 1;
+                if (willRetry)
+                {
+                    await outputDevice.DisplayAsync(
+                        this,
+                        new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryAttemptFailedWillRetry, attemptCount, userMaxRetryCount + 1, failedThisAttempt))
+                        {
+                            ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkYellow },
+                        },
+                        cancellationToken).ConfigureAwait(false);
+
+                    // Each retried attempt re-runs exactly this attempt's failed set, so its failed count is the
+                    // number of extra executions added by the retry — the platform "(+N retried)" semantics.
+                    retriedExecutions += failedThisAttempt;
+                }
+
                 finalArguments.Clear();
                 lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
             }
             else
             {
+                finalFailedTests = 0;
                 break;
             }
         }
 
+        orchestrationStopwatch.Stop();
+
         if (!thresholdPolicyKickedIn && !retryInterrupted)
         {
-            if (exitCodes[^1] != (int)ExitCode.Success)
+            bool runSucceeded = exitCodes[^1] == (int)ExitCode.Success;
+            int flakyTests = Math.Max(0, firstAttemptFailedTests - finalFailedTests);
+            int totalAttempts = userMaxRetryCount + 1;
+
+            // Headline verdict, colored by the FINAL outcome so a run rescued by retry reads as green.
+            if (runSucceeded)
             {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
+                string header = attemptCount == 1
+                    ? ExtensionResources.RetrySummaryPassedNoRetry
+                    : string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryPassed, attemptCount, totalAttempts);
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(header) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } }, cancellationToken).ConfigureAwait(false);
             }
             else
             {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } }, cancellationToken).ConfigureAwait(false);
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryFailed, attemptCount, totalAttempts)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkRed } }, cancellationToken).ConfigureAwait(false);
             }
+
+            if (!runSucceeded && finalFailedTests > 0)
+            {
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryFailedLine, finalFailedTests)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkRed } }, cancellationToken).ConfigureAwait(false);
+            }
+
+            // "flaky" = failed at least once but eventually passed — the headline value of the retry feature.
+            if (flakyTests > 0)
+            {
+                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryFlakyLine, flakyTests)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkYellow } }, cancellationToken).ConfigureAwait(false);
+            }
+
+            string totalLine = string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryTotalLine, suiteTotalTests);
+            if (retriedExecutions > 0)
+            {
+                totalLine += string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryRetriedSuffix, retriedExecutions);
+            }
+
+            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(totalLine), cancellationToken).ConfigureAwait(false);
+            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetrySummaryDurationLine, FormatDuration(orchestrationStopwatch.Elapsed))), cancellationToken).ConfigureAwait(false);
         }
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
@@ -435,9 +510,8 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         string[] filesToMove = _fileSystem.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
         if (filesToMove.Length > 0)
         {
-            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles), cancellationToken).ConfigureAwait(false);
-
-            // Move last attempt assets
+            // Move last attempt assets. The per-file detail is demoted to a debug log; the user-facing output is a
+            // single collapsed line so a large artifact set no longer spams the console.
             foreach (string file in filesToMove)
             {
                 string finalFileLocation = file.Replace(currentTryResultFolder, resultDirectory);
@@ -445,7 +519,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 // Create the directory if missing
                 fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
 
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation)), cancellationToken).ConfigureAwait(false);
+                logger.LogDebug($"Moving file '{file}' to '{finalFileLocation}'");
 #if NETCOREAPP
                 fileSystem.MoveFile(file, finalFileLocation, overwrite: true);
 #else
@@ -453,6 +527,14 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 fileSystem.DeleteFile(file);
 #endif
             }
+
+            await outputDevice.DisplayAsync(
+                this,
+                new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryArtifactsMoved, filesToMove.Length, resultDirectory))
+                {
+                    ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGray },
+                },
+                cancellationToken).ConfigureAwait(false);
         }
 
         return exitCodes[^1];
@@ -513,4 +595,23 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
             }
         }
     }
+
+    // Renders a retry delay the same way the --retry-failed-tests-delay option accepts it (e.g. '500ms', '1s',
+    // '1500ms') so the displayed wait is consistent with how the user configured it. The output is always a single
+    // value + unit that TimeSpanParser round-trips, and uses InvariantCulture so it never varies by locale.
+    private static string FormatDelay(TimeSpan delay)
+        => delay.TotalMilliseconds < 1000
+            ? string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)delay.TotalMilliseconds)
+            : delay.Milliseconds == 0
+                ? string.Format(CultureInfo.InvariantCulture, "{0}s", (long)delay.TotalSeconds)
+                : string.Format(CultureInfo.InvariantCulture, "{0}ms", (long)delay.TotalMilliseconds);
+
+    // Compact, human-friendly duration for the retry summary, mirroring the platform terminal style
+    // (e.g. '240ms', '1s 240ms', '2m 03s'). InvariantCulture keeps the numeric separators stable across locales.
+    private static string FormatDuration(TimeSpan duration)
+        => duration.TotalSeconds < 1
+            ? string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)duration.TotalMilliseconds)
+            : duration.TotalMinutes < 1
+                ? string.Format(CultureInfo.InvariantCulture, "{0}s {1:000}ms", duration.Seconds, duration.Milliseconds)
+                : string.Format(CultureInfo.InvariantCulture, "{0}m {1:00}s", (int)duration.TotalMinutes, duration.Seconds);
 }

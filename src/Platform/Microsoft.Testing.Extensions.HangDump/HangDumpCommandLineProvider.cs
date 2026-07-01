@@ -35,7 +35,6 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
     private static readonly string[] AllHangDumpTypeOptions = ["Mini", "Heap", "Full", "Triage", "None"];
 
     private static readonly string HangDumpTypeOptionsFormatted = string.Join(", ", Array.ConvertAll(HangDumpTypeOptions, option => $"'{option}'"));
-    private static readonly string AllHangDumpTypeOptionsFormatted = string.Join(", ", Array.ConvertAll(AllHangDumpTypeOptions, option => $"'{option}'"));
 
     private static readonly IReadOnlyCollection<CommandLineOption> CachedCommandLineOptions =
     [
@@ -69,42 +68,29 @@ internal sealed class HangDumpCommandLineProvider : CommandLineOptionsProviderBa
 
         if (commandOption.Name == HangDumpTypeOptionName)
         {
-            if (!HangDumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
-            {
-                return ValidationResult.InvalidTask(string.Format(
-                    CultureInfo.InvariantCulture,
-                    ExtensionResources.HangDumpTypeOptionInvalidType,
-                    arguments[0],
-                    HangDumpTypeOptionsFormatted));
-            }
+            return ValidateAllowedValuesAsync(arguments[0], HangDumpTypeOptions, ExtensionResources.HangDumpTypeOptionInvalidType);
         }
 
-        return commandOption.Name == HangDumpTypeIfSupportedOptionName
+        if (commandOption.Name == HangDumpTypeIfSupportedOptionName)
+        {
             // The "-if-supported" variant accepts the full set of dump types regardless of TFM:
             // the runtime fallback is what makes the option safe to leave in a shared command
             // line. Anything outside the full set is still a user typo and must be rejected.
-            && !AllHangDumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
-            ? ValidationResult.InvalidTask(string.Format(
-                CultureInfo.InvariantCulture,
-                ExtensionResources.HangDumpTypeOptionInvalidType,
-                arguments[0],
-                AllHangDumpTypeOptionsFormatted))
-            : ValidationResult.ValidTask;
+            return ValidateAllowedValuesAsync(arguments[0], AllHangDumpTypeOptions, ExtensionResources.HangDumpTypeOptionInvalidType);
+        }
+
+        return ValidationResult.ValidTask;
     }
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-    {
-        bool hasHangDumpSubOption = commandLineOptions.IsOptionSet(HangDumpTimeoutOptionName) ||
-            commandLineOptions.IsOptionSet(HangDumpFileNameOptionName) ||
-            commandLineOptions.IsOptionSet(HangDumpTypeOptionName) ||
-            commandLineOptions.IsOptionSet(HangDumpTypeIfSupportedOptionName);
-
-        return hasHangDumpSubOption && !commandLineOptions.IsOptionSet(HangDumpOptionName)
-            ? ValidationResult.InvalidTask(ExtensionResources.MissingHangDumpMainOption)
-            : commandLineOptions.IsOptionSet(HangDumpTypeOptionName) && commandLineOptions.IsOptionSet(HangDumpTypeIfSupportedOptionName)
-                ? ValidationResult.InvalidTask(ExtensionResources.HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage)
-                : ValidationResult.ValidTask;
-    }
+        => RequiresMainOption(
+            commandLineOptions,
+            [HangDumpTimeoutOptionName, HangDumpFileNameOptionName, HangDumpTypeOptionName, HangDumpTypeIfSupportedOptionName],
+            HangDumpOptionName,
+            () => ExtensionResources.MissingHangDumpMainOption)
+        ?? (commandLineOptions.IsOptionSet(HangDumpTypeOptionName) && commandLineOptions.IsOptionSet(HangDumpTypeIfSupportedOptionName)
+            ? ValidationResult.InvalidTask(ExtensionResources.HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage)
+            : ValidationResult.ValidTask);
 
     // Returns true when 'value' (an already-validated entry from the full hang dump type set)
     // is available on the current runtime, i.e. when --hangdump-type would have accepted it.

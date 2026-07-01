@@ -101,6 +101,17 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
+        // Server-mode variant: runs via `dotnet test --no-build` to exercise the MTP JSON-RPC
+        // (named-pipe) path rather than the plain-process standalone path.  The "PlainProcess"
+        // suffix keeps this scenario captured by the existing nightly workflow filter (*PlainProcess*).
+        pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetTestProcess("Scenario1_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
         return pipelineRunner.Run(pipelineNameFilter);
     }
 }

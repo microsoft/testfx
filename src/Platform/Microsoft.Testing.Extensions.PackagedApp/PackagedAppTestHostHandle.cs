@@ -56,11 +56,7 @@ internal sealed class PackagedAppTestHostHandle : ITestHostHandle
                 Directory.Delete(_deploymentDirectory, recursive: true);
             }
         }
-        catch (IOException ex)
-        {
-            Debug.WriteLine($"Best-effort cleanup of deployment directory '{_deploymentDirectory}' failed: {ex}");
-        }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Debug.WriteLine($"Best-effort cleanup of deployment directory '{_deploymentDirectory}' failed: {ex}");
         }

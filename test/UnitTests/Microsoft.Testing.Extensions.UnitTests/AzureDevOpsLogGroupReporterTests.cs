@@ -59,13 +59,27 @@ public sealed class AzureDevOpsLogGroupReporterTests
     }
 
     [TestMethod]
+    public async Task IsEnabledAsync_ReturnsFalse_WhenGroupsExplicitlyOffAsync()
+    {
+        AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true, groups: ["off"]);
+        Assert.IsFalse(await reporter.IsEnabledAsync());
+    }
+
+    [TestMethod]
+    public async Task IsEnabledAsync_ReturnsTrue_WhenGroupsExplicitlyOnAsync()
+    {
+        AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true, groups: ["on"]);
+        Assert.IsTrue(await reporter.IsEnabledAsync());
+    }
+
+    [TestMethod]
     public async Task SessionStarting_EmitsGroupHeaderWithAssemblyAndTfmAsync()
     {
         AzureDevOpsLogGroupReporter reporter = CreateReporter(enabled: true, tfBuild: true);
 
         await reporter.OnTestSessionStartingAsync(new TestSessionContext());
 
-        string[] lines = GetFormattedLines();
+        string[] lines = GetCommandLines();
         Assert.HasCount(1, lines);
         string headerPrefix = AzureDevOpsResources.LogGroupHeader.Replace("{0}", string.Empty);
         Assert.StartsWith($"##[group]{headerPrefix}MyAssembly (", lines[0]);
@@ -79,7 +93,7 @@ public sealed class AzureDevOpsLogGroupReporterTests
         await reporter.OnTestSessionStartingAsync(new TestSessionContext());
         await reporter.OnTestSessionFinishingAsync(new TestSessionContext());
 
-        string[] lines = GetFormattedLines();
+        string[] lines = GetCommandLines();
         Assert.HasCount(2, lines);
         Assert.StartsWith("##[group]", lines[0]);
         Assert.AreEqual("##[endgroup]", lines[1]);
@@ -92,7 +106,7 @@ public sealed class AzureDevOpsLogGroupReporterTests
 
         await reporter.OnTestSessionFinishingAsync(new TestSessionContext());
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
     }
 
     [TestMethod]
@@ -108,7 +122,7 @@ public sealed class AzureDevOpsLogGroupReporterTests
             CreateTestNodeUpdateMessage("t1", new PassedTestNodeStateProperty()),
             CancellationToken.None);
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
     }
 
     private static TestNodeUpdateMessage CreateTestNodeUpdateMessage(string uid, TestNodeStateProperty state)
@@ -121,11 +135,16 @@ public sealed class AzureDevOpsLogGroupReporterTests
                 Properties = new PropertyBag(state),
             });
 
-    private AzureDevOpsLogGroupReporter CreateReporter(bool enabled, bool tfBuild)
+    private AzureDevOpsLogGroupReporter CreateReporter(bool enabled, bool tfBuild, string[]? groups = null)
     {
         Dictionary<string, string[]> options = enabled
             ? new Dictionary<string, string[]> { [AzureDevOpsCommandLineOptions.AzureDevOpsOptionName] = [] }
             : [];
+        if (groups is not null)
+        {
+            options[AzureDevOpsCommandLineOptions.AzureDevOpsGroups] = groups;
+        }
+
         _ = _environmentMock.Setup(e => e.GetEnvironmentVariable(AzureDevOpsConstants.TfBuildEnvironmentVariableName))
             .Returns(tfBuild ? AzureDevOpsConstants.TfBuildEnabledValue : null);
         return new AzureDevOpsLogGroupReporter(
@@ -136,8 +155,8 @@ public sealed class AzureDevOpsLogGroupReporterTests
             _loggerFactoryMock.Object);
     }
 
-    private string[] GetFormattedLines()
-        => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
+    private string[] GetCommandLines()
+        => [.. _outputData.OfType<AzureDevOpsCommandOutputDeviceData>().Select(data => data.Text)];
 
     private sealed class TestSessionContext : ITestSessionContext
     {

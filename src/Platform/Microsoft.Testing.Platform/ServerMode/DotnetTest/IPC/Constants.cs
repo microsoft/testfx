@@ -26,6 +26,17 @@ internal static class SessionEventTypes
 }
 
 [Embedded]
+internal static class DisplayMessageLevels
+{
+    // The severity of a generic host display message forwarded over the pipe. The SDK maps each level
+    // to its TerminalTestReporter sink: Information -> WriteMessage, Warning -> WriteWarningMessage,
+    // Error -> WriteErrorMessage. Values must stay stable (they flow over IPC to dotnet test).
+    internal const byte Information = 0;
+    internal const byte Warning = 1;
+    internal const byte Error = 2;
+}
+
+[Embedded]
 internal static class HandshakeMessagePropertyNames
 {
     internal const byte PID = 0;
@@ -92,10 +103,30 @@ internal static class ProtocolConstants
     // When both sides advertise 1.1.0 and we negotiate to that version, the SDK can keep its
     // live output enabled.
     //
-    // NOTE: The no-op output device is installed for all pipe-protocol connections, regardless
-    // of the negotiated protocol version. With an old SDK that only supports 1.0.0, both sides
-    // will produce no live output (the SDK suppresses its TerminalTestReporter to avoid colliding
-    // with the host output it expected before this change). Users must update to an SDK that
-    // negotiates 1.1.0 to see live output via the SDK's TerminalTestReporter.
-    internal const string SupportedVersions = "1.0.0;1.1.0";
+    // 1.2.0 adds the AzureDevOpsLogMessage: under the pipe protocol the host installs a no-op output
+    // device (see below), so any Azure DevOps logging commands (##[group], ##vso[...]) produced by the
+    // AzureDevOpsReport extension would otherwise be swallowed. When both sides negotiate 1.2.0 the host
+    // forwards those marked lines to the SDK over the pipe, and the SDK writes them verbatim to its
+    // TerminalTestReporter so they reach the pipeline log. An older SDK that only negotiates 1.1.0 never
+    // receives the message (the host gates forwarding on the negotiated version), so it stays compatible.
+    //
+    // 1.3.0 adds the generic DisplayMessage: under the pipe protocol the host's forwarding output device still
+    // discards regular (informational) output, but relays warning/error host messages
+    // (WarningMessageOutputDeviceData / ErrorMessageOutputDeviceData) to the SDK as DisplayMessage so that
+    // host-side diagnostics produced outside test results (hang/crash dump diagnostics, retry summaries, generic
+    // extension/framework warnings and errors) are no longer swallowed in multi-assembly runs. The SDK routes each
+    // DisplayMessage to its TerminalTestReporter's WriteWarningMessage / WriteErrorMessage. Unlike the AzureDevOps
+    // path, this is not gated on an Azure DevOps agent. The host gates forwarding on the negotiated version, so an
+    // older SDK (<= 1.2.0) never receives the message.
+    //
+    // NOTE: Under the pipe protocol the host installs a forwarding output device
+    // (DotnetTestPassthroughOutputDevice) regardless of the negotiated protocol version (the SDK's
+    // TerminalTestReporter owns user-facing output). It still discards regular (informational) output but,
+    // depending on the negotiated version, relays: Azure DevOps logging commands as AzureDevOpsLogMessage (1.2.0+,
+    // only on an Azure DevOps agent) and warning/error host messages as DisplayMessage (1.3.0+, always). See
+    // OutputDeviceManager.BuildAsync. With an old SDK that only supports 1.0.0, both sides will produce no live
+    // output (the SDK suppresses its TerminalTestReporter to avoid colliding with the host output it expected
+    // before this change). Users must update to an SDK that negotiates 1.1.0 to see live output via the SDK's
+    // TerminalTestReporter.
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0";
 }

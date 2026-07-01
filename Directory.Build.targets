@@ -64,4 +64,22 @@
       <Compile Include="$(IntermediateOutputPath)BuildInfo.cs" />
     </ItemGroup>
   </Target>
+
+  <!-- Validates that the literal versions declared on the MSTest.Sdk-bundled feature PackageVersion items
+       in Directory.Packages.props stay in sync with the matching scalar *Version properties consumed by the
+       build. Authored here (rather than in Directory.Packages.props) because targets belong in .targets
+       files; the PackageVersion items it references are populated before this target executes regardless of
+       which file declares it. -->
+  <Target Name="_ValidateBundledSdkFeatureVersions"
+          BeforeTargets="CollectPackageReferences;GenerateNuspec;Build;Pack"
+          Condition=" '$(MSBuildProjectName)' == 'MSTest.Sdk' ">
+    <PropertyGroup>
+      <_AspireHostingTestingPackageVersion>@(PackageVersion->WithMetadataValue('Identity', 'Aspire.Hosting.Testing')->'%(Version)')</_AspireHostingTestingPackageVersion>
+      <_MicrosoftPlaywrightPackageVersion>@(PackageVersion->WithMetadataValue('Identity', 'Microsoft.Playwright.MSTest.v4')->'%(Version)')</_MicrosoftPlaywrightPackageVersion>
+    </PropertyGroup>
+    <Error Condition=" '$(AspireHostingTestingVersion)' != '$(_AspireHostingTestingPackageVersion)' "
+           Text="AspireHostingTestingVersion ('$(AspireHostingTestingVersion)') is out of sync with the 'Aspire.Hosting.Testing' PackageVersion ('$(_AspireHostingTestingPackageVersion)') in Directory.Packages.props. Update the AspireHostingTestingVersion property to match (Dependabot only updates the PackageVersion)." />
+    <Error Condition=" '$(MicrosoftPlaywrightVersion)' != '$(_MicrosoftPlaywrightPackageVersion)' "
+           Text="MicrosoftPlaywrightVersion ('$(MicrosoftPlaywrightVersion)') is out of sync with the 'Microsoft.Playwright.MSTest.v4' PackageVersion ('$(_MicrosoftPlaywrightPackageVersion)') in Directory.Packages.props. Update the MicrosoftPlaywrightVersion property to match (Dependabot only updates the PackageVersion)." />
+  </Target>
 </Project>

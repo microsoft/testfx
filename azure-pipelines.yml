@@ -48,10 +48,23 @@ variables:
   #   --report-junit / --report-junit-filename "{asm}_{tfm}.xml" — JUnit XML per (assembly x TFM).
   #   --report-azdo — surfaces failed tests in the AzDO UI.
   #   --report-azdo-summary — Markdown job summary uploaded to the build's Summary tab.
+  #   --report-azdo-slow-test-history 30 — query the pipeline's own test history (last 30 days) and lower the
+  #     per-test 'still running' threshold for historically fast tests. Mirrors the Debug path in
+  #     test/Directory.Build.targets so Debug and Release dogfood the same AzDO surface.
+  #   --report-azdo-slow-test-history-min-sample 10 / --report-azdo-slow-test-history-multiplier 3.0 — exercise
+  #     the slow-test-history sub-options and their 'requires report-azdo-slow-test-history' validation. Values
+  #     match the extension defaults, so they don't change which tests are flagged; they only keep the option
+  #     surface covered.
+  #   --report-azdo-flaky-history 30 — query test history (last 30 days) and annotate reported failures with
+  #     flakiness context. Annotation only: it does NOT demote failures to warnings (that is the separate
+  #     report-azdo-demote-known-flaky option, intentionally left off so a genuine regression is never hidden).
   #   --hangdump --hangdump-timeout 15m — dump a module that hangs past 15 minutes.
+  # The report-azdo history options (slow-test-history, flaky-history) authenticate via the SYSTEM_ACCESSTOKEN
+  # secret. It is now mapped onto the public Test/TestRelease steps below; fork PR builds don't receive the
+  # secret so the history service silently no-ops there, while trusted-branch builds exercise it end-to-end.
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _ReleaseUnitTestReportArgs
-    value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
+    value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
 
 stages:
 
@@ -194,6 +207,13 @@ stages:
             name: Test
             displayName: Test
             condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+            env:
+              # Expose the build's OAuth token so the report-azdo history options (slow-test-history /
+              # flaky-history injected by test/Directory.Build.targets) can query this pipeline's own
+              # test-result history. Secret variables are not auto-exposed to scripts, so the explicit mapping
+              # is required. Fork PR builds don't receive the secret, so the history service simply no-ops
+              # there; trusted branch builds exercise it end-to-end.
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
           # Integration tests are redundant in Release—they spawn child processes that already cover
           # both Debug and Release configurations. Use --test-modules to run only unit tests.
@@ -219,6 +239,13 @@ stages:
             name: TestRelease
             displayName: Test (unit tests only)
             condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
+            env:
+              # Expose the build's OAuth token so the report-azdo history options (slow-test-history /
+              # flaky-history in $(_ReleaseUnitTestReportArgs)) can query this pipeline's own test-result
+              # history. Secret variables are not auto-exposed to scripts, so the explicit mapping is required.
+              # Fork PR builds don't receive the secret, so the history service simply no-ops there; trusted
+              # branch builds exercise it end-to-end.
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Test Results folders'

@@ -252,7 +252,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         => await EmitLineAsync($"{AzureDevOpsBuildAddTagCommandPrefix}{tag}", cancellationToken).ConfigureAwait(false);
 
     private async Task EmitLineAsync(string line, CancellationToken cancellationToken)
-        => await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
+        => await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), cancellationToken).ConfigureAwait(false);
 
     private string GetArtifactName()
         => _artifactNameOverride is { } artifactName && !RoslynString.IsNullOrWhiteSpace(artifactName)

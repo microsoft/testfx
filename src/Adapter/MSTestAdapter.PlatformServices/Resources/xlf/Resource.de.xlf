@@ -408,6 +408,11 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Der Komponententestadapter konnte keine Verbindung mit der Datenquelle herstellen bzw. die Daten nicht lesen. Weitere Informationen zur Problembehandlung dieses Fehlers finden Sie unter "Problembehandlung von datengesteuerten Komponententests" (http://go.microsoft.com/fwlink/?LinkId=62412) in der MSDN Library. Fehlerdetails: {0}</target>
         <note>{0} is the error details. {Locked="http://go.microsoft.com/fwlink/?LinkId=62412"}{Locked="MSDN"}</note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
+        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</target>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
+      </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
         <target state="translated">UTA031: Die Klasse {0} weist keine gültige TestContext-Eigenschaft auf. TestContext muss vom Typ TestContext sein, muss non-static und public sein. Beispiel: public TestContext TestContext.</target>
@@ -524,6 +529,41 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <source>The {0}.TestContext has incorrect type.</source>
         <target state="translated">"{0}.TestContext" weist einen falschen Typ auf.</target>
         <note>{0} is the test class name. {Locked="TestContext"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
+        <source>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</source>
+        <target state="new">UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</target>
+        <note>{0} is the type name. {1} is the exception details. {Locked="UTA077"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderLoadFailed">
+        <source>UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</source>
+        <target state="new">UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</target>
+        <note>{0} is the assembly path. {1} is the exception details. {Locked="UTA073"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderMultipleDeclared">
+        <source>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</source>
+        <target state="new">UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</target>
+        <note>{0} is the assembly path. {Locked="UTA079"}{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderThrew">
+        <source>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</source>
+        <target state="new">UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</target>
+        <note>{0} is the filter type name. {1} is the test name. {2} is the exception details. {Locked="UTA078"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeDoesNotImplementInterface">
+        <source>UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</source>
+        <target state="new">UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</target>
+        <note>{0} is the type name. {1} is the required interface name. {Locked="UTA076"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsGeneric">
+        <source>UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</source>
+        <target state="new">UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</target>
+        <note>{0} is the type name. {Locked="UTA074"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsNotInstantiable">
+        <source>UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</source>
+        <target state="new">UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</target>
+        <note>{0} is the type name. {Locked="UTA075"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>

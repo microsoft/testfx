@@ -418,6 +418,10 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</value>
     <comment>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="[TestMethod]"}{Locked="non-static"}{Locked="public"}{Locked="void"}{Locked="async-await"}{Locked="Task"}{Locked="public void Test.Class1.Test()"}{Locked="public async Task Test.Class1.Test2()"}</comment>
   </data>
+  <data name="UTA_ErrorGenericValueTaskReturnType" xml:space="preserve">
+    <value>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</value>
+    <comment>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</comment>
+  </data>
   <data name="UTA_ErrorInValidTestContextSignature" xml:space="preserve">
     <value>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</value>
     <comment>{0} is the test class name. {Locked="UTA031"}{Locked="TestContext"}{Locked="non-static"}{Locked="public"}{Locked="public TestContext TestContext"}</comment>
@@ -445,6 +449,34 @@ but received {4} argument(s), with types '{5}'.</value>
   <data name="UTA_AssemblyFixtureProviderLoadFailed" xml:space="preserve">
     <value>UTA072: Failed to load [AssemblyFixtureProvider] marker from assembly '{0}'. {1}</value>
     <comment>{0} is the assembly path. {1} is the exception details. {Locked="UTA072"}{Locked="[AssemblyFixtureProvider]"}</comment>
+  </data>
+  <data name="UTA_TestFilterProviderLoadFailed" xml:space="preserve">
+    <value>UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</value>
+    <comment>{0} is the assembly path. {1} is the exception details. {Locked="UTA073"}{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="UTA_TestFilterProviderTypeIsGeneric" xml:space="preserve">
+    <value>UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</value>
+    <comment>{0} is the type name. {Locked="UTA074"}{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="UTA_TestFilterProviderTypeIsNotInstantiable" xml:space="preserve">
+    <value>UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</value>
+    <comment>{0} is the type name. {Locked="UTA075"}{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="UTA_TestFilterProviderTypeDoesNotImplementInterface" xml:space="preserve">
+    <value>UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</value>
+    <comment>{0} is the type name. {1} is the required interface name. {Locked="UTA076"}{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="UTA_TestFilterProviderInstantiationFailed" xml:space="preserve">
+    <value>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</value>
+    <comment>{0} is the type name. {1} is the exception details. {Locked="UTA077"}{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="UTA_TestFilterProviderThrew" xml:space="preserve">
+    <value>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</value>
+    <comment>{0} is the filter type name. {1} is the test name. {2} is the exception details. {Locked="UTA078"}{Locked="[TestFilterProvider]"}</comment>
+  </data>
+  <data name="UTA_TestFilterProviderMultipleDeclared" xml:space="preserve">
+    <value>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</value>
+    <comment>{0} is the assembly path. {Locked="UTA079"}{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</comment>
   </data>
   <data name="UTA_ErrorMultiClassClean" xml:space="preserve">
     <value>UTA026: {0}: Cannot define more than one method with the ClassCleanup attribute inside a class.</value>
