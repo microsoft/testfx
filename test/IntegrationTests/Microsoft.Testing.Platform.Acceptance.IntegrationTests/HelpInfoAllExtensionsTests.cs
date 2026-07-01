@@ -165,6 +165,18 @@ Extension options:
         The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.ctrf.json
+    --report-gh
+        Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
+    --report-gh-annotations
+        Enable or disable GitHub Actions failure annotations ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-groups
+        Enable or disable per-assembly log groups ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-slow-test-notices
+        Enable or disable GitHub Actions slow-test notices ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-slow-test-threshold
+        The number of seconds a test may run before a GitHub Actions slow-test notice is emitted. Defaults to 60.
+    --report-gh-step-summary
+        Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
     --report-html
         Enable generating an HTML report
     --report-html-filename
@@ -510,6 +522,35 @@ Registered command line providers:
         Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.ctrf.json
+  GitHubActionsCommandLineProvider
+    Name: GitHub Actions report generator
+    Version: *
+    Description: GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
+    Options:
+      --report-gh
+        Arity: 0
+        Hidden: False
+        Description: Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
+      --report-gh-annotations
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable GitHub Actions failure annotations ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-groups
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable per-assembly log groups ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-slow-test-notices
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable GitHub Actions slow-test notices ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-slow-test-threshold
+        Arity: 1
+        Hidden: False
+        Description: The number of seconds a test may run before a GitHub Actions slow-test notice is emitted. Defaults to 60.
+      --report-gh-step-summary
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *
@@ -675,6 +716,7 @@ Registered tools:
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
