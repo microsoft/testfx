@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
 
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
@@ -89,22 +89,6 @@
     <!-- WinUI dependency must not flow to consumers of the package. -->
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" PrivateAssets="all" />
   </ItemGroup>
-
-  <!--
-    MSTest.Analyzers is a dependency for CONSUMERS of this NuGet package, but must NOT
-    run during build of the source repo (it would flag intentional internal patterns).
-    We declare it with PrivateAssets="all" to block transitive flow during build,
-    then override at pack time so it appears in the output .nupkg dependency list.
-  -->
-  <ItemGroup>
-    <PackageReference Include="MSTest.Analyzers" PrivateAssets="all" ExcludeAssets="all" />
-  </ItemGroup>
-
-  <Target Name="_UnprivatizeAnalyzersForPack" BeforeTargets="_GetPackageDependencies">
-    <ItemGroup>
-      <PackageReference Update="MSTest.Analyzers" PrivateAssets="none" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
