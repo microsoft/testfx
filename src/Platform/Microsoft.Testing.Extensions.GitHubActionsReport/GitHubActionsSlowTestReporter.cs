@@ -66,6 +66,9 @@ internal sealed class GitHubActionsSlowTestReporter : SlowTestReporterBase
             GitHubActionsEscaper.EscapeData(message));
     }
 
+    // Re-reads the already-provider-validated threshold option (the CLI provider guarantees a parseable
+    // positive integer). This mirrors the sibling AzureDevOpsSlowTestReporter, which likewise reads its
+    // history options straight from ICommandLineOptions rather than threading a parsed value through.
     private static int GetThresholdSeconds(ICommandLineOptions commandLineOptions)
         => commandLineOptions.TryGetOptionArgumentList(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold, out string[]? arguments)
             && arguments is [string value]
