@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 /// </summary>
 internal static class GitHubActionsRepositoryRoot
 {
+    // Process-lifetime cache of the discovered git root. Written without synchronization on purpose: the value
+    // is idempotent (always derived from the constant AppContext.BaseDirectory), so a benign race can at most
+    // recompute the same path. It is intentionally never reset for the lifetime of the process.
     private static string? s_cachedGitRoot;
 
     public static string? Resolve(IEnvironment environment)
