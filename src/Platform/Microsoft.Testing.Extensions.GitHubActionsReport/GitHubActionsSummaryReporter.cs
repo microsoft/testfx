@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
@@ -174,7 +174,7 @@ internal sealed class GitHubActionsSummaryReporter :
                 snapshot = [.. _records.Values];
             }
 
-            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown", _targetFrameworkMoniker.Value);
+            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name", _targetFrameworkMoniker.Value);
 
             try
             {

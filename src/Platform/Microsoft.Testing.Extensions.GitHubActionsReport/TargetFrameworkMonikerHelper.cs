@@ -10,5 +10,5 @@ internal static class TargetFrameworkMonikerHelper
     public static string GetTargetFrameworkMoniker()
         => TargetFrameworkParser.GetShortTargetFramework(Assembly.GetEntryAssembly()?.GetCustomAttribute<System.Runtime.Versioning.TargetFrameworkAttribute>()?.FrameworkDisplayName)
             ?? TargetFrameworkParser.GetShortTargetFramework(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription)
-            ?? "unknown";
+            ?? "unknown framework";
 }
