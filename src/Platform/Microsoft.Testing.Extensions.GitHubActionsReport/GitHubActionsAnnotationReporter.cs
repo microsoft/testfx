@@ -75,36 +75,52 @@ internal sealed class GitHubActionsAnnotationReporter :
 
     public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        if (value is not TestNodeUpdateMessage nodeUpdateMessage)
+        try
         {
-            return;
-        }
+            cancellationToken.ThrowIfCancellationRequested();
 
-        TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-        string testDisplayName = nodeUpdateMessage.TestNode.DisplayName;
+            if (value is not TestNodeUpdateMessage nodeUpdateMessage)
+            {
+                return;
+            }
 
-        switch (nodeState)
-        {
-            case FailedTestNodeStateProperty failed:
-                await WriteAnnotationAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), failed.Explanation, failed.Exception, cancellationToken).ConfigureAwait(false);
-                break;
-            case ErrorTestNodeStateProperty error:
-                await WriteAnnotationAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), error.Explanation, error.Exception, cancellationToken).ConfigureAwait(false);
-                break;
-            case TimeoutTestNodeStateProperty timeout:
-                await WriteAnnotationAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), timeout.Explanation, timeout.Exception, cancellationToken).ConfigureAwait(false);
-                break;
+            // FirstOrDefault (not SingleOrDefault): a malformed node that somehow carries more than one state
+            // property must degrade to "no annotation for this test" rather than throwing into the platform's
+            // data-consumer dispatch.
+            TestNodeStateProperty? nodeState = nodeUpdateMessage.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
+
+            (string? Explanation, Exception? Exception)? failure = nodeState switch
+            {
+                FailedTestNodeStateProperty failed => (failed.Explanation, failed.Exception),
+                ErrorTestNodeStateProperty error => (error.Explanation, error.Exception),
+                TimeoutTestNodeStateProperty timeout => (timeout.Explanation, timeout.Exception),
 #pragma warning disable CS0618, MTP0001 // Type or member is obsolete
-            case CancelledTestNodeStateProperty cancelled:
+                CancelledTestNodeStateProperty cancelled => (cancelled.Explanation, cancelled.Exception),
 #pragma warning restore CS0618, MTP0001 // Type or member is obsolete
-                await WriteAnnotationAsync(testDisplayName, GetTestName(nodeUpdateMessage.TestNode), cancelled.Explanation, cancelled.Exception, cancellationToken).ConfigureAwait(false);
-                break;
+                _ => null,
+            };
+
+            if (failure is null)
+            {
+                return;
+            }
+
+            await WriteAnnotationAsync(GetTestName(nodeUpdateMessage.TestNode), failure.Value.Explanation, failure.Value.Exception, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Mirror the sibling reporters: a failure while building/emitting an annotation (e.g. a malformed
+            // stack-trace path making IFileSystem.ExistFile throw) degrades to "no annotation" instead of
+            // propagating into the platform's consumer dispatch.
+            LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
     }
 
-    private async Task WriteAnnotationAsync(string testDisplayName, string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
+    private async Task WriteAnnotationAsync(string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
@@ -249,4 +265,12 @@ internal sealed class GitHubActionsAnnotationReporter :
 
     private static string GetTestName(TestNode testNode)
         => TestNodeIdentity.GetTestName(testNode);
+
+    private void LogUnexpectedException(string callbackName, Exception ex)
+    {
+        if (_logger.IsEnabled(LogLevel.Warning))
+        {
+            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
+        }
+    }
 }
