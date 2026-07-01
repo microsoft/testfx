@@ -1,23 +1,26 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Tasks Last Run
-- Task 2 (Identify Opportunities): 2026-06-30 (scanned OTel, TerminalTestReporter, TrxReport, TestResultCaptureHelper)
-- Task 3 (Implement Improvement): 2026-06-29
-- Task 4 (Maintain PRs): 2026-06-29 (no open efficiency PRs; all merged)
+- Task 2 (Identify Opportunities): 2026-07-01 (scanned VSTestBridge, JUnitReport, AzureDevOpsReport, MTP platform core, MSTest adapter execution path)
+- Task 3 (Implement Improvement): 2026-07-01 (ParameterTypes cache in ResolveArguments)
+- Task 4 (Maintain PRs): 2026-07-01 (no open efficiency PRs to maintain)
 - Task 5 (Comment on Issues): 2026-06-30 (GitHub MCP 403 error; enterprise PAT policy blocked search)
 - Task 6 (Measurement Infrastructure): 2026-06-27
-- Task 7 (Monthly Summary): 2026-06-30
+- Task 7 (Monthly Summary): 2026-07-01 (closed #9197, created July issue #aw_jul2026)
 
 ## Backlog Cursor
 - IPC serializer series: COMPLETE
 - Analyzers scan: DONE
 - SourceGeneratedReflectionOperations: DONE (PR #9479, merged 2026-06-28)
 - VideoRecorder PropertyBag.FirstOrDefault: DONE (PR #9488, merged 2026-06-29)
-- GetParameters caching: DONE (PR #9514, merged 2026-06-30)
-- OpenTelemetry handler: scanned 2026-06-30 — LOW priority only
-- TerminalTestReporter: scanned 2026-06-30 — LOW priority only
-- TrxReport (TrxReportEngine, TestResultCaptureHelper): scanned 2026-06-30 — all optimized
-- Next scan area: VSTestBridge conversion path, JUnitReport, AzureDevOpsReport extensions
+- GetParameters caching (TestMethodInfo.ParameterTypes + AssemblyEnumerator): DONE (PR #9514, merged 2026-06-30)
+- VSTestBridge conversion path: scanned 2026-07-01 — all optimized (single-pass, pre-sized lists, struct enumerators)
+- JUnitReport: scanned 2026-07-01 — all optimized
+- AzureDevOpsReport: scanned 2026-07-01 — all optimized (already GetStructEnumerator)
+- MTP platform core (Terminal, PropertyBag, AsynchronousMessageBus): scanned 2026-07-01 — end-of-run code, no hot-path LINQ
+- MSTest adapter execution path (TestMethodInfo.ArgumentResolution): scanned 2026-07-01 — fix submitted (PR created 2026-07-01)
+- ResolveArguments GetParameters fix: IN PR (branch efficiency/cache-getparameters-in-resolve-arguments)
+- Next scan area: MSTest discovery path (ClassInfo, AssemblyInfo), TestDataSource implementations, TestContextImpl
 
 ## Validated Commands
 
@@ -35,17 +38,18 @@ Notes:
 - Build environment for this agent: no `.dotnet/` bootstrapped; PRs validated via GitHub Actions CI.
 
 ## Monthly Activity Issue
-- Issue #9197: `[efficiency-improver] Monthly Activity 2026-06` (open)
+- Issue #9197: `[efficiency-improver] Monthly Activity 2026-06` — CLOSED 2026-07-01
+- Current: July 2026 issue — created 2026-07-01 (see temporary_id #aw_jul2026)
 - Label: `efficiency`
-- Last updated: 2026-06-30
 
 ## Open PRs (Efficiency Improver)
-None. All efficiency-improver PRs merged.
+- Branch `efficiency/cache-getparameters-in-resolve-arguments`: perf: use cached ParameterTypes in ResolveArguments — PENDING REVIEW (created 2026-07-01)
 
 ## Work in Progress
-None.
+None after PR creation.
 
 ## Completed Work (PRs merged or applied)
+- PR branch efficiency/cache-getparameters-in-resolve-arguments: use cached ParameterTypes in ResolveArguments — created 2026-07-01 (pending)
 - PR #9514: cache MethodInfo.GetParameters() in TestMethodInfo.ParameterTypes + AssemblyEnumerator.TryUnfoldITestDataSource — merged 2026-06-30
 - PR #9488: add PropertyBag.FirstOrDefault<T>() — zero-allocation linked-list walk — merged 2026-06-29
 - PR #9479: eliminate LINQ iterator allocations in SourceGeneratedReflectionOperations — merged 2026-06-28
@@ -69,13 +73,16 @@ None.
 - C# 14 `field` keyword available (LangVersion=preview). Useful for lazy-initialized auto properties.
 - TestResultCaptureHelper.ExtractProperties: already uses single-pass GetStructEnumerator with switch pattern — fully optimized.
 - TrxReportEngine: processes at end-of-run only (report generation), not in hot path.
+- VSTestBridge / JUnitReport / AzureDevOpsReport extensions: all already optimized; no new hotpaths found.
 - GitHub MCP tools: enterprise PAT policy (>8 days) blocks search_issues and search_pull_requests intermittently. Use search_pull_requests (works more reliably) for PR status checks.
+- ReflectHelper.GetParallelizeAttribute etc.: one-per-assembly calls using OfType — low priority, not hot path.
 
 ## Optimisation Backlog
 
 | Priority | Focus Area | Opportunity | Notes |
 |----------|------------|-------------|-------|
 | MEDIUM | Infrastructure | Add server-mode (JSON-RPC) perf scenario to nightly pipeline + trend tracking | Issue #9480 open |
+| MEDIUM | Code-Level | MSTest discovery path (ClassInfo, AssemblyInfo, TestDataSource impls) — scan for GetParameters/LINQ patterns | Next scan target |
 | LOW | Code-Level | OpenTelemetry: OfType<TestMetadataProperty>() in iterator method | Needs non-iterator refactor |
 | LOW | Code-Level | TerminalTestReporter.TotalTests: calls _assemblies.Values.Sum() on every access | Rare caller, negligible |
 | LOW | Code-Level | PlainProcess.cs: cache JsonSerializerOptions instance (CA1869) | Negligible |
@@ -87,5 +94,5 @@ None.
 - Do not re-comment until new human activity appears
 
 ## Round-Robin Task Schedule
-- This run (2026-06-30): Tasks 2, 5 (partial, blocked), 7
-- Next run should prioritize: Task 3 (consider OpenTelemetry non-iterator refactor or VSTestBridge scan), Task 6 (infra), Task 4 (check for new PRs), Task 7
+- This run (2026-07-01): Tasks 2 (continued scan), 3 (ResolveArguments fix), 4 (no PRs), 7 (July issue)
+- Next run should prioritize: Task 5 (comment on issues — GitHub MCP issue may be resolved), Task 6 (infra: benchmark coverage), Task 4 (check new PR status), Task 7
