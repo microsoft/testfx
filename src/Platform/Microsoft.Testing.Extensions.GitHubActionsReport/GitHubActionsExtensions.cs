@@ -11,6 +11,7 @@ namespace Microsoft.Testing.Extensions;
 /// <summary>
 /// Provides extension methods for adding GitHub Actions reporting support to the test application builder.
 /// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class GitHubActionsExtensions
 {
     /// <summary>

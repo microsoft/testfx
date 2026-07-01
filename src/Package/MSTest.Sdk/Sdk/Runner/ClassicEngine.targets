@@ -38,9 +38,9 @@
     <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
     <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
 
-    <!-- GitHub Actions -->
+    <!-- GitHub Actions (early preview / alpha - has its own pre-release version line
+         seeded by Sdk.props.template and flowed through MSTest.Sdk.csproj). -->
     <EnableMicrosoftTestingExtensionsGitHubActionsReport Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
-    <MicrosoftTestingExtensionsGitHubActionsReportVersion Condition=" '$(MicrosoftTestingExtensionsGitHubActionsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsGitHubActionsReportVersion>
 
     <!-- HTML report -->
     <EnableMicrosoftTestingExtensionsHtmlReport Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHtmlReport>

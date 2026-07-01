@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(SupportedNetFrameworks)</TargetFrameworks>
+    <VersionPrefix>$(MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix)</VersionPrefix>
+    <PreReleaseVersionLabel>$(MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel)</PreReleaseVersionLabel>
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
   </PropertyGroup>
@@ -12,7 +15,7 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestNodeIdentity.cs" Link="Helpers\TestNodeIdentity.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\SlowTestReporterBase.cs" Link="Helpers\SlowTestReporterBase.cs" />
   </ItemGroup>
 
   <!-- NuGet properties -->
