@@ -1782,7 +1782,7 @@ public sealed class TerminalTestReporterTests
 
         // The end-of-run recap header is printed and identifies the errored assembly with its captured output.
         Assert.Contains(TerminalResources.ErroredAssembliesHeader, output);
-        string recap = output[(output.IndexOf(TerminalResources.ErroredAssembliesHeader, StringComparison.Ordinal))..];
+        string recap = output[output.IndexOf(TerminalResources.ErroredAssembliesHeader, StringComparison.Ordinal)..];
         Assert.Contains("Crashy.dll", recap);
         Assert.Contains($"{TerminalResources.ExitCode}: 42", recap);
         Assert.Contains("boom stdout", recap);
