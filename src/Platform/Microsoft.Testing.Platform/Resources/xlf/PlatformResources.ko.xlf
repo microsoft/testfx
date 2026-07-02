@@ -436,7 +436,7 @@
       </trans-unit>
       <trans-unit id="OnlyOneTestHostLauncherSupported">
         <source>Only one test host launcher can be registered.</source>
-        <target state="new">Only one test host launcher can be registered.</target>
+        <target state="translated">테스트 호스트 시작 관리자는 하나만 등록할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
@@ -665,14 +665,14 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
-        <target state="new">Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</target>
+        <target state="translated">'--zero-tests-policy'에 잘못된 값 '{0}'이(가) 지정되었습니다. 유효한 값은 {1}입니다.</target>
         <note>{Locked="--zero-tests-policy"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
-        <target state="new">Specifies how a run that executed no tests is treated.
-Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</target>
+        <target state="translated">테스트를 실행하지 않은 실행을 처리하는 방법을 지정합니다.
+유효한 값은 'allow-skipped'(기본값)과 'strict'입니다. 'allow-skipped'는 건너뛴 테스트를 실행된 것으로 계산하므로, 테스트를 하나도 찾지 못한 실행만 종료 코드 8로 실패합니다. 'strict'는 건너뛴 테스트를 실행되지 않은 것으로 처리하므로, 모든 테스트를 건너뛴 실행 또는 테스트를 찾지 못한 실행은 종료 코드 8로 실패합니다.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -812,7 +812,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="TerminalNoProgressDeprecatedWarning">
         <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="new">warning: --no-progress is deprecated; use --progress off instead.</target>
+        <target state="translated">경고: --no-progress는 더 이상 사용되지 않습니다. 대신 --progress off를 사용하세요.</target>
         <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">

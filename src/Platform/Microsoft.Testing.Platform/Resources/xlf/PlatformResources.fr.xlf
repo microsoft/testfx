@@ -665,14 +665,14 @@ Prend un argument correspondant à une valeur de temps avec un suffixe d’unit�
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
-        <target state="new">Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</target>
+        <target state="translated">Valeur non valide « {0} » pour « --zero-tests-policy ». Les valeurs valides sont {1}.</target>
         <note>{Locked="--zero-tests-policy"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
-        <target state="new">Specifies how a run that executed no tests is treated.
-Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</target>
+        <target state="translated">Indique comment est traité un run qui n’a exécuté aucun test.
+Les valeurs valides sont « allow-skipped » (la valeur par défaut), qui compte les tests ignorés comme exécutés, de sorte qu’une exécution pour laquelle aucun test n’a été trouvé échoue uniquement avec le code de sortie 8, et « strict », qui traite les tests ignorés comme non exécutés, de sorte qu’une exécution pour laquelle tous les tests ont été ignorés (ou pour laquelle aucun test n’a été trouvé) échoue avec le code de sortie 8.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -812,7 +812,7 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       </trans-unit>
       <trans-unit id="TerminalNoProgressDeprecatedWarning">
         <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="new">warning: --no-progress is deprecated; use --progress off instead.</target>
+        <target state="translated">avertissement : --no-progress est déconseillé, utilisez --progress off à la place.</target>
         <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
