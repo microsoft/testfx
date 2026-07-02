@@ -46,6 +46,17 @@ internal sealed class TestHostOrchestratorHost(TestHostOrchestratorConfiguration
             {
                 return (int)ExitCode.IncompatibleProtocolVersion;
             }
+
+            if (pushOnlyProtocol.IsServerControlChannelSupported)
+            {
+                // The orchestrator has no graceful-stop capability of its own; a server-initiated cancel maps to
+                // cancelling the application token, which propagates to the orchestrated test host processes.
+                await pushOnlyProtocol.StartServerControlChannelAsync(_ =>
+                {
+                    applicationCancellationToken.Cancel();
+                    return Task.CompletedTask;
+                }).ConfigureAwait(false);
+            }
         }
 
         int exitCode;

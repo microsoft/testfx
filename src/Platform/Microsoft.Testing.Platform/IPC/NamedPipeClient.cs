@@ -23,6 +23,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
     private readonly NamedPipeClientStream _namedPipeClientStream;
     private readonly SemaphoreSlim _lock = new(1, 1);
     private readonly IEnvironment _environment;
+    private readonly bool _exitProcessOnConnectionLoss;
 
     private bool _disposed;
 
@@ -32,6 +33,25 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
     }
 
     public NamedPipeClient(string name, IEnvironment environment)
+        : this(name, environment, exitProcessOnConnectionLoss: true)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NamedPipeClient"/> class connecting to the named pipe
+    /// <paramref name="name"/>.
+    /// </summary>
+    /// <param name="name">The OS-level named pipe name to connect to.</param>
+    /// <param name="environment">The environment abstraction used for process-exit on connection loss.</param>
+    /// <param name="exitProcessOnConnectionLoss">
+    /// When <see langword="true"/> (the default) a lost connection - the server disconnecting while we write a
+    /// request or before it sends a response - terminates the process via <see cref="IEnvironment.Exit(int)"/>.
+    /// This is the right behavior for the primary data pipe: if we cannot talk to the host there is no way to
+    /// recover. Set it to <see langword="false"/> for auxiliary channels (e.g. the reverse server-control pipe)
+    /// where a dropped connection should surface as an exception the caller can handle cooperatively rather than
+    /// killing the whole test host.
+    /// </param>
+    public NamedPipeClient(string name, IEnvironment environment, bool exitProcessOnConnectionLoss)
     {
         if (name is null)
         {
@@ -41,6 +61,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
         _namedPipeClientStream = new(".", name, PipeDirection.InOut, AsyncCurrentUserPipeOptions);
         PipeName = name;
         _environment = environment;
+        _exitProcessOnConnectionLoss = exitProcessOnConnectionLoss;
     }
 
     public string PipeName { get; }
@@ -69,6 +90,12 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                 // The server disconnected while we were writing the request. Mirror the read-EOF handling
                 // below: if we cannot deliver the request there's no way to recover, so exit abnormally
                 // instead of surfacing a raw IPC error to the caller.
+                if (!_exitProcessOnConnectionLoss)
+                {
+                    // Auxiliary channel: let the caller observe the disconnect and react cooperatively.
+                    throw;
+                }
+
                 _environment.Exit((int)ExitCode.GenericFailure);
                 throw;
             }
@@ -83,6 +110,13 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
                 // This is especially important for 'dotnet test', where the user can simply kill the dotnet.exe process themselves.
                 // In that case, we want the MTP process to also die.
                 // Exit code 1 indicates abnormal termination due to IPC connection loss.
+                if (!_exitProcessOnConnectionLoss)
+                {
+                    // Auxiliary channel (e.g. the reverse server-control pipe): a dropped connection means the
+                    // peer went away. Surface it as an exception so the caller can react (e.g. treat "host gone"
+                    // as a cooperative cancel) instead of killing the whole test host.
+                    throw new IOException($"Pipe '{PipeName}' was closed by the server before a response was received.");
+                }
 
                 // Surface a diagnostic on stderr so the user has a chance to understand why this process is exiting.
                 // We deliberately use Console.Error (and not stdout) to avoid corrupting any machine-readable output

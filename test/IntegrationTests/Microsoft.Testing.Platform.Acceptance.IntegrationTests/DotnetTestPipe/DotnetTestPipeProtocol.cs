@@ -42,6 +42,8 @@ internal static class DotnetTestPipeProtocol
         public const int TestInProgressMessages = 10;
         public const int AzureDevOpsLogMessage = 11;
         public const int DisplayMessage = 12;
+        public const int WaitForServerControlRequest = 13;
+        public const int ServerControlMessage = 14;
     }
 
     public static class HandshakeProperties
@@ -58,6 +60,12 @@ internal static class DotnetTestPipeProtocol
         public const byte IsIDE = 9;
         public const byte ExecutionMode = 10;
         public const byte OrchestratorFeature = 11;
+        public const byte ServerControlPipeName = 12;
+    }
+
+    public static class ServerControlKinds
+    {
+        public const byte CancelSession = 1;
     }
 
     public static class SessionEventTypes
@@ -194,6 +202,24 @@ internal static class DotnetTestPipeProtocol
             stream.WriteByte(kvp.Key);
             WriteLengthPrefixedString(stream, kvp.Value);
         }
+
+        return stream.ToArray();
+    }
+
+    /// <summary>
+    /// Encodes the body of a <see cref="SerializerIds.ServerControlMessage"/> frame. Mirrors
+    /// <c>ServerControlMessageSerializer</c>: a field-tagged object with a single <c>Kind</c> field (id 1)
+    /// carrying one byte (<see cref="ServerControlKinds"/>).
+    /// </summary>
+    public static byte[] EncodeServerControlMessageBody(byte kind)
+    {
+        const ushort kindFieldId = 1;
+
+        using MemoryStream stream = new();
+        WriteUShort(stream, 1); // field count
+        WriteUShort(stream, kindFieldId);
+        WriteInt(stream, sizeof(byte)); // field size
+        stream.WriteByte(kind);
 
         return stream.ToArray();
     }
@@ -541,6 +567,13 @@ internal static class DotnetTestPipeProtocol
     private static void WriteUShort(Stream stream, ushort value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
+        BitConverter.TryWriteBytes(bytes, value);
+        stream.Write(bytes);
+    }
+
+    private static void WriteInt(Stream stream, int value)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int)];
         BitConverter.TryWriteBytes(bytes, value);
         stream.Write(bytes);
     }
