@@ -134,17 +134,17 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">"--report-azdo-slow-test-history-min-sample" 需要启用 "--report-azdo-slow-test-history"</target>
         <note>{Locked="--report-azdo-slow-test-history-min-sample"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">"--report-azdo-slow-test-history-multiplier" 需要启用 "--report-azdo-slow-test-history"</target>
         <note>{Locked="--report-azdo-slow-test-history-multiplier"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryRequiresAzureDevOps">
         <source>'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-slow-test-history" 要求启用 "--report-azdo"</target>
         <note>{Locked="--report-azdo-slow-test-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
@@ -244,17 +244,17 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</target>
+        <target state="translated">"--report-azdo-slow-test-history" 的值 "{0}" 无效。请提供 1 到 90 之间的整数。</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMinSample">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</target>
+        <target state="translated">"--report-azdo-slow-test-history-min-sample" 的值 "{0}" 无效。请提供大于或等于 1 的整数。</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMultiplier">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</target>
+        <target state="translated">"--report-azdo-slow-test-history-multiplier" 的值 "{0}" 无效。请提供一个大于 0 且不超过 10000 的数字。</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</note>
       </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
@@ -264,7 +264,7 @@
       </trans-unit>
       <trans-unit id="LogGroupHeader">
         <source>Tests: {0}</source>
-        <target state="new">Tests: {0}</target>
+        <target state="translated">测试: {0}</target>
         <note>{0} is the test assembly name and target framework, e.g. 'MSTest.UnitTests (net9.0)'. This text is the collapsible Azure DevOps log group header.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -329,32 +329,32 @@
       </trans-unit>
       <trans-unit id="SlowTestHistoryDecoration">
         <source>(historical p95 = {0}, p99 = {1}, samples = {2})</source>
-        <target state="new">(historical p95 = {0}, p99 = {1}, samples = {2})</target>
+        <target state="translated">(历史 p95 = {0}, p99 = {1}, 样本数 = {2})</target>
         <note>{0} is the p95 duration. {1} is the p99 duration. {2} is the sample count.</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMinSampleOptionDescription">
         <source>Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">在使用测试历史记录调整其慢速测试阈值或修饰输出行之前，将所需的历史样本数量最小化。默认值为 {0}。需要 "--report-azdo-slow-test-history"。</target>
         <note>{0} is the default minimum sample count. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMultiplierOptionDescription">
         <source>Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">将乘数应用于测试的历史 p99 持续时间，以计算其慢速测试阈值(阈值 = min(静态默认值，p99 * 乘数))。默认值为 {0}。需要 "--report-azdo-slow-test-history"。</target>
         <note>{0} is the default multiplier. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</source>
-        <target state="new">Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</target>
+        <target state="translated">查询过去 N (1-90) 天的 Azure DevOps 测试结果历史记录，并使用已知较短的运行时降低每个测试“仍在运行”阈值。需要 "--report-azdo"。</target>
         <note>{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryRequiresTfBuildWarning">
         <source>Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</source>
-        <target state="new">Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</target>
+        <target state="translated">请求了 Azure DevOps slow-test 历史记录，但 TF_BUILD 未设置为 "true"；正在跳过 slow-test 呈现。</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] 在 {0}后仍然运行: {1}</target>
         <note>{0} is the elapsed duration. {1} is the test name. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
@@ -369,7 +369,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="new">Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</target>
+        <target state="translated">在测试运行结束时编写 Markdown 作业摘要，并通过 "##vso[task.uploadsummary]" 上传它。可选文件路径参数会替代默认位置("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md")。需要 "--report-azdo"。</target>
         <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">
