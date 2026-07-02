@@ -24,12 +24,12 @@
       </trans-unit>
       <trans-unit id="RetryArtifactsMoved">
         <source>Retry: moved {0} result file(s) to '{1}'</source>
-        <target state="new">Retry: moved {0} result file(s) to '{1}'</target>
+        <target state="translated">Opakování: přesunuto {0} souborů s výsledky do {1}</target>
         <note>{0} is the number of files moved. {1} is the destination result directory.</note>
       </trans-unit>
       <trans-unit id="RetryAttemptFailedWillRetry">
         <source>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</source>
-        <target state="new">Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</target>
+        <target state="translated">Opakování: Pokus {0}/{1} selhal, počet neúspěšných testů: {2}, probíhá další pokus.</target>
         <note>{0} is the current attempt number. {1} is the total number of attempts. {2} is the number of failing tests in this attempt.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
@@ -109,47 +109,47 @@
       </trans-unit>
       <trans-unit id="RetrySummaryDurationLine">
         <source>  duration: {0}</source>
-        <target state="new">  duration: {0}</target>
+        <target state="translated">  doba trvání: {0}</target>
         <note>{0} is the total retry orchestration duration. Two leading spaces and the lowercase 'duration:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryFailed">
         <source>Retry summary: Failed! after {0}/{1} attempts</source>
-        <target state="new">Retry summary: Failed! after {0}/{1} attempts</target>
+        <target state="translated">Souhrn opakování: Neúspěšné po {0}/{1} pokusů.</target>
         <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryFailedLine">
         <source>  failed: {0}</source>
-        <target state="new">  failed: {0}</target>
+        <target state="translated">  selhalo: {0}</target>
         <note>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryFlakyLine">
         <source>  flaky: {0}</source>
-        <target state="new">  flaky: {0}</target>
+        <target state="translated">  nestabilní: {0}</target>
         <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryPassed">
         <source>Retry summary: Passed! after {0}/{1} attempts</source>
-        <target state="new">Retry summary: Passed! after {0}/{1} attempts</target>
+        <target state="translated">Souhrn opakování: Úspěšné po {0}/{1} pokusů.</target>
         <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryPassedNoRetry">
         <source>Retry summary: Passed! on the first attempt (no retries needed)</source>
-        <target state="new">Retry summary: Passed! on the first attempt (no retries needed)</target>
+        <target state="translated">Souhrn opakování: Úspěšné při prvním pokusu (opakování nebylo potřeba).</target>
         <note>Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryRetriedSuffix">
         <source> (+{0} retried)</source>
-        <target state="new"> (+{0} retried)</target>
+        <target state="translated"> (+{0} zkoušeno opakovaně)</target>
         <note>{0} is the number of test executions that were retried. Appended to the total line, mirroring the platform '(+N retried)' suffix.</note>
       </trans-unit>
       <trans-unit id="RetrySummaryTotalLine">
         <source>  total: {0}</source>
-        <target state="new">  total: {0}</target>
+        <target state="translated">  celkem: {0}</target>
         <note>{0} is the total number of tests in the suite. Two leading spaces and the lowercase 'total:' label mirror the platform run summary.</note>
       </trans-unit>
       <trans-unit id="RetryWaitingBeforeNextAttempt">
         <source>Retry: waiting {0} before attempt {1}/{2}</source>
-        <target state="new">Retry: waiting {0} before attempt {1}/{2}</target>
+        <target state="translated">Opakování: čeká se na {0} před pokusem {1}/{2}</target>
         <note>{0} is the delay (e.g. '1s'). {1} is the next attempt number. {2} is the total number of attempts.</note>
       </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
