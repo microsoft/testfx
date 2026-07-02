@@ -117,8 +117,15 @@ public sealed class GitHubActionsSlowTestReporterTests
         Mock<IEnvironment> environmentMock = new();
         environmentMock.Setup(x => x.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions ? "true" : null);
 
+        // The extension is enabled only when both the GITHUB_ACTIONS env var and the --report-gh master switch
+        // are set, so always seed the master switch here; these tests exercise the env/knob behavior on top of it.
+        Dictionary<string, string[]> commandLineOptions = options is null
+            ? new(StringComparer.OrdinalIgnoreCase)
+            : new(options, StringComparer.OrdinalIgnoreCase);
+        commandLineOptions[GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [];
+
         return new GitHubActionsSlowTestReporter(
-            new FakeCommandLineOptions(options ?? []),
+            new FakeCommandLineOptions(commandLineOptions),
             environmentMock.Object,
             outputDevice,
             new NonRunningTask(),

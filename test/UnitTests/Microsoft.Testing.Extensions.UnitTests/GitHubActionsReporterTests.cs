@@ -63,6 +63,13 @@ public sealed class GitHubActionsReporterTests
         var environment = new Mock<IEnvironment>();
         environment.Setup(e => e.GetEnvironmentVariable("GITHUB_ACTIONS")).Returns(githubActions ? "true" : null);
 
+        // The extension is enabled only when both the GITHUB_ACTIONS env var and the --report-gh master switch
+        // are set, so always seed the master switch here; these tests exercise the env/knob behavior on top of it.
+        var commandLineOptions = new Dictionary<string, string[]>(options, StringComparer.OrdinalIgnoreCase)
+        {
+            [GitHubActionsCommandLineOptions.GitHubActionsOptionName] = [],
+        };
+
         var outputDevice = new Mock<IOutputDevice>();
         outputDevice
             .Setup(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
@@ -77,7 +84,7 @@ public sealed class GitHubActionsReporterTests
         loggerFactory.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(logger.Object);
 
         return new GitHubActionsReporter(
-            new TestCommandLineOptions(options),
+            new TestCommandLineOptions(commandLineOptions),
             environment.Object,
             outputDevice.Object,
             moduleInfo.Object,
