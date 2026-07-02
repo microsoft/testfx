@@ -23,8 +23,8 @@ internal static class AdapterMessageLoggerExtensions
     /// </summary>
     /// <param name="messageLogger">The host message logger to wrap.</param>
     /// <returns>A platform-agnostic logger that forwards to <paramref name="messageLogger"/>.</returns>
-    public static IAdapterMessageLogger ToAdapterMessageLogger(this IMessageLogger messageLogger)
-        => new HostMessageLogger(messageLogger);
+    internal static IAdapterMessageLogger ToAdapterMessageLogger(this IMessageLogger messageLogger)
+        => new HostMessageLogger(messageLogger ?? throw new ArgumentNullException(nameof(messageLogger)));
 
     private sealed class HostMessageLogger : IAdapterMessageLogger
     {
