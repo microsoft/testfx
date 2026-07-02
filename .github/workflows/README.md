@@ -36,6 +36,66 @@ gh aw audit <run-id>
 
 For deeper guidance — creating, updating, debugging, upgrading, or wrapping MCP servers — see the dispatcher [`.github/agents/agentic-workflows.agent.md`](../agents/agentic-workflows.agent.md), which routes to the canonical `gh-aw` prompts.
 
+## Secrets & authentication
+
+Agentic workflows authenticate through repository secrets. Two are essential:
+
+| Secret | Required by | Notes |
+| --- | --- | --- |
+| `COPILOT_GITHUB_TOKEN` | Every `copilot`-engine workflow | Drives the GitHub Copilot CLI (model inference). Validated at startup — a missing/expired value fails the run early. |
+| `GH_AW_GITHUB_TOKEN` | Every **lockdown** workflow (see below) | A **fine-grained PAT** used by the GitHub MCP server and the activation-time lockdown check. |
+
+### Lockdown mode requires a fine-grained PAT
+
+Several workflows set `lockdown: true` on the GitHub MCP tool. Locally these are
+[`add-tests.md`](./add-tests.md), [`weekly-issue-activity.md`](./weekly-issue-activity.md),
+[`shared/address-review-shared.md`](./shared/address-review-shared.md), and
+[`shared/grade-tests-shared.md`](./shared/grade-tests-shared.md); several imported
+`githubnext/agentics` workflows (Issue Arborist, Sub-Issue Closer, …) also enable it.
+
+In lockdown mode `gh-aw` **rejects the default `GITHUB_TOKEN`** and requires a custom
+fine-grained PAT. The compiled `.lock.yml` resolves the token in this order:
+
+```text
+secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN
+```
+
+If neither custom secret is present, the **activation job fails before the agent even
+runs** with a *"Lockdown mode is enabled but no custom GitHub token is configured"* error,
+and the workflow files an `[aw] … failed` issue. Because every lockdown workflow shares the
+same secret, a single missing/expired PAT produces a **burst** of such issues at once.
+
+### Rotation — the PAT expires
+
+> [!IMPORTANT]
+> `GH_AW_GITHUB_TOKEN` is a **fine-grained PAT and therefore expires** (GitHub caps the
+> lifetime at ~1 year). When it lapses, *all* lockdown workflows fail activation
+> simultaneously. Rotate it **before** the expiry date rather than reacting to the failure
+> issues.
+
+Provisioning / rotating the token (requires repo admin):
+
+1. Create a fine-grained PAT scoped to `microsoft/testfx` with **read** access to *Contents*,
+   *Metadata*, and *Issues* (add *Pull requests* read for the PR-oriented workflows). Choose the
+   longest allowed expiry.
+2. Store it as the `GH_AW_GITHUB_TOKEN` repository secret:
+
+   ```bash
+   gh aw secrets set GH_AW_GITHUB_TOKEN --value "YOUR_FINE_GRAINED_PAT"
+   # or: gh secret set GH_AW_GITHUB_TOKEN --repo microsoft/testfx
+   ```
+
+3. Re-run one lockdown workflow (e.g. `gh aw run weekly-issue-activity`) to confirm activation
+   succeeds.
+
+See the upstream reference: <https://github.com/github/gh-aw/blob/main/docs/src/content/docs/reference/auth.mdx>.
+
+> [!NOTE]
+> Not every `[aw] … failed` issue is a token problem. The failure banner usually names the
+> cause — *AI credits budget exceeded*, an engine/inference error, or transient
+> container-image / AWF-binary download failures are all unrelated to `GH_AW_GITHUB_TOKEN`.
+> Only the *"Lockdown Check Failed … custom GitHub token"* banner indicates a PAT issue.
+
 ## Catalog
 
 ### Agentic workflows
