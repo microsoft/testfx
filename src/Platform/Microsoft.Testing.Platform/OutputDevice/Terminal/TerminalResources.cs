@@ -53,6 +53,8 @@ internal static partial class TerminalResources
 
     internal static string @Error => GetResourceString("Error");
 
+    internal static string @ErroredAssembliesHeader => GetResourceString("ErroredAssembliesHeader");
+
     internal static string @ExitCode => GetResourceString("ExitCode");
 
     internal static string @Expected => GetResourceString("Expected");

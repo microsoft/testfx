@@ -203,6 +203,10 @@ internal sealed partial class TerminalTestReporter
         // Re-print any handshake failures (orchestrator-only) at the very end so they aren't lost above the summary.
         // No-op for the in-process host, which never reports handshake failures.
         AppendHandshakeFailureRecap(terminal);
+
+        // Re-print any assemblies that errored (non-zero exit with no failed test) for the same reason: the inline
+        // process output is otherwise buried in the middle of a large run. No-op for the in-process host.
+        AppendErroredAssemblyRecap(terminal);
     }
 
     /// <summary>

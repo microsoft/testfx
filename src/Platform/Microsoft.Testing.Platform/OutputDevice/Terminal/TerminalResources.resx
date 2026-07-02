@@ -283,6 +283,9 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
   <data name="HandshakeFailuresHeader" xml:space="preserve">
     <value>Handshake failures:</value>
   </data>
+  <data name="ErroredAssembliesHeader" xml:space="preserve">
+    <value>Errored assemblies:</value>
+  </data>
   <data name="ExitCode" xml:space="preserve">
     <value>Exit code</value>
   </data>

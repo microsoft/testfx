@@ -1755,6 +1755,61 @@ public sealed class TerminalTestReporterTests
         Assert.Contains($"{TerminalResources.TestRunSummary} {TerminalResources.Failed}!", output);
     }
 
+    // dotnet/sdk#51952: an assembly that DOES handshake but then exits non-zero without any failed test (a crash,
+    // Environment.FailFast, a hang-dump kill, an option rejected after the handshake, ...) has its process output
+    // printed inline when it completes, which is easily lost in the middle of a large multi-assembly run. The
+    // end-of-run summary must re-print an "Errored assemblies:" recap with the captured output so it is discoverable.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenAssemblyErroredWithoutFailedTests_ReprintsErroredAssemblyRecap()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole, showAssemblyStartAndComplete: false);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Crashy.dll" : "/repo/Crashy.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "exec-1", "inst-1");
+        ReportOrchestratorTest(terminalReporter, assembly, "exec-1", "inst-1", "t-1", TestOutcome.Passed);
+
+        // The single test passed but the process exits non-zero -> error category (FailedTests == 0).
+        terminalReporter.AssemblyRunCompleted("exec-1", exitCode: 42, outputData: "boom stdout", errorData: "boom stderr");
+
+        // It is NOT a handshake failure (the assembly was registered).
+        Assert.IsFalse(terminalReporter.HasHandshakeFailure);
+
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 42);
+
+        string output = stringBuilderConsole.Output;
+
+        // The end-of-run recap header is printed and identifies the errored assembly with its captured output.
+        Assert.Contains(TerminalResources.ErroredAssembliesHeader, output);
+        string recap = output[output.IndexOf(TerminalResources.ErroredAssembliesHeader, StringComparison.Ordinal)..];
+        Assert.Contains("Crashy.dll", recap);
+        Assert.Contains($"{TerminalResources.ExitCode}: 42", recap);
+        Assert.Contains("boom stdout", recap);
+        Assert.Contains("boom stderr", recap);
+    }
+
+    // Guard for the recap's scope: an assembly that exits non-zero BECAUSE a test failed must not be added to the
+    // "Errored assemblies:" recap - those failures are already reported per-test, and re-dumping every failing
+    // assembly's process output at the end would be noise. The recap is reserved for unexplained process errors.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenAssemblyExitedNonZeroWithFailedTests_DoesNotReprintErroredAssemblyRecap()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole, showAssemblyStartAndComplete: false);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Failing.dll" : "/repo/Failing.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "exec-1", "inst-1");
+        ReportOrchestratorTest(terminalReporter, assembly, "exec-1", "inst-1", "t-1", TestOutcome.Fail);
+
+        terminalReporter.AssemblyRunCompleted("exec-1", exitCode: 1, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 1);
+
+        // No "Errored assemblies:" recap: the failure is already reported through the failed test.
+        Assert.DoesNotContain(TerminalResources.ErroredAssembliesHeader, stringBuilderConsole.Output);
+    }
+
     [TestMethod]
     public void AssemblyRunStarted_AfterRetry_RendersLatestAttemptCounts()
     {
