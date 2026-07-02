@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="ArtifactPerTestDescription">
         <source>Video captured for test '{0}'.</source>
-        <target state="new">Video captured for test '{0}'.</target>
+        <target state="translated">Video acquisito per il test '{0}'.</target>
         <note>Description for a per-test video artifact. {0} is the test display name.</note>
       </trans-unit>
       <trans-unit id="ArtifactPerTestDisplayName">
@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ArtifactSessionDescription">
         <source>Video captured during the test run.</source>
-        <target state="new">Video captured during the test run.</target>
+        <target state="translated">Video acquisito durante l'esecuzione di test.</target>
         <note>Description for the whole-session video artifact.</note>
       </trans-unit>
       <trans-unit id="ArtifactSessionDisplayName">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="CapDurationDescription">
         <source>duration {0}</source>
-        <target state="new">duration {0}</target>
+        <target state="translated">durata {0}</target>
         <note>Describes a duration cap. {0} is the duration.</note>
       </trans-unit>
       <trans-unit id="CapSizeDescription">
@@ -39,27 +39,27 @@
       </trans-unit>
       <trans-unit id="CommandLineProviderDescription">
         <source>Command-line options for the video recorder extension.</source>
-        <target state="new">Command-line options for the video recorder extension.</target>
+        <target state="translated">Opzioni della riga di comando per l'estensione del registratore video.</target>
         <note>Description of the video recorder command-line options provider.</note>
       </trans-unit>
       <trans-unit id="ExtensionDescription">
         <source>Records the screen during a test run using ffmpeg.</source>
-        <target state="new">Records the screen during a test run using ffmpeg.</target>
+        <target state="translated">Registra lo schermo durante un'esecuzione di test usando lo strumento ffmpeg.</target>
         <note>Description of the video recorder extension.</note>
       </trans-unit>
       <trans-unit id="ExtensionDisplayName">
         <source>Video recorder</source>
-        <target state="new">Video recorder</target>
+        <target state="translated">Registratore video</target>
         <note>Display name of the video recorder extension.</note>
       </trans-unit>
       <trans-unit id="FailedToStartRecording">
         <source>Failed to start recording: {0}. Recording skipped.</source>
-        <target state="new">Failed to start recording: {0}. Recording skipped.</target>
+        <target state="translated">Non è possibile avviare la registrazione: {0}. Registrazione ignorata.</target>
         <note>Warning when the ffmpeg process could not be started. {0} is the error message.</note>
       </trans-unit>
       <trans-unit id="FfmpegNotFound">
         <source>Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.</source>
-        <target state="new">Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.</target>
+        <target state="translated">È stata richiesta la registrazione video, ma non è possibile trovare lo strumento ffmpeg (impostare VideoRecorderOptions.FfmpegPath oppure aggiungere ffmpeg a PATH). Registrazione ignorata.</target>
         <note>Warning shown when ffmpeg cannot be located.</note>
       </trans-unit>
       <trans-unit id="HintPerSession">
@@ -69,17 +69,17 @@
       </trans-unit>
       <trans-unit id="HintPerTest">
         <source>Recording each test into its own video.</source>
-        <target state="new">Recording each test into its own video.</target>
+        <target state="translated">Registrazione di ogni test in un video separato.</target>
         <note>Hint appended to the ready message in per-test mode.</note>
       </trans-unit>
       <trans-unit id="InvalidOptionPositiveInteger">
         <source>Invalid value '{0}' for --{1}. Expected a positive whole number of seconds.</source>
-        <target state="new">Invalid value '{0}' for --{1}. Expected a positive whole number of seconds.</target>
+        <target state="translated">Valore '{0}' non valido per --{1}. È previsto un numero intero positivo di secondi.</target>
         <note>Validation error for a non-positive-integer option value. {0} value, {1} option name.</note>
       </trans-unit>
       <trans-unit id="InvalidOptionValue">
         <source>Invalid value '{0}' for --{1}. Valid values are {2}.</source>
-        <target state="new">Invalid value '{0}' for --{1}. Valid values are {2}.</target>
+        <target state="translated">Valore '{0}' non valido per --{1}. I valori validi sono: {2}.</target>
         <note>Validation error for an invalid option value. {0} value, {1} option name, {2} the list of valid values.</note>
       </trans-unit>
       <trans-unit id="NoUsableVideoProduced">
@@ -89,32 +89,32 @@
       </trans-unit>
       <trans-unit id="OptionDescriptionArgs">
         <source>Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".</source>
-        <target state="new">Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".</target>
+        <target state="translated">Argomenti aggiuntivi passati al registratore sottostante (attualmente ffmpeg), come opzioni di output/codifica. Richiede --capture-video. Poiché il valore inizia in genere con '-', usare il delimitatore '=' in modo che non venga analizzato come opzione separata, ad esempio --capture-video-args="-vf scale=1280:-1".</target>
         <note>Help text for the --capture-video-args option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionCaptureVideo">
         <source>Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.</source>
-        <target state="new">Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.</target>
+        <target state="translated">Registra lo schermo durante l'esecuzione di test. È possibile specificare anche quando conservare il video: 'on-failure' (impostazione predefinita, conserva solo il materiale dei test non riusciti) oppure 'always'.</target>
         <note>Help text for the --capture-video option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionChapters">
         <source>Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.</source>
-        <target state="new">Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.</target>
+        <target state="translated">Indica se il video per sessione include un segnalibro di capitolo per ogni test: 'on' (impostazione predefinita) oppure 'off'. Si applica solo con l'opzione --capture-video-granularity impostata su session. Richiede --capture-video.</target>
         <note>Help text for the --capture-video-chapters option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionGranularity">
         <source>How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.</source>
-        <target state="new">How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.</target>
+        <target state="translated">Come vengono suddivise le registrazioni: 'test' (impostazione predefinita, un video per test) o 'session' (un unico video suddiviso in capitoli per l'intera esecuzione). Richiede --capture-video.</target>
         <note>Help text for the --capture-video-granularity option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionMaxDuration">
         <source>Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.</source>
-        <target state="new">Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.</target>
+        <target state="translated">Limitare il materiale registrato agli ultimi N secondi circa (un buffer a ciclo continuo) per limitare l'utilizzo del disco nelle sessioni a esecuzione prolungata. Il materiale più vecchio, non necessario per il test in esecuzione, viene eliminato. Richiede --capture-video.</target>
         <note>Help text for the --capture-video-max-duration option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionSource">
         <source>What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.</source>
-        <target state="new">What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.</target>
+        <target state="translated">Cosa acquisire: 'screen' (impostazione predefinita, schermo intero) o 'window' (solo la finestra del processo corrente; solo Windows, in caso contrario, viene eseguito il fallback allo schermo intero). Richiede --capture-video.</target>
         <note>Help text for the --capture-video-source option.</note>
       </trans-unit>
       <trans-unit id="OutcomeError">
@@ -144,32 +144,32 @@
       </trans-unit>
       <trans-unit id="RecorderReady">
         <source>Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</source>
-        <target state="new">Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</target>
+        <target state="translated">Registratore video pronto (ffmpeg: {0}, granularità: {1}, persistenza: {2}). {3}</target>
         <note>Informational message at session start. {0} ffmpeg path, {1} granularity, {2} persist mode, {3} a granularity-specific hint.</note>
       </trans-unit>
       <trans-unit id="RecordingCapReached">
         <source>Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</source>
-        <target state="new">Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</target>
+        <target state="translated">La registrazione video ha raggiunto il limite configurato per il buffer a ciclo continuo ({0}); il materiale più vecchio è in fase di eliminazione per limitare l'utilizzo del disco e, pertanto, i clip dei test precedenti potrebbero non essere disponibili.</target>
         <note>Warning when the rolling-buffer size/duration limit is hit and old footage is pruned. {0} describes the limit that was reached.</note>
       </trans-unit>
       <trans-unit id="StopTimeoutKilled">
         <source>ffmpeg did not stop within the timeout; killing the process. The recording may be incomplete.</source>
-        <target state="new">ffmpeg did not stop within the timeout; killing the process. The recording may be incomplete.</target>
+        <target state="translated">Lo strumento ffmpeg non si è arrestato entro il timeout; il processo è stato terminato. La registrazione potrebbe essere incompleta.</target>
         <note>Warning when ffmpeg has to be killed because it did not stop gracefully.</note>
       </trans-unit>
       <trans-unit id="SubOptionsRequireEnable">
         <source>The video recorder sub-options require --{0} to be specified.</source>
-        <target state="new">The video recorder sub-options require --{0} to be specified.</target>
+        <target state="translated">Le opzioni secondarie del registratore video richiedono che sia specificato --{0}.</target>
         <note>Validation error when a sub-option is used without the enable option. {0} is the enable option name.</note>
       </trans-unit>
       <trans-unit id="WindowCaptureFallback">
         <source>Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</source>
-        <target state="new">Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</target>
+        <target state="translated">Non è possibile risolvere una finestra visibile del processo corrente (è stata tentata la finestra principale del processo, la finestra in primo piano e la finestra della console); verrà acquisito lo schermo intero. Questo si verifica nelle esecuzioni in modalità headless e può verificarsi con terminali la cui finestra visibile non è attiva al momento della registrazione.</target>
         <note>Informational message when window capture falls back to full screen.</note>
       </trans-unit>
       <trans-unit id="WindowCaptureUnsupportedOs">
         <source>Current-process window capture is only supported on Windows; capturing the full screen instead.</source>
-        <target state="new">Current-process window capture is only supported on Windows; capturing the full screen instead.</target>
+        <target state="translated">L'acquisizione della finestra del processo corrente è supportata solo in Windows; verrà acquisito lo schermo intero.</target>
         <note>Informational message on non-Windows when window capture is requested.</note>
       </trans-unit>
     </body>
