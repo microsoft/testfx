@@ -82,7 +82,7 @@ internal sealed class DisplayMessageSerializer : NamedPipeSerializer<DisplayMess
 
     protected override void SerializeCore(DisplayMessage objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 

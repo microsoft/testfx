@@ -61,12 +61,13 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                         // `dotnet test --list-tests json`). Plain runs keep the payload minimal.
                         TestFileLocationProperty? testFileLocationProperty = null;
                         TestMethodIdentifierProperty? testMethodIdentifierProperty = null;
-                        TestMetadataProperty[] traits = [];
+                        TraitMessage[] traits = [];
                         if (_dotnetTestConnection.IsIDE)
                         {
                             testFileLocationProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestFileLocationProperty>();
                             testMethodIdentifierProperty = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
-                            traits = testNodeDetails.Traits;
+                            // Convert the platform's TestMetadataProperty to the shared, platform-decoupled wire type.
+                            traits = [.. testNodeDetails.Traits.Select(static t => new TraitMessage(t.Key, t.Value))];
                         }
 
                         DiscoveredTestMessages discoveredTestMessages = new(
