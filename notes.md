@@ -31,22 +31,25 @@
 - **TimeoutAttribute is sealed** — cannot derive from it in test scenarios (confirmed CS0509).
 - **`--treenode-filter` format**: Does NOT work for class-level filtering in MSTest.Analyzers.UnitTests; use `--filter "ClassName~MyClass"` or `--filter-uid "Namespace.ClassName.MethodName"` instead.
 - **DoNotUseShadowingAnalyzer**: `GetBaseMembers` walks the full inheritance chain via while-loop on `BaseType`; `IsMemberShadowing` handles only `IMethodSymbol` and `IPropertySymbol` — fields fall through to `return false`. Property type must match via `SymbolEqualityComparer` for shadowing detection.
+- **`[TestClass]` on structs**: CS0592 — `[TestClass]` is only valid on class declarations. For tests involving struct containing types, omit `[TestClass]` from the struct.
+- **GitHub issue/list APIs**: Failing with enterprise fine-grained token restriction (token lifetime >8 days). PR searches still work. Issue creation/commenting via safeoutputs works. Cannot list or search issues via MCP tools.
+- **`--no-build` on stale DLL**: After editing tests, always rebuild (`dotnet build`) before using `--no-build`; stale binary gives wrong test results.
 
 ## Testing Opportunities Backlog
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. Next candidates:
-   - `UseCooperativeCancellationForTimeoutAnalyzerTests` (14 tests) — covered relative to complexity
-   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — covered relative to complexity
-   - `PreferConstructorOverTestInitializeAnalyzerTests` (15 tests) — covered relative to complexity
-   - `DuplicateTestMethodAttributeAnalyzerTests` (23 tests) — possible additional scenarios
-   - `GlobalTestFixtureShouldBeValidAnalyzerTests` — done 2026-06-30 (generic class, struct, derived TestClass attribute)
+   - `UseCooperativeCancellationForTimeoutAnalyzerTests` (27 tests) — further edge cases possible
+   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — room for edge cases
+   - `PreferConstructorOverTestInitializeAnalyzerTests` (15 tests) — room for edge cases
+   - `UseAttributeOnTestMethodAnalyzerTests` (14 tests) — DataTestMethod early-return, OSCondition ConditionBase
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-02 | Task 3 (GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 generic+struct+derivedAttr, DuplicateTestMethodAttributeAnalyzer MSTEST0060 outside-TestClass+inline-mixed+first-wins), Task 7 |
 | 2026-07-01 | Task 3 (DuplicateTestMethodAttributeAnalyzer MSTEST0060: method outside TestClass, mixed inline list, first-wins fixer), Task 7 |
 | 2026-06-30 | Task 3 (GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 edge cases: generic class, struct, derived TestClass attribute), Task 7 |
 | 2026-06-29 | Task 3 (UseAttributeOnTestMethodAnalyzer MSTEST0007: DataTestMethod early-return, OSCondition ConditionBase subclass), Task 4, Task 7 |
@@ -63,12 +66,13 @@
 
 ## Last Run
 
-2026-07-01 23:21 UTC
+2026-07-02 23:19 UTC
 
 ## Completed Work (recent)
 
-- PR (pending) for DuplicateTestMethodAttributeAnalyzer MSTEST0060 edge cases (2026-07-01) — method outside TestClass, mixed inline with non-test attr, first-wins fixer; 15/15 pass (GitHub API unavailable this run, PR number unknown)
-- PR (pending) for GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 edge cases (2026-06-30) — generic class, struct, derived TestClass attribute; 18/18 pass
+- PR (pending) for GlobalTestFixtureShouldBeValid + DuplicateTestMethodAttribute edge cases (2026-07-02) — generic class, struct, derived TestClassAttr; method outside TestClass, mixed inline fixer, first-wins fixer; 33/33 pass
+- PR (pending) for DuplicateTestMethodAttributeAnalyzer MSTEST0060 edge cases (2026-07-01) — GitHub API unavailable, PR not created
+- PR (pending) for GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 edge cases (2026-06-30) — GitHub API unavailable, PR not created
 - PR (pending) for UseAttributeOnTestMethodAnalyzer MSTEST0007 edge cases (2026-06-29) — DataTestMethod early-return, OSCondition ConditionBase; 39/39 pass
 - PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036 (multi-level inheritance, property type mismatch, field fallthrough)
 - PR #9481 merged — TestContextPropertyUsageAnalyzer MSTEST0048 (non-TestContext guard, lambda ContainingSymbol)
