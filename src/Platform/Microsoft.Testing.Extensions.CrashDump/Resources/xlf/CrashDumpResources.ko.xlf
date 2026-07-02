@@ -35,8 +35,8 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</target>
+        <target state="translated">덤프 파일의 이름을 지정합니다.
+다음 자리 표시자를 지원합니다. {pname}(프로세스 실행 이름, .NET 런타임에 "%e"로 지연됨), {pid}(프로세스 ID, .NET 런타임에 "%p"로 지연됨), {asm}(항목 어셈블리 이름), {tfm}(대상 프레임워크 모니커), {time}(크래시덤프 환경이 구성된 경우 타임스탬프). .NET 런타임의 createdump에서 직접 사용하는 레거시 %p /%e/%h/ %t 토큰도 지원됩니다.</target>
         <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">

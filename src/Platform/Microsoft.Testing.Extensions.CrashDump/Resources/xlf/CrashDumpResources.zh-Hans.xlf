@@ -35,8 +35,8 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</target>
+        <target state="translated">指定转储文件的名称。
+支持以下占位符: {pname} (进程可执行文件名称，由 .NET 运行时处理为“%e”)、{pid} (进程 ID，由 .NET 运行时处理为“%p”)、{asm} (入口程序集名称)、{tfm} (目标框架名字对象)、{time} (配置 crashdump 环境时的时间戳)。还支持 .NET 运行时的 createdump 直接使用的旧版 %p / %e / %h / %t 令牌。</target>
         <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">

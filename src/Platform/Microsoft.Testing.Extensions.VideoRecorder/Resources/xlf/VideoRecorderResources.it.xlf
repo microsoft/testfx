@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="ArtifactPerTestDisplayName">
         <source>Screen recording — {0}</source>
-        <target state="new">Screen recording — {0}</target>
+        <target state="translated">Registrazione dello schermo - {0}</target>
         <note>Display name for a per-test video artifact. {0} is the test display name.</note>
       </trans-unit>
       <trans-unit id="ArtifactSessionDescription">
@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="ArtifactSessionDisplayName">
         <source>Screen recording</source>
-        <target state="new">Screen recording</target>
+        <target state="translated">Registrazione dello schermo</target>
         <note>Display name for the whole-session video artifact.</note>
       </trans-unit>
       <trans-unit id="CapDurationDescription">
@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="CapSizeDescription">
         <source>size {0} MB</source>
-        <target state="new">size {0} MB</target>
+        <target state="translated">dimensioni {0} MB</target>
         <note>Describes a size cap. {0} is the size in megabytes.</note>
       </trans-unit>
       <trans-unit id="ChapterTitleFormat">
         <source>{0} [{1}]</source>
-        <target state="new">{0} [{1}]</target>
+        <target state="translated">{0} [{1}]</target>
         <note>Chapter bookmark title. {0} test display name, {1} outcome.</note>
       </trans-unit>
       <trans-unit id="CommandLineProviderDescription">
@@ -64,7 +64,7 @@
       </trans-unit>
       <trans-unit id="HintPerSession">
         <source>Recording the whole session into one video.</source>
-        <target state="new">Recording the whole session into one video.</target>
+        <target state="translated">Registrazione dell'intera sessione in un unico video.</target>
         <note>Hint appended to the ready message in per-session mode.</note>
       </trans-unit>
       <trans-unit id="HintPerTest">
@@ -84,7 +84,7 @@
       </trans-unit>
       <trans-unit id="NoUsableVideoProduced">
         <source>Screen recording produced no usable video (ffmpeg exit code {0}). {1}</source>
-        <target state="new">Screen recording produced no usable video (ffmpeg exit code {0}). {1}</target>
+        <target state="translated">La registrazione dello schermo non ha prodotto alcun video utilizzabile (codice di uscita ffmpeg {0}). {1}</target>
         <note>Warning when recording yielded nothing. {0} exit code, {1} last ffmpeg error detail.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionArgs">
@@ -119,27 +119,27 @@
       </trans-unit>
       <trans-unit id="OutcomeError">
         <source>Error</source>
-        <target state="new">Error</target>
+        <target state="translated">Errore</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeFailed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">Errore</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomePassed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">Superato</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeSkipped">
         <source>Skipped</source>
-        <target state="new">Skipped</target>
+        <target state="translated">Ignorata</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeTimeout">
         <source>Timeout</source>
-        <target state="new">Timeout</target>
+        <target state="translated">Timeout</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="RecorderReady">

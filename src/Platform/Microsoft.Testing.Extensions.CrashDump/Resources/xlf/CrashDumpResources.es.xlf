@@ -35,8 +35,8 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</target>
+        <target state="translated">Especifique el nombre del archivo de volcado.
+Admite los siguientes marcadores de posición: {pname} (nombre ejecutable del proceso, diferido al entorno de ejecución de .NET como "%e"), {pid} (id. de proceso, diferido al entorno de ejecución de .NET como "%p"), {asm} (nombre del ensamblado de entrada), {tfm} (moniker de la plataforma de destino), {time} (marca de tiempo cuando se configura el entorno de volcado de bloqueo). También se admiten los tokens heredados %p / %e / %h / %t consumidos directamente por el archivo createdump del runtime de .NET.</target>
         <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
@@ -157,9 +157,9 @@ Para obtener más información, visite https://learn.microsoft.com/dotnet/core/d
         <source>Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
 The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
 Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</source>
-        <target state="new">Control whether a sequence file listing the tests started and ended during the test session is generated alongside the crash dump or crash report.
-The file makes it possible to identify the tests that were running at the time of the crash without having to inspect the dump.
-Valid values are 'on' (default; also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').</target>
+        <target state="translated">Controlar si se genera un archivo de secuencia que enumera las pruebas iniciadas y finalizadas durante la sesión de prueba junto con el volcado de memoria o el informe de bloqueos.
+El archivo permite identificar las pruebas que se estaban ejecutando en el momento del bloqueo sin tener que inspeccionar el volcado.
+Los valores válidos son 'on' (valor predeterminado; también acepta 'true', 'enable', '1') o 'off' (también acepta 'false', 'disable', '0').</target>
         <note>Do not localize option name {Locked="--crash-sequence"} or option values {Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}.</note>
       </trans-unit>
       <trans-unit id="CrashSequenceOptionInvalidArgument">

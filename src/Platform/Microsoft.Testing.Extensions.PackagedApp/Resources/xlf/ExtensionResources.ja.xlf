@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</source>
-        <target state="new">Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</target>
+        <target state="translated">パッケージ化された Windows (UWP/WinUI) テスト ホストを分離されたディレクトリに展開し、そこから起動します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
         <source>Packaged app test host launcher</source>
-        <target state="new">Packaged app test host launcher</target>
+        <target state="translated">パッケージ アプリ テスト ホスト ランチャー</target>
         <note />
       </trans-unit>
     </body>

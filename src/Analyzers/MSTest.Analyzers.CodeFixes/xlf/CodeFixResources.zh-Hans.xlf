@@ -109,7 +109,7 @@
       </trans-unit>
       <trans-unit id="RemoveRedundantTestMethodDisplayNameFix">
         <source>Remove redundant 'DisplayName'</source>
-        <target state="new">Remove redundant 'DisplayName'</target>
+        <target state="translated">删除冗余“DisplayName”</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="ReplaceDataTestMethodWithTestMethodTitle">
