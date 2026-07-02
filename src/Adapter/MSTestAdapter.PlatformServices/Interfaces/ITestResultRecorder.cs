@@ -14,8 +14,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// <remarks>
 /// This abstraction lets the platform services layer report test start/end and results without taking a
 /// dependency on a specific test platform's result object model (for example the VSTest <c>TestResult</c>,
-/// <c>TestOutcome</c> and attachment types). The mapping to a concrete host recorder (for example the
-/// VSTest <c>ITestExecutionRecorder</c>) is provided by the adapter layer.
+/// <c>TestOutcome</c> and attachment types). The concrete recorder is provided at the platform boundary by a
+/// wrapper over the host's result recorder (currently <c>TestResultRecorderExtensions</c>, which wraps the
+/// VSTest <c>ITestExecutionRecorder</c>), and is expected to move fully out of the platform services layer in
+/// a later phase.
 /// </remarks>
 internal interface ITestResultRecorder
 {
