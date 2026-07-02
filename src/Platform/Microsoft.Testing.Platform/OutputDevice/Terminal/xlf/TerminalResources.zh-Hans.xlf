@@ -4,172 +4,172 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">已中止</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">实际</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="new">canceled</target>
+        <target state="translated">已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="new">Canceling the test session...</target>
+        <target state="translated">正在取消测试会话...</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
-        <target state="new">Console is already in batching mode.</target>
+        <target state="translated">控制台已处于批处理模式。</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
-        <target state="new">Discovered {0} tests in assembly</target>
+        <target state="translated">在程序集中发现了 {0} 个测试</target>
         <note>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummary">
         <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="new">Discovered {0} tests in {1} assemblies.</target>
+        <target state="translated">在 {1} 个程序集中发现了 {0} 个测试。</target>
         <note>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummarySingular">
         <source>Discovered {0} tests.</source>
-        <target state="new">Discovered {0} tests.</target>
+        <target state="translated">已发现 {0} 个测试。</target>
         <note>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
         <source>Discovering tests from</source>
-        <target state="new">Discovering tests from</target>
+        <target state="translated">正在发现以下位置中的测试</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before discovering tests in an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="new">duration</target>
+        <target state="translated">持续时间</target>
         <note />
       </trans-unit>
       <trans-unit id="Error">
         <source>error</source>
-        <target state="new">error</target>
+        <target state="translated">错误</target>
         <note>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</note>
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
-        <target state="new">Exit code</target>
+        <target state="translated">退出代码</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">预期</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">失败</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">失败</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
-        <target state="new">failed with {0} error(s)</target>
+        <target state="translated">失败并出现 {0} 个错误</target>
         <note>{0} is the number of errors in an assembly summary line</note>
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">用于测试</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="HandshakeFailuresHeader">
         <source>Handshake failures:</source>
-        <target state="new">Handshake failures:</target>
+        <target state="translated">握手失败：</target>
         <note />
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">生成的进程内文件项目:</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">最低预期测试策略冲突，测试已运行 {0} 次，最低预期 {1} 次</target>
         <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="new">and {0} more</target>
+        <target state="translated">和其他 {0} 项</target>
         <note>{0} is the number of additional active tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="new">{0} tests running</target>
+        <target state="translated">{0} 个测试正在运行</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">生成的进程外文件项目:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">已通过</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">已通过</target>
         <note />
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="new">Press Ctrl+C again to force exit.</target>
+        <target state="translated">再次按 Ctrl+C 强制退出。</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="Retried">
         <source>retried</source>
-        <target state="new">retried</target>
+        <target state="translated">已重试</target>
         <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
-        <target state="new">Running tests from</target>
+        <target state="translated">正在从以下位置运行测试</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">已跳过</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
-        <target state="new">at</target>
+        <target state="translated">在</target>
         <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
       </trans-unit>
       <trans-unit id="StackFrameIn">
         <source>in</source>
-        <target state="new">in</target>
+        <target state="translated">位于</target>
         <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">错误输出</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">标准输出</target>
         <note />
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="new">succeeded</target>
+        <target state="translated">成功</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionDescription">
@@ -177,47 +177,47 @@
 Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
 'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
 When both --ansi and --no-ansi are provided, --ansi wins.</source>
-        <target state="new">Control whether ANSI escape characters are emitted.
-Valid values are 'auto' (default), 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0').
-'on' forces ANSI escape codes (including cursor movement) even when stdout is redirected; pair it with --progress off if you only want colors.
-When both --ansi and --no-ansi are provided, --ansi wins.</target>
+        <target state="translated">控制是否发出 ANSI 转义字符。
+有效值为 'auto' (默认值)、'on' (还接受 'true'、'enable'、'1')或 'off' (还接受 'false'、'disable'、'0')。
+'on' 会强制使用 ANSI 转义代码（包括光标移动），即使 stdout 被重定向也是如此；如果只需要颜色，请将其与 --progress off 一起使用。
+同时提供 --ansi 和 --no-ansi 时，--ansi 将生效。</target>
         <note>{Locked="'auto'"}{Locked="'on'"}{Locked="'true'"}{Locked="'enable'"}{Locked="'1'"}{Locked="'off'"}{Locked="'false'"}{Locked="'disable'"}{Locked="'0'"}{Locked="--progress off"}{Locked="--ansi"}{Locked="--no-ansi"}</note>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--ansi 需要值为“auto”、“on”(或 'true'、“enable”、'1')或“off”(或 'false'、“disable”、'0')的单个参数。</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
         <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <target state="translated">禁用将 ANSI 转义字符输出到屏幕。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
-        <target state="new">[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</target>
+        <target state="translated">[已弃用，改用 "--progress off"]禁用向屏幕报告进度。</target>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">报告测试时的输出详细程度。
+有效值为 'Normal'、'Detailed'。默认值为 'Normal'。</target>
         <note>{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">--output 应为值为“Normal”或“Detailed”的单个参数。</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
-        <target state="new">running... {0} completed, {1} failed</target>
+        <target state="translated">正在运行... {0} 个已完成， {1} 个失败</target>
         <note>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
         <source> | active: {0}</source>
-        <target state="new"> | active: {0}</target>
+        <target state="translated"> | 活动: {0}</target>
         <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">
@@ -233,66 +233,66 @@ This option takes precedence over the deprecated --no-progress flag.</target>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--progress 需要值为 "auto"、"on"(或 "true"、"enable"、"1")或 "off"(或 "false"、"disable"、"0")的单个参数。</target>
         <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] 在 {0}后仍在运行: {1}</target>
         <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
+        <target state="translated">--show-stdout and --show-stderr 需要值为“All”、“Failed”或“None”的单个参数。</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">确定何时显示测试捕获的错误输出。
+有效值为 'All'、'Failed'、'None'。默认值为 'All' (如果检测到 LLM/AI 智能体环境，则为 'Failed')。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">确定何时显示测试的捕获标准输出。
+有效值为 'All'、'Failed'、'None'。默认值为 'All' (如果检测到 LLM/AI 智能体环境，则为 'Failed')。</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="new">Writes test results to terminal.</target>
+        <target state="translated">将测试结果写入终端。</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="new">Terminal test reporter</target>
+        <target state="translated">终端测试报告器</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="new">Test discovery summary: found {0} test(s)</target>
+        <target state="translated">测试发现摘要: 找到 {0} 个测试</target>
         <note>{0} is the number of discovered tests.</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
-        <target state="new">Test run summary:</target>
+        <target state="translated">测试运行摘要:</target>
         <note />
       </trans-unit>
       <trans-unit id="Try">
         <source>try {0}</source>
-        <target state="new">try {0}</target>
+        <target state="translated">尝试 {0}</target>
         <note>number of tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">运行了零个测试</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="new">total</target>
+        <target state="translated">总计</target>
         <note />
       </trans-unit>
     </body>
