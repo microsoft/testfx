@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -55,6 +56,24 @@ internal sealed class TestMethodFilter
         }
 
         return filter;
+    }
+
+    /// <summary>
+    /// Builds a platform-agnostic <see cref="ITestElementFilter"/> for the properties supported by the adapter.
+    /// </summary>
+    /// <param name="context">The current context of the run.</param>
+    /// <param name="logger">Handler to report test messages/start/end and results.</param>
+    /// <param name="filterHasError">Indicates that the filter is unsupported/has an error.</param>
+    /// <returns>
+    /// A filter that evaluates <see cref="UnitTestElement"/> instances, or <see langword="null"/> when no
+    /// filter applies (in which case every element is included).
+    /// </returns>
+    internal ITestElementFilter? GetTestElementFilter(IDiscoveryContext? context, IAdapterMessageLogger logger, out bool filterHasError)
+    {
+        ITestCaseFilterExpression? filterExpression = GetFilterExpression(context, logger, out filterHasError);
+        return filterExpression is null
+            ? null
+            : new TestElementFilter(this, filterExpression);
     }
 
     /// <summary>
@@ -138,5 +157,28 @@ internal sealed class TestMethodFilter
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Platform-agnostic filter that evaluates a <see cref="UnitTestElement"/> against a VSTest
+    /// <see cref="ITestCaseFilterExpression"/>. This is the single point where the neutral element model is
+    /// translated to the VSTest test case in order to reuse the host's filter matching.
+    /// </summary>
+    private sealed class TestElementFilter : ITestElementFilter
+    {
+        private readonly TestMethodFilter _testMethodFilter;
+        private readonly ITestCaseFilterExpression _filterExpression;
+
+        public TestElementFilter(TestMethodFilter testMethodFilter, ITestCaseFilterExpression filterExpression)
+        {
+            _testMethodFilter = testMethodFilter;
+            _filterExpression = filterExpression;
+        }
+
+        public bool Matches(UnitTestElement testElement)
+        {
+            var testCase = testElement.ToTestCase();
+            return _filterExpression.MatchTestCase(testCase, propertyName => _testMethodFilter.PropertyValueProvider(testCase, propertyName));
+        }
     }
 }

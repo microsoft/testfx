@@ -73,7 +73,7 @@ internal partial class TestExecutionManager
         }
 
         // Default test set is filtered tests based on user provided filter criteria
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, adapterMessageLogger, out bool filterHasError);
+        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(runContext, adapterMessageLogger, out bool filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
@@ -113,7 +113,7 @@ internal partial class TestExecutionManager
 
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
-        TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter))];
+        TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filter, t, source))];
         if (_testOrderRandom is { } sourceRandom)
         {
             Shuffle(sourceRandom, testsToRun);
