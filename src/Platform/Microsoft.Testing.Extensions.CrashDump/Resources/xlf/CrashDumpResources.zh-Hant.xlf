@@ -105,7 +105,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are {1}</target>
+        <target state="translated">'{0}' 不是有效的傾印類型。有效的選項為 {1}</target>
         <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">

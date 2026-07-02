@@ -410,7 +410,7 @@ pero recibió {4} argumentos, con los tipos '{5}'.</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
-        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</target>
+        <target state="translated">UTA007: El método {1} definido en la clase {0} no tiene la firma correcta. "ValueTask&lt;T&gt;" no es un tipo de valor devuelto de método de prueba válido; use en su lugar la "ValueTask" no genérica. Ejemplo: public async ValueTask Test.Class1.Test()</target>
         <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
