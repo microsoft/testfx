@@ -410,7 +410,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
-        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</target>
+        <target state="translated">UTA007: 類別 {0} 中定義的方法 {1} 沒有正確的簽章。'ValueTask&lt;T&gt;' 不是有效的測試方法傳回類型: 請改用非泛型的 'ValueTask'。範例: public async ValueTask Test.Class1.Test()</target>
         <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
