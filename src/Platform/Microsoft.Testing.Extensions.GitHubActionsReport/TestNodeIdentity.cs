@@ -4,21 +4,21 @@
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions.Messages;
 
-namespace Microsoft.Testing.Extensions.AzureDevOpsReport;
+namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 internal static class TestNodeIdentity
 {
     private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
 
     /// <summary>
-    /// Resolves the stable test name used to match a <see cref="TestNode"/> against Azure DevOps history
-    /// (which keys results by <c>AutomatedTestName</c>, i.e. the fully-qualified <c>Namespace.Type.Method</c>).
+    /// Resolves the stable, fully-qualified test name for a <see cref="TestNode"/>. Falls back to the
+    /// display name when the fully-qualified name property is unavailable.
     /// </summary>
     /// <remarks>
     /// The identity is resolved in the same priority order used by the TRX and VSTest-bridge converters:
     /// <list type="number">
     /// <item><description><see cref="TestMethodIdentifierProperty"/> — the canonical, ECMA-335 compliant identity added by
-    /// frameworks running natively on the platform. This is the property that maps to Azure DevOps' <c>AutomatedTestName</c>.</description></item>
+    /// frameworks running natively on the platform.</description></item>
     /// <item><description>The non-standard <c>vstest.TestCase.FullyQualifiedName</c> property (only present for tests flowing
     /// through the VSTest bridge in server mode).</description></item>
     /// <item><description>The display name, as a last resort.</description></item>
