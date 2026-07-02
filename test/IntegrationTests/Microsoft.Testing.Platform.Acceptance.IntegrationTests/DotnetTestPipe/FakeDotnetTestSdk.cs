@@ -52,14 +52,12 @@ internal static class FakeDotnetTestSdk
 
         // Optional reverse "server control" pipe: when advertised, the test app connects back and parks a
         // WaitForServerControlRequest that we complete with a CancelSession, exercising server-initiated
-        // session cancellation (issue #8691).
-        string? controlOsPipeName = null;
-        NamedPipeServerStream? controlStream = null;
-        if (advertiseServerControlPipe)
-        {
-            controlOsPipeName = DotnetTestPipeProtocol.GetPipeName(Guid.NewGuid().ToString("N"));
-            controlStream = new(controlOsPipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Byte, options);
-        }
+        // session cancellation (issue #8691). Declared with 'await using' so the OS handle is released reliably
+        // on every exit path (including exceptions), and remains a no-op when the feature is not advertised.
+        string? controlOsPipeName = advertiseServerControlPipe ? DotnetTestPipeProtocol.GetPipeName(Guid.NewGuid().ToString("N")) : null;
+        await using NamedPipeServerStream? controlStream = controlOsPipeName is null
+            ? null
+            : new(controlOsPipeName, PipeDirection.InOut, maxNumberOfServerInstances: 1, PipeTransmissionMode.Byte, options);
 
         List<RawMessage> received = [];
         Dictionary<byte, string>? receivedHandshake = null;
@@ -119,11 +117,6 @@ internal static class FakeDotnetTestSdk
                 // Best-effort: the control interaction is observed via controlObservations; don't let its
                 // teardown fail the harness.
             }
-        }
-
-        if (controlStream is not null)
-        {
-            await controlStream.DisposeAsync().ConfigureAwait(false);
         }
 
         return new FakeDotnetTestSdkResult(

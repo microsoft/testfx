@@ -144,7 +144,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             bool.TryParse(isIDEValue, out bool isIDE) &&
             isIDE;
 
-        if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.ServerControlPipeName, out string? serverControlPipeName) == true &&
+        if (response.Properties?.TryGetValue(HandshakeMessagePropertyNames.ServerControlPipeName, out string? serverControlPipeName) is true &&
             !RoslynString.IsNullOrEmpty(serverControlPipeName))
         {
             _serverControlPipeName = serverControlPipeName;
