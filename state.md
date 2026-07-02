@@ -48,12 +48,19 @@ NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.Platfo
   - ~160 B fewer allocations per test in the common case
   - Status: awaiting CI
 
+- Branch perf-assist/skip-clone-double-copy — PR #aw_pr_clone submitted 2026-07-02
+  - Add private ctor in TestContextImplementation to skip 2nd dictionary copy in CloneForDataDrivenIteration
+  - Saves 1 Dictionary alloc + O(n) copy per data-driven test iteration
+  - Build: 0 warnings, 0 errors (./build.sh -c Debug)
+  - Status: awaiting CI
+
 ## Optimization Backlog
 
 Priority | Item
 ---------|-----
 Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450, #9461, #9478, #9486, #9507 merged
 Pending | PR (2026-07-01) — skip TCS bridge in ExecuteTestAsync when ctx == null (awaiting CI)
+Pending | PR (2026-07-02) — skip 2nd dict copy in CloneForDataDrivenIteration (awaiting CI)
 Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
 Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
 Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
@@ -70,26 +77,27 @@ Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallb
 - RunTestMethodAsync: fast path now covers both non-data-driven and null-ctx cases
 - ExecuteTestAsync TCS bridge: only needed when TestClassInfo.ExecutionContext or TestAssemblyInfo.ExecutionContext is non-null (i.e., when [AssemblyInitialize]/[ClassInitialize] captured an ExecutionContext)
 - GitHub MCP tools return 403 when run in this CI agent (token lifetime constraint) — use git log + local code analysis only
+- CloneForDataDrivenIteration double-copy: FIXED in PR (2026-07-02). The private ctor assigns snapshot directly.
 
 ## Task Schedule (last run dates)
 
 - Task 1 (Commands): 2026-06-25
 - Task 2 (Identify): 2026-06-30
-- Task 3 (Implement): 2026-07-01 ✓ this run
+- Task 3 (Implement): 2026-07-02 ✓ this run
 - Task 4 (Maintain PRs): 2026-06-30
 - Task 5 (Comment issues): 2026-06-28
 - Task 6 (Infra): 2026-06-28
-- Task 7 (Monthly Summary): 2026-07-01 ✓ this run (closed #9258, created July issue)
+- Task 7 (Monthly Summary): 2026-07-02 ✓ this run (created new July issue)
 
 ## Monthly Activity Issue
 
 Issue #9258: [perf-improver] Monthly Activity 2026-06 (CLOSED 2026-07-01)
-July issue: [perf-improver] Monthly Activity 2026-07 (created 2026-07-01, number TBD)
-Last updated: 2026-07-01 run 28524086228
+July issue: [perf-improver] Monthly Activity 2026-07 (created 2026-07-02, number TBD — #aw_jul_activity)
+Last updated: 2026-07-02 run 28596742003
 
 ## Backlog Cursor
 
-TCS bridge fast path PR submitted 2026-07-01. Next priority tasks:
+Two pending PRs (TCS bridge + clone double-copy). Next priority tasks:
+- Task 4 (Maintain PRs) — check both pending PRs next run
 - Task 5 (Comment on performance issues) — last done 2026-06-28
 - Task 6 (Perf infra) — last done 2026-06-28
-- Task 4 (Maintain PRs) — check TCS bridge PR status next run
