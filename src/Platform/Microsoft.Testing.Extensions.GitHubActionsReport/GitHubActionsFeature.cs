@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -19,7 +19,7 @@ internal static class GitHubActionsFeature
 
     public static bool IsMasterEnabled(ICommandLineOptions commandLine, IEnvironment environment)
         => IsRunningOnGitHubActions(environment)
-            || commandLine.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsOptionName);
+            && commandLine.IsOptionSet(GitHubActionsCommandLineOptions.GitHubActionsOptionName);
 
     public static bool IsKnobEnabled(ICommandLineOptions commandLine, string knobOptionName)
         => !(commandLine.TryGetOptionArgumentList(knobOptionName, out string[]? arguments)
