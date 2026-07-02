@@ -1,9 +1,10 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -60,7 +61,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultConfigurationSettingsWhenDiscoveryContextIsNull()
     {
-        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(null, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         settings.ExecutionApartmentState.Should().BeNull();
@@ -68,7 +69,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         settings.ExecutionApartmentState.Should().BeNull();
@@ -77,7 +78,7 @@ public class RunConfigurationSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
         _mockDiscoveryContext.Setup(md => md.RunSettings!.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         settings.ExecutionApartmentState.Should().BeNull();
@@ -96,7 +97,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         settings.Should().NotBeNull();
@@ -119,7 +120,7 @@ public class RunConfigurationSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
         settings.Should().NotBeNull();

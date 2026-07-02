@@ -139,7 +139,7 @@ internal sealed class MSTestExecutor : ITestExecutor
 
         try
         {
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle.ToAdapterMessageLogger(), configuration, new TestSourceHandler()))
             {
                 return;
             }
@@ -183,7 +183,7 @@ internal sealed class MSTestExecutor : ITestExecutor
         try
         {
             TestSourceHandler testSourceHandler = new();
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle.ToAdapterMessageLogger(), configuration, testSourceHandler))
             {
                 return;
             }
