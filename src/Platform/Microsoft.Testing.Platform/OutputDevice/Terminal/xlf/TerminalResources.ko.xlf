@@ -57,11 +57,6 @@
         <target state="translated">오류</target>
         <note>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</note>
       </trans-unit>
-      <trans-unit id="ErroredAssembliesHeader">
-        <source>Errored assemblies:</source>
-        <target state="new">Errored assemblies:</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
         <target state="translated">종료 코드</target>
