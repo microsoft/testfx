@@ -21,10 +21,12 @@ internal partial class TestExecutionManager
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="testResultRecorder">Recorder used to report test results back to the host.</param>
+    /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    internal virtual async Task ExecuteTestsAsync(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestResultRecorder testResultRecorder, bool isDeploymentDone)
+    internal virtual async Task ExecuteTestsAsync(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, bool isDeploymentDone)
     {
         _testResultRecorder = testResultRecorder;
+        _testElementFilterProvider = filterProvider;
 
         InitializeRandomTestOrder(frameworkHandle.ToAdapterMessageLogger());
 
@@ -74,7 +76,8 @@ internal partial class TestExecutionManager
         }
 
         // Default test set is filtered tests based on user provided filter criteria
-        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(runContext, adapterMessageLogger, out bool filterHasError);
+        bool filterHasError = false;
+        ITestElementFilter? filter = _testElementFilterProvider?.GetTestElementFilter(adapterMessageLogger, out filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
