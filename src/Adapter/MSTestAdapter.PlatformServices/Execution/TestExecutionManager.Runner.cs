@@ -3,8 +3,6 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -52,7 +50,7 @@ internal partial class TestExecutionManager
 
     private async Task ExecuteTestsWithTestRunnerAsync(
         IEnumerable<UnitTestElement> tests,
-        ITestExecutionRecorder testExecutionRecorder,
+        IAdapterMessageLogger adapterMessageLogger,
         string source,
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner,
@@ -65,11 +63,11 @@ internal partial class TestExecutionManager
                 .ThenBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedMethodName : null)
             : tests;
 
-        // If testRunner is in a different AppDomain, we cannot pass the testExecutionRecorder directly.
+        // If testRunner is in a different AppDomain, we cannot pass the message logger directly.
         // Instead, we pass a proxy (remoting object) that is marshallable by ref.
-        IMessageLogger remotingMessageLogger = usesAppDomains
-            ? new RemotingMessageLogger(testExecutionRecorder)
-            : testExecutionRecorder;
+        IAdapterMessageLogger remotingMessageLogger = usesAppDomains
+            ? new RemotingMessageLogger(adapterMessageLogger)
+            : adapterMessageLogger;
 
         foreach (UnitTestElement currentTest in orderedTests)
         {

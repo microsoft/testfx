@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 // The programmatic test-filter types (ITestFilter, TestFilterContext, TestFilterResult,
@@ -150,7 +149,7 @@ internal sealed partial class UnitTestRunner
     private async Task<TestResult[]> FinishFilteredOutTestAsync(
         TestMethod testMethod,
         IDictionary<string, object?> testContextProperties,
-        IMessageLogger messageLogger,
+        IAdapterMessageLogger messageLogger,
         TestResult[] filterResult,
         ITestContext testContextForTestExecution)
     {
