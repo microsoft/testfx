@@ -25,6 +25,8 @@
 
 NOTE: Local SDK (.dotnet/) is NOT available in CI agent. Build/test must go through CI.
 NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.PlatformServices.UnitTests — NOT MSTest Assert.
+NOTE: MSTestAdapter.PlatformServices.UnitTests only builds on Windows (requires .NET Framework TFMs).
+NOTE: NonWindowsTests.slnf covers only MTP/Analyzer unit tests on Linux.
 
 ## Completed Work
 
@@ -42,16 +44,18 @@ NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.Platfo
 
 ## Open Work
 
-- Branch perf-assist/skip-tcs-no-exec-context — PR submitted 2026-07-01 (number TBD)
-  - Fast path in ExecuteTestAsync when no ExecutionContext (no AssemblyInitialize/ClassInitialize captured ctx)
-  - Skips TaskCompletionSource<TestResult[]> + async-lambda closure + Action delegate allocs
-  - ~160 B fewer allocations per test in the common case
+- Branch perf-assist/skip-clone-dict-alloc — PR #aw_clone_alloc submitted 2026-07-03
+  - Skip intermediate Dictionary allocation in CloneForDataDrivenIteration
+  - Pass _properties directly to ctor; ctor copies in its null/null branch
+  - Saves 1 Dictionary alloc + O(n) copy per data-driven test iteration
+  - Build: 0 warnings, 0 errors; all unit tests passed
   - Status: awaiting CI
 
-- Branch perf-assist/skip-clone-double-copy — PR #aw_pr_clone submitted 2026-07-02
-  - Add private ctor in TestContextImplementation to skip 2nd dictionary copy in CloneForDataDrivenIteration
-  - Saves 1 Dictionary alloc + O(n) copy per data-driven test iteration
-  - Build: 0 warnings, 0 errors (./build.sh -c Debug)
+- Branch perf-assist/skip-tcs-no-exec-context — PR #aw_tcs_fast submitted 2026-07-03
+  - Fast path in ExecuteTestAsync when capturedContext == null
+  - Skips TaskCompletionSource<TestResult[]> + async-lambda closure + Action delegate allocs
+  - ~160 B / 3 heap allocs fewer per test in the common case
+  - Build: 0 warnings, 0 errors; all unit tests passed
   - Status: awaiting CI
 
 ## Optimization Backlog
@@ -59,8 +63,8 @@ NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.Platfo
 Priority | Item
 ---------|-----
 Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450, #9461, #9478, #9486, #9507 merged
-Pending | PR (2026-07-01) — skip TCS bridge in ExecuteTestAsync when ctx == null (awaiting CI)
-Pending | PR (2026-07-02) — skip 2nd dict copy in CloneForDataDrivenIteration (awaiting CI)
+Submitted | PR (2026-07-03) — skip intermediate dict alloc in CloneForDataDrivenIteration
+Submitted | PR (2026-07-03) — skip TCS bridge in ExecuteTestAsync when ctx==null
 Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
 Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
 Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
@@ -74,30 +78,29 @@ Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallb
 - efficiency-improver bot also operates on this repo — check for duplicate opportunities before creating PRs
 - Acceptance tests need -pack first; unit tests do not
 - DotnetTestProcess step: TotalProcessorTime = parent dotnet only; ElapsedTime is the primary user-visible metric
-- RunTestMethodAsync: fast path now covers both non-data-driven and null-ctx cases
 - ExecuteTestAsync TCS bridge: only needed when TestClassInfo.ExecutionContext or TestAssemblyInfo.ExecutionContext is non-null (i.e., when [AssemblyInitialize]/[ClassInitialize] captured an ExecutionContext)
-- GitHub MCP tools return 403 when run in this CI agent (token lifetime constraint) — use git log + local code analysis only
-- CloneForDataDrivenIteration double-copy: FIXED in PR (2026-07-02). The private ctor assigns snapshot directly.
+- GitHub MCP tools return 403/token lifetime error in CI agent — use git log + local code analysis only
+- CloneForDataDrivenIteration: ctor null/null branch always copies via [with(properties)]; no snapshot needed
+- IDE0008 rule in MSTestAdapter.PlatformServices project: use explicit types (not var) for new locals
 
 ## Task Schedule (last run dates)
 
 - Task 1 (Commands): 2026-06-25
 - Task 2 (Identify): 2026-06-30
-- Task 3 (Implement): 2026-07-02 ✓ this run
+- Task 3 (Implement): 2026-07-03 ✓ this run (2 PRs submitted)
 - Task 4 (Maintain PRs): 2026-06-30
 - Task 5 (Comment issues): 2026-06-28
 - Task 6 (Infra): 2026-06-28
-- Task 7 (Monthly Summary): 2026-07-02 ✓ this run (created new July issue)
+- Task 7 (Monthly Summary): 2026-07-03 ✓ this run
 
 ## Monthly Activity Issue
 
 Issue #9258: [perf-improver] Monthly Activity 2026-06 (CLOSED 2026-07-01)
-July issue: [perf-improver] Monthly Activity 2026-07 (created 2026-07-02, number TBD — #aw_jul_activity)
-Last updated: 2026-07-02 run 28596742003
+July issue: #aw_jul2607 (created 2026-07-03 run 28665966760; prev run also created one — maintainer may need to close duplicate)
 
 ## Backlog Cursor
 
-Two pending PRs (TCS bridge + clone double-copy). Next priority tasks:
+Two new PRs (clone dict alloc + TCS fast path). Next priority tasks:
 - Task 4 (Maintain PRs) — check both pending PRs next run
 - Task 5 (Comment on performance issues) — last done 2026-06-28
 - Task 6 (Perf infra) — last done 2026-06-28
