@@ -40,6 +40,17 @@ list `Microsoft.NET.Sdk.Web` first so it owns the base `Microsoft.NET.Sdk` impor
 </Project>
 ```
 
+Because the version cannot be specified on an `<Import>`'s `Sdk` attribute the same way it can on
+`<Project Sdk="MSTest.Sdk/x.y.z">`, pin the `MSTest.Sdk` version through `global.json`:
+
+```json
+{
+  "msbuild-sdks": {
+    "MSTest.Sdk": "x.y.z"
+  }
+}
+```
+
 `Sdk.props`/`Sdk.targets` guard their `Microsoft.NET.Sdk` import behind the
 `_MSTestSdkImportsMicrosoftNETSdk` property: `MSTest.Sdk` only imports the base SDK when no other SDK
 has already done so (detected via the `UsingMicrosoftNETSdk` property that `Microsoft.NET.Sdk` sets

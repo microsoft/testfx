@@ -678,7 +678,7 @@ namespace MSTestPlainTest
 <Project>
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.Web" />
-  <Import Project="Sdk.props" Sdk="MSTest.Sdk/$MSTestVersion$" />
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
 
   <PropertyGroup>
     <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
@@ -687,10 +687,17 @@ namespace MSTestPlainTest
     <NoWarn>$(NoWarn);NU1507</NoWarn>
   </PropertyGroup>
 
-  <Import Project="Sdk.targets" Sdk="MSTest.Sdk/$MSTestVersion$" />
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.Web" />
 
 </Project>
+
+#file global.json
+{
+  "msbuild-sdks": {
+    "MSTest.Sdk": "$MSTestVersion$"
+  }
+}
 
 #file UnitTest1.cs
 using Microsoft.AspNetCore.Builder;
