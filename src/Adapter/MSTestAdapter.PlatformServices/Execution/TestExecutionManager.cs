@@ -3,11 +3,11 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+#if !WINDOWS_UWP && !WIN_UI
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+#endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if !WINDOWS_UWP && !WIN_UI
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -99,7 +99,7 @@ internal partial class TestExecutionManager
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
 #if !WINDOWS_UWP && !WIN_UI
-        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(ToHostTestCasesForDeployment(tests), runContext, frameworkHandle);
+        bool isDeploymentDone = Deploy(tests, runContext, frameworkHandle);
 #else
         const bool isDeploymentDone = false;
 #endif
@@ -143,7 +143,7 @@ internal partial class TestExecutionManager
         }
 
 #if !WINDOWS_UWP && !WIN_UI
-        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(ToHostTestCasesForDeployment(tests), runContext, frameworkHandle);
+        bool isDeploymentDone = Deploy(tests, runContext, frameworkHandle);
 #else
         const bool isDeploymentDone = false;
 #endif
@@ -164,14 +164,15 @@ internal partial class TestExecutionManager
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
-    /// Materializes the VSTest test cases required by the (still VSTest-based) deployment service. Reuses each
-    /// element's host test case when present (tests handed to the adapter to run) and otherwise materializes
-    /// and caches one (tests discovered internally), so deployment and result recording share a single test
-    /// case per test. This is the single remaining place where execution touches the VSTest test case type,
-    /// kept until the deployment service itself is made platform-agnostic in a later phase.
+    /// Runs deployment for the given tests via the platform-agnostic deployment service, translating the host
+    /// run context into the neutral <see cref="DeploymentContext"/> at this call site. This is the single place
+    /// execution reads the VSTest run context for deployment (removed once the run context itself is neutralized).
     /// </summary>
-    private static TestCase[] ToHostTestCasesForDeployment(IEnumerable<UnitTestElement> tests)
-        => [.. tests.Select(static e => e.GetOrCreateHostTestCase())];
+    private static bool Deploy(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle)
+    {
+        var deploymentContext = new DeploymentContext(runContext?.TestRunDirectory, runContext?.RunSettings?.SettingsXml);
+        return PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, deploymentContext, frameworkHandle.ToAdapterMessageLogger());
+    }
 #endif
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
