@@ -5,13 +5,12 @@ using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProviderBase
 {
-    private static readonly string[] OnOffOptions = [GitHubActionsCommandLineOptions.OptionOn, GitHubActionsCommandLineOptions.OptionOff];
-
     public GitHubActionsCommandLineProvider()
         : base(
             nameof(GitHubActionsCommandLineProvider),
@@ -33,10 +32,10 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
         => commandOption.Name switch
         {
             GitHubActionsCommandLineOptions.GitHubActionsGroups or GitHubActionsCommandLineOptions.GitHubActionsAnnotations or GitHubActionsCommandLineOptions.GitHubActionsStepSummary or GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices
-                when !OnOffOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
+                when !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0])
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidOnOffValue, arguments[0])),
             GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold
-                when !(int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds) && seconds >= 1)
+                when !(TimeSpanParser.TryParse(arguments[0], TimeSpanDefaultUnit.Seconds, out TimeSpan threshold) && threshold > TimeSpan.Zero)
                 => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.InvalidSlowTestThreshold, arguments[0])),
             _ => ValidationResult.ValidTask,
         };

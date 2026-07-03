@@ -24,7 +24,7 @@ internal static class GitHubActionsFeature
     public static bool IsKnobEnabled(ICommandLineOptions commandLine, string knobOptionName)
         => !(commandLine.TryGetOptionArgumentList(knobOptionName, out string[]? arguments)
             && arguments is [string value]
-            && string.Equals(value, GitHubActionsCommandLineOptions.OptionOff, StringComparison.OrdinalIgnoreCase));
+            && CommandLineOptionArgumentValidator.IsOffValue(value));
 
     public static bool IsEnabled(ICommandLineOptions commandLine, IEnvironment environment, string knobOptionName)
         => IsMasterEnabled(commandLine, environment) && IsKnobEnabled(commandLine, knobOptionName);

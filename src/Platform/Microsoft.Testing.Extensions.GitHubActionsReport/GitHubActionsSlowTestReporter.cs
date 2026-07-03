@@ -29,7 +29,7 @@ internal sealed class GitHubActionsSlowTestReporter : SlowTestReporterBase
         : base(outputDevice, task, clock, loggerFactory.CreateLogger<GitHubActionsSlowTestReporter>())
     {
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsSlowTestNotices);
-        _threshold = TimeSpan.FromSeconds(GetThresholdSeconds(commandLineOptions));
+        _threshold = GetThreshold(commandLineOptions);
     }
 
     public override string Uid => nameof(GitHubActionsSlowTestReporter);
@@ -67,13 +67,14 @@ internal sealed class GitHubActionsSlowTestReporter : SlowTestReporterBase
     }
 
     // Re-reads the already-provider-validated threshold option (the CLI provider guarantees a parseable
-    // positive integer). This mirrors the sibling AzureDevOpsSlowTestReporter, which likewise reads its
-    // history options straight from ICommandLineOptions rather than threading a parsed value through.
-    private static int GetThresholdSeconds(ICommandLineOptions commandLineOptions)
+    // positive duration). Accepts a bare number of seconds or a value with a unit suffix (e.g. '90s', '2m').
+    // This mirrors the sibling AzureDevOpsSlowTestReporter, which likewise reads its history options straight
+    // from ICommandLineOptions rather than threading a parsed value through.
+    private static TimeSpan GetThreshold(ICommandLineOptions commandLineOptions)
         => commandLineOptions.TryGetOptionArgumentList(GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold, out string[]? arguments)
             && arguments is [string value]
-            && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int seconds)
-            && seconds >= 1
-                ? seconds
-                : GitHubActionsCommandLineOptions.SlowTestThresholdDefaultSeconds;
+            && TimeSpanParser.TryParse(value, TimeSpanDefaultUnit.Seconds, out TimeSpan threshold)
+            && threshold > TimeSpan.Zero
+                ? threshold
+                : TimeSpan.FromSeconds(GitHubActionsCommandLineOptions.SlowTestThresholdDefaultSeconds);
 }

@@ -62,8 +62,8 @@
     <value>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
   </data>
   <data name="AnnotationsOptionDescription" xml:space="preserve">
-    <value>Enable or disable GitHub Actions failure annotations ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</value>
-    <comment>{Locked="on"}{Locked="off"}</comment>
+    <value>Enable or disable GitHub Actions failure annotations. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
   <data name="AnnotationTitle" xml:space="preserve">
     <value>Test failed: {0}</value>
@@ -73,19 +73,20 @@
     <value>The test failed without providing a failure message.</value>
   </data>
   <data name="StepSummaryOptionDescription" xml:space="preserve">
-    <value>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</value>
-    <comment>{Locked="on"}{Locked="off"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
+    <value>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
   </data>
   <data name="StepSummaryWriteFailedWarning" xml:space="preserve">
     <value>Failed to write the GitHub Actions job summary to '{0}': {1}</value>
     <comment>{0} is the file path, {1} is the error message.</comment>
   </data>
   <data name="SlowTestNoticesOptionDescription" xml:space="preserve">
-    <value>Enable or disable GitHub Actions slow-test notices ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</value>
-    <comment>{Locked="on"}{Locked="off"}</comment>
+    <value>Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
   <data name="SlowTestThresholdOptionDescription" xml:space="preserve">
-    <value>The number of seconds a test may run before a GitHub Actions slow-test notice is emitted. Defaults to 60.</value>
+    <value>The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</value>
+    <comment>{Locked="s"}{Locked="m"}{Locked="h"}</comment>
   </data>
   <data name="SlowTestNoticeTitle" xml:space="preserve">
     <value>Slow test: {0}</value>
@@ -96,7 +97,8 @@
     <comment>{0} is the fully qualified test name, {1} is the elapsed seconds.</comment>
   </data>
   <data name="InvalidSlowTestThreshold" xml:space="preserve">
-    <value>Invalid value '{0}'. The slow-test threshold must be a positive integer number of seconds.</value>
+    <value>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</value>
+    <comment>{Locked="s"}{Locked="m"}</comment>
   </data>
   <data name="DisplayName" xml:space="preserve">
     <value>GitHub Actions report generator</value>
@@ -106,12 +108,12 @@
     <comment>{0} is the assembly name, {1} is the target framework moniker.</comment>
   </data>
   <data name="GroupsOptionDescription" xml:space="preserve">
-    <value>Enable or disable per-assembly log groups ('on' or 'off'). Defaults to 'on' when running on GitHub Actions.</value>
-    <comment>{Locked="on"}{Locked="off"}</comment>
+    <value>Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
   <data name="InvalidOnOffValue" xml:space="preserve">
-    <value>Invalid value '{0}'. Valid values are 'on' and 'off'.</value>
-    <comment>{Locked="on"}{Locked="off"}</comment>
+    <value>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
   <data name="OptionDescription" xml:space="preserve">
     <value>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
