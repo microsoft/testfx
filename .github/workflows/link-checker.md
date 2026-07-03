@@ -4,8 +4,22 @@ description: Daily automated link checker that finds and fixes broken links in d
 on:
   schedule: daily on weekdays
 permissions:
-  all: read
+  actions: read
+  attestations: read
+  checks: read
+  contents: read
   copilot-requests: write
+  deployments: read
+  discussions: read
+  issues: read
+  models: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
+  vulnerability-alerts: read
 timeout-minutes: 60
 network:
   allowed:
