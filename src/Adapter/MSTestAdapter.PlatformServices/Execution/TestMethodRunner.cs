@@ -36,6 +36,13 @@ internal sealed class TestMethodRunner
     private readonly TestMethodInfo _testMethodInfo;
 
     /// <summary>
+    /// Cached <see cref="ReflectionTestMethodInfo"/> wrapper reused across data rows.
+    /// <see cref="_testMethodInfo"/>.MethodInfo and <see cref="_test"/>.DisplayName are constant
+    /// for the lifetime of this runner, so a single instance is sufficient.
+    /// </summary>
+    private ReflectionTestMethodInfo? _cachedReflectionMethodInfo;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
     /// </summary>
     /// <param name="testMethodInfo">
@@ -419,11 +426,13 @@ internal sealed class TestMethodRunner
             data = tupleExpandedToArray;
         }
 
-        // PERF: Extract ReflectionTestMethodInfo to avoid allocating it twice when testDataSource is not null
-        // and both GetDisplayName and ComputeDefaultDisplayName need to be consulted.
+        // PERF: Reuse the same ReflectionTestMethodInfo instance across all data rows — _testMethodInfo.MethodInfo
+        // and _test.DisplayName are constant for the lifetime of this TestMethodRunner, so creating a new wrapper
+        // per row is wasteful for data-driven tests with many rows. GetParameters() is also cached on the wrapper
+        // (see ReflectionTestMethodInfo), so the underlying MethodInfo.GetParameters() array is allocated once total.
         if (displayNameFromTestDataRow is null && testDataSource is not null)
         {
-            var reflectionMethodInfo = new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
+            ReflectionTestMethodInfo reflectionMethodInfo = _cachedReflectionMethodInfo ??= new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
             displayName = testDataSource.GetDisplayName(reflectionMethodInfo, data)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(reflectionMethodInfo, data)
                 ?? displayName;

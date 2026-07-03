@@ -6,6 +6,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.Internal;
 internal sealed class ReflectionTestMethodInfo : MethodInfo
 {
     private readonly MethodInfo _methodInfo;
+    private ParameterInfo[]? _cachedParameters;
 
     public ReflectionTestMethodInfo(MethodInfo methodInfo, string? displayName)
     {
@@ -41,7 +42,7 @@ internal sealed class ReflectionTestMethodInfo : MethodInfo
 
     public override MethodImplAttributes GetMethodImplementationFlags() => _methodInfo.GetMethodImplementationFlags();
 
-    public override ParameterInfo[] GetParameters() => _methodInfo.GetParameters();
+    public override ParameterInfo[] GetParameters() => _cachedParameters ??= _methodInfo.GetParameters();
 
     public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture) => _methodInfo.Invoke(obj, invokeAttr, binder, parameters, culture);
 
