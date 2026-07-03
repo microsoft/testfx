@@ -129,7 +129,7 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// <param name="source">
     /// The source.
     /// </param>
-    /// <param name="runSettings">
+    /// <param name="settingsXml">
     /// The run Settings for the session.
     /// </param>
     /// <returns>
@@ -137,9 +137,9 @@ internal sealed class PlatformServiceProvider : IPlatformServiceProvider
     /// </returns>
     public ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings)
+        string? settingsXml)
     {
-        var testSourceHost = new TestSourceHost(source, runSettings);
+        var testSourceHost = new TestSourceHost(source, settingsXml);
         testSourceHost.SetupHost();
 
         return testSourceHost;

@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -23,7 +22,7 @@ internal sealed class AssemblyEnumeratorWrapper
     /// Gets test elements from an assembly.
     /// </summary>
     /// <returns> A collection of test elements. </returns>
-    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, IRunSettings? runSettings, ITestSourceHandler testSourceHandler, bool isMTP, out List<string> warnings)
+    internal static ICollection<UnitTestElement>? GetTests(string? assemblyFileName, string? settingsXml, ITestSourceHandler testSourceHandler, bool isMTP, out List<string> warnings)
     {
         warnings = [];
 
@@ -48,7 +47,7 @@ internal sealed class AssemblyEnumeratorWrapper
         try
         {
             // Load the assembly in isolation if required.
-            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, runSettings, isMTP);
+            AssemblyEnumerationResult result = GetTestsInIsolation(fullFilePath, settingsXml, isMTP);
             warnings.AddRange(result.Warnings);
             return result.TestElements;
         }
@@ -86,9 +85,9 @@ internal sealed class AssemblyEnumeratorWrapper
         }
     }
 
-    private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings, bool isMTP)
+    private static AssemblyEnumerationResult GetTestsInIsolation(string fullFilePath, string? settingsXml, bool isMTP)
     {
-        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, settingsXml);
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), [MSTestSettings.CurrentSettings])!;
