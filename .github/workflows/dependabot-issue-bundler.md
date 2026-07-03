@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/dependabot-issue-bundler.md@main
 description: Find all open Dependabot PRs and create bundle issues for each runtime + manifest file.
 
 on: weekly on monday
