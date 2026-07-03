@@ -82,7 +82,7 @@ Provisioning / rotating the token (requires repo admin):
 
    ```bash
    gh aw secrets set GH_AW_GITHUB_TOKEN --value "YOUR_FINE_GRAINED_PAT"
-   # or: gh secret set GH_AW_GITHUB_TOKEN --repo microsoft/testfx
+   # or (GitHub CLI): gh secret set GH_AW_GITHUB_TOKEN --repo microsoft/testfx --body "YOUR_FINE_GRAINED_PAT"
    ```
 
 3. Re-run one lockdown workflow (e.g. `gh aw run weekly-issue-activity`) to confirm activation
