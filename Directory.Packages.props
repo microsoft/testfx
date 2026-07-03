@@ -26,7 +26,7 @@
          The last stable release (3.3.4, 2022) lacks newer RS0017/RS0026/RS0036 fixes that testfx's
          public-API surface tracking depends on. Promote back to the next stable 5.x once one ships.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.5.0-2.26224.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.6.0</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
