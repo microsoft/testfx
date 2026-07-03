@@ -47,7 +47,30 @@ public sealed class RpcMessagesTests
         string result = args.ToString();
 
         Assert.Contains("TestNodes = <null>", result);
+        Assert.Contains("GraphFilter = <null>", result);
         AssertNoDefaultCollectionToString(result);
+    }
+
+    [TestMethod]
+    public void ProcessInfoArgs_ToString_WithNullMembers_RendersNull()
+    {
+        ProcessInfoArgs args = new("program.exe", Args: null, WorkingDirectory: null, EnvironmentVariables: null);
+
+        string result = args.ToString();
+
+        Assert.Contains("Args = <null>", result);
+        Assert.Contains("WorkingDirectory = <null>", result);
+        Assert.Contains("EnvironmentVariables = <null>", result);
+    }
+
+    [TestMethod]
+    public void ProcessInfoArgs_ToString_WithNullEnvironmentVariableValue_RendersNull()
+    {
+        ProcessInfoArgs args = new("program.exe", "--flag", "C:\\work", new Dictionary<string, string?> { ["VAR"] = null });
+
+        string result = args.ToString();
+
+        Assert.Contains("VAR = <null>", result);
     }
 
     [TestMethod]

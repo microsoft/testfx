@@ -140,8 +140,10 @@ internal sealed record ProcessInfoArgs(string Program, string? Args, string? Wor
         var builder = new StringBuilder();
         builder.Append(nameof(ProcessInfoArgs)).Append(" { ");
         builder.Append($"{nameof(Program)} = ").Append(Program);
-        builder.Append($", {nameof(Args)} = ").Append(Args);
-        builder.Append($", {nameof(WorkingDirectory)} = ").Append(WorkingDirectory);
+        builder.Append($", {nameof(Args)} = ");
+        RpcMessageFormatting.AppendValue(builder, Args);
+        builder.Append($", {nameof(WorkingDirectory)} = ");
+        RpcMessageFormatting.AppendValue(builder, WorkingDirectory);
         builder.Append($", {nameof(EnvironmentVariables)} = ");
         RpcMessageFormatting.AppendDictionary(builder, EnvironmentVariables);
         builder.Append(" }");
@@ -181,9 +183,23 @@ internal static class RpcMessageFormatting
         builder.Append("RunId = ").Append(runId);
         builder.Append(", TestNodes = ");
         AppendItems(builder, testNodes);
-        builder.Append(", GraphFilter = ").Append(graphFilter);
+        builder.Append(", GraphFilter = ");
+        AppendValue(builder, graphFilter);
         builder.Append(" }");
         return builder.ToString();
+    }
+
+    // Appends a value, rendering null explicitly as "<null>" so that a null value is not
+    // confused with an empty string in the diagnostic logs.
+    public static void AppendValue<T>(StringBuilder builder, T value)
+    {
+        if (value is null)
+        {
+            builder.Append("<null>");
+            return;
+        }
+
+        builder.Append(value);
     }
 
     public static void AppendItems<T>(StringBuilder builder, IEnumerable<T>? items)
@@ -204,7 +220,7 @@ internal static class RpcMessageFormatting
             }
 
             first = false;
-            builder.Append(item);
+            AppendValue(builder, item);
         }
 
         builder.Append(']');
@@ -228,7 +244,8 @@ internal static class RpcMessageFormatting
             }
 
             first = false;
-            builder.Append(pair.Key).Append(" = ").Append(pair.Value);
+            builder.Append(pair.Key).Append(" = ");
+            AppendValue(builder, pair.Value);
         }
 
         builder.Append(']');
