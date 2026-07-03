@@ -41,10 +41,10 @@ internal partial class TestExecutionManager
         }
     }
 
-    private static bool MatchTestFilter(ITestCaseFilterExpression? filterExpression, TestCase test, TestMethodFilter testMethodFilter)
+    private static bool MatchTestFilter(ITestElementFilter? filter, TestCase test, string source)
     {
-        if (filterExpression != null
-            && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
+        if (filter is not null
+            && !filter.Matches(test.ToUnitTestElementWithUpdatedSource(source)))
         {
             // Skip test if not fitting filter criteria.
             return false;
