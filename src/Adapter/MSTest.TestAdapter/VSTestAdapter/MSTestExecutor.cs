@@ -156,7 +156,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             // execution engine reports results through this neutral recorder and never constructs VSTest results.
             ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
 
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(testElements, runContext, frameworkHandle, testResultRecorder, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(testElements, runContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {
@@ -214,7 +214,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             // execution engine reports results through this neutral recorder and never constructs VSTest results.
             ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
 
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testResultRecorder, testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {

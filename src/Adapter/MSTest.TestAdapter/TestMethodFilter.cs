@@ -182,3 +182,20 @@ internal sealed class TestMethodFilter
         }
     }
 }
+
+/// <summary>
+/// Adapter-boundary <see cref="ITestElementFilterProvider"/> that closes over the VSTest discovery/run context
+/// and produces the neutral <see cref="ITestElementFilter"/> via <see cref="TestMethodFilter"/>. Created at the
+/// boundary and passed into the platform services engine/discoverer so the filter (and any parse-error report)
+/// is built at the exact point the engine needs it, preserving the original per-source timing.
+/// </summary>
+internal sealed class TestElementFilterProvider : ITestElementFilterProvider
+{
+    private readonly TestMethodFilter _testMethodFilter = new();
+    private readonly IDiscoveryContext? _context;
+
+    public TestElementFilterProvider(IDiscoveryContext? context) => _context = context;
+
+    public ITestElementFilter? GetTestElementFilter(IAdapterMessageLogger logger, out bool filterHasError)
+        => _testMethodFilter.GetTestElementFilter(_context, logger, out filterHasError);
+}
