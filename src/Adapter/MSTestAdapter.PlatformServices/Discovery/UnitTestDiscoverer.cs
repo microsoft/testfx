@@ -31,7 +31,7 @@ internal class UnitTestDiscoverer
     internal void DiscoverTests(
         IEnumerable<string> sources,
         IAdapterMessageLogger logger,
-        ITestCaseDiscoverySink discoverySink,
+        IUnitTestElementSink discoverySink,
         IDiscoveryContext discoveryContext,
         bool isMTP)
     {
@@ -52,7 +52,7 @@ internal class UnitTestDiscoverer
     internal virtual void DiscoverTestsInSource(
         string source,
         IAdapterMessageLogger logger,
-        ITestCaseDiscoverySink discoverySink,
+        IUnitTestElementSink discoverySink,
         IDiscoveryContext? discoveryContext,
         bool isMTP)
     {
@@ -108,7 +108,7 @@ internal class UnitTestDiscoverer
 
     private readonly ITestSourceHandler _testSource;
 
-    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IAdapterMessageLogger logger)
+    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, IDiscoveryContext? discoveryContext, IAdapterMessageLogger logger)
     {
         // Get filter and skip discovery in case filter expression has parsing error.
         ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(discoveryContext, logger, out bool filterHasError);
@@ -125,7 +125,7 @@ internal class UnitTestDiscoverer
                 continue;
             }
 
-            discoverySink.SendTestCase(testElement.ToTestCase());
+            discoverySink.SendTestElement(testElement);
         }
     }
 }
