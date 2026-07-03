@@ -21,7 +21,7 @@ public sealed class GitHubActionsAnnotationReporterTests
         Exception error = CaptureException("this is an error\nwith\rnewline", out int throwLine);
 
         string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
-            "MyNamespace.MyTest", explanation: null, error, GitHubActionsRepositoryRoot.FindGitRoot(), CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+            "MyNamespace.MyTest", explanation: null, error, GitHubActionsRepositoryRoot.FindGitRoot(), CreateFileSystemWhereEveryFileExists(), new NoopLogger(), skipAssertionFrames: true);
 
         // The line is computed dynamically (from where the throw actually executes) rather than hard-coded, and the
         // file existence is mocked, so the assertion does not depend on this file's exact layout or the physical
@@ -37,7 +37,7 @@ public sealed class GitHubActionsAnnotationReporterTests
         Exception error = CaptureException("exception message", out int throwLine);
 
         string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
-            "MyNamespace.MyTest", "Some custom reason\nwith\rnewline", error, GitHubActionsRepositoryRoot.FindGitRoot(), CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+            "MyNamespace.MyTest", "Some custom reason\nwith\rnewline", error, GitHubActionsRepositoryRoot.FindGitRoot(), CreateFileSystemWhereEveryFileExists(), new NoopLogger(), skipAssertionFrames: true);
 
         Assert.IsTrue(text.StartsWith("::error file=", StringComparison.Ordinal), text);
         Assert.Contains($"GitHubActionsAnnotationReporterTests.cs,line={throwLine},col=1,title=Test failed%3A MyNamespace.MyTest::", text);
@@ -47,7 +47,7 @@ public sealed class GitHubActionsAnnotationReporterTests
     [TestMethod]
     public void GetErrorAnnotation_FallsBackToTitleOnly_WhenNoSourceLocation()
     {
-        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", "boom", exception: null, repoRoot: null, CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", "boom", exception: null, repoRoot: null, CreateFileSystemWhereEveryFileExists(), new NoopLogger(), skipAssertionFrames: true);
 
         Assert.AreEqual("::error title=Test failed%3A MyNamespace.MyTest::boom", text);
     }
@@ -60,7 +60,7 @@ public sealed class GitHubActionsAnnotationReporterTests
         var exception = new StackTraceException("   at Contoso.Calc.Add() in /_/src/Calc.cs:line 12");
 
         string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
-            "Contoso.CalcTests.Add", "boom", exception, repoRoot: "/repo/", CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+            "Contoso.CalcTests.Add", "boom", exception, repoRoot: "/repo/", CreateFileSystemWhereEveryFileExists(), new NoopLogger(), skipAssertionFrames: true);
 
         Assert.AreEqual("::error file=src/Calc.cs,line=12,col=1,title=Test failed%3A Contoso.CalcTests.Add::boom", text);
     }
@@ -74,7 +74,7 @@ public sealed class GitHubActionsAnnotationReporterTests
             + "   at Contoso.MyTests.TheTest() in /_/src/MyTests.cs:line 7");
 
         string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
-            "Contoso.MyTests.TheTest", "nope", exception, repoRoot: "/repo/", CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+            "Contoso.MyTests.TheTest", "nope", exception, repoRoot: "/repo/", CreateFileSystemWhereEveryFileExists(), new NoopLogger(), skipAssertionFrames: true);
 
         Assert.AreEqual("::error file=src/MyTests.cs,line=7,col=1,title=Test failed%3A Contoso.MyTests.TheTest::nope", text);
     }
@@ -82,7 +82,7 @@ public sealed class GitHubActionsAnnotationReporterTests
     [TestMethod]
     public void GetErrorAnnotation_UsesFallbackMessage_WhenNoExplanationOrException()
     {
-        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", explanation: null, exception: null, repoRoot: null, CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", explanation: null, exception: null, repoRoot: null, CreateFileSystemWhereEveryFileExists(), new NoopLogger(), skipAssertionFrames: true);
 
         Assert.IsTrue(text.StartsWith("::error title=Test failed%3A MyNamespace.MyTest::", StringComparison.Ordinal), text);
     }

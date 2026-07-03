@@ -116,7 +116,11 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             {
                 string testName = GetTestName(update.TestNode);
                 TimeSpan threshold = ResolveThreshold(testName);
-                _inProgress[uid] = new InProgressTest(testName, _clock.UtcNow, threshold);
+
+                // Use the first-seen start time: the platform can emit InProgress more than once for the same
+                // test (progress heartbeats), and resetting the start time on each would keep pushing the slow
+                // threshold out so a genuinely slow test would never surface.
+                _inProgress.TryAdd(uid, new InProgressTest(testName, _clock.UtcNow, threshold));
             }
             else if (state is not null)
             {
@@ -217,6 +221,14 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             InProgressTest test = entry.Value;
             TimeSpan elapsed = now - test.StartTime;
             if (elapsed < test.NextEmitThreshold)
+            {
+                continue;
+            }
+
+            // The enumeration is a moving snapshot of the ConcurrentDictionary; a test can complete (and be
+            // removed) between the snapshot and here. Skip it so we don't surface a slow-test notice for a
+            // test that has already finished.
+            if (!_inProgress.ContainsKey(entry.Key))
             {
                 continue;
             }

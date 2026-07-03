@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -22,20 +21,6 @@ internal sealed class GitHubActionsAnnotationReporter :
     IDataConsumer,
     IOutputDeviceDataProducer
 {
-    private const string DeterministicBuildRoot = "/_/";
-    private static readonly char[] NewlineCharacters = ['\r', '\n'];
-
-    // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose
-    // 'code' starts with any of these is treated as framework internals and skipped when looking
-    // for the user's call site to annotate.
-    private static readonly string[] AssertionImplementationCodePrefixes =
-    [
-        "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.",
-    ];
-
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
     private readonly IOutputDevice _outputDisplay;
@@ -128,7 +113,7 @@ internal sealed class GitHubActionsAnnotationReporter :
         }
 
         string repoRoot = GitHubActionsRepositoryRoot.Resolve(_environment) ?? string.Empty;
-        string line = GetErrorAnnotation(testName, explanation, exception, repoRoot, _fileSystem, _logger);
+        string line = GetErrorAnnotation(testName, explanation, exception, repoRoot, _fileSystem, _logger, StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime);
 
         if (_logger.IsEnabled(LogLevel.Trace))
         {
@@ -144,19 +129,19 @@ internal sealed class GitHubActionsAnnotationReporter :
         await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData($"\n{line}"), cancellationToken).ConfigureAwait(false);
     }
 
-    internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger)
+    internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger, bool skipAssertionFrames)
     {
         string message = explanation ?? exception?.Message ?? GitHubActionsResources.NoFailureMessageFallback;
         string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.AnnotationTitle, testName);
 
-        (string File, int Line)? location = TryGetSourceLocation(exception, repoRoot, fileSystem, logger);
+        (string RelativeNormalizedPath, int LineNumber)? location = StackTraceSourceLocationResolver.TryResolve(exception?.StackTrace, repoRoot, fileSystem, logger, skipAssertionFrames);
         if (location is not null)
         {
             return string.Format(
                 CultureInfo.InvariantCulture,
                 "::error file={0},line={1},col=1,title={2}::{3}",
-                GitHubActionsEscaper.EscapeProperty(location.Value.File),
-                location.Value.Line.ToString(CultureInfo.InvariantCulture),
+                GitHubActionsEscaper.EscapeProperty(location.Value.RelativeNormalizedPath),
+                location.Value.LineNumber.ToString(CultureInfo.InvariantCulture),
                 GitHubActionsEscaper.EscapeProperty(title),
                 GitHubActionsEscaper.EscapeData(message));
         }
@@ -168,99 +153,6 @@ internal sealed class GitHubActionsAnnotationReporter :
             "::error title={0}::{1}",
             GitHubActionsEscaper.EscapeProperty(title),
             GitHubActionsEscaper.EscapeData(message));
-    }
-
-    private static (string File, int Line)? TryGetSourceLocation(Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger)
-    {
-        if (exception?.StackTrace is not { } stackTrace || RoslynString.IsNullOrEmpty(repoRoot))
-        {
-            return null;
-        }
-
-        foreach (string stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
-        {
-            (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
-            if (location is null)
-            {
-                continue;
-            }
-
-            string file = location.Value.File;
-            string code = location.Value.Code;
-
-            if (IsAssertionImplementationFrame(code))
-            {
-                continue;
-            }
-
-            string relativePath;
-            if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                relativePath = file.Substring(DeterministicBuildRoot.Length);
-            }
-            else if (file.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                relativePath = file.Substring(repoRoot.Length);
-            }
-            else
-            {
-                continue;
-            }
-
-            string fullPath = Path.Combine(repoRoot, relativePath);
-            if (!fileSystem.ExistFile(fullPath))
-            {
-                continue;
-            }
-
-            // GitHub annotations expect a workspace-relative path with forward slashes.
-            string relativeNormalizedPath = relativePath.Replace('\\', '/').TrimStart('/');
-            if (logger.IsEnabled(LogLevel.Trace))
-            {
-                logger.LogTrace($"Normalized path for GitHub annotation '{relativeNormalizedPath}'.");
-            }
-
-            return (relativeNormalizedPath, location.Value.LineNumber);
-        }
-
-        return null;
-    }
-
-    private static bool IsAssertionImplementationFrame(string code)
-    {
-        foreach (string prefix in AssertionImplementationCodePrefixes)
-        {
-            if (code.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
-    {
-        Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
-        if (!match.Success)
-        {
-            return null;
-        }
-
-        string code = match.Groups["code"].Value;
-        if (RoslynString.IsNullOrWhiteSpace(code))
-        {
-            return null;
-        }
-
-        string file = match.Groups["file"].Value;
-        if (RoslynString.IsNullOrWhiteSpace(file))
-        {
-            return null;
-        }
-
-        int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-        return (code, file, line);
     }
 
     private static string GetTestName(TestNode testNode)
