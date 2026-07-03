@@ -33,6 +33,7 @@ permissions:
   issues: read
   pull-requests: read
   actions: read
+  copilot-requests: write
 
 network:
   allowed:

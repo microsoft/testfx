@@ -13,7 +13,9 @@ on:
     strategy: centralized
   reaction: "eyes"
 
-permissions: read-all
+permissions:
+  all: read
+  copilot-requests: write
 
 network: defaults
 

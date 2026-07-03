@@ -11,6 +11,7 @@ permissions:
   contents: read
   issues: read
   pull-requests: read
+  copilot-requests: write
 
 tracker-id: unskip-closed-tests
 

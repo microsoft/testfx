@@ -2,7 +2,9 @@
 on:
   schedule: daily
   skip-if-match: is:pr is:open in:title "[code-simplifier]"
-permissions: read-all
+permissions:
+  all: read
+  copilot-requests: write
 network:
   allowed:
   - defaults

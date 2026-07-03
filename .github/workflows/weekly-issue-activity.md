@@ -10,6 +10,7 @@ on:
 
 permissions:
   issues: read
+  copilot-requests: write
 
 network:
   allowed:

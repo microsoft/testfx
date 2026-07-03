@@ -45,7 +45,9 @@ timeout-minutes: 30
 
 max-ai-credits: 2000
 
-permissions: read-all
+permissions:
+  all: read
+  copilot-requests: write
 
 network:
   allowed:

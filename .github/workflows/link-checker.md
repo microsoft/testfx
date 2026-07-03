@@ -3,7 +3,9 @@ source: githubnext/agentics/workflows/link-checker.md@main
 description: Daily automated link checker that finds and fixes broken links in documentation files
 on:
   schedule: daily on weekdays
-permissions: read-all
+permissions:
+  all: read
+  copilot-requests: write
 timeout-minutes: 60
 network:
   allowed:
