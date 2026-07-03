@@ -64,7 +64,7 @@ internal sealed class TestSessionEventSerializer : NamedPipeSerializer<TestSessi
 
     protected override void SerializeCore(TestSessionEvent objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 

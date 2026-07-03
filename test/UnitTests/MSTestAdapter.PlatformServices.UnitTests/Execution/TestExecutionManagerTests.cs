@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -125,7 +125,7 @@ public class TestExecutionManagerTests : TestContainer
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] unitTestResults = [];
 
-        _testExecutionManager.SendTestResults(testCase, unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle);
+        _testExecutionManager.SendTestResults(testCase, unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle.ToTestResultRecorder(EnvironmentWrapper.Instance.MachineName, MSTestSettings.CurrentSettings));
 
         _frameworkHandle.TestCaseEndList.Should().Equal("PassingTest:None");
         _frameworkHandle.ResultsList.Should().BeEmpty();
@@ -461,7 +461,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             DummyTestClassForParallelize.ThreadIds.Count.Should().Be(1);
@@ -498,7 +498,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             _enqueuedParallelTestsCount.Should().Be(2);
@@ -535,7 +535,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             DummyTestClassForParallelize.ThreadIds.Count.Should().Be(1);
@@ -570,7 +570,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -629,7 +629,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -696,7 +696,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             _enqueuedParallelTestsCount.Should().Be(2);
@@ -730,7 +730,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
             testablePlatformService.SetupMockReflectionOperations();
 
@@ -802,7 +802,7 @@ public class TestExecutionManagerTests : TestContainer
 
         try
         {
-            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+            MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
             await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
             DummyTestClassWithDoNotParallelizeMethods.ThreadApartmentStates.Count.Should().Be(1);
@@ -842,7 +842,7 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         var firstHandle = new TestableFrameworkHandle();
         var firstManager = new TestExecutionManager(EnvironmentWrapper.Instance, task => task());
@@ -885,7 +885,7 @@ public class TestExecutionManagerTests : TestContainer
             </RunSettings>
             """);
 
-        MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object, null);
+        MSTestSettings.PopulateSettings(_runContext, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         await _testExecutionManager.RunTestsAsync(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 

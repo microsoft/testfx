@@ -18,8 +18,14 @@ break).
 The package ships shared source as `contentFiles/cs/any` with `BuildAction=Compile`, so the consumer compiles it
 into its **own** assembly and the `internal` types are visible without any `InternalsVisibleTo` plumbing:
 
-- **Wire contract** (`contentFiles/cs/any/DotnetTestProtocol/`): `ObjectFieldIds.cs` (serializer/field ids) and
-  `Constants.cs` (handshake property names, execution modes, session-event types, test states, protocol version).
+- **`dotnet test` named-pipe protocol** (`contentFiles/cs/any/DotnetTestProtocol/`): the whole serializer stack as a
+  single source of truth — `ObjectFieldIds.cs` (serializer/field ids) and `Constants.cs` (handshake property names,
+  execution modes, session-event types, test states, protocol version), the message **models** and **serializers**
+  for serializer ids 0–12 (including `AzureDevOpsLogMessage` = 11 and `DisplayMessage` = 12), the serializer registry
+  (`NamedPipeBase` + `RegisterSerializers`), the serializer base infrastructure (`BaseSerializer`,
+  `NamedPipeSerializer`) and the `INamedPipeSerializer`/`IRequest`/`IResponse` interfaces. The named-pipe **transport**
+  (`NamedPipeServer`/`NamedPipeClient`/framing) is intentionally **not** shared — it differs per repo — so a consumer
+  keeps its own transport and reuses the shared registry + serializers.
 - **Terminal reporter** (`contentFiles/cs/any/TerminalReporter/`): the reporter + rendering + state types and the
   small platform abstractions they need (`IConsole`/`IStopwatch`/`IColor`/`System*`, `RoslynString`,
   `ApplicationStateGuard`, `StackTraceHelper`, `TargetFrameworkParser`, `TestRunSummaryHelper`).
@@ -30,18 +36,25 @@ into its **own** assembly and the `internal` types are visible without any `Inte
 
 ## Consuming it (plug-in requirements)
 
-Reference the package and the source compiles into your assembly. For the terminal reporter source the consumer
-must have:
+Reference the package and the source compiles into your assembly. For the terminal reporter source and the
+`dotnet test` protocol serializer stack the consumer must have:
 
 - **`ImplicitUsings` enabled** — the build props supplies the extra global usings the shared source relies on
-  (`System.Text`, `System.Runtime.CompilerServices`, `System.Runtime.Versioning`, …) when implicit usings are on.
+  (`System.Text`, `System.Diagnostics`, `System.Diagnostics.CodeAnalysis`, `System.Globalization`,
+  `System.Runtime.CompilerServices`, `System.Runtime.Versioning`, …) when implicit usings are on.
 - **A `LangVersion` that supports the `field` keyword** (preview/latest).
-- **The `Microsoft.CodeAnalysis.EmbeddedAttribute` polyfill** — shipped by this package as source, so it is always
-  available (dotnet/sdk also defines its own for its copied IPC transport; the `internal sealed partial` polyfill
-  merges harmlessly).
+- **The `Microsoft.CodeAnalysis.EmbeddedAttribute` polyfill** — the protocol registry/infra types and the terminal
+  reporter types are `[Microsoft.CodeAnalysis.Embedded]`, so the consumer needs this attribute. It is shipped once by
+  this package as source (the `internal sealed partial` polyfill merges harmlessly if the consumer also defines one).
 - **XliffTasks** (only for localized satellites) — dotnet/sdk has it via Arcade.
+- **Down-level polyfills (only for non-`NETCOREAPP` TFMs such as `net462`/`netstandard2.0`)** — the protocol source
+  uses positional records (need `System.Runtime.CompilerServices.IsExternalInit`) and nullable-reference annotations
+  (`System.Diagnostics.CodeAnalysis` nullable attributes). Modern net TFMs (e.g. dotnet/sdk) have these built in and
+  need nothing; a down-level consumer must supply the usual polyfills (as the in-repo standalone test project does by
+  compiling `src/Polyfills`).
 
-The wire-contract source is zero-dependency and needs none of the above.
+Only the `ObjectFieldIds`/`Constants` wire-contract subset is zero-dependency and needs none of the above; the rest of
+the protocol serializer stack has the same requirements as the terminal reporter source.
 
 > ℹ️ The terminal reporter ships a couple of small abstractions that also live in Microsoft.Testing.Platform. The
 > internal ones (`IConsole`/`IStopwatch`/`System*`) are not exported by the platform, so they never conflict. The two
@@ -53,6 +66,9 @@ The wire-contract source is zero-dependency and needs none of the above.
 
 ## Scope
 
-The message **models** and **serializers** are not shared yet because they still depend on `TestMetadataProperty`
-(`Microsoft.Testing.Platform.Extensions.Messages`) and use a different class shape than the SDK's copy; sharing them
-requires decoupling/unifying first.
+The `dotnet test` protocol source is decoupled so it compiles standalone in a consumer that has no reference to
+Microsoft.Testing.Platform: `BaseSerializer` carries its own `Unreachable()`/`DebugAssert` helpers (no
+`ApplicationStateGuard`/`RoslynDebug`); the `DiscoveredTestMessage` trait uses the platform-decoupled `TraitMessage`
+wire type instead of the public `TestMetadataProperty`; and `NamedPipeBase` is registry-only (no `PipeStream`/framing).
+None of this changes the wire bytes — serializer ids, field ids, field order and layout are unchanged. Only the
+named-pipe **transport** (`NamedPipeServer`/`NamedPipeClient`) is kept per-repo.

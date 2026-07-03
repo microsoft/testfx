@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
@@ -131,7 +129,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
             string? @namespace = null;
             string? typeName = null;
             string? methodName = null;
-            TestMetadataProperty[] traits = [];
+            TraitMessage[] traits = [];
             string[] parameterTypeFullNames = [];
 
             int fieldCount = ReadUShort(stream);
@@ -204,10 +202,10 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         return parameterTypeFullNames;
     }
 
-    private static TestMetadataProperty[] ReadTraitsPayload(Stream stream)
+    private static TraitMessage[] ReadTraitsPayload(Stream stream)
     {
         int length = ReadInt(stream);
-        var traits = new TestMetadataProperty[length];
+        var traits = new TraitMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? key = null;
@@ -235,9 +233,9 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
                 }
             }
 
-            _ = key ?? throw ApplicationStateGuard.Unreachable();
-            _ = value ?? throw ApplicationStateGuard.Unreachable();
-            traits[i] = new TestMetadataProperty(key, value);
+            _ = key ?? throw new InvalidOperationException("Trait key is required.");
+            _ = value ?? throw new InvalidOperationException("Trait value is required.");
+            traits[i] = new TraitMessage(key, value);
         }
 
         return traits;
@@ -245,7 +243,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     protected override void SerializeCore(DiscoveredTestMessages objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 
@@ -289,7 +287,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
     }
 
-    private static void WriteTraitsPayload(Stream stream, TestMetadataProperty[]? traits)
+    private static void WriteTraitsPayload(Stream stream, TraitMessage[]? traits)
     {
         if (traits is null || traits.Length == 0)
         {
@@ -304,7 +302,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
         long before = stream.Position;
         WriteInt(stream, traits.Length);
-        foreach (TestMetadataProperty trait in traits)
+        foreach (TraitMessage trait in traits)
         {
             WriteUShort(stream, GetFieldCount(trait));
 
@@ -358,7 +356,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         (IsNullOrEmpty(discoveredTestMessage.ParameterTypeFullNames) ? 0 : 1) +
         (IsNullOrEmpty(discoveredTestMessage.Traits) ? 0 : 1));
 
-    private static ushort GetFieldCount(TestMetadataProperty trait) =>
+    private static ushort GetFieldCount(TraitMessage trait) =>
         (ushort)((trait.Key is null ? 0 : 1) +
         (trait.Value is null ? 0 : 1));
 }

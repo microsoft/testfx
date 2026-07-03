@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -33,7 +33,7 @@ internal sealed class TestMethodFilter
     /// <param name="logger">Handler to report test messages/start/end and results.</param>
     /// <param name="filterHasError">Indicates that the filter is unsupported/has an error.</param>
     /// <returns>A filter expression.</returns>
-    internal ITestCaseFilterExpression? GetFilterExpression(IDiscoveryContext? context, IMessageLogger logger, out bool filterHasError)
+    internal ITestCaseFilterExpression? GetFilterExpression(IDiscoveryContext? context, IAdapterMessageLogger logger, out bool filterHasError)
     {
         filterHasError = false;
         if (context == null)
@@ -51,7 +51,7 @@ internal sealed class TestMethodFilter
         catch (TestPlatformFormatException ex)
         {
             filterHasError = true;
-            logger.SendMessage(TestMessageLevel.Error, ex.Message);
+            logger.SendMessage(MessageLevel.Error, ex.Message);
         }
 
         return filter;
@@ -118,7 +118,7 @@ internal sealed class TestMethodFilter
     /// <param name="logger">The logger to log exception messages too.</param>
     /// <returns>Filter expression.</returns>
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072:'target parameter' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method.", Justification = "GetTestCaseFilter is part of the VSTest discovery contract on the concrete DiscoveryContext type; the runtime guarantees the method exists on supported hosts.")]
-    private ITestCaseFilterExpression? GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
+    private ITestCaseFilterExpression? GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IAdapterMessageLogger logger)
     {
         try
         {
@@ -134,7 +134,7 @@ internal sealed class TestMethodFilter
         }
         catch (Exception ex)
         {
-            logger.SendMessage(TestMessageLevel.Warning, ex.Message);
+            logger.SendMessage(MessageLevel.Warning, ex.Message);
         }
 
         return null;

@@ -12,20 +12,25 @@
   </ItemGroup>
 
   <!--
-    [Embedded] on the shared contract types resolves to Microsoft.CodeAnalysis.EmbeddedAttribute (not a framework
-    type). This independent consumer must provide it - the platform/extensions get it from src/Polyfills, and
-    dotnet/sdk already defines it for its copied IPC transport. We include only the polyfill (not via a package
-    reference) to mirror how an external consumer would supply the attribute.
+    The shared protocol types are [Microsoft.CodeAnalysis.Embedded] (resolves to a polyfill, not a framework type) and
+    the record models use init accessors (need the IsExternalInit polyfill on down-level TFMs such as net462). We
+    compile all src/Polyfills shims here (not via a package reference) to mirror how an external consumer supplies them.
   -->
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src\Polyfills\EmbeddedAttribute.cs" Link="Polyfills\EmbeddedAttribute.cs" />
+    <Compile Include="$(RepoRoot)src\Polyfills\**\*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <!--
     This project intentionally does NOT reference Microsoft.Testing.Platform's protocol types directly. It compiles
-    the shared 'dotnet test' wire-contract source (ObjectFieldIds + Constants) into its own assembly via the shared
-    .props, proving that the contract can live in testfx and be consumed by an independent assembly (e.g. dotnet/sdk)
-    with a single source of truth.
+    the whole shared 'dotnet test' named-pipe protocol source (the ObjectFieldIds + Constants wire contract AND the
+    message models + serializers for ids 0-12, the serializer registry and base infrastructure) into its own assembly
+    via the shared .props, proving the protocol can live in testfx and be consumed by an independent assembly (e.g.
+    dotnet/sdk) with a single source of truth.
+
+    CAVEAT: this project inherits the repo-root Directory.Build.props global usings (a superset of what the package's
+    build/*.props supply to an external consumer), so a green build here does NOT by itself prove the package's <Using>
+    set is sufficient for dotnet/sdk. It is not a substitute for a restricted-usings compile check; today the shared
+    source only uses namespaces present in both sets.
   -->
   <Import Project="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\ServerMode\DotnetTest\DotnetTestProtocolContract.props" />
 
