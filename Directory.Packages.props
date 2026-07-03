@@ -19,7 +19,7 @@
          the two drift apart. -->
     <AspireHostingTestingVersion>13.4.6</AspireHostingTestingVersion>
     <MicrosoftBuildVersion>17.11.48</MicrosoftBuildVersion>
-    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisVersion>5.6.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
     <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers pinned to a daily build (5.5.x).
