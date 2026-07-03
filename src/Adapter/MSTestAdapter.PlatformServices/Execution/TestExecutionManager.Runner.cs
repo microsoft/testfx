@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -13,7 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal partial class TestExecutionManager
 {
     internal void SendTestResults(
-        TestCase test,
+        UnitTestElement test,
         TestTools.UnitTesting.TestResult[] unitTestResults,
         DateTimeOffset startTime,
         DateTimeOffset endTime,
@@ -73,10 +71,6 @@ internal partial class TestExecutionManager
             ? new RemotingMessageLogger(testExecutionRecorder)
             : testExecutionRecorder;
 
-        // Translate the VSTest recorder into the platform-agnostic result recorder a single time for this
-        // test set. This is the boundary at which VSTest result construction is applied.
-        ITestResultRecorder testResultRecorder = testExecutionRecorder.ToTestResultRecorder(_environment.MachineName, MSTestSettings.CurrentSettings);
-
         foreach (UnitTestElement currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
@@ -87,13 +81,9 @@ internal partial class TestExecutionManager
 
             UnitTestElement unitTestElement = currentTest.WithUpdatedSource(source);
 
-            // Obtain the host's test case for this test as an OPAQUE handle: the engine passes it verbatim to
-            // the (still VSTest-based) result recorder and reads nothing VSTest-specific off it. This preserves
-            // byte-for-byte reporting fidelity — including any host-injected (TCM / data-collector) properties —
-            // for the recorded results. Neutralizing the recorder is deferred to a later boundary phase.
-            TestCase currentTestCase = currentTest.GetOrCreateHostTestCase();
-
-            testResultRecorder.RecordStart(currentTestCase);
+            // Report through the neutral recorder using the element itself; the adapter-side recorder resolves
+            // the host test case (preserving host-injected TCM / data-collector properties) with full fidelity.
+            _testResultRecorder.RecordStart(currentTest);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
@@ -131,7 +121,7 @@ internal partial class TestExecutionManager
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
-            SendTestResults(currentTestCase, unitTestResult, startTime, endTime, testResultRecorder);
+            SendTestResults(currentTest, unitTestResult, startTime, endTime, _testResultRecorder);
         }
     }
 }
