@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+#if !WINDOWS_UWP && !WIN_UI
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -85,7 +88,7 @@ internal partial class TestExecutionManager
     /// <param name="runContext">Context to use when executing the tests.</param>
     /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
     /// <param name="runCancellationToken">Test run cancellation token.</param>
-    internal async Task RunTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
+    internal async Task RunTestsAsync(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
     {
         DebugEx.Assert(tests != null, "tests");
         DebugEx.Assert(runContext != null, "runContext");
@@ -96,7 +99,7 @@ internal partial class TestExecutionManager
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
 #if !WINDOWS_UWP && !WIN_UI
-        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(ToHostTestCasesForDeployment(tests), runContext, frameworkHandle);
 #else
         const bool isDeploymentDone = false;
 #endif
@@ -122,7 +125,7 @@ internal partial class TestExecutionManager
 
         var discoverySink = new TestCaseDiscoverySink();
 
-        var tests = new List<TestCase>();
+        var tests = new List<UnitTestElement>();
 
         IAdapterMessageLogger logger = frameworkHandle.ToAdapterMessageLogger();
 
@@ -133,14 +136,14 @@ internal partial class TestExecutionManager
 
             // discover the tests
             GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext, isMTP);
-            tests.AddRange(discoverySink.Tests);
+            tests.AddRange(discoverySink.TestElements);
 
             // Clear discoverSinksTests so that it just stores test for one source at one point of time
-            discoverySink.Tests.Clear();
+            discoverySink.TestElements.Clear();
         }
 
 #if !WINDOWS_UWP && !WIN_UI
-        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(ToHostTestCasesForDeployment(tests), runContext, frameworkHandle);
 #else
         const bool isDeploymentDone = false;
 #endif
@@ -158,6 +161,18 @@ internal partial class TestExecutionManager
         }
 #endif
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    /// <summary>
+    /// Materializes the VSTest test cases required by the (still VSTest-based) deployment service. Reuses each
+    /// element's host test case when present (tests handed to the adapter to run) and otherwise materializes
+    /// and caches one (tests discovered internally), so deployment and result recording share a single test
+    /// case per test. This is the single remaining place where execution touches the VSTest test case type,
+    /// kept until the deployment service itself is made platform-agnostic in a later phase.
+    /// </summary>
+    private static TestCase[] ToHostTestCasesForDeployment(IEnumerable<UnitTestElement> tests)
+        => [.. tests.Select(static e => e.GetOrCreateHostTestCase())];
+#endif
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
 }

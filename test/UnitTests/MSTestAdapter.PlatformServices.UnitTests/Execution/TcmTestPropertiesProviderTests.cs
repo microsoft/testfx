@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -34,7 +34,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
-        IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
+        IReadOnlyDictionary<string, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
         tcmProperties.Should().BeNull();
     }
 
@@ -61,7 +61,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         ];
         SetTestCaseProperties(testCase, propertiesValue);
 
-        IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        IReadOnlyDictionary<string, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
         tcmProperties.Should().BeNull();
     }
 
@@ -88,7 +88,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         ];
         SetTestCaseProperties(testCase, propertiesValue);
 
-        IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        IReadOnlyDictionary<string, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
 
         VerifyTcmProperties(tcmProperties, testCase);
     }
@@ -116,7 +116,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             345
         ];
         SetTestCaseProperties(testCase1, propertiesValue1);
-        IDictionary<TestProperty, object?>? tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
+        IReadOnlyDictionary<string, object?>? tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
         VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
@@ -140,7 +140,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             346
         ];
         SetTestCaseProperties(testCase2, propertiesValue2);
-        IDictionary<TestProperty, object?>? tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
+        IReadOnlyDictionary<string, object?>? tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
         VerifyTcmProperties(tcmProperties2, testCase2);
     }
 
@@ -167,7 +167,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             345
         ];
         SetTestCaseProperties(testCase1, propertiesValue1);
-        IDictionary<TestProperty, object?>? tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
+        IReadOnlyDictionary<string, object?>? tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
         VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
@@ -191,7 +191,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             346
         ];
         SetTestCaseProperties(testCase2, propertiesValue2);
-        IDictionary<TestProperty, object?>? tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
+        IReadOnlyDictionary<string, object?>? tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
         VerifyTcmProperties(tcmProperties2, testCase2);
 
         // Verify 3rd call.
@@ -215,7 +215,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             347
         ];
         SetTestCaseProperties(testCase3, propertiesValue3);
-        IDictionary<TestProperty, object?>? tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
+        IReadOnlyDictionary<string, object?>? tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
         VerifyTcmProperties(tcmProperties3, testCase3);
     }
 
@@ -232,12 +232,12 @@ public class TcmTestPropertiesProviderTests : TestContainer
         }
     }
 
-    private void VerifyTcmProperties(IDictionary<TestProperty, object?>? tcmProperties, TestCase testCase)
+    private void VerifyTcmProperties(IReadOnlyDictionary<string, object?>? tcmProperties, TestCase testCase)
     {
         tcmProperties.Should().NotBeNull();
         foreach (TestProperty property in _tcmKnownProperties)
         {
-            testCase.GetPropertyValue(property)!.Equals(tcmProperties[property]).Should().BeTrue();
+            testCase.GetPropertyValue(property)!.Equals(tcmProperties[property.Id]).Should().BeTrue();
         }
     }
 }

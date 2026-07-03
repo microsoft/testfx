@@ -17,7 +17,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 /// <c>TestOutcome</c> and attachment types). The concrete recorder is provided at the platform boundary by a
 /// wrapper over the host's result recorder (currently <c>TestResultRecorderExtensions</c>, which wraps the
 /// VSTest <c>ITestExecutionRecorder</c>), and is expected to move fully out of the platform services layer in
-/// a later phase.
+/// a later phase. The execution engine passes the test's <c>TestCase</c> as an opaque handle to this recorder
+/// (it reads nothing VSTest-specific off it); reporting fidelity — including host-injected properties — is the
+/// recorder's responsibility.
 /// </remarks>
 internal interface ITestResultRecorder
 {

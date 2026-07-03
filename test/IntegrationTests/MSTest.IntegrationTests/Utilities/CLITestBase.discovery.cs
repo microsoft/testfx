@@ -7,6 +7,8 @@ using DiscoveryAndExecutionTests.Utilities;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -37,7 +39,7 @@ public abstract partial class CLITestBase
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
-        await testExecutionManager.ExecuteTestsAsync(testCases, null, frameworkHandle, false);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), null, frameworkHandle, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 
@@ -49,9 +51,21 @@ public abstract partial class CLITestBase
         string runSettingsXml = GetRunSettingsXml(string.Empty);
         var runContext = new InternalRunContext(runSettingsXml, testCaseFilter);
 
-        await testExecutionManager.ExecuteTestsAsync(testCases, runContext, frameworkHandle, false);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), runContext, frameworkHandle, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
+
+    // Mirrors the adapter's execution boundary (see MSTestExecutor): each host test case becomes a neutral
+    // UnitTestElement carrying its execution-context (TCM) properties and the originating test case as an
+    // opaque recording handle, so results are recorded against the exact same TestCase instances.
+    private static IEnumerable<UnitTestElement> ToUnitTestElements(IEnumerable<TestCase> testCases)
+        => testCases.Select(static testCase =>
+        {
+            UnitTestElement element = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
+            element.ExecutionContextProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+            element.HostRecordingHandle = testCase;
+            return element;
+        });
 
     #region Helper classes
     private class InternalLogger : IMessageLogger
