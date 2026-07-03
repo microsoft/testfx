@@ -41,17 +41,11 @@ internal partial class TestExecutionManager
         }
     }
 
-    private static bool MatchTestFilter(ITestCaseFilterExpression? filterExpression, TestCase test, TestMethodFilter testMethodFilter)
-    {
-        if (filterExpression != null
-            && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
-        {
-            // Skip test if not fitting filter criteria.
-            return false;
-        }
-
-        return true;
-    }
+    // Takes the already-converted UnitTestElement (rather than reconstructing one from the TestCase) so the
+    // caller can convert each test exactly once and reuse that element both for filtering and downstream.
+    private static bool MatchTestFilter(ITestElementFilter? filter, UnitTestElement testElement)
+        // Keep the test when there is no filter or when the element satisfies the filter criteria.
+        => filter is null || filter.Matches(testElement);
 
     private async Task ExecuteTestsWithTestRunnerAsync(
         IEnumerable<TestCase> tests,
