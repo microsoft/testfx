@@ -58,7 +58,11 @@ public sealed class GitHubActionsSummaryReporterTests
         int slowIndex = markdown.IndexOf("- `T.Slow` — 1m 05s", StringComparison.Ordinal);
         int fastIndex = markdown.IndexOf("- `T.Fast` — 10ms", StringComparison.Ordinal);
         Assert.IsGreaterThanOrEqualTo(0, slowIndex, markdown);
-        Assert.IsGreaterThan(slowIndex, fastIndex, markdown);
+        Assert.IsGreaterThanOrEqualTo(0, fastIndex, markdown);
+
+        // Slowest-first ordering: the slow test must be listed before the fast one, i.e. at a smaller index.
+        // IsLessThan(upperBound, value) asserts value < upperBound, so this asserts slowIndex < fastIndex.
+        Assert.IsLessThan(fastIndex, slowIndex, markdown);
     }
 
     [TestMethod]

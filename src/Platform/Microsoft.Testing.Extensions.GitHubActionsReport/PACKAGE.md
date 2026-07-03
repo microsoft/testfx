@@ -18,18 +18,17 @@ This package extends Microsoft.Testing.Platform with:
 - **Failure annotations**: emits an `::error` workflow command for each failing test so failures appear in the workflow Annotations tab and, when the source location can be resolved, on the pull request's "Files changed" diff gutter
 - **Job summary**: appends a markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page
 - **Slow-test notices**: emits a `::notice` workflow command for any test still running past a threshold (default 60 seconds)
-- **CI auto-detection**: detects GitHub Actions environments through the `GITHUB_ACTIONS` variable
 
-All features are enabled by default when running on GitHub Actions (or when the `--report-gh` master switch is set), and no-op otherwise. Each feature can be toggled individually:
+The extension activates when the test run is on GitHub Actions (`GITHUB_ACTIONS=true`) and the `--report-gh` switch is passed; it no-ops otherwise. When active, each feature is enabled by default and can be toggled individually:
 
 | Option | Description | Default |
 |---|---|---|
-| `--report-gh` | Master switch to enable the extension outside GitHub Actions | off |
+| `--report-gh` | Master switch that turns the extension on (required, in addition to running on GitHub Actions) | off |
 | `--report-gh-groups on\|off` | Per-assembly log groups | on |
 | `--report-gh-annotations on\|off` | Failure annotations | on |
 | `--report-gh-step-summary on\|off` | Markdown job summary | on |
 | `--report-gh-slow-test-notices on\|off` | Slow-test notices | on |
-| `--report-gh-slow-test-threshold <seconds>` | Seconds before a slow-test notice is emitted | 60 |
+| `--report-gh-slow-test-threshold <duration>` | Time before a slow-test notice is emitted; accepts a bare number of seconds or a unit suffix such as `90s`, `2m`, `1.5h` | 60s |
 
 ## Related packages
 
