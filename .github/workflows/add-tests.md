@@ -21,7 +21,6 @@ imports:
 
 tools:
   github:
-    lockdown: true
     toolsets: [pull_requests, repos]
     min-integrity: none
   edit:
