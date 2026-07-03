@@ -55,7 +55,7 @@ internal sealed class ServerControlMessageSerializer : NamedPipeSerializer<Serve
 
     protected override void SerializeCore(ServerControlMessage objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         // Kind is always written (it is a non-nullable byte).
         WriteUShort(stream, 1);
