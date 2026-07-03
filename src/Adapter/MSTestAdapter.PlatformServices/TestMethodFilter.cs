@@ -31,7 +31,7 @@ internal sealed class TestMethodFilter
     /// Returns ITestCaseFilterExpression for TestProperties supported by adapter.
     /// </summary>
     /// <param name="context">The current context of the run.</param>
-    /// <param name="logger">Handler to report test messages/start/end and results.</param>
+    /// <param name="logger">Logger used to report diagnostic messages (for example, filter parse errors).</param>
     /// <param name="filterHasError">Indicates that the filter is unsupported/has an error.</param>
     /// <returns>A filter expression.</returns>
     internal ITestCaseFilterExpression? GetFilterExpression(IDiscoveryContext? context, IAdapterMessageLogger logger, out bool filterHasError)
@@ -62,7 +62,7 @@ internal sealed class TestMethodFilter
     /// Builds a platform-agnostic <see cref="ITestElementFilter"/> for the properties supported by the adapter.
     /// </summary>
     /// <param name="context">The current context of the run.</param>
-    /// <param name="logger">Handler to report test messages/start/end and results.</param>
+    /// <param name="logger">Logger used to report diagnostic messages (for example, filter parse errors).</param>
     /// <param name="filterHasError">Indicates that the filter is unsupported/has an error.</param>
     /// <returns>
     /// A filter that evaluates <see cref="UnitTestElement"/> instances, or <see langword="null"/> when no
