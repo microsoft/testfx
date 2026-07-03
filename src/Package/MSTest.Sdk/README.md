@@ -18,3 +18,30 @@ Instead, the `.targets` files should split the version specification depending o
   matching `PackageVersion` item carrying the `Version` metadata so CPM resolves the version.
 
 This approach works regardless of `CentralPackageVersionOverrideEnabled` and does not produce `NU1009` warnings.
+
+## Layering on top of a different base SDK
+
+`MSTest.Sdk` implicitly imports `Microsoft.NET.Sdk` as its base SDK, so `<Project Sdk="MSTest.Sdk">`
+is enough for the common case. To combine it with a different base SDK (for example
+`Microsoft.NET.Sdk.Web` for an ASP.NET Core integration test project), import both SDKs manually and
+list `Microsoft.NET.Sdk.Web` first so it owns the base `Microsoft.NET.Sdk` import:
+
+```xml
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.Web" />
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.Web" />
+</Project>
+```
+
+`Sdk.props`/`Sdk.targets` guard their `Microsoft.NET.Sdk` import behind the
+`_MSTestSdkImportsMicrosoftNETSdk` property: `MSTest.Sdk` only imports the base SDK when no other SDK
+has already done so (detected via the `UsingMicrosoftNETSdk` property that `Microsoft.NET.Sdk` sets
+very early). This keeps the manual/mixed layering scenario free of `MSB4011` duplicate-import
+warnings.
