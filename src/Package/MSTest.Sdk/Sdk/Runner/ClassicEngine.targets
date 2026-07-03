@@ -38,6 +38,10 @@
     <EnableMicrosoftTestingExtensionsAzureDevOpsReport Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>
     <MicrosoftTestingExtensionsAzureDevOpsReportVersion Condition=" '$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsAzureDevOpsReportVersion>
 
+    <!-- GitHub Actions (early preview / alpha - has its own pre-release version line
+         seeded by Sdk.props.template and flowed through MSTest.Sdk.csproj). -->
+    <EnableMicrosoftTestingExtensionsGitHubActionsReport Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsGitHubActionsReport>
+
     <!-- HTML report -->
     <EnableMicrosoftTestingExtensionsHtmlReport Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHtmlReport>
     <MicrosoftTestingExtensionsHtmlReportVersion Condition=" '$(MicrosoftTestingExtensionsHtmlReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHtmlReportVersion>
@@ -151,6 +155,13 @@
     </PackageReference>
     <PackageVersion Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$(MicrosoftTestingExtensionsAzureDevOpsReportVersion)"
                     Condition=" '$(EnableMicrosoftTestingExtensionsAzureDevOpsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
+
+    <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Sdk="MSTest"
+                      Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' == 'true' ">
+      <Version Condition=" '$(ManagePackageVersionsCentrally)' != 'true' ">$(MicrosoftTestingExtensionsGitHubActionsReportVersion)</Version>
+    </PackageReference>
+    <PackageVersion Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$(MicrosoftTestingExtensionsGitHubActionsReportVersion)"
+                    Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' == 'true' and '$(ManagePackageVersionsCentrally)' == 'true' " />
 
     <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Sdk="MSTest"
                       Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' == 'true' ">

@@ -43,6 +43,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add experimental `ITestHostLauncher` extension point and `Microsoft.Testing.Extensions.PackagedApp` reference extension for packaged app test host deployment by @Evangelink in [#9454](https://github.com/microsoft/testfx/pull/9454)
 * Forward Azure DevOps logging commands over the dotnet test pipe for multi-assembly test runs by @Evangelink in [#9463](https://github.com/microsoft/testfx/pull/9463)
 * Add `PropertyBag.FirstOrDefault<TProperty>()` for efficient single-property lookup without per-call array allocation by @Evangelink in [#9488](https://github.com/microsoft/testfx/pull/9488)
+* Add experimental `Microsoft.Testing.Extensions.GitHubActionsReport` extension emitting GitHub Actions workflow commands (per-assembly log groups, failure annotations, job summary, slow-test notices) by @azat-msft in [#9541](https://github.com/microsoft/testfx/pull/9541)
 
 ### Fixed
 

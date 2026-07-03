@@ -43,7 +43,7 @@ internal sealed partial class AzureDevOpsTestResultsPublisher
         string currentTestApplicationPath = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         string assemblyName = _testApplicationModuleInfo.TryGetAssemblyName() ?? Path.GetFileNameWithoutExtension(currentTestApplicationPath);
         string automatedTestStorage = Path.GetFileNameWithoutExtension(currentTestApplicationPath);
-        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
         string agentName = _environment.GetEnvironmentVariable("AGENT_NAME") ?? _environment.MachineName;
         string? stageName = _environment.GetEnvironmentVariable("SYSTEM_STAGENAME");
         string? jobName = _environment.GetEnvironmentVariable("SYSTEM_JOBNAME");
