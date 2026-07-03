@@ -1,11 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using DebuggerLaunchMode = Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode;
-using MessageLevel = Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel;
 using StringEx = Microsoft.VisualStudio.TestTools.UnitTesting.StringEx;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -61,7 +60,7 @@ internal sealed partial class MSTestSettings
     }
 #endif
 
-    internal static MSTestSettings? GetSettings(string? runSettingsXml, string settingName, IAdapterMessageLogger? logger)
+    internal static MSTestSettings? GetSettings(string? runSettingsXml, string settingName, IMessageLogger? logger)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
@@ -82,7 +81,7 @@ internal sealed partial class MSTestSettings
         return !reader.EOF ? ToSettings(reader.ReadSubtree(), logger) : null;
     }
 
-    private static MSTestSettings ToSettings(XmlReader reader, IAdapterMessageLogger? logger)
+    private static MSTestSettings ToSettings(XmlReader reader, IMessageLogger? logger)
     {
         if (reader is null)
         {
@@ -109,7 +108,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, captureTraceOutput, "CaptureTraceOutput"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, captureTraceOutput, "CaptureTraceOutput"));
                         }
 
                         break;
@@ -121,7 +120,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapInconclusiveToFailed, "MapInconclusiveToFailed"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapInconclusiveToFailed, "MapInconclusiveToFailed"));
                         }
 
                         break;
@@ -133,7 +132,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapNotRunnableToFailed, "MapNotRunnableToFailed"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapNotRunnableToFailed, "MapNotRunnableToFailed"));
                         }
 
                         break;
@@ -145,7 +144,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, treatDiscoveryWarningsAsErrors, "TreatDiscoveryWarningsAsErrors"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, treatDiscoveryWarningsAsErrors, "TreatDiscoveryWarningsAsErrors"));
                         }
 
                         break;
@@ -167,7 +166,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, considerEmptyDataSourceAsInconclusive, "ConsiderEmptyDataSourceAsInconclusive"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, considerEmptyDataSourceAsInconclusive, "ConsiderEmptyDataSourceAsInconclusive"));
                         }
 
                         break;
@@ -194,7 +193,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, cooperativeCancellationTimeout, "CooperativeCancellationTimeout"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, cooperativeCancellationTimeout, "CooperativeCancellationTimeout"));
                         }
 
                         break;
@@ -206,7 +205,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, orderTestsByNameInClass, "OrderTestsByNameInClass"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, orderTestsByNameInClass, "OrderTestsByNameInClass"));
                         }
 
                         break;
@@ -218,7 +217,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomizeTestOrder, "RandomizeTestOrder"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomizeTestOrder, "RandomizeTestOrder"));
                         }
 
                         break;
@@ -230,7 +229,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomTestOrderSeed, "RandomTestOrderSeed"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomTestOrderSeed, "RandomTestOrderSeed"));
                         }
 
                         break;
@@ -242,7 +241,7 @@ internal sealed partial class MSTestSettings
                         }
                         else
                         {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, launchDebuggerOnAssertionFailure, "LaunchDebuggerOnAssertionFailure"));
+                            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, launchDebuggerOnAssertionFailure, "LaunchDebuggerOnAssertionFailure"));
                         }
 
                         break;
@@ -257,7 +256,7 @@ internal sealed partial class MSTestSettings
         return settings;
     }
 
-    private static void ParseTimeoutSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<int> setSetting)
+    private static void ParseTimeoutSetting(string rawValue, string settingName, IMessageLogger? logger, Action<int> setSetting)
     {
         if (int.TryParse(rawValue, out int result) && result > 0)
         {
@@ -265,7 +264,7 @@ internal sealed partial class MSTestSettings
         }
         else
         {
-            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, rawValue, settingName));
+            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, rawValue, settingName));
         }
     }
 

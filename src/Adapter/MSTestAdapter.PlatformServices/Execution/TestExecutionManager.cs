@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -124,12 +124,12 @@ internal partial class TestExecutionManager
 
         var tests = new List<TestCase>();
 
-        IAdapterMessageLogger logger = frameworkHandle.ToAdapterMessageLogger();
-
         // deploy everything first.
         foreach (string source in sources)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
+
+            var logger = (IMessageLogger)frameworkHandle;
 
             // discover the tests
             GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext, isMTP);

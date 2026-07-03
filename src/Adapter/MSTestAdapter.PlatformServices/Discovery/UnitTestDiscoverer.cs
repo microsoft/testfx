@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -30,7 +31,7 @@ internal class UnitTestDiscoverer
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal void DiscoverTests(
         IEnumerable<string> sources,
-        IAdapterMessageLogger logger,
+        IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext discoveryContext,
         bool isMTP)
@@ -51,7 +52,7 @@ internal class UnitTestDiscoverer
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal virtual void DiscoverTestsInSource(
         string source,
-        IAdapterMessageLogger logger,
+        IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext? discoveryContext,
         bool isMTP)
@@ -85,7 +86,7 @@ internal class UnitTestDiscoverer
                 }
 
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
-                logger.SendMessage(MessageLevel.Warning, message);
+                logger.SendMessage(TestMessageLevel.Warning, message);
             }
         }
 
@@ -108,7 +109,7 @@ internal class UnitTestDiscoverer
 
     private readonly ITestSourceHandler _testSource;
 
-    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IAdapterMessageLogger logger)
+    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
         // Get filter expression and skip discovery in case filter expression has parsing error.
         ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);

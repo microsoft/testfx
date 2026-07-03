@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
@@ -62,8 +63,6 @@ internal partial class TestExecutionManager
         }
 #endif
 
-        IAdapterMessageLogger adapterMessageLogger = frameworkHandle.ToAdapterMessageLogger();
-
         using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
 
@@ -73,7 +72,7 @@ internal partial class TestExecutionManager
         }
 
         // Default test set is filtered tests based on user provided filter criteria
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, adapterMessageLogger, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, frameworkHandle, out bool filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
@@ -143,8 +142,8 @@ internal partial class TestExecutionManager
         if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
         {
             // Parallelization is enabled. Let's do further classification for sets.
-            adapterMessageLogger.SendMessage(
-                MessageLevel.Informational,
+            frameworkHandle.SendMessage(
+                TestMessageLevel.Informational,
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
             // Create test sets for execution, we can execute them in parallel based on parallel settings
@@ -249,7 +248,7 @@ internal partial class TestExecutionManager
                         PlatformServiceProvider.Instance.AdapterTraceLogger.Error("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
                     }
 
-                    adapterMessageLogger.SendMessage(MessageLevel.Error, exceptionToString);
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
                     throw;
                 }
             }
