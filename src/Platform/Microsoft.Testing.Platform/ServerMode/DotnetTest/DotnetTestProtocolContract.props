@@ -8,9 +8,17 @@
       binary protocol. This .props is the single canonical list of the source files that make up that protocol - the
       wire contract (serializer ids + field ids + handshake/session/state constants), the message models, the
       serializers, and the small serializer-registry + base infrastructure they need. The same files are compiled
-      into Microsoft.Testing.Platform (the host side, via its default globbing) AND shared as source with the
-      dotnet/sdk 'dotnet test' implementation (via the Microsoft.Testing.Platform.Internal.DotnetTest source package),
-      so the protocol has ONE source of truth instead of being duplicated by hand.
+      into Microsoft.Testing.Platform (the host side, via its default globbing) AND VENDORED (hand-copied) into the
+      dotnet/sdk 'dotnet test' implementation (see its ObjectFieldIds.cs, which carries a "must be kept aligned with
+      the testfx repo" warning), so the protocol has ONE source of truth instead of being duplicated by hand. Any
+      drift is a silent wire-protocol break.
+
+      testfx is the SOURCE OF TRUTH for these files. This .props is the canonical enumeration of the shared set:
+      it lets the same source files be compiled into a standalone in-repo consumer (the contract test project) that
+      guarantees they build independently, and it tells testfx contributors exactly which files dotnet/sdk vendors.
+      dotnet/sdk tracks the same files in its eng/vendored-files.json manifest and a scheduled workflow opens an
+      issue there whenever these upstream files change, so any change here may require a coordinated port in
+      dotnet/sdk. See also dotnet/sdk eng/vendored-files.md.
 
     SCOPE
       Shared here:
@@ -37,13 +45,8 @@
     USAGE
       Import this file from any project that needs the protocol source. Microsoft.Testing.Platform itself does NOT
       import it (it compiles these files via its default source globbing); importing it there would double-include them.
-
-        The single canonical list of protocol files lives in the @(DotnetTestProtocolContractSource) item below.
-      - Source consumers (e.g. the standalone contract test project) get them as <Compile> items (the default).
-      - The Microsoft.Testing.Platform.Internal.DotnetTest package project sets DotnetTestProtocolContractCompile=false
-        and instead packs @(DotnetTestProtocolContractSource) as contentFiles, so the NuGet and the source-share never
-        drift. The shared serializer source is authored against the testfx global usings; the package's build/ props
-        supply the matching <Using> items to external consumers (e.g. dotnet/sdk).
+      The single canonical list of protocol files lives in the @(DotnetTestProtocolContractSource) item below;
+      importing consumers (e.g. the standalone contract test project) get them as <Compile> items.
   -->
   <PropertyGroup>
     <_DotnetTestProtocolPlatform>$(MSBuildThisFileDirectory)..\..</_DotnetTestProtocolPlatform>
@@ -73,7 +76,7 @@
     <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\Serializers\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(DotnetTestProtocolContractCompile)' != 'false' ">
+  <ItemGroup>
     <Compile Include="@(DotnetTestProtocolContractSource)" Link="DotnetTestProtocol\%(Filename)%(Extension)" />
   </ItemGroup>
 
