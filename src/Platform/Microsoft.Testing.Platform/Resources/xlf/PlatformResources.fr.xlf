@@ -436,7 +436,7 @@
       </trans-unit>
       <trans-unit id="OnlyOneTestHostLauncherSupported">
         <source>Only one test host launcher can be registered.</source>
-        <target state="new">Only one test host launcher can be registered.</target>
+        <target state="translated">Un seul lanceur d’hôtes de test peut être inscrit.</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
