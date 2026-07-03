@@ -38,62 +38,101 @@ For deeper guidance — creating, updating, debugging, upgrading, or wrapping MC
 
 ## Secrets & authentication
 
-Agentic workflows authenticate through repository secrets. Two are essential:
+Agentic workflows authenticate through repository secrets:
 
-| Secret | Required by | Notes |
+| Secret / permission | Used for | Notes |
 | --- | --- | --- |
-| `COPILOT_GITHUB_TOKEN` | Every `copilot`-engine workflow | Drives the GitHub Copilot CLI (model inference). Validated at startup — a missing/expired value fails the run early. |
-| `GH_AW_GITHUB_TOKEN` | Every **lockdown** workflow (see below) | A **fine-grained PAT** used by the GitHub MCP server and the activation-time lockdown check. |
-
-### Lockdown mode requires a fine-grained PAT
-
-Several workflows set `lockdown: true` on the GitHub MCP tool. Locally these are
-[`add-tests.md`](./add-tests.md), [`weekly-issue-activity.md`](./weekly-issue-activity.md),
-[`shared/address-review-shared.md`](./shared/address-review-shared.md), and
-[`shared/grade-tests-shared.md`](./shared/grade-tests-shared.md); several imported
-`githubnext/agentics` workflows (Issue Arborist, Sub-Issue Closer, …) also enable it.
-
-In lockdown mode `gh-aw` **rejects the default `GITHUB_TOKEN`** and requires a custom
-fine-grained PAT. The compiled `.lock.yml` resolves the token in this order:
-
-```text
-secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN
-```
-
-If neither custom secret is present, the **activation job fails before the agent even
-runs** with a *"Lockdown mode is enabled but no custom GitHub token is configured"* error,
-and the workflow files an `[aw] … failed` issue. Because every lockdown workflow shares the
-same secret, a single missing/expired PAT produces a **burst** of such issues at once.
-
-### Rotation — the PAT expires
+| `COPILOT_GITHUB_TOKEN` | GitHub Copilot CLI (model inference) | Fine-grained PAT. **Preferably replaced** by the `copilot-requests: write` permission — see below. |
+| `GH_AW_GITHUB_TOKEN` | GitHub MCP reads / safe-output writes that need more than the default `GITHUB_TOKEN` | Fine-grained PAT and the token that used to be forced by lockdown mode. **Preferably replaced** by a GitHub App — see below. |
 
 > [!IMPORTANT]
-> `GH_AW_GITHUB_TOKEN` is a **fine-grained PAT and therefore expires** (GitHub caps the
-> lifetime at ~1 year). When it lapses, *all* lockdown workflows fail activation
-> simultaneously. Rotate it **before** the expiry date rather than reacting to the failure
-> issues.
+> **Fine-grained PATs expire and, under the `microsoft` org policy, may live at most ~1 week.**
+> A PAT-based setup therefore breaks on a short cycle: when the token lapses, every workflow
+> that depends on it fails at once and files a burst of `[aw] … failed` issues. Prefer the
+> two PAT-free options below — together they let this repo run agentic workflows with **no
+> long-lived PAT at all**.
 
-Provisioning / rotating the token (requires repo admin):
+### Preferred: eliminate the expiring PATs
 
-1. Create a fine-grained PAT scoped to `microsoft/testfx` with **read** access to *Contents*,
-   *Metadata*, and *Issues* (add *Pull requests* read for the PR-oriented workflows). Choose the
-   longest allowed expiry.
-2. Store it as the `GH_AW_GITHUB_TOKEN` repository secret:
+**1. Replace `COPILOT_GITHUB_TOKEN` with `copilot-requests: write`.**
+When a workflow's `permissions:` block grants `copilot-requests: write`, gh-aw authenticates
+Copilot inference with the per-run GitHub Actions token and bills through the org's Copilot
+subscription — no PAT, no secret to rotate. When the permission is present any
+`COPILOT_GITHUB_TOKEN` value is ignored for inference.
+
+```yaml
+permissions:
+  contents: read
+  copilot-requests: write
+```
+
+**2. Replace `GH_AW_GITHUB_TOKEN` with an org-owned GitHub App.**
+A GitHub App mints a **short-lived token at the start of each run, scoped to the job's
+`permissions:`, and automatically revoked when the run ends (even on failure)** — which
+satisfies the org's short-PAT policy without any manual rotation. A single App can serve
+every GitHub auth need in these workflows (MCP reads *and* safe-output writes); only
+`COPILOT_GITHUB_TOKEN` cannot use an App (covered by option 1 instead).
+
+Set it up once (requires org admin to create/install the App):
+
+1. Create a GitHub App owned by the `microsoft` org (Settings → Developer settings → GitHub
+   Apps). Grant the read/write repository permissions the workflows need (e.g. Contents,
+   Issues, Pull requests), generate a **private key** (`.pem`), and **install** the App on
+   `microsoft/testfx`.
+2. Store the App ID as a repository **variable** and the private key as a **secret**:
 
    ```bash
-   gh aw secrets set GH_AW_GITHUB_TOKEN --value "YOUR_FINE_GRAINED_PAT"
-   # or (GitHub CLI): gh secret set GH_AW_GITHUB_TOKEN --repo microsoft/testfx --body "YOUR_FINE_GRAINED_PAT"
+   gh variable set APP_ID   --repo microsoft/testfx --body "<app-id>"
+   gh secret   set APP_PRIVATE_KEY --repo microsoft/testfx --body "$(cat path/to/private-key.pem)"
    ```
 
-3. Re-run one lockdown workflow (e.g. `gh aw run weekly-issue-activity`) to confirm activation
-   succeeds.
+3. Reference the App in the workflow frontmatter (source `.md`, then recompile):
 
-See the upstream reference: <https://github.com/github/gh-aw/blob/main/docs/src/content/docs/reference/auth.mdx>.
+   ```yaml
+   tools:
+     github:
+       toolsets: [repos, issues, pull_requests]
+       github-app:
+         client-id: ${{ vars.APP_ID }}
+         private-key: ${{ secrets.APP_PRIVATE_KEY }}
+   # and/or, for write-backs:
+   safe-outputs:
+     github-app:
+       client-id: ${{ vars.APP_ID }}
+       private-key: ${{ secrets.APP_PRIVATE_KEY }}
+   ```
+
+   Add `ignore-if-missing: true` under `github-app:` if a workflow must still run on fork PRs
+   (where App secrets are unavailable); it then falls back to `GH_AW_GITHUB_TOKEN || GITHUB_TOKEN`.
+
+See the upstream reference: <https://github.com/github/gh-aw/blob/main/docs/src/content/docs/reference/auth.mdx#using-a-github-app-for-authentication>.
+
+### Lockdown mode has been removed from this repo's workflows
+
+Historically the four local workflows that read issues/PRs
+([`add-tests.md`](./add-tests.md), [`weekly-issue-activity.md`](./weekly-issue-activity.md),
+[`shared/address-review-shared.md`](./shared/address-review-shared.md), and
+[`shared/grade-tests-shared.md`](./shared/grade-tests-shared.md)) set `lockdown: true` on the
+GitHub MCP tool. Lockdown mode **rejected the default `GITHUB_TOKEN`** and forced a custom PAT
+(`GH_AW_GITHUB_MCP_SERVER_TOKEN || GH_AW_GITHUB_TOKEN || GITHUB_TOKEN`), so a single
+missing/expired PAT failed *all* of them at activation.
+
+`lockdown:` is **deprecated** upstream in favour of [integrity filtering](https://github.com/github/gh-aw/blob/main/docs/src/content/docs/reference/integrity.md)
+(`min-integrity`). These workflows already declared `min-integrity: none` (they intentionally
+examine any issue/PR), so `lockdown: true` only added the PAT requirement. It has been dropped;
+the content-filtering behaviour is unchanged, and the default `GITHUB_TOKEN` now suffices unless
+a workflow needs elevated access (then use the GitHub App above).
+
+> [!NOTE]
+> Legacy fallback only: if you must keep a PAT (e.g. before the App is provisioned), store a
+> fine-grained PAT — scoped to `microsoft/testfx` with read access to *Contents*, *Metadata*,
+> *Issues* (and *Pull requests* for the PR workflows) — as `GH_AW_GITHUB_TOKEN`
+> (`gh aw secrets set GH_AW_GITHUB_TOKEN --value "…"`), and rotate it before every expiry.
 
 > [!NOTE]
 > Not every `[aw] … failed` issue is a token problem. The failure banner usually names the
 > cause — *AI credits budget exceeded*, an engine/inference error, or transient
-> container-image / AWF-binary download failures are all unrelated to `GH_AW_GITHUB_TOKEN`.
+> container-image / AWF-binary download failures are all unrelated to authentication.
 > Only the *"Lockdown Check Failed … custom GitHub token"* banner indicates a PAT issue.
 
 ## Catalog
