@@ -2,9 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -18,11 +17,11 @@ internal partial class TestExecutionManager
         TestTools.UnitTesting.TestResult[] unitTestResults,
         DateTimeOffset startTime,
         DateTimeOffset endTime,
-        ITestResultRecorder testResultRecorder)
+        ITestExecutionRecorder testExecutionRecorder)
     {
         if (unitTestResults.Length == 0)
         {
-            testResultRecorder.RecordEmptyResult(test);
+            testExecutionRecorder.RecordEnd(test, TestOutcome.None);
             return;
         }
 
@@ -30,14 +29,39 @@ internal partial class TestExecutionManager
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-#if !WINDOWS_UWP && !WIN_UI
-            if (testResultRecorder.RecordResult(test, unitTestResult, startTime, endTime))
+            var testResult = unitTestResult.ToTestResult(
+                test,
+                startTime,
+                endTime,
+                _environment.MachineName,
+                MSTestSettings.CurrentSettings);
+
+            testExecutionRecorder.RecordEnd(test, testResult.Outcome);
+
+            if (testResult.Outcome == TestOutcome.Failed)
             {
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
+                }
+
+#if !WINDOWS_UWP && !WIN_UI
                 _hasAnyTestFailed = true;
-            }
-#else
-            testResultRecorder.RecordResult(test, unitTestResult, startTime, endTime);
 #endif
+            }
+
+            try
+            {
+                if (testResult.Outcome != TestOutcome.NotFound
+                    || !RuntimeContext.IsHotReloadEnabled)
+                {
+                    testExecutionRecorder.RecordResult(testResult);
+                }
+            }
+            catch (TestCanceledException)
+            {
+                // Ignore this exception
+            }
         }
     }
 
@@ -71,10 +95,6 @@ internal partial class TestExecutionManager
             ? new RemotingMessageLogger(testExecutionRecorder)
             : testExecutionRecorder;
 
-        // Translate the VSTest recorder into the platform-agnostic result recorder a single time for this
-        // test set. This is the boundary at which VSTest result construction is applied.
-        ITestResultRecorder testResultRecorder = testExecutionRecorder.ToTestResultRecorder(_environment.MachineName, MSTestSettings.CurrentSettings);
-
         foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
@@ -85,7 +105,7 @@ internal partial class TestExecutionManager
 
             UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
 
-            testResultRecorder.RecordStart(currentTest);
+            testExecutionRecorder.RecordStart(currentTest);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
@@ -123,7 +143,7 @@ internal partial class TestExecutionManager
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
-            SendTestResults(currentTest, unitTestResult, startTime, endTime, testResultRecorder);
+            SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
         }
     }
 }

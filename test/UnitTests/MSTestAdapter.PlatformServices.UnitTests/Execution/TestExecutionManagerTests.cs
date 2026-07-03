@@ -125,7 +125,7 @@ public class TestExecutionManagerTests : TestContainer
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] unitTestResults = [];
 
-        _testExecutionManager.SendTestResults(testCase, unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle.ToTestResultRecorder(EnvironmentWrapper.Instance.MachineName, MSTestSettings.CurrentSettings));
+        _testExecutionManager.SendTestResults(testCase, unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle);
 
         _frameworkHandle.TestCaseEndList.Should().Equal("PassingTest:None");
         _frameworkHandle.ResultsList.Should().BeEmpty();
