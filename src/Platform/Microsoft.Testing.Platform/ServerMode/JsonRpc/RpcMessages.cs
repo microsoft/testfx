@@ -42,16 +42,38 @@ internal sealed record InitializeResponseArgs(int? ProcessId, ServerInfo ServerI
 internal record RequestArgsBase(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter);
 
 internal sealed record DiscoverRequestArgs(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter) :
-    RequestArgsBase(RunId, TestNodes, GraphFilter);
+    RequestArgsBase(RunId, TestNodes, GraphFilter)
+{
+    // The compiler-generated record ToString renders the TestNodes collection using its default
+    // Object.ToString (e.g. 'System.Collections.Generic.List`1[...]'), which is unreadable in the
+    // diagnostic logs. Render the members explicitly instead.
+    public override string ToString()
+        => RpcMessageFormatting.FormatRequestArgs(nameof(DiscoverRequestArgs), RunId, TestNodes, GraphFilter);
+}
 
 internal record ResponseArgsBase;
 
 internal sealed record DiscoverResponseArgs : ResponseArgsBase;
 
 internal sealed record RunRequestArgs(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter) :
-    RequestArgsBase(RunId, TestNodes, GraphFilter);
+    RequestArgsBase(RunId, TestNodes, GraphFilter)
+{
+    public override string ToString()
+        => RpcMessageFormatting.FormatRequestArgs(nameof(RunRequestArgs), RunId, TestNodes, GraphFilter);
+}
 
-internal sealed record RunResponseArgs(Artifact[] Artifacts) : ResponseArgsBase;
+internal sealed record RunResponseArgs(Artifact[] Artifacts) : ResponseArgsBase
+{
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(RunResponseArgs)).Append(" { ");
+        builder.Append($"{nameof(Artifacts)} = ");
+        RpcMessageFormatting.AppendItems(builder, Artifacts);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}
 
 internal sealed record Artifact(string Uri, string Producer, string Type, string DisplayName, string? Description = null);
 
@@ -81,16 +103,134 @@ internal sealed record ServerTestingCapabilities(
     bool SupportsAttachments,
     bool MultiConnectionProvider);
 
-internal sealed record TestNodeStateChangedEventArgs(Guid RunId, TestNodeUpdateMessage[]? Changes);
+internal sealed record TestNodeStateChangedEventArgs(Guid RunId, TestNodeUpdateMessage[]? Changes)
+{
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestNodeStateChangedEventArgs)).Append(" { ");
+        builder.Append($"{nameof(RunId)} = ").Append(RunId);
+        builder.Append($", {nameof(Changes)} = ");
+        RpcMessageFormatting.AppendItems(builder, Changes);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}
 
 internal sealed record LogEventArgs(ServerLogMessage LogMessage);
 
-internal sealed record TelemetryEventArgs(string EventName, IDictionary<string, object> Metrics);
+internal sealed record TelemetryEventArgs(string EventName, IDictionary<string, object> Metrics)
+{
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TelemetryEventArgs)).Append(" { ");
+        builder.Append($"{nameof(EventName)} = ").Append(EventName);
+        builder.Append($", {nameof(Metrics)} = ");
+        RpcMessageFormatting.AppendDictionary(builder, Metrics);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}
 
-internal sealed record ProcessInfoArgs(string Program, string? Args, string? WorkingDirectory, IDictionary<string, string?>? EnvironmentVariables);
+internal sealed record ProcessInfoArgs(string Program, string? Args, string? WorkingDirectory, IDictionary<string, string?>? EnvironmentVariables)
+{
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(ProcessInfoArgs)).Append(" { ");
+        builder.Append($"{nameof(Program)} = ").Append(Program);
+        builder.Append($", {nameof(Args)} = ").Append(Args);
+        builder.Append($", {nameof(WorkingDirectory)} = ").Append(WorkingDirectory);
+        builder.Append($", {nameof(EnvironmentVariables)} = ");
+        RpcMessageFormatting.AppendDictionary(builder, EnvironmentVariables);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}
 
 internal sealed record AttachDebuggerInfoArgs(int ProcessId);
 
-internal sealed record class TestsAttachments(RunTestAttachment[] Attachments);
+internal sealed record class TestsAttachments(RunTestAttachment[] Attachments)
+{
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+        builder.Append(nameof(TestsAttachments)).Append(" { ");
+        builder.Append($"{nameof(Attachments)} = ");
+        RpcMessageFormatting.AppendItems(builder, Attachments);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+}
 
 internal sealed record class RunTestAttachment(string? Uri, string? Producer, string? Type, string? DisplayName, string? Description);
+
+/// <summary>
+/// Helpers to render JSON-RPC message members that hold collections or dictionaries. The compiler-generated
+/// record <see cref="object.ToString"/> would otherwise print these members using the default
+/// <see cref="object.ToString"/> (e.g. <c>System.Collections.Generic.List`1[...]</c>), which is unreadable
+/// when the messages are dumped to the diagnostic logs.
+/// </summary>
+internal static class RpcMessageFormatting
+{
+    public static string FormatRequestArgs(string typeName, Guid runId, ICollection<TestNode>? testNodes, string? graphFilter)
+    {
+        var builder = new StringBuilder();
+        builder.Append(typeName).Append(" { ");
+        builder.Append("RunId = ").Append(runId);
+        builder.Append(", TestNodes = ");
+        AppendItems(builder, testNodes);
+        builder.Append(", GraphFilter = ").Append(graphFilter);
+        builder.Append(" }");
+        return builder.ToString();
+    }
+
+    public static void AppendItems<T>(StringBuilder builder, IEnumerable<T>? items)
+    {
+        if (items is null)
+        {
+            builder.Append("<null>");
+            return;
+        }
+
+        builder.Append('[');
+        bool first = true;
+        foreach (T item in items)
+        {
+            if (!first)
+            {
+                builder.Append(", ");
+            }
+
+            first = false;
+            builder.Append(item);
+        }
+
+        builder.Append(']');
+    }
+
+    public static void AppendDictionary<TValue>(StringBuilder builder, IDictionary<string, TValue>? dictionary)
+    {
+        if (dictionary is null)
+        {
+            builder.Append("<null>");
+            return;
+        }
+
+        builder.Append('[');
+        bool first = true;
+        foreach (KeyValuePair<string, TValue> pair in dictionary)
+        {
+            if (!first)
+            {
+                builder.Append(", ");
+            }
+
+            first = false;
+            builder.Append(pair.Key).Append(" = ").Append(pair.Value);
+        }
+
+        builder.Append(']');
+    }
+}
