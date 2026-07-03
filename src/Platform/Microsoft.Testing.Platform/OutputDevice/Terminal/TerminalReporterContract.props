@@ -5,9 +5,12 @@
 
     PURPOSE
       The terminal reporter (progress rendering, summary, ANSI/non-ANSI terminals, state model) is hard-forked
-      into dotnet/sdk's 'dotnet test' implementation. This .props lets the same source files be compiled into
-      another assembly - a standalone consumer test, or (once packaged as a source NuGet) the dotnet/sdk copy -
-      so the reporter has a single source of truth instead of being duplicated by hand.
+      into dotnet/sdk's 'dotnet test' implementation. testfx is the SOURCE OF TRUTH; this .props is the canonical
+      enumeration of the shared reporter source. It lets the same files be compiled into a standalone in-repo
+      consumer (the reporter contract test project) that guarantees they build independently, and it tells testfx
+      contributors exactly which files dotnet/sdk vendors. dotnet/sdk hand-copies these files and tracks them in its
+      eng/vendored-files.json manifest; a scheduled workflow there opens an issue whenever these upstream files
+      change, so any change here may require a coordinated port in dotnet/sdk (see dotnet/sdk eng/vendored-files.md).
 
     SCOPE
       The set is the reporter + its rendering/state types + the small platform abstractions it depends on
@@ -30,21 +33,16 @@
       Microsoft.Testing.Platform we DROP the duplicated copies (see the _RemoveTerminalReporter* target below) and let
       the single reporter use of 'SystemConsoleColor?' (TerminalTestReporter.Messaging.cs) bind to the platform's
       public types - no CS0436 and no consumer-side NoWarn. A consumer that does NOT reference the platform keeps the
-      copies and compiles standalone. The NuGet source package applies the same drop in its build/ props.
+      copies and compiles standalone.
 
     USAGE
       Import this file from any project that needs the reporter source. Microsoft.Testing.Platform itself does
       NOT import it (it compiles these files via its default source globbing); importing it there would
-      double-include them.
-
-      - Source consumers (e.g. the standalone contract test project) get the .cs as <Compile> items and the resx
-        as an <EmbeddedResource GenerateSource="true"> (the defaults below), so the generated TerminalResources
-        accessor + satellites are embedded in the consumer's own assembly. No IS_CORE_MTP symbol is needed:
-        TerminalResources.cs (the only IS_CORE_MTP-conditional file) is excluded, and the resx generates the
-        accessor unconditionally.
-      - A future Microsoft.Testing.Platform.DotnetTestTerminal package sets TerminalReporterContractCompile=false
-        and instead packs @(TerminalReporterContractSource) + @(TerminalReporterContractResource) as contentFiles,
-        so the NuGet and the source-share never drift.
+      double-include them. Importing consumers (e.g. the standalone contract test project) get the .cs as <Compile>
+      items and the resx as an <EmbeddedResource GenerateSource="true"> (the defaults below), so the generated
+      TerminalResources accessor + satellites are embedded in the consumer's own assembly. No IS_CORE_MTP symbol is
+      needed: TerminalResources.cs (the only IS_CORE_MTP-conditional file) is excluded, and the resx generates the
+      accessor unconditionally.
   -->
 
   <PropertyGroup>
@@ -83,7 +81,7 @@
     <TerminalReporterContractResource Include="$(MSBuildThisFileDirectory)TerminalResources.resx" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TerminalReporterContractCompile)' != 'false' ">
+  <ItemGroup>
     <Compile Include="@(TerminalReporterContractSource)" Link="TerminalReporter\%(RecursiveDir)%(Filename)%(Extension)" />
     <!-- No Link on the resource: its manifest name / generated-accessor namespace must stay
          Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalResources so the reporter source resolves it. -->
@@ -95,13 +93,11 @@
     contract ALSO references Microsoft.Testing.Platform, compiling local copies would raise CS0436 (conflicts with the
     imported public types). Drop the local copies in that case so the reporter's single 'SystemConsoleColor?' use
     binds to the platform's public types instead - no CS0436, no NoWarn. A consumer that does NOT reference the
-    platform keeps the copies and compiles standalone. The NuGet source package applies the same drop in its build/
-    props for external consumers.
+    platform keeps the copies and compiles standalone.
   -->
   <Target Name="_RemoveTerminalReporterDuplicatePublicColorAbstractions"
           AfterTargets="ResolveReferences"
-          BeforeTargets="CoreCompile"
-          Condition=" '$(TerminalReporterContractCompile)' != 'false' ">
+          BeforeTargets="CoreCompile">
     <ItemGroup>
       <_TerminalReporterPlatformRef Remove="@(_TerminalReporterPlatformRef)" />
       <_TerminalReporterPlatformRef Include="@(ReferencePath)" Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' " />
