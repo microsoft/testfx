@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsAnnotationsRequiresAzureDevOps">
         <source>'--report-azdo-annotations' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-annotations' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-annotations'를 사용하려면 '--report-azdo'를 사용하도록 설정해야 합니다</target>
         <note>{Locked="--report-azdo-annotations"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsGroupsRequiresAzureDevOps">
         <source>'--report-azdo-groups' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-groups' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-groups'를 사용하려면 '--report-azdo'를 사용하도록 설정해야 합니다</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -214,7 +214,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="new">Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <target state="translated">어셈블리별 Azure DevOps 로그 그룹을 사용하거나 사용하지 않도록 설정합니다('on' 또는 'off'). 기본값은 'on'입니다. '--report-azdo'가 필요합니다.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' and 'off'.</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' and 'off'.</target>
+        <target state="translated">값 '{0}'이(가) 잘못되었습니다. 유효한 값은 'on'과 'off'입니다.</target>
         <note>{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="InvalidSeverity">
