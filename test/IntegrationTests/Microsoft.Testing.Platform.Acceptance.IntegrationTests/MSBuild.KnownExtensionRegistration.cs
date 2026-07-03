@@ -22,6 +22,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
             .PatchCodeWithReplace("$TargetFrameworks$", tfm)
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
             .PatchCodeWithReplace("$MicrosoftTestingExtensionsVideoRecorderVersion$", MicrosoftTestingExtensionsVideoRecorderVersion));
         DotnetMuxerResult result = await DotnetCli.RunAsync($"{(verb == Verb.publish ? $"publish -f {tfm}" : "build")}  -c {compilationMode} -r {RID} {testAsset.TargetAssetPath} -v:n", cancellationToken: TestContext.CancellationToken);
@@ -34,6 +35,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         testHostResult.AssertOutputContains("--publish-azdo-run-name");
         testHostResult.AssertOutputContains("--publish-azdo-test-results");
         testHostResult.AssertOutputContains("--report-ctrf");
+        testHostResult.AssertOutputContains("--report-gh");
         testHostResult.AssertOutputContains("--report-html");
         testHostResult.AssertOutputContains("--report-junit");
         testHostResult.AssertOutputContains("--report-trx");
@@ -48,6 +50,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         Assert.Contains("Microsoft.Testing.Extensions.AzureDevOpsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CrashDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.CtrfReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
+        Assert.Contains("Microsoft.Testing.Extensions.GitHubActionsReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HangDump.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HotReload.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
         Assert.Contains("Microsoft.Testing.Extensions.HtmlReport.TestingPlatformBuilderHook.AddExtensions", generatedSource.Text, generatedSource.Text);
@@ -112,6 +115,7 @@ public class MSBuildTests_KnownExtensionRegistration : AcceptanceTestBase<NopAss
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />

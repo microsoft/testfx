@@ -81,7 +81,7 @@ internal abstract class ReportEngineBase
         // TestResults folder overwrites the previous file (with a warning), matching
         // the behavior of an explicitly-provided file name.
         string moduleName = Path.GetFileNameWithoutExtension(testApplicationModule);
-        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        string targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
         string architecture = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
         string raw = $"{moduleName}_{targetFrameworkMoniker}_{architecture}.{extension}";
         return ReplaceInvalidFileNameChars(raw);
