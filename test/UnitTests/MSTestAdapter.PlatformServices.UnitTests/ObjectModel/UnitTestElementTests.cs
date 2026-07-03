@@ -33,6 +33,44 @@ public class UnitTestElementTests : TestContainer
 
     #endregion
 
+    #region Source resolution / host test case tests
+
+    public void WithUpdatedSourceShouldReturnSameInstanceWhenSourceUnchanged()
+        => _unitTestElement.WithUpdatedSource("A").Should().BeSameAs(_unitTestElement);
+
+    public void WithUpdatedSourceShouldReturnCloneWithNewSourceAndLeaveOriginalUnchanged()
+    {
+        UnitTestElement clone = _unitTestElement.WithUpdatedSource("B");
+
+        clone.Should().NotBeSameAs(_unitTestElement);
+        clone.TestMethod.AssemblyName.Should().Be("B");
+        // The original element (and its test method) must not be mutated by the clone.
+        _unitTestElement.TestMethod.AssemblyName.Should().Be("A");
+        clone.TestMethod.Should().NotBeSameAs(_testMethod);
+    }
+
+    public void GetOrCreateHostTestCaseShouldReturnHostHandleWhenPresent()
+    {
+        var hostTestCase = new TestCase("C.M", EngineConstants.ExecutorUri, "A");
+        _unitTestElement.HostRecordingHandle = hostTestCase;
+
+        _unitTestElement.GetOrCreateHostTestCase().Should().BeSameAs(hostTestCase);
+    }
+
+    public void GetOrCreateHostTestCaseShouldMaterializeAndCacheWhenNoHandle()
+    {
+        _unitTestElement.HostRecordingHandle.Should().BeNull();
+
+        TestCase materialized = _unitTestElement.GetOrCreateHostTestCase();
+
+        materialized.Should().NotBeNull();
+        // Subsequent calls (deployment, test-start, each reported result) reuse the same instance.
+        _unitTestElement.GetOrCreateHostTestCase().Should().BeSameAs(materialized);
+        _unitTestElement.HostRecordingHandle.Should().BeSameAs(materialized);
+    }
+
+    #endregion
+
     #region ToTestCase tests
 
     public void ToTestCaseShouldSetFullyQualifiedName()

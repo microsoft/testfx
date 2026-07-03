@@ -95,17 +95,35 @@ internal sealed class UnitTestElement
     internal IReadOnlyDictionary<string, object?>? ExecutionContextProperties { get; set; }
 
     /// <summary>
-    /// Gets or sets an opaque handle to the host's original representation of this test, used only to report
-    /// its lifecycle and results back to the host with full fidelity (preserving any host-injected data that
-    /// the neutral model does not otherwise carry). It is set at the platform boundary by the adapter and is
-    /// <see langword="null"/> for tests discovered internally by the platform services. The platform services
-    /// engine treats it as opaque; only the result-recording bridge interprets it.
+    /// Gets or sets the host's test case for this test, used to report its lifecycle and results back to the
+    /// host with full fidelity (preserving any host-injected data — such as test-case-management properties —
+    /// that the neutral model does not otherwise carry) and to describe it to the (still VSTest-based)
+    /// deployment service. For tests handed to the adapter by a host it is that original test case; for tests
+    /// discovered internally by the platform services it is <see langword="null"/> until materialized on
+    /// demand by <see cref="GetOrCreateHostTestCase"/>. The platform services engine treats it as opaque; only
+    /// the result-recording bridge and the deployment boundary interpret it.
     /// </summary>
 #if NETFRAMEWORK
-    // Result recording happens on the source-processing side; the isolation host copy never reads it.
+    // Result recording and deployment happen on the source-processing side; the isolation host copy never reads it.
     [field: NonSerialized]
 #endif
     internal object? HostRecordingHandle { get; set; }
+
+    /// <summary>
+    /// Returns the host test case for this test, reusing the host-provided one when present and otherwise
+    /// materializing a single VSTest test case on demand and caching it (so deployment, test-start and every
+    /// reported result share one instance, matching the historical "one test case per discovered test").
+    /// </summary>
+    internal TestCase GetOrCreateHostTestCase()
+    {
+        if (HostRecordingHandle is not TestCase testCase)
+        {
+            testCase = ToTestCase();
+            HostRecordingHandle = testCase;
+        }
+
+        return testCase;
+    }
 
     internal UnitTestElement Clone()
     {

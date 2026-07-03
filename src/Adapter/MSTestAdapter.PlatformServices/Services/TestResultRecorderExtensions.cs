@@ -89,9 +89,10 @@ internal static class TestResultRecorderExtensions
         /// Resolves the VSTest <see cref="TestCase"/> to record against. When the element carries the host's
         /// original representation (tests handed to the adapter to run), that exact test case is reused so all
         /// host-injected data (including test-case-management properties) is preserved with full fidelity;
-        /// otherwise the test case is materialized from the neutral element (tests discovered internally).
+        /// otherwise a single test case is materialized from the neutral element and reused (tests discovered
+        /// internally).
         /// </summary>
         private static TestCase ResolveTestCase(UnitTestElement testElement)
-            => testElement.HostRecordingHandle as TestCase ?? testElement.ToTestCase();
+            => testElement.GetOrCreateHostTestCase();
     }
 }

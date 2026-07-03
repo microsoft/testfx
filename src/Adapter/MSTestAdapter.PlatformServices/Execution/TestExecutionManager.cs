@@ -164,14 +164,14 @@ internal partial class TestExecutionManager
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
-    /// Materializes the VSTest test cases required by the (still VSTest-based) deployment service. When an
-    /// element carries the host's original test case (tests handed to the adapter to run) that exact instance
-    /// is reused; otherwise it is materialized from the neutral element (tests discovered internally). This is
-    /// the single remaining place where execution touches the VSTest test case type, kept until the deployment
-    /// service itself is made platform-agnostic in a later phase.
+    /// Materializes the VSTest test cases required by the (still VSTest-based) deployment service. Reuses each
+    /// element's host test case when present (tests handed to the adapter to run) and otherwise materializes
+    /// and caches one (tests discovered internally), so deployment and result recording share a single test
+    /// case per test. This is the single remaining place where execution touches the VSTest test case type,
+    /// kept until the deployment service itself is made platform-agnostic in a later phase.
     /// </summary>
     private static TestCase[] ToHostTestCasesForDeployment(IEnumerable<UnitTestElement> tests)
-        => [.. tests.Select(static e => e.HostRecordingHandle as TestCase ?? e.ToTestCase())];
+        => [.. tests.Select(static e => e.GetOrCreateHostTestCase())];
 #endif
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
