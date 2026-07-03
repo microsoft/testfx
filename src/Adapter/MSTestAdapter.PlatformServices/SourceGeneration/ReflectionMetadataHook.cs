@@ -127,11 +127,12 @@ public static class ReflectionMetadataHook
     /// <para>
     /// <b>Ownership transfer.</b> The adapter takes ownership of every collection passed in
     /// (the <paramref name="types"/> array, the <paramref name="assemblyAttributes"/> array, and
-    /// each dictionary with its value arrays) and stores them without cloning. The generator emits
-    /// fresh, throwaway collections for each call, so the caller MUST NOT mutate any of these
-    /// inputs after the call returns. This trades the previous defensive copies for zero-copy
-    /// startup, relying on the single trusted caller (the generator, versioned in lockstep with
-    /// this adapter) rather than defending a public surface that is documented as not for direct use.
+    /// each dictionary with its value arrays) and stores them without cloning. Callers MUST hand
+    /// over freshly-built collections and MUST NOT mutate them after the call returns; the source
+    /// generator (the only intended caller) already emits fresh, throwaway collections that satisfy
+    /// this. This is a contract about ownership and mutation, not caller identity: it trades the
+    /// previous defensive copies for zero-copy startup on the understanding that the inputs are the
+    /// adapter's to keep.
     /// </para>
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
