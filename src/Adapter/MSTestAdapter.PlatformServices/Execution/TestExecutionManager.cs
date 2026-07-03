@@ -110,7 +110,7 @@ internal partial class TestExecutionManager
 #endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
-        CacheSessionParameters(runContext, frameworkHandle);
+        CacheSessionParameters(runContext, frameworkHandle.ToAdapterMessageLogger());
 
         // Execute the tests
         await ExecuteTestsAsync(tests, runContext, frameworkHandle, testResultRecorder, isDeploymentDone).ConfigureAwait(false);
@@ -154,7 +154,7 @@ internal partial class TestExecutionManager
 #endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
-        CacheSessionParameters(runContext, frameworkHandle);
+        CacheSessionParameters(runContext, frameworkHandle.ToAdapterMessageLogger());
 
         // Run tests.
         await ExecuteTestsAsync(tests, runContext, frameworkHandle, testResultRecorder, isDeploymentDone).ConfigureAwait(false);

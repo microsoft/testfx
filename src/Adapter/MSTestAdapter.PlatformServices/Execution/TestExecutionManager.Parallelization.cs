@@ -26,7 +26,7 @@ internal partial class TestExecutionManager
     {
         _testResultRecorder = testResultRecorder;
 
-        InitializeRandomTestOrder(frameworkHandle);
+        InitializeRandomTestOrder(frameworkHandle.ToAdapterMessageLogger());
 
         var testsBySource = (from test in tests
                              group test by test.TestMethod.AssemblyName into testGroup
@@ -223,7 +223,7 @@ internal partial class TestExecutionManager
 
                                 if (queue.TryDequeue(out IEnumerable<UnitTestElement>? testSet))
                                 {
-                                    await ExecuteTestsWithTestRunnerAsync(testSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                                    await ExecuteTestsWithTestRunnerAsync(testSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
                                 }
                             }
                         }
@@ -258,17 +258,17 @@ internal partial class TestExecutionManager
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
-                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
             }
         }
         else
         {
-            await ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+            await ExecuteTestsWithTestRunnerAsync(testsToRun, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
         }
 
         if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
         {
-            testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
+            testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(adapterMessageLogger));
         }
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)

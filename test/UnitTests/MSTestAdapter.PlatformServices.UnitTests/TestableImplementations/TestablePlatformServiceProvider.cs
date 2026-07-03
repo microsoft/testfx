@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
@@ -69,7 +68,7 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public int GetTestContextCallCount { get; private set; }
 
-    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger messageLogger, UnitTestOutcome outcome)
+    public ITestContext GetTestContext(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger messageLogger, UnitTestOutcome outcome)
     {
         GetTestContextCallCount++;
         var testContextImpl = new TestContextImplementation(testMethod, testClassFullName, properties, messageLogger, testRunCancellationToken: null);
