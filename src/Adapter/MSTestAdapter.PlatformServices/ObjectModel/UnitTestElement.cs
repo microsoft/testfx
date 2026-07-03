@@ -132,10 +132,24 @@ internal sealed class UnitTestElement
         return clone;
     }
 
+    // Legacy source-updating clone used only by the ToTestCase / test-case filter bridge
+    // (TestCaseExtensions.ToUnitTestElementWithUpdatedSource). It delegates to the buggy
+    // TestMethod.CloneWithUpdatedSource and is retained to preserve that path's exact current behavior; the
+    // execution engine uses WithUpdatedSource / CloneWithSource instead. Tracked by
+    // https://github.com/microsoft/testfx/issues/9573.
     internal UnitTestElement CloneWithUpdatedSource(string source)
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.CloneWithUpdatedSource(source);
+        return clone;
+    }
+
+    // Correct source-updating clone: the returned clone (only) targets the new source. Used by the execution
+    // engine via WithUpdatedSource. See https://github.com/microsoft/testfx/issues/9573.
+    internal UnitTestElement CloneWithSource(string source)
+    {
+        var clone = (UnitTestElement)MemberwiseClone();
+        clone.TestMethod = TestMethod.CloneWithSource(source);
         return clone;
     }
 
@@ -149,7 +163,7 @@ internal sealed class UnitTestElement
     /// <param name="source">The (possibly deployment-relocated) source of the test.</param>
     /// <returns>An element whose <see cref="ObjectModel.TestMethod.AssemblyName"/> is <paramref name="source"/>.</returns>
     internal UnitTestElement WithUpdatedSource(string source)
-        => TestMethod.AssemblyName == source ? this : CloneWithUpdatedSource(source);
+        => TestMethod.AssemblyName == source ? this : CloneWithSource(source);
 
     /// <summary>
     /// Convert the UnitTestElement instance to an Object Model testCase instance.
