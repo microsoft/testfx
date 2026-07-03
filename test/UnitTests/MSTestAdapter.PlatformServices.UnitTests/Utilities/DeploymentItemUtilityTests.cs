@@ -4,12 +4,12 @@
 #if !WINDOWS_UWP && !WIN_UI
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using Moq;
 
@@ -19,13 +19,6 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 public class DeploymentItemUtilityTests : TestContainer
 {
-    internal static readonly TestProperty DeploymentItemsProperty = TestProperty.Register(
-        "MSTestDiscoverer.DeploymentItems",
-        "DeploymentItems",
-        typeof(KeyValuePair<string, string>[]),
-        TestPropertyAttributes.Hidden,
-        typeof(TestCase));
-
     private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly ICollection<string> _warnings;
@@ -391,22 +384,24 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void HasDeployItemsShouldReturnFalseForNoDeploymentItems()
     {
-        TestCase testCase = new("A.C.M", new Uri("executor://testExecutor"), "A");
-        testCase.SetPropertyValue(DeploymentItemsProperty, null);
+        var testCase = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null))
+        {
+            DeploymentItems = null,
+        };
 
         DeploymentItemUtility.HasDeploymentItems(testCase).Should().BeFalse();
     }
 
     public void HasDeployItemsShouldReturnTrueWhenDeploymentItemsArePresent()
     {
-        TestCase testCase = new("A.C.M", new Uri("executor://testExecutor"), "A");
+        var testCase = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null));
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory)
         ];
-        testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
+        testCase.DeploymentItems = kvpArray;
 
         DeploymentItemUtility.HasDeploymentItems(testCase).Should().BeTrue();
     }

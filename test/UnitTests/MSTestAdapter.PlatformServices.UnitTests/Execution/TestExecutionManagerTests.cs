@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -205,7 +206,7 @@ public class TestExecutionManagerTests : TestContainer
         // Setup mocks.
         TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
         testablePlatformService.MockTestDeployment.Setup(
-            td => td.Deploy(It.Is<IEnumerable<TestCase>>(t => t.SequenceEqual(tests)), _runContext, _frameworkHandle)).Callback(() => SetCaller("Deploy"));
+            td => td.Deploy(It.IsAny<IEnumerable<UnitTestElement>>(), It.IsAny<DeploymentContext>(), It.IsAny<IAdapterMessageLogger>())).Callback(() => SetCaller("Deploy"));
 
         await _testExecutionManager.RunTestsAsync(
             ToUnitTestElements(tests),
@@ -263,7 +264,7 @@ public class TestExecutionManagerTests : TestContainer
 
         // Setup mocks.
         testablePlatformService.MockTestDeployment.Setup(
-            td => td.Deploy(It.Is<IEnumerable<TestCase>>(t => t.SequenceEqual(tests)), _runContext, _frameworkHandle)).Returns(true);
+            td => td.Deploy(It.IsAny<IEnumerable<UnitTestElement>>(), It.IsAny<DeploymentContext>(), It.IsAny<IAdapterMessageLogger>())).Returns(true);
         testablePlatformService.MockTestDeployment.Setup(td => td.GetDeploymentDirectory())
             .Returns(@"C:\temp");
 

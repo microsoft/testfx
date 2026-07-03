@@ -4,13 +4,11 @@
 #if !WINDOWS_UWP && !WIN_UI
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
-
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -43,31 +41,31 @@ internal abstract class DeploymentUtilityBase
 
     protected AssemblyUtility AssemblyUtility { get; set; }
 
-    public bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, TestRunDirectories runDirectories)
+    public bool Deploy(IEnumerable<UnitTestElement> tests, string source, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, TestRunDirectories runDirectories)
     {
         IList<DeploymentItem> deploymentItems = DeploymentItemUtility.GetDeploymentItems(tests);
 
         // we just deploy source if there are no deployment items for current source but there are deployment items for other sources
-        return Deploy(source, runContext, testExecutionRecorder, deploymentItems, runDirectories);
+        return Deploy(source, deploymentContext, messageLogger, deploymentItems, runDirectories);
     }
 
     /// <summary>
     /// Create deployment directories.
     /// </summary>
-    /// <param name="runContext">The run context.</param>
+    /// <param name="deploymentContext">The host deployment inputs.</param>
     /// <param name="firstTestSource">
     /// The path to the test assembly of the first test case. In most cases, all
     /// test cases belong to the same assembly, but not guaranteed. We are using the path from
     /// the first test case as a "best effort" implementation. DeploymentItem isn't correctly designed and should be deprecated in future.
     /// </param>
     /// <returns>TestRunDirectories instance.</returns>
-    public TestRunDirectories CreateDeploymentDirectories(IRunContext? runContext, string? firstTestSource)
+    public TestRunDirectories CreateDeploymentDirectories(DeploymentContext deploymentContext, string? firstTestSource)
     {
-        string resultsDirectory = GetTestResultsDirectory(runContext);
+        string resultsDirectory = GetTestResultsDirectory(deploymentContext);
         string rootDeploymentDirectory = GetRootDeploymentDirectory(resultsDirectory);
 
 #if NETFRAMEWORK
-        bool isAppDomainCreationDisabled = runContext?.RunSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(runContext.RunSettings.SettingsXml);
+        bool isAppDomainCreationDisabled = deploymentContext.RunSettingsXml is not null && MSTestAdapterSettings.IsAppDomainCreationDisabled(deploymentContext.RunSettingsXml);
 #else
         // AppDomains are only supported in .NET Framework.
         const bool isAppDomainCreationDisabled = true;
@@ -94,10 +92,10 @@ internal abstract class DeploymentUtilityBase
     /// <summary>
     /// Get the parent test results directory where deployment will be done.
     /// </summary>
-    /// <param name="runContext">The run context.</param>
+    /// <param name="deploymentContext">The host deployment inputs.</param>
     /// <returns>The test results directory.</returns>
-    public static string GetTestResultsDirectory(IRunContext? runContext) => !StringEx.IsNullOrEmpty(runContext?.TestRunDirectory)
-            ? runContext.TestRunDirectory
+    public static string GetTestResultsDirectory(DeploymentContext deploymentContext) => !StringEx.IsNullOrEmpty(deploymentContext.TestRunDirectory)
+            ? deploymentContext.TestRunDirectory
             : Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
 
     /// <summary>
@@ -397,20 +395,20 @@ internal abstract class DeploymentUtilityBase
     /// <summary>
     /// Log the parameter warnings on the parameter logger.
     /// </summary>
-    /// <param name="testExecutionRecorder">Execution recorder.</param>
+    /// <param name="messageLogger">Message logger.</param>
     /// <param name="warnings">Warnings.</param>
-    private static void LogWarnings(ITestExecutionRecorder testExecutionRecorder, IEnumerable<string> warnings)
+    private static void LogWarnings(IAdapterMessageLogger messageLogger, IEnumerable<string> warnings)
     {
-        DebugEx.Assert(testExecutionRecorder != null, "Logger should not be null");
+        DebugEx.Assert(messageLogger != null, "Logger should not be null");
 
         // log the warnings
         foreach (string warning in warnings)
         {
-            testExecutionRecorder.SendMessage(TestMessageLevel.Warning, warning);
+            messageLogger.SendMessage(MessageLevel.Warning, warning);
         }
     }
 
-    private bool Deploy(string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
+    private bool Deploy(string source, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
     {
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
@@ -427,10 +425,10 @@ internal abstract class DeploymentUtilityBase
             PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor: Using deployment directory {0} for source {1}.", runDirectories.OutDirectory, source);
         }
 
-        IEnumerable<string> warnings = Deploy([.. deploymentItems], source, runDirectories.OutDirectory, GetTestResultsDirectory(runContext));
+        IEnumerable<string> warnings = Deploy([.. deploymentItems], source, runDirectories.OutDirectory, GetTestResultsDirectory(deploymentContext));
 
         // Log warnings
-        LogWarnings(testExecutionRecorder, warnings);
+        LogWarnings(messageLogger, warnings);
         return deploymentItems is { Count: > 0 };
     }
 

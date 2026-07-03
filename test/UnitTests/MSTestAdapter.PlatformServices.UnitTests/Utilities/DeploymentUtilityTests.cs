@@ -4,14 +4,12 @@
 #if !WINDOWS_UWP && !WIN_UI
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
@@ -29,8 +27,7 @@ public class DeploymentUtilityTests : TestContainer
     private readonly Mock<IReflectionOperations> _mockReflectionOperations;
     private readonly Mock<FileUtility> _mockFileUtility;
     private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
-    private readonly Mock<IRunContext> _mockRunContext;
-    private readonly Mock<ITestExecutionRecorder> _mockTestExecutionRecorder;
+    private readonly Mock<IAdapterMessageLogger> _mockMessageLogger;
 
     private readonly DeploymentUtility _deploymentUtility;
 
@@ -52,16 +49,15 @@ public class DeploymentUtilityTests : TestContainer
             _mockAssemblyUtility.Object,
             _mockFileUtility.Object);
 
-        _mockRunContext = new Mock<IRunContext>();
-        _mockTestExecutionRecorder = new Mock<ITestExecutionRecorder>();
+        _mockMessageLogger = new Mock<IAdapterMessageLogger>();
     }
 
     #region Deploy tests
 
     public void DeployShouldReturnFalseWhenNoDeploymentItemsOnTestCase()
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), Path.Combine(RootDeploymentDirectory, "asm.dll"));
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
+        UnitTestElement testCase = CreateTestElement(Path.Combine(RootDeploymentDirectory, "asm.dll"));
+        testCase.DeploymentItems = null;
         var testRunDirectories = new TestRunDirectories(RootDeploymentDirectory, Path.Combine(RootDeploymentDirectory, "asm.dll"), isAppDomainCreationDisabled: true);
 
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
@@ -77,17 +73,17 @@ public class DeploymentUtilityTests : TestContainer
 #endif
 
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeFalse();
     }
 
 #if NETFRAMEWORK
     public void DeployShouldDeploySourceAndItsConfigFile()
     {
-        TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
+        UnitTestElement testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
 
         // Setup mocks.
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
@@ -102,10 +98,10 @@ public class DeploymentUtilityTests : TestContainer
 
         // Act.
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeTrue();
 
         // Assert.
@@ -132,7 +128,7 @@ public class DeploymentUtilityTests : TestContainer
     {
         string dependencyFile = "C:\\temp\\dependency.dll";
 
-        TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
+        UnitTestElement testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
 
         // Setup mocks.
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
@@ -147,10 +143,10 @@ public class DeploymentUtilityTests : TestContainer
 
         // Act.
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeTrue();
 
         // Assert.
@@ -167,7 +163,7 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldDeploySatelliteAssemblies()
     {
-        TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
+        UnitTestElement testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
         string assemblyFullPath = Assembly.GetExecutingAssembly().Location;
         string satelliteFullPath = Path.Combine(Path.GetDirectoryName(assemblyFullPath), "de", "satellite.dll");
 
@@ -184,10 +180,10 @@ public class DeploymentUtilityTests : TestContainer
 
         // Act.
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeTrue();
 
         // Assert.
@@ -208,7 +204,7 @@ public class DeploymentUtilityTests : TestContainer
         string deploymentItemPath = "C:\\temp\\sample.dll";
         string deploymentItemOutputDirectory = "..\\..\\out";
 
-        TestCase testCase = GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
+        UnitTestElement testCase = GetTestCaseAndTestRunDirectories(deploymentItemPath, deploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
 
         // Setup mocks.
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
@@ -225,10 +221,10 @@ public class DeploymentUtilityTests : TestContainer
 
         // Act.
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeTrue();
 
         // Assert.
@@ -243,10 +239,10 @@ public class DeploymentUtilityTests : TestContainer
             Times.Never);
 
         // Verify the warning.
-        _mockTestExecutionRecorder.Verify(
+        _mockMessageLogger.Verify(
             ter =>
             ter.SendMessage(
-                TestMessageLevel.Warning,
+                MessageLevel.Warning,
                 string.Format(
                     CultureInfo.InvariantCulture,
                     Resource.DeploymentErrorBadDeploymentItem,
@@ -257,7 +253,7 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldDeployContentsOfADirectoryIfSpecified()
     {
-        TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
+        UnitTestElement testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
         string content1 = Path.Combine(DefaultDeploymentItemPath, "directoryContents.dll");
         var directoryContentFiles = new List<string> { content1 };
 
@@ -280,10 +276,10 @@ public class DeploymentUtilityTests : TestContainer
 
         // Act.
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeTrue();
 
         // Assert.
@@ -301,7 +297,7 @@ public class DeploymentUtilityTests : TestContainer
 #if NETFRAMEWORK
     public void DeployShouldDeployPdbWithSourceIfPdbFileIsPresentInSourceDirectory()
     {
-        TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
+        UnitTestElement testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
 
         // Setup mocks.
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
@@ -324,10 +320,10 @@ public class DeploymentUtilityTests : TestContainer
 
         // Act.
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeTrue();
 
         // Assert.
@@ -356,7 +352,7 @@ public class DeploymentUtilityTests : TestContainer
         // Path for pdb file of dependent assembly if pdb file is present.
         string pdbFile = Path.ChangeExtension(dependencyFile, "pdb");
 
-        TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
+        UnitTestElement testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
 
         // Setup mocks.
         _mockFileUtility.Setup(fu => fu.DoesDirectoryExist(It.Is<string>(s => !s.EndsWith(".dll") && !s.EndsWith(".exe") && !s.EndsWith(".config"))))
@@ -379,10 +375,10 @@ public class DeploymentUtilityTests : TestContainer
 
         // Act.
         _deploymentUtility.Deploy(
-            new List<TestCase> { testCase },
-            testCase.Source,
-            _mockRunContext.Object,
-            _mockTestExecutionRecorder.Object,
+            new List<UnitTestElement> { testCase },
+            testCase.TestMethod.AssemblyName,
+            new DeploymentContext(null, null),
+            _mockMessageLogger.Object,
             testRunDirectories).Should().BeTrue();
 
         // Assert.
@@ -411,12 +407,11 @@ public class DeploymentUtilityTests : TestContainer
     public void CreateDeploymentDirectoriesShouldCreateDeploymentDirectoryFromRunContext()
     {
         // Setup mocks
-        _mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(TestRunDirectory);
         _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(TestRunDirectory, It.IsAny<string>()))
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object, null);
+        _deploymentUtility.CreateDeploymentDirectories(new DeploymentContext(TestRunDirectory, null), null);
 
         // Assert.
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
@@ -428,12 +423,11 @@ public class DeploymentUtilityTests : TestContainer
     public void CreateDeploymentDirectoriesShouldCreateDefaultDeploymentDirectoryIfTestRunDirectoryIsNull()
     {
         // Setup mocks
-        _mockRunContext.Setup(rc => rc.TestRunDirectory).Returns((string)null!);
         _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.Is<string>(s => s.Contains(TestRunDirectories.DefaultDeploymentRootDirectory)), It.IsAny<string>()))
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        _deploymentUtility.CreateDeploymentDirectories(_mockRunContext.Object, null);
+        _deploymentUtility.CreateDeploymentDirectories(new DeploymentContext(null, null), null);
 
         // Assert.
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
@@ -449,7 +443,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(RootDeploymentDirectory);
 
         // Act.
-        _deploymentUtility.CreateDeploymentDirectories(null, null);
+        _deploymentUtility.CreateDeploymentDirectories(new DeploymentContext(null, null), null);
 
         // Assert.
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(RootDeploymentDirectory), Times.Once);
@@ -462,16 +456,16 @@ public class DeploymentUtilityTests : TestContainer
 
     #region private methods
 
-    private static TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryOut, out TestRunDirectories testRunDirectories)
+    private static UnitTestElement GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryOut, out TestRunDirectories testRunDirectories)
     {
-        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
+        UnitTestElement testCase = CreateTestElement(Assembly.GetExecutingAssembly().Location);
         KeyValuePair<string, string>[] kvpArray =
         [
             new KeyValuePair<string, string>(
                 deploymentItemPath,
                 defaultDeploymentItemOutputDirectoryOut)
         ];
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
+        testCase.DeploymentItems = kvpArray;
         string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
 
         const bool isAppDomainCreationDisabled =
@@ -485,6 +479,9 @@ public class DeploymentUtilityTests : TestContainer
 
         return testCase;
     }
+
+    private static UnitTestElement CreateTestElement(string source)
+        => new(new TestMethod("M", "C", source, displayName: null));
 
     #endregion
 }
