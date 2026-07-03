@@ -410,7 +410,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
-        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</target>
+        <target state="translated">UTA007: {0} sınıfında tanımlanan {1} yönteminin imzası doğru değil. 'ValueTask&lt;T&gt;' geçerli bir test yöntemi dönüş türü değil; bunun yerine genel olmayan 'ValueTask' değerini kullanın. Örnek: public async ValueTask Test.Class1.Test()</target>
         <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
