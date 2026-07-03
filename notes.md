@@ -34,6 +34,9 @@
 - **`[TestClass]` on structs**: CS0592 — `[TestClass]` is only valid on class declarations. For tests involving struct containing types, omit `[TestClass]` from the struct.
 - **GitHub issue/list APIs**: Failing with enterprise fine-grained token restriction (token lifetime >8 days). PR searches still work. Issue creation/commenting via safeoutputs works. Cannot list or search issues via MCP tools.
 - **`--no-build` on stale DLL**: After editing tests, always rebuild (`dotnet build`) before using `--no-build`; stale binary gives wrong test results.
+- **Generic class in FixtureUtils**: `ContainingType.IsGenericType && !allowGenericType` fires for GlobalTestFixtureShouldBeValid because `allowGenericType: false`. A `[TestClass] public class MyTestClass<T>` containing `[GlobalTestInitialize]` produces a diagnostic.
+- **DuplicateTestMethodAttributeAnalyzer has NO TestClass guard**: fires on duplicate TestMethod-derived attrs on any method, regardless of [TestClass].
+- **DuplicateTestMethodAttributeFixer first-wins**: keeps the first TestMethod-derived attribute encountered in attribute list order; subsequent ones are removed.
 
 ## Testing Opportunities Backlog
 
@@ -43,12 +46,12 @@
    - `UseCooperativeCancellationForTimeoutAnalyzerTests` (27 tests) — further edge cases possible
    - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — room for edge cases
    - `PreferConstructorOverTestInitializeAnalyzerTests` (15 tests) — room for edge cases
-   - `UseAttributeOnTestMethodAnalyzerTests` (14 tests) — DataTestMethod early-return, OSCondition ConditionBase
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-03 | Task 3 (GlobalTestFixtureShouldBeValid MSTEST0050 generic+derivedAttr, DuplicateTestMethodAttribute MSTEST0060 no-TestClass-guard+first-wins-fixer), Task 7 |
 | 2026-07-02 | Task 3 (GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 generic+struct+derivedAttr, DuplicateTestMethodAttributeAnalyzer MSTEST0060 outside-TestClass+inline-mixed+first-wins), Task 7 |
 | 2026-07-01 | Task 3 (DuplicateTestMethodAttributeAnalyzer MSTEST0060: method outside TestClass, mixed inline list, first-wins fixer), Task 7 |
 | 2026-06-30 | Task 3 (GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 edge cases: generic class, struct, derived TestClass attribute), Task 7 |
@@ -66,14 +69,12 @@
 
 ## Last Run
 
-2026-07-02 23:19 UTC
+2026-07-03 23:18 UTC
 
 ## Completed Work (recent)
 
-- PR (pending) for GlobalTestFixtureShouldBeValid + DuplicateTestMethodAttribute edge cases (2026-07-02) — generic class, struct, derived TestClassAttr; method outside TestClass, mixed inline fixer, first-wins fixer; 33/33 pass
-- PR (pending) for DuplicateTestMethodAttributeAnalyzer MSTEST0060 edge cases (2026-07-01) — GitHub API unavailable, PR not created
-- PR (pending) for GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 edge cases (2026-06-30) — GitHub API unavailable, PR not created
-- PR (pending) for UseAttributeOnTestMethodAnalyzer MSTEST0007 edge cases (2026-06-29) — DataTestMethod early-return, OSCondition ConditionBase; 39/39 pass
+- PR #aw_pr_gfd (pending) for GlobalTestFixtureShouldBeValid + DuplicateTestMethodAttribute edge cases (2026-07-03) — generic class, derived TestClassAttr; no-TestClass-guard, first-wins-fixer; 31/31 pass
+- PR #9516 merged — UseAttributeOnTestMethodAnalyzer (MSTEST0007) edge cases (merged 2026-06-30)
 - PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036 (multi-level inheritance, property type mismatch, field fallthrough)
 - PR #9481 merged — TestContextPropertyUsageAnalyzer MSTEST0048 (non-TestContext guard, lambda ContainingSymbol)
 - PR #9468 merged — IgnoreStringMethodReturnValueAnalyzer (discard, lambda block body, chained receiver)
