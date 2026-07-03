@@ -6,13 +6,27 @@ using System.Buffers;
 #endif
 
 using Microsoft.CodeAnalysis;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 [Embedded]
 internal abstract class BaseSerializer
 {
+    // Self-contained DEBUG assert so this shared-source type has no dependency on the rest of
+    // Microsoft.Testing.Platform (e.g. RoslynDebug). Replaces RoslynDebug.Assert in the serializers.
+    // No [DoesNotReturnIf(false)]: this is [Conditional("DEBUG")] and delegates to Debug.Assert, which can
+    // return when the condition is false - so the annotation would be misleading and would force down-level
+    // consumers to also carry the DoesNotReturnIfAttribute polyfill.
+    [Conditional("DEBUG")]
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "Self-contained replacement for RoslynDebug in shared IPC source.")]
+    protected static void DebugAssert(bool condition, string message)
+        => Debug.Assert(condition, message);
+
+    // Internal invariant-violation diagnostic for "impossible" states (e.g. BitConverter.TryWriteBytes into a
+    // correctly-sized buffer). Kept self-contained (no ApplicationStateGuard) so this file shares as source.
+    private static InvalidOperationException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
+        => new(string.Format(CultureInfo.InvariantCulture, "This program location is thought to be unreachable. File='{0}' Line={1}", path, line));
+
 #if NETCOREAPP
     protected static string ReadString(Stream stream)
     {
@@ -54,7 +68,7 @@ internal abstract class BaseSerializer
             Span<byte> len = stackalloc byte[sizeof(int)];
             if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
             {
-                throw ApplicationStateGuard.Unreachable();
+                throw Unreachable();
             }
 
             stream.Write(len);
@@ -76,7 +90,7 @@ internal abstract class BaseSerializer
 
         if (!BitConverter.TryWriteBytes(len, sizeInBytes))
         {
-            throw ApplicationStateGuard.Unreachable();
+            throw Unreachable();
         }
 
         stream.Write(len);
@@ -87,7 +101,7 @@ internal abstract class BaseSerializer
         Span<byte> bytes = stackalloc byte[sizeof(int)];
         if (!BitConverter.TryWriteBytes(bytes, value))
         {
-            throw ApplicationStateGuard.Unreachable();
+            throw Unreachable();
         }
 
         stream.Write(bytes);
@@ -98,7 +112,7 @@ internal abstract class BaseSerializer
         Span<byte> bytes = stackalloc byte[sizeof(long)];
         if (!BitConverter.TryWriteBytes(bytes, value))
         {
-            throw ApplicationStateGuard.Unreachable();
+            throw Unreachable();
         }
 
         stream.Write(bytes);
@@ -109,7 +123,7 @@ internal abstract class BaseSerializer
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
         if (!BitConverter.TryWriteBytes(bytes, value))
         {
-            throw ApplicationStateGuard.Unreachable();
+            throw Unreachable();
         }
 
         stream.Write(bytes);
@@ -120,7 +134,7 @@ internal abstract class BaseSerializer
         Span<byte> bytes = stackalloc byte[sizeof(bool)];
         if (!BitConverter.TryWriteBytes(bytes, value))
         {
-            throw ApplicationStateGuard.Unreachable();
+            throw Unreachable();
         }
 
         stream.Write(bytes);
@@ -344,7 +358,7 @@ internal abstract class BaseSerializer
         Type type when type == typeof(ushort) => sizeof(ushort),
         Type type when type == typeof(bool) => sizeof(bool),
         Type type when type == typeof(byte) => sizeof(byte),
-        _ => throw ApplicationStateGuard.Unreachable(),
+        _ => throw Unreachable(),
     };
 
     public static bool IsNullOrEmpty<T>(T[]? list) => list is null || list.Length == 0;

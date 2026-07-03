@@ -145,7 +145,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
 
     protected override void SerializeCore(FileArtifactMessages objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 

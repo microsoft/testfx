@@ -6,15 +6,17 @@ using Microsoft.Testing.Platform.IPC;
 namespace Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests;
 
 /// <summary>
-/// Verifies the shared 'dotnet test' wire-contract source (ObjectFieldIds + Constants), compiled into this
-/// independent assembly via <c>DotnetTestProtocolContract.props</c>.
+/// Verifies the shared 'dotnet test' wire contract (serializer/field ids in <c>ObjectFieldIds</c> + the
+/// handshake/session/state values in <c>Constants</c>), compiled into this independent assembly via
+/// <c>DotnetTestProtocolContract.props</c> alongside the rest of the shared serializer stack.
 /// </summary>
 /// <remarks>
-/// This project does not reference Microsoft.Testing.Platform's protocol types; it compiles the same source files.
-/// The assertions pin every value that flows over the pipe and is mirrored by hand in dotnet/sdk's
-/// <c>ObjectFieldIds</c>, so a drift between the two repositories - or an accidental change to the contract - fails
-/// the build here. The fact that this assembly compiles at all is the proof that the contract is self-contained and
-/// consumable with a single source of truth.
+/// This project does not reference Microsoft.Testing.Platform's protocol types; it compiles the same source files
+/// (the whole serializer stack for ids 0-12 - see <see cref="DotnetTestProtocolSerializerTests"/> for the round-trip
+/// coverage). The assertions here pin every value that flows over the pipe, so an accidental change to the contract -
+/// or drift from the copy dotnet/sdk consumes from this same source - fails the build here. The fact that this
+/// assembly compiles at all is the proof that the contract is self-contained and consumable with a single source of
+/// truth.
 /// </remarks>
 [TestClass]
 public sealed class DotnetTestProtocolContractTests

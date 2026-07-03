@@ -15,12 +15,9 @@
       shared source files as contentFiles/cs/any so a consumer (the dotnet/sdk 'dotnet test' implementation)
       compiles them into its OWN assembly, keeping a single source of truth instead of hand-copying.
 
-      Internal, source-only package for the 'dotnet test' <-> Microsoft.Testing.Platform integration. It ships
-      shared source files as contentFiles/cs/any so a consumer (the dotnet/sdk 'dotnet test' implementation)
-      compiles them into its OWN assembly, keeping a single source of truth instead of hand-copying.
-
-      It hosts (a) the named-pipe wire contract (ObjectFieldIds.cs + Constants.cs) and (b) the terminal reporter
-      (reporter + rendering + state + the small platform abstractions it needs) together with its localized
+      It hosts (a) the whole named-pipe protocol source - the ObjectFieldIds.cs + Constants.cs wire contract plus the
+      message models + serializers for ids 0-12, the serializer registry and base infrastructure - and (b) the terminal
+      reporter (reporter + rendering + state + the small platform abstractions it needs) together with its localized
       resources (TerminalResources.resx + xlf, wired up by the build-extension props this package ships - see
       build/). The name is deliberately generic and carries 'Internal' so it is clearly NOT a public API / client
       library (see also issue #5667, closed pending a real use case for a public MTP client).
