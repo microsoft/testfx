@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -99,16 +98,16 @@ internal partial class TestExecutionManager
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
-    private void CacheSessionParameters(IRunContext? runContext, IAdapterMessageLogger messageLogger)
+    private void CacheSessionParameters(string? settingsXml, IAdapterMessageLogger messageLogger)
     {
-        if (StringEx.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
+        if (StringEx.IsNullOrEmpty(settingsXml))
         {
             return;
         }
 
         try
         {
-            Dictionary<string, object>? testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
+            Dictionary<string, object>? testRunParameters = RunSettingsUtilities.GetTestRunParameters(settingsXml);
             if (testRunParameters != null)
             {
                 // Clear sessionParameters to prevent key collisions of test run parameters in case

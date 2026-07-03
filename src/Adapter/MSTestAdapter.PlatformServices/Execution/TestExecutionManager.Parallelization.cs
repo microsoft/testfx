@@ -65,7 +65,7 @@ internal partial class TestExecutionManager
 
         IAdapterMessageLogger adapterMessageLogger = frameworkHandle.ToAdapterMessageLogger();
 
-        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings?.SettingsXml);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)

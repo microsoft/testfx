@@ -5,10 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-
-using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -37,9 +34,10 @@ public class DesktopTestSourceHostTests : TestContainer
              </RunSettings>
              """;
 
+        LoadMSTestSettings(runSettingsXml);
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
-            GetMockedIRunSettings(runSettingsXml).Object);
+            runSettingsXml);
         _testSourceHost.SetupHost();
 
         // Loading SampleProjectForAssemblyResolution.dll should not throw.
@@ -67,9 +65,10 @@ public class DesktopTestSourceHostTests : TestContainer
              </RunSettings>
              """;
 
+        LoadMSTestSettings(runSettingsXml);
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
-            GetMockedIRunSettings(runSettingsXml).Object);
+            runSettingsXml);
         _testSourceHost.SetupHost();
 
         var asm = Assembly.LoadFrom(sampleProjectPath);
@@ -125,17 +124,12 @@ public class DesktopTestSourceHostTests : TestContainer
         return testAssetPath;
     }
 
-    private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingsXml)
+    private static void LoadMSTestSettings(string runSettingsXml)
     {
-        var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-
         StringReader stringReader = new(runSettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         reader.ReadToFollowing("MSTestV2");
         mstestSettingsProvider.Load(reader);
-
-        return mockRunSettings;
     }
 }
