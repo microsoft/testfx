@@ -8,8 +8,33 @@
     <UsingMSTestSdk>true</UsingMSTestSdk>
   </PropertyGroup>
 
+  <!--
+    MSTest.Sdk layers on top of Microsoft.NET.Sdk. In the common case, MSTest.Sdk is the outer
+    SDK (`<Project Sdk="MSTest.Sdk">`) and is responsible for importing the base .NET SDK.
+
+    However, MSTest.Sdk can also be layered on top of a different base SDK (for example
+    Microsoft.NET.Sdk.Web) using manual SDK imports:
+
+        <Project>
+          <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.Web" />
+          <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
+          ...
+          <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
+          <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.Web" />
+        </Project>
+
+    In that case the outer SDK has already imported Microsoft.NET.Sdk (which sets
+    'UsingMicrosoftNETSdk' to 'true' before anything else), so importing it again here would emit
+    MSB4011 duplicate-import warnings. We only import the base SDK when nobody else has, and we
+    remember that decision so Sdk.targets knows whether it should also import the base SDK targets.
+  -->
+  <PropertyGroup>
+    <_MSTestSdkImportsMicrosoftNETSdk Condition=" '$(_MSTestSdkImportsMicrosoftNETSdk)' == '' AND '$(UsingMicrosoftNETSdk)' != 'true' ">true</_MSTestSdkImportsMicrosoftNETSdk>
+    <_MSTestSdkImportsMicrosoftNETSdk Condition=" '$(_MSTestSdkImportsMicrosoftNETSdk)' == '' ">false</_MSTestSdkImportsMicrosoftNETSdk>
+  </PropertyGroup>
+
   <!-- Implicit top import -->
-  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(_MSTestSdkImportsMicrosoftNETSdk)' == 'true' " />
 
   <PropertyGroup>
     <EnableAspireTesting Condition=" '$(EnableAspireTesting)' == '' ">false</EnableAspireTesting>

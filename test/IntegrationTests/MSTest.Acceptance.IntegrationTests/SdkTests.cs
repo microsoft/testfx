@@ -667,4 +667,64 @@ namespace MSTestPlainTest
         testHostResult.AssertOutputContains("Test Parallelization enabled");
         testHostResult.AssertOutputContains("(Workers: 3, Scope: MethodLevel)");
     }
+
+    // Verifies that MSTest.Sdk can be layered on top of a different base SDK (here Microsoft.NET.Sdk.Web)
+    // using manual SDK imports without emitting MSB4011 duplicate-import warnings. See https://github.com/microsoft/testfx/issues/9562.
+    [TestMethod]
+    public async Task MSTestSdk_LayeredOnTopOfWebSdk_BuildsWithoutDuplicateImportWarnings()
+    {
+        const string MixedSdkSource = """
+#file MSTestWeb.csproj
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.Web" />
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk/$MSTestVersion$" />
+
+  <PropertyGroup>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+  </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk/$MSTestVersion$" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.Web" />
+
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.AspNetCore.Builder;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestWebTest
+{
+    [TestClass]
+    public class UnitTest1
+    {
+        [TestMethod]
+        public void TestMethod1()
+        {
+            WebApplicationBuilder builder = WebApplication.CreateBuilder();
+            Assert.IsNotNull(builder);
+        }
+    }
+}
+""";
+
+        const string MixedAssetName = "MSTestWeb";
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            MixedAssetName,
+            MixedSdkSource
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
+        compilationResult.AssertExitCodeIs(0);
+        compilationResult.AssertOutputDoesNotContain("MSB4011");
+
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, MixedAssetName, TargetFrameworks.NetCurrent, buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+    }
 }
