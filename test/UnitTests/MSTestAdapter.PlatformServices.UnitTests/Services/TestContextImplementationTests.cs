@@ -9,8 +9,8 @@ using System.Data.Common;
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 using Moq;
 
@@ -28,7 +28,7 @@ public class TestContextImplementationTests : TestContainer
 
     private TestContextImplementation _testContextImplementation = null!;
 
-    private TestContextImplementation CreateTestContextImplementation(IMessageLogger? messageLogger = null)
+    private TestContextImplementation CreateTestContextImplementation(IAdapterMessageLogger? messageLogger = null)
         => new(_testMethod.Object, null, _properties, messageLogger, null);
 
     public void TestContextConstructorShouldInitializeProperties()
@@ -346,19 +346,19 @@ public class TestContextImplementationTests : TestContainer
 
     public void DisplayMessageShouldForwardToIMessageLogger()
     {
-        var messageLoggerMock = new Mock<IMessageLogger>(MockBehavior.Strict);
+        var messageLoggerMock = new Mock<IAdapterMessageLogger>(MockBehavior.Strict);
 
         messageLoggerMock
-            .Setup(l => l.SendMessage(It.IsAny<TestMessageLevel>(), It.IsAny<string>()));
+            .Setup(l => l.SendMessage(It.IsAny<MessageLevel>(), It.IsAny<string>()));
 
         _testContextImplementation = CreateTestContextImplementation(messageLoggerMock.Object);
         _testContextImplementation.DisplayMessage(MessageLevel.Informational, "InfoMessage");
         _testContextImplementation.DisplayMessage(MessageLevel.Warning, "WarningMessage");
         _testContextImplementation.DisplayMessage(MessageLevel.Error, "ErrorMessage");
 
-        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Informational, "InfoMessage"), Times.Once);
-        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Warning, "WarningMessage"), Times.Once);
-        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Error, "ErrorMessage"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(MessageLevel.Informational, "InfoMessage"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(MessageLevel.Warning, "WarningMessage"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(MessageLevel.Error, "ErrorMessage"), Times.Once);
     }
 
     public void GetAndClearOutput_ShouldReturnContentThenClearBuffer()
@@ -399,7 +399,7 @@ public class TestContextImplementationTests : TestContainer
 
     public void WritesFromBackgroundThreadShouldNotThrow()
     {
-        TestContextImplementation testContextImplementation = CreateTestContextImplementation(new Mock<IMessageLogger>().Object);
+        TestContextImplementation testContextImplementation = CreateTestContextImplementation(new Mock<IAdapterMessageLogger>().Object);
         var t = new Thread(() =>
         {
             for (int i = 0; i < 100; i++)
@@ -704,12 +704,12 @@ public class TestContextImplementationTests : TestContainer
 
     public void CloneForDataDrivenIterationShouldShareMessageLogger()
     {
-        var messageLoggerMock = new Mock<IMessageLogger>();
+        var messageLoggerMock = new Mock<IAdapterMessageLogger>();
         _testContextImplementation = CreateTestContextImplementation(messageLoggerMock.Object);
 
         TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
         clone.DisplayMessage(MessageLevel.Informational, "from-clone");
 
-        messageLoggerMock.Verify(x => x.SendMessage(TestMessageLevel.Informational, "from-clone"), Times.Once);
+        messageLoggerMock.Verify(x => x.SendMessage(MessageLevel.Informational, "from-clone"), Times.Once);
     }
 }
