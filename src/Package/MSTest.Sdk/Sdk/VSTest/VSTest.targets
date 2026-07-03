@@ -6,6 +6,7 @@
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' != '' " Text="'EnableMicrosoftTestingExtensionsCodeCoverage' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != '' " Text="'EnableMicrosoftTestingExtensionsCrashDump' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsCtrfReport)' != '' " Text="'EnableMicrosoftTestingExtensionsCtrfReport' is not supported by VSTest." />
+    <Error Condition=" '$(EnableMicrosoftTestingExtensionsGitHubActionsReport)' != '' " Text="'EnableMicrosoftTestingExtensionsGitHubActionsReport' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != '' " Text="'EnableMicrosoftTestingExtensionsHangDump' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != '' " Text="'EnableMicrosoftTestingExtensionsHotReload' is not supported by VSTest." />
     <Error Condition=" '$(EnableMicrosoftTestingExtensionsHtmlReport)' != '' " Text="'EnableMicrosoftTestingExtensionsHtmlReport' is not supported by VSTest." />

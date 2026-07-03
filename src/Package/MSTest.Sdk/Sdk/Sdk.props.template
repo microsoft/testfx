@@ -22,6 +22,7 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingExtensionsCtrfReportVersion Condition=" '$(MicrosoftTestingExtensionsCtrfReportVersion)' == '' " >${MicrosoftTestingExtensionsCtrfReportVersion}</MicrosoftTestingExtensionsCtrfReportVersion>
     <MicrosoftTestingExtensionsFakesVersion Condition=" '$(MicrosoftTestingExtensionsFakesVersion)' == '' " >${MicrosoftTestingExtensionsFakesVersion}</MicrosoftTestingExtensionsFakesVersion>
+    <MicrosoftTestingExtensionsGitHubActionsReportVersion Condition=" '$(MicrosoftTestingExtensionsGitHubActionsReportVersion)' == '' " >${MicrosoftTestingExtensionsGitHubActionsReportVersion}</MicrosoftTestingExtensionsGitHubActionsReportVersion>
     <MicrosoftTestingExtensionsJUnitReportVersion Condition=" '$(MicrosoftTestingExtensionsJUnitReportVersion)' == '' " >${MicrosoftTestingExtensionsJUnitReportVersion}</MicrosoftTestingExtensionsJUnitReportVersion>
     <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >${MicrosoftTestingExtensionsOpenTelemetryVersion}</MicrosoftTestingExtensionsOpenTelemetryVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>

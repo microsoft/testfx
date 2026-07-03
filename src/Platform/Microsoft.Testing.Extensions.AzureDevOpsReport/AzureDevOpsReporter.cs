@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
 using Microsoft.Testing.Extensions.Reporting;
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
@@ -20,26 +19,9 @@ internal sealed class AzureDevOpsReporter :
     IOutputDeviceDataProducer
 {
     internal const double KnownFlakyFailureRateThreshold = 0.25;
-    private const string DeterministicBuildRoot = "/_/";
     private const int MinSamplesForRegressionAnnotation = 5;
     private const string QuarantineBuildTagLine = "##vso[build.addbuildtag]has-quarantined-test-failure";
     private const string WarningSeverity = "warning";
-    private static readonly char[] NewlineCharacters = ['\r', '\n'];
-
-    // Fully-qualified type prefixes for MSTest assertion implementations. A stack frame whose
-    // 'code' (i.e., the "Namespace.Type.Method(args)" portion) starts with any of these is treated
-    // as framework internals and skipped when looking for the user's call site to annotate.
-    // Matching on the type name (rather than the source file name) is robust to partial-class
-    // splits (e.g. Assert.AreEqual.cs, Assert.IComparable.cs) and extension-based assertion
-    // implementations such as Assert.That in Assert.That.cs, and it avoids false positives on user
-    // files innocently named *Assert.cs. See https://github.com/microsoft/testfx/issues/6925.
-    private static readonly string[] AssertionImplementationCodePrefixes =
-    [
-        "Microsoft.VisualStudio.TestTools.UnitTesting.Assert.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.AssertExtensions.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.",
-        "Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.",
-    ];
 
     private readonly IOutputDevice _outputDisplay;
     private readonly ILogger _logger;
@@ -69,7 +51,7 @@ internal sealed class AzureDevOpsReporter :
         _outputDisplay = outputDisplay;
         _historyService = historyService;
         _logger = loggerFactory.CreateLogger<AzureDevOpsReporter>();
-        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker();
+        _targetFrameworkMoniker = TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform();
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -170,7 +152,7 @@ internal sealed class AzureDevOpsReporter :
 
         string severity = GetSeverity(testName, isQuarantined);
         string annotationSuffix = BuildAnnotationSuffix(testName, isQuarantined);
-        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix, _userStackFrameFilters);
+        string? line = GetErrorText(testDisplayName, explanation, exception, severity, _fileSystem, _logger, _targetFrameworkMoniker, annotationSuffix, _userStackFrameFilters, StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime);
         if (line is null)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
@@ -190,12 +172,12 @@ internal sealed class AzureDevOpsReporter :
     }
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker)
-        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix: null, userStackFrameFilters: null);
+        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix: null, userStackFrameFilters: null, skipAssertionFrames: true);
 
     internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix)
-        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix, userStackFrameFilters: null);
+        => GetErrorText(testDisplayName, explanation, exception, severity, fileSystem, logger, targetFrameworkMoniker, additionalMessageSuffix, userStackFrameFilters: null, skipAssertionFrames: true);
 
-    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix, Regex[]? userStackFrameFilters)
+    internal static /* for testing */ string? GetErrorText(string testDisplayName, string? explanation, Exception? exception, string severity, IFileSystem fileSystem, ILogger logger, string targetFrameworkMoniker, string? additionalMessageSuffix, Regex[]? userStackFrameFilters, bool skipAssertionFrames)
     {
         string message = explanation ?? exception?.Message ?? AzureDevOpsResources.NoFailureMessageFallback;
         string formattedMessage = $"{FormatErrorMessage(testDisplayName, targetFrameworkMoniker, message)}{additionalMessageSuffix}";
@@ -208,87 +190,17 @@ internal sealed class AzureDevOpsReporter :
                 logger.LogTrace($"Found repo root '{repoRoot}'");
             }
 
-            foreach (string? stackFrame in stackTrace.Split(NewlineCharacters, StringSplitOptions.RemoveEmptyEntries))
+            (string RelativeNormalizedPath, int LineNumber)? location = StackTraceSourceLocationResolver.TryResolve(
+                stackTrace,
+                repoRoot,
+                fileSystem,
+                logger,
+                skipAssertionFrames,
+                code => IsUserStackFrameFilterMatch(code, userStackFrameFilters, logger));
+
+            if (location is not null)
             {
-                (string Code, string File, int LineNumber)? location = GetStackFrameLocation(stackFrame);
-                if (location is null)
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace("StackFrame location was null, continuing to next.");
-                    }
-
-                    continue;
-                }
-
-                string file = location.Value.File;
-                string code = location.Value.Code;
-
-                if (IsAssertionImplementationFrame(code) || IsUserStackFrameFilterMatch(code, userStackFrameFilters, logger))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"StackFrame code '{code}' is an MSTest assertion implementation, continuing to next.");
-                    }
-
-                    continue;
-                }
-
-                string relativePath;
-                if (file.StartsWith(DeterministicBuildRoot, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{file}' is coming from deterministic build.");
-                    }
-
-                    relativePath = file.Substring(DeterministicBuildRoot.Length);
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Using relative path '{relativePath}'.");
-                    }
-                }
-                else if (file.StartsWith(repoRoot, StringComparison.OrdinalIgnoreCase))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{file}' is in current repo '{repoRoot}'.");
-                    }
-
-                    relativePath = file.Substring(repoRoot.Length);
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Using relative path '{relativePath}'.");
-                    }
-                }
-                else
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{file}' does not belong to current repo '{repoRoot}'. Continue to next.");
-                    }
-
-                    continue;
-                }
-
-                string fullPath = Path.Combine(repoRoot, relativePath);
-                if (!fileSystem.ExistFile(fullPath))
-                {
-                    if (logger.IsEnabled(LogLevel.Trace))
-                    {
-                        logger.LogTrace($"Path '{fullPath}' does not exist on disk. Continue to next.");
-                    }
-
-                    continue;
-                }
-
-                string relativeNormalizedPath = relativePath.Replace('\\', '/');
-                if (logger.IsEnabled(LogLevel.Trace))
-                {
-                    logger.LogTrace($"Normalized path for GitHub '{relativeNormalizedPath}'.");
-                }
-
-                string line = $"##vso[task.logissue type={severity};sourcepath={relativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
+                string line = $"##vso[task.logissue type={severity};sourcepath={location.Value.RelativeNormalizedPath};linenumber={location.Value.LineNumber};columnnumber=1]{AzDoEscaper.Escape(formattedMessage)}";
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
                     logger.LogTrace($"Reported full message '{line}'.");
@@ -463,19 +375,6 @@ internal sealed class AzureDevOpsReporter :
         => displayName.EndsWith($"({tfm})", StringComparison.Ordinal)
             || displayName.EndsWith($"(\"{tfm}\")", StringComparison.Ordinal);
 
-    private static bool IsAssertionImplementationFrame(string code)
-    {
-        foreach (string prefix in AssertionImplementationCodePrefixes)
-        {
-            if (code.StartsWith(prefix, StringComparison.Ordinal))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private static bool IsUserStackFrameFilterMatch(string code, Regex[]? userStackFrameFilters, ILogger logger)
     {
         if (userStackFrameFilters is null || userStackFrameFilters.Length == 0)
@@ -502,29 +401,5 @@ internal sealed class AzureDevOpsReporter :
         }
 
         return false;
-    }
-
-    private static (string Code, string File, int LineNumber)? GetStackFrameLocation(string stackTraceLine)
-    {
-        Match match = StackTraceHelper.GetFrameRegex().Match(stackTraceLine);
-        if (!match.Success)
-        {
-            return null;
-        }
-
-        string code = match.Groups["code"].Value;
-        if (RoslynString.IsNullOrWhiteSpace(code))
-        {
-            return null;
-        }
-
-        string file = match.Groups["file"].Value;
-        if (RoslynString.IsNullOrWhiteSpace(file))
-        {
-            return null;
-        }
-
-        int line = int.TryParse(match.Groups["line"].Value, out int value) ? value : 0;
-        return (code, file, line);
     }
 }
