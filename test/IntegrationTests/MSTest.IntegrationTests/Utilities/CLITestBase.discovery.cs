@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
+using ITestResultRecorder = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestResultRecorder;
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
@@ -39,7 +40,8 @@ public abstract partial class CLITestBase
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), null, frameworkHandle, false);
+        ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), null, frameworkHandle, testResultRecorder, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 
@@ -51,7 +53,8 @@ public abstract partial class CLITestBase
         string runSettingsXml = GetRunSettingsXml(string.Empty);
         var runContext = new InternalRunContext(runSettingsXml, testCaseFilter);
 
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), runContext, frameworkHandle, false);
+        ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), runContext, frameworkHandle, testResultRecorder, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 

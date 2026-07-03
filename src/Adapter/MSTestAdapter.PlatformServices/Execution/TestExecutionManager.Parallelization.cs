@@ -20,9 +20,12 @@ internal partial class TestExecutionManager
     /// <param name="tests">Tests to execute.</param>
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
+    /// <param name="testResultRecorder">Recorder used to report test results back to the host.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    internal virtual async Task ExecuteTestsAsync(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    internal virtual async Task ExecuteTestsAsync(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestResultRecorder testResultRecorder, bool isDeploymentDone)
     {
+        _testResultRecorder = testResultRecorder;
+
         InitializeRandomTestOrder(frameworkHandle);
 
         var testsBySource = (from test in tests
