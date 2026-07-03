@@ -35,8 +35,22 @@ if: needs.pre_activation.outputs.check_result == 'success'
 timeout-minutes: 15
 
 permissions:
-  all: read
+  actions: read
+  attestations: read
+  checks: read
+  contents: read
   copilot-requests: write
+  deployments: read
+  discussions: read
+  issues: read
+  models: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
+  vulnerability-alerts: read
 
 network: defaults
 
