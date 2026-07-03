@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -12,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal partial class TestExecutionManager
 {
     internal void SendTestResults(
-        UnitTestElement test,
+        TestCase test,
         TestTools.UnitTesting.TestResult[] unitTestResults,
         DateTimeOffset startTime,
         DateTimeOffset endTime,
@@ -86,7 +87,13 @@ internal partial class TestExecutionManager
 
             UnitTestElement unitTestElement = currentTest.WithUpdatedSource(source);
 
-            testResultRecorder.RecordStart(currentTest);
+            // Obtain the host's test case for this test as an OPAQUE handle: the engine passes it verbatim to
+            // the (still VSTest-based) result recorder and reads nothing VSTest-specific off it. This preserves
+            // byte-for-byte reporting fidelity — including any host-injected (TCM / data-collector) properties —
+            // for the recorded results. Neutralizing the recorder is deferred to a later boundary phase.
+            TestCase currentTestCase = currentTest.GetOrCreateHostTestCase();
+
+            testResultRecorder.RecordStart(currentTestCase);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
@@ -124,7 +131,7 @@ internal partial class TestExecutionManager
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
-            SendTestResults(currentTest, unitTestResult, startTime, endTime, testResultRecorder);
+            SendTestResults(currentTestCase, unitTestResult, startTime, endTime, testResultRecorder);
         }
     }
 }

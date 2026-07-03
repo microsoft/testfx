@@ -96,12 +96,13 @@ internal sealed class UnitTestElement
 
     /// <summary>
     /// Gets or sets the host's test case for this test, used to report its lifecycle and results back to the
-    /// host with full fidelity (preserving any host-injected data — such as test-case-management properties —
-    /// that the neutral model does not otherwise carry) and to describe it to the (still VSTest-based)
-    /// deployment service. For tests handed to the adapter by a host it is that original test case; for tests
-    /// discovered internally by the platform services it is <see langword="null"/> until materialized on
-    /// demand by <see cref="GetOrCreateHostTestCase"/>. The platform services engine treats it as opaque; only
-    /// the result-recording bridge and the deployment boundary interpret it.
+    /// host with full fidelity (preserving any host-injected data — such as test-case-management or
+    /// data-collector properties — that the neutral model does not otherwise carry) and to describe it to the
+    /// (still VSTest-based) deployment service. For tests handed to the adapter by a host it is that original
+    /// test case; for tests discovered internally by the platform services it is <see langword="null"/> until
+    /// materialized on demand by <see cref="GetOrCreateHostTestCase"/>. The execution engine treats it as an
+    /// opaque handle — it reads nothing VSTest-specific off it and only threads it into the result recorder and
+    /// the deployment boundary.
     /// </summary>
 #if NETFRAMEWORK
     // Result recording and deployment happen on the source-processing side; the isolation host copy never reads it.
