@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -46,14 +47,15 @@ internal static class TestResultRecorderExtensions
             _settings = settings;
         }
 
-        public void RecordStart(TestCase testCase)
-            => _testExecutionRecorder.RecordStart(testCase);
+        public void RecordStart(UnitTestElement testElement)
+            => _testExecutionRecorder.RecordStart(ResolveTestCase(testElement));
 
-        public void RecordEmptyResult(TestCase testCase)
-            => _testExecutionRecorder.RecordEnd(testCase, TestOutcome.None);
+        public void RecordEmptyResult(UnitTestElement testElement)
+            => _testExecutionRecorder.RecordEnd(ResolveTestCase(testElement), TestOutcome.None);
 
-        public bool RecordResult(TestCase testCase, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime)
+        public bool RecordResult(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime)
         {
+            TestCase testCase = ResolveTestCase(testElement);
             var testResult = unitTestResult.ToTestResult(testCase, startTime, endTime, _computerName, _settings);
 
             _testExecutionRecorder.RecordEnd(testCase, testResult.Outcome);
@@ -82,5 +84,14 @@ internal static class TestResultRecorderExtensions
             // observed as part of reporting the result.
             return isFailed;
         }
+
+        /// <summary>
+        /// Resolves the VSTest <see cref="TestCase"/> to record against. When the element carries the host's
+        /// original representation (tests handed to the adapter to run), that exact test case is reused so all
+        /// host-injected data (including test-case-management properties) is preserved with full fidelity;
+        /// otherwise the test case is materialized from the neutral element (tests discovered internally).
+        /// </summary>
+        private static TestCase ResolveTestCase(UnitTestElement testElement)
+            => testElement.HostRecordingHandle as TestCase ?? testElement.ToTestCase();
     }
 }

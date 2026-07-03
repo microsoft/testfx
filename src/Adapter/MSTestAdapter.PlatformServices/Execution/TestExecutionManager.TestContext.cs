@@ -20,7 +20,7 @@ internal partial class TestExecutionManager
     /// <param name="unitTestElement">The unit test element to get properties from.</param>
     /// <returns>Test context properties.</returns>
     private static Dictionary<string, object?> GetTestContextProperties(
-        IDictionary<TestProperty, object?>? tcmProperties,
+        IReadOnlyDictionary<string, object?>? tcmProperties,
         IDictionary<string, object> sourceLevelParameters,
         UnitTestElement unitTestElement)
     {
@@ -38,9 +38,9 @@ internal partial class TestExecutionManager
         // Add tcm properties.
         if (tcmProperties is not null)
         {
-            foreach (KeyValuePair<TestProperty, object?> kvp in tcmProperties)
+            foreach (KeyValuePair<string, object?> kvp in tcmProperties)
             {
-                testContextProperties[kvp.Key.Id] = kvp.Value;
+                testContextProperties[kvp.Key] = kvp.Value;
             }
         }
 

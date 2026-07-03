@@ -3,30 +3,27 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
-/// The test case discovery sink used internally by execution to collect the discovered tests.
+/// The discovery sink used internally by execution to collect the tests discovered from a source.
 /// </summary>
 /// <remarks>
-/// It implements the platform-agnostic <see cref="IUnitTestElementSink"/> but still materializes a VSTest
-/// <see cref="TestCase"/> for every discovered element, because the execution pipeline currently consumes
-/// <see cref="TestCase"/> instances. That materialization is expected to disappear once execution flows the
-/// neutral <see cref="UnitTestElement"/> model end-to-end.
+/// It collects the neutral <see cref="UnitTestElement"/> model directly, so the execution pipeline can flow
+/// discovered tests without round-tripping them through a VSTest <c>TestCase</c>.
 /// </remarks>
 internal sealed class TestCaseDiscoverySink : IUnitTestElementSink
 {
     /// <summary>
-    /// Gets the tests.
+    /// Gets the discovered tests.
     /// </summary>
-    public ICollection<TestCase> Tests { get; } = [];
+    public ICollection<UnitTestElement> TestElements { get; } = [];
 
     /// <summary>
-    /// Collects the discovered test, materializing it as a VSTest <see cref="TestCase"/>.
+    /// Collects the discovered test element.
     /// </summary>
     /// <param name="testElement"> The discovered test element. </param>
     public void SendTestElement(UnitTestElement testElement)
-        => Tests.Add(testElement.ToTestCase());
+        => TestElements.Add(testElement);
 }

@@ -138,8 +138,8 @@ internal sealed class TestMethod : ITestMethod
     internal TestMethod CloneWithUpdatedSource(string source)
     {
         var clone = (TestMethod)MemberwiseClone();
-        AssemblyName = source;
-        MethodInfo = null;
+        clone.AssemblyName = source;
+        clone.MethodInfo = null;
         return clone;
     }
 }

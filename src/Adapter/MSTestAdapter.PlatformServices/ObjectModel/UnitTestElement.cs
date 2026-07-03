@@ -81,6 +81,32 @@ internal sealed class UnitTestElement
     /// </summary>
     internal string[]? WorkItemIds { get; set; }
 
+    /// <summary>
+    /// Gets or sets host-provided execution context properties (for example the values historically read
+    /// from a test-case-management host: run id, plan id, build configuration, test point id, ...) that are
+    /// surfaced to the running test through <c>TestContext</c>. Keyed by the host property identifier so the
+    /// platform services layer does not depend on a specific test platform's property object model. This is
+    /// only populated when a host supplies such values (for internally discovered tests it stays null).
+    /// </summary>
+#if NETFRAMEWORK
+    // Consumed on the source-processing side before execution; the isolation host copy never reads it.
+    [field: NonSerialized]
+#endif
+    internal IReadOnlyDictionary<string, object?>? ExecutionContextProperties { get; set; }
+
+    /// <summary>
+    /// Gets or sets an opaque handle to the host's original representation of this test, used only to report
+    /// its lifecycle and results back to the host with full fidelity (preserving any host-injected data that
+    /// the neutral model does not otherwise carry). It is set at the platform boundary by the adapter and is
+    /// <see langword="null"/> for tests discovered internally by the platform services. The platform services
+    /// engine treats it as opaque; only the result-recording bridge interprets it.
+    /// </summary>
+#if NETFRAMEWORK
+    // Result recording happens on the source-processing side; the isolation host copy never reads it.
+    [field: NonSerialized]
+#endif
+    internal object? HostRecordingHandle { get; set; }
+
     internal UnitTestElement Clone()
     {
         var clone = (UnitTestElement)MemberwiseClone();
@@ -94,6 +120,18 @@ internal sealed class UnitTestElement
         clone.TestMethod = TestMethod.CloneWithUpdatedSource(source);
         return clone;
     }
+
+    /// <summary>
+    /// Returns this element when it already targets <paramref name="source"/>, otherwise a clone whose test
+    /// method points at <paramref name="source"/>. This mirrors the source resolution the adapter previously
+    /// performed while converting a host test case, so a deployed source (relocated to the deployment
+    /// directory) is honored without reloading the assembly from its original location (see
+    /// https://github.com/microsoft/testfx/issues/6713).
+    /// </summary>
+    /// <param name="source">The (possibly deployment-relocated) source of the test.</param>
+    /// <returns>An element whose <see cref="ObjectModel.TestMethod.AssemblyName"/> is <paramref name="source"/>.</returns>
+    internal UnitTestElement WithUpdatedSource(string source)
+        => TestMethod.AssemblyName == source ? this : CloneWithUpdatedSource(source);
 
     /// <summary>
     /// Convert the UnitTestElement instance to an Object Model testCase instance.
