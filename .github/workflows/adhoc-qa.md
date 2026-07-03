@@ -34,7 +34,9 @@ if: needs.pre_activation.outputs.check_result == 'success'
 
 timeout-minutes: 15
 
-permissions: read-all
+permissions:
+  all: read
+  copilot-requests: write
 
 network: defaults
 

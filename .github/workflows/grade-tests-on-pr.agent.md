@@ -36,6 +36,7 @@ if: >
 permissions:
   contents: read
   pull-requests: read
+  copilot-requests: write
 
 imports:
   - shared/grade-tests-shared.md

@@ -24,7 +24,9 @@ on:
 
 if: needs.pre_activation.outputs.check_result == 'success'
 
-permissions: read-all
+permissions:
+  all: read
+  copilot-requests: write
 
 network: defaults
 

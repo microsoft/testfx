@@ -17,6 +17,7 @@ permissions:
   actions: read
   issues: read
   pull-requests: read
+  copilot-requests: write
 
 network: defaults
 

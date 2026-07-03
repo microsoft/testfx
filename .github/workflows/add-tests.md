@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  copilot-requests: write
 
 network:
   allowed:

@@ -16,6 +16,7 @@ permissions:
   contents: read
   pull-requests: read
   actions: read
+  copilot-requests: write
 
 imports:
   - shared/address-review-shared.md
