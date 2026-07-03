@@ -34,7 +34,7 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
 
         var provider = new SourceGeneratedReflectionDataProvider
         {
-            TypeMethodInvokers = { [add] = invoker },
+            TypeMethodInvokers = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>> { [add] = invoker },
         };
         var operations = new SourceGeneratedReflectionOperations(provider);
 
@@ -67,7 +67,7 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         ];
         var provider = new SourceGeneratedReflectionDataProvider
         {
-            TypeConstructorsInvoker = { [typeof(Sample)] = invokers },
+            TypeConstructorsInvoker = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]> { [typeof(Sample)] = invokers },
         };
         var operations = new SourceGeneratedReflectionOperations(provider);
 
@@ -99,7 +99,7 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
         ];
         var provider = new SourceGeneratedReflectionDataProvider
         {
-            TypeConstructorsInvoker = { [typeof(Sample)] = invokers },
+            TypeConstructorsInvoker = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]> { [typeof(Sample)] = invokers },
         };
         var operations = new SourceGeneratedReflectionOperations(provider);
 
@@ -119,7 +119,7 @@ public sealed class SourceGeneratedReflectionOperationsTests : TestContainer
 
         var provider = new SourceGeneratedReflectionDataProvider
         {
-            TypePropertySetters = { [property] = setter },
+            TypePropertySetters = new Dictionary<PropertyInfo, Action<object?, object?>> { [property] = setter },
         };
         var operations = new SourceGeneratedReflectionOperations(provider);
 

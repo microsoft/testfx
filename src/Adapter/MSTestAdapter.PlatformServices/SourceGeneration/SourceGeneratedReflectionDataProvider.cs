@@ -33,13 +33,13 @@ internal class SourceGeneratedReflectionDataProvider
     /// <summary>
     /// Gets a lookup of types by full name.
     /// </summary>
-    public Dictionary<string, Type> TypesByName { get; init; } = [];
+    public IReadOnlyDictionary<string, Type> TypesByName { get; init; } = new Dictionary<string, Type>();
 
     /// <summary>
     /// Gets attributes declared on each type. The array contains attribute instances
     /// already inflated by the source generator so no reflection call is required to read them.
     /// </summary>
-    public Dictionary<Type, Attribute[]> TypeAttributes { get; init; } = [];
+    public IReadOnlyDictionary<Type, Attribute[]> TypeAttributes { get; init; } = new Dictionary<Type, Attribute[]>();
 
     /// <summary>
     /// Gets attribute instances declared at the assembly level.
@@ -50,7 +50,7 @@ internal class SourceGeneratedReflectionDataProvider
     /// Gets the properties declared on each type that MSTest may inspect (for example
     /// <c>TestContext</c> properties or properties referenced by <c>DynamicData</c>).
     /// </summary>
-    public Dictionary<Type, PropertyInfo[]> TypeProperties { get; init; } = [];
+    public IReadOnlyDictionary<Type, PropertyInfo[]> TypeProperties { get; init; } = new Dictionary<Type, PropertyInfo[]>();
 
     /// <summary>
     /// Gets the methods declared on each type that the source generator was able to surface
@@ -62,36 +62,36 @@ internal class SourceGeneratedReflectionDataProvider
     /// source for <c>BindingFlags.DeclaredOnly</c>-style enumerations; the reflection-backed
     /// fallback is responsible for completeness.
     /// </remarks>
-    public Dictionary<Type, MethodInfo[]> TypeMethods { get; init; } = [];
+    public IReadOnlyDictionary<Type, MethodInfo[]> TypeMethods { get; init; } = new Dictionary<Type, MethodInfo[]>();
 
     /// <summary>
     /// Gets source-location data for each type's methods so navigation in the IDE works
     /// without a PDB round-trip.
     /// </summary>
-    public Dictionary<string, TypeLocation> TypeMethodLocations { get; init; } = [];
+    public IReadOnlyDictionary<string, TypeLocation> TypeMethodLocations { get; init; } = new Dictionary<string, TypeLocation>();
 
     /// <summary>
     /// Gets attributes declared on each method, keyed by the <see cref="MethodInfo"/> instance
     /// that the source-generator resolved at startup. Keying by <see cref="MethodInfo"/>
     /// (rather than method name) preserves the ability to distinguish overloaded methods.
     /// </summary>
-    public Dictionary<MethodInfo, Attribute[]> TypeMethodAttributes { get; init; } = [];
+    public IReadOnlyDictionary<MethodInfo, Attribute[]> TypeMethodAttributes { get; init; } = new Dictionary<MethodInfo, Attribute[]>();
 
     /// <summary>
     /// Gets constructors declared on each type. These are returned by
     /// <c>GetDeclaredConstructors</c>.
     /// </summary>
-    public Dictionary<Type, ConstructorInfo[]> TypeConstructors { get; init; } = [];
+    public IReadOnlyDictionary<Type, ConstructorInfo[]> TypeConstructors { get; init; } = new Dictionary<Type, ConstructorInfo[]>();
 
     /// <summary>
     /// Gets a lookup of properties on a type by property name.
     /// </summary>
-    public Dictionary<Type, Dictionary<string, PropertyInfo>> TypePropertiesByName { get; init; } = [];
+    public IReadOnlyDictionary<Type, Dictionary<string, PropertyInfo>> TypePropertiesByName { get; init; } = new Dictionary<Type, Dictionary<string, PropertyInfo>>();
 
     /// <summary>
     /// Gets the constructor invokers that allow instantiating types without reflection.
     /// </summary>
-    public Dictionary<Type, ConstructorInvoker[]> TypeConstructorsInvoker { get; init; } = [];
+    public IReadOnlyDictionary<Type, ConstructorInvoker[]> TypeConstructorsInvoker { get; init; } = new Dictionary<Type, ConstructorInvoker[]>();
 
     /// <summary>
     /// Gets the delegate-based invokers for test methods and fixtures, keyed by the
@@ -102,14 +102,14 @@ internal class SourceGeneratedReflectionDataProvider
     /// a <see cref="System.Threading.Tasks.ValueTask"/> is converted with <c>AsTask()</c>, and any
     /// return value is discarded — so callers can simply await the result.
     /// </summary>
-    public Dictionary<MethodInfo, Func<object?, object?[]?, object?>> TypeMethodInvokers { get; init; } = [];
+    public IReadOnlyDictionary<MethodInfo, Func<object?, object?[]?, object?>> TypeMethodInvokers { get; init; } = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>();
 
     /// <summary>
     /// Gets the delegate-based property setters, keyed by the <see cref="PropertyInfo"/> the
     /// adapter holds (today: the <c>TestContext</c> property). Each delegate assigns the value
     /// directly instead of calling <see cref="PropertyInfo.SetValue(object, object)"/>.
     /// </summary>
-    public Dictionary<PropertyInfo, Action<object?, object?>> TypePropertySetters { get; init; } = [];
+    public IReadOnlyDictionary<PropertyInfo, Action<object?, object?>> TypePropertySetters { get; init; } = new Dictionary<PropertyInfo, Action<object?, object?>>();
 
     /// <summary>
     /// Returns the snapshot of merged metadata that callers should read. Single-assembly

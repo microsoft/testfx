@@ -222,7 +222,7 @@ internal sealed class CompositeSourceGeneratedReflectionDataProvider : SourceGen
             };
         }
 
-        private static void MergeInto<TKey, TValue>(Dictionary<TKey, TValue> target, Dictionary<TKey, TValue> source)
+        private static void MergeInto<TKey, TValue>(Dictionary<TKey, TValue> target, IReadOnlyDictionary<TKey, TValue> source)
             where TKey : notnull
         {
             foreach (KeyValuePair<TKey, TValue> kvp in source)

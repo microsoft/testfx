@@ -127,12 +127,13 @@ public static class ReflectionMetadataHook
     /// <para>
     /// <b>Ownership transfer.</b> The adapter takes ownership of every collection passed in
     /// (the <paramref name="types"/> array, the <paramref name="assemblyAttributes"/> array, and
-    /// each dictionary with its value arrays) and stores them without cloning. Callers MUST hand
-    /// over freshly-built collections and MUST NOT mutate them after the call returns; the source
-    /// generator (the only intended caller) already emits fresh, throwaway collections that satisfy
-    /// this. This is a contract about ownership and mutation, not caller identity: it trades the
-    /// previous defensive copies for zero-copy startup on the understanding that the inputs are the
-    /// adapter's to keep.
+    /// each dictionary with its value arrays) and stores them without cloning; the read-only
+    /// dictionaries are held as-is behind <see cref="IReadOnlyDictionary{TKey, TValue}"/>. Callers
+    /// MUST hand over freshly-built collections and MUST NOT mutate them after the call returns;
+    /// the source generator (the only intended caller) already emits fresh, throwaway collections
+    /// that satisfy this. This is a contract about ownership and mutation, not caller identity: it
+    /// trades the previous defensive copies for zero-copy startup on the understanding that the
+    /// inputs are the adapter's to keep.
     /// </para>
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -188,17 +189,11 @@ public static class ReflectionMetadataHook
 
         // Ownership transfer (see the remarks on this method): the source generator hands over
         // freshly-built, throwaway collections and never mutates them after the call, so we store
-        // them directly instead of cloning. Arrays are kept by reference; dictionaries are reused
-        // as-is when already concrete and only materialized when the caller passed some other
-        // IReadOnlyDictionary implementation.
-        Dictionary<Type, MethodInfo[]> testMethodsMap = AsOwnedDictionary(testMethods);
-        Dictionary<Type, Attribute[]> typeAttributesMap = AsOwnedDictionary(typeAttributes);
-        Dictionary<MethodInfo, Func<object?, object?[]?, object?>> methodInvokersMap = AsOwnedDictionary(methodInvokers);
-        Dictionary<PropertyInfo, Action<object?, object?>> propertySettersMap = AsOwnedDictionary(propertySetters);
-
-        // ConstructorInvokerInfo (public struct) has to be projected onto the adapter's internal
-        // ConstructorInvoker type; this is a representation change, not a defensive copy, and the
-        // parameter-type arrays are taken by reference.
+        // the passed arrays and read-only dictionaries directly instead of copying them.
+        //
+        // ConstructorInvokerInfo (public struct) still has to be projected onto the adapter's
+        // internal ConstructorInvoker type; this is a representation change, not a defensive copy,
+        // and the parameter-type arrays are taken by reference.
         var constructorInvokersMap = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>(constructorInvokers.Count);
         foreach (KeyValuePair<Type, ConstructorInvokerInfo[]> kvp in constructorInvokers)
         {
@@ -235,12 +230,12 @@ public static class ReflectionMetadataHook
             AssemblyName = assembly.GetName().Name ?? string.Empty,
             Types = types,
             TypesByName = typesByName,
-            TypeMethods = testMethodsMap,
-            TypeAttributes = typeAttributesMap,
+            TypeMethods = testMethods,
+            TypeAttributes = typeAttributes,
             AssemblyAttributes = assemblyAttributes,
-            TypeMethodInvokers = methodInvokersMap,
+            TypeMethodInvokers = methodInvokers,
             TypeConstructorsInvoker = constructorInvokersMap,
-            TypePropertySetters = propertySettersMap,
+            TypePropertySetters = propertySetters,
         };
 
         lock (Lock)
@@ -255,27 +250,6 @@ public static class ReflectionMetadataHook
                 concreteProvider.SetSourceGeneratedOperations(reflectionOperations, fileOperations);
             }
         }
-    }
-
-    // Reuses the caller-provided dictionary when it is already a concrete Dictionary<,> (the shape
-    // the source generator always emits), honoring the ownership-transfer contract with zero
-    // copying. Any other IReadOnlyDictionary implementation is materialized once so the provider
-    // still owns a concrete instance. Values are always taken by reference.
-    private static Dictionary<TKey, TValue> AsOwnedDictionary<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> source)
-        where TKey : notnull
-    {
-        if (source is Dictionary<TKey, TValue> concrete)
-        {
-            return concrete;
-        }
-
-        var copy = new Dictionary<TKey, TValue>(source.Count);
-        foreach (KeyValuePair<TKey, TValue> kvp in source)
-        {
-            copy[kvp.Key] = kvp.Value;
-        }
-
-        return copy;
     }
 
     private static readonly Dictionary<Type, Attribute[]> EmptyTypeAttributes = [];
