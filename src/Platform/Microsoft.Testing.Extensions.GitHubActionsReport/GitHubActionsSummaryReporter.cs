@@ -27,7 +27,6 @@ internal sealed class GitHubActionsSummaryReporter :
     IOutputDeviceDataProducer
 {
     private const string StepSummaryEnvironmentVariable = "GITHUB_STEP_SUMMARY";
-    private const string FullyQualifiedNamePropertyKey = "vstest.TestCase.FullyQualifiedName";
     private const int MaxFailures = 20;
     private const int MaxSlowestTests = 10;
 
@@ -98,7 +97,7 @@ internal sealed class GitHubActionsSummaryReporter :
                 return Task.CompletedTask;
             }
 
-            TestNodeStateProperty? state = update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+            TestNodeStateProperty? state = update.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
             TerminalKind kind = GetTerminalKind(state);
             if (kind == TerminalKind.NotTerminal)
             {
@@ -108,23 +107,21 @@ internal sealed class GitHubActionsSummaryReporter :
             string uid = update.TestNode.Uid;
             string displayName = update.TestNode.DisplayName;
 
+            // Resolve the stable, fully-qualified name the same way the annotation and slow-test reporters do
+            // (preferring TestMethodIdentifierProperty) so a given test renders identically across all three surfaces.
+            string fullyQualifiedName = TestNodeIdentity.GetTestName(update.TestNode);
+
             TimingProperty? timing = null;
-            string? fqnValue = null;
             PropertyBag.PropertyBagEnumerator enumerator = update.TestNode.Properties.GetStructEnumerator();
             while (enumerator.MoveNext())
             {
-                switch (enumerator.Current)
+                if (enumerator.Current is TimingProperty t)
                 {
-                    case TimingProperty t:
-                        timing = t;
-                        break;
-                    case SerializableKeyValuePairStringProperty kv when kv.Key == FullyQualifiedNamePropertyKey && fqnValue is null:
-                        fqnValue = kv.Value;
-                        break;
+                    timing = t;
+                    break;
                 }
             }
 
-            string fullyQualifiedName = fqnValue ?? displayName;
             TimeSpan duration = timing?.GlobalTiming.Duration ?? TimeSpan.Zero;
 
             lock (_stateLock)
@@ -178,7 +175,7 @@ internal sealed class GitHubActionsSummaryReporter :
 
             try
             {
-                using IFileStream stream = _fileSystem.NewFileStream(path!, FileMode.Append, FileAccess.Write, FileShare.Read);
+                using IFileStream stream = _fileSystem.NewFileStream(path!, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
                 using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false));
                 await writer.WriteAsync(markdown).ConfigureAwait(false);
             }

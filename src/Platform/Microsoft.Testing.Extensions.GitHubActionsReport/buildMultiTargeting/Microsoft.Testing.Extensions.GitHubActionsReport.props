@@ -1,6 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project>
   <ItemGroup>
+    <!--
+      The GUID is a stable extension identifier for this builder hook; keep it fixed once published.
+      The extension's closing '::endgroup::' is guaranteed to be emitted after the other reporters'
+      output by intra-provider registration order (the group reporter is registered last inside
+      AddGitHubActionsProvider), not by any GUID-based ordering here.
+    -->
     <TestingPlatformBuilderHook Include="97613040-23E9-4712-BA5D-3B1534504735" >
       <DisplayName>Microsoft.Testing.Extensions.GitHubActionsReport</DisplayName>
       <TypeFullName>Microsoft.Testing.Extensions.GitHubActionsReport.TestingPlatformBuilderHook</TypeFullName>

@@ -16,6 +16,7 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\OutputDevice\TargetFrameworkParser.cs" Link="Helpers\TargetFrameworkParser.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TargetFrameworkMonikerHelper.cs" Link="Helpers\TargetFrameworkMonikerHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\SlowTestReporterBase.cs" Link="Helpers\SlowTestReporterBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestNodeIdentity.cs" Link="Helpers\TestNodeIdentity.cs" />
     <Compile Include="$(RepoRoot)\test\Utilities\Microsoft.Testing.TestInfrastructure\RootFinder.cs" Link="RootFinder.cs" />
   </ItemGroup>
 

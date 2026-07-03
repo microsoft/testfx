@@ -53,6 +53,33 @@ public sealed class GitHubActionsAnnotationReporterTests
     }
 
     [TestMethod]
+    public void GetErrorAnnotation_RemapsDeterministicBuildRootPathToWorkspaceRelative()
+    {
+        // A frame emitted from a deterministic (source-linked) build carries the '/_/' root marker; the reporter
+        // must strip it and produce a forward-slash workspace-relative path regardless of the repo root value.
+        var exception = new StackTraceException("   at Contoso.Calc.Add() in /_/src/Calc.cs:line 12");
+
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
+            "Contoso.CalcTests.Add", "boom", exception, repoRoot: "/repo/", CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+
+        Assert.AreEqual("::error file=src/Calc.cs,line=12,col=1,title=Test failed%3A Contoso.CalcTests.Add::boom", text);
+    }
+
+    [TestMethod]
+    public void GetErrorAnnotation_SkipsAssertionFramesAndAnnotatesUserCallSite()
+    {
+        // The top frame is an MSTest assertion implementation and must be skipped in favour of the user's call site.
+        var exception = new StackTraceException(
+            "   at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(string message) in /_/assert/Assert.cs:line 1\n"
+            + "   at Contoso.MyTests.TheTest() in /_/src/MyTests.cs:line 7");
+
+        string text = GitHubActionsAnnotationReporter.GetErrorAnnotation(
+            "Contoso.MyTests.TheTest", "nope", exception, repoRoot: "/repo/", CreateFileSystemWhereEveryFileExists(), new NoopLogger());
+
+        Assert.AreEqual("::error file=src/MyTests.cs,line=7,col=1,title=Test failed%3A Contoso.MyTests.TheTest::nope", text);
+    }
+
+    [TestMethod]
     public void GetErrorAnnotation_UsesFallbackMessage_WhenNoExplanationOrException()
     {
         string text = GitHubActionsAnnotationReporter.GetErrorAnnotation("MyNamespace.MyTest", explanation: null, exception: null, repoRoot: null, CreateFileSystemWhereEveryFileExists(), new NoopLogger());
@@ -83,6 +110,17 @@ public sealed class GitHubActionsAnnotationReporterTests
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(f => f.ExistFile(It.IsAny<string>())).Returns(true);
         return fileSystem.Object;
+    }
+
+    // Exception whose StackTrace is a caller-supplied synthetic string, letting tests exercise the
+    // frame-parsing/path-remapping branches deterministically without relying on real PDB-derived paths.
+    private sealed class StackTraceException : Exception
+    {
+        private readonly string _stackTrace;
+
+        public StackTraceException(string stackTrace) => _stackTrace = stackTrace;
+
+        public override string? StackTrace => _stackTrace;
     }
 
     private sealed class NoopLogger : ILogger

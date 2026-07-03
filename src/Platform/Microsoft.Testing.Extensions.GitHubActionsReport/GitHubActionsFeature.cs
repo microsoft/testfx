@@ -7,10 +7,10 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 /// <summary>
-/// Shared activation logic for the GitHub Actions reporters. The extension auto-activates when running
-/// on GitHub Actions (<c>GITHUB_ACTIONS=true</c>) or when the <c>--report-gh</c> master switch is set;
-/// each individual feature is then on by default but can be turned off with its <c>--report-gh-*</c>
-/// knob set to <c>off</c>.
+/// Shared activation logic for the GitHub Actions reporters. The extension activates only when running
+/// on GitHub Actions (<c>GITHUB_ACTIONS=true</c>) and the <c>--report-gh</c> master switch is set; each
+/// individual feature is then on by default but can be turned off with its <c>--report-gh-*</c> knob set
+/// to <c>off</c>.
 /// </summary>
 internal static class GitHubActionsFeature
 {

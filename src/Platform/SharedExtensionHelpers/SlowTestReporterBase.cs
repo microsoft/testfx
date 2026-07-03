@@ -111,7 +111,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             }
 
             string uid = update.TestNode.Uid;
-            TestNodeStateProperty? state = update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
+            TestNodeStateProperty? state = update.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
             if (state is InProgressTestNodeStateProperty)
             {
                 string testName = GetTestName(update.TestNode);
