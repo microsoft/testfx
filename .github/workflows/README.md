@@ -43,14 +43,22 @@ Agentic workflows authenticate through repository secrets:
 | Secret / permission | Used for | Notes |
 | --- | --- | --- |
 | `COPILOT_GITHUB_TOKEN` | GitHub Copilot CLI (model inference) | Fine-grained PAT. **Preferably replaced** by the `copilot-requests: write` permission — see below. |
-| `GH_AW_GITHUB_TOKEN` | GitHub MCP reads / safe-output writes that need more than the default `GITHUB_TOKEN` | Fine-grained PAT and the token that used to be forced by lockdown mode. **Preferably replaced** by a GitHub App — see below. |
+| `GH_AW_GITHUB_TOKEN` | GitHub MCP reads / safe-output writes that need more than the default `GITHUB_TOKEN` | Fine-grained PAT and the token that used to be forced by lockdown mode. **Preferably replaced** by a GitHub App — see below. **Currently unset**: the compiler's token chain (`GH_AW_GITHUB_MCP_SERVER_TOKEN \|\| GH_AW_GITHUB_TOKEN \|\| GITHUB_TOKEN`) falls back to the per-run `GITHUB_TOKEN` when this secret is absent, so leave it unset unless a workflow needs elevated access. |
 
 > [!IMPORTANT]
-> **Fine-grained PATs expire and, under the `microsoft` org policy, may live at most ~1 week.**
-> A PAT-based setup therefore breaks on a short cycle: when the token lapses, every workflow
-> that depends on it fails at once and files a burst of `[aw] … failed` issues. Prefer the
-> two PAT-free options below — together they let this repo run agentic workflows with **no
-> long-lived PAT at all**.
+> **Fine-grained PATs expire, and the `Microsoft Open Source` enterprise now hard-rejects any
+> fine-grained PAT whose lifetime exceeds 8 days** (the API returns `403` with a message pointing
+> at the token's settings page). A PAT-based setup therefore breaks on a short cycle: when the
+> token lapses — or simply outlives the 8-day window — every workflow that depends on it fails at
+> once (e.g. the `Checkout PR branch` step 403s on the collaborator-permission and PR lookups) and
+> files a burst of `[aw] … failed` issues. Prefer the two PAT-free options below — together they
+> let this repo run agentic workflows with **no long-lived PAT at all**.
+>
+> **Fast unblock:** delete the `GH_AW_GITHUB_TOKEN` secret (`gh secret delete GH_AW_GITHUB_TOKEN
+> --repo microsoft/testfx`). Because no source workflow forces a custom PAT anymore (`lockdown` was
+> removed repo-wide and all declare `min-integrity: none`), every workflow then degrades gracefully
+> to the built-in `GITHUB_TOKEN`. The only case that still needs elevated auth is a write-back on a
+> **fork** PR (where `GITHUB_TOKEN` is read-only) — use the GitHub App below for those.
 
 ### Preferred: eliminate the expiring PATs
 
