@@ -41,18 +41,6 @@ public abstract partial class CLITestBase
         return frameworkHandle.GetFlattenedTestResults();
     }
 
-    internal static async Task<ImmutableArray<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases, string? testCaseFilter)
-    {
-        var testExecutionManager = new TestExecutionManager();
-        var frameworkHandle = new InternalFrameworkHandle();
-
-        string runSettingsXml = GetRunSettingsXml(string.Empty);
-        var runContext = new InternalRunContext(runSettingsXml, testCaseFilter);
-
-        await testExecutionManager.ExecuteTestsAsync(testCases, runContext, frameworkHandle, false);
-        return frameworkHandle.GetFlattenedTestResults();
-    }
-
     #region Helper classes
     private class InternalLogger : IMessageLogger
     {
@@ -85,46 +73,15 @@ public abstract partial class CLITestBase
         public IRunSettings? RunSettings { get; }
 
         public ITestCaseFilterExpression? GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider) => _filter;
-    }
 
-    private sealed class InternalRunContext : IRunContext
-    {
-        private readonly ITestCaseFilterExpression? _filter;
-
-        public InternalRunContext(string runSettings, string? testCaseFilter)
+        private class InternalRunSettings : IRunSettings
         {
-            RunSettings = new InternalRunSettings(runSettings);
+            public InternalRunSettings(string runSettings) => SettingsXml = runSettings;
 
-            if (testCaseFilter != null)
-            {
-                _filter = TestCaseFilterFactory.ParseTestFilter(testCaseFilter);
-            }
+            public string SettingsXml { get; }
+
+            public ISettingsProvider? GetSettings(string? settingsName) => throw new NotImplementedException();
         }
-
-        public IRunSettings? RunSettings { get; }
-
-        public bool KeepAlive => false;
-
-        public bool InIsolation => false;
-
-        public bool IsDataCollectionEnabled => false;
-
-        public bool IsBeingDebugged => false;
-
-        public string? TestRunDirectory => null;
-
-        public string? SolutionDirectory => null;
-
-        public ITestCaseFilterExpression? GetTestCaseFilter(IEnumerable<string>? supportedProperties, Func<string, TestProperty?> propertyProvider) => _filter;
-    }
-
-    private sealed class InternalRunSettings : IRunSettings
-    {
-        public InternalRunSettings(string runSettings) => SettingsXml = runSettings;
-
-        public string SettingsXml { get; }
-
-        public ISettingsProvider? GetSettings(string? settingsName) => throw new NotImplementedException();
     }
 
     private sealed class InternalFrameworkHandle : IFrameworkHandle

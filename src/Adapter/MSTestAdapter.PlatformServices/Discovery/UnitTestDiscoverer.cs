@@ -110,8 +110,8 @@ internal class UnitTestDiscoverer
 
     internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IAdapterMessageLogger logger)
     {
-        // Get filter and skip discovery in case filter expression has parsing error.
-        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(discoveryContext, logger, out bool filterHasError);
+        // Get filter expression and skip discovery in case filter expression has parsing error.
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
         if (filterHasError)
         {
             return;
@@ -119,13 +119,15 @@ internal class UnitTestDiscoverer
 
         foreach (UnitTestElement testElement in testElements)
         {
-            // Filter tests based on test case filters.
-            if (filter is not null && !filter.Matches(testElement))
+            var testCase = testElement.ToTestCase();
+
+            // Filter tests based on test case filters
+            if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
             {
                 continue;
             }
 
-            discoverySink.SendTestCase(testElement.ToTestCase());
+            discoverySink.SendTestCase(testCase);
         }
     }
 }

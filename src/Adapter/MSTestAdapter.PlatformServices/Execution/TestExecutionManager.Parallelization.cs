@@ -73,7 +73,7 @@ internal partial class TestExecutionManager
         }
 
         // Default test set is filtered tests based on user provided filter criteria
-        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(runContext, adapterMessageLogger, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, adapterMessageLogger, out bool filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
@@ -113,19 +113,13 @@ internal partial class TestExecutionManager
 
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
-        // Convert each test to its UnitTestElement exactly once and carry the pair through filtering and
-        // shuffling, so the surviving tests aren't converted a second time when building unitTestElements below.
-        (TestCase TestCase, UnitTestElement Element)[] testsToRunPairs =
-            [.. tests
-                .Select(test => (TestCase: test, Element: test.ToUnitTestElementWithUpdatedSource(source)))
-                .Where(pair => MatchTestFilter(filter, pair.Element))];
+        TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter))];
         if (_testOrderRandom is { } sourceRandom)
         {
-            Shuffle(sourceRandom, testsToRunPairs);
+            Shuffle(sourceRandom, testsToRun);
         }
 
-        TestCase[] testsToRun = [.. testsToRunPairs.Select(pair => pair.TestCase)];
-        UnitTestElement[] unitTestElements = [.. testsToRunPairs.Select(pair => pair.Element)];
+        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElementWithUpdatedSource(source))];
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
