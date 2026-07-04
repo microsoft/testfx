@@ -43,14 +43,14 @@
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
 3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. Next candidates:
-   - `UseCooperativeCancellationForTimeoutAnalyzerTests` (27 tests) — further edge cases possible
-   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — room for edge cases
-   - `PreferConstructorOverTestInitializeAnalyzerTests` (15 tests) — room for edge cases
+   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — room for edge cases (expression-body Dispose in fixer, base class IDisposable)
+   - `PreferConstructorOverTestInitializeAnalyzerTests` (11 tests) — room for edge cases (parameterized-only ctor scenario, non-TestClass)
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-04 | Task 3 (UseCooperativeCancellationForTimeout MSTEST0045: async method, non-TestClass, named arg), Task 7 |
 | 2026-07-03 | Task 3 (GlobalTestFixtureShouldBeValid MSTEST0050 generic+derivedAttr, DuplicateTestMethodAttribute MSTEST0060 no-TestClass-guard+first-wins-fixer), Task 7 |
 | 2026-07-02 | Task 3 (GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 generic+struct+derivedAttr, DuplicateTestMethodAttributeAnalyzer MSTEST0060 outside-TestClass+inline-mixed+first-wins), Task 7 |
 | 2026-07-01 | Task 3 (DuplicateTestMethodAttributeAnalyzer MSTEST0060: method outside TestClass, mixed inline list, first-wins fixer), Task 7 |
@@ -69,11 +69,12 @@
 
 ## Last Run
 
-2026-07-03 23:18 UTC
+2026-07-04 23:14 UTC
 
 ## Completed Work (recent)
 
-- PR #aw_pr_gfd (pending) for GlobalTestFixtureShouldBeValid + DuplicateTestMethodAttribute edge cases (2026-07-03) — generic class, derived TestClassAttr; no-TestClass-guard, first-wins-fixer; 31/31 pass
+- PR #aw_cooptimeout (pending) for UseCooperativeCancellationForTimeout (MSTEST0045) edge cases (2026-07-04) — async method, non-TestClass method, named argument form; 18/18 pass
+- PR #aw_pr_gfd → MERGED — GlobalTestFixtureShouldBeValid (static class, no-TestClass attr) + DuplicateTestMethodAttribute (non-TestMethod NoDiag, inline duplicates fixer)
 - PR #9516 merged — UseAttributeOnTestMethodAnalyzer (MSTEST0007) edge cases (merged 2026-06-30)
 - PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036 (multi-level inheritance, property type mismatch, field fallthrough)
 - PR #9481 merged — TestContextPropertyUsageAnalyzer MSTEST0048 (non-TestContext guard, lambda ContainingSymbol)
