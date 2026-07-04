@@ -7,6 +7,10 @@ internal sealed class ReflectionTestMethodInfo : MethodInfo
 {
     private readonly MethodInfo _methodInfo;
 
+    // PERF: MethodInfo.GetParameters() allocates a fresh array on every call (CLR safety guarantee).
+    // Cache the result so N data rows share a single allocation.
+    private ParameterInfo[]? _parameters;
+
     public ReflectionTestMethodInfo(MethodInfo methodInfo, string? displayName)
     {
         _methodInfo = methodInfo;
@@ -41,7 +45,7 @@ internal sealed class ReflectionTestMethodInfo : MethodInfo
 
     public override MethodImplAttributes GetMethodImplementationFlags() => _methodInfo.GetMethodImplementationFlags();
 
-    public override ParameterInfo[] GetParameters() => _methodInfo.GetParameters();
+    public override ParameterInfo[] GetParameters() => _parameters ??= _methodInfo.GetParameters();
 
     public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture) => _methodInfo.Invoke(obj, invokeAttr, binder, parameters, culture);
 
