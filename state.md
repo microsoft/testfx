@@ -44,18 +44,18 @@ NOTE: NonWindowsTests.slnf covers only MTP/Analyzer unit tests on Linux.
 
 ## Open Work
 
-- Branch perf-assist/skip-clone-dict-alloc — PR #aw_clone_alloc submitted 2026-07-03
+- Branch perf-assist/skip-clone-dict-alloc — PR #aw_clone_alloc submitted 2026-07-04
   - Skip intermediate Dictionary allocation in CloneForDataDrivenIteration
   - Pass _properties directly to ctor; ctor copies in its null/null branch
   - Saves 1 Dictionary alloc + O(n) copy per data-driven test iteration
-  - Build: 0 warnings, 0 errors; all unit tests passed
+  - Build: awaiting CI
   - Status: awaiting CI
 
-- Branch perf-assist/skip-tcs-no-exec-context — PR #aw_tcs_fast submitted 2026-07-03
+- Branch perf-assist/skip-tcs-no-exec-context — PR #aw_tcs_fast submitted 2026-07-04
   - Fast path in ExecuteTestAsync when capturedContext == null
   - Skips TaskCompletionSource<TestResult[]> + async-lambda closure + Action delegate allocs
-  - ~160 B / 3 heap allocs fewer per test in the common case
-  - Build: 0 warnings, 0 errors; all unit tests passed
+  - ~3 heap allocs fewer per test in the common case
+  - Build: awaiting CI
   - Status: awaiting CI
 
 ## Optimization Backlog
@@ -63,8 +63,8 @@ NOTE: NonWindowsTests.slnf covers only MTP/Analyzer unit tests on Linux.
 Priority | Item
 ---------|-----
 Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450, #9461, #9478, #9486, #9507 merged
-Submitted | PR (2026-07-03) — skip intermediate dict alloc in CloneForDataDrivenIteration
-Submitted | PR (2026-07-03) — skip TCS bridge in ExecuteTestAsync when ctx==null
+Submitted | PR (2026-07-04) — skip intermediate dict alloc in CloneForDataDrivenIteration
+Submitted | PR (2026-07-04) — skip TCS bridge in ExecuteTestAsync when ctx==null
 Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
 Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
 Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
@@ -81,26 +81,28 @@ Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallb
 - ExecuteTestAsync TCS bridge: only needed when TestClassInfo.ExecutionContext or TestAssemblyInfo.ExecutionContext is non-null (i.e., when [AssemblyInitialize]/[ClassInitialize] captured an ExecutionContext)
 - GitHub MCP tools return 403/token lifetime error in CI agent — use git log + local code analysis only
 - CloneForDataDrivenIteration: ctor null/null branch always copies via [with(properties)]; no snapshot needed
-- IDE0008 rule in MSTestAdapter.PlatformServices project: use explicit types (not var) for new locals
+- IDE0008 rule: use explicit types for new locals (not var) — unless csharp_style_var_when_type_is_apparent applies (e.g. new Foo() on right side)
+- csharp_style_var_elsewhere = false:warning — do NOT use var for method results/local assignments where type not apparent
+- 2026-07-03 run PRs never created due to id-token:read bug in agentic workflow (fixed by PR #9574/9577)
 
 ## Task Schedule (last run dates)
 
 - Task 1 (Commands): 2026-06-25
 - Task 2 (Identify): 2026-06-30
-- Task 3 (Implement): 2026-07-03 ✓ this run (2 PRs submitted)
-- Task 4 (Maintain PRs): 2026-06-30
+- Task 3 (Implement): 2026-07-04 ✓ (2 PRs submitted)
+- Task 4 (Maintain PRs): 2026-07-04 ✓ (confirmed no open PRs, re-submitted)
 - Task 5 (Comment issues): 2026-06-28
 - Task 6 (Infra): 2026-06-28
-- Task 7 (Monthly Summary): 2026-07-03 ✓ this run
+- Task 7 (Monthly Summary): 2026-07-04 ✓ (closed June issue #9258, created July #aw_jul2607)
 
 ## Monthly Activity Issue
 
-Issue #9258: [perf-improver] Monthly Activity 2026-06 (CLOSED 2026-07-01)
-July issue: #aw_jul2607 (created 2026-07-03 run 28665966760; prev run also created one — maintainer may need to close duplicate)
+Issue #9258: [perf-improver] Monthly Activity 2026-06 (CLOSED 2026-07-04)
+July issue: #aw_jul2607 (created 2026-07-04 run 28708586488)
 
 ## Backlog Cursor
 
-Two new PRs (clone dict alloc + TCS fast path). Next priority tasks:
+Two new PRs submitted. Next priority tasks:
 - Task 4 (Maintain PRs) — check both pending PRs next run
-- Task 5 (Comment on performance issues) — last done 2026-06-28
-- Task 6 (Perf infra) — last done 2026-06-28
+- Task 5 (Comment on performance issues) — last done 2026-06-28 (oldest)
+- Task 6 (Perf infra) — last done 2026-06-28 (oldest)
