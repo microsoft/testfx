@@ -524,16 +524,15 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <returns>A fresh context suitable for one folded data-driven iteration.</returns>
     internal TestContextImplementation CloneForDataDrivenIteration()
     {
-        // Take a shallow snapshot of the current property bag so that the clone starts with
-        // the same properties (including TestNameLabel / FullyQualifiedTestClassNameLabel and
-        // anything merged from AssemblyInitialize / ClassInitialize) but is otherwise isolated.
-        // Per-iteration mutations to the clone's property bag won't leak back to this instance
-        // nor to subsequent iterations.
-        var snapshot = new Dictionary<string, object?>(_properties);
-
-        // Pass testMethod: null and testClassFullName: null because the relevant labels are
-        // already in the snapshot. The constructor will copy the snapshot as-is.
-        var clone = new TestContextImplementation(testMethod: null, testClassFullName: null, snapshot, _messageLogger, _testRunCancellationToken);
+        // Pass testMethod: null and testClassFullName: null so the constructor takes the
+        // null/null branch: _properties = [with(properties)], which shallow-copies _properties
+        // into a new Dictionary. The clone starts with the same properties (including
+        // TestNameLabel / FullyQualifiedTestClassNameLabel and anything merged from
+        // AssemblyInitialize / ClassInitialize) but its property bag is fully isolated —
+        // per-iteration mutations won't leak back to this instance or to subsequent iterations.
+        // Passing _properties directly avoids creating an intermediate Dictionary, saving one
+        // allocation per data-driven test iteration.
+        TestContextImplementation clone = new(testMethod: null, testClassFullName: null, _properties, _messageLogger, _testRunCancellationToken);
 
         // Preserve TestRunCount so user code that observes it (e.g. retry-aware tests) sees
         // the same value it would see in the unfolded path. TestRunCount represents the
