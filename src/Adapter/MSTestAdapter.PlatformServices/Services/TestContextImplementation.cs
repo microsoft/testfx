@@ -10,7 +10,6 @@ using System.Collections.ObjectModel;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
@@ -71,7 +70,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 #else
     private readonly object _propertiesLock = new();
 #endif
-    private readonly IMessageLogger? _messageLogger;
+    private readonly IAdapterMessageLogger? _messageLogger;
     private readonly TestRunCancellationToken? _testRunCancellationToken;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
@@ -113,7 +112,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
@@ -428,7 +427,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     /// <inheritdoc/>
     public override void DisplayMessage(MessageLevel messageLevel, string message)
-        => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
+        => _messageLogger?.SendMessage(messageLevel, message);
     #endregion
 
     /// <inheritdoc/>

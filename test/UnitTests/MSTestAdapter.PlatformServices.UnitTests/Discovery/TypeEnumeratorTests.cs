@@ -121,7 +121,7 @@ public partial class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(mockRunContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
 
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName!);
@@ -151,7 +151,7 @@ public partial class TypeEnumeratorTests : TestContainer
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
-        MSTestSettings.PopulateSettings(mockRunContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(mockRunContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName!);
 

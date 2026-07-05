@@ -5,9 +5,9 @@
 using System.Security;
 #endif
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -198,7 +198,7 @@ internal class ReflectHelper
     /// </summary>
     /// <param name="testPropertyProvider">The member to inspect.</param>
     /// <returns>List of traits.</returns>
-    internal static Trait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
+    internal static TestTrait[] GetTestPropertiesAsTraits(MethodInfo testPropertyProvider)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetTestPropertiesAsTraits(testPropertyProvider);
 
     /// <summary>

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -376,7 +376,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
         MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeTrue();
@@ -400,7 +400,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.RandomizeTestOrder.Should().BeTrue();
         MSTestSettings.CurrentSettings.OrderTestsByNameInClass.Should().BeFalse();
@@ -656,7 +656,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.DisableParallelization.Should().BeFalse();
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Never);
@@ -675,7 +675,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings.CurrentSettings.DisableParallelization.Should().BeTrue();
     }
@@ -693,7 +693,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '3' for runsettings entry 'DisableParallelization', setting will be ignored."), Times.Once);
     }
 
@@ -981,7 +981,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         MSTestSettings adapterSettings2 = MSTestSettings.CurrentSettings;
@@ -1033,7 +1033,7 @@ public class MSTestSettingsTests : TestContainer
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
     {
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
@@ -1045,7 +1045,7 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
     {
         _mockDiscoveryContext.Setup(md => md.RunSettings!.SettingsXml).Returns(string.Empty);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
@@ -1067,7 +1067,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1092,7 +1092,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1118,7 +1118,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
@@ -1147,7 +1147,7 @@ public class MSTestSettingsTests : TestContainer
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object.RunSettings?.SettingsXml, _mockMessageLogger.Object.ToAdapterMessageLogger(), null);
 
         MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 

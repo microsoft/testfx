@@ -135,7 +135,23 @@ internal sealed class TestMethod : ITestMethod
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 
+    // NOTE: This method has a latent bug (it assigns AssemblyName/MethodInfo on `this` instead of on the
+    // returned clone), tracked by https://github.com/microsoft/testfx/issues/9573. It is intentionally left
+    // untouched here so the existing ToTestCase / test-case filter bridge callers keep their exact current
+    // behavior; the execution engine uses the correct CloneWithSource below instead. The two are unified once
+    // #9573 is addressed.
     internal TestMethod CloneWithUpdatedSource(string source)
+    {
+        var clone = (TestMethod)MemberwiseClone();
+        clone.AssemblyName = source;
+        clone.MethodInfo = null;
+        return clone;
+    }
+
+    // Correct counterpart of CloneWithUpdatedSource: assigns the updated source and clears the cached
+    // MethodInfo on the returned clone (leaving `this` untouched). Used by the execution engine's source
+    // resolution. See https://github.com/microsoft/testfx/issues/9573.
+    internal TestMethod CloneWithSource(string source)
     {
         var clone = (TestMethod)MemberwiseClone();
         clone.AssemblyName = source;

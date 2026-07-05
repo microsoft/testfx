@@ -4,12 +4,14 @@
 #if !WINDOWS_UWP && !WIN_UI
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 #if NETFRAMEWORK
+// SuspendCodeCoverage (used below to pause dynamic code coverage while deployment copies files) is a VSTest
+// object-model type. Its neutralization is deferred to a later platform-services decoupling step; the rest of
+// the deployment input is already platform-agnostic.
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -104,13 +106,13 @@ internal sealed class TestDeployment : ITestDeployment
     /// <summary>
     /// Deploy files related to the list of tests specified.
     /// </summary>
-    /// <param name="testCases"> The tests. </param>
-    /// <param name="runContext"> The run context. </param>
-    /// <param name="frameworkHandle"> The framework handle. </param>
+    /// <param name="testElements"> The tests. </param>
+    /// <param name="deploymentContext"> The host deployment inputs. </param>
+    /// <param name="messageLogger"> The logger used to surface deployment warnings. </param>
     /// <returns> Return true if deployment is done. </returns>
-    public bool Deploy(IEnumerable<TestCase> testCases, IRunContext? runContext, IFrameworkHandle frameworkHandle)
+    public bool Deploy(IEnumerable<UnitTestElement> testElements, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger)
     {
-        DebugEx.Assert(testCases != null, "tests");
+        DebugEx.Assert(testElements != null, "tests");
 
         // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
         // even if test host is kept alive.
@@ -118,7 +120,7 @@ internal sealed class TestDeployment : ITestDeployment
 
         _adapterSettings = MSTestSettingsProvider.Settings;
         bool canDeploy = CanDeploy();
-        bool hasDeploymentItems = testCases.Any(DeploymentItemUtility.HasDeploymentItems);
+        bool hasDeploymentItems = testElements.Any(DeploymentItemUtility.HasDeploymentItems);
 
         // deployment directories should not be created in this case,simply return
         if (!canDeploy && hasDeploymentItems)
@@ -127,8 +129,8 @@ internal sealed class TestDeployment : ITestDeployment
         }
 
 #if NETFRAMEWORK
-        string? firstTestSource = testCases.FirstOrDefault()?.Source;
-        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
+        string? firstTestSource = testElements.FirstOrDefault()?.TestMethod.AssemblyName;
+        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(deploymentContext, firstTestSource);
 
         // Deployment directories are created but deployment will not happen.
         // This is added just to keep consistency with MSTest v1 behavior.
@@ -143,8 +145,8 @@ internal sealed class TestDeployment : ITestDeployment
             return false;
         }
 
-        string? firstTestSource = testCases.FirstOrDefault()?.Source;
-        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext, firstTestSource);
+        string? firstTestSource = testElements.FirstOrDefault()?.TestMethod.AssemblyName;
+        RunDirectories = _deploymentUtility.CreateDeploymentDirectories(deploymentContext, firstTestSource);
 #endif
 
         // Object model currently does not have support for SuspendCodeCoverage. We can remove this once support is added
@@ -153,15 +155,15 @@ internal sealed class TestDeployment : ITestDeployment
 #endif
         {
             // Group the tests by source
-            var testsBySource = from test in testCases
-                                group test by test.Source into testGroup
+            var testsBySource = from test in testElements
+                                group test by test.TestMethod.AssemblyName into testGroup
                                 select new { Source = testGroup.Key, Tests = testGroup };
 
             TestRunDirectories runDirectories = RunDirectories;
             foreach (var group in testsBySource)
             {
                 // do the deployment
-                _deploymentUtility.Deploy(@group.Tests, @group.Source, runContext, frameworkHandle, RunDirectories);
+                _deploymentUtility.Deploy(@group.Tests, @group.Source, deploymentContext, messageLogger, RunDirectories);
             }
 
             // Update the runDirectories

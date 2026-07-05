@@ -118,7 +118,7 @@ internal static class TestCaseExtensions
 
         if (testCase.Traits.Any())
         {
-            testElement.Traits = [.. testCase.Traits];
+            testElement.Traits = [.. testCase.Traits.Select(t => new TestTrait(t.Name, t.Value))];
         }
 
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);
