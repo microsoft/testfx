@@ -161,7 +161,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             // this boundary so the execution engine no longer depends on the VSTest run context.
             var deploymentContext = new DeploymentContext(runContext?.TestRunDirectory, runContext?.RunSettings?.SettingsXml);
 
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(testElements, deploymentContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(testElements, deploymentContext, frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, new TestElementFilterProvider(runContext), testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {
@@ -223,7 +223,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             // this boundary so the execution engine no longer depends on the VSTest run context.
             var deploymentContext = new DeploymentContext(runContext?.TestRunDirectory, runContext?.RunSettings?.SettingsXml);
 
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, deploymentContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, deploymentContext, frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, new TestElementFilterProvider(runContext), testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {
