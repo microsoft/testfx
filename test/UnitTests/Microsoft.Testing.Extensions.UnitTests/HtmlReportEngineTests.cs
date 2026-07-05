@@ -364,7 +364,7 @@ public class HtmlReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 2, 3, 4, 5, 6, TimeSpan.Zero));
 
-        var engine = new HtmlReportEngine(
+        var engine = new HtmlReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -374,7 +374,7 @@ public class HtmlReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
         (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
@@ -525,7 +525,7 @@ public class HtmlReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-        var engine = new HtmlReportEngine(
+        var engine = new HtmlReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -535,7 +535,7 @@ public class HtmlReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
         (string finalPath, string? warning) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
@@ -570,7 +570,7 @@ public class HtmlReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-        var engine = new HtmlReportEngine(
+        var engine = new HtmlReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -580,7 +580,7 @@ public class HtmlReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
         await Assert.ThrowsExactlyAsync<IOException>(() => engine.GenerateReportAsync([Captured("a", "A", "passed")]));
         Assert.AreEqual(1, callCount);
