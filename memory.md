@@ -1,9 +1,10 @@
 # Efficiency Improver Memory — microsoft/testfx
 
 ## Tasks Last Run
-- Task 3 (Implement Improvement): 2026-07-04 (cache ReflectionTestMethodInfo + GetParameters() across data rows; fix ResolveArguments to use ParameterTypes; PR #aw_pr_jul2 submitted)
-- Task 7 (Monthly Summary): 2026-07-04 (updated July 2026 issue #9594 with new PR)
-- Task 2 (Identify Opportunities): 2026-07-03 (scanned TestFramework assertions, TelemetryCollector, TestMethodRunner, TestDataSourceUtilities)
+- Task 4 (Check PR Status): 2026-07-08 (PR #9614 merged; PR #9617 still open/dirty)
+- Task 3 (Implement Improvement): 2026-07-08 (pass cached ParameterTypes to GetInvokeResultAsync; eliminate double-alloc in ConstructGenericMethod; branch efficiency/pass-cached-params-to-invoke; issue #aw_pr_jul3)
+- Task 7 (Monthly Summary): 2026-07-08 (updated July 2026 issue #9594)
+- Task 2 (Identify Opportunities): 2026-07-08 (found GetInvokeResultAsync uncached GetParameters() call site)
 - Task 5 (Comment on Issues): 2026-06-30 (GitHub MCP 403 error)
 - Task 6 (Measurement Infrastructure): 2026-06-27
 
@@ -12,8 +13,9 @@
 - Analyzers scan: DONE
 - SourceGeneratedReflectionOperations: DONE (PR #9479)
 - VideoRecorder PropertyBag.FirstOrDefault: DONE (PR #9488)
-- GetParameters caching (TestMethodInfo.ParameterTypes + AssemblyEnumerator): DONE (PR #9514, merged 2026-06-30)
-- ReflectionTestMethodInfo caching + ArgumentResolution fix: DONE (PR #aw_pr_jul2, submitted 2026-07-04)
+- GetInvokeResultAsync uncached params: DONE (branch efficiency/pass-cached-params-to-invoke; issue #aw_pr_jul3; 2026-07-08) — threads ParameterTypes cache to invocation call; eliminates double-alloc for generic methods
+- ReflectionTestMethodInfo caching + ArgumentResolution fix: DONE (incorporated in PR #9617 by Evangelink)
+- GetInvokeResultAsync uncached params: DONE (branch efficiency/pass-cached-params-to-invoke, issue #aw_pr_jul3, 2026-07-08)
 - Next scan areas: CtrfReport/HtmlReport report generators (low priority — end-of-run), Analyzers remaining
 
 ## Validated Commands
@@ -33,10 +35,10 @@ Notes:
 
 ## Monthly Activity Issue
 - Issue #9197: June 2026 — CLOSED 2026-07-03
-- Current: July 2026 issue #9594 (created 2026-07-03, updated 2026-07-04)
+- Current: July 2026 issue #9594 (created 2026-07-03, updated 2026-07-08)
 
 ## Open PRs (Efficiency Improver)
-- Branch `efficiency/cache-getparameters-across-data-rows` (temporary_id #aw_pr_jul2): 3 changes — cache GetParameters() in ReflectionTestMethodInfo, use ParameterTypes in ResolveArguments, cache ReflectionTestMethodInfo wrapper in TestMethodRunner field — PENDING REVIEW (created 2026-07-04)
+- Branch `efficiency/pass-cached-params-to-invoke` (temporary_id #aw_pr_jul3): thread TestMethodInfo.ParameterTypes through GetInvokeResultAsync + ConstructGenericMethod; eliminates O(N) GetParameters() allocs per invocation — PENDING REVIEW (created 2026-07-08)
 
 ## Work in Progress
 None.
@@ -53,6 +55,7 @@ None.
 
 ## Efficiency Notes
 - MethodInfo.GetParameters(): always returns a fresh array copy (CLR safety). Cache with ??= for repeated calls.
+- GetInvokeResultAsync: add overload accepting ParameterInfo[] to avoid re-calling GetParameters() on every test invocation. ConstructGenericMethod also called GetParameters() a second time for generic methods — pass cached array there too.
 - C# 14 `field` keyword available (LangVersion=preview) — useful for lazy auto-property caching.
 - ReflectionTestMethodInfo: cache _parameters field (GetParameters() result).
 - TestMethodRunner._cachedReflectionMethodInfo: reuses wrapper across N data rows since _testMethodInfo.MethodInfo and _test.DisplayName are immutable per TestMethodRunner lifetime.
@@ -77,5 +80,5 @@ None.
 - Do not re-comment until new human activity appears
 
 ## Round-Robin Task Schedule
-- This run (2026-07-04): Tasks 3 (cache GetParameters), 7 (update July issue)
-- Next run should prioritize: Task 4 (check PR #aw_pr_jul2 status), Task 5 (comment on issues), Task 6 (infra proposal), Task 7
+- This run (2026-07-08): Tasks 4 (check PR status), 2 (identify opportunities), 3 (implement), 7 (update July issue)
+- Next run should prioritize: Task 5 (comment on issues — check for new activity on #8894, #8824), Task 6 (infra proposal for #9480), Task 7
