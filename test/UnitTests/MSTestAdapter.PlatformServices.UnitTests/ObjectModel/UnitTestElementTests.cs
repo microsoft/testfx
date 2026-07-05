@@ -164,7 +164,7 @@ public class UnitTestElementTests : TestContainer
         testCase.Traits.Count().Should().Be(0);
 #pragma warning restore CA1827 // Do not use Count() or LongCount() when Any() can be used
 
-        var trait = new Trait("trait", "value");
+        var trait = new TestTrait("trait", "value");
         _unitTestElement.Traits = [trait];
         testCase = _unitTestElement.ToTestCase();
 

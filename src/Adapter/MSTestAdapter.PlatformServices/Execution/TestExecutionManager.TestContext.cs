@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -51,7 +50,7 @@ internal partial class TestExecutionManager
 
         if (unitTestElement.Traits is { Length: > 0 })
         {
-            foreach (Trait trait in unitTestElement.Traits)
+            foreach (TestTrait trait in unitTestElement.Traits)
             {
                 ValidateAndAssignTestProperty(testContextProperties, trait.Name, trait.Value);
             }
