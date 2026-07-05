@@ -37,19 +37,23 @@
 - **Generic class in FixtureUtils**: `ContainingType.IsGenericType && !allowGenericType` fires for GlobalTestFixtureShouldBeValid because `allowGenericType: false`. A `[TestClass] public class MyTestClass<T>` containing `[GlobalTestInitialize]` produces a diagnostic.
 - **DuplicateTestMethodAttributeAnalyzer has NO TestClass guard**: fires on duplicate TestMethod-derived attrs on any method, regardless of [TestClass].
 - **DuplicateTestMethodAttributeFixer first-wins**: keeps the first TestMethod-derived attribute encountered in attribute list order; subsequent ones are removed.
+- **PreferDisposeOverTestCleanupAnalyzer has NO TestClass guard**: fires on any method with [TestCleanup] regardless of whether the class has [TestClass]. ImplementsIDisposable fixer method only checks syntactic base list (not semantic inheritance), so if base class implements IDisposable, fixer adds redundant IDisposable to derived class's base list.
+- **PreferConstructorOverTestInitializeAnalyzer has NO TestClass guard**: fires on any method with [TestInitialize] that returns void. Fixer merges into the FIRST non-static constructor found, even parameterized ctors.
+- **Unused using after code fix**: When a code fix removes the only usage of a namespace, the `using` becomes unused but remains in fixed code (fixers don't remove usings). Tests pass because unused usings are warnings not errors.
 
 ## Testing Opportunities Backlog
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
-3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. Next candidates:
-   - `PreferDisposeOverTestCleanupAnalyzerTests` (11 tests) — room for edge cases (expression-body Dispose in fixer, base class IDisposable)
-   - `PreferConstructorOverTestInitializeAnalyzerTests` (11 tests) — room for edge cases (parameterized-only ctor scenario, non-TestClass)
+3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. After exhaustive coverage of most analyzers, look for:
+   - Any remaining analyzers with non-TestClass-guard scenarios
+   - Fixer edge cases for more complex code transforms
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-05 | Task 3 (PreferConstructorOverTestInitialize MSTEST0020 + PreferDisposeOverTestCleanup MSTEST0021 edge cases), Task 7 |
 | 2026-07-04 | Task 3 (UseCooperativeCancellationForTimeout MSTEST0045: async method, non-TestClass, named arg), Task 7 |
 | 2026-07-03 | Task 3 (GlobalTestFixtureShouldBeValid MSTEST0050 generic+derivedAttr, DuplicateTestMethodAttribute MSTEST0060 no-TestClass-guard+first-wins-fixer), Task 7 |
 | 2026-07-02 | Task 3 (GlobalTestFixtureShouldBeValidAnalyzer MSTEST0050 generic+struct+derivedAttr, DuplicateTestMethodAttributeAnalyzer MSTEST0060 outside-TestClass+inline-mixed+first-wins), Task 7 |
@@ -59,28 +63,22 @@
 | 2026-06-28 | Task 3 (DoNotUseShadowingAnalyzer MSTEST0036: multi-level inheritance, property type mismatch, field shadowing), Task 7 |
 | 2026-06-27 | Task 3 (TestContextPropertyUsageAnalyzer MSTEST0048: non-TestContext type guard, lambda ContainingSymbol), Task 7 |
 | 2026-06-26 | Task 4 (verified PRs #9438, #9410 merged), Task 3 (IgnoreStringMethodReturnValue edge cases), Task 7 |
-| 2026-06-25 | Task 3 (UseExecuteAsyncOverrideFixer edge cases), Task 7 |
-| 2026-06-24 | Task 3 (RemoveClassCleanupBehaviorArgumentFixer edge cases), Task 7 |
-| 2026-06-23 | Task 3 (PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor), Task 7 |
-| 2026-06-22 | Task 3 (UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases), Task 7 |
-| 2026-06-21 | Task 3 (RedundantTestMethodDisplayName + UseAsyncSuffix suppressors), Task 7 |
-| 2026-06-20 | Task 3 (UnusedParameterSuppressor MSTEST0047 edge cases), Task 7 |
-| (pre-06-20) | Task 3 for analyzers: MSTEST0038, MSTEST0005, MSTEST0042, MSTEST0070, MSTEST0041, MSTEST0030, MSTEST0016, MSTEST0031, MSTEST0035, MSTEST0004, MSTEST0035, PreferTestMethod, IgnoreNotIgnored, NonNullableSuppressor, DoNotStoreStaticCtx, Assert.StartsWith/EndsWith |
+| (pre-06-26) | Task 3 for analyzers: many MSTEST00xx, Assert methods, suppressors, fixers |
 
 ## Last Run
 
-2026-07-04 23:14 UTC
+2026-07-05 23:17 UTC
 
 ## Completed Work (recent)
 
-- PR #aw_cooptimeout (pending) for UseCooperativeCancellationForTimeout (MSTEST0045) edge cases (2026-07-04) — async method, non-TestClass method, named argument form; 18/18 pass
-- PR #aw_pr_gfd → MERGED — GlobalTestFixtureShouldBeValid (static class, no-TestClass attr) + DuplicateTestMethodAttribute (non-TestMethod NoDiag, inline duplicates fixer)
+- PR for MSTEST0020/0021 (pending) — PreferConstructorOverTestInitialize + PreferDisposeOverTestCleanup edge cases (+3 tests: non-TestClass fire, parameterized-ctor merge, non-TestClass Dispose fix); 1350/1350 pass
+- PR #9615 MERGED — MSTEST0045/0050/0060 edge cases (merged 2026-07-05 by Evangelink)
 - PR #9516 merged — UseAttributeOnTestMethodAnalyzer (MSTEST0007) edge cases (merged 2026-06-30)
-- PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036 (multi-level inheritance, property type mismatch, field fallthrough)
-- PR #9481 merged — TestContextPropertyUsageAnalyzer MSTEST0048 (non-TestContext guard, lambda ContainingSymbol)
-- PR #9468 merged — IgnoreStringMethodReturnValueAnalyzer (discard, lambda block body, chained receiver)
-- PR #9438 merged — UseExecuteAsyncOverrideFixer (no public modifier, zero params, wrong param type)
-- PR #9410 merged — RemoveClassCleanupBehaviorArgumentFixer (first-arg ordering, non-attribute context guard)
+- PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036
+- PR #9481 merged — TestContextPropertyUsageAnalyzer MSTEST0048
+- PR #9468 merged — IgnoreStringMethodReturnValueAnalyzer
+- PR #9438 merged — UseExecuteAsyncOverrideFixer
+- PR #9410 merged — RemoveClassCleanupBehaviorArgumentFixer
 - PR #9382 merged — PreferTestCleanupOverDispose + PreferTestInitializeOverConstructor edge cases
 - PR #9355 merged — UseCancellationTokenPropertyAnalyzer MSTEST0054 edge cases
 - PR #9314 merged — async-suffix suppressors + redundant display name edge cases
