@@ -36,6 +36,14 @@ internal sealed class TestMethodRunner
     private readonly TestMethodInfo _testMethodInfo;
 
     /// <summary>
+    /// Lazily-created <see cref="ReflectionTestMethodInfo"/> wrapper reused across all data rows of a
+    /// data-driven test. Both <see cref="TestMethodInfo.MethodInfo"/> and <see cref="TestMethod.DisplayName"/>
+    /// are immutable for the lifetime of a <see cref="TestMethodRunner"/>, so a single wrapper can be shared
+    /// instead of allocating one per row.
+    /// </summary>
+    private ReflectionTestMethodInfo? _cachedReflectionMethodInfo;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
     /// </summary>
     /// <param name="testMethodInfo">
@@ -423,9 +431,9 @@ internal sealed class TestMethodRunner
         // and both GetDisplayName and ComputeDefaultDisplayName need to be consulted.
         if (displayNameFromTestDataRow is null && testDataSource is not null)
         {
-            var reflectionMethodInfo = new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
-            displayName = testDataSource.GetDisplayName(reflectionMethodInfo, data)
-                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(reflectionMethodInfo, data)
+            _cachedReflectionMethodInfo ??= new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
+            displayName = testDataSource.GetDisplayName(_cachedReflectionMethodInfo, data)
+                ?? TestDataSourceUtilities.ComputeDefaultDisplayName(_cachedReflectionMethodInfo, data)
                 ?? displayName;
         }
         else
@@ -488,11 +496,26 @@ internal sealed class TestMethodRunner
     {
         try
         {
+            ExecutionContext? capturedContext = testMethodInfo.Parent.ExecutionContext ?? testMethodInfo.Parent.Parent.ExecutionContext;
+
+            // Fast path: when no ExecutionContext was captured by [AssemblyInitialize] / [ClassInitialize]
+            // (the common case), RunOnContext with a null context simply invokes the action directly on the
+            // current thread. Skip the TaskCompletionSource + closure + delegate allocations and just await
+            // the executor directly.
+            if (capturedContext is null)
+            {
+                using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
+                {
+                    testMethodInfo.TestContext = executionContext;
+                    return await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false);
+                }
+            }
+
             var tcs = new TaskCompletionSource<TestResult[]>();
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
             ExecutionContextHelpers.RunOnContext(
-                testMethodInfo.Parent.ExecutionContext ?? testMethodInfo.Parent.Parent.ExecutionContext,
+                capturedContext,
                 async () =>
                 {
                     try
