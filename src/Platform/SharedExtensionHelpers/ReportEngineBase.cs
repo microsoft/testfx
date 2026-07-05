@@ -112,4 +112,16 @@ internal abstract class ReportEngineBase
 
         return (finalPath, wasExplicit);
     }
+
+    protected async Task WriteBytesAsync(string path, FileMode mode, byte[] bytes)
+    {
+        // Note that we need to dispose the IFileStream, not the inner stream.
+        // IFileStream implementations will be responsible to dispose their inner stream.
+        using IFileStream stream = _fileSystem.NewFileStream(path, mode);
+#if NETCOREAPP
+        await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
+#else
+        await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
+#endif
+    }
 }
