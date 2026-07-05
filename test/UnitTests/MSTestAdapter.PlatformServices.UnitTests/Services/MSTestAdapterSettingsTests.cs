@@ -3,10 +3,10 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using Moq;
 
@@ -202,7 +202,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             """;
 
         StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
         reader.Read();
 
         MSTestAdapterSettings.ToSettings(reader);
@@ -222,12 +222,12 @@ public class MSTestAdapterSettingsTests : TestContainer
             """;
 
         StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
         reader.Read();
 
         void ShouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
-        new Action(ShouldThrowException).Should().Throw<SettingsException>();
+        new Action(ShouldThrowException).Should().Throw<InvalidRunSettingsException>();
     }
 
     #endregion
@@ -242,7 +242,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             </MSTestV2>
             """;
         StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         adapterSettings.DeploymentEnabled.Should().BeTrue();
@@ -257,7 +257,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             </MSTestV2>
             """;
         StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         adapterSettings.DeploymentEnabled.Should().BeFalse();
@@ -275,7 +275,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             </MSTestV2>
             """;
         StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         adapterSettings.DeployTestSourceDependencies.Should().BeTrue();
@@ -290,7 +290,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             </MSTestV2>
             """;
         StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         adapterSettings.DeployTestSourceDependencies.Should().BeFalse();
@@ -305,7 +305,7 @@ public class MSTestAdapterSettingsTests : TestContainer
             </MSTestV2>
             """;
         StringReader stringReader = new(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
         reader.Read();
         var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         adapterSettings.DeployTestSourceDependencies.Should().BeTrue();
