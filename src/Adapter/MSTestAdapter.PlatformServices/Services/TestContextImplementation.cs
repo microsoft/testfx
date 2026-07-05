@@ -524,16 +524,12 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <returns>A fresh context suitable for one folded data-driven iteration.</returns>
     internal TestContextImplementation CloneForDataDrivenIteration()
     {
-        // Take a shallow snapshot of the current property bag so that the clone starts with
-        // the same properties (including TestNameLabel / FullyQualifiedTestClassNameLabel and
-        // anything merged from AssemblyInitialize / ClassInitialize) but is otherwise isolated.
+        // Pass _properties directly: the constructor's null/null branch copies it into a fresh
+        // Dictionary via the [with(properties)] collection-expression spread, so the clone is
+        // fully isolated from this instance without a separate intermediate allocation.
         // Per-iteration mutations to the clone's property bag won't leak back to this instance
         // nor to subsequent iterations.
-        var snapshot = new Dictionary<string, object?>(_properties);
-
-        // Pass testMethod: null and testClassFullName: null because the relevant labels are
-        // already in the snapshot. The constructor will copy the snapshot as-is.
-        var clone = new TestContextImplementation(testMethod: null, testClassFullName: null, snapshot, _messageLogger, _testRunCancellationToken);
+        TestContextImplementation clone = new(testMethod: null, testClassFullName: null, _properties, _messageLogger, _testRunCancellationToken);
 
         // Preserve TestRunCount so user code that observes it (e.g. retry-aware tests) sees
         // the same value it would see in the unfolded path. TestRunCount represents the
