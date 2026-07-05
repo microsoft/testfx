@@ -36,31 +36,17 @@ internal static class TestResultCapture
         }
 
         CapturedTestResultCoreData core = coreData.GetValueOrDefault();
-        return new CapturedTestResult
+        var result = new CapturedTestResult
         {
-            // Identity fields are test-controlled and can be unbounded (e.g. very long
-            // UIDs/display names from generated data), so we also cap them to keep the
-            // session-wide result list and generated XML within a predictable budget.
             // RawUid and ParentRawUid are used as keys/edges in the parent-chain
-            // dictionary, so they must be capped with the same budget on both sides
-            // to keep lookups consistent.
-            Uid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
+            // dictionary, so they must be capped with the same MaxIdentityFieldLength
+            // budget on both sides to keep lookups consistent.
             RawUid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
             ParentRawUid = TestResultCaptureHelper.Truncate(update.ParentTestNodeUid?.Value, TestResultCaptureHelper.MaxIdentityFieldLength),
-            DisplayName = TestResultCaptureHelper.Truncate(node.DisplayName, TestResultCaptureHelper.MaxIdentityFieldLength)!,
             Outcome = ClassifyOutcome(core.State),
-            Duration = core.Duration,
-            StartTime = core.Properties.Timing?.GlobalTiming.StartTime,
-            EndTime = core.Properties.Timing?.GlobalTiming.EndTime,
-            ClassName = TestResultCaptureHelper.Truncate(core.ClassName, TestResultCaptureHelper.MaxIdentityFieldLength),
-            MethodName = TestResultCaptureHelper.Truncate(core.MethodName, TestResultCaptureHelper.MaxIdentityFieldLength),
-            ErrorMessage = TestResultCaptureHelper.Truncate(core.ExceptionDetails.ErrorMessage, TestResultCaptureHelper.MaxMessageLength),
-            ExceptionType = core.ExceptionDetails.ExceptionType,
-            StackTrace = TestResultCaptureHelper.Truncate(core.ExceptionDetails.StackTrace, TestResultCaptureHelper.MaxStackTraceLength),
-            StandardOutput = TestResultCaptureHelper.Truncate(core.Properties.StandardOutput?.StandardOutput, TestResultCaptureHelper.MaxStandardStreamLength),
-            StandardError = TestResultCaptureHelper.Truncate(core.Properties.StandardError?.StandardError, TestResultCaptureHelper.MaxStandardStreamLength),
-            Traits = core.Properties.Traits,
         };
+        result.PopulateBaseFields(node, core);
+        return result;
     }
 
     private static string ClassifyOutcome(TestNodeStateProperty state)
