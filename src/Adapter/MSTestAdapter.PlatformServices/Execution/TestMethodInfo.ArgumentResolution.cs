@@ -10,7 +10,7 @@ internal partial class TestMethodInfo
 
     internal object?[] ResolveArguments(object?[] arguments)
     {
-        ParameterInfo[] parametersInfo = MethodInfo.GetParameters();
+        ParameterInfo[] parametersInfo = ParameterTypes;
         int requiredParameterCount = 0;
         bool hasParamsValue = false;
         object? paramsValues = null;
