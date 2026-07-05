@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 using DebuggerLaunchMode = Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode;
 using MessageLevel = Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel;
@@ -45,7 +45,7 @@ internal sealed partial class MSTestSettings
         }
 
         using var stringReader = new StringReader(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
 
         XmlReaderUtilities.ReadToRootNode(reader);
         reader.ReadToNextElement();
@@ -69,7 +69,7 @@ internal sealed partial class MSTestSettings
         }
 
         using var stringReader = new StringReader(runSettingsXml);
-        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, RunSettingsUtilities.ReaderSettings);
 
         XmlReaderUtilities.ReadToRootNode(reader);
         reader.ReadToNextElement();

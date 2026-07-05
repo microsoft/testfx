@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using VSTestAttachmentSet = Microsoft.VisualStudio.TestPlatform.ObjectModel.AttachmentSet;
@@ -48,8 +49,8 @@ internal static class TestResultExtensions
             ComputerName = computerName,
         };
 
-        testResult.SetPropertyValue(EngineConstants.ExecutionIdProperty, frameworkTestResult.ExecutionId);
-        testResult.SetPropertyValue(EngineConstants.ParentExecIdProperty, frameworkTestResult.ParentExecId);
+        testResult.SetPropertyValue(AdapterTestProperties.ExecutionIdProperty, frameworkTestResult.ExecutionId);
+        testResult.SetPropertyValue(AdapterTestProperties.ParentExecIdProperty, frameworkTestResult.ParentExecId);
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.LogOutput))
         {

@@ -3,8 +3,8 @@
 
 #if !WINDOWS_UWP && !WIN_UI
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -14,13 +14,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 internal interface ITestDeployment
 {
     /// <summary>
-    /// Deploy deployment items for the specified test cases.
+    /// Deploy deployment items for the specified tests.
     /// </summary>
-    /// <param name="testCases"> The test cases. </param>
-    /// <param name="runContext"> The run context. </param>
-    /// <param name="frameworkHandle"> The framework handle. </param>
+    /// <param name="testElements"> The tests. </param>
+    /// <param name="deploymentContext"> The host deployment inputs (test-run directory, run settings XML). </param>
+    /// <param name="messageLogger"> The logger used to surface deployment warnings. </param>
     /// <returns> True if deployment is done. </returns>
-    bool Deploy(IEnumerable<TestCase> testCases, IRunContext? runContext, IFrameworkHandle frameworkHandle);
+    bool Deploy(IEnumerable<UnitTestElement> testElements, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger);
 
     /// <summary>
     /// Gets the set of deployment items on a method and its corresponding class.

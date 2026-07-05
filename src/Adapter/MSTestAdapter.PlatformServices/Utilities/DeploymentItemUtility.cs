@@ -3,9 +3,9 @@
 
 #if !WINDOWS_UWP && !WIN_UI
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -105,21 +105,17 @@ internal sealed class DeploymentItemUtility
     /// <summary>
     /// Returns whether there are any deployment items defined on the test.
     /// </summary>
-    /// <param name="testCase"> The test Case. </param>
+    /// <param name="testElement"> The test. </param>
     /// <returns> True if has deployment items.</returns>
-    internal static bool HasDeploymentItems(TestCase testCase)
-    {
-        KeyValuePair<string, string>[]? deploymentItems = GetDeploymentItems(testCase);
+    internal static bool HasDeploymentItems(UnitTestElement testElement)
+        => testElement.DeploymentItems is { Length: > 0 };
 
-        return deploymentItems is { Length: > 0 };
-    }
-
-    internal static IList<DeploymentItem> GetDeploymentItems(IEnumerable<TestCase> tests)
+    internal static IList<DeploymentItem> GetDeploymentItems(IEnumerable<UnitTestElement> tests)
     {
         List<DeploymentItem> allDeploymentItems = [];
-        foreach (TestCase test in tests)
+        foreach (UnitTestElement test in tests)
         {
-            KeyValuePair<string, string>[]? items = GetDeploymentItems(test);
+            KeyValuePair<string, string>[]? items = test.DeploymentItems;
             if (items == null || items.Length == 0)
             {
                 continue;
@@ -219,14 +215,6 @@ internal sealed class DeploymentItemUtility
 
         return result;
     }
-
-    /// <summary>
-    /// Returns the deployment items defined on the test.
-    /// </summary>
-    /// <param name="testCase"> The test Case. </param>
-    /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
-    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) as
-            KeyValuePair<string, string>[];
 
     private static KeyValuePair<string, string>[]? ToKeyValuePairs(IEnumerable<DeploymentItem> deploymentItemList)
     {

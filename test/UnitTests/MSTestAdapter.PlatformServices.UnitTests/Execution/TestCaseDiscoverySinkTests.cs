@@ -18,22 +18,22 @@ public class TestCaseDiscoverySinkTests : TestContainer
 
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {
-        _testCaseDiscoverySink.Tests.Should().NotBeNull();
-        _testCaseDiscoverySink.Tests.Count.Should().Be(0);
+        _testCaseDiscoverySink.TestElements.Should().NotBeNull();
+        _testCaseDiscoverySink.TestElements.Count.Should().Be(0);
     }
 
-    public void SendTestElementShouldAddTheMaterializedTestCaseToTests()
+    public void SendTestElementShouldAddTheTestElement()
     {
         var testElement = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null));
 
         _testCaseDiscoverySink.SendTestElement(testElement);
 
-        _testCaseDiscoverySink.Tests.Should().NotBeNull();
-        _testCaseDiscoverySink.Tests.Count.Should().Be(1);
-        _testCaseDiscoverySink.Tests.ToArray()[0].FullyQualifiedName.Should().Be("C.M");
+        _testCaseDiscoverySink.TestElements.Should().NotBeNull();
+        _testCaseDiscoverySink.TestElements.Count.Should().Be(1);
+        _testCaseDiscoverySink.TestElements.ToArray()[0].Should().BeSameAs(testElement);
     }
 
-    public void SendTestElementShouldAddEachTestCaseInOrder()
+    public void SendTestElementShouldAddEachTestElementInOrder()
     {
         var testElement1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
         var testElement2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
@@ -41,8 +41,8 @@ public class TestCaseDiscoverySinkTests : TestContainer
         _testCaseDiscoverySink.SendTestElement(testElement1);
         _testCaseDiscoverySink.SendTestElement(testElement2);
 
-        _testCaseDiscoverySink.Tests.Count.Should().Be(2);
-        _testCaseDiscoverySink.Tests.ToArray()[0].FullyQualifiedName.Should().Be("C.M1");
-        _testCaseDiscoverySink.Tests.ToArray()[1].FullyQualifiedName.Should().Be("C.M2");
+        _testCaseDiscoverySink.TestElements.Count.Should().Be(2);
+        _testCaseDiscoverySink.TestElements.ToArray()[0].Should().BeSameAs(testElement1);
+        _testCaseDiscoverySink.TestElements.ToArray()[1].Should().BeSameAs(testElement2);
     }
 }

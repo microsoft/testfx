@@ -85,9 +85,9 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         try
         {
             IAdapterMessageLogger adapterLogger = logger.ToAdapterMessageLogger();
-            if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, adapterLogger, configuration, _testSourceHandler))
+            if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext?.RunSettings?.SettingsXml, adapterLogger, configuration, _testSourceHandler))
             {
-                new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, adapterLogger, discoverySink.ToUnitTestElementSink(), discoveryContext, isMTP);
+                new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, adapterLogger, discoverySink.ToUnitTestElementSink(), discoveryContext?.RunSettings?.SettingsXml, new TestElementFilterProvider(discoveryContext), isMTP);
             }
         }
         finally
