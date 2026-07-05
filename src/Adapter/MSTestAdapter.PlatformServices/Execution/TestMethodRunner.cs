@@ -36,6 +36,14 @@ internal sealed class TestMethodRunner
     private readonly TestMethodInfo _testMethodInfo;
 
     /// <summary>
+    /// Cached <see cref="ReflectionTestMethodInfo"/> wrapper reused across all data rows of a
+    /// data-driven test. Both <see cref="TestMethodInfo.MethodInfo"/> and <see cref="TestMethod.DisplayName"/>
+    /// are immutable for the lifetime of this <see cref="TestMethodRunner"/>, so the wrapper can be
+    /// safely shared instead of allocating a new one per row.
+    /// </summary>
+    private ReflectionTestMethodInfo? _cachedReflectionMethodInfo;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
     /// </summary>
     /// <param name="testMethodInfo">
@@ -423,7 +431,7 @@ internal sealed class TestMethodRunner
         // and both GetDisplayName and ComputeDefaultDisplayName need to be consulted.
         if (displayNameFromTestDataRow is null && testDataSource is not null)
         {
-            var reflectionMethodInfo = new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
+            ReflectionTestMethodInfo reflectionMethodInfo = _cachedReflectionMethodInfo ??= new ReflectionTestMethodInfo(_testMethodInfo.MethodInfo, _test.DisplayName);
             displayName = testDataSource.GetDisplayName(reflectionMethodInfo, data)
                 ?? TestDataSourceUtilities.ComputeDefaultDisplayName(reflectionMethodInfo, data)
                 ?? displayName;
