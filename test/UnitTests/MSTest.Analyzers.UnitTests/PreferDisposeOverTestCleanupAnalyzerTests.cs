@@ -382,6 +382,38 @@ public partial class MyTestClass : IDisposable
 #endif
 
     [TestMethod]
+    public async Task WhenTestCleanupNotInTestClass_Diagnostic()
+    {
+        // The analyzer fires regardless of whether the containing class has [TestClass].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                [TestCleanup]
+                public void [|MyCleanup|]()
+                {
+                    int x = 1;
+                }
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                    int x = 1;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanupWithMultiLineBody_PreservesIndentation()
     {
         string code = """

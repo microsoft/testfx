@@ -405,6 +405,79 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestInitializeNotInTestClass_Diagnostic()
+    {
+        // The analyzer fires regardless of whether the containing class has [TestClass].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                [TestInitialize]
+                public void [|MyInit|]()
+                {
+                    int x = 1;
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                public MyClass()
+                {
+                    int x = 1;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasOnlyParameterizedCtorAndTestInitialize_Diagnostic()
+    {
+        // The fixer merges TestInitialize body into the first non-static constructor found,
+        // even when that constructor has parameters.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x, _y;
+                public MyTestClass(int y)
+                {
+                    _y = y;
+                }
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    _x = 1;
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x, _y;
+                public MyTestClass(int y)
+                {
+                    _y = y;
+                    _x = 1;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenTestClassHasTestInitializeWithMultiLineBody_PreservesIndentation()
     {
         string code = """
