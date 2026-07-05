@@ -15,6 +15,9 @@
     <PackageReference Include="Moq" />
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="StrongNamer" />
+    <!-- This test uses ObjectModel's XmlRunSettingsUtilities directly; it was previously provided transitively
+         through the MSTestAdapter.PlatformServices project reference, which no longer depends on the object model. -->
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
   </ItemGroup>
 
 </Project>
