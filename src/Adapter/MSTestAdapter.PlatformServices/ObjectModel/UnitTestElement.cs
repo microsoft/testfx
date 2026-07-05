@@ -53,7 +53,7 @@ internal sealed class UnitTestElement
     /// <summary>
     /// Gets or sets the traits for test method.
     /// </summary>
-    public Trait[]? Traits { get; set; }
+    public TestTrait[]? Traits { get; set; }
 
     /// <summary>
     /// Gets or sets the priority of the test method, if any.
@@ -217,7 +217,10 @@ internal sealed class UnitTestElement
 
         if (Traits is { Length: > 0 })
         {
-            testCase.Traits.AddRange(Traits);
+            foreach (TestTrait trait in Traits)
+            {
+                testCase.Traits.Add(new Trait(trait.Name, trait.Value));
+            }
         }
 
         if (WorkItemIds != null)
