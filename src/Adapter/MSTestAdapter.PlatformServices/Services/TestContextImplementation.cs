@@ -524,6 +524,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <returns>A fresh context suitable for one folded data-driven iteration.</returns>
     internal TestContextImplementation CloneForDataDrivenIteration()
     {
+<<<<<<< HEAD
         // Pass testMethod: null and testClassFullName: null because the relevant labels
         // (including TestNameLabel / FullyQualifiedTestClassNameLabel and anything merged from
         // AssemblyInitialize / ClassInitialize) are already in _properties. In that branch the
@@ -531,6 +532,16 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         // directly gives the clone an isolated property bag without an extra intermediate copy:
         // per-iteration mutations to the clone's property bag won't leak back to this instance
         // nor to subsequent iterations.
+=======
+        // Pass _properties directly and testMethod: null / testClassFullName: null because the
+        // relevant labels (including TestNameLabel / FullyQualifiedTestClassNameLabel and anything
+        // merged from AssemblyInitialize / ClassInitialize) are already in the property bag. The
+        // constructor's null/null branch copies the supplied properties into a fresh dictionary
+        // via the [with(properties)] spread, so no intermediate snapshot allocation is needed and
+        // isolation is preserved: per-iteration mutations to the clone's property bag won't leak
+        // back to this instance nor to subsequent iterations, and mutations to this instance after
+        // clone creation won't leak into the clone.
+>>>>>>> perf: skip intermediate Dictionary alloc in CloneForDataDrivenIteration
         var clone = new TestContextImplementation(testMethod: null, testClassFullName: null, _properties, _messageLogger, _testRunCancellationToken);
 
         // Preserve TestRunCount so user code that observes it (e.g. retry-aware tests) sees
