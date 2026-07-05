@@ -35,21 +35,21 @@ public class TestExecutionManagerTests : TestContainer
 
     private readonly TestProperty[] _tcmKnownProperties =
     [
-        EngineConstants.TestRunIdProperty,
-        EngineConstants.TestPlanIdProperty,
-        EngineConstants.BuildConfigurationIdProperty,
-        EngineConstants.BuildDirectoryProperty,
-        EngineConstants.BuildFlavorProperty,
-        EngineConstants.BuildNumberProperty,
-        EngineConstants.BuildPlatformProperty,
-        EngineConstants.BuildUriProperty,
-        EngineConstants.TfsServerCollectionUrlProperty,
-        EngineConstants.TfsTeamProjectProperty,
-        EngineConstants.IsInLabEnvironmentProperty,
-        EngineConstants.TestCaseIdProperty,
-        EngineConstants.TestConfigurationIdProperty,
-        EngineConstants.TestConfigurationNameProperty,
-        EngineConstants.TestPointIdProperty,
+        AdapterTestProperties.TestRunIdProperty,
+        AdapterTestProperties.TestPlanIdProperty,
+        AdapterTestProperties.BuildConfigurationIdProperty,
+        AdapterTestProperties.BuildDirectoryProperty,
+        AdapterTestProperties.BuildFlavorProperty,
+        AdapterTestProperties.BuildNumberProperty,
+        AdapterTestProperties.BuildPlatformProperty,
+        AdapterTestProperties.BuildUriProperty,
+        AdapterTestProperties.TfsServerCollectionUrlProperty,
+        AdapterTestProperties.TfsTeamProjectProperty,
+        AdapterTestProperties.IsInLabEnvironmentProperty,
+        AdapterTestProperties.TestCaseIdProperty,
+        AdapterTestProperties.TestConfigurationIdProperty,
+        AdapterTestProperties.TestConfigurationNameProperty,
+        AdapterTestProperties.TestPointIdProperty,
     ];
 
     private TestableRunContextTestExecutionTests _runContext;
@@ -690,8 +690,8 @@ public class TestExecutionManagerTests : TestContainer
         TestCase testCase3 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
         TestCase testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
 
-        testCase3.SetPropertyValue(EngineConstants.DoNotParallelizeProperty, true);
-        testCase4.SetPropertyValue(EngineConstants.DoNotParallelizeProperty, true);
+        testCase3.SetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, true);
+        testCase4.SetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, true);
 
         TestCase[] tests = [testCase1, testCase2, testCase3, testCase4];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
@@ -800,7 +800,7 @@ public class TestExecutionManagerTests : TestContainer
         TestCase testCase3 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod3");
         TestCase testCase4 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod4");
 
-        testCase4.SetPropertyValue(EngineConstants.DoNotParallelizeProperty, true);
+        testCase4.SetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, true);
 
         TestCase[] tests = [testCase1, testCase2, testCase3, testCase4];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(

@@ -49,8 +49,8 @@ internal static class TestResultExtensions
             ComputerName = computerName,
         };
 
-        testResult.SetPropertyValue(EngineConstants.ExecutionIdProperty, frameworkTestResult.ExecutionId);
-        testResult.SetPropertyValue(EngineConstants.ParentExecIdProperty, frameworkTestResult.ParentExecId);
+        testResult.SetPropertyValue(AdapterTestProperties.ExecutionIdProperty, frameworkTestResult.ExecutionId);
+        testResult.SetPropertyValue(AdapterTestProperties.ParentExecIdProperty, frameworkTestResult.ParentExecId);
 
         if (!StringEx.IsNullOrEmpty(frameworkTestResult.LogOutput))
         {

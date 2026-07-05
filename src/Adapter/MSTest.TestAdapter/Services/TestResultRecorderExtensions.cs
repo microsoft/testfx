@@ -20,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// the framework <see cref="FrameworkTestResult"/>) and the VSTest result object model (<c>TestResult</c>,
 /// <c>TestOutcome</c>, attachments, ...). It lives in the adapter layer; the platform services engine reports
 /// through the neutral <see cref="ITestResultRecorder"/> only. The element's host test case is resolved (and
-/// materialized/cached on demand for internally discovered tests) via <see cref="UnitTestElement.GetOrCreateHostTestCase"/>
+/// materialized/cached on demand for internally discovered tests) via <c>UnitTestElementExtensions.GetOrCreateHostTestCase</c>
 /// so recorded results preserve host-injected data (test-case-management / data-collector properties) with full fidelity.
 /// </remarks>
 internal static class TestResultRecorderExtensions

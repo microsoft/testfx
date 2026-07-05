@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -15,21 +16,21 @@ public class TcmTestPropertiesProviderTests : TestContainer
 {
     private readonly TestProperty[] _tcmKnownProperties =
     [
-        EngineConstants.TestRunIdProperty,
-        EngineConstants.TestPlanIdProperty,
-        EngineConstants.BuildConfigurationIdProperty,
-        EngineConstants.BuildDirectoryProperty,
-        EngineConstants.BuildFlavorProperty,
-        EngineConstants.BuildNumberProperty,
-        EngineConstants.BuildPlatformProperty,
-        EngineConstants.BuildUriProperty,
-        EngineConstants.TfsServerCollectionUrlProperty,
-        EngineConstants.TfsTeamProjectProperty,
-        EngineConstants.IsInLabEnvironmentProperty,
-        EngineConstants.TestCaseIdProperty,
-        EngineConstants.TestConfigurationIdProperty,
-        EngineConstants.TestConfigurationNameProperty,
-        EngineConstants.TestPointIdProperty,
+        AdapterTestProperties.TestRunIdProperty,
+        AdapterTestProperties.TestPlanIdProperty,
+        AdapterTestProperties.BuildConfigurationIdProperty,
+        AdapterTestProperties.BuildDirectoryProperty,
+        AdapterTestProperties.BuildFlavorProperty,
+        AdapterTestProperties.BuildNumberProperty,
+        AdapterTestProperties.BuildPlatformProperty,
+        AdapterTestProperties.BuildUriProperty,
+        AdapterTestProperties.TfsServerCollectionUrlProperty,
+        AdapterTestProperties.TfsTeamProjectProperty,
+        AdapterTestProperties.IsInLabEnvironmentProperty,
+        AdapterTestProperties.TestCaseIdProperty,
+        AdapterTestProperties.TestConfigurationIdProperty,
+        AdapterTestProperties.TestConfigurationNameProperty,
+        AdapterTestProperties.TestPointIdProperty,
     ];
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()

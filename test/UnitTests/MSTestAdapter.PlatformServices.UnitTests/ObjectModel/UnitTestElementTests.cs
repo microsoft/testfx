@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -113,7 +114,7 @@ public class UnitTestElementTests : TestContainer
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        (testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string).Should().Be("C");
+        (testCase.GetPropertyValue(AdapterTestProperties.TestClassNameProperty) as string).Should().Be("C");
     }
 
     public void ToTestCaseShouldUseFullClassNameAsManagedTypeName()
@@ -129,17 +130,17 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.TestCategory = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        testCase.GetPropertyValue(EngineConstants.TestCategoryProperty).Should().BeNull();
+        testCase.GetPropertyValue(AdapterTestProperties.TestCategoryProperty).Should().BeNull();
 
         _unitTestElement.TestCategory = [];
         testCase = _unitTestElement.ToTestCase();
 
-        testCase.GetPropertyValue(EngineConstants.TestCategoryProperty).Should().BeNull();
+        testCase.GetPropertyValue(AdapterTestProperties.TestCategoryProperty).Should().BeNull();
 
         _unitTestElement.TestCategory = ["TC"];
         testCase = _unitTestElement.ToTestCase();
 
-        new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(EngineConstants.TestCategoryProperty)!).Should().BeTrue();
+        new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(AdapterTestProperties.TestCategoryProperty)!).Should().BeTrue();
     }
 
     public void ToTestCaseShouldSetPriorityIfPresent()
@@ -147,12 +148,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Priority = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        ((int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)!).Should().Be(0);
+        ((int)testCase.GetPropertyValue(AdapterTestProperties.PriorityProperty)!).Should().Be(0);
 
         _unitTestElement.Priority = 1;
         testCase = _unitTestElement.ToTestCase();
 
-        ((int)testCase.GetPropertyValue(EngineConstants.PriorityProperty)!).Should().Be(1);
+        ((int)testCase.GetPropertyValue(AdapterTestProperties.PriorityProperty)!).Should().Be(1);
     }
 
     public void ToTestCaseShouldSetTraitsIfPresent()
@@ -179,7 +180,7 @@ public class UnitTestElementTests : TestContainer
 
         var testCase = _unitTestElement.ToTestCase();
 
-        ((string[])testCase.GetPropertyValue(EngineConstants.WorkItemIdsProperty)!).Should().Equal(["2312", "22332"]);
+        ((string[])testCase.GetPropertyValue(AdapterTestProperties.WorkItemIdsProperty)!).Should().Equal(["2312", "22332"]);
     }
 
 #if !WINDOWS_UWP && !WIN_UI
@@ -188,17 +189,17 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.DeploymentItems = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty).Should().BeNull();
+        testCase.GetPropertyValue(AdapterTestProperties.DeploymentItemsProperty).Should().BeNull();
 
         _unitTestElement.DeploymentItems = [];
         testCase = _unitTestElement.ToTestCase();
 
-        testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty).Should().BeNull();
+        testCase.GetPropertyValue(AdapterTestProperties.DeploymentItemsProperty).Should().BeNull();
 
         _unitTestElement.DeploymentItems = [new("s", "d")];
         testCase = _unitTestElement.ToTestCase();
 
-        _unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(EngineConstants.DeploymentItemsProperty) as KeyValuePair<string, string>[]).Should().BeTrue();
+        _unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(AdapterTestProperties.DeploymentItemsProperty) as KeyValuePair<string, string>[]).Should().BeTrue();
     }
 #endif
 
@@ -226,7 +227,7 @@ public class UnitTestElementTests : TestContainer
         static Guid GuidFromString(string data)
         {
             byte[] hash = TestFx.Hashing.XxHash128.Hash(Encoding.Unicode.GetBytes(data));
-            return UnitTestElement.VersionedGuidFromHash(hash, hashVersion: 1);
+            return UnitTestElementExtensions.VersionedGuidFromHash(hash, hashVersion: 1);
         }
     }
 
