@@ -22,6 +22,13 @@ internal sealed class UnitTestElement
     private static readonly byte[] OpenBracket = [91, 0]; // Encoding.Unicode.GetBytes("[");
     private static readonly byte[] CloseBracket = [93, 0]; // Encoding.Unicode.GetBytes("]");
 
+    // Lazily-built VSTest TestCase reused across a single discovery/execution pass (see
+    // GetOrCreateHostTestCase). Not part of the element's serialized state.
+#if NETFRAMEWORK
+    [NonSerialized]
+#endif
+    private TestCase? _hostTestCase;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestElement"/> class.
     /// </summary>
@@ -85,6 +92,7 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.Clone();
+        clone._hostTestCase = null;
         return clone;
     }
 
@@ -92,8 +100,23 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.CloneWithUpdatedSource(source);
+        clone._hostTestCase = null;
         return clone;
     }
+
+    /// <summary>
+    /// Gets the VSTest <see cref="TestCase"/> for this element, building it on first access and caching it so
+    /// the discovery/execution pipeline can reuse a single instance instead of constructing a redundant
+    /// <see cref="TestCase"/>. This avoids the double construction that otherwise happens for every matched
+    /// test when a filter is active: once to evaluate the filter and once to report the test to the sink.
+    /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="ToTestCase"/>, which always builds a fresh <see cref="TestCase"/> reflecting the
+    /// current element state, this method memoizes its result. It must therefore only be used once the element
+    /// is fully configured and no longer mutated (as is the case in the discovery/execution filtering path).
+    /// </remarks>
+    /// <returns>The cached <see cref="TestCase"/> for this element.</returns>
+    internal TestCase GetOrCreateHostTestCase() => _hostTestCase ??= ToTestCase();
 
     /// <summary>
     /// Convert the UnitTestElement instance to an Object Model testCase instance.
