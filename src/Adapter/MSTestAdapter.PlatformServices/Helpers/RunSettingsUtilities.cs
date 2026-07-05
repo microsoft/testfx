@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -18,6 +17,11 @@ internal static class RunSettingsUtilities
         IgnoreWhitespace = true,
     };
 
+    // The runsettings node names, historically taken from the VSTest object model's Constants type.
+    internal const string RunConfigurationSettingsName = "RunConfiguration";
+
+    internal const string TestRunParametersName = "TestRunParameters";
+
     /// <summary>
     /// Gets the set of user defined test run parameters from settings xml as key value pairs.
     /// </summary>
@@ -25,23 +29,23 @@ internal static class RunSettingsUtilities
     /// <returns>The test run parameters.</returns>
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
     internal static Dictionary<string, object>? GetTestRunParameters(string? settingsXml)
-        => GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
+        => GetNodeValue(settingsXml, TestRunParametersName, TestRunParameters.FromXml);
 
     /// <summary>
     /// Throws if the node has an attribute.
     /// </summary>
     /// <param name="reader"> The reader. </param>
-    /// <exception cref="SettingsException"> Thrown if the node has an attribute. </exception>
+    /// <exception cref="InvalidRunSettingsException"> Thrown if the node has an attribute. </exception>
     internal static void ThrowOnHasAttributes(XmlReader reader)
     {
         if (reader.HasAttributes)
         {
             reader.MoveToNextAttribute();
-            throw new SettingsException(
+            throw new InvalidRunSettingsException(
                 string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidSettingsXmlAttribute,
-                    TestPlatform.ObjectModel.Constants.RunConfigurationSettingsName,
+                    RunConfigurationSettingsName,
                     reader.Name));
         }
     }
