@@ -378,4 +378,79 @@ public sealed class DuplicateTestMethodAttributeAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasDuplicateAttributesOutsideTestClass_Diagnostic()
+    {
+        // The analyzer fires on duplicate TestMethod-like attributes regardless of whether
+        // the containing class is marked [TestClass].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class NonTestClass
+            {
+                [TestMethod]
+                [DataTestMethod]
+                public void [|TestMethod1|]()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenDerivedAttributeIsFirstAndTestMethodIsSecond_CodeFix_KeepsDerivedAttribute()
+    {
+        // The fixer uses a "first-wins" strategy: iterates attribute lists in order and
+        // keeps the first TestMethod-derived attribute it encounters. When a derived
+        // attribute appears before [TestMethod], the derived one is retained.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethod : TestMethodAttribute
+            {
+                public MyTestMethod([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                [TestMethod]
+                public void [|TestMethod1|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Runtime.CompilerServices;
+
+            public class MyTestMethod : TestMethodAttribute
+            {
+                public MyTestMethod([CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = -1)
+                    : base(callerFilePath, callerLineNumber)
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyTestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
