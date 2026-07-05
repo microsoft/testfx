@@ -8,12 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-#if NETFRAMEWORK
-// SuspendCodeCoverage (used below to pause dynamic code coverage while deployment copies files) is a VSTest
-// object-model type. Its neutralization is deferred to a later platform-services decoupling step; the rest of
-// the deployment input is already platform-agnostic.
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-#endif
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
