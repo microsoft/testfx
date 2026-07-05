@@ -30,7 +30,7 @@ public abstract partial class CLITestBase
         string runSettingsXml = GetRunSettingsXml(string.Empty);
         var context = new InternalDiscoveryContext(runSettingsXml, testCaseFilter);
 
-        unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger.ToAdapterMessageLogger(), sink.ToUnitTestElementSink(), context, false);
+        unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger.ToAdapterMessageLogger(), sink.ToUnitTestElementSink(), context, new TestElementFilterProvider(context), false);
 
         return sink.DiscoveredTests;
     }
@@ -41,7 +41,7 @@ public abstract partial class CLITestBase
         var frameworkHandle = new InternalFrameworkHandle();
 
         ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), null, frameworkHandle, testResultRecorder, false);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), null, frameworkHandle, testResultRecorder, filterProvider: null, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 
@@ -54,7 +54,7 @@ public abstract partial class CLITestBase
         var runContext = new InternalRunContext(runSettingsXml, testCaseFilter);
 
         ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), runContext, frameworkHandle, testResultRecorder, false);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), runContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 

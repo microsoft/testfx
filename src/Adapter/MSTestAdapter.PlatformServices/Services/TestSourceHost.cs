@@ -11,7 +11,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 #endif
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
@@ -66,10 +65,10 @@ internal class TestSourceHost : ITestSourceHost
     /// Initializes a new instance of the <see cref="TestSourceHost"/> class.
     /// </summary>
     /// <param name="sourceFileName"> The source file name. </param>
-    /// <param name="runSettings"> The run-settings provided for this session. </param>
-    public TestSourceHost(string sourceFileName, IRunSettings? runSettings)
+    /// <param name="settingsXml"> The run-settings XML provided for this session. </param>
+    public TestSourceHost(string sourceFileName, string? settingsXml)
 #if NETFRAMEWORK
-        : this(sourceFileName, runSettings, new AppDomainWrapper())
+        : this(sourceFileName, settingsXml, new AppDomainWrapper())
 #endif
     {
 #if !WINDOWS_UWP && !NETFRAMEWORK
@@ -81,7 +80,7 @@ internal class TestSourceHost : ITestSourceHost
     }
 
 #if NETFRAMEWORK
-    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IAppDomain appDomain)
+    internal TestSourceHost(string sourceFileName, string? settingsXml, IAppDomain appDomain)
     {
         _sourceFileName = sourceFileName;
         _appDomain = appDomain;
@@ -90,7 +89,7 @@ internal class TestSourceHost : ITestSourceHost
         SetContext(sourceFileName);
 
         // Set isAppDomainCreationDisabled flag
-        _isAppDomainCreationDisabled = runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(runSettings.SettingsXml);
+        _isAppDomainCreationDisabled = settingsXml is not null && MSTestAdapterSettings.IsAppDomainCreationDisabled(settingsXml);
     }
 
     /// <summary>

@@ -12,13 +12,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class UnitTestDiscoverer
 {
-    private readonly TestMethodFilter _testMethodFilter;
-
-    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler)
-    {
-        _testMethodFilter = new TestMethodFilter();
-        _testSource = testSourceHandler;
-    }
+    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler) => _testSource = testSourceHandler;
 
     /// <summary>
     /// Discovers the tests available from the provided sources.
@@ -27,17 +21,19 @@ internal class UnitTestDiscoverer
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
     /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal void DiscoverTests(
         IEnumerable<string> sources,
         IAdapterMessageLogger logger,
         IUnitTestElementSink discoverySink,
         IDiscoveryContext discoveryContext,
+        ITestElementFilterProvider? filterProvider,
         bool isMTP)
     {
         foreach (string source in sources)
         {
-            DiscoverTestsInSource(source, logger, discoverySink, discoveryContext, isMTP);
+            DiscoverTestsInSource(source, logger, discoverySink, discoveryContext, filterProvider, isMTP);
         }
     }
 
@@ -48,15 +44,17 @@ internal class UnitTestDiscoverer
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
     /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal virtual void DiscoverTestsInSource(
         string source,
         IAdapterMessageLogger logger,
         IUnitTestElementSink discoverySink,
         IDiscoveryContext? discoveryContext,
+        ITestElementFilterProvider? filterProvider,
         bool isMTP)
     {
-        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, _testSource, isMTP, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings?.SettingsXml, _testSource, isMTP, out List<string> warnings);
 
         if (MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors)
         {
@@ -103,15 +101,16 @@ internal class UnitTestDiscoverer
                 source);
         }
 
-        SendTestCases(testElements, discoverySink, discoveryContext, logger);
+        SendTestCases(testElements, discoverySink, filterProvider, logger);
     }
 
     private readonly ITestSourceHandler _testSource;
 
-    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, IDiscoveryContext? discoveryContext, IAdapterMessageLogger logger)
+    internal static void SendTestCases(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, ITestElementFilterProvider? filterProvider, IAdapterMessageLogger logger)
     {
         // Get filter and skip discovery in case filter expression has parsing error.
-        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(discoveryContext, logger, out bool filterHasError);
+        bool filterHasError = false;
+        ITestElementFilter? filter = filterProvider?.GetTestElementFilter(logger, out filterHasError);
         if (filterHasError)
         {
             return;
