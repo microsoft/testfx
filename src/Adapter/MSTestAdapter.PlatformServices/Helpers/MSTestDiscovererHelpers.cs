@@ -3,7 +3,6 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -20,7 +19,7 @@ internal static class MSTestDiscovererHelpers
     internal static bool AreValidSources(IEnumerable<string> sources, ITestSourceHandler testSourceHandler)
         => sources.Any(source => testSourceHandler.ValidSourceExtensions.Any(extension => string.Equals(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase)));
 
-    internal static bool InitializeDiscovery(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IAdapterMessageLogger messageLogger, IConfiguration? configuration, ITestSourceHandler testSourceHandler)
+    internal static bool InitializeDiscovery(IEnumerable<string> sources, string? settingsXml, IAdapterMessageLogger messageLogger, IConfiguration? configuration, ITestSourceHandler testSourceHandler)
     {
         if (!AreValidSources(sources, testSourceHandler))
         {
@@ -30,7 +29,7 @@ internal static class MSTestDiscovererHelpers
         // Populate the runsettings.
         try
         {
-            MSTestSettings.PopulateSettings(discoveryContext, messageLogger, configuration);
+            MSTestSettings.PopulateSettings(settingsXml, messageLogger, configuration);
             return true;
         }
         catch (AdapterSettingsException ex)

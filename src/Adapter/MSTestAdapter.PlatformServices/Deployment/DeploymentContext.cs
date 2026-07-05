@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP && !WIN_UI
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 /// <summary>
-/// Platform-agnostic inputs the deployment pipeline needs from the running test host: the test-run/results
-/// directory and the run settings XML. This lets the platform services deployment layer run without taking a
-/// dependency on a specific test platform's run-context object model (for example the VSTest
+/// Platform-agnostic inputs the execution pipeline needs from the running test host: the test-run/results
+/// directory and the run settings XML. This lets the platform services execution and deployment layers run
+/// without taking a dependency on a specific test platform's run-context object model (for example the VSTest
 /// <c>IRunContext</c> / <c>IRunSettings</c> types). It is populated at the adapter boundary.
 /// </summary>
 internal sealed class DeploymentContext
@@ -30,5 +28,3 @@ internal sealed class DeploymentContext
     /// </summary>
     public string? RunSettingsXml { get; }
 }
-
-#endif
