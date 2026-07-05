@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -7,12 +7,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-#endif
-#if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-#endif
-#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,6 +23,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 #pragma warning disable CA1852 // Seal internal types - needs to be non-sealed because it's mocked in tests.
 internal class TestSourceHost : ITestSourceHost
 {
+#if NETFRAMEWORK || (NET && !WINDOWS_UWP)
+    private const string ObjectModelAssemblyName = "Microsoft.VisualStudio.TestPlatform.ObjectModel";
+#endif
+#if NETFRAMEWORK
+    private const string CoreUtilitiesAssemblyName = "Microsoft.TestPlatform.CoreUtilities";
+#endif
+
 #if !WINDOWS_UWP
 #pragma warning disable IDE0052 // Remove unread private members
     private readonly string _sourceFileName;
@@ -178,7 +179,7 @@ internal class TestSourceHost : ITestSourceHost
             // For unknown reasons, with MSTest 3.4+ we start to see infinite cycles of assembly resolution of this dll in the new app
             // domain. In older versions, this was not the case, and the callback was allowing to fully lookup and load the dll before
             // triggering the next resolution.
-            AppDomain.Load(typeof(EqtTrace).Assembly.GetName());
+            AppDomain.Load(GetLoadedAssembly(CoreUtilitiesAssemblyName).GetName());
 
             // Add an assembly resolver in the child app-domain...
             Type assemblyResolverType = typeof(AssemblyResolver);
@@ -352,6 +353,17 @@ internal class TestSourceHost : ITestSourceHost
 
 #if NETFRAMEWORK || (NET && !WINDOWS_UWP)
     /// <summary>
+    /// Resolves a loaded test-platform assembly by simple name, so this file needs no compile-time reference to
+    /// the VSTest object model. These assemblies are loaded by the adapter/host before the source host runs, so
+    /// the resolved identity matches what a direct type reference would have produced.
+    /// </summary>
+    /// <param name="simpleName">The simple assembly name.</param>
+    /// <returns>The loaded assembly.</returns>
+    private static Assembly GetLoadedAssembly(string simpleName)
+        => AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, simpleName, StringComparison.Ordinal))
+            ?? Assembly.Load(simpleName);
+
+    /// <summary>
     /// Gets the probing paths to load the test assembly dependencies.
     /// </summary>
     /// <param name="sourceFileName">
@@ -402,7 +414,7 @@ internal class TestSourceHost : ITestSourceHost
             resolutionPaths.Add(adapterDirectory);
         }
 
-        string? testPlatformDirectory = Path.GetDirectoryName(AssemblyFileLocator.TryGetLocation(typeof(AssemblyHelper).Assembly));
+        string? testPlatformDirectory = Path.GetDirectoryName(AssemblyFileLocator.TryGetLocation(GetLoadedAssembly(ObjectModelAssemblyName)));
         if (!string.IsNullOrEmpty(testPlatformDirectory) && !resolutionPaths.Contains(testPlatformDirectory))
         {
             // Adding TestPlatform folder to resolution paths
