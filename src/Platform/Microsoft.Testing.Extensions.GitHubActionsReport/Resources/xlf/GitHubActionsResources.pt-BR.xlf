@@ -8,8 +8,8 @@
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
-        <source>Enable or disable GitHub Actions failure annotations. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable GitHub Actions failure annotations. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <source>Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
+        <target state="new">Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="Description">
@@ -47,10 +47,20 @@
         <target state="new">The test failed without providing a failure message.</target>
         <note />
       </trans-unit>
+      <trans-unit id="NoSkipReasonFallback">
+        <source>The test was skipped without providing a reason.</source>
+        <target state="new">The test was skipped without providing a reason.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
         <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
         <note />
+      </trans-unit>
+      <trans-unit id="SkippedAnnotationTitle">
+        <source>Test skipped: {0}</source>
+        <target state="new">Test skipped: {0}</target>
+        <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>

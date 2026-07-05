@@ -62,15 +62,22 @@
     <value>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
   </data>
   <data name="AnnotationsOptionDescription" xml:space="preserve">
-    <value>Enable or disable GitHub Actions failure annotations. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <value>Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
     <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
   </data>
   <data name="AnnotationTitle" xml:space="preserve">
     <value>Test failed: {0}</value>
     <comment>{0} is the fully qualified test name.</comment>
   </data>
+  <data name="SkippedAnnotationTitle" xml:space="preserve">
+    <value>Test skipped: {0}</value>
+    <comment>{0} is the fully qualified test name.</comment>
+  </data>
   <data name="NoFailureMessageFallback" xml:space="preserve">
     <value>The test failed without providing a failure message.</value>
+  </data>
+  <data name="NoSkipReasonFallback" xml:space="preserve">
+    <value>The test was skipped without providing a reason.</value>
   </data>
   <data name="StepSummaryOptionDescription" xml:space="preserve">
     <value>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
