@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -19,12 +19,12 @@ internal sealed class TestMethodFilter
 
     internal TestMethodFilter() => _supportedProperties = new Dictionary<string, TestProperty>(StringComparer.OrdinalIgnoreCase)
     {
-        [EngineConstants.TestCategoryProperty.Label] = EngineConstants.TestCategoryProperty,
-        [EngineConstants.PriorityProperty.Label] = EngineConstants.PriorityProperty,
+        [AdapterTestProperties.TestCategoryProperty.Label] = AdapterTestProperties.TestCategoryProperty,
+        [AdapterTestProperties.PriorityProperty.Label] = AdapterTestProperties.PriorityProperty,
         [TestCaseProperties.FullyQualifiedName.Label] = TestCaseProperties.FullyQualifiedName,
         [TestCaseProperties.DisplayName.Label] = TestCaseProperties.DisplayName,
         [TestCaseProperties.Id.Label] = TestCaseProperties.Id,
-        [EngineConstants.TestClassNameProperty.Label] = EngineConstants.TestClassNameProperty,
+        [AdapterTestProperties.TestClassNameProperty.Label] = AdapterTestProperties.TestClassNameProperty,
     };
 
     /// <summary>

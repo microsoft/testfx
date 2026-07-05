@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -89,31 +88,31 @@ internal static class TestCaseExtensions
         }
 
         string? managedTypeName = testCase.GetManagedType();
-        string? legacyTestClassName = testCase.GetPropertyValue(EngineConstants.TestClassNameProperty) as string;
+        string? legacyTestClassName = testCase.GetPropertyValue(AdapterTestProperties.TestClassNameProperty) as string;
         string? testClassName = testCase.GetClassNameWhenFullyQualifiedNameStartsWith(managedTypeName)
             ?? testCase.GetClassNameWhenFullyQualifiedNameStartsWith(legacyTestClassName)
             ?? managedTypeName
             ?? legacyTestClassName;
         string name = testCase.GetTestName(testClassName);
 
-        var testMethod = new TestMethod(testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(EngineConstants.ParameterTypesProperty, null));
+        var testMethod = new TestMethod(testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName!, source, testCase.DisplayName, testCase.GetPropertyValue<string>(AdapterTestProperties.ParameterTypesProperty, null));
 
-        var dataType = (DynamicDataType)testCase.GetPropertyValue(EngineConstants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
+        var dataType = (DynamicDataType)testCase.GetPropertyValue(AdapterTestProperties.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
-            string[]? data = testCase.GetPropertyValue<string[]>(EngineConstants.TestDynamicDataProperty, null);
+            string[]? data = testCase.GetPropertyValue<string[]>(AdapterTestProperties.TestDynamicDataProperty, null);
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
-            testMethod.TestCaseIndex = testCase.GetPropertyValue(EngineConstants.TestCaseIndexProperty, 0);
-            testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(EngineConstants.TestDataSourceIgnoreMessageProperty) as string;
+            testMethod.TestCaseIndex = testCase.GetPropertyValue(AdapterTestProperties.TestCaseIndexProperty, 0);
+            testMethod.TestDataSourceIgnoreMessage = testCase.GetPropertyValue(AdapterTestProperties.TestDataSourceIgnoreMessageProperty) as string;
         }
 
         var testElement = new UnitTestElement(testMethod)
         {
-            TestCategory = testCase.GetPropertyValue(EngineConstants.TestCategoryProperty) as string[],
-            Priority = testCase.GetPropertyValue(EngineConstants.PriorityProperty) as int?,
-            UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(EngineConstants.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
+            TestCategory = testCase.GetPropertyValue(AdapterTestProperties.TestCategoryProperty) as string[],
+            Priority = testCase.GetPropertyValue(AdapterTestProperties.PriorityProperty) as int?,
+            UnfoldingStrategy = (TestDataSourceUnfoldingStrategy)testCase.GetPropertyValue(AdapterTestProperties.UnfoldingStrategy, (int)TestDataSourceUnfoldingStrategy.Auto),
         };
 
         if (testCase.Traits.Any())
@@ -121,21 +120,21 @@ internal static class TestCaseExtensions
             testElement.Traits = [.. testCase.Traits.Select(t => new TestTrait(t.Name, t.Value))];
         }
 
-        string[]? workItemIds = testCase.GetPropertyValue<string[]>(EngineConstants.WorkItemIdsProperty, null);
+        string[]? workItemIds = testCase.GetPropertyValue<string[]>(AdapterTestProperties.WorkItemIdsProperty, null);
         if (workItemIds is { Length: > 0 })
         {
             testElement.WorkItemIds = workItemIds;
         }
 
 #if !WINDOWS_UWP && !WIN_UI
-        KeyValuePair<string, string>[]? deploymentItems = testCase.GetPropertyValue<KeyValuePair<string, string>[]>(EngineConstants.DeploymentItemsProperty, null);
+        KeyValuePair<string, string>[]? deploymentItems = testCase.GetPropertyValue<KeyValuePair<string, string>[]>(AdapterTestProperties.DeploymentItemsProperty, null);
         if (deploymentItems is { Length: > 0 })
         {
             testElement.DeploymentItems = deploymentItems;
         }
 #endif
 
-        testElement.DoNotParallelize = testCase.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false);
+        testElement.DoNotParallelize = testCase.GetPropertyValue(AdapterTestProperties.DoNotParallelizeProperty, false);
 
         return testElement;
     }

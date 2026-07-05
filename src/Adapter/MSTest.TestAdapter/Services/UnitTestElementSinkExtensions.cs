@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -14,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// <remarks>
 /// This is the single translation point between the neutral <see cref="UnitTestElement"/> model and the
 /// VSTest discovery object model (<c>TestCase</c>, <c>ITestCaseDiscoverySink</c>). It materializes a
-/// VSTest <c>TestCase</c> for each discovered element via <see cref="UnitTestElement.ToTestCase"/>. It is
+/// VSTest <c>TestCase</c> for each discovered element via <c>UnitTestElementExtensions.ToTestCase</c>. It is
 /// expected to move entirely into the adapter layer once discovery no longer flows VSTest discovery sinks
 /// through the platform services (see the tracking issue linked in the pull request that removes the VSTest
 /// object model from platform services).
