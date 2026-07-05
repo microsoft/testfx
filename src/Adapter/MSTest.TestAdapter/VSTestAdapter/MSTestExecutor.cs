@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
@@ -141,7 +142,7 @@ internal sealed class MSTestExecutor : ITestExecutor
 
         try
         {
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle.ToAdapterMessageLogger(), configuration, new TestSourceHandler()))
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext?.RunSettings?.SettingsXml, frameworkHandle.ToAdapterMessageLogger(), configuration, new TestSourceHandler()))
             {
                 return;
             }
@@ -156,7 +157,11 @@ internal sealed class MSTestExecutor : ITestExecutor
             // execution engine reports results through this neutral recorder and never constructs VSTest results.
             ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
 
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(testElements, runContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+            // Extract the neutral run inputs (test-run directory + run settings XML) from the host run context at
+            // this boundary so the execution engine no longer depends on the VSTest run context.
+            var deploymentContext = new DeploymentContext(runContext?.TestRunDirectory, runContext?.RunSettings?.SettingsXml);
+
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(testElements, deploymentContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {
@@ -203,7 +208,7 @@ internal sealed class MSTestExecutor : ITestExecutor
         try
         {
             TestSourceHandler testSourceHandler = new();
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle.ToAdapterMessageLogger(), configuration, testSourceHandler))
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext?.RunSettings?.SettingsXml, frameworkHandle.ToAdapterMessageLogger(), configuration, testSourceHandler))
             {
                 return;
             }
@@ -214,7 +219,11 @@ internal sealed class MSTestExecutor : ITestExecutor
             // execution engine reports results through this neutral recorder and never constructs VSTest results.
             ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
 
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+            // Extract the neutral run inputs (test-run directory + run settings XML) from the host run context at
+            // this boundary so the execution engine no longer depends on the VSTest run context.
+            var deploymentContext = new DeploymentContext(runContext?.TestRunDirectory, runContext?.RunSettings?.SettingsXml);
+
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, deploymentContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {

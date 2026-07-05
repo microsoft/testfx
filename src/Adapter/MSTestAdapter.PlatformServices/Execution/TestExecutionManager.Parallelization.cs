@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,12 +19,12 @@ internal partial class TestExecutionManager
     /// Execute the parameter tests.
     /// </summary>
     /// <param name="tests">Tests to execute.</param>
-    /// <param name="runContext">The run context.</param>
+    /// <param name="deploymentContext">Host-provided test-run directory and run settings XML.</param>
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="testResultRecorder">Recorder used to report test results back to the host.</param>
     /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    internal virtual async Task ExecuteTestsAsync(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, bool isDeploymentDone)
+    internal virtual async Task ExecuteTestsAsync(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IFrameworkHandle frameworkHandle, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, bool isDeploymentDone)
     {
         _testResultRecorder = testResultRecorder;
         _testElementFilterProvider = filterProvider;
@@ -42,7 +43,7 @@ internal partial class TestExecutionManager
         foreach (var group in testsBySource)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
-            await ExecuteTestsInSourceAsync(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone).ConfigureAwait(false);
+            await ExecuteTestsInSourceAsync(group.Tests, deploymentContext, frameworkHandle, group.Source, isDeploymentDone).ConfigureAwait(false);
         }
     }
 
@@ -50,11 +51,11 @@ internal partial class TestExecutionManager
     /// Execute the parameter tests present in parameter source.
     /// </summary>
     /// <param name="tests">Tests to execute.</param>
-    /// <param name="runContext">The run context.</param>
+    /// <param name="deploymentContext">Host-provided test-run directory and run settings XML.</param>
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="source">The test container for the tests.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    private async Task ExecuteTestsInSourceAsync(IEnumerable<UnitTestElement> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
+    private async Task ExecuteTestsInSourceAsync(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
@@ -67,7 +68,7 @@ internal partial class TestExecutionManager
 
         IAdapterMessageLogger adapterMessageLogger = frameworkHandle.ToAdapterMessageLogger();
 
-        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings?.SettingsXml);
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, deploymentContext.RunSettingsXml);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)

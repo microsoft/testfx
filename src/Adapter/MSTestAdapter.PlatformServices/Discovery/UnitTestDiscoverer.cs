@@ -4,7 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -20,20 +19,20 @@ internal class UnitTestDiscoverer
     /// <param name="sources"> The sources. </param>
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
-    /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="settingsXml"> The run settings XML, or <see langword="null"/> when none was provided. </param>
     /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal void DiscoverTests(
         IEnumerable<string> sources,
         IAdapterMessageLogger logger,
         IUnitTestElementSink discoverySink,
-        IDiscoveryContext discoveryContext,
+        string? settingsXml,
         ITestElementFilterProvider? filterProvider,
         bool isMTP)
     {
         foreach (string source in sources)
         {
-            DiscoverTestsInSource(source, logger, discoverySink, discoveryContext, filterProvider, isMTP);
+            DiscoverTestsInSource(source, logger, discoverySink, settingsXml, filterProvider, isMTP);
         }
     }
 
@@ -43,18 +42,18 @@ internal class UnitTestDiscoverer
     /// <param name="source"> The source. </param>
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
-    /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="settingsXml"> The run settings XML, or <see langword="null"/> when none was provided. </param>
     /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
     internal virtual void DiscoverTestsInSource(
         string source,
         IAdapterMessageLogger logger,
         IUnitTestElementSink discoverySink,
-        IDiscoveryContext? discoveryContext,
+        string? settingsXml,
         ITestElementFilterProvider? filterProvider,
         bool isMTP)
     {
-        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings?.SettingsXml, _testSource, isMTP, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, settingsXml, _testSource, isMTP, out List<string> warnings);
 
         if (MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors)
         {

@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -30,7 +31,7 @@ public abstract partial class CLITestBase
         string runSettingsXml = GetRunSettingsXml(string.Empty);
         var context = new InternalDiscoveryContext(runSettingsXml, testCaseFilter);
 
-        unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger.ToAdapterMessageLogger(), sink.ToUnitTestElementSink(), context, new TestElementFilterProvider(context), false);
+        unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger.ToAdapterMessageLogger(), sink.ToUnitTestElementSink(), runSettingsXml, new TestElementFilterProvider(context), false);
 
         return sink.DiscoveredTests;
     }
@@ -41,7 +42,7 @@ public abstract partial class CLITestBase
         var frameworkHandle = new InternalFrameworkHandle();
 
         ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), null, frameworkHandle, testResultRecorder, filterProvider: null, false);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), new DeploymentContext(null, null), frameworkHandle, testResultRecorder, filterProvider: null, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 
@@ -54,7 +55,7 @@ public abstract partial class CLITestBase
         var runContext = new InternalRunContext(runSettingsXml, testCaseFilter);
 
         ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), runContext, frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), false);
+        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), new DeploymentContext(runContext.TestRunDirectory, runContext.RunSettings?.SettingsXml), frameworkHandle, testResultRecorder, new TestElementFilterProvider(runContext), false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 
