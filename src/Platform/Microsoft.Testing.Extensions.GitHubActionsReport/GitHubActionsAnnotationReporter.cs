@@ -15,7 +15,8 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 /// <summary>
 /// Emits a GitHub Actions <c>::error</c> workflow command for each failing test so the failure surfaces
 /// both in the workflow run's Annotations tab and, when the source location can be resolved, on the
-/// pull request's "Files changed" diff gutter.
+/// pull request's "Files changed" diff gutter. Skipped tests are surfaced as title-only <c>::warning</c>
+/// workflow commands so they are visible in the Annotations tab too.
 /// </summary>
 internal sealed class GitHubActionsAnnotationReporter :
     IDataConsumer,
@@ -87,6 +88,14 @@ internal sealed class GitHubActionsAnnotationReporter :
 
             if (failure is null)
             {
+                // Skipped tests carry no exception (and therefore no source location); surface them as a
+                // title-only '::warning' so intentionally or unexpectedly skipped tests are visible in the
+                // workflow Annotations tab alongside failures, rather than being silently absent.
+                if (nodeState is SkippedTestNodeStateProperty skipped)
+                {
+                    await WriteSkippedAnnotationAsync(GetTestName(nodeUpdateMessage.TestNode), skipped.Explanation, cancellationToken).ConfigureAwait(false);
+                }
+
                 return;
             }
 
@@ -151,6 +160,39 @@ internal sealed class GitHubActionsAnnotationReporter :
         return string.Format(
             CultureInfo.InvariantCulture,
             "::error title={0}::{1}",
+            GitHubActionsEscaper.EscapeProperty(title),
+            GitHubActionsEscaper.EscapeData(message));
+    }
+
+    private async Task WriteSkippedAnnotationAsync(string testName, string? explanation, CancellationToken cancellationToken)
+    {
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            _logger.LogTrace("Skip received.");
+        }
+
+        string line = GetSkippedAnnotation(testName, explanation);
+
+        if (_logger.IsEnabled(LogLevel.Trace))
+        {
+            _logger.LogTrace($"Showing skip annotation '{line}'.");
+        }
+
+        // Prepend a newline for the same reason as the failure annotation: it guarantees the '::warning'
+        // workflow command starts at column 0 on its own line so GitHub recognizes it.
+        await _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData($"\n{line}"), cancellationToken).ConfigureAwait(false);
+    }
+
+    internal static /* for testing */ string GetSkippedAnnotation(string testName, string? explanation)
+    {
+        string message = explanation ?? GitHubActionsResources.NoSkipReasonFallback;
+        string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.SkippedAnnotationTitle, testName);
+
+        // Skipped nodes never carry a stack trace, so there is no file/line to pin the annotation to; a
+        // title-only '::warning' still surfaces in the workflow Annotations tab.
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "::warning title={0}::{1}",
             GitHubActionsEscaper.EscapeProperty(title),
             GitHubActionsEscaper.EscapeData(message));
     }
