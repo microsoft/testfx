@@ -47,6 +47,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+* Emit `::warning` annotations for skipped tests in `Microsoft.Testing.Extensions.GitHubActionsReport` by @Evangelink in [#9641](https://github.com/microsoft/testfx/pull/9641)
 
 ### Fixed
 
