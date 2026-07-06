@@ -382,6 +382,36 @@ public partial class MyTestClass : IDisposable
 #endif
 
     [TestMethod]
+    public async Task WhenTestCleanupMethodInNonTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                [TestCleanup]
+                public void [|MyCleanup|]()
+                {
+                    int x = 1;
+                }
+            }
+            """;
+        string fixedCode = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass : IDisposable
+            {
+                public void Dispose()
+                {
+                    int x = 1;
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenTestClassHasTestCleanupWithMultiLineBody_PreservesIndentation()
     {
         string code = """

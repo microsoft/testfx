@@ -405,6 +405,78 @@ public sealed class PreferConstructorOverTestInitializeAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenTestInitializeMethodInNonTestClass_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                [TestInitialize]
+                public void [|MyInit|]()
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass
+            {
+                public MyClass()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestClassHasOnlyParameterizedCtorAndTestInitialize_CodeFix_MergesIntoParameterizedCtor()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+                private int _y;
+
+                public MyTestClass(int y)
+                {
+                    _y = y;
+                }
+
+                [TestInitialize]
+                public void [|MyTestInit|]()
+                {
+                    _x = 1;
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private int _x;
+                private int _y;
+
+                public MyTestClass(int y)
+                {
+                    _y = y;
+                    _x = 1;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task WhenTestClassHasTestInitializeWithMultiLineBody_PreservesIndentation()
     {
         string code = """
