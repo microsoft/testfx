@@ -116,10 +116,15 @@ internal static class MethodInfoExtensions
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
-    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    /// <summary>
+    /// Invokes a test method asynchronously using pre-cached parameter metadata,
+    /// avoiding the per-call <c>MethodInfo.GetParameters()</c> allocation.
+    /// Hot-path callers that already hold a cached <c>ParameterInfo[]</c> (e.g. from
+    /// <c>TestMethodInfo.ParameterTypes</c>) should use this overload.
+    /// Non-hot-path callers may use the convenience overload that fetches parameters internally.
+    /// </summary>
+    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, ParameterInfo[] methodParameters, params object?[]? arguments)
     {
-        ParameterInfo[]? methodParameters = methodInfo.GetParameters();
-
         // check if test method expected parameter values but no test data was provided,
         // throw error with appropriate message.
         if (methodParameters is { Length: > 0 } && arguments == null)
@@ -150,7 +155,7 @@ internal static class MethodInfoExtensions
             // IndexOutOfRangeException. Mirror the reflection path's friendly diagnostic instead. We
             // only validate the count here — a type mismatch surfaces as the test's own exception and
             // must not be reinterpreted as an arguments error.
-            int expectedParameterCount = methodParameters?.Length ?? 0;
+            int expectedParameterCount = methodParameters.Length;
             int providedArgumentCount = sourceGeneratedArguments?.Length ?? 0;
             if (expectedParameterCount != providedArgumentCount)
             {
@@ -162,7 +167,7 @@ internal static class MethodInfoExtensions
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
                         expectedParameterCount,
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? []),
+                        string.Join(", ", methodParameters.Select(p => p.ParameterType.Name)),
                         providedArgumentCount,
                         string.Join(", ", sourceGeneratedArguments?.Select(a => a?.GetType().Name ?? "null") ?? [])));
             }
@@ -184,7 +189,7 @@ internal static class MethodInfoExtensions
         }
         else
         {
-            int methodParametersLengthOrZero = methodParameters?.Length ?? 0;
+            int methodParametersLengthOrZero = methodParameters.Length;
             int argumentsLengthOrZero = arguments?.Length ?? 0;
 
 #if WINDOWS_UWP
@@ -203,7 +208,7 @@ internal static class MethodInfoExtensions
             {
                 if (methodInfo.IsGenericMethod)
                 {
-                    methodInfo = ConstructGenericMethod(methodInfo, arguments);
+                    methodInfo = ConstructGenericMethod(methodInfo, methodParameters, arguments);
                 }
 
                 invokeResult = methodInfo.Invoke(classInstance, arguments);
@@ -218,7 +223,7 @@ internal static class MethodInfoExtensions
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
                         methodParametersLengthOrZero,
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? []),
+                        string.Join(", ", methodParameters.Select(p => p.ParameterType.Name)),
                         argumentsLengthOrZero,
                         string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? [])), ex);
             }
@@ -231,6 +236,14 @@ internal static class MethodInfoExtensions
             _ => TryGetTaskFromValueTaskAsync(invokeResult),
         };
     }
+
+    /// <summary>
+    /// Convenience overload for non-hot-path callers that do not hold a cached
+    /// <c>ParameterInfo[]</c>. Fetches parameters once and delegates to the primary overload.
+    /// Hot-path callers should prefer the overload that accepts a pre-cached array.
+    /// </summary>
+    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+        => GetInvokeResultAsync(methodInfo, classInstance, methodInfo.GetParameters(), arguments);
 
     // Avoid loading System.Threading.Tasks.Extensions if not needed.
     // Note: .NET runtime will load all types once it's entering the method.
@@ -285,7 +298,7 @@ internal static class MethodInfoExtensions
     // public void TestMethod<T1, T2>(T2 p0, T1, p1) { }
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2060:Call to 'System.Reflection.MethodInfo.MakeGenericMethod' can not be statically analyzed.", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
     [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
-    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments)
+    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, ParameterInfo[] parameters, object?[]? arguments)
     {
         DebugEx.Assert(methodInfo.IsGenericMethod, "ConstructGenericMethod should only be called for a generic method.");
 
@@ -304,7 +317,6 @@ internal static class MethodInfoExtensions
             map[i] = (genericDefinitions[i], null);
         }
 
-        ParameterInfo[] parameters = methodInfo.GetParameters();
         for (int i = 0; i < parameters.Length; i++)
         {
             Type parameterType = parameters[i].ParameterType;
