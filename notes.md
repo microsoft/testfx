@@ -4,13 +4,13 @@
 
 - **Build (Debug)**: `./build.sh` (Linux) / `.\build.cmd` (Windows)
 - **Build (Release)**: `./build.sh -c Release`
+- **Restore SDK**: `./build.sh --restore` (installs .dotnet/ SDK + runtimes)
 - **Unit Tests**: `./build.sh -test`
 - **Pack NuGets**: `./build.sh -pack`
 - **Integration Tests**: `./build.sh -pack -test -integrationTest`
 - **Single test (MTP)**: `dotnet run --project test/UnitTests/<Project> -f net8.0 --no-build -- --treenode-filter "/*/*/*/MyClass/MyMethod"`
 - **Single test via dotnet test**: `dotnet test test/UnitTests/<Project>/<Project>.csproj -f net8.0 --no-build -c Debug --filter "FullyQualifiedName~ClassName"`
 - **Single project test**: `./build.sh --test --projects "$(pwd)/test/UnitTests/<Project>/<Project>.csproj"`
-- **Install SDK first**: `./build.sh --restore` (installs .dotnet/ SDK + runtimes, then can use `.dotnet/dotnet`)
 
 ## Testing Frameworks & Patterns
 
@@ -37,7 +37,7 @@
 - **Generic class in FixtureUtils**: `ContainingType.IsGenericType && !allowGenericType` fires for GlobalTestFixtureShouldBeValid because `allowGenericType: false`. A `[TestClass] public class MyTestClass<T>` containing `[GlobalTestInitialize]` produces a diagnostic.
 - **DuplicateTestMethodAttributeAnalyzer has NO TestClass guard**: fires on duplicate TestMethod-derived attrs on any method, regardless of [TestClass].
 - **DuplicateTestMethodAttributeFixer first-wins**: keeps the first TestMethod-derived attribute encountered in attribute list order; subsequent ones are removed.
-- **PreferDisposeOverTestCleanupAnalyzer has NO TestClass guard**: fires on any method with [TestCleanup] regardless of whether the class has [TestClass]. ImplementsIDisposable fixer method only checks syntactic base list (not semantic inheritance), so if base class implements IDisposable, fixer adds redundant IDisposable to derived class's base list.
+- **PreferDisposeOverTestCleanupAnalyzer has NO TestClass guard**: fires on any method with [TestCleanup] regardless of whether the class has [TestClass]. ImplementsIDisposable fixer method checks semantic BaseList only (not full inheritance hierarchy).
 - **PreferConstructorOverTestInitializeAnalyzer has NO TestClass guard**: fires on any method with [TestInitialize] that returns void. Fixer merges into the FIRST non-static constructor found, even parameterized ctors.
 - **Unused using after code fix**: When a code fix removes the only usage of a namespace, the `using` becomes unused but remains in fixed code (fixers don't remove usings). Tests pass because unused usings are warnings not errors.
 
@@ -45,14 +45,13 @@
 
 1. **MSTest.Engine internal class coverage** — `TestArgumentsManager`, `TestFixtureManager`, `ThreadPoolTestNodeRunner` are internal (~135+ LOC each). Would need `InternalsVisibleTo` or integration tests.
 2. **More Assert method coverage** — Any remaining gaps in newer Assert overloads.
-3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. After exhaustive coverage of most analyzers, look for:
-   - Any remaining analyzers with non-TestClass-guard scenarios
-   - Fixer edge cases for more complex code transforms
+3. **Analyzer edge cases (ongoing)** — Continue systematic coverage of untested paths in MSTest.Analyzers. After exhaustive coverage of most analyzers, look for remaining untested paths.
 
 ## Tasks Run History
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-06 | Task 3 (MSTEST0020/0021 edge cases — redo after prior PR intent did not materialize), Task 7 |
 | 2026-07-05 | Task 3 (PreferConstructorOverTestInitialize MSTEST0020 + PreferDisposeOverTestCleanup MSTEST0021 edge cases), Task 7 |
 | 2026-07-04 | Task 3 (UseCooperativeCancellationForTimeout MSTEST0045: async method, non-TestClass, named arg), Task 7 |
 | 2026-07-03 | Task 3 (GlobalTestFixtureShouldBeValid MSTEST0050 generic+derivedAttr, DuplicateTestMethodAttribute MSTEST0060 no-TestClass-guard+first-wins-fixer), Task 7 |
@@ -67,11 +66,11 @@
 
 ## Last Run
 
-2026-07-05 23:17 UTC
+2026-07-06 23:19 UTC
 
 ## Completed Work (recent)
 
-- PR for MSTEST0020/0021 (pending) — PreferConstructorOverTestInitialize + PreferDisposeOverTestCleanup edge cases (+3 tests: non-TestClass fire, parameterized-ctor merge, non-TestClass Dispose fix); 1350/1350 pass
+- PR for MSTEST0020/0021 (pending, created 2026-07-06) — non-TestClass diagnostic + parameterized-ctor merge fixer; 3 new tests
 - PR #9615 MERGED — MSTEST0045/0050/0060 edge cases (merged 2026-07-05 by Evangelink)
 - PR #9516 merged — UseAttributeOnTestMethodAnalyzer (MSTEST0007) edge cases (merged 2026-06-30)
 - PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036
