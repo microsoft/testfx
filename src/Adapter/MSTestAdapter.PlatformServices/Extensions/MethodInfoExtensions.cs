@@ -117,8 +117,11 @@ internal static class MethodInfoExtensions
     }
 
     internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+        => GetInvokeResultAsync(methodInfo, classInstance, arguments, methodInfo.GetParameters());
+
+    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, object?[]? arguments, ParameterInfo[] cachedParameters)
     {
-        ParameterInfo[]? methodParameters = methodInfo.GetParameters();
+        ParameterInfo[]? methodParameters = cachedParameters;
 
         // check if test method expected parameter values but no test data was provided,
         // throw error with appropriate message.
@@ -203,7 +206,7 @@ internal static class MethodInfoExtensions
             {
                 if (methodInfo.IsGenericMethod)
                 {
-                    methodInfo = ConstructGenericMethod(methodInfo, arguments);
+                    methodInfo = ConstructGenericMethod(methodInfo, arguments, cachedParameters);
                 }
 
                 invokeResult = methodInfo.Invoke(classInstance, arguments);
@@ -285,7 +288,7 @@ internal static class MethodInfoExtensions
     // public void TestMethod<T1, T2>(T2 p0, T1, p1) { }
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2060:Call to 'System.Reflection.MethodInfo.MakeGenericMethod' can not be statically analyzed.", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
     [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
-    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments)
+    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments, ParameterInfo[] parameters)
     {
         DebugEx.Assert(methodInfo.IsGenericMethod, "ConstructGenericMethod should only be called for a generic method.");
 
@@ -304,7 +307,6 @@ internal static class MethodInfoExtensions
             map[i] = (genericDefinitions[i], null);
         }
 
-        ParameterInfo[] parameters = methodInfo.GetParameters();
         for (int i = 0; i < parameters.Length; i++)
         {
             Type parameterType = parameters[i].ParameterType;

@@ -144,7 +144,7 @@ internal partial class TestMethodInfo
                     {
                         if (_executionContext is null)
                         {
-                            Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
+                            Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments, ParameterTypes);
                             if (invokeResult is not null)
                             {
                                 await invokeResult.ConfigureAwait(true);
@@ -161,7 +161,7 @@ internal partial class TestMethodInfo
 #if NETFRAMEWORK
                                     CallContext.HostContext = _hostContext;
 #endif
-                                    Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments);
+                                    Task? invokeResult = MethodInfo.GetInvokeResultAsync(_classInstance, arguments, ParameterTypes);
                                     if (invokeResult is not null)
                                     {
                                         await invokeResult.ConfigureAwait(false);
