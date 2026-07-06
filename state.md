@@ -1,107 +1,62 @@
-# Perf Improver — State for microsoft/testfx
+# Perf Improver State — microsoft/testfx
 
-## Validated Commands
+## Build/Test Commands
 
 ```sh
-# Build all projects (Debug)
-./build.sh
-
-# Build + run unit tests
-./build.sh -test
-
-# Pack NuGet packages (required before acceptance tests and performance runner)
-./build.sh -pack
-
-# Run acceptance integration tests (requires -pack first)
-./build.sh -pack -test -integrationTest
-
-# Run performance timing scenarios (requires -pack first)
-.dotnet/dotnet run --project test/Performance/MSTest.Performance.Runner \
-  -- execute --pipelineNameFilter "*PlainProcess*"
-
-# Run a single test project
-.dotnet/dotnet run --project <project-path> -f net9.0 --no-build -- --treenode-filter "*/*/MyTestClass/*"
+./build.sh              # restore + build (Debug)
+./build.sh -c Release   # release build
+./build.sh -test        # unit tests (net8.0 + net9.0)
+./build.sh -pack        # produce NuGet packages
+./build.sh -pack -test -integrationTest  # full acceptance suite
+# Run single test project (after build):
+.dotnet/dotnet run --project <proj> -f net9.0 --no-build -- --treenode-filter "*/*/Class/Method"
 ```
 
-NOTE: Local SDK (.dotnet/) is NOT available in CI agent. Build/test must go through CI.
-NOTE: AwesomeAssertions (FluentAssertions-style) is used in MSTestAdapter.PlatformServices.UnitTests — NOT MSTest Assert.
-NOTE: MSTestAdapter.PlatformServices.UnitTests only builds on Windows (requires .NET Framework TFMs).
-NOTE: NonWindowsTests.slnf covers only MTP/Analyzer unit tests on Linux.
+## Work In Progress
+
+None — last PR submitted on current run.
 
 ## Completed Work
 
-- PR #9159 merged: perf: single-pass PropertyBag walk in TerminalOutputDevice
-- PR #9257 merged: perf: replace per-test Queue/Stack allocation in TestMethodInfo lifecycle
-- PR #9299 merged: Replace Array.IndexOf(GetType()) with is pattern matching in TestApplicationResult etc.
-- PR #9311 merged: Extend performance runner to Linux/macOS; add ClassLevel variant
-- PR #9348 merged: Avoid redundant TestNodeUid allocation in server mode
-- PR #9433 merged (2026-06-26): Skip unused TestContextImplementation allocs in RunSingleTestAsync
-- PR #9450 merged (2026-06-26): Add Linux job to nightly perf-timing workflow
-- PR #9461 merged (2026-06-29): Defer class-cleanup TestContextImplementation allocation to last test only
-- PR #9478 merged (2026-06-28): Skip Dictionary + ReadOnlyDictionary alloc in CaptureLifecycleProperties when empty
-- PR #9486 merged (2026-06-29): Add dotnet test server-mode scenario to performance runner
-- PR #9507 merged (2026-06-29): Avoid List<TestResult> allocation in RunTestMethodAsync non-data-driven fast path
+| Date | Change | Status |
+|---|---|---|
+| 2026-06-29 | Cache ParameterInfo[] in TestMethodInfo.ParameterTypes (efficiency-improver PR #9514) | Merged 2026-06-30 |
+| 2026-07-04 | Issue #9602: skip intermediate Dict alloc in CloneForDataDrivenIteration | Open (branch available) |
+| 2026-07-04 | Issue #9603: skip TCS bridge in ExecuteTestAsync when capturedContext==null | Merged via PR #9636 (2026-07-06) |
+| 2026-07-05 | PR #9617 by Evangelink: all 4 optimizations grouped — dirty (needs rebase after #9636) | Open |
+| 2026-07-06 | PR submitted on branch perf-assist/cache-invoke-params: pass cached ParameterTypes to GetInvokeResultAsync | Pending review |
 
-## Open Work
+## Optimization Backlog (prioritized)
 
-- Branch perf-assist/skip-clone-dict-alloc — PR #aw_clone_alloc submitted 2026-07-05
-  - Skip intermediate Dictionary allocation in CloneForDataDrivenIteration
-  - Pass _properties directly to ctor; ctor copies in its null/null branch
-  - Saves 1 Dictionary alloc + O(n) copy per data-driven test iteration
-  - Status: awaiting CI
-  - Note: Old issue #9602 (same change, previous run's failed PR) should be closed
+1. **[PR open, needs rebase]** PR #9617: skip Dict alloc in CloneForDataDrivenIteration + 3 others
+2. **[PR submitted]** Pass cached ParameterTypes to GetInvokeResultAsync — eliminates GetParameters() alloc per test invocation (perf-assist/cache-invoke-params)
+3. AntiTerminal.StopUpdate(): StringBuilder.ToString() on every flush — blocked on IConsole abstraction
+4. SilenceDrivenHeartbeatRenderer: allocs only on rare heartbeat paths — low priority
+5. ClassifyOutcome: Array.IndexOf fallback — very low priority
 
-- Branch perf-assist/skip-tcs-no-exec-context — PR #aw_tcs_fast submitted 2026-07-05
-  - Fast path in ExecuteTestAsync when capturedContext == null
-  - Skips TaskCompletionSource<TestResult[]> + async-lambda closure + Action delegate allocs
-  - ~3 heap allocs fewer per test in the common case
-  - Status: awaiting CI
-  - Note: Old issue #9603 (same change, previous run's failed PR) should be closed
+## Perf Notes
 
-## Optimization Backlog
-
-Priority | Item
----------|-----
-Done | PR #9159, #9257, #9299, #9311, #9348, #9433, #9450, #9461, #9478, #9486, #9507 merged
-Submitted | PR #aw_clone_alloc (2026-07-05) — skip intermediate dict alloc in CloneForDataDrivenIteration
-Submitted | PR #aw_tcs_fast (2026-07-05) — skip TCS bridge in ExecuteTestAsync when ctx==null
-Low | AntiTerminal.StopUpdate() _stringBuilder.ToString() on flush (blocked on IConsole/netstandard2.0)
-Low | SilenceDrivenHeartbeatRenderer — only heartbeat/slow-test path
-Very Low | ClassifyOutcome in TestResultCaptureHelper.cs — Array.IndexOf fallback for CancelledTestNodeStateProperty
-
-## Performance Notes
-
-- TestContextImplementation ctor copies testContextProperties dict + registers CancellationTokenRegistration
-- TestablePlatformServiceProvider.GetTestContextCallCount tracks allocation counts in unit tests
-- CaptureLifecycleProperties: return type now nullable (null = no user properties set)
-- efficiency-improver bot also operates on this repo — check for duplicate opportunities before creating PRs
-- Acceptance tests need -pack first; unit tests do not
-- DotnetTestProcess step: ElapsedTime is the primary user-visible metric
-- ExecuteTestAsync TCS bridge: only needed when TestClassInfo.ExecutionContext or TestAssemblyInfo.ExecutionContext is non-null
-- CloneForDataDrivenIteration: ctor null/null branch always copies via [with(properties)]; no snapshot needed
-- csharp_style_var_when_type_is_apparent = true:warning — MUST use var when type apparent (e.g. var x = new Foo())
-- csharp_style_var_elsewhere = false:warning — do NOT use var for method results/local assignments where type not apparent
-- GitHub Actions lacks pull-requests:write permission → PRs fall back to issues with patch bundles
-- 2026-07-04: PRs #aw_clone_alloc and #aw_tcs_fast were created as issues #9602 and #9603
-
-## Task Schedule (last run dates)
-
-- Task 1 (Commands): 2026-06-25
-- Task 2 (Identify): 2026-06-30
-- Task 3 (Implement): 2026-07-05 ✓ (2 PRs re-submitted)
-- Task 4 (Maintain PRs): 2026-07-05 ✓ (found old issues #9602/#9603; re-submitted as proper PRs)
-- Task 5 (Comment issues): 2026-06-28
-- Task 6 (Infra): 2026-06-28
-- Task 7 (Monthly Summary): 2026-07-05 ✓ (updated issue #9604)
+- MethodInfo.GetParameters() always allocates a fresh ParameterInfo[] (CLR safety). Cache wherever used in loops or hot paths.
+- TestMethodInfo.ParameterTypes uses `field ??=` (C# 14) lazy init — valid because MethodInfo is get-only.
+- ITestDataSource test execution: hot path is TestMethodRunner → ExecuteTestAsync → ExecuteInternalAsync → GetInvokeResultAsync. Each method called N times (N = data rows).
+- Lifecycle methods (AssemblyInit/Cleanup, ClassInit/Cleanup, TestInit/Cleanup): called 1-2 times per class/assembly. Not worth micro-optimizing.
 
 ## Monthly Activity Issue
 
-Issue #9258: [perf-improver] Monthly Activity 2026-06 (CLOSED 2026-07-04)
-Issue #9604: [perf-improver] Monthly Activity 2026-07 (open)
+Issue #9604: [perf-improver] Monthly Activity 2026-07 (OPEN)
 
-## Backlog Cursor
+## Task Schedule (last run dates)
 
-Two PRs submitted (re-submission of 2026-07-04 work). Next run priority:
-- Task 5 (Comment on performance issues) — last done 2026-06-28 (oldest)
-- Task 6 (Perf infra) — last done 2026-06-28 (oldest)
-- Task 4 (Maintain PRs) — check if #aw_clone_alloc and #aw_tcs_fast have CI results
+| Task | Last Run |
+|---|---|
+| Task 1: Discover commands | 2026-06-28 |
+| Task 2: Identify opportunities | 2026-07-06 |
+| Task 3: Implement improvements | 2026-07-06 |
+| Task 4: Maintain PRs | 2026-07-06 |
+| Task 5: Comment on issues | 2026-06-28 |
+| Task 6: Perf infra | 2026-06-28 |
+| Task 7: Monthly summary | 2026-07-06 |
+
+## Next Run Priority
+
+Tasks 5 and 6 (oldest) — comment on perf issues, check perf measurement infrastructure.
