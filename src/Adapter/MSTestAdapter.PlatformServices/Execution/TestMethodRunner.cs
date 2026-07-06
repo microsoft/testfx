@@ -496,11 +496,27 @@ internal sealed class TestMethodRunner
     {
         try
         {
+            ExecutionContext? capturedContext = testMethodInfo.Parent.ExecutionContext
+                ?? testMethodInfo.Parent.Parent.ExecutionContext;
+
+            // Fast path: when no ExecutionContext was captured (the common case),
+            // ExecutionContextHelpers.RunOnContext would simply call the action inline.
+            // Skip the TaskCompletionSource bridge, async-lambda closure, and Action
+            // delegate allocations entirely.
+            if (capturedContext is null)
+            {
+                using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
+                {
+                    testMethodInfo.TestContext = executionContext;
+                    return await _testMethodInfo.Executor.ExecuteAsync(testMethodInfo).ConfigureAwait(false);
+                }
+            }
+
             var tcs = new TaskCompletionSource<TestResult[]>();
 
 #pragma warning disable VSTHRD101 // Avoid unsupported async delegates
             ExecutionContextHelpers.RunOnContext(
-                testMethodInfo.Parent.ExecutionContext ?? testMethodInfo.Parent.Parent.ExecutionContext,
+                capturedContext,
                 async () =>
                 {
                     try
