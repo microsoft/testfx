@@ -1050,7 +1050,7 @@ See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.3.2" />[1.3.2] - 2024-08-05
 
-See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/compare/v1.3.1...v1.3.2)
+See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testfx/compare/v1.3.1...v1.3.2)
 
 ### Fixed
 
@@ -1074,7 +1074,7 @@ See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.3.1" />[1.3.1] - 2024-07-15
 
-See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
+See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testfx/compare/v1.2.1...v1.3.1)
 
 ### Added
 
