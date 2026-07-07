@@ -22,24 +22,24 @@ public class TestCaseDiscoverySinkTests : TestContainer
         _testCaseDiscoverySink.TestElements.Count.Should().Be(0);
     }
 
-    public void SendTestElementShouldAddTheTestElement()
+    public async Task SendTestElementShouldAddTheTestElement()
     {
         var testElement = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null));
 
-        _testCaseDiscoverySink.SendTestElement(testElement);
+        await _testCaseDiscoverySink.SendTestElementAsync(testElement);
 
         _testCaseDiscoverySink.TestElements.Should().NotBeNull();
         _testCaseDiscoverySink.TestElements.Count.Should().Be(1);
         _testCaseDiscoverySink.TestElements.ToArray()[0].Should().BeSameAs(testElement);
     }
 
-    public void SendTestElementShouldAddEachTestElementInOrder()
+    public async Task SendTestElementShouldAddEachTestElementInOrder()
     {
         var testElement1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
         var testElement2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
 
-        _testCaseDiscoverySink.SendTestElement(testElement1);
-        _testCaseDiscoverySink.SendTestElement(testElement2);
+        await _testCaseDiscoverySink.SendTestElementAsync(testElement1);
+        await _testCaseDiscoverySink.SendTestElementAsync(testElement2);
 
         _testCaseDiscoverySink.TestElements.Count.Should().Be(2);
         _testCaseDiscoverySink.TestElements.ToArray()[0].Should().BeSameAs(testElement1);

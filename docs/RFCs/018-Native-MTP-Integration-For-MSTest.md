@@ -81,7 +81,7 @@ MTP ITestFramework request (Discover/Run)  ──►  Microsoft.Testing.Extensio
                         TestNodeUpdateMessage  ──►  MTP IMessageBus
 ```
 
-The neutral seams already exist in `src\Adapter\MSTestAdapter.PlatformServices\Interfaces`:
+The neutral seams already exist in `src/Adapter/MSTestAdapter.PlatformServices/Interfaces`:
 
 | Neutral seam | Role | VSTest impl today |
 | --- | --- | --- |

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -31,10 +31,10 @@ internal sealed class MtpUnitTestElementSink : IUnitTestElementSink
         _isTrxEnabled = isTrxEnabled;
     }
 
-    public void SendTestElement(UnitTestElement testElement)
+    public Task SendTestElementAsync(UnitTestElement testElement)
     {
         TestNode testNode = MSTestTestNodeConverter.ToDiscoveredTestNode(testElement, _isTrxEnabled);
-        _messageBus.PublishAsync(_dataProducer, new TestNodeUpdateMessage(_sessionUid, testNode)).GetAwaiter().GetResult();
+        return _messageBus.PublishAsync(_dataProducer, new TestNodeUpdateMessage(_sessionUid, testNode));
     }
 }
 #endif

@@ -24,6 +24,9 @@ internal sealed class TestCaseDiscoverySink : IUnitTestElementSink
     /// Collects the discovered test element.
     /// </summary>
     /// <param name="testElement"> The discovered test element. </param>
-    public void SendTestElement(UnitTestElement testElement)
-        => TestElements.Add(testElement);
+    public Task SendTestElementAsync(UnitTestElement testElement)
+    {
+        TestElements.Add(testElement);
+        return Task.CompletedTask;
+    }
 }

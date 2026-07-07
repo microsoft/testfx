@@ -108,7 +108,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
             IUnitTestElementSink unitTestElementSink = elementSink ?? discoverySink!.ToUnitTestElementSink();
             if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext?.RunSettings?.SettingsXml, adapterLogger, configuration, _testSourceHandler))
             {
-                new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, adapterLogger, unitTestElementSink, discoveryContext?.RunSettings?.SettingsXml, new TestElementFilterProvider(discoveryContext), isMTP);
+                await new UnitTestDiscoverer(_testSourceHandler).DiscoverTestsAsync(sources, adapterLogger, unitTestElementSink, discoveryContext?.RunSettings?.SettingsXml, new TestElementFilterProvider(discoveryContext), isMTP).ConfigureAwait(false);
             }
         }
         finally

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -239,13 +239,13 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
     }
 
     // --- Seams ------------------------------------------------------------------------------------------------
-    public void MtpUnitTestElementSink_PublishesDiscoveredTestNode()
+    public async Task MtpUnitTestElementSink_PublishesDiscoveredTestNode()
     {
         var messageBus = new CapturingMessageBus();
         var sessionUid = new SessionUid("session-1");
         var sink = new MtpUnitTestElementSink(messageBus, new StubDataProducer(), sessionUid, isTrxEnabled: false);
 
-        sink.SendTestElement(CreateElement());
+        await sink.SendTestElementAsync(CreateElement());
 
         messageBus.Published.Should().ContainSingle();
         var message = (TestNodeUpdateMessage)messageBus.Published[0];
@@ -253,46 +253,46 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         message.TestNode.Properties.Any<DiscoveredTestNodeStateProperty>().Should().BeTrue();
     }
 
-    public void MtpTestResultRecorder_RecordStart_PublishesInProgressNode()
+    public async Task MtpTestResultRecorder_RecordStart_PublishesInProgressNode()
     {
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(messageBus, new StubDataProducer(), new SessionUid("s"), isTrxEnabled: false, new MSTestSettings());
 
-        recorder.RecordStart(CreateElement());
+        await recorder.RecordStartAsync(CreateElement());
 
         var message = (TestNodeUpdateMessage)messageBus.Published.Single();
         message.TestNode.Properties.Any<InProgressTestNodeStateProperty>().Should().BeTrue();
     }
 
-    public void MtpTestResultRecorder_RecordEmptyResult_PublishesNothing()
+    public async Task MtpTestResultRecorder_RecordEmptyResult_PublishesNothing()
     {
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(messageBus, new StubDataProducer(), new SessionUid("s"), isTrxEnabled: false, new MSTestSettings());
 
-        recorder.RecordEmptyResult(CreateElement());
+        await recorder.RecordEmptyResultAsync(CreateElement());
 
         messageBus.Published.Should().BeEmpty();
     }
 
-    public void MtpTestResultRecorder_RecordResult_PublishesResultNodeAndReturnsFailedFlag()
+    public async Task MtpTestResultRecorder_RecordResult_PublishesResultNodeAndReturnsFailedFlag()
     {
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(messageBus, new StubDataProducer(), new SessionUid("s"), isTrxEnabled: false, new MSTestSettings());
         var result = new FrameworkTestResult { Outcome = UnitTestOutcome.Failed, ExceptionMessage = "nope" };
 
-        bool isFailed = recorder.RecordResult(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now);
+        bool isFailed = await recorder.RecordResultAsync(CreateElement(), result, DateTimeOffset.Now, DateTimeOffset.Now);
 
         isFailed.Should().BeTrue();
         var message = (TestNodeUpdateMessage)messageBus.Published.Single();
         message.TestNode.Properties.Any<FailedTestNodeStateProperty>().Should().BeTrue();
     }
 
-    public void MtpTestResultRecorder_RecordResult_ReturnsFalse_ForPassedTest()
+    public async Task MtpTestResultRecorder_RecordResult_ReturnsFalse_ForPassedTest()
     {
         var messageBus = new CapturingMessageBus();
         var recorder = new MtpTestResultRecorder(messageBus, new StubDataProducer(), new SessionUid("s"), isTrxEnabled: false, new MSTestSettings());
 
-        bool isFailed = recorder.RecordResult(CreateElement(), new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now);
+        bool isFailed = await recorder.RecordResultAsync(CreateElement(), new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now);
 
         isFailed.Should().BeFalse();
     }

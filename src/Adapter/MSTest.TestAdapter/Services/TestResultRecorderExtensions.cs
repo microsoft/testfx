@@ -48,13 +48,19 @@ internal static class TestResultRecorderExtensions
             _settings = settings;
         }
 
-        public void RecordStart(UnitTestElement testElement)
-            => _testExecutionRecorder.RecordStart(testElement.GetOrCreateHostTestCase());
+        public Task RecordStartAsync(UnitTestElement testElement)
+        {
+            _testExecutionRecorder.RecordStart(testElement.GetOrCreateHostTestCase());
+            return Task.CompletedTask;
+        }
 
-        public void RecordEmptyResult(UnitTestElement testElement)
-            => _testExecutionRecorder.RecordEnd(testElement.GetOrCreateHostTestCase(), TestOutcome.None);
+        public Task RecordEmptyResultAsync(UnitTestElement testElement)
+        {
+            _testExecutionRecorder.RecordEnd(testElement.GetOrCreateHostTestCase(), TestOutcome.None);
+            return Task.CompletedTask;
+        }
 
-        public bool RecordResult(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime)
+        public Task<bool> RecordResultAsync(UnitTestElement testElement, FrameworkTestResult unitTestResult, DateTimeOffset startTime, DateTimeOffset endTime)
         {
             TestCase testCase = testElement.GetOrCreateHostTestCase();
             var testResult = unitTestResult.ToTestResult(testCase, startTime, endTime, _computerName, _settings);
@@ -83,7 +89,7 @@ internal static class TestResultRecorderExtensions
             // A failure is reported only once RecordResult has completed (a swallowed TestCanceledException
             // still counts as completed). This mirrors the original inline flow where the failure was
             // observed as part of reporting the result.
-            return isFailed;
+            return Task.FromResult(isFailed);
         }
     }
 }

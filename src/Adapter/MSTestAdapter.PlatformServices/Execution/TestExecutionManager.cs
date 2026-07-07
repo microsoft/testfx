@@ -138,7 +138,7 @@ internal partial class TestExecutionManager
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
             // discover the tests
-            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, deploymentContext.RunSettingsXml, filterProvider, isMTP);
+            await GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSourceAsync(source, logger, discoverySink, deploymentContext.RunSettingsXml, filterProvider, isMTP).ConfigureAwait(false);
             tests.AddRange(discoverySink.TestElements);
 
             // Clear discoverSinksTests so that it just stores test for one source at one point of time
