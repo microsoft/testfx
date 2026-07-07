@@ -86,8 +86,6 @@ internal sealed class GitHubActionsAnnotationReporter :
                 _ => null,
             };
 
-            string testName = GetTestName(nodeUpdateMessage.TestNode);
-
             if (failure is null)
             {
                 // Skipped tests carry no exception (and therefore no source location); surface them as a
@@ -95,13 +93,13 @@ internal sealed class GitHubActionsAnnotationReporter :
                 // workflow Annotations tab alongside failures, rather than being silently absent.
                 if (nodeState is SkippedTestNodeStateProperty skipped)
                 {
-                    await WriteSkippedAnnotationAsync(testName, skipped.Explanation, cancellationToken).ConfigureAwait(false);
+                    await WriteSkippedAnnotationAsync(GetTestName(nodeUpdateMessage.TestNode), skipped.Explanation, cancellationToken).ConfigureAwait(false);
                 }
 
                 return;
             }
 
-            await WriteAnnotationAsync(testName, failure.Value.Explanation, failure.Value.Exception, cancellationToken).ConfigureAwait(false);
+            await WriteAnnotationAsync(GetTestName(nodeUpdateMessage.TestNode), failure.Value.Explanation, failure.Value.Exception, cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {
