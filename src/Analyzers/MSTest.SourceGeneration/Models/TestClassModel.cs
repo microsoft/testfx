@@ -3,7 +3,7 @@
 
 using MSTest.Analyzers.Shared;
 
-namespace MSTest.AotReflection.SourceGeneration.Model;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
 /// <summary>
 /// A reified attribute application: the attribute class plus its ctor / named args, captured

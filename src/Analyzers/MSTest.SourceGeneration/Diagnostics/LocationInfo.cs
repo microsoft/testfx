@@ -4,7 +4,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace MSTest.AotReflection.SourceGeneration.Diagnostics;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
 
 /// <summary>
 /// Value-equatable surrogate for <see cref="Location" /> so a reported

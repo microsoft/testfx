@@ -3,7 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 
-namespace MSTest.AotReflection.SourceGeneration.Diagnostics;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
 
 /// <summary>
 /// Catalogue of <see cref="DiagnosticDescriptor"/> values surfaced by the AOT reflection

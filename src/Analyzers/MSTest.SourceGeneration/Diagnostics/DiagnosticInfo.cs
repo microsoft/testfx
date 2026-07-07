@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis;
 
 using MSTest.Analyzers.Shared;
 
-namespace MSTest.AotReflection.SourceGeneration.Diagnostics;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
 
 /// <summary>
 /// Equatable payload that travels through the incremental-generator pipeline and is

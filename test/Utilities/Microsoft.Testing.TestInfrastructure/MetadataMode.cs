@@ -24,10 +24,12 @@ public enum MetadataMode
     SourceGeneration,
 
     /// <summary>
-    /// A build with the experimental <c>MSTest.AotReflection.SourceGeneration</c> package injected.
-    /// In addition to the type and test-method rooting the shipping generator performs, it also
-    /// publishes materialized type- and assembly-level attributes through <c>ReflectionMetadataHook</c>
-    /// so the adapter serves them without runtime reflection (the AOT-reflection path).
+    /// A build with the shipping <c>MSTest.SourceGeneration</c> package injected and
+    /// <c>MSTestSourceGenMode=ReflectionFree</c> selected, so the package's reflection-free generator
+    /// emits. In addition to the type and test-method rooting the default (<c>Rooting</c>) mode
+    /// performs, it also publishes materialized type- and assembly-level attributes plus delegate-based
+    /// invokers through <c>ReflectionMetadataHook</c> so the adapter serves them without runtime
+    /// reflection (the AOT-reflection path).
     /// Output lands under <c>bin/AotSourceGen/&lt;config&gt;/&lt;tfm&gt;</c>.
     /// </summary>
     AotSourceGeneration,

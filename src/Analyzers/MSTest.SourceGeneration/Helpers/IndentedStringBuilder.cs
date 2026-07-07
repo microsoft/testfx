@@ -4,8 +4,8 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
 /// <summary>
-/// Canonical source-generator indentation helper. This file is linked by
-/// MSTest.AotReflection.SourceGeneration so both generators use deterministic newlines.
+/// Canonical source-generator indentation helper shared by both generators
+/// (rooting and reflection-free) so they use deterministic newlines.
 /// </summary>
 internal sealed class IndentedStringBuilder
 {
