@@ -112,6 +112,35 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
+        // Scenario2: data-driven tests (100 classes × 10 methods × 10 DataRow rows = 10 000 executions).
+        // Matches Scenario1's total execution count for a direct overhead comparison between
+        // the plain and data-driven execution paths.
+        pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new PlainProcess("Scenario2_DataDriven_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        // Class-level parallelism variant of the data-driven scenario.
+        pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new PlainProcess("Scenario2_DataDriven_ClassLevel_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        // dotnet-test path for the data-driven scenario.
+        pipelineRunner.AddPipeline("Default", "Scenario2_DataDriven_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario2(numberOfClass: 100, methodsPerClass: 10, dataRowsPerMethod: 10, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetTestProcess("Scenario2_DataDriven_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
         return pipelineRunner.Run(pipelineNameFilter);
     }
 }
