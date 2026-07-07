@@ -103,23 +103,20 @@ public sealed class GitHubActionsAnnotationReporterTests
         Assert.AreEqual("::warning title=Test skipped%3A MyNamespace.MyTest::The test was skipped without providing a reason.", text);
     }
 
-    // Throws (and catches) an exception, reporting the exact line of the throw statement so tests can assert the
-    // resolved line without hard-coding a physical number that shifts whenever code above changes.
-    private static Exception CaptureException(string message, out int throwLine)
+    // Produces an exception whose stack trace deterministically points at this test file at a fixed line, so
+    // tests can assert the resolved file and line. A real 'throw' was previously used, but the runtime-reported
+    // line of a thrown exception shifts under Release JIT optimization (observed differing between .NET
+    // Framework net462 and net472), which made the exact-line assertion flaky in CI (see #9658). A synthetic
+    // frame keeps both the resolved file and line stable while still exercising the resolver's real
+    // repo-root/'/_/' path relativization: [CallerFilePath] yields this file's path (mapped to '/_/test/...'
+    // in deterministic CI builds, or an absolute path locally), exactly as a genuine frame would.
+    private static Exception CaptureException(string message, out int throwLine, [CallerFilePath] string filePath = "")
     {
-        throwLine = 0;
-        try
-        {
-            throwLine = CurrentLine() + 1;
-            throw new Exception(message);
-        }
-        catch (Exception ex)
-        {
-            return ex;
-        }
+        throwLine = 12345;
+        return new StackTraceException(
+            $"   at Microsoft.Testing.Extensions.UnitTests.GitHubActionsAnnotationReporterTests.CaptureException() in {filePath}:line {throwLine}",
+            message);
     }
-
-    private static int CurrentLine([CallerLineNumber] int line = 0) => line;
 
     private static IFileSystem CreateFileSystemWhereEveryFileExists()
     {
@@ -134,7 +131,9 @@ public sealed class GitHubActionsAnnotationReporterTests
     {
         private readonly string _stackTrace;
 
-        public StackTraceException(string stackTrace) => _stackTrace = stackTrace;
+        public StackTraceException(string stackTrace, string? message = null)
+            : base(message)
+            => _stackTrace = stackTrace;
 
         public override string? StackTrace => _stackTrace;
     }
