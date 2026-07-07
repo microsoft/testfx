@@ -119,7 +119,7 @@ An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits
 - **Job summary** (`--report-gh-step-summary`): appends a markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page.
 - **Slow-test notices** (`--report-gh-slow-test-notices`): emits a `::notice` workflow command for any test running past a configured threshold (default 60 seconds; set with `--report-gh-slow-test-threshold`).
 
-When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. Not supported in NativeAOT or VSTest mode. Introduced in [PR #9641](https://github.com/microsoft/testfx/pull/9641) (skipped-test `::warning` annotations).
+When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. Not supported in NativeAOT or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
 
 ## H
 
