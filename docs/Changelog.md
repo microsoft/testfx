@@ -55,6 +55,10 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Fix `[ClassCleanup]` resource leak when `ITestFilter` drops the last test of an initialized class by @Evangelink in [#9503](https://github.com/microsoft/testfx/pull/9503)
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
 
+### Changed
+
+* Lower `MSTEST0050` (`GlobalTestFixtureShouldBeValidAnalyzer`) severity from `Error` to `Warning`, matching the six peer fixture analyzers (MSTEST0008–0013) by @Evangelink in [#9670](https://github.com/microsoft/testfx/pull/9670)
+
 ## <a name="4.2.3" />[4.2.3] - 2026-05-14
 
 See full log [of v4.2.2...v4.2.3](https://github.com/microsoft/testfx/compare/v4.2.2...v4.2.3)
