@@ -4,13 +4,13 @@
 using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
 using MSTest.Analyzers.Shared;
-using MSTest.AotReflection.SourceGeneration.Diagnostics;
-using MSTest.AotReflection.SourceGeneration.Helpers;
-using MSTest.AotReflection.SourceGeneration.Model;
 
-namespace MSTest.AotReflection.SourceGeneration.Generators;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators;
 
 /// <summary>
 /// Translates a <see cref="INamedTypeSymbol"/> decorated with <c>[TestClass]</c> into an

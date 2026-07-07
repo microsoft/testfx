@@ -6,13 +6,13 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
 using MSTest.Analyzers.Shared;
-using MSTest.AotReflection.SourceGeneration.Diagnostics;
-using MSTest.AotReflection.SourceGeneration.Helpers;
-using MSTest.AotReflection.SourceGeneration.Model;
 
-namespace MSTest.AotReflection.SourceGeneration.Generators;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators;
 
 /// <summary>
 /// Roslyn incremental generator that walks every <c>[TestClass]</c> in the consuming

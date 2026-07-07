@@ -7,9 +7,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-using MSTest.AotReflection.SourceGeneration.Generators;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Generators;
 
-namespace MSTest.AotReflection.SourceGeneration.UnitTests;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.UnitTests;
 
 /// <summary>
 /// Behavior tests for <see cref="MSTestReflectionMetadataGenerator" />.
