@@ -169,25 +169,20 @@ internal sealed partial class TestClassInfo
             var testContextImpl = testContext as TestContextImplementation;
             if (ex is not null)
             {
-                return new TestResult()
+                var failedResult = new TestResult()
                 {
                     Outcome = UnitTestOutcome.Failed,
                     DisplayName = $"[{ClassType.FullName} ClassCleanup]",
                     TestFailureException = ex,
-                    LogOutput = testContextImpl?.GetAndClearOutput(),
-                    LogError = testContextImpl?.GetAndClearError(),
-                    DebugTrace = testContextImpl?.GetAndClearTrace(),
-                    TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
+                failedResult.SetOutputAndTraces(testContextImpl, testContext);
+                return failedResult;
             }
 
             if (results.Length > 0)
             {
                 TestResult lastResult = results[results.Length - 1];
-                lastResult.LogOutput += testContextImpl?.GetAndClearOutput();
-                lastResult.LogError += testContextImpl?.GetAndClearError();
-                lastResult.DebugTrace += testContextImpl?.GetAndClearTrace();
-                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                lastResult.AppendOutputAndTraces(testContextImpl, testContext);
             }
 
             return null;
