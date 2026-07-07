@@ -44,6 +44,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Forward Azure DevOps logging commands over the dotnet test pipe for multi-assembly test runs by @Evangelink in [#9463](https://github.com/microsoft/testfx/pull/9463)
 * Add `PropertyBag.FirstOrDefault<TProperty>()` for efficient single-property lookup without per-call array allocation by @Evangelink in [#9488](https://github.com/microsoft/testfx/pull/9488)
 * Add experimental `Microsoft.Testing.Extensions.GitHubActionsReport` extension emitting GitHub Actions workflow commands (per-assembly log groups, failure annotations, job summary, slow-test notices) by @azat-msft in [#9541](https://github.com/microsoft/testfx/pull/9541)
+* Emit `::warning` annotations for skipped tests in `Microsoft.Testing.Extensions.GitHubActionsReport` by @Evangelink in [#9641](https://github.com/microsoft/testfx/pull/9641)
 
 ### Fixed
 
@@ -1047,7 +1048,7 @@ See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.3.2" />[1.3.2] - 2024-08-05
 
-See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/compare/v1.3.1...v1.3.2)
+See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testfx/compare/v1.3.1...v1.3.2)
 
 ### Fixed
 
@@ -1071,7 +1072,7 @@ See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.3.1" />[1.3.1] - 2024-07-15
 
-See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
+See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testfx/compare/v1.2.1...v1.3.1)
 
 ### Added
 
