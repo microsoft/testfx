@@ -561,10 +561,9 @@ Bu yöntemleri bildiren tipin ayrıca aşağıdaki kurallara uyması gerekir:
 The type declaring these methods should also respect the following rules:
 -The type should be a class
 -The class should be 'public'
--The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">‘[GlobalTestInitialize]’ veya ‘[GlobalTestCleanup]’ ile işaretlenmiş yöntemlerin geçerli olabilmesi için şu düzeni izlemesi gerekir:
+        <target state="needs-review-translation">‘[GlobalTestInitialize]’ veya ‘[GlobalTestCleanup]’ ile işaretlenmiş yöntemlerin geçerli olabilmesi için şu düzeni izlemesi gerekir:
 -genel bir class tanımlanamaz
 -'public' olmalıdır
 -'static' olmalıdır
