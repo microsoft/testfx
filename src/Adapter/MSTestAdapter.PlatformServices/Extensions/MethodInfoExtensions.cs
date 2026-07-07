@@ -3,6 +3,8 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -114,6 +116,43 @@ internal static class MethodInfoExtensions
     {
         AsyncStateMachineAttribute? asyncStateMachineAttribute = (reflectHelper ?? ReflectHelper.Instance).GetFirstAttributeOrDefault<AsyncStateMachineAttribute>(method);
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
+    }
+
+    /// <summary>
+    /// Invokes a static lifecycle fixture method (assembly/class initialize or cleanup) and captures the
+    /// <see cref="ExecutionContext"/> that results from its execution.
+    /// </summary>
+    /// <param name="methodInfo">The fixture method to invoke.</param>
+    /// <param name="testContext">The test context to set as current and (when the method is parameterized) pass to the method.</param>
+    /// <param name="setExecutionContext">
+    /// Receives the <see cref="ExecutionContext"/> captured after the fixture method executed. This context
+    /// contains async locals set by the fixture method and is used to flow state to subsequent lifecycle methods.
+    /// </param>
+    /// <param name="afterExecutionContextCaptured">Optional callback invoked after the execution context has been captured (e.g. to snapshot test context properties).</param>
+    internal static async SynchronizationContextPreservingTask InvokeAsFixtureMethodAsync(
+        this MethodInfo methodInfo,
+        TestContext testContext,
+        Action<ExecutionContext?> setExecutionContext,
+        Action? afterExecutionContextCaptured = null)
+    {
+        // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
+        // It's safer to reset it before the capture.
+        using (TestContextImplementation.SetCurrentTestContext(testContext))
+        {
+            Task? task = methodInfo.GetParameters().Length == 0
+                ? methodInfo.GetInvokeResultAsync(null)
+                : methodInfo.GetInvokeResultAsync(null, testContext);
+            if (task is not null)
+            {
+                await task.ConfigureAwait(false);
+            }
+        }
+
+        // **After** we have executed the fixture method, we save the current context.
+        // This context will contain async locals set by the fixture method.
+        setExecutionContext(ExecutionContext.Capture());
+
+        afterExecutionContextCaptured?.Invoke();
     }
 
     internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
