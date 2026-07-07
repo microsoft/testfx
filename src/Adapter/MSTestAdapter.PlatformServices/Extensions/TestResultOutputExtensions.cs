@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -20,7 +20,7 @@ internal static class TestResultOutputExtensions
     /// <param name="result">The result to populate.</param>
     /// <param name="testContextImpl">The test context implementation providing output/error/trace. May be <see langword="null"/>.</param>
     /// <param name="testContext">The test context providing diagnostic messages.</param>
-    public static void SetOutputAndTraces(
+    internal static void SetOutputAndTraces(
         this TestResult result,
         TestContextImplementation? testContextImpl,
         ITestContext testContext)
@@ -42,7 +42,7 @@ internal static class TestResultOutputExtensions
     /// <param name="initializationErrorLogs">Logs to prepend to <see cref="TestResult.LogError"/>.</param>
     /// <param name="initializationTrace">Trace to prepend to <see cref="TestResult.DebugTrace"/>.</param>
     /// <param name="initializationTestContextMessages">Messages to prepend to <see cref="TestResult.TestContextMessages"/>.</param>
-    public static void SetOutputAndTraces(
+    internal static void SetOutputAndTraces(
         this TestResult result,
         TestContextImplementation? testContextImpl,
         ITestContext testContext,
@@ -64,7 +64,7 @@ internal static class TestResultOutputExtensions
     /// <param name="result">The result to append to.</param>
     /// <param name="testContextImpl">The test context implementation providing output/error/trace. May be <see langword="null"/>.</param>
     /// <param name="testContext">The test context providing diagnostic messages.</param>
-    public static void AppendOutputAndTraces(
+    internal static void AppendOutputAndTraces(
         this TestResult result,
         TestContextImplementation? testContextImpl,
         ITestContext testContext)
