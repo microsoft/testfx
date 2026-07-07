@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
@@ -18,31 +14,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 
     public HtmlReportEngine(ReportEngineContext context)
         : base(context)
-    {
-    }
-
-    public HtmlReportEngine(
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IEnvironment environment,
-        ICommandLineOptions commandLineOptions,
-        IConfiguration configuration,
-        IClock clock,
-        ITestFramework testFramework,
-        DateTimeOffset testStartTime,
-        int exitCode,
-        CancellationToken cancellationToken)
-        : this(new(
-            fileSystem,
-            testApplicationModuleInfo,
-            environment,
-            commandLineOptions,
-            configuration,
-            clock,
-            testFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken))
     {
     }
 
