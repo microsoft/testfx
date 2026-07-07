@@ -43,6 +43,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
   </ItemGroup>

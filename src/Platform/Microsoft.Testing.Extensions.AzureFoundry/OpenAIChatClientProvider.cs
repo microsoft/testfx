@@ -18,6 +18,11 @@ namespace Microsoft.Testing.Extensions.AzureFoundry;
 /// </summary>
 internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
 {
+    // DefaultAzureCredential caches tokens on the instance and probes the whole credential chain
+    // (env vars, workload identity, managed identity via IMDS, Azure CLI, ...) on first use, which
+    // can be expensive. Reuse a single instance so the token cache and chain discovery are shared.
+    private static readonly Lazy<DefaultAzureCredential> DefaultCredential = new(() => new DefaultAzureCredential());
+
     /// <inheritdoc />
     public bool IsAvailable =>
         !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
@@ -50,7 +55,7 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
         // authentication via DefaultAzureCredential. This keeps the provider secure-by-default for
         // Azure-hosted scenarios where distributing API keys is undesirable.
         AzureOpenAIClient client = RoslynString.IsNullOrEmpty(apiKey)
-            ? new AzureOpenAIClient(new Uri(endpoint), new DefaultAzureCredential())
+            ? new AzureOpenAIClient(new Uri(endpoint), DefaultCredential.Value)
             : new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey));
 
         return Task.FromResult(client.GetChatClient(deploymentName).AsIChatClient());

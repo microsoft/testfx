@@ -31,6 +31,8 @@ The provider is configured through the following environment variables:
 
 When `AZURE_OPENAI_API_KEY` is not set, the provider authenticates with [`DefaultAzureCredential`](https://learn.microsoft.com/dotnet/api/azure.identity.defaultazurecredential), which is recommended for Azure-hosted scenarios so that no secret has to be provisioned or distributed. Provide `AZURE_OPENAI_API_KEY` only when you explicitly want key-based authentication.
 
+To target a specific user-assigned managed identity, set the `AZURE_CLIENT_ID` environment variable to its client ID; `DefaultAzureCredential` honors it automatically. Because credentials are resolved lazily, authentication problems (for example, an identity that lacks access to the Azure OpenAI resource) surface on the first chat request rather than when the provider is configured.
+
 This package is a reference implementation of the [Microsoft.Testing.Platform.AI](https://www.nuget.org/packages/Microsoft.Testing.Platform.AI) abstractions.
 
 ## Related packages
