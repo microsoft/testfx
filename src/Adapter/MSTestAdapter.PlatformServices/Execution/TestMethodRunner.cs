@@ -496,12 +496,13 @@ internal sealed class TestMethodRunner
     {
         try
         {
-            ExecutionContext? capturedContext = testMethodInfo.Parent.ExecutionContext ?? testMethodInfo.Parent.Parent.ExecutionContext;
+            ExecutionContext? capturedContext = testMethodInfo.Parent.ExecutionContext
+                ?? testMethodInfo.Parent.Parent.ExecutionContext;
 
-            // Fast path: when no ExecutionContext was captured by [AssemblyInitialize] / [ClassInitialize]
-            // (the common case), RunOnContext with a null context simply invokes the action directly on the
-            // current thread. Skip the TaskCompletionSource + closure + delegate allocations and just await
-            // the executor directly.
+            // Fast path: when no ExecutionContext was captured (the common case),
+            // ExecutionContextHelpers.RunOnContext would simply call the action inline.
+            // Skip the TaskCompletionSource bridge, async-lambda closure, and Action
+            // delegate allocations entirely.
             if (capturedContext is null)
             {
                 using (TestContextImplementation.SetCurrentTestContext(executionContext as TestContext))
