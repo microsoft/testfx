@@ -7,7 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
-internal static class TestResultExtensions
+internal static class TestResultOutputExtensions
 {
     /// <summary>
     /// Captures the output, error, trace and diagnostic messages from the test context and
@@ -26,16 +26,16 @@ internal static class TestResultExtensions
 
     /// <summary>
     /// Captures the output, error, trace and diagnostic messages from the test context and
-    /// assigns them to the corresponding <see cref="TestResult"/> properties, pre-pending the
+    /// assigns them to the corresponding <see cref="TestResult"/> properties, prepending the
     /// provided prefixes (typically assembly/class initialize logs).
     /// </summary>
     /// <param name="result">The test result to populate.</param>
     /// <param name="testContextImpl">The test context implementation to read (and clear) output, error and trace from. May be <see langword="null"/>.</param>
     /// <param name="testContext">The test context to read (and clear) diagnostic messages from.</param>
-    /// <param name="outputPrefix">The value pre-pended to the captured output.</param>
-    /// <param name="errorPrefix">The value pre-pended to the captured error.</param>
-    /// <param name="tracePrefix">The value pre-pended to the captured trace.</param>
-    /// <param name="messagesPrefix">The value pre-pended to the captured diagnostic messages.</param>
+    /// <param name="outputPrefix">The value prepended to the captured output.</param>
+    /// <param name="errorPrefix">The value prepended to the captured error.</param>
+    /// <param name="tracePrefix">The value prepended to the captured trace.</param>
+    /// <param name="messagesPrefix">The value prepended to the captured diagnostic messages.</param>
     public static void SetOutputAndTraces(this TestResult result, TestContextImplementation? testContextImpl, ITestContext testContext, string? outputPrefix, string? errorPrefix, string? tracePrefix, string? messagesPrefix)
     {
         result.LogOutput = outputPrefix + testContextImpl?.GetAndClearOutput();
