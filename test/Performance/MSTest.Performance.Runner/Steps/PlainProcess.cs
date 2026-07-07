@@ -8,6 +8,8 @@ namespace MSTest.Performance.Runner.Steps;
 
 internal class PlainProcess : IStep<BuildArtifact, Files>
 {
+    private static readonly JsonSerializerOptions s_writeIndented = new() { WriteIndented = true };
+
     private readonly string _reportFileName;
     private readonly int _numberOfRun;
     private readonly string _argument;
@@ -52,11 +54,9 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
             results.Add(result);
         }
 
-#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
         await File.AppendAllTextAsync(Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"), JsonSerializer.Serialize(
             results,
-            new JsonSerializerOptions { WriteIndented = true }));
-#pragma warning restore CA1869 // Cache and reuse 'JsonSerializerOptions' instances
+            s_writeIndented));
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
