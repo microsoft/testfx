@@ -233,6 +233,7 @@ extends:
             - script: eng/common/build.sh
                 -configuration $(_BuildConfig)
                 -prepareMachine
+                --ci
                 --restore
                 --build
                 --pack
