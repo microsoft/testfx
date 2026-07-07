@@ -121,7 +121,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
 
     protected override void SerializeCore(CommandLineOptionMessages objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 

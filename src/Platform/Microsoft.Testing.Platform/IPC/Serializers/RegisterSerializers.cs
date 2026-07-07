@@ -22,6 +22,8 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
  * TestInProgressMessagesSerializer: 10
  * AzureDevOpsLogMessageSerializer: 11
  * DisplayMessageSerializer: 12
+ * WaitForServerControlRequestSerializer: 13
+ * ServerControlMessageSerializer: 14
 */
 
 [Embedded]
@@ -41,5 +43,7 @@ internal static class RegisterSerializers
         namedPipeBase.RegisterSerializer(new TestInProgressMessagesSerializer(), typeof(TestInProgressMessages));
         namedPipeBase.RegisterSerializer(new AzureDevOpsLogMessageSerializer(), typeof(AzureDevOpsLogMessage));
         namedPipeBase.RegisterSerializer(new DisplayMessageSerializer(), typeof(DisplayMessage));
+        namedPipeBase.RegisterSerializer(new WaitForServerControlRequestSerializer(), typeof(WaitForServerControlRequest));
+        namedPipeBase.RegisterSerializer(new ServerControlMessageSerializer(), typeof(ServerControlMessage));
     }
 }

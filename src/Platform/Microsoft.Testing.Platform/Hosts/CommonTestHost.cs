@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -59,6 +60,13 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType).ConfigureAwait(false);
+
+                if (isValidProtocol && PushOnlyProtocol.IsServerControlChannelSupported)
+                {
+                    // Start listening for server-initiated signals (e.g. session cancellation) before running tests
+                    // so a signal that arrives mid-run is observed. React by stopping gracefully where possible.
+                    await PushOnlyProtocol.StartServerControlChannelAsync(RequestGracefulSessionStopAsync).ConfigureAwait(false);
+                }
 
                 exitCode = isValidProtocol
                     ? await RunTestAppAsync(platformOTelService, testApplicationCancellationToken, alreadyDisposed).ConfigureAwait(false)
@@ -125,6 +133,25 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         // this path. This method only covers the test host and test host controller roles.
         string hostType = HostType;
         return hostType;
+    }
+
+    // Reaction to a server-initiated session cancellation coming over the reverse control pipe. Prefer a graceful
+    // stop so the framework stops scheduling new tests but still emits trx/logs/artifacts for whatever completed
+    // (mirroring the local '--maximum-failed-tests' behavior). Fall back to hard cancellation when the running
+    // framework has no graceful-stop capability (e.g. the test host controller), which is the only lever left.
+    private async Task RequestGracefulSessionStopAsync(CancellationToken cancellationToken)
+    {
+        IGracefulStopTestExecutionCapability? capability =
+            ServiceProvider.GetService<ITestFrameworkCapabilities>()?.GetCapability<IGracefulStopTestExecutionCapability>();
+
+        if (capability is not null)
+        {
+            await capability.StopTestExecutionAsync(cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            ServiceProvider.GetTestApplicationCancellationTokenSource().Cancel();
+        }
     }
 
     private async Task<int> RunTestAppAsync(IPlatformOpenTelemetryService? platformOTelService, CancellationToken testApplicationCancellationToken, List<object> alreadyDisposed)

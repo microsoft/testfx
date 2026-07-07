@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  copilot-requests: write
 
 imports:
   - shared/review-shared.md

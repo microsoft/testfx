@@ -10,6 +10,7 @@ on:
 permissions:
   contents: read
   pull-requests: read
+  copilot-requests: write
 
 network:
   allowed:
@@ -21,7 +22,6 @@ imports:
 
 tools:
   github:
-    lockdown: true
     toolsets: [pull_requests, repos]
     min-integrity: none
   edit:

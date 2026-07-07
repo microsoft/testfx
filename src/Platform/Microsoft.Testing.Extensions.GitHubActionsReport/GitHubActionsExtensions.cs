@@ -1,0 +1,68 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Extensions.GitHubActionsReport;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Services;
+
+namespace Microsoft.Testing.Extensions;
+
+/// <summary>
+/// Provides extension methods for adding GitHub Actions reporting support to the test application builder.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public static class GitHubActionsExtensions
+{
+    /// <summary>
+    /// Adds support to the test application builder.
+    /// </summary>
+    /// <param name="builder">The test application builder.</param>
+    public static void AddGitHubActionsProvider(this ITestApplicationBuilder builder)
+    {
+        var compositeSummaryReporter = new CompositeExtensionFactory<GitHubActionsSummaryReporter>(serviceProvider =>
+            new GitHubActionsSummaryReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                serviceProvider.GetLoggerFactory()));
+
+        var compositeSlowTestReporter = new CompositeExtensionFactory<GitHubActionsSlowTestReporter>(serviceProvider =>
+            new GitHubActionsSlowTestReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTask(),
+                serviceProvider.GetClock(),
+                serviceProvider.GetLoggerFactory()));
+
+        var compositeReporter = new CompositeExtensionFactory<GitHubActionsReporter>(serviceProvider =>
+            new GitHubActionsReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetTestApplicationModuleInfo(),
+                serviceProvider.GetLoggerFactory()));
+
+        builder.TestHost.AddDataConsumer(serviceProvider =>
+            new GitHubActionsAnnotationReporter(
+                serviceProvider.GetCommandLineOptions(),
+                serviceProvider.GetEnvironment(),
+                serviceProvider.GetFileSystem(),
+                serviceProvider.GetOutputDevice(),
+                serviceProvider.GetLoggerFactory()));
+
+        builder.TestHost.AddDataConsumer(compositeSummaryReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSummaryReporter);
+        builder.TestHost.AddDataConsumer(compositeSlowTestReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeSlowTestReporter);
+
+        // Register the group reporter last, as both a data consumer (no-op) and a session-lifetime handler, so its
+        // closing '::endgroup::' is ordered into the consumer phase after every other reporter's final output.
+        builder.TestHost.AddDataConsumer(compositeReporter);
+        builder.TestHost.AddTestSessionLifetimeHandler(compositeReporter);
+        builder.CommandLine.AddProvider(() => new GitHubActionsCommandLineProvider());
+    }
+}

@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsAnnotationsRequiresAzureDevOps">
         <source>'--report-azdo-annotations' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-annotations' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-annotations' öğesinin etkinleştirilmesi için '--report-azdo' öğesinin etkin olması gerekir</target>
         <note>{Locked="--report-azdo-annotations"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsGroupsRequiresAzureDevOps">
         <source>'--report-azdo-groups' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-groups' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-groups' öğesinin etkinleştirilmesi için '--report-azdo' öğesinin etkin olması gerekir</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -134,17 +134,17 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">'--report-azdo-slow-test-history-min-sample' kullanmak için '--report-azdo-slow-test-history' seçeneğinin etkinleştirilmiş olması gerekir</target>
         <note>{Locked="--report-azdo-slow-test-history-min-sample"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">'--report-azdo-slow-test-history-multiplier' kullanmak için '--report-azdo-slow-test-history' seçeneğinin etkinleştirilmiş olması gerekir</target>
         <note>{Locked="--report-azdo-slow-test-history-multiplier"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryRequiresAzureDevOps">
         <source>'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-slow-test-history' öğesi '--report-azdo' öğesinin etkinleştirilmesini gerektirir</target>
         <note>{Locked="--report-azdo-slow-test-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
@@ -214,7 +214,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="new">Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <target state="translated">Derleme başına Azure DevOps günlük gruplarını ('on' veya 'off') etkinleştirin veya devre dışı bırakın. Varsayılan olarak 'on'. '--report-azdo' gerektirir.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' and 'off'.</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' and 'off'.</target>
+        <target state="translated">Geçersiz değer '{0}'. Geçerli değerler 'on' ve 'off'tur.</target>
         <note>{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="InvalidSeverity">
@@ -244,17 +244,17 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</target>
+        <target state="translated">'--report-azdo-slow-test-history' için geçersiz değer '{0}'. 1 ile 90 arasında bir tamsayı belirtin.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMinSample">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</target>
+        <target state="translated">'--report-azdo-slow-test-history-min-sample' için geçersiz değer '{0}'. 1 değerine eşit veya daha büyük bir tamsayı belirtin.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMultiplier">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</target>
+        <target state="translated">'--report-azdo-slow-test-history-multiplier' için geçersiz değer '{0}'. 0'dan büyük ve en fazla 10000 olan bir sayı girin.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</note>
       </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
@@ -264,7 +264,7 @@
       </trans-unit>
       <trans-unit id="LogGroupHeader">
         <source>Tests: {0}</source>
-        <target state="new">Tests: {0}</target>
+        <target state="translated">Testler: {0}</target>
         <note>{0} is the test assembly name and target framework, e.g. 'MSTest.UnitTests (net9.0)'. This text is the collapsible Azure DevOps log group header.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -329,32 +329,32 @@
       </trans-unit>
       <trans-unit id="SlowTestHistoryDecoration">
         <source>(historical p95 = {0}, p99 = {1}, samples = {2})</source>
-        <target state="new">(historical p95 = {0}, p99 = {1}, samples = {2})</target>
+        <target state="translated">(geçmiş p95 = {0}, p99 = {1}, örnek sayısı = {2})</target>
         <note>{0} is the p95 duration. {1} is the p99 duration. {2} is the sample count.</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMinSampleOptionDescription">
         <source>Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">Bir testin geçmişinin, yavaş test eşiğini ayarlamak veya oluşturulan satırlara ek bilgi eklemek için kullanılmasından önce gereken en az geçmiş örneği sayısı. Varsayılan olarak {0} değerini alır. '--report-azdo-slow-test-history' seçeneğini gerektirir.</target>
         <note>{0} is the default minimum sample count. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMultiplierOptionDescription">
         <source>Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">Bir testin yavaş test eşiğini türetmek için testin geçmiş p99 süresine uygulanan çarpan (eşik = min(statik varsayılan, p99 * çarpan)). Varsayılan olarak {0} değerini alır. '--report-azdo-slow-test-history' seçeneğini gerektirir.</target>
         <note>{0} is the default multiplier. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</source>
-        <target state="new">Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</target>
+        <target state="translated">Son N gün (1-90) içindeki Azure DevOps test sonucu geçmişini sorgulayın ve geçmişte kısa sürdüğü bilinen testler için test başına 'hala çalışıyor' eşiğini düşürün. '--report-azdo' gerektirir.</target>
         <note>{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryRequiresTfBuildWarning">
         <source>Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</source>
-        <target state="new">Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</target>
+        <target state="translated">Azure DevOps yavaş test geçmişi istendi ancak TF_BUILD 'true' olarak ayarlanmadı. Yavaş testleri gösterme atlanıyor.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] {0} sonra hala çalışıyor: {1}</target>
         <note>{0} is the elapsed duration. {1} is the test name. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
@@ -369,7 +369,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="new">Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</target>
+        <target state="translated">Test çalıştırmasının sonunda bir Markdown iş özeti yazın ve '##vso[task.uploadsummary]' aracılığıyla karşıya yükleyin. İsteğe bağlı bir dosya yolu bağımsız değişkeni varsayılan konumu ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md') geçersiz kılar. '--report-azdo' gerektirir.</target>
         <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">

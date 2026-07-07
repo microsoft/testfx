@@ -278,7 +278,7 @@ public class TestMethodFilterTests : TestContainer
 
     private sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpression
     {
-        public string TestCaseFilterValue => null!;
+        public string TestCaseFilterValue => string.Empty;
 
         public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => throw new NotImplementedException();
     }
@@ -289,7 +289,7 @@ public class TestMethodFilterTests : TestContainer
 
         public MatchingTestCaseFilterExpression(Func<TestCase, bool> matchTestCase) => _matchTestCase = matchTestCase;
 
-        public string TestCaseFilterValue => null!;
+        public string TestCaseFilterValue => string.Empty;
 
         public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => _matchTestCase(testCase);
     }

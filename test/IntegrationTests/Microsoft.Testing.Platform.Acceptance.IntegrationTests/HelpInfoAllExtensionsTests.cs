@@ -89,6 +89,18 @@ Options:
         Specifies how a run that executed no tests is treated.
         Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.
 Extension options:
+    --capture-video
+        Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.
+    --capture-video-args
+        Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".
+    --capture-video-chapters
+        Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.
+    --capture-video-granularity
+        How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.
+    --capture-video-max-duration
+        Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.
+    --capture-video-source
+        What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.
     --crash-report
         [Linux/macOS only] Generate a JSON crash report when the test process crashes. Combine with '--crashdump' to also generate a dump file. Requires .NET 7+ when used alone; .NET 6+ when combined with '--crashdump'. This runtime requirement is not enforced by the tool: on unsupported runtimes no crash report will be emitted. Not supported on Windows due to a .NET runtime limitation (dotnet/runtime#80191); use '--crash-report-if-supported' to silently skip the option there.
     --crash-report-if-supported
@@ -169,6 +181,18 @@ Extension options:
         The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.ctrf.json
+    --report-gh
+        Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
+    --report-gh-annotations
+        Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-groups
+        Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-slow-test-notices
+        Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+    --report-gh-slow-test-threshold
+        The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.
+    --report-gh-step-summary
+        Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-html
         Enable generating an HTML report
     --report-html-filename
@@ -522,6 +546,35 @@ Registered command line providers:
         Description: The name of the generated CTRF report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp).
         Example: MyReport_{tfm}.ctrf.json
+  GitHubActionsCommandLineProvider
+    Name: GitHub Actions report generator
+    Version: *
+    Description: GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
+    Options:
+      --report-gh
+        Arity: 0
+        Hidden: False
+        Description: Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
+      --report-gh-annotations
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-groups
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-slow-test-notices
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+      --report-gh-slow-test-threshold
+        Arity: 1
+        Hidden: False
+        Description: The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.
+      --report-gh-step-summary
+        Arity: 1
+        Hidden: False
+        Description: Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
   HangDumpCommandLineProvider
     Name: Hang dump
     Version: *
@@ -637,6 +690,35 @@ Registered command line providers:
         Description: The name of the generated TRX report. May include a relative or absolute path; relative paths are resolved against the test results directory and missing directories are created.
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.trx
+  VideoRecorderCommandLineProvider
+    Name: Video recorder
+    Version: *
+    Description: Command-line options for the video recorder extension.
+    Options:
+      --capture-video
+        Arity: 0..1
+        Hidden: False
+        Description: Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.
+      --capture-video-args
+        Arity: 1
+        Hidden: False
+        Description: Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".
+      --capture-video-chapters
+        Arity: 1
+        Hidden: False
+        Description: Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.
+      --capture-video-granularity
+        Arity: 1
+        Hidden: False
+        Description: How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.
+      --capture-video-max-duration
+        Arity: 1
+        Hidden: False
+        Description: Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.
+      --capture-video-source
+        Arity: 1
+        Hidden: False
+        Description: What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.
 Registered tools:
   TrxCompareTool
     Command: ms-trxcompare
@@ -685,14 +767,20 @@ Registered tools:
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.AzureDevOpsReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.AzureFoundry" Version="$MicrosoftTestingExtensionsAzureFoundryVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CtrfReport" Version="$MicrosoftTestingExtensionsCtrfReportVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.GitHubActionsReport" Version="$MicrosoftTestingExtensionsGitHubActionsReportVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.HtmlReport" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.JUnitReport" Version="$MicrosoftTestingExtensionsJUnitReportVersion$" />
+        <!-- PackagedApp ships only for .NET (no netstandard2.0 / net462 asset), so exclude it on .NET Framework. -->
+        <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$MicrosoftTestingExtensionsPackagedAppVersion$" Condition=" '$(TargetFramework)' != 'net462' " />
         <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.VideoRecorder" Version="$MicrosoftTestingExtensionsVideoRecorderVersion$" />
     </ItemGroup>
 </Project>
 
@@ -748,7 +836,11 @@ public class DummyTestFramework : ITestFramework
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingExtensionsCtrfReportVersion$", MicrosoftTestingExtensionsCtrfReportVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion));
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsJUnitReportVersion$", MicrosoftTestingExtensionsJUnitReportVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsGitHubActionsReportVersion$", MicrosoftTestingExtensionsGitHubActionsReportVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsPackagedAppVersion$", MicrosoftTestingExtensionsPackagedAppVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsVideoRecorderVersion$", MicrosoftTestingExtensionsVideoRecorderVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingExtensionsAzureFoundryVersion$", MicrosoftTestingExtensionsAzureFoundryVersion));
     }
 
     public TestContext TestContext { get; set; }

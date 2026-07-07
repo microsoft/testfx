@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.CtrfReport.Resources;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
@@ -17,7 +16,7 @@ internal sealed partial class CtrfReportEngine
         if (fileNameExplicitlyProvided)
         {
             bool willOverwrite = _fileSystem.ExistFile(finalPath);
-            await WriteAsync(finalPath, FileMode.Create, bytes).ConfigureAwait(false);
+            await WriteBytesAsync(finalPath, FileMode.Create, bytes).ConfigureAwait(false);
             return (
                 finalPath,
                 willOverwrite
@@ -38,7 +37,7 @@ internal sealed partial class CtrfReportEngine
 
             try
             {
-                await WriteAsync(candidate, FileMode.CreateNew, bytes).ConfigureAwait(false);
+                await WriteBytesAsync(candidate, FileMode.CreateNew, bytes).ConfigureAwait(false);
                 return (candidate, null);
             }
             catch (IOException) when (_fileSystem.ExistFile(candidate))
@@ -75,17 +74,5 @@ internal sealed partial class CtrfReportEngine
 
         baseName = Path.GetFileNameWithoutExtension(fileName);
         extension = Path.GetExtension(fileName);
-    }
-
-    private async Task WriteAsync(string path, FileMode mode, byte[] bytes)
-    {
-        // Note that we need to dispose the IFileStream, not the inner stream.
-        // IFileStream implementations will be responsible to dispose their inner stream.
-        using IFileStream stream = _fileSystem.NewFileStream(path, mode);
-#if NETCOREAPP
-        await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
-#else
-        await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
-#endif
     }
 }

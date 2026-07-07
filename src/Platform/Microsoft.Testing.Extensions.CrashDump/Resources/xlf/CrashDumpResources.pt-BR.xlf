@@ -35,8 +35,8 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</target>
+        <target state="translated">Especifique o nome do arquivo de despejo.
+Há suporte para os seguintes espaços reservados: {pname} (nome do executável do processo, repassado ao runtime do .NET como "%e"), {pid} (ID do processo, repassado ao runtime do .NET como "%p"), {asm} (nome do assembly de entrada), {tfm} (identificador da plataforma de destino) {time} (carimbo de data e hora em que o ambiente do despejo de memória é configurado). Também há suporte aos tokens herdados %p/%e/%h/%t consumidos diretamente pelo createdump do runtime do .NET.</target>
         <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
@@ -105,7 +105,7 @@ Para obter mais informações, visite https://learn.microsoft.com/dotnet/core/di
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are {1}</target>
+        <target state="translated">''{0}'' não é um tipo de despejo válido. As opções válidas são {1}</target>
         <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">

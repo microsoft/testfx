@@ -53,7 +53,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _logger = loggerFactory.CreateLogger<AzureDevOpsLogGroupReporter>();
-        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker);
+        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
     }
 
     public string Uid => nameof(AzureDevOpsLogGroupReporter);

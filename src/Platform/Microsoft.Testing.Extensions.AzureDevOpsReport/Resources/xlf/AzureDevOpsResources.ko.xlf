@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsAnnotationsRequiresAzureDevOps">
         <source>'--report-azdo-annotations' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-annotations' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-annotations'를 사용하려면 '--report-azdo'를 사용하도록 설정해야 합니다</target>
         <note>{Locked="--report-azdo-annotations"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsGroupsRequiresAzureDevOps">
         <source>'--report-azdo-groups' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-groups' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-groups'를 사용하려면 '--report-azdo'를 사용하도록 설정해야 합니다</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -134,17 +134,17 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">'--report-azdo-slow-test-history-min-sample'을 사용하려면 '--report-azdo-slow-test-history'를 활성화해야 함</target>
         <note>{Locked="--report-azdo-slow-test-history-min-sample"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">'--report-azdo-slow-test-history-multiplier'를 사용하려면 '--report-azdo-slow-test-history'를 활성화해야 함</target>
         <note>{Locked="--report-azdo-slow-test-history-multiplier"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryRequiresAzureDevOps">
         <source>'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-slow-test-history'를 사용하려면 '--report-azdo'를 활성화해야 함</target>
         <note>{Locked="--report-azdo-slow-test-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
@@ -214,7 +214,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="new">Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <target state="translated">어셈블리별 Azure DevOps 로그 그룹을 사용하거나 사용하지 않도록 설정합니다('on' 또는 'off'). 기본값은 'on'입니다. '--report-azdo'가 필요합니다.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' and 'off'.</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' and 'off'.</target>
+        <target state="translated">값 '{0}'이(가) 잘못되었습니다. 유효한 값은 'on'과 'off'입니다.</target>
         <note>{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="InvalidSeverity">
@@ -244,17 +244,17 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</target>
+        <target state="translated">'--report-azdo-slow-test-history'에 대한 값 '{0}'이(가) 올바르지 않습니다. 1에서 90 사이의 정수를 입력하세요.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMinSample">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</target>
+        <target state="translated">'--report-azdo-slow-test-history-min-sample'에 대한 값 '{0}'이(가) 올바르지 않습니다. 1보다 크거나 같은 정수를 입력하세요.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMultiplier">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</target>
+        <target state="translated">'--report-azdo-slow-test-history-multiplier'에 대한 값 '{0}'이(가) 올바르지 않습니다. 0보다 크고 10,000 이하인 숫자를 입력하세요.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</note>
       </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
@@ -264,7 +264,7 @@
       </trans-unit>
       <trans-unit id="LogGroupHeader">
         <source>Tests: {0}</source>
-        <target state="new">Tests: {0}</target>
+        <target state="translated">테스트: {0}</target>
         <note>{0} is the test assembly name and target framework, e.g. 'MSTest.UnitTests (net9.0)'. This text is the collapsible Azure DevOps log group header.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -329,32 +329,32 @@
       </trans-unit>
       <trans-unit id="SlowTestHistoryDecoration">
         <source>(historical p95 = {0}, p99 = {1}, samples = {2})</source>
-        <target state="new">(historical p95 = {0}, p99 = {1}, samples = {2})</target>
+        <target state="translated">(기록 p95 = {0}, p99 = {1}, 샘플 수 = {2})</target>
         <note>{0} is the p95 duration. {1} is the p99 duration. {2} is the sample count.</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMinSampleOptionDescription">
         <source>Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">테스트 기록을 사용해 느린 테스트 임계값을 조정하거나 출력되는 줄에 정보를 추가하기 전에 필요한 최소 기록 샘플 수입니다. 기본값은 {0}입니다. '--report-azdo-slow-test-history'가 필요합니다.</target>
         <note>{0} is the default minimum sample count. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMultiplierOptionDescription">
         <source>Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">느린 테스트 임계값을 파생하기 위해 테스트의 기록 p99 기간에 적용되는 승수입니다(threshold = min(static default, p99 * multiplier)). 기본값은 {0}입니다. '--report-azdo-slow-test-history'가 필요합니다.</target>
         <note>{0} is the default multiplier. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</source>
-        <target state="new">Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</target>
+        <target state="translated">지난 N일(1~90) 동안의 Azure DevOps 테스트 결과 기록을 쿼리하고, 과거 실행 시간이 짧았던 것으로 확인된 테스트의 각 테스트별 '실행 중' 임계값을 낮춥니다. '--report-azdo'가 필요합니다.</target>
         <note>{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryRequiresTfBuildWarning">
         <source>Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</source>
-        <target state="new">Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</target>
+        <target state="translated">Azure DevOps 느린 테스트 기록이 요청되었지만 TF_BUILD가 'true'로 설정되지 않아 느린 테스트 표시를 건너뜁니다.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] {0} 이후에도 여전히 실행 중: {1}</target>
         <note>{0} is the elapsed duration. {1} is the test name. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
@@ -369,7 +369,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="new">Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</target>
+        <target state="translated">테스트 실행이 끝날 때 Markdown 작업 요약을 작성하고 '##vso[task.uploadsummary]'를 통해 업로드합니다. 선택적 파일 경로 인수는 기본 위치('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md')를 재정의합니다. '--report-azdo'가 필요합니다.</target>
         <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">

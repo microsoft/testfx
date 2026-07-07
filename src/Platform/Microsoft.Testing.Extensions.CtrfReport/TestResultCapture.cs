@@ -23,32 +23,24 @@ internal static class TestResultCapture
 
         CapturedTestResultCoreData core = coreData.GetValueOrDefault();
         (string status, string? rawStatus) = ClassifyStatus(core.State);
-        (string? ns, string? className, string? methodName) = GetClassAndMethodName(core.Properties.Identifier);
+        (string? ns, string? className, _) = GetClassAndMethodName(core.Properties.Identifier);
 
-        return new CapturedTestResult
+        var result = new CapturedTestResult
         {
-            // Identity fields are test-controlled and can be unbounded (e.g. very long
-            // UIDs/display names from generated data), so we also cap them to keep the
-            // session-wide result list and generated report within a predictable budget.
-            Uid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
-            DisplayName = TestResultCaptureHelper.Truncate(node.DisplayName, TestResultCaptureHelper.MaxIdentityFieldLength)!,
             Status = status,
             RawStatus = rawStatus,
-            Duration = core.Duration,
-            StartTime = core.Properties.Timing?.GlobalTiming.StartTime,
-            EndTime = core.Properties.Timing?.GlobalTiming.EndTime,
             Namespace = TestResultCaptureHelper.Truncate(ns, TestResultCaptureHelper.MaxIdentityFieldLength),
-            ClassName = TestResultCaptureHelper.Truncate(className, TestResultCaptureHelper.MaxIdentityFieldLength),
-            MethodName = TestResultCaptureHelper.Truncate(methodName, TestResultCaptureHelper.MaxIdentityFieldLength),
-            ErrorMessage = TestResultCaptureHelper.Truncate(core.ExceptionDetails.ErrorMessage, TestResultCaptureHelper.MaxMessageLength),
-            ExceptionType = core.ExceptionDetails.ExceptionType,
-            StackTrace = TestResultCaptureHelper.Truncate(core.ExceptionDetails.StackTrace, TestResultCaptureHelper.MaxStackTraceLength),
-            StandardOutput = TestResultCaptureHelper.Truncate(core.Properties.StandardOutput?.StandardOutput, TestResultCaptureHelper.MaxStandardStreamLength),
-            StandardError = TestResultCaptureHelper.Truncate(core.Properties.StandardError?.StandardError, TestResultCaptureHelper.MaxStandardStreamLength),
             FilePath = TestResultCaptureHelper.Truncate(core.Properties.Location?.FilePath, TestResultCaptureHelper.MaxIdentityFieldLength),
             Line = core.Properties.Location?.LineSpan.Start.Line,
-            Traits = core.Properties.Traits,
         };
+        result.PopulateBaseFields(node, core);
+
+        // CTRF decomposes the identifier into a separate Namespace plus a type-name-only
+        // ClassName, rather than the namespace-prefixed ClassName the shared base-field
+        // population produces, so override ClassName here (MethodName already matches the
+        // shared value).
+        result.ClassName = TestResultCaptureHelper.Truncate(className, TestResultCaptureHelper.MaxIdentityFieldLength);
+        return result;
     }
 
     // CTRF status enum: passed, failed, skipped, pending, other.

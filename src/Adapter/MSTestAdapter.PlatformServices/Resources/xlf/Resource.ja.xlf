@@ -169,7 +169,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="DeprecatedFlatOrderTestsByNameInClassKey">
         <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
-        <target state="new">The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</target>
+        <target state="translated">'mstest:orderTestsByNameInClass' 構成キーは非推奨であり、将来のバージョンで削除される予定です。代わりに 'mstest:execution:orderTestsByNameInClass' を使用してください。</target>
         <note>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="DiscoveryErrors">
@@ -251,7 +251,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="InvalidTimeoutValue">
         <source>Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</target>
+        <target state="translated">runsettings エントリ '{1}' の値 '{0}' が無効です。タイムアウトは厳密に正の整数 (ミリ秒単位) である必要があります。0 以下の値は指定できません。既定値 (タイムアウトなし) を使用するには、エントリを省略します。設定は無視されます。</target>
         <note>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidValue">
@@ -411,7 +411,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
-        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</target>
+        <target state="translated">UTA007: クラス {0} で定義されているメソッド {1} に適切なシグネチャが含まれていません。'ValueTask&lt;T&gt;' は有効なテスト メソッドの戻り値の型ではありません。代わりに非ジェネリック 'ValueTask' を使用してください。例: public async ValueTask Test.Class1.Test()</target>
         <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
       </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
@@ -533,37 +533,37 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
         <source>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</source>
-        <target state="new">UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</target>
+        <target state="translated">UTA077: [TestFilterProvider] によって参照される型 '{0}' のインスタンス化に失敗しました。この型は、パラメーターなしのパブリック コンストラクターを宣言する必要があります。 {1}</target>
         <note>{0} is the type name. {1} is the exception details. {Locked="UTA077"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderLoadFailed">
         <source>UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</source>
-        <target state="new">UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</target>
+        <target state="translated">UTA073: アセンブリ '{0}' から [TestFilterProvider] マーカーを読み込めませんでした。 {1}</target>
         <note>{0} is the assembly path. {1} is the exception details. {Locked="UTA073"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderMultipleDeclared">
         <source>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</source>
-        <target state="new">UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</target>
+        <target state="translated">UTA079: アセンブリ '{0}' で、[TestFilterProvider] 属性が複数宣言されています。テスト アセンブリごとに許可されるのは最大 1 つです。複数のフィルタリング戦略は、単一の ITestFilter 実装内で組み合わせて構成してください。</target>
         <note>{0} is the assembly path. {Locked="UTA079"}{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderThrew">
         <source>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</source>
-        <target state="new">UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</target>
+        <target state="translated">UTA078: [TestFilterProvider] フィルター '{0}' は、テスト '{1}' を評価中に例外をスローしました。 {2}</target>
         <note>{0} is the filter type name. {1} is the test name. {2} is the exception details. {Locked="UTA078"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderTypeDoesNotImplementInterface">
         <source>UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</source>
-        <target state="new">UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</target>
+        <target state="translated">UTA076: [TestFilterProvider] によって参照される型 '{0}' は、'{1}' を実装する必要があります。</target>
         <note>{0} is the type name. {1} is the required interface name. {Locked="UTA076"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderTypeIsGeneric">
         <source>UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</source>
-        <target state="new">UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</target>
+        <target state="translated">UTA074: [TestFilterProvider] で参照される型 '{0}' はジェネリックにできません。</target>
         <note>{0} is the type name. {Locked="UTA074"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestFilterProviderTypeIsNotInstantiable">
         <source>UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</source>
-        <target state="new">UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</target>
+        <target state="translated">UTA075: [TestFilterProvider] によって参照される型 '{0}' は、インターフェイスまたは抽象クラスではなく、具象クラスである必要があります。</target>
         <note>{0} is the type name. {Locked="UTA075"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">

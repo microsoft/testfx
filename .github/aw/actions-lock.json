@@ -40,10 +40,10 @@
       "version": "v7.0.1",
       "sha": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"
     },
-    "github/codeql-action/upload-sarif@v4.36.2": {
+    "github/codeql-action/upload-sarif@v4.36.3": {
       "repo": "github/codeql-action/upload-sarif",
-      "version": "v4.36.2",
-      "sha": "8aad20d150bbac5944a9f9d289da16a4b0d87c1e"
+      "version": "v4.36.3",
+      "sha": "54f647b7e1bb85c95cddabcd46b0c578ec92bc1a"
     },
     "github/gh-aw-actions/setup-cli@v0.81.6": {
       "repo": "github/gh-aw-actions/setup-cli",

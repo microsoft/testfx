@@ -35,8 +35,8 @@
       <trans-unit id="CrashDumpFileNameOptionDescription">
         <source>Specify the name of the dump file.
 Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</source>
-        <target state="new">Specify the name of the dump file.
-Supports the following placeholders: {pname} (process executable name, deferred to the .NET runtime as "%e"), {pid} (process ID, deferred to the .NET runtime as "%p"), {asm} (entry assembly name), {tfm} (target framework moniker), {time} (timestamp when the crashdump environment is configured). The legacy %p / %e / %h / %t tokens consumed directly by the .NET runtime's createdump are also supported.</target>
+        <target state="translated">ダンプ ファイルの名前を指定します。
+次のプレースホルダーをサポートします: {pname} (プロセスの実行可能ファイル名、.NET ランタイムに "%e" として渡されます)、{pid} (プロセス ID、.NET ランタイムに "%p" として渡されます)、{asm} (エントリ アセンブリ名)、{tfm} (ターゲット フレームワーク モニカー)、{time} (クラッシュダンプ環境が構成されたときのタイムスタンプ)。また、.NET ランタイムの createdump が直接消費するレガシ %p / %e / %h / %t トークンもサポートされています。</target>
         <note>Do not localize option name {Locked="--crashdump-filename"} or file extension {Locked=".dmp"}.</note>
       </trans-unit>
       <trans-unit id="CrashDumpInvalidEnvironmentVariableValueErrorMessage">
@@ -105,7 +105,7 @@ For more information visit https://learn.microsoft.com/dotnet/core/diagnostics/c
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionInvalidType">
         <source>'{0}' is not a valid dump type. Valid options are {1}</source>
-        <target state="new">'{0}' is not a valid dump type. Valid options are {1}</target>
+        <target state="translated">'{0}' は有効なダンプの種類ではありません。有効なオプションは {1} です</target>
         <note>{0} is the invalid dump type. {1} is the list of valid dump type values.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTypeOptionTooManyArguments">

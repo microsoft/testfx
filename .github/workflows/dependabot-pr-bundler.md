@@ -1,5 +1,4 @@
 ---
-source: githubnext/agentics/workflows/dependabot-pr-bundler.md@main
 description: |
   This workflow checks Dependabot alerts and updates dependencies in package manifests (not just lock files).
   Bundles multiple compatible updates into single pull requests, runs tests to verify
@@ -24,7 +23,23 @@ on:
 
 if: needs.pre_activation.outputs.check_result == 'success'
 
-permissions: read-all
+permissions:
+  actions: read
+  attestations: read
+  checks: read
+  contents: read
+  copilot-requests: write
+  deployments: read
+  discussions: read
+  issues: read
+  models: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
+  vulnerability-alerts: read
 
 network: defaults
 

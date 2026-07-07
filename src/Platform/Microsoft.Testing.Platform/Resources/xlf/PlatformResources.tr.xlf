@@ -436,7 +436,7 @@
       </trans-unit>
       <trans-unit id="OnlyOneTestHostLauncherSupported">
         <source>Only one test host launcher can be registered.</source>
-        <target state="new">Only one test host launcher can be registered.</target>
+        <target state="translated">Yalnızca bir test konağı başlatıcısı kaydedilebilir.</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
@@ -665,14 +665,14 @@ Açık bir birim soneki bulunan bir zaman değeri olarak bir bağımsız değiş
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
-        <target state="new">Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</target>
+        <target state="translated">'--zero-tests-policy' için geçersiz değer '{0}'. Geçerli değerler {1}.</target>
         <note>{Locked="--zero-tests-policy"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
-        <target state="new">Specifies how a run that executed no tests is treated.
-Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</target>
+        <target state="translated">Hiç test yürütmeyen bir çalıştırmanın nasıl ele alınacağını belirtir.
+Geçerli değerler atlanan testleri çalıştırma sayımında hesaba katan, dolayısıyla yalnızca hiç test bulunamayan bir çalıştırmanın 8 çıkış koduyla başarısız olduğu 'allow-skipped' (varsayılan) ve atlanan testleri çalıştırma değil olarak değerlendiren, dolayısıyla her testin atlandığı (veya hiçbir testin bulunamadığı) bir çalıştırmanın 8 çıkış koduyla başarısız olduğu 'strict'.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -812,7 +812,7 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
       </trans-unit>
       <trans-unit id="TerminalNoProgressDeprecatedWarning">
         <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="new">warning: --no-progress is deprecated; use --progress off instead.</target>
+        <target state="translated">uyarı: --no-progress kullanım dışıdır; bunun yerine --progress off kullanın.</target>
         <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">

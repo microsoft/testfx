@@ -1,41 +1,82 @@
 <Project>
 
   <!--
-    Shared-source manifest for the 'dotnet test' named-pipe protocol *wire contract*.
+    Shared-source manifest for the 'dotnet test' named-pipe protocol.
 
     PURPOSE
-      ObjectFieldIds.cs and Constants.cs define the serializer ids, field ids and the handshake/session/state
-      constants that flow over the named pipe between a Microsoft.Testing.Platform test host and 'dotnet test'.
-      The dotnet/sdk repository hand-copies these exact values (see its ObjectFieldIds.cs, which carries a
-      "must be kept aligned with the testfx repo" warning). Any drift is a silent wire-protocol break.
+      The 'dotnet test' <-> Microsoft.Testing.Platform integration talks over a named pipe using a small, versioned
+      binary protocol. This .props is the single canonical list of the source files that make up that protocol - the
+      wire contract (serializer ids + field ids + handshake/session/state constants), the message models, the
+      serializers, and the small serializer-registry + base infrastructure they need. The same files are compiled
+      into Microsoft.Testing.Platform (the host side, via its default globbing) AND VENDORED (hand-copied) into the
+      dotnet/sdk 'dotnet test' implementation (see its ObjectFieldIds.cs, which carries a "must be kept aligned with
+      the testfx repo" warning), so the protocol has ONE source of truth instead of being duplicated by hand. Any
+      drift is a silent wire-protocol break.
 
-      This .props lets the same source files be compiled into another assembly (a standalone consumer, or - once
-      packaged as a source NuGet - the dotnet/sdk 'dotnet test' implementation) so the contract has a single source
-      of truth instead of being duplicated by hand.
+      testfx is the SOURCE OF TRUTH for these files. This .props is the canonical enumeration of the shared set:
+      it lets the same source files be compiled into a standalone in-repo consumer (the contract test project) that
+      guarantees they build independently, and it tells testfx contributors exactly which files dotnet/sdk vendors.
+      dotnet/sdk tracks the same files in its eng/vendored-files.json manifest and a scheduled workflow opens an
+      issue there whenever these upstream files change, so any change here may require a coordinated port in
+      dotnet/sdk. See also dotnet/sdk eng/vendored-files.md.
 
     SCOPE
-      Only the zero-dependency wire contract (ids + constants) is shared here. The message models and serializers
-      are intentionally NOT included yet: they still depend on TestMetadataProperty (Microsoft.Testing.Platform.
-      Extensions.Messages) and use a different class shape than the SDK's copy, so they require decoupling/unifying
-      first. See the protocol contract tests in
-      test/UnitTests/Microsoft.Testing.Platform.UnitTests/IPC/ProtocolTests.cs.
+      Shared here:
+        - Wire contract: IPC/ObjectFieldIds.cs, IPC/Constants.cs.
+        - Interfaces + serializer registry: IPC/INamedPipeSerializer.cs, IPC/IRequest.cs, IPC/IResponse.cs,
+          IPC/NamedPipeBase.cs (registry only).
+        - Serializer infrastructure: IPC/Serializers/BaseSerializer.cs, NamedPipeSerializer.cs, RegisterSerializers.cs
+          and the base request/response serializers (VoidResponse/TestHostCompletedRequest/TestHostProcessPIDRequest).
+        - Message models + serializers for serializer ids 0-12 (Models/*.cs + Serializers/*.cs under this folder,
+          plus the base models under IPC/Models/*.cs).
+
+      Deliberately NOT shared (kept local to Microsoft.Testing.Platform, transport differs per repo):
+        - The named-pipe transport: IPC/NamedPipeConnectionBase.cs (framing/buffers), IPC/NamedPipeServer.cs,
+          IPC/NamedPipeClient.cs, IPC/IServer.cs, IPC/IClient.cs, IPC/PipeNameDescription.cs.
+        - The host data consumer (DotnetTestDataConsumer.cs) and connection.
+
+      The shared files are self-contained: BaseSerializer decouples from ApplicationStateGuard/RoslynDebug (it has its
+      own Unreachable()/DebugAssert helpers); the DiscoveredTestMessage trait uses the platform-decoupled TraitMessage
+      wire type instead of the public TestMetadataProperty; NamedPipeBase is registry-only (no PipeStream/framing). The
+      infrastructure types are [Microsoft.CodeAnalysis.Embedded] so they are not exported by Microsoft.Testing.Platform
+      and never conflict in a consumer that also references the platform. None of these changes alter the wire bytes
+      (ids, field ids, order and layout are pinned by ObjectFieldIds.cs and the round-trip tests).
 
     USAGE
-      Import this file from any project that needs the contract. Microsoft.Testing.Platform itself does NOT import
-      it (it compiles these files via its default source globbing); importing it there would double-include them.
-
-        The single canonical list of contract files lives in the @(DotnetTestProtocolContractSource) item below.
-      - Source consumers (e.g. the standalone contract test project) get them as <Compile> items (the default).
-      - The Microsoft.Testing.Platform.DotnetTestProtocol package project sets
-        DotnetTestProtocolContractCompile=false and instead packs @(DotnetTestProtocolContractSource) as
-        contentFiles, so the NuGet and the source-share never drift.
+      Import this file from any project that needs the protocol source. Microsoft.Testing.Platform itself does NOT
+      import it (it compiles these files via its default source globbing); importing it there would double-include them.
+      The single canonical list of protocol files lives in the @(DotnetTestProtocolContractSource) item below;
+      importing consumers (e.g. the standalone contract test project) get them as <Compile> items.
   -->
+  <PropertyGroup>
+    <_DotnetTestProtocolPlatform>$(MSBuildThisFileDirectory)..\..</_DotnetTestProtocolPlatform>
+  </PropertyGroup>
+
   <ItemGroup>
+    <!-- Wire contract: serializer ids + field ids + handshake/session/state constants. -->
     <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\ObjectFieldIds.cs" />
     <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\Constants.cs" />
+
+    <!-- Interfaces + serializer registry (platform IPC folder; transport files are intentionally excluded). -->
+    <DotnetTestProtocolContractSource Include="$(_DotnetTestProtocolPlatform)\IPC\INamedPipeSerializer.cs" />
+    <DotnetTestProtocolContractSource Include="$(_DotnetTestProtocolPlatform)\IPC\IRequest.cs" />
+    <DotnetTestProtocolContractSource Include="$(_DotnetTestProtocolPlatform)\IPC\IResponse.cs" />
+    <DotnetTestProtocolContractSource Include="$(_DotnetTestProtocolPlatform)\IPC\NamedPipeBase.cs" />
+
+    <!-- Serializer infrastructure + base request/response serializers (all files in the platform IPC/Serializers folder).
+         NOTE: this shares EVERY file in that folder; any new file dropped there is auto-exported into the SDK source
+         share and must stay standalone-compilable (no dependency on the rest of Microsoft.Testing.Platform). -->
+    <DotnetTestProtocolContractSource Include="$(_DotnetTestProtocolPlatform)\IPC\Serializers\*.cs" />
+
+    <!-- Base request/response models (all files in the platform IPC/Models folder). Same "every file is shared" note as above. -->
+    <DotnetTestProtocolContractSource Include="$(_DotnetTestProtocolPlatform)\IPC\Models\*.cs" />
+
+    <!-- 'dotnet test' message models + serializers for serializer ids 0-12. -->
+    <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\Models\*.cs" />
+    <DotnetTestProtocolContractSource Include="$(MSBuildThisFileDirectory)IPC\Serializers\*.cs" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(DotnetTestProtocolContractCompile)' != 'false' ">
+  <ItemGroup>
     <Compile Include="@(DotnetTestProtocolContractSource)" Link="DotnetTestProtocol\%(Filename)%(Extension)" />
   </ItemGroup>
 

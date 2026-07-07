@@ -113,7 +113,7 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override void SerializeCore(TestInProgressMessages objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 

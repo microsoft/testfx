@@ -143,8 +143,19 @@ internal sealed class TestMethod : ITestMethod
     internal TestMethod CloneWithUpdatedSource(string source)
     {
         var clone = (TestMethod)MemberwiseClone();
-        AssemblyName = source;
-        MethodInfo = null;
+        clone.AssemblyName = source;
+        clone.MethodInfo = null;
+        return clone;
+    }
+
+    // Correct counterpart of CloneWithUpdatedSource: assigns the updated source and clears the cached
+    // MethodInfo on the returned clone (leaving `this` untouched). Used by the execution engine's source
+    // resolution. See https://github.com/microsoft/testfx/issues/9573.
+    internal TestMethod CloneWithSource(string source)
+    {
+        var clone = (TestMethod)MemberwiseClone();
+        clone.AssemblyName = source;
+        clone.MethodInfo = null;
         return clone;
     }
 

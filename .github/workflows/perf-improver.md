@@ -45,7 +45,23 @@ timeout-minutes: 60
 
 max-ai-credits: 2000
 
-permissions: read-all
+permissions:
+  actions: read
+  attestations: read
+  checks: read
+  contents: read
+  copilot-requests: write
+  deployments: read
+  discussions: read
+  issues: read
+  models: read
+  packages: read
+  pages: read
+  pull-requests: read
+  repository-projects: read
+  security-events: read
+  statuses: read
+  vulnerability-alerts: read
 
 network:
   allowed:

@@ -10,6 +10,7 @@ on:
 
 permissions:
   issues: read
+  copilot-requests: write
 
 network:
   allowed:
@@ -21,7 +22,6 @@ tools:
   bash:
     - "*"
   github:
-    lockdown: true
     toolsets:
       - issues
     min-integrity: none # This workflow is allowed to examine and comment on any issues or PRs

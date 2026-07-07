@@ -4,172 +4,172 @@
     <body>
       <trans-unit id="ArtifactPerTestDescription">
         <source>Video captured for test '{0}'.</source>
-        <target state="new">Video captured for test '{0}'.</target>
+        <target state="translated">已捕获测试“{0}”的视频。</target>
         <note>Description for a per-test video artifact. {0} is the test display name.</note>
       </trans-unit>
       <trans-unit id="ArtifactPerTestDisplayName">
         <source>Screen recording — {0}</source>
-        <target state="new">Screen recording — {0}</target>
+        <target state="translated">屏幕录制 - {0}</target>
         <note>Display name for a per-test video artifact. {0} is the test display name.</note>
       </trans-unit>
       <trans-unit id="ArtifactSessionDescription">
         <source>Video captured during the test run.</source>
-        <target state="new">Video captured during the test run.</target>
+        <target state="translated">测试运行期间捕获的视频。</target>
         <note>Description for the whole-session video artifact.</note>
       </trans-unit>
       <trans-unit id="ArtifactSessionDisplayName">
         <source>Screen recording</source>
-        <target state="new">Screen recording</target>
+        <target state="translated">屏幕录制</target>
         <note>Display name for the whole-session video artifact.</note>
       </trans-unit>
       <trans-unit id="CapDurationDescription">
         <source>duration {0}</source>
-        <target state="new">duration {0}</target>
+        <target state="translated">持续时间 {0}</target>
         <note>Describes a duration cap. {0} is the duration.</note>
       </trans-unit>
       <trans-unit id="CapSizeDescription">
         <source>size {0} MB</source>
-        <target state="new">size {0} MB</target>
+        <target state="translated">大小 {0} MB</target>
         <note>Describes a size cap. {0} is the size in megabytes.</note>
       </trans-unit>
       <trans-unit id="ChapterTitleFormat">
         <source>{0} [{1}]</source>
-        <target state="new">{0} [{1}]</target>
+        <target state="translated">{0} [{1}]</target>
         <note>Chapter bookmark title. {0} test display name, {1} outcome.</note>
       </trans-unit>
       <trans-unit id="CommandLineProviderDescription">
         <source>Command-line options for the video recorder extension.</source>
-        <target state="new">Command-line options for the video recorder extension.</target>
+        <target state="translated">视频录制器扩展的命令行选项。</target>
         <note>Description of the video recorder command-line options provider.</note>
       </trans-unit>
       <trans-unit id="ExtensionDescription">
         <source>Records the screen during a test run using ffmpeg.</source>
-        <target state="new">Records the screen during a test run using ffmpeg.</target>
+        <target state="translated">使用 ffmpeg 在测试运行期间录制屏幕。</target>
         <note>Description of the video recorder extension.</note>
       </trans-unit>
       <trans-unit id="ExtensionDisplayName">
         <source>Video recorder</source>
-        <target state="new">Video recorder</target>
+        <target state="translated">视频录制器</target>
         <note>Display name of the video recorder extension.</note>
       </trans-unit>
       <trans-unit id="FailedToStartRecording">
         <source>Failed to start recording: {0}. Recording skipped.</source>
-        <target state="new">Failed to start recording: {0}. Recording skipped.</target>
+        <target state="translated">启动录制失败: {0}。已跳过录制。</target>
         <note>Warning when the ffmpeg process could not be started. {0} is the error message.</note>
       </trans-unit>
       <trans-unit id="FfmpegNotFound">
         <source>Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.</source>
-        <target state="new">Video recording requested but ffmpeg was not found (set VideoRecorderOptions.FfmpegPath or add ffmpeg to PATH). Recording skipped.</target>
+        <target state="translated">已请求视频录制，但未找到 ffmpeg (请设置 VideoRecorderOptions.FfmpegPath 或将 ffmpeg 添加到 PATH)。已跳过录制。</target>
         <note>Warning shown when ffmpeg cannot be located.</note>
       </trans-unit>
       <trans-unit id="HintPerSession">
         <source>Recording the whole session into one video.</source>
-        <target state="new">Recording the whole session into one video.</target>
+        <target state="translated">将整个会话录制为一个视频。</target>
         <note>Hint appended to the ready message in per-session mode.</note>
       </trans-unit>
       <trans-unit id="HintPerTest">
         <source>Recording each test into its own video.</source>
-        <target state="new">Recording each test into its own video.</target>
+        <target state="translated">将每个测试录制到其自己的视频中。</target>
         <note>Hint appended to the ready message in per-test mode.</note>
       </trans-unit>
       <trans-unit id="InvalidOptionPositiveInteger">
         <source>Invalid value '{0}' for --{1}. Expected a positive whole number of seconds.</source>
-        <target state="new">Invalid value '{0}' for --{1}. Expected a positive whole number of seconds.</target>
+        <target state="translated">--{1} 的值“{0}”无效。应为正整数的秒数。</target>
         <note>Validation error for a non-positive-integer option value. {0} value, {1} option name.</note>
       </trans-unit>
       <trans-unit id="InvalidOptionValue">
         <source>Invalid value '{0}' for --{1}. Valid values are {2}.</source>
-        <target state="new">Invalid value '{0}' for --{1}. Valid values are {2}.</target>
+        <target state="translated">--{1} 的值“{0}”无效。有效值是 {2}。</target>
         <note>Validation error for an invalid option value. {0} value, {1} option name, {2} the list of valid values.</note>
       </trans-unit>
       <trans-unit id="NoUsableVideoProduced">
         <source>Screen recording produced no usable video (ffmpeg exit code {0}). {1}</source>
-        <target state="new">Screen recording produced no usable video (ffmpeg exit code {0}). {1}</target>
+        <target state="translated">屏幕录制未生成可用的视频(ffmpeg 退出代码 {0})。{1}</target>
         <note>Warning when recording yielded nothing. {0} exit code, {1} last ffmpeg error detail.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionArgs">
         <source>Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".</source>
-        <target state="new">Extra arguments passed to the underlying recorder (currently ffmpeg), as output/encoding options. Requires --capture-video. Because the value usually starts with '-', use the '=' delimiter so it is not parsed as a separate option, e.g. --capture-video-args="-vf scale=1280:-1".</target>
+        <target state="translated">传递给底层录制器(当前为 ffmpeg)的额外参数，作为输出/编码选项。需要 --capture-video。由于该值通常以 "-" 开头，请使用 "=" 分隔符，以免其被解析为单独的选项，例如 --capture-video-args="-vf scale=1280:-1"。</target>
         <note>Help text for the --capture-video-args option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionCaptureVideo">
         <source>Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.</source>
-        <target state="new">Record the screen during the test run. Optionally specify when to keep the video: 'on-failure' (default, keep only failing tests' footage) or 'always'.</target>
+        <target state="translated">在测试运行期间录制屏幕。(可选)指定何时保留视频:“失败时”(默认，仅保留失败测试的录像)或“始终”。</target>
         <note>Help text for the --capture-video option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionChapters">
         <source>Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.</source>
-        <target state="new">Whether the per-session video includes one chapter bookmark per test: 'on' (default) or 'off'. Only applies with --capture-video-granularity session. Requires --capture-video.</target>
+        <target state="translated">每个会话的视频是否包含每个测试的一个章节书签:“开”(默认)或“关”。仅适用于 --capture-video-granularity session。需要 --capture-video。</target>
         <note>Help text for the --capture-video-chapters option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionGranularity">
         <source>How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.</source>
-        <target state="new">How recordings are split: 'test' (default, one video per test) or 'session' (one chaptered video for the whole run). Requires --capture-video.</target>
+        <target state="translated">录制如何分割:“测试”(默认，每个测试一个视频)或“会话”(整个运行的一个分章节视频)。需要 --capture-video。</target>
         <note>Help text for the --capture-video-granularity option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionMaxDuration">
         <source>Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.</source>
-        <target state="new">Limit retained footage to roughly the last N seconds (a rolling buffer) to bound disk usage on long runs. Older footage that no running test needs is pruned. Requires --capture-video.</target>
+        <target state="translated">将保留的录像限制在大约最后 N 秒(滚动缓冲区)，以限制长时间运行的磁盘使用量。较旧且正在运行的测试不需要的录像将被清除。需要 --capture-video。</target>
         <note>Help text for the --capture-video-max-duration option.</note>
       </trans-unit>
       <trans-unit id="OptionDescriptionSource">
         <source>What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.</source>
-        <target state="new">What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.</target>
+        <target state="translated">要捕获的内容: "screen" (默认，整个屏幕)或“窗口”(仅当前进程窗口；仅限 Windows，在其他系统上回退到整个屏幕)。需要 --capture-video。</target>
         <note>Help text for the --capture-video-source option.</note>
       </trans-unit>
       <trans-unit id="OutcomeError">
         <source>Error</source>
-        <target state="new">Error</target>
+        <target state="translated">错误</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeFailed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">失败</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomePassed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">已通过</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeSkipped">
         <source>Skipped</source>
-        <target state="new">Skipped</target>
+        <target state="translated">已跳过</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="OutcomeTimeout">
         <source>Timeout</source>
-        <target state="new">Timeout</target>
+        <target state="translated">超时</target>
         <note>Test outcome shown in a chapter bookmark.</note>
       </trans-unit>
       <trans-unit id="RecorderReady">
         <source>Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</source>
-        <target state="new">Video recorder ready (ffmpeg: {0}, granularity: {1}, persist: {2}). {3}</target>
+        <target state="translated">视频录制器准备就绪(ffmpeg: {0}，粒度: {1}，持久性: {2})。{3}</target>
         <note>Informational message at session start. {0} ffmpeg path, {1} granularity, {2} persist mode, {3} a granularity-specific hint.</note>
       </trans-unit>
       <trans-unit id="RecordingCapReached">
         <source>Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</source>
-        <target state="new">Video recording reached its configured rolling-buffer limit ({0}); older footage is being pruned to bound disk usage, so clips for earlier tests may be unavailable.</target>
+        <target state="translated">视频录制已达到其配置的滚动缓冲区限制({0})；正在清除较旧的录像以限制磁盘使用量，因此早期测试的剪辑可能不可用。</target>
         <note>Warning when the rolling-buffer size/duration limit is hit and old footage is pruned. {0} describes the limit that was reached.</note>
       </trans-unit>
       <trans-unit id="StopTimeoutKilled">
         <source>ffmpeg did not stop within the timeout; killing the process. The recording may be incomplete.</source>
-        <target state="new">ffmpeg did not stop within the timeout; killing the process. The recording may be incomplete.</target>
+        <target state="translated">ffmpeg 未在超时时间内停止；正在终止进程。录制可能不完整。</target>
         <note>Warning when ffmpeg has to be killed because it did not stop gracefully.</note>
       </trans-unit>
       <trans-unit id="SubOptionsRequireEnable">
         <source>The video recorder sub-options require --{0} to be specified.</source>
-        <target state="new">The video recorder sub-options require --{0} to be specified.</target>
+        <target state="translated">视频录制器子选项需要指定 --{0}。</target>
         <note>Validation error when a sub-option is used without the enable option. {0} is the enable option name.</note>
       </trans-unit>
       <trans-unit id="WindowCaptureFallback">
         <source>Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</source>
-        <target state="new">Could not resolve a visible current-process window (tried the process main window, the foreground window, and the console window); capturing the full screen instead. This happens on headless runs and can happen with terminals whose visible window is not focused at record time.</target>
+        <target state="translated">无法解析可见的当前进程窗口(已尝试进程主窗口、前台窗口和控制台窗口)；改为捕获整个屏幕。这发生在无外设运行中，也可能发生在录制时可见窗口未聚焦的终端上。</target>
         <note>Informational message when window capture falls back to full screen.</note>
       </trans-unit>
       <trans-unit id="WindowCaptureUnsupportedOs">
         <source>Current-process window capture is only supported on Windows; capturing the full screen instead.</source>
-        <target state="new">Current-process window capture is only supported on Windows; capturing the full screen instead.</target>
+        <target state="translated">当前进程窗口捕获仅在 Windows 上受支持；改为捕获整个屏幕。</target>
         <note>Informational message on non-Windows when window capture is requested.</note>
       </trans-unit>
     </body>
