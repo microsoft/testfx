@@ -205,7 +205,7 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
                 finalFailedTests = failedThisAttempt;
 
                 // Check thresholds only on the first attempt (computed against the full suite).
-                if (attemptCount == 1 && await EvaluateThresholdPolicyAsync(outputDevice, retryFailedTestsPipeServer, cancellationToken).ConfigureAwait(false))
+                if (attemptCount == 1 && await RetryThresholdPolicy.EvaluateAsync(_commandLineOptions, this, outputDevice, retryFailedTestsPipeServer, cancellationToken).ConfigureAwait(false))
                 {
                     thresholdPolicyKickedIn = true;
                     break;
@@ -265,46 +265,6 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         await RetrySummaryReporter.MoveArtifactsAsync(this, outputDevice, fileSystem, logger, currentTryResultFolder, resultDirectory, cancellationToken).ConfigureAwait(false);
 
         return exitCodes[^1];
-    }
-
-    private async Task<bool> EvaluateThresholdPolicyAsync(IOutputDevice outputDevice, RetryFailedTestsPipeServer retryFailedTestsPipeServer, CancellationToken cancellationToken)
-    {
-        double? maxFailedTests = null;
-        double? maxPercentage = null;
-        double? maxCount = null;
-        if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, out string[]? retryFailedTestsMaxPercentage))
-        {
-            maxPercentage = double.Parse(retryFailedTestsMaxPercentage[0], CultureInfo.InvariantCulture);
-            maxFailedTests = maxPercentage / 100 * retryFailedTestsPipeServer.TotalTestRan;
-        }
-
-        if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, out string[]? retryFailedTestsMaxCount))
-        {
-            maxCount = double.Parse(retryFailedTestsMaxCount[0], CultureInfo.InvariantCulture);
-            maxFailedTests = maxCount.Value;
-        }
-
-        // If threshold policy is not enabled, or the failed set is within the threshold, keep retrying.
-        if (maxFailedTests is null || (retryFailedTestsPipeServer.FailedUID?.Count ?? 0) <= maxFailedTests)
-        {
-            return false;
-        }
-
-        StringBuilder explanation = new();
-        explanation.AppendLine(ExtensionResources.FailureThresholdPolicy);
-        if (maxPercentage is not null)
-        {
-            double failedPercentage = Math.Round(retryFailedTestsPipeServer.FailedUID!.Count / (double)retryFailedTestsPipeServer.TotalTestRan * 100, 2);
-            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxPercentage, maxPercentage, failedPercentage, retryFailedTestsPipeServer.FailedUID.Count, retryFailedTestsPipeServer.TotalTestRan));
-        }
-
-        if (maxCount is not null)
-        {
-            explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedUID!.Count));
-        }
-
-        await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
-        return true;
     }
 
     // Copied from HotReloadTestHostTestFrameworkInvoker

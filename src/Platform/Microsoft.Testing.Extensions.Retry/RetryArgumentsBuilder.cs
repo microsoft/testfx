@@ -121,15 +121,7 @@ internal static class RetryArgumentsBuilder
             // from tokens, so UIDs containing literal '"' (e.g. parameterized tests with
             // string arguments that include double quotes) cannot safely round-trip through
             // a response file. In that case we must always use inline arguments.
-            bool hasUidsWithQuotes = false;
-            foreach (string uid in lastListOfFailedId)
-            {
-                if (uid.IndexOf('"') >= 0)
-                {
-                    hasUidsWithQuotes = true;
-                    break;
-                }
-            }
+            bool hasUidsWithQuotes = lastListOfFailedId.Any(uid => uid.IndexOf('"') >= 0);
 
             bool useResponseFile = false;
             if (!hasUidsWithQuotes)
