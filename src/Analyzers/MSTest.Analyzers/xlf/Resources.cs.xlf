@@ -561,9 +561,10 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 The type declaring these methods should also respect the following rules:
 -The type should be a class
 -The class should be 'public'
+-The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
+        <target state="translated">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
 – Nesmí být deklarované pro obecnou class.
 – Musí být „public“.
 – Musí být „static“.
