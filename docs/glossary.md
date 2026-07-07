@@ -108,6 +108,19 @@ The practice of using formal mathematical proofs to establish correctness proper
 
 A specific code component (function, struct, or class) selected for formal verification. Each FV target progresses through defined phases: (1) identified, (2) informal spec extracted, (3) Lean 4 formal spec written, (4) implementation model extracted, (5) proofs completed. Current targets are listed in `formal-verification/TARGETS.md`.
 
+## G
+
+### GitHubActionsReport
+
+An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits GitHub Actions-native workflow commands so test runs on GitHub Actions produce a first-class CI experience. The extension activates only when the test run executes inside GitHub Actions (`GITHUB_ACTIONS=true`) and the `--report-gh` master switch is passed; it no-ops otherwise. When active, it provides four independently toggleable features:
+
+- **Per-assembly log groups** (`--report-gh-groups`): emits `::group::`/`::endgroup::` workflow commands so each test assembly's output is collapsed by default in the runner UI.
+- **Failure and skip annotations** (`--report-gh-annotations`): emits a `::error` workflow command for each failing test (with file/line source location when resolvable, so failures appear in the PR "Files changed" diff gutter) and a `::warning` workflow command for each skipped test; both surface in the workflow **Annotations** tab.
+- **Job summary** (`--report-gh-step-summary`): appends a markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page.
+- **Slow-test notices** (`--report-gh-slow-test-notices`): emits a `::notice` workflow command for any test running past a configured threshold (default 60 seconds; set with `--report-gh-slow-test-threshold`).
+
+When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. Not supported in NativeAOT or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
+
 ## H
 
 ### HangDump

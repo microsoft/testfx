@@ -189,39 +189,27 @@ internal sealed class TestAssemblyInfo
                     try
                     {
                         AssemblyInitializationException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-                            async () =>
-                            {
-                                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
-                                // It's safer to reset it before the capture.
-                                using (TestContextImplementation.SetCurrentTestContext(testContext))
+                            () => AssemblyInitializeMethod.InvokeAsFixtureMethodAsync(
+                                testContext,
+                                ec => ExecutionContext = ec,
+                                () =>
                                 {
-                                    Task? task = AssemblyInitializeMethod.GetInvokeResultAsync(null, testContext);
-                                    if (task is not null)
+                                    // The `is` check is defensive: this method is part of an internal
+                                    // but mockable surface, so unit tests can legitimately pass a
+                                    // mocked TestContext. Production callers always pass a
+                                    // TestContextImplementation.
+                                    if (testContext is TestContextImplementation testContextImpl)
                                     {
-                                        await task.ConfigureAwait(false);
+                                        // Capture a snapshot of TestContext.Properties so that values
+                                        // set during AssemblyInitialize flow to subsequent contexts
+                                        // (class init, test execution, class cleanup, assembly cleanup).
+                                        // PostAssemblyInitProperties uses Volatile.Read/Write so that
+                                        // callers on the IsAssemblyInitializeExecuted fast path
+                                        // (which bypasses _assemblyInfoExecuteSyncSemaphore) safely
+                                        // observe the published snapshot.
+                                        PostAssemblyInitProperties = testContextImpl.CaptureLifecycleProperties();
                                     }
-                                }
-
-                                // **After** we have executed the assembly initialize, we save the current context.
-                                // This context will contain async locals set by the assembly initialize method.
-                                ExecutionContext = ExecutionContext.Capture();
-
-                                // The `is` check is defensive: this method is part of an internal
-                                // but mockable surface, so unit tests can legitimately pass a
-                                // mocked TestContext. Production callers always pass a
-                                // TestContextImplementation.
-                                if (testContext is TestContextImplementation testContextImpl)
-                                {
-                                    // Capture a snapshot of TestContext.Properties so that values
-                                    // set during AssemblyInitialize flow to subsequent contexts
-                                    // (class init, test execution, class cleanup, assembly cleanup).
-                                    // PostAssemblyInitProperties uses Volatile.Read/Write so that
-                                    // callers on the IsAssemblyInitializeExecuted fast path
-                                    // (which bypasses _assemblyInfoExecuteSyncSemaphore) safely
-                                    // observe the published snapshot.
-                                    PostAssemblyInitProperties = testContextImpl.CaptureLifecycleProperties();
-                                }
-                            },
+                                }),
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
                             AssemblyInitializeMethod,
@@ -286,23 +274,9 @@ internal sealed class TestAssemblyInfo
         {
             await _assemblyInfoExecuteSyncSemaphore.WaitAsync().ConfigureAwait(false);
             AssemblyCleanupException = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-                 async () =>
-                 {
-                     // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
-                     // It's safer to reset it before the capture.
-                     using (TestContextImplementation.SetCurrentTestContext(testContext))
-                     {
-                         Task? task = AssemblyCleanupMethod.GetParameters().Length == 0
-                             ? AssemblyCleanupMethod.GetInvokeResultAsync(null)
-                             : AssemblyCleanupMethod.GetInvokeResultAsync(null, testContext);
-                         if (task is not null)
-                         {
-                             await task.ConfigureAwait(false);
-                         }
-                     }
-
-                     ExecutionContext = ExecutionContext.Capture();
-                 },
+                 () => AssemblyCleanupMethod.InvokeAsFixtureMethodAsync(
+                     testContext,
+                     ec => ExecutionContext = ec),
                  testContext.CancellationTokenSource,
                  AssemblyCleanupMethodTimeoutMilliseconds,
                  AssemblyCleanupMethod,

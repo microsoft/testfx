@@ -10,6 +10,9 @@ internal partial class TestMethodInfo
 
     internal object?[] ResolveArguments(object?[] arguments)
     {
+        // Use the cached ParameterTypes property rather than calling MethodInfo.GetParameters()
+        // (which allocates a fresh ParameterInfo[] on every call). ResolveArguments only reads the
+        // array, so sharing the cached instance is safe.
         ParameterInfo[] parametersInfo = ParameterTypes;
         int requiredParameterCount = 0;
         bool hasParamsValue = false;

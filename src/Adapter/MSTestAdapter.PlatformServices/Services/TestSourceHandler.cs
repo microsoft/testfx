@@ -110,7 +110,7 @@ internal sealed class TestSourceHandler : ITestSourceHandler
         try
         {
             string? referenceAssemblyName = referenceAssembly.Name;
-            byte[] referenceAssemblyPublicKeyToken = referenceAssembly.GetPublicKeyToken();
+            byte[]? referenceAssemblyPublicKeyToken = referenceAssembly.GetPublicKeyToken();
 
             // ReflectionOnlyLoadFrom loads from the specified path only (no probing) and does not
             // execute any code from the loaded assembly.
@@ -139,8 +139,20 @@ internal sealed class TestSourceHandler : ITestSourceHandler
         }
     }
 
-    private static bool ArePublicKeyTokensEqual(byte[] left, byte[] right)
+    private static bool ArePublicKeyTokensEqual(byte[]? left, byte[]? right)
     {
+        // GetPublicKeyToken() returns null (or an empty array) for unsigned assemblies.
+        // Treat two unsigned tokens as equal, and a signed vs. unsigned pair as unequal.
+        if (left is null || left.Length == 0)
+        {
+            return right is null || right.Length == 0;
+        }
+
+        if (right is null || right.Length == 0)
+        {
+            return false;
+        }
+
         if (left.Length != right.Length)
         {
             return false;

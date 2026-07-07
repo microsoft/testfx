@@ -177,7 +177,9 @@ internal sealed class TestMethodFilter
 
         public bool Matches(UnitTestElement testElement)
         {
-            var testCase = testElement.ToTestCase();
+            // Reuse the element's cached host TestCase so that a matched test is not converted a second time
+            // when it is subsequently reported to the discovery sink.
+            TestCase testCase = testElement.GetOrCreateHostTestCase();
             return _filterExpression.MatchTestCase(testCase, propertyName => _testMethodFilter.PropertyValueProvider(testCase, propertyName));
         }
     }

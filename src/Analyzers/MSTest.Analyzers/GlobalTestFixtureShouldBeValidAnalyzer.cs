@@ -24,7 +24,7 @@ public sealed class GlobalTestFixtureShouldBeValidAnalyzer : DiagnosticAnalyzer
         new LocalizableResourceString(nameof(Resources.GlobalTestFixtureShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),
         new LocalizableResourceString(nameof(Resources.GlobalTestFixtureShouldBeValidDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
-        DiagnosticSeverity.Error,
+        DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     /// <inheritdoc />

@@ -42,6 +42,22 @@ internal sealed class ReflectionTestMethodInfo : MethodInfo
 
     public override MethodImplAttributes GetMethodImplementationFlags() => _methodInfo.GetMethodImplementationFlags();
 
+    /// <summary>
+    /// Returns the parameters of the wrapped method, caching the array across calls.
+    /// </summary>
+    /// <returns>The cached <see cref="ParameterInfo"/> array of the wrapped method.</returns>
+    /// <remarks>
+    /// <c>MethodInfo.GetParameters()</c> allocates a fresh <see cref="ParameterInfo"/> array on
+    /// every call (a CLR safety guarantee). The wrapped <see cref="MethodInfo"/> is immutable, so the
+    /// array is cached and shared across callers of this wrapper (e.g. display-name computation for every
+    /// data-driven row) to avoid that per-call allocation.
+    /// <para>
+    /// Because the same instance is handed out to every caller, the returned array MUST be treated as
+    /// read-only. Mutating it (including callers such as user-provided
+    /// <c>ITestDataSource.GetDisplayName</c> implementations) would corrupt the cache for all subsequent
+    /// callers.
+    /// </para>
+    /// </remarks>
     public override ParameterInfo[] GetParameters() => _parameters ??= _methodInfo.GetParameters();
 
     public override object? Invoke(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? parameters, CultureInfo? culture) => _methodInfo.Invoke(obj, invokeAttr, binder, parameters, culture);

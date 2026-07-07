@@ -38,6 +38,6 @@ internal static class UnitTestElementSinkExtensions
             => _discoverySink = discoverySink;
 
         public void SendTestElement(UnitTestElement testElement)
-            => _discoverySink.SendTestCase(testElement.ToTestCase());
+            => _discoverySink.SendTestCase(testElement.GetOrCreateHostTestCase());
     }
 }
