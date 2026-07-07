@@ -82,6 +82,12 @@
          that reference is suppressed above, so they are referenced explicitly here. -->
     <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
     <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
+
+    <!-- The adapter's VSTest-facing code (VSTestAdapter\*, AdapterTestProperties) uses the VSTest object model
+         directly. On other TFMs it flows in transitively via Microsoft.Testing.Extensions.VSTestBridge, but that
+         reference is not added for UWP (see above), and PlatformServices no longer references the object model,
+         so it is referenced explicitly here for UWP. -->
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
