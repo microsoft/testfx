@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
@@ -110,7 +110,7 @@ internal sealed class GitHubActionsAnnotationReporter :
             // Mirror the sibling reporters: a failure while building/emitting an annotation (e.g. a malformed
             // stack-trace path making IFileSystem.ExistFile throw) degrades to "no annotation" instead of
             // propagating into the platform's consumer dispatch.
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
     }
 
@@ -200,12 +200,4 @@ internal sealed class GitHubActionsAnnotationReporter :
 
     private static string GetTestName(TestNode testNode)
         => TestNodeIdentity.GetTestName(testNode);
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
-        }
-    }
 }

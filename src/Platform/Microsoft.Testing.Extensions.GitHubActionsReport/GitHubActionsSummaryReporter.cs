@@ -135,7 +135,7 @@ internal sealed class GitHubActionsSummaryReporter :
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
 
         return Task.CompletedTask;
@@ -196,7 +196,7 @@ internal sealed class GitHubActionsSummaryReporter :
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
         }
     }
 
@@ -316,14 +316,6 @@ internal sealed class GitHubActionsSummaryReporter :
 #pragma warning restore CS0618, MTP0001
             _ => TerminalKind.NotTerminal,
         };
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
-        }
-    }
 
     internal readonly struct TestRecord
     {
