@@ -283,23 +283,9 @@ internal sealed partial class TestClassInfo
         }
 
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-                // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
-                // It's safer to reset it before the capture.
-                using (TestContextImplementation.SetCurrentTestContext(testContext))
-                {
-                    Task? task = methodInfo.GetInvokeResultAsync(null, testContext);
-                    if (task is not null)
-                    {
-                        await task.ConfigureAwait(false);
-                    }
-                }
-
-                // **After** we have executed the class initialize, we save the current context.
-                // This context will contain async locals set by the class initialize method.
-                ExecutionContext = ExecutionContext.Capture();
-            },
+            () => methodInfo.InvokeAsFixtureMethodAsync(
+                testContext,
+                ec => ExecutionContext = ec),
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
