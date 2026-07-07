@@ -23,7 +23,6 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     private readonly Func<IEnumerable<Assembly>> _getTestAssemblies;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private bool _isDisposed;
-    private SessionUid? _sessionUid;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SynchronizedSingleSessionVSTestBridgedTestFramework"/> class.
@@ -52,6 +51,13 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     /// <inheritdoc />
     public sealed override string Version => _extension.Version;
 
+    /// <summary>
+    /// Gets the current test session UID, or <see langword="null"/> when no session is active. Exposed to the
+    /// (internals-visible) MSTest adapter so it can publish Microsoft.Testing.Platform test node updates natively
+    /// without routing through the VSTest bridge object model.
+    /// </summary>
+    internal SessionUid? SessionUid { get; private set; }
+
     /// <inheritdoc />
     public override async Task<bool> IsEnabledAsync() => await _extension.IsEnabledAsync().ConfigureAwait(false);
 
@@ -60,12 +66,12 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
     {
         context.CancellationToken.ThrowIfCancellationRequested();
 
-        if (_sessionUid is not null)
+        if (SessionUid is not null)
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage, _sessionUid.Value.Value));
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage, SessionUid.Value.Value));
         }
 
-        _sessionUid = context.SessionUid;
+        SessionUid = context.SessionUid;
         return Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
     }
 
@@ -77,7 +83,7 @@ public abstract class SynchronizedSingleSessionVSTestBridgedTestFramework : VSTe
 
         // Wait for remaining request processing
         await _incomingRequestCounter.WaitAsync(context.CancellationToken).ConfigureAwait(false);
-        _sessionUid = null;
+        SessionUid = null;
         return new CloseTestSessionResult { IsSuccess = true };
     }
 

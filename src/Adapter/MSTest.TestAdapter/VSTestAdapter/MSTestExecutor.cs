@@ -177,7 +177,21 @@ internal sealed class MSTestExecutor : ITestExecutor
         return testElement;
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
+    internal Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
+        => RunTestsFromSourcesCoreAsync(sources, runContext, frameworkHandle, settings => frameworkHandle!.ToTestResultRecorder(Environment.MachineName, settings), configuration, isMTP);
+
+    /// <summary>
+    /// Runs the tests from sources, reporting results to a caller-provided platform-agnostic
+    /// <see cref="ITestResultRecorder"/> (used by the native Microsoft.Testing.Platform integration, which
+    /// publishes test nodes itself instead of recording through the VSTest <see cref="IFrameworkHandle"/>).
+    /// The <paramref name="frameworkHandle"/> is still used for message logging and apartment-state handling.
+    /// The recorder is created via <paramref name="recorderFactory"/> after settings are resolved so it observes
+    /// the effective <see cref="MSTestSettings"/>.
+    /// </summary>
+    internal Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, Func<MSTestSettings, ITestResultRecorder> recorderFactory, IConfiguration? configuration, bool isMTP)
+        => RunTestsFromSourcesCoreAsync(sources, runContext, frameworkHandle, recorderFactory, configuration, isMTP);
+
+    private async Task RunTestsFromSourcesCoreAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, Func<MSTestSettings, ITestResultRecorder> recorderFactory, IConfiguration? configuration, bool isMTP)
     {
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
@@ -215,9 +229,10 @@ internal sealed class MSTestExecutor : ITestExecutor
 
             sources = testSourceHandler.GetTestSources(sources);
 
-            // Translate the VSTest recorder into the platform-agnostic result recorder at this boundary; the
-            // execution engine reports results through this neutral recorder and never constructs VSTest results.
-            ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
+            // Build the neutral result recorder now that settings have been resolved by InitializeDiscovery; the
+            // execution engine reports results through this recorder and never constructs VSTest results. For the
+            // VSTest path this wraps the framework handle; for the native MTP path it publishes test nodes directly.
+            ITestResultRecorder testResultRecorder = recorderFactory(MSTestSettings.CurrentSettings);
 
             // Extract the neutral run inputs (test-run directory + run settings XML) from the host run context at
             // this boundary so the execution engine no longer depends on the VSTest run context.
