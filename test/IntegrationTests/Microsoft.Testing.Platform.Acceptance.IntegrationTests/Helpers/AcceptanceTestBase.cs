@@ -128,8 +128,8 @@ public abstract class AcceptanceTestBase
 
     /// <summary>
     /// Gets the metadata modes each acceptance assertion should run against. By default the runtime
-    /// reflection path and both source-generated paths (<c>MSTest.SourceGeneration</c> and
-    /// <c>MSTest.AotReflection.SourceGeneration</c>) are exercised; the source-gen modes are dropped
+    /// reflection path and both source-generated paths (the <c>MSTest.SourceGeneration</c> package's
+    /// <c>Rooting</c> and <c>ReflectionFree</c> modes) are exercised; the source-gen modes are dropped
     /// when globally disabled via the kill-switch.
     /// </summary>
     internal static MetadataMode[] MetadataModesToRun { get; }
