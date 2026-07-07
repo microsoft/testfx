@@ -230,4 +230,96 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasDerivedTestMethodAttributeAndOutParam_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyCustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyCustomTestMethod]
+                public void [|TestMethod1|](out string s)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class MyCustomTestMethodAttribute : TestMethodAttribute { }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MyCustomTestMethod]
+                public void TestMethod1(string s)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodOutsideTestClassHasOutParam_Diagnostic()
+    {
+        // The analyzer has no [TestClass] guard — it fires on any method carrying a
+        // TestMethod-derived attribute, even when the containing class lacks [TestClass].
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClassWithoutTestClass
+            {
+                [TestMethod]
+                public void [|TestMethod1|](out string s)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClassWithoutTestClass
+            {
+                [TestMethod]
+                public void TestMethod1(string s)
+                {
+                    s = "";
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenTestMethodHasInParameter_NoDiagnostic()
+    {
+        // The analyzer only flags RefKind.Out and RefKind.Ref; 'in' parameters are not flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1(in string s)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
