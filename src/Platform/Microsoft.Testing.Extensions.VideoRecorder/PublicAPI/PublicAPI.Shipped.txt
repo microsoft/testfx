@@ -1,1 +1,45 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureGranularity
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureGranularity.PerSession = 1 -> Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureGranularity
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureGranularity.PerTest = 0 -> Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureGranularity
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureSource
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureSource.Screen = 0 -> Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureSource
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureSource.Window = 1 -> Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureSource
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFormat
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFormat.Mp4H264 = 0 -> Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFormat
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFormat.WebMVp9 = 1 -> Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFormat
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.ExtraRecorderArguments.get -> string?
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.ExtraRecorderArguments.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.FfmpegPath.get -> string?
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.FfmpegPath.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.Format.get -> Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderFormat
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.Format.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.FrameRate.get -> int
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.FrameRate.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.Granularity.get -> Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureGranularity
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.Granularity.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.IncludeChapters.get -> bool
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.IncludeChapters.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.InputArgumentsOverride.get -> string?
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.InputArgumentsOverride.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.MaxRetainedDuration.get -> System.TimeSpan?
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.MaxRetainedDuration.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.OutputDirectory.get -> string?
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.OutputDirectory.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.PersistMode.get -> Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderPersistenceMode
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.PersistMode.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.SegmentLengthSeconds.get -> int
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.SegmentLengthSeconds.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.Source.get -> Microsoft.Testing.Extensions.VideoRecorder.VideoCaptureSource
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.Source.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.VideoRecorderOptions() -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.X11CaptureSize.get -> string!
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions.X11CaptureSize.set -> void
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderPersistenceMode
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderPersistenceMode.Always = 0 -> Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderPersistenceMode
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderPersistenceMode.OnFailure = 1 -> Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderPersistenceMode
+[TPEXP]Microsoft.Testing.Extensions.VideoRecorderExtensions
+[TPEXP]static Microsoft.Testing.Extensions.VideoRecorderExtensions.AddVideoRecorderProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Action<Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderOptions!>? configure = null) -> void
+Microsoft.Testing.Extensions.VideoRecorder.TestingPlatformBuilderHook
+static Microsoft.Testing.Extensions.VideoRecorder.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
