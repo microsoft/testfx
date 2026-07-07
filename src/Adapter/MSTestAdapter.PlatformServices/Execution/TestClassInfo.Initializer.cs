@@ -253,10 +253,7 @@ internal sealed partial class TestClassInfo
             {
                 // Assembly initialize and class initialize logs are pre-pended to the first result.
                 var testContextImpl = testContext as TestContextImplementation;
-                result.LogOutput = initializationLogs + testContextImpl?.GetAndClearOutput();
-                result.LogError = initializationErrorLogs + testContextImpl?.GetAndClearError();
-                result.DebugTrace = initializationTrace + testContextImpl?.GetAndClearTrace();
-                result.TestContextMessages = initializationTestContextMessages + testContext.GetAndClearDiagnosticMessages();
+                result.SetOutputAndTraces(testContextImpl, testContext, initializationLogs, initializationErrorLogs, initializationTrace, initializationTestContextMessages);
             }
 
             // Publish with Volatile.Write so callers on the cached-result fast path of

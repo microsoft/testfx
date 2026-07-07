@@ -151,10 +151,7 @@ internal partial class TestMethodInfo : ITestMethod
             if (result != null)
             {
                 var testContextImpl = TestContext as TestContextImplementation;
-                result.LogOutput = testContextImpl?.GetAndClearOutput();
-                result.LogError = testContextImpl?.GetAndClearError();
-                result.DebugTrace = testContextImpl?.GetAndClearTrace();
-                result.TestContextMessages = TestContext?.GetAndClearDiagnosticMessages();
+                result.SetOutputAndTraces(testContextImpl, TestContext);
                 result.ResultFiles = TestContext?.GetResultFiles();
                 result.Duration = watch.Elapsed;
             }

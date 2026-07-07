@@ -29,10 +29,7 @@ internal sealed partial class UnitTestRunner
         {
             result ??= new TestResult { Outcome = UnitTestOutcome.Error };
             var testContextImpl = testContext.Context as TestContextImplementation;
-            result.LogOutput = testContextImpl?.GetAndClearOutput();
-            result.LogError = testContextImpl?.GetAndClearError();
-            result.DebugTrace = testContextImpl?.GetAndClearTrace();
-            result.TestContextMessages = testContext.GetAndClearDiagnosticMessages();
+            result.SetOutputAndTraces(testContextImpl, testContext);
         }
 
         return result;
@@ -54,24 +51,19 @@ internal sealed partial class UnitTestRunner
 
             if (ex is not null)
             {
-                return new TestResult()
+                var failedResult = new TestResult()
                 {
                     Outcome = UnitTestOutcome.Failed,
                     TestFailureException = ex,
-                    LogOutput = testContextImpl?.GetAndClearOutput(),
-                    LogError = testContextImpl?.GetAndClearError(),
-                    DebugTrace = testContextImpl?.GetAndClearTrace(),
-                    TestContextMessages = testContext.GetAndClearDiagnosticMessages(),
                 };
+                failedResult.SetOutputAndTraces(testContextImpl, testContext);
+                return failedResult;
             }
 
             if (results.Length > 0)
             {
                 TestResult lastResult = results[results.Length - 1];
-                lastResult.LogOutput += testContextImpl?.GetAndClearOutput();
-                lastResult.LogError += testContextImpl?.GetAndClearError();
-                lastResult.DebugTrace += testContextImpl?.GetAndClearTrace();
-                lastResult.TestContextMessages += testContext.GetAndClearDiagnosticMessages();
+                lastResult.AppendOutputAndTraces(testContextImpl, testContext);
             }
         }
 
