@@ -12,3 +12,9 @@ MSTEST0067 | Performance | Disabled | AvoidThreadSleepAndTaskWaitInTestsAnalyzer
 MSTEST0068 | Usage | Info | CollectionAssertToAssertAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0068)
 MSTEST0070 | Usage | Warning | MemberConditionShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0070)
 MSTEST0071 | Usage | Info | RedundantTestMethodDisplayNameAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0071)
+
+### Changed Rules
+
+Rule ID | New Category | New Severity | Old Category | Old Severity | Notes
+--------|--------------|--------------|--------------|--------------|-------
+MSTEST0050 | Usage | Warning | Usage | Error | GlobalTestFixtureShouldBeValidAnalyzer
