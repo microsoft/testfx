@@ -13,6 +13,13 @@
   <!-- Import VSTest.targets -->
   <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
-  <!-- Implicit bottom import -->
-  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <!--
+    Implicit bottom import.
+
+    Only import the base .NET SDK targets when MSTest.Sdk was the SDK that imported the base .NET
+    SDK props (see the detailed comment in Sdk.props). When MSTest.Sdk is layered on top of another
+    base SDK, that outer SDK imports the base targets itself, so importing them here would emit
+    MSB4011 duplicate-import warnings.
+  -->
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(_MSTestSdkImportsMicrosoftNETSdk)' == 'true' " />
 </Project>
