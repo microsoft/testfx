@@ -123,7 +123,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
         }
     }
 
@@ -150,7 +150,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
 
         return Task.CompletedTask;
@@ -196,7 +196,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
         }
     }
 
@@ -241,7 +241,7 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(EmitArtifactUploadCommandsAsync), ex);
+            _logger.LogUnexpectedException(nameof(EmitArtifactUploadCommandsAsync), ex);
         }
     }
 
@@ -273,14 +273,6 @@ internal sealed class AzureDevOpsArtifactUploader : IDataConsumer, ITestSessionL
         }
 
         return matcher;
-    }
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
-        }
     }
 
     private bool ShouldUploadAllFiles()

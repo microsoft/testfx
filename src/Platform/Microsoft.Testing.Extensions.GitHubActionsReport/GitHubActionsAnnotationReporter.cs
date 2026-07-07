@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.GitHubActionsReport.Resources;
@@ -93,6 +93,9 @@ internal sealed class GitHubActionsAnnotationReporter :
                 // workflow Annotations tab alongside failures, rather than being silently absent.
                 if (nodeState is SkippedTestNodeStateProperty skipped)
                 {
+                    // GetTestName is computed lazily at the call sites so the common passing/in-progress path
+                    // (which returns below without annotating) does not walk the property bag or allocate the
+                    // formatted name it would immediately discard.
                     await WriteSkippedAnnotationAsync(GetTestName(nodeUpdateMessage.TestNode), skipped.Explanation, cancellationToken).ConfigureAwait(false);
                 }
 
@@ -110,11 +113,11 @@ internal sealed class GitHubActionsAnnotationReporter :
             // Mirror the sibling reporters: a failure while building/emitting an annotation (e.g. a malformed
             // stack-trace path making IFileSystem.ExistFile throw) degrades to "no annotation" instead of
             // propagating into the platform's consumer dispatch.
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
     }
 
-    private async Task WriteAnnotationAsync(string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
+    private Task WriteAnnotationAsync(string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
@@ -129,7 +132,7 @@ internal sealed class GitHubActionsAnnotationReporter :
             _logger.LogTrace($"Showing failure annotation '{line}'.");
         }
 
-        await DisplayAnnotationLineAsync(line, cancellationToken).ConfigureAwait(false);
+        return DisplayAnnotationLineAsync(line, cancellationToken);
     }
 
     internal static /* for testing */ string GetErrorAnnotation(string testName, string? explanation, Exception? exception, string? repoRoot, IFileSystem fileSystem, ILogger logger, bool skipAssertionFrames)
@@ -158,7 +161,7 @@ internal sealed class GitHubActionsAnnotationReporter :
             GitHubActionsEscaper.EscapeData(message));
     }
 
-    private async Task WriteSkippedAnnotationAsync(string testName, string? explanation, CancellationToken cancellationToken)
+    private Task WriteSkippedAnnotationAsync(string testName, string? explanation, CancellationToken cancellationToken)
     {
         if (_logger.IsEnabled(LogLevel.Trace))
         {
@@ -172,15 +175,15 @@ internal sealed class GitHubActionsAnnotationReporter :
             _logger.LogTrace($"Showing skip annotation '{line}'.");
         }
 
-        await DisplayAnnotationLineAsync(line, cancellationToken).ConfigureAwait(false);
+        return DisplayAnnotationLineAsync(line, cancellationToken);
     }
 
-    // Prepend a newline so the workflow command ('::error' or '::warning') always starts at column 0 on its
-    // own line. In CI the terminal output device runs in SimpleAnsi mode and emits a color reset ('\e[m')
-    // WITHOUT a trailing newline after the preceding colored test block. Emitting the annotation directly
-    // would yield "\e[m::error ..." and GitHub only recognizes a workflow command when the line begins with
-    // '::', so the dangling reset would silently drop the annotation. The leading newline pushes the reset
-    // onto its own (ignored) line and keeps the annotation parseable.
+    // Prepend a newline so every workflow command annotation ('::error' or '::warning') starts at column 0
+    // on its own line. In CI the terminal output device runs in SimpleAnsi mode and emits a color reset
+    // ('\e[m') WITHOUT a trailing newline after the preceding colored test block. Emitting the annotation
+    // directly would yield "\e[m::error ..." and GitHub only recognizes a workflow command when the line
+    // begins with '::', so the dangling reset would silently drop the annotation. The leading newline pushes
+    // the reset onto its own (ignored) line and keeps the annotation parseable.
     private Task DisplayAnnotationLineAsync(string line, CancellationToken cancellationToken)
         => _outputDisplay.DisplayAsync(this, new FormattedTextOutputDeviceData($"\n{line}"), cancellationToken);
 
@@ -200,12 +203,4 @@ internal sealed class GitHubActionsAnnotationReporter :
 
     private static string GetTestName(TestNode testNode)
         => TestNodeIdentity.GetTestName(testNode);
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
-        }
-    }
 }

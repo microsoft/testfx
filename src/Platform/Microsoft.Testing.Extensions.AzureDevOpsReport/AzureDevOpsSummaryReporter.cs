@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -114,7 +114,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
         }
     }
 
@@ -179,7 +179,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
 
         return Task.CompletedTask;
@@ -247,7 +247,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
         }
     }
 
@@ -426,13 +426,5 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         }
 
         return sb.ToString();
-    }
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
-        }
     }
 }

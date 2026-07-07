@@ -11,7 +11,6 @@
       "src\\Analyzers\\MSTest.Analyzers.CodeFixes\\MSTest.Analyzers.CodeFixes.csproj",
       "src\\Analyzers\\MSTest.Analyzers.Package\\MSTest.Analyzers.Package.csproj",
       "src\\Analyzers\\MSTest.Analyzers\\MSTest.Analyzers.csproj",
-      "src\\Analyzers\\MSTest.AotReflection.SourceGeneration\\MSTest.AotReflection.SourceGeneration.csproj",
       "src\\Analyzers\\MSTest.GlobalConfigsGenerator\\MSTest.GlobalConfigsGenerator.csproj",
       "src\\Analyzers\\MSTest.SourceGeneration\\MSTest.SourceGeneration.csproj",
       "src\\Package\\MSTest.Sdk\\MSTest.Sdk.csproj",

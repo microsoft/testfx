@@ -135,7 +135,7 @@ internal sealed class GitHubActionsSummaryReporter :
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
 
         return Task.CompletedTask;
@@ -196,7 +196,7 @@ internal sealed class GitHubActionsSummaryReporter :
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
         }
     }
 
@@ -284,12 +284,4 @@ internal sealed class GitHubActionsSummaryReporter :
 
     private static string EscapeInlineCode(string value)
         => RoslynString.IsNullOrEmpty(value) ? value : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
-        }
-    }
 }

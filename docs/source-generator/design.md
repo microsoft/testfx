@@ -323,9 +323,9 @@ per-test execution throughput today.**
 
 ### Why not just emit delegates here too?
 
-**The work has already started.** A proof-of-concept generator that emits exactly this
-shape lives in `src/Analyzers/MSTest.AotReflection.SourceGeneration/` (marked
-`<IsShipping>false</IsShipping>`, tracked by
+**The work has already started.** A reflection-free generator that emits exactly this
+shape now ships inside `src/Analyzers/MSTest.SourceGeneration/` and is selected via
+`<MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>` (tracked by
 [issue #1837](https://github.com/microsoft/testfx/issues/1837)). It emits a per-assembly
 `MSTestReflectionMetadata` registry where each test class carries:
 
@@ -372,17 +372,18 @@ The current generator's value proposition, stated honestly, is:
 - ✅ Trim/Native AOT *correctness*: tests run at all after trimming/AOT publish.
 - ✅ Cold-start *throughput*: skip the assembly + type scans.
 - ⚠️ Per-test *throughput*: unchanged from reflection MSTest. Closing this requires
-  wiring the PoC delegate-emitting generator (`MSTest.AotReflection.SourceGeneration`,
-  issue #1837) into the adapter via the seams already in place (`ITestMethod.MethodInfo`
-  returning a delegate-backed `MethodInfo` subclass, populating `TypeConstructorsInvoker`,
-  etc.).
+  wiring the delegate-emitting reflection-free generator (`MSTest.SourceGeneration`
+  with `MSTestSourceGenMode=ReflectionFree`, issue #1837) into the adapter via the seams
+  already in place (`ITestMethod.MethodInfo` returning a delegate-backed `MethodInfo`
+  subclass, populating `TypeConstructorsInvoker`, etc.).
 
 Setting expectations this way avoids over-promising what the existing generator
 delivers today and makes the case for wiring the PoC concrete when prioritising it.
 
 ### What wiring the delegate generator unlocks beyond perf
 
-The case for wiring `MSTest.AotReflection.SourceGeneration` is **not just per-test
+The case for wiring the reflection-free generator (`MSTest.SourceGeneration` with
+`MSTestSourceGenMode=ReflectionFree`) is **not just per-test
 throughput**. Several non-perf design issues with the current source-gen story dissolve
 once the registry holds delegates and pre-materialized attributes instead of
 `MethodInfo` + name lookups.
@@ -438,7 +439,8 @@ What it does *not* fix (be honest with prioritisation):
 
 ## Sunset plan for the current generator + `MSTest.Engine`
 
-Once the delegate-emitting generator (`MSTest.AotReflection.SourceGeneration`) is wired
+Once the delegate-emitting reflection-free generator (`MSTest.SourceGeneration` with
+`MSTestSourceGenMode=ReflectionFree`) is wired
 into `MSTest.TestAdapter` directly, the current architecture — open-source
 `MSTest.SourceGeneration` package + closed-source `MSTest.Engine` runtime — becomes
 redundant. The recommended sunset plan:
