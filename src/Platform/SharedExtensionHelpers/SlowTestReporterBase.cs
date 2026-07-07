@@ -93,7 +93,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
+            Logger.LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
         }
 
         return Task.CompletedTask;
@@ -134,7 +134,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(ConsumeAsync), ex);
+            Logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
 
         return Task.CompletedTask;
@@ -165,7 +165,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             }
             catch (Exception ex)
             {
-                LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+                Logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
             }
         }
 
@@ -247,16 +247,8 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                LogUnexpectedException(nameof(ScanOnceAsync), ex);
+                Logger.LogUnexpectedException(nameof(ScanOnceAsync), ex);
             }
-        }
-    }
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (Logger.IsEnabled(LogLevel.Warning))
-        {
-            Logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
         }
     }
 
