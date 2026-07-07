@@ -561,25 +561,23 @@ Typ deklarující tyto metody by měl také respektovat následující pravidla:
 The type declaring these methods should also respect the following rules:
 -The type should be a class
 -The class should be 'public'
--The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
-– Nesmí být deklarované pro obecnou class.
-– Musí být „public“.
-– Musí být „static“.
-– Nesmí být „async void“.
-– Nesmí být speciální metodou („finalizer“, „operator“...).
-– Nesmí být obecné.
-– Musí mít jeden parametr typu TestContext.
-– Návratový typ musí být „void“, „Task“ nebo „ValueTask“.
+        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být class.
-– class by měla být „public“.
-– class by neměla být „static“.
-– class by měla být označena atributem [TestClass] (nebo odvozeným atributem).
-– class by neměla být obecná.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
