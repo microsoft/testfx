@@ -4,6 +4,7 @@
 using System.ClientModel;
 
 using Azure.AI.OpenAI;
+using Azure.Identity;
 
 using Microsoft.Extensions.AI;
 using Microsoft.Testing.Extensions.AzureFoundry.Resources;
@@ -20,8 +21,7 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
     /// <inheritdoc />
     public bool IsAvailable =>
         !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
-        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
-        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"));
+        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME"));
 
     /// <inheritdoc />
     public bool HasToolsCapability => true;
@@ -46,14 +46,12 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_DEPLOYMENT_NAME"));
         }
 
-        if (RoslynString.IsNullOrEmpty(apiKey))
-        {
-            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_API_KEY"));
-        }
-
-        var client = new AzureOpenAIClient(
-            new Uri(endpoint),
-            new ApiKeyCredential(apiKey));
+        // Prefer an explicit API key when provided, otherwise fall back to Entra ID / managed identity
+        // authentication via DefaultAzureCredential. This keeps the provider secure-by-default for
+        // Azure-hosted scenarios where distributing API keys is undesirable.
+        AzureOpenAIClient client = RoslynString.IsNullOrEmpty(apiKey)
+            ? new AzureOpenAIClient(new Uri(endpoint), new DefaultAzureCredential())
+            : new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey));
 
         return Task.FromResult(client.GetChatClient(deploymentName).AsIChatClient());
     }
