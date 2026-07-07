@@ -223,15 +223,13 @@ public abstract class TestContext
         where T : class
     {
         DebugEx.Assert(Properties is not null, "Properties is null");
-#if WINDOWS_UWP || WIN_UI
+
+        // Use TryGetValue rather than the indexer so a missing key returns null instead of throwing,
+        // regardless of the IDictionary implementation a custom subclass provides.
         if (!Properties.TryGetValue(name, out object? propertyValue))
         {
             return null;
         }
-#else
-        // This old API doesn't throw when key is not found, but returns null.
-        object? propertyValue = Properties[name];
-#endif
 
         // If propertyValue has a value, but it's not the right type
         if (propertyValue is not null and not T)
