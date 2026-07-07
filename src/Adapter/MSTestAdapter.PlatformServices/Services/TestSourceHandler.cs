@@ -5,9 +5,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if NETFRAMEWORK
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -79,7 +76,7 @@ internal sealed class TestSourceHandler : ITestSourceHandler
     {
 #if NETFRAMEWORK
         // This loads the dll in a different app domain. We can optimize this to load in the current domain since this code could be run in a new app domain anyway.
-        bool? utfReference = AssemblyHelper.DoesReferencesAssembly(source, assemblyName);
+        bool? utfReference = DoesSourceReferenceAssembly(source, assemblyName);
 
         // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.
         return !utfReference.HasValue || utfReference.Value;
@@ -93,6 +90,73 @@ internal sealed class TestSourceHandler : ITestSourceHandler
         return true;
 #endif
     }
+
+#if NETFRAMEWORK
+    /// <summary>
+    /// Checks whether the source assembly directly references the given assembly.
+    /// Only the assembly simple name and public key token are matched; version is ignored.
+    /// Returns <see langword="null"/> if the reference could not be determined.
+    /// </summary>
+    /// <param name="source"> The path to the source assembly to inspect. </param>
+    /// <param name="referenceAssembly"> The assembly to look for in the source's references. </param>
+    /// <returns> <see langword="true"/> if referenced, <see langword="false"/> if not, <see langword="null"/> if undeterminable. </returns>
+    private static bool? DoesSourceReferenceAssembly(string source, AssemblyName referenceAssembly)
+    {
+        if (string.IsNullOrEmpty(source) || referenceAssembly is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            string? referenceAssemblyName = referenceAssembly.Name;
+            byte[] referenceAssemblyPublicKeyToken = referenceAssembly.GetPublicKeyToken();
+
+            // ReflectionOnlyLoadFrom loads from the specified path only (no probing) and does not
+            // execute any code from the loaded assembly.
+            var assembly = Assembly.ReflectionOnlyLoadFrom(source);
+
+            foreach (AssemblyName referencedAssembly in assembly.GetReferencedAssemblies())
+            {
+                // Match without version: only the simple name and public key token.
+                if (!string.Equals(referencedAssembly.Name, referenceAssemblyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (ArePublicKeyTokensEqual(referencedAssembly.GetPublicKeyToken(), referenceAssemblyPublicKeyToken))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            // Return null if we are not able to check.
+            return null;
+        }
+    }
+
+    private static bool ArePublicKeyTokensEqual(byte[] left, byte[] right)
+    {
+        if (left.Length != right.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < left.Length; ++i)
+        {
+            if (left[i] != right[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+#endif
 
     /// <summary>
     /// Gets the set of sources (dll's/exe's) that contain tests. If a source is a package (appx), return the file (dll/exe) that contains tests from it.

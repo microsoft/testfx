@@ -184,7 +184,7 @@ Extension options:
     --report-gh
         Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.
     --report-gh-annotations
-        Enable or disable GitHub Actions failure annotations. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+        Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-groups
         Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
     --report-gh-slow-test-notices
@@ -558,7 +558,7 @@ Registered command line providers:
       --report-gh-annotations
         Arity: 1
         Hidden: False
-        Description: Enable or disable GitHub Actions failure annotations. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
+        Description: Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.
       --report-gh-groups
         Arity: 1
         Hidden: False

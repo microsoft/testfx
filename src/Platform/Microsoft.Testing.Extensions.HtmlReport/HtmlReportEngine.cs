@@ -73,24 +73,12 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         // provided or generated from the default <asm>_<tfm>_<arch>.html shape. Emit a warning
         // when overwriting so users have a single, predictable rule to reason about.
         bool willOverwrite = _fileSystem.ExistFile(finalPath);
-        await WriteFileAsync(finalPath, bytes).ConfigureAwait(false);
+        await WriteBytesAsync(finalPath, FileMode.Create, bytes).ConfigureAwait(false);
         return (
             finalPath,
             willOverwrite
                 ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.HtmlReportFileExistsAndWillBeOverwritten, finalPath)
                 : null);
-    }
-
-    private async Task WriteFileAsync(string path, byte[] bytes)
-    {
-        // Note that we need to dispose the IFileStream, not the inner stream.
-        // IFileStream implementations will be responsible to dispose their inner stream.
-        using IFileStream stream = _fileSystem.NewFileStream(path, FileMode.Create);
-#if NETCOREAPP
-        await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
-#else
-        await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
-#endif
     }
 
     private static string LoadTemplate()

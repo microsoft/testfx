@@ -39,7 +39,7 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassCorrectly()
     {
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
+        TestTrait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassBase).GetMethod(nameof(DummyTestClassBase.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(3);
         traits[0].Name.Should().Be("TestMethodKeyFromBase");
         traits[0].Value.Should().Be("TestMethodValueFromBase");
@@ -51,7 +51,7 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsTestMethod()
     {
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
+        TestTrait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInBaseAndDerived))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod1Key");
         traits[0].Value.Should().Be("DerivedMethod1Value");
@@ -69,7 +69,7 @@ public class TestPropertyAttributeTests : TestContainer
 
     public void GetTestMethodInfoShouldAddPropertiesFromContainingClassAndBaseClassesAndOverriddenMethodsCorrectly_OverriddenIsNotTestMethod()
     {
-        TestPlatform.ObjectModel.Trait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
+        TestTrait[] traits = [.. ReflectHelper.GetTestPropertiesAsTraits(typeof(DummyTestClassDerived).GetMethod(nameof(DummyTestClassDerived.VirtualTestMethodInDerivedButNotTestMethodInBase))!)];
         traits.Length.Should().Be(6);
         traits[0].Name.Should().Be("DerivedMethod2Key");
         traits[0].Value.Should().Be("DerivedMethod2Value");

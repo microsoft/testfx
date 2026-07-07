@@ -87,6 +87,22 @@ public sealed class GitHubActionsAnnotationReporterTests
         Assert.IsTrue(text.StartsWith("::error title=Test failed%3A MyNamespace.MyTest::", StringComparison.Ordinal), text);
     }
 
+    [TestMethod]
+    public void GetSkippedAnnotation_EmitsTitleOnlyWarningWithReasonAndEscaping()
+    {
+        string text = GitHubActionsAnnotationReporter.GetSkippedAnnotation("MyNamespace.MyTest", "not today\nmaybe\rlater");
+
+        Assert.AreEqual("::warning title=Test skipped%3A MyNamespace.MyTest::not today%0Amaybe%0Dlater", text);
+    }
+
+    [TestMethod]
+    public void GetSkippedAnnotation_FallsBackToDefaultReason_WhenNoExplanation()
+    {
+        string text = GitHubActionsAnnotationReporter.GetSkippedAnnotation("MyNamespace.MyTest", explanation: null);
+
+        Assert.AreEqual("::warning title=Test skipped%3A MyNamespace.MyTest::The test was skipped without providing a reason.", text);
+    }
+
     // Throws (and catches) an exception, reporting the exact line of the throw statement so tests can assert the
     // resolved line without hard-coding a physical number that shifts whenever code above changes.
     private static Exception CaptureException(string message, out int throwLine)

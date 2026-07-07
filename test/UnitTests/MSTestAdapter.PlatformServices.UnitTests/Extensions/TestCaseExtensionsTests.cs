@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -22,9 +23,9 @@ public class TestCaseExtensionsTests : TestContainer
         };
         string[] testCategories = ["DummyCategory"];
 
-        testCase.SetPropertyValue(EngineConstants.PriorityProperty, 2);
-        testCase.SetPropertyValue(EngineConstants.TestCategoryProperty, testCategories);
-        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
+        testCase.SetPropertyValue(AdapterTestProperties.PriorityProperty, 2);
+        testCase.SetPropertyValue(AdapterTestProperties.TestCategoryProperty, testCategories);
+        testCase.SetPropertyValue(AdapterTestProperties.TestClassNameProperty, "DummyClassName");
 
         UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
@@ -37,7 +38,7 @@ public class TestCaseExtensionsTests : TestContainer
     public void ToUnitTestElementForTestCaseWithNoPropertiesShouldReturnUnitTestElementWithDefaultFields()
     {
         TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
-        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
+        testCase.SetPropertyValue(AdapterTestProperties.TestClassNameProperty, "DummyClassName");
 
         UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
@@ -49,7 +50,7 @@ public class TestCaseExtensionsTests : TestContainer
     public void ToUnitTestElementShouldAddDeclaringClassNameToTestElementWhenAvailable()
     {
         TestCase testCase = new("DummyClass.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
-        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "DummyClassName");
+        testCase.SetPropertyValue(AdapterTestProperties.TestClassNameProperty, "DummyClassName");
 
         UnitTestElement resultUnitTestElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
 
@@ -59,7 +60,7 @@ public class TestCaseExtensionsTests : TestContainer
     public void ToUnitTestElementShouldPreferManagedTypeOverTestClassNameWhenAvailable()
     {
         TestCase testCase = new("SemanticClassName.DummyMethod", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
-        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, "SyntacticClassName");
+        testCase.SetPropertyValue(AdapterTestProperties.TestClassNameProperty, "SyntacticClassName");
         testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, "SemanticClassName");
         testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, "DummyMethod");
 
@@ -74,7 +75,7 @@ public class TestCaseExtensionsTests : TestContainer
         Type closedType = typeof(DummyGenericTestClass<int>);
         string methodName = nameof(DummyGenericTestClass<>.GenericTestMethod);
         TestCase testCase = new($"{closedType.FullName}.{methodName}", new("DummyUri", UriKind.Relative), Assembly.GetCallingAssembly().FullName!);
-        testCase.SetPropertyValue(EngineConstants.TestClassNameProperty, closedType.FullName);
+        testCase.SetPropertyValue(AdapterTestProperties.TestClassNameProperty, closedType.FullName);
         testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, typeof(DummyGenericTestClass<>).FullName);
         testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, methodName);
 

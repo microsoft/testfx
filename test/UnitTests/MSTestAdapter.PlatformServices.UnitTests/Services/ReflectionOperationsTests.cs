@@ -4,6 +4,7 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -237,9 +238,9 @@ public class ReflectionOperationsTests : TestContainer
     {
         _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("MethodKey", "MethodValue")], MemberTypes.Method);
 
-        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+        TestTrait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().BeEquivalentTo(new[] { new Trait("MethodKey", "MethodValue") }, options => options.WithStrictOrdering());
+        actual.Should().BeEquivalentTo(new[] { new TestTrait("MethodKey", "MethodValue") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -249,9 +250,9 @@ public class ReflectionOperationsTests : TestContainer
     {
         _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("ClassKey", "ClassValue")], MemberTypes.TypeInfo);
 
-        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+        TestTrait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().BeEquivalentTo(new[] { new Trait("ClassKey", "ClassValue") }, options => options.WithStrictOrdering());
+        actual.Should().BeEquivalentTo(new[] { new TestTrait("ClassKey", "ClassValue") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -262,9 +263,9 @@ public class ReflectionOperationsTests : TestContainer
         _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("MethodKey", "MethodValue")], MemberTypes.Method);
         _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("ClassKey", "ClassValue")], MemberTypes.TypeInfo);
 
-        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+        TestTrait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().BeEquivalentTo(new[] { new Trait("MethodKey", "MethodValue"), new Trait("ClassKey", "ClassValue") }, options => options.WithStrictOrdering());
+        actual.Should().BeEquivalentTo(new[] { new TestTrait("MethodKey", "MethodValue"), new TestTrait("ClassKey", "ClassValue") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -274,9 +275,9 @@ public class ReflectionOperationsTests : TestContainer
     {
         _attributeMockingHelper.AddCustomAttribute(typeof(TestPropertyAttribute), [new TestPropertyAttribute("Key1", "Value1"), new TestPropertyAttribute("Key2", "Value2")], MemberTypes.Method);
 
-        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+        TestTrait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
-        actual.Should().BeEquivalentTo(new[] { new Trait("Key1", "Value1"), new Trait("Key2", "Value2") }, options => options.WithStrictOrdering());
+        actual.Should().BeEquivalentTo(new[] { new TestTrait("Key1", "Value1"), new TestTrait("Key2", "Value2") }, options => options.WithStrictOrdering());
     }
 
     /// <summary>
@@ -286,7 +287,7 @@ public class ReflectionOperationsTests : TestContainer
     {
         _attributeMockingHelper.AddCustomAttribute(typeof(TestCategoryBaseAttribute), [new TestCategoryAttribute("SomeCategory")], MemberTypes.Method);
 
-        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
+        TestTrait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(_method.Object);
 
         actual.Should().BeEmpty();
     }
@@ -577,7 +578,7 @@ public class ReflectionOperationsTests : TestContainer
             [new TestPropertyAttribute("ClassKey", "ClassValue")],
             MemberTypes.TypeInfo);
 
-        Trait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(methodWithNullReflectedType.Object);
+        TestTrait[] actual = _reflectionOperations.GetTestPropertiesAsTraits(methodWithNullReflectedType.Object);
 
         actual.Should().BeEmpty();
     }

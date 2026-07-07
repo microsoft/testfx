@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -21,7 +20,6 @@ internal partial class TestExecutionManager
     /// Dictionary for test run parameters.
     /// </summary>
     private readonly IDictionary<string, object> _sessionParameters;
-    private readonly IEnvironment _environment;
     private readonly Func<Func<Task>, Task> _taskFactory;
 
     /// <summary>
@@ -36,18 +34,22 @@ internal partial class TestExecutionManager
     private Random? _testOrderRandom;
 
     /// <summary>
+    /// Recorder used to report test start/end/results back to the host. Supplied at the adapter boundary and set
+    /// once per run in <see cref="ExecuteTestsAsync"/> before any source is processed.
+    /// </summary>
+    private ITestResultRecorder _testResultRecorder = null!;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="TestExecutionManager"/> class.
     /// </summary>
     public TestExecutionManager()
-        : this(EnvironmentWrapper.Instance)
+        : this(null)
     {
     }
 
-    internal TestExecutionManager(IEnvironment environment, Func<Func<Task>, Task>? taskFactory = null)
+    internal TestExecutionManager(Func<Func<Task>, Task>? taskFactory = null)
     {
-        _testMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
-        _environment = environment;
         _taskFactory = taskFactory ?? DefaultFactoryAsync;
     }
 
@@ -67,9 +69,11 @@ internal partial class TestExecutionManager
     }
 
     /// <summary>
-    /// Gets or sets method filter for filtering tests.
+    /// Provider for the test filter, supplied at the adapter boundary and set once per run in
+    /// <see cref="ExecuteTestsAsync"/> so the filter is built at the same point (and with the same per-source
+    /// timing) as before.
     /// </summary>
-    private readonly TestMethodFilter _testMethodFilter;
+    private ITestElementFilterProvider? _testElementFilterProvider;
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <summary>
@@ -82,30 +86,32 @@ internal partial class TestExecutionManager
     /// Runs the tests.
     /// </summary>
     /// <param name="tests">Tests to be run.</param>
-    /// <param name="runContext">Context to use when executing the tests.</param>
-    /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
+    /// <param name="deploymentContext">Host-provided test-run directory and run settings XML.</param>
+    /// <param name="messageLogger">Logger used to report test messages back to the host.</param>
+    /// <param name="testResultRecorder">Recorder used to report test results back to the host.</param>
+    /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="runCancellationToken">Test run cancellation token.</param>
-    internal async Task RunTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
+    internal async Task RunTestsAsync(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, TestRunCancellationToken runCancellationToken)
     {
         DebugEx.Assert(tests != null, "tests");
-        DebugEx.Assert(runContext != null, "runContext");
-        DebugEx.Assert(frameworkHandle != null, "frameworkHandle");
+        DebugEx.Assert(deploymentContext != null, "deploymentContext");
+        DebugEx.Assert(messageLogger != null, "messageLogger");
         DebugEx.Assert(runCancellationToken != null, "runCancellationToken");
 
         _testRunCancellationToken = runCancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
 #if !WINDOWS_UWP && !WIN_UI
-        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+        bool isDeploymentDone = Deploy(tests, deploymentContext, messageLogger);
 #else
         const bool isDeploymentDone = false;
 #endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
-        CacheSessionParameters(runContext, frameworkHandle);
+        CacheSessionParameters(deploymentContext.RunSettingsXml, messageLogger);
 
         // Execute the tests
-        await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).ConfigureAwait(false);
+        await ExecuteTestsAsync(tests, deploymentContext, messageLogger, testResultRecorder, filterProvider, isDeploymentDone).ConfigureAwait(false);
 
 #if !WINDOWS_UWP && !WIN_UI
         if (!_hasAnyTestFailed)
@@ -115,16 +121,16 @@ internal partial class TestExecutionManager
 #endif
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, ITestSourceHandler testSourceHandler, bool isMTP, TestRunCancellationToken cancellationToken)
+    internal async Task RunTestsAsync(IEnumerable<string> sources, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, ITestSourceHandler testSourceHandler, bool isMTP, TestRunCancellationToken cancellationToken)
     {
         _testRunCancellationToken = cancellationToken;
         PlatformServiceProvider.Instance.TestRunCancellationToken = _testRunCancellationToken;
 
         var discoverySink = new TestCaseDiscoverySink();
 
-        var tests = new List<TestCase>();
+        var tests = new List<UnitTestElement>();
 
-        IAdapterMessageLogger logger = frameworkHandle.ToAdapterMessageLogger();
+        IAdapterMessageLogger logger = messageLogger;
 
         // deploy everything first.
         foreach (string source in sources)
@@ -132,24 +138,24 @@ internal partial class TestExecutionManager
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
             // discover the tests
-            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, runContext, isMTP);
-            tests.AddRange(discoverySink.Tests);
+            GetUnitTestDiscoverer(testSourceHandler).DiscoverTestsInSource(source, logger, discoverySink, deploymentContext.RunSettingsXml, filterProvider, isMTP);
+            tests.AddRange(discoverySink.TestElements);
 
             // Clear discoverSinksTests so that it just stores test for one source at one point of time
-            discoverySink.Tests.Clear();
+            discoverySink.TestElements.Clear();
         }
 
 #if !WINDOWS_UWP && !WIN_UI
-        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+        bool isDeploymentDone = Deploy(tests, deploymentContext, messageLogger);
 #else
         const bool isDeploymentDone = false;
 #endif
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
-        CacheSessionParameters(runContext, frameworkHandle);
+        CacheSessionParameters(deploymentContext.RunSettingsXml, messageLogger);
 
         // Run tests.
-        await ExecuteTestsAsync(tests, runContext, frameworkHandle, isDeploymentDone).ConfigureAwait(false);
+        await ExecuteTestsAsync(tests, deploymentContext, messageLogger, testResultRecorder, filterProvider, isDeploymentDone).ConfigureAwait(false);
 
 #if !WINDOWS_UWP && !WIN_UI
         if (!_hasAnyTestFailed)
@@ -158,6 +164,15 @@ internal partial class TestExecutionManager
         }
 #endif
     }
+
+#if !WINDOWS_UWP && !WIN_UI
+    /// <summary>
+    /// Runs deployment for the given tests via the platform-agnostic deployment service using the neutral
+    /// <see cref="DeploymentContext"/> supplied by the adapter boundary.
+    /// </summary>
+    private static bool Deploy(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger)
+        => PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, deploymentContext, messageLogger);
+#endif
 
     internal virtual UnitTestDiscoverer GetUnitTestDiscoverer(ITestSourceHandler testSourceHandler) => new(testSourceHandler);
 }

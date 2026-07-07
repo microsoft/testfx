@@ -1,8 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
@@ -62,7 +62,7 @@ internal static class ReflectionHelper
     /// <param name="reflectionOperations">The reflection operations to use.</param>
     /// <param name="testPropertyProvider">The member to inspect.</param>
     /// <returns>List of traits.</returns>
-    public static Trait[] GetTestPropertiesAsTraits(this IReflectionOperations reflectionOperations, MethodInfo testPropertyProvider)
+    public static TestTrait[] GetTestPropertiesAsTraits(this IReflectionOperations reflectionOperations, MethodInfo testPropertyProvider)
     {
         Attribute[] attributesFromMethod = reflectionOperations.GetCustomAttributesCached(testPropertyProvider);
         Attribute[] attributesFromClass = testPropertyProvider.ReflectedType is { } testClass ? reflectionOperations.GetCustomAttributesCached(testClass) : [];
@@ -89,13 +89,13 @@ internal static class ReflectionHelper
             return [];
         }
 
-        var traits = new Trait[countTestPropertyAttribute];
+        var traits = new TestTrait[countTestPropertyAttribute];
         int index = 0;
         foreach (Attribute attribute in attributesFromMethod)
         {
             if (attribute is TestPropertyAttribute testProperty)
             {
-                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
+                traits[index++] = new TestTrait(testProperty.Name, testProperty.Value);
             }
         }
 
@@ -103,7 +103,7 @@ internal static class ReflectionHelper
         {
             if (attribute is TestPropertyAttribute testProperty)
             {
-                traits[index++] = new Trait(testProperty.Name, testProperty.Value);
+                traits[index++] = new TestTrait(testProperty.Name, testProperty.Value);
             }
         }
 

@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -14,7 +13,7 @@ internal sealed partial class UnitTestRunner
 {
     // Task cannot cross app domains.
     // For now, TestExecutionManager will call this sync method which is hacky.
-    internal TestResult[] RunSingleTest(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+    internal TestResult[] RunSingleTest(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IAdapterMessageLogger messageLogger)
         => RunSingleTestAsync(unitTestElement, testContextProperties, messageLogger).GetAwaiter().GetResult();
 
     /// <summary>
@@ -24,7 +23,7 @@ internal sealed partial class UnitTestRunner
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <param name="messageLogger"> The message logger. </param>
     /// <returns> The <see cref="TestResult"/>. </returns>
-    internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+    internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IAdapterMessageLogger messageLogger)
     {
         if (unitTestElement is null)
         {
@@ -288,5 +287,5 @@ internal sealed partial class UnitTestRunner
         return true;
     }
 
-    internal void ForceCleanup(IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger) => ClassCleanupManager.ForceCleanup(_typeCache, sourceLevelParameters, logger);
+    internal void ForceCleanup(IDictionary<string, object?> sourceLevelParameters, IAdapterMessageLogger logger) => ClassCleanupManager.ForceCleanup(_typeCache, sourceLevelParameters, logger);
 }

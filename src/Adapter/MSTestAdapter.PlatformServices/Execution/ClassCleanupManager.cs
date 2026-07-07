@@ -3,7 +3,7 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 using AdapterApplicationStateGuard = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.ApplicationStateGuard;
 
@@ -53,7 +53,7 @@ internal sealed class ClassCleanupManager
         }
     }
 
-    internal static void ForceCleanup(TypeCache typeCache, IDictionary<string, object?> sourceLevelParameters, IMessageLogger logger)
+    internal static void ForceCleanup(TypeCache typeCache, IDictionary<string, object?> sourceLevelParameters, IAdapterMessageLogger logger)
     {
         IEnumerable<TestClassInfo> classInfoCache = typeCache.ClassInfoListWithExecutableCleanupMethods;
         foreach (TestClassInfo classInfo in classInfoCache)
