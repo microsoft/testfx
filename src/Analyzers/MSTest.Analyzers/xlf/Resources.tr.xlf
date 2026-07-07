@@ -563,22 +563,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">‘[GlobalTestInitialize]’ veya ‘[GlobalTestCleanup]’ ile işaretlenmiş yöntemlerin geçerli olabilmesi için şu düzeni izlemesi gerekir:
--genel bir class tanımlanamaz
--'public' olmalıdır
--'static' olmalıdır
--'async void' olmamalıdır
--özel bir metot (sonlandırıcı, işleç...) olmamalıdır.
-- genel olmamalıdır
-- 'TestContext' türünden bir parametre almalıdır
-- dönüş türü 'void', 'Task' veya 'ValueTask' olmalıdır
+        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
--Tür bir class olmalıdır
--class ‘public’ olmalıdır
--class 'static' olmamalıdır
--class '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
--class genel olmamalıdır.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
