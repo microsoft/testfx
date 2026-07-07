@@ -23,6 +23,22 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
     // can be expensive. Reuse a single instance so the token cache and chain discovery are shared.
     private static readonly Lazy<DefaultAzureCredential> DefaultCredential = new(() => new DefaultAzureCredential());
 
+    /// <summary>
+    /// The authentication mode used to create the Azure OpenAI client.
+    /// </summary>
+    internal enum AuthenticationMode
+    {
+        /// <summary>
+        /// Authenticate with an explicit API key (<c>AZURE_OPENAI_API_KEY</c>).
+        /// </summary>
+        ApiKey,
+
+        /// <summary>
+        /// Authenticate with Entra ID / managed identity via <see cref="DefaultAzureCredential"/>.
+        /// </summary>
+        DefaultAzureCredential,
+    }
+
     /// <inheritdoc />
     public bool IsAvailable =>
         !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
@@ -33,6 +49,14 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
 
     /// <inheritdoc />
     public string ModelName => Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
+
+    // Prefer an explicit API key when provided, otherwise fall back to Entra ID / managed identity
+    // authentication via DefaultAzureCredential. This keeps the provider secure-by-default for
+    // Azure-hosted scenarios where distributing API keys is undesirable.
+    internal static AuthenticationMode GetAuthenticationMode(string? apiKey)
+        => RoslynString.IsNullOrEmpty(apiKey)
+            ? AuthenticationMode.DefaultAzureCredential
+            : AuthenticationMode.ApiKey;
 
     /// <inheritdoc />
     public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)
@@ -51,12 +75,11 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_DEPLOYMENT_NAME"));
         }
 
-        // Prefer an explicit API key when provided, otherwise fall back to Entra ID / managed identity
-        // authentication via DefaultAzureCredential. This keeps the provider secure-by-default for
-        // Azure-hosted scenarios where distributing API keys is undesirable.
-        AzureOpenAIClient client = RoslynString.IsNullOrEmpty(apiKey)
-            ? new AzureOpenAIClient(new Uri(endpoint), DefaultCredential.Value)
-            : new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey));
+        AzureOpenAIClient client = GetAuthenticationMode(apiKey) switch
+        {
+            AuthenticationMode.ApiKey => new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey!)),
+            _ => new AzureOpenAIClient(new Uri(endpoint), DefaultCredential.Value),
+        };
 
         return Task.FromResult(client.GetChatClient(deploymentName).AsIChatClient());
     }

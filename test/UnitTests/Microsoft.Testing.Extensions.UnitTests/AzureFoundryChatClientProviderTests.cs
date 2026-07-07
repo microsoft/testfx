@@ -118,6 +118,10 @@ public sealed class AzureFoundryChatClientProviderTests
 
         var provider = new AzureOpenAIChatClientProvider();
 
+        // The selection logic must resolve to the API-key path when a key is present...
+        Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey, AzureOpenAIChatClientProvider.GetAuthenticationMode("secret"));
+
+        // ...and the client must be constructed without throwing.
         IChatClient client = await provider.CreateChatClientAsync(CancellationToken.None);
 
         Assert.IsNotNull(client);
@@ -132,11 +136,25 @@ public sealed class AzureFoundryChatClientProviderTests
         var provider = new AzureOpenAIChatClientProvider();
 
         // No AZURE_OPENAI_API_KEY is set, so the provider must fall back to DefaultAzureCredential.
+        Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.DefaultAzureCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(null));
+
         // Credential resolution is lazy, so client construction must not throw even without a live identity.
         IChatClient client = await provider.CreateChatClientAsync(CancellationToken.None);
 
         Assert.IsNotNull(client);
     }
+
+    [TestMethod]
+    public void GetAuthenticationMode_WithApiKey_ReturnsApiKey()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey, AzureOpenAIChatClientProvider.GetAuthenticationMode("secret"));
+
+    [TestMethod]
+    public void GetAuthenticationMode_WithoutApiKey_ReturnsDefaultAzureCredential()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.DefaultAzureCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(null));
+
+    [TestMethod]
+    public void GetAuthenticationMode_WithEmptyApiKey_ReturnsDefaultAzureCredential()
+        => Assert.AreEqual(AzureOpenAIChatClientProvider.AuthenticationMode.DefaultAzureCredential, AzureOpenAIChatClientProvider.GetAuthenticationMode(string.Empty));
 
     [TestMethod]
     public async Task CreateChatClientAsync_WhenEndpointMissing_Throws()
