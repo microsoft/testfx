@@ -130,7 +130,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
             }
 
             TestNodeStateProperty? state = update.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
-            TerminalKind kind = GetTerminalKind(state);
+            TerminalKind kind = SummaryReporterHelpers.GetTerminalKind(state);
             if (kind == TerminalKind.NotTerminal)
             {
                 return Task.CompletedTask;
@@ -394,32 +394,7 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
     }
 
     private static string FormatDuration(TimeSpan duration)
-    {
-        if (duration < TimeSpan.FromSeconds(1))
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)duration.TotalMilliseconds);
-        }
-
-        if (duration < TimeSpan.FromMinutes(1))
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0:0.00}s", duration.TotalSeconds);
-        }
-
-        if (duration < TimeSpan.FromHours(1))
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0:mm\\:ss}", duration);
-        }
-
-        // Custom format `hh` is the *hour component* and wraps at 24 hours, so for >= 1 hour runs
-        // we compute total hours explicitly to keep multi-day sessions accurate.
-        long totalHours = (long)Math.Floor(duration.TotalHours);
-        return string.Format(
-            CultureInfo.InvariantCulture,
-            "{0}:{1:D2}:{2:D2}",
-            totalHours,
-            duration.Minutes,
-            duration.Seconds);
-    }
+        => SummaryReporterHelpers.FormatDuration(duration, "{0:D2}:{1:D2}", "{0}:{1:D2}:{2:D2}");
 
     private static string EscapeCell(string value)
     {
@@ -453,52 +428,11 @@ internal sealed class AzureDevOpsSummaryReporter : IDataConsumer, ITestSessionLi
         return sb.ToString();
     }
 
-    private static TerminalKind GetTerminalKind(TestNodeStateProperty? state)
-        => state switch
-        {
-            PassedTestNodeStateProperty => TerminalKind.Passed,
-            FailedTestNodeStateProperty => TerminalKind.Failed,
-            ErrorTestNodeStateProperty => TerminalKind.Failed,
-            TimeoutTestNodeStateProperty => TerminalKind.Failed,
-            SkippedTestNodeStateProperty => TerminalKind.Skipped,
-#pragma warning disable CS0618, MTP0001
-            CancelledTestNodeStateProperty => TerminalKind.Failed,
-#pragma warning restore CS0618, MTP0001
-            _ => TerminalKind.NotTerminal,
-        };
-
     private void LogUnexpectedException(string callbackName, Exception ex)
     {
         if (_logger.IsEnabled(LogLevel.Warning))
         {
             _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
         }
-    }
-
-    internal readonly struct TestRecord
-    {
-        public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration)
-        {
-            DisplayName = displayName;
-            FullyQualifiedName = fullyQualifiedName;
-            Kind = kind;
-            Duration = duration;
-        }
-
-        public string DisplayName { get; }
-
-        public string FullyQualifiedName { get; }
-
-        public TerminalKind Kind { get; }
-
-        public TimeSpan Duration { get; }
-    }
-
-    internal enum TerminalKind
-    {
-        NotTerminal,
-        Passed,
-        Failed,
-        Skipped,
     }
 }
