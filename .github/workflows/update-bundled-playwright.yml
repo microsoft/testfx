@@ -1,0 +1,91 @@
+name: Update bundled Playwright
+
+# Keeps the MSTest.Sdk-bundled Microsoft.Playwright.MSTest.v4 version current.
+#
+# Dependabot cannot reliably do this: it discovers the package via the anchor in
+# Directory.Packages.props and even computes the new version, but drops the change
+# at PR-assembly time for this specific package. See
+# https://github.com/microsoft/testfx/issues/9362 for the full investigation.
+#
+# This workflow replaces that one Dependabot flow:
+#   - Scheduled / manual runs look up the latest STABLE release on nuget.org and,
+#     when newer, rewrite BOTH coupled values in Directory.Packages.props
+#     (the <MicrosoftPlaywrightVersion> property and the literal PackageVersion,
+#     which _ValidateBundledSdkFeatureVersions requires to stay in sync) and open
+#     a PR.
+#   - Pull-request runs that touch the script or workflow only self-test the
+#     script (no network writes, no PR) to catch regressions.
+
+on:
+  schedule:
+    # Weekly, Tuesday 07:00 UTC (offset from other scheduled workflow slots).
+    - cron: '0 7 * * 2'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/scripts/update_bundled_playwright.py'
+      - '.github/workflows/update-bundled-playwright.yml'
+
+permissions:
+  contents: read
+
+# One in-flight update at a time so scheduled + manual runs don't race on the
+# shared update-bundled-playwright/autoupdate branch.
+concurrency:
+  group: update-bundled-playwright
+  cancel-in-progress: false
+
+jobs:
+  self-test:
+    name: Self-test script
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+      - name: Validate Directory.Packages.props is in sync
+        run: python .github/scripts/update_bundled_playwright.py check
+
+  update:
+    name: Bump bundled Playwright
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: '3.12'
+
+      - name: Compute and apply update
+        id: bump
+        run: python .github/scripts/update_bundled_playwright.py update
+
+      - name: Create Pull Request
+        if: steps.bump.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7
+        with:
+          commit-message: "Update bundled Playwright for .NET to ${{ steps.bump.outputs.new_version }}"
+          title: "Update bundled Playwright for .NET to ${{ steps.bump.outputs.new_version }}"
+          body: |
+            Bumps the MSTest.Sdk-bundled `Microsoft.Playwright.MSTest.v4` from
+            `${{ steps.bump.outputs.old_version }}` to `${{ steps.bump.outputs.new_version }}`.
+
+            Updates both the `MicrosoftPlaywrightVersion` property and the matching
+            `Microsoft.Playwright.MSTest.v4` `PackageVersion` in `Directory.Packages.props`
+            so `_ValidateBundledSdkFeatureVersions` stays green.
+
+            Opened by the `update-bundled-playwright` workflow because Dependabot
+            cannot reliably open this bump (see #9362).
+          branch: update-bundled-playwright/autoupdate
+          delete-branch: true
+          labels: dependencies
