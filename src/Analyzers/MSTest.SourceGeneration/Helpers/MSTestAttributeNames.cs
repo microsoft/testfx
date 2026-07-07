@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTest.AotReflection.SourceGeneration.Helpers;
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 
 /// <summary>
 /// Fully-qualified metadata names of MSTest attributes the PoC generator understands.
