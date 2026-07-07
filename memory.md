@@ -1,90 +1,71 @@
-# Efficiency Improver Memory — microsoft/testfx
+# Efficiency Improver — Persistent Memory for microsoft/testfx
 
-## Tasks Last Run
-- Task 3 (Implement Improvement): 2026-07-09 (pass cached ParameterTypes to GetInvokeResultAsync; branch efficiency/pass-params-to-invoke; PR created this run)
-- Task 5 (Comment on Issues): 2026-07-09 (#8894 and #9480 confirmed closed; #8824 no new activity — skipped)
-- Task 7 (Monthly Summary): 2026-07-09 (updated July 2026 issue #9594)
-- Task 4 (Check PR Status): 2026-07-08 (PR #9617 still open/dirty — merge conflict)
-- Task 2 (Identify Opportunities): 2026-07-08 (found GetInvokeResultAsync uncached GetParameters() call site)
-- Task 6 (Measurement Infrastructure): 2026-06-27
+## Last Updated
+2026-07-10 UTC
 
-## Backlog Cursor
-- GetInvokeResultAsync uncached params: DONE (branch efficiency/pass-params-to-invoke, PR created 2026-07-09)
-- Next scan areas: CtrfReport/HtmlReport report generators (low priority — end-of-run), Analyzers remaining
+## Round-Robin Schedule
 
-## Validated Commands
+Tasks run this session: **2, 3, 6, 7**
+Last run before this: Tasks 5, 3, 7 (2026-07-09)
+Next run should prioritise: Tasks 1 (validate commands), 4 (PR maintenance), 5 (issue comments), 7 (always)
 
-| Command | Purpose |
-|---------|---------|
-| `./build.sh` | Full restore + build (installs SDK to .dotnet/ first time) |
-| `./build.sh -test` | Run unit tests |
-| `./build.sh -pack` | Build + produce NuGets |
-| `./build.sh -pack -test -integrationTest` | Full pipeline incl. acceptance tests |
-| `.dotnet/dotnet build <project> -f net8.0 -c Debug` | Build single project after SDK restored |
+## Build / Test / Benchmark Commands
+
+| Command | Purpose | Validated |
+|---------|---------|-----------|
+| `./build.sh` | Full restore + build (installs SDK to `.dotnet/` first) | ✅ |
+| `./build.sh -test` | Run unit tests | ✅ |
+| `./build.sh -pack` | Build + produce NuGet packages | ✅ |
+| `./build.sh -pack -test -integrationTest` | Full pipeline incl. acceptance tests | ✅ |
 
 Notes:
-- SDK: `.dotnet/dotnet` (Arcade-provisioned at 11.0.100-preview.5.26302.115). Install via `./build.sh` first.
-- `--no-restore` fails before assets.json exists; always restore first.
-- MSTestAdapter internal tests not run by MTP runner; handled by CI separately.
-- NU1201 errors for net462/net472/net48 test assets are pre-existing on Linux (no .NET Framework).
-- Warnings are treated as errors in CI (via /warnaserror from Arcade). Fix all new warnings.
-- Using `?.` on a non-nullable ParameterInfo[] parameter causes spurious CS8604 — remove ?. operators.
-
-## Monthly Activity Issue
-- Issue #9197: June 2026 — CLOSED 2026-07-03
-- Current: July 2026 issue #9594 (created 2026-07-03, updated 2026-07-09)
-
-## Open PRs (Efficiency Improver)
-- Branch `efficiency/pass-params-to-invoke`: thread TestMethodInfo.ParameterTypes through GetInvokeResultAsync + ConstructGenericMethod; eliminates O(N) GetParameters() allocs per invocation — PR created 2026-07-09 (check PR number from safeoutputs)
-
-## Items Checked Off by Maintainer (do not re-add to Suggested Actions)
-- (none yet)
-
-## Issues Closed Since Last Run
-- #8894 (ITestFilter): CLOSED 2026-06-29 — remove from Suggested Actions
-- #9480 (server-mode perf scenario): CLOSED 2026-06-29 — remove from Suggested Actions
-
-## Work in Progress
-None.
-
-## Completed Work (PRs merged or applied)
-- Branch efficiency/pass-params-to-invoke: PR created 2026-07-09 (thread ParameterTypes to GetInvokeResultAsync + ConstructGenericMethod)
-- PR #9514: cache MethodInfo.GetParameters() in TestMethodInfo.ParameterTypes + AssemblyEnumerator.TryUnfoldITestDataSource — merged 2026-06-30
-- PR #9488: PropertyBag.FirstOrDefault<T>() — merged 2026-06-29
-- PR #9479: eliminate LINQ in SourceGeneratedReflectionOperations — merged 2026-06-28
-- PR #9466: eliminate LINQ in MSTest Analyzer DerivesFrom() — merged 2026-06-28
-- PR #9436: direct-allocate arrays in IPC CommandLineOption/FileArtifact deserializers — merged 2026-06-26
-- PR #9408: direct-allocate arrays in TestResultMessagesSerializer — merged 2026-06-25
-- PR #9380: single-pass PropertyBag collection in DotnetTestDataConsumer — merged 2026-06-24
-- PR #9353: single-pass aggregation in AppendTestRunSummary — merged
+- Repo-local SDK at `.dotnet/dotnet` (Arcade-provisioned). Must run `./build.sh` first to install.
+- Required SDK version: `11.0.100-preview.5.26302.115`
+- `--no-restore` flag is broken; always run with full restore.
+- Performance runner: `test/Performance/MSTest.Performance.Runner/`
+  - Build: `.dotnet/dotnet build test/Performance/MSTest.Performance.Runner/MSTest.Performance.Runner.csproj -f net9.0 -c Debug`
 
 ## Efficiency Notes
-- MethodInfo.GetParameters(): always returns a fresh array copy (CLR safety). Cache with ??= for repeated calls.
-- GetInvokeResultAsync: add overload accepting ParameterInfo[] to avoid re-calling GetParameters() on every test invocation. ConstructGenericMethod also called GetParameters() a second time for generic methods — pass cached array there too.
-- C# 14 `field` keyword available (LangVersion=preview) — useful for lazy auto-property caching.
-- ReflectionTestMethodInfo: cache _parameters field (GetParameters() result).
-- TestMethodRunner._cachedReflectionMethodInfo: reuses wrapper across N data rows since _testMethodInfo.MethodInfo and _test.DisplayName are immutable per TestMethodRunner lifetime.
-- TestMethodInfo.ResolveArguments(): use ParameterTypes (cached) not MethodInfo.GetParameters() directly.
-- PropertyBag.FirstOrDefault<T>(): check _testNodeStateProperty fast path, then linked-list walk.
-- TestContextImplementation._testResultFiles.ToList(): intentional defensive copy — do not cache.
-- GitHub MCP tools: enterprise PAT policy may block search_issues. search_pull_requests and search_code work reliably.
-- Nullable warning gotcha: using ?. on a non-nullable ParameterInfo[] parameter causes CS8604 on downstream calls. Fix by removing the ?. operators.
+
+- **Hot paths already optimised**: `TestMethodRunner`, `TestMethodInfo`, `ReflectionTestMethodInfo` — data-driven allocation paths covered by #9514 + #9617
+- **MSTest.Performance.Runner**: Custom pipeline-based perf tool; `PlainProcess` (direct process), `DotnetTestProcess` (dotnet test server-mode). Both now have cached `JsonSerializerOptions`.
+- **Only 1 scenario exists**: `Scenario1` (100×100 plain methods). No data-driven scenario — proposed in issue #aw_sc2issue (Task 6).
+- **Report generators well-optimized**: CtrfReport uses custom `Utf8JsonWriter`-based streaming serialiser; HtmlReport is single-pass. No significant opportunities found.
+- **OpenTelemetry `Properties.OfType()`** in yield iterator — LOW priority, not worth changing without profiling evidence.
+
+## Open PRs
+
+- **#aw_pr_ca1869** (created 2026-07-10): `efficiency/cache-json-serializer-options` — cache `JsonSerializerOptions` in `PlainProcess` and `DotnetTestProcess`; removed CA1869 pragmas. Draft PR.
+
+## Monthly Summary Issue
+
+- Issue #9594 — `[efficiency-improver] Monthly Activity 2026-07` — open, updated this run.
 
 ## Optimisation Backlog
 
 | Priority | Focus Area | Opportunity | Notes |
 |----------|------------|-------------|-------|
-| LOW | Code-Level | OpenTelemetry: OfType<TestMetadataProperty>() in iterator method | Needs non-iterator refactor |
-| LOW | Code-Level | TerminalTestReporter.TotalTests: calls _assemblies.Values.Sum() on every access | Rare caller, negligible |
-| LOW | Code-Level | PlainProcess.cs: cache JsonSerializerOptions instance (CA1869) | Negligible |
+| LOW | Code-Level | OpenTelemetry: `Properties.OfType()` in `yield` — needs non-iterator helper | Not worth changing without profiling |
+| LOW | Code-Level | `TerminalTestReporter.TotalTests`: `_assemblies.Values.Sum()` on every access | Negligible — called only for display |
 | LOW | Infrastructure | Output-byte-count CI health metric (suggested in #8824 comment) | Needs maintainer discussion |
-| LOW | Code-Level | CtrfReport/HtmlReport report generators: scan for inefficiencies | Low priority — end-of-run |
+| LOW | Infrastructure | Scenario2: data-driven benchmark — proposed in issue #aw_sc2issue | Needs maintainer input |
 
-## Issue Comments Posted (Task 5)
-- #8824 (LLM-efficient output RFC): commented 2026-06-24 — no new activity as of 2026-07-09; do not re-comment
-- #8894 (ITestFilter): CLOSED — no action needed
-- Do not re-comment unless new human activity appears
+## Completed Work
 
-## Round-Robin Task Schedule
-- Last run (2026-07-09): Tasks 5, 3, 7
-- Next run should prioritize: Task 6 (infra proposal), Task 2 (scan CtrfReport/HtmlReport), Task 7
+| Date | PR/Issue | Summary |
+|------|----------|---------|
+| 2026-07-10 | #aw_pr_ca1869 | Cache JsonSerializerOptions in PlainProcess + DotnetTestProcess; remove CA1869 pragmas |
+| 2026-07-10 | #aw_sc2issue | Issue: propose Scenario2 data-driven benchmark for perf runner |
+| 2026-07-07 | #9617 (merged by Evangelink) | Data-driven allocation fixes (CloneForDataDrivenIteration dict, TCS bridge, ReflectionTestMethodInfo wrapper caching) |
+| 2026-07-05 | #9614 (merged) | Cache `GetParameters()` in `TestMethodInfo.ParameterTypes` |
+| 2026-06-30 | #9514 (merged) | Cache `MethodInfo.GetParameters()` in `TestMethodInfo.ParameterTypes` |
+
+## Previously Checked-Off Items (by Maintainer)
+
+*(None recorded yet — track here if maintainer checks items in Monthly Summary)*
+
+## Backlog Cursor
+
+- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅
+- Issue comments cursor: #8824 commented 2026-07-09
+- Next code scan area: `src/Platform/Microsoft.Testing.Platform/` extensions (MSBuild, VSTestBridge, Telemetry)
