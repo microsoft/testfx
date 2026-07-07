@@ -29,12 +29,6 @@ on:
 permissions:
   contents: read
 
-# One in-flight update at a time so scheduled + manual runs don't race on the
-# shared update-bundled-playwright/autoupdate branch.
-concurrency:
-  group: update-bundled-playwright
-  cancel-in-progress: false
-
 jobs:
   self-test:
     name: Self-test script
@@ -54,6 +48,12 @@ jobs:
     name: Bump bundled Playwright
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    # One in-flight update at a time so scheduled + manual runs don't race on the
+    # shared update-bundled-playwright/autoupdate branch. Scoped to this job so
+    # read-only PR self-tests are never gated behind the update lock.
+    concurrency:
+      group: update-bundled-playwright
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: write
