@@ -142,6 +142,21 @@ internal static class UnitTestElementExtensions
         return testCase;
     }
 
+    /// <summary>
+    /// Computes the stable test identifier for a <see cref="UnitTestElement"/> without materializing a VSTest
+    /// <see cref="TestCase"/>. This is the same identifier surfaced as <see cref="TestCase.Id"/> by
+    /// <see cref="ToTestCase"/>, exposed neutrally so the native Microsoft.Testing.Platform integration can build
+    /// a <c>TestNode</c> UID without depending on the VSTest object model.
+    /// </summary>
+    /// <param name="element">The test element to identify.</param>
+    /// <returns>The stable, versioned test identifier.</returns>
+    internal static Guid GetTestId(this UnitTestElement element)
+    {
+        TestMethod testMethod = element.TestMethod;
+        string testFullName = $"{testMethod.FullClassName}.{testMethod.Name}";
+        return GenerateSerializedDataStrategyTestId(element, testFullName);
+    }
+
     private static Guid GenerateSerializedDataStrategyTestId(UnitTestElement element, string testFullName)
     {
         TestMethod testMethod = element.TestMethod;
