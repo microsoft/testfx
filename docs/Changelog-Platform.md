@@ -47,6 +47,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+* Emit `::warning` annotations for skipped tests in `Microsoft.Testing.Extensions.GitHubActionsReport` by @Evangelink in [#9641](https://github.com/microsoft/testfx/pull/9641)
 
 ### Fixed
 
@@ -1050,7 +1051,7 @@ See full log [of v1.3.2...v1.4.0](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.3.2" />[1.3.2] - 2024-08-05
 
-See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/compare/v1.3.1...v1.3.2)
+See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testfx/compare/v1.3.1...v1.3.2)
 
 ### Fixed
 
@@ -1074,7 +1075,7 @@ See full log [of v1.3.1...v1.3.2](https://github.com/microsoft/testanywhere/comp
 
 ## <a name="1.3.1" />[1.3.1] - 2024-07-15
 
-See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testanywhere/compare/v1.2.1...v1.3.1)
+See full log [of v1.2.1...v1.3.1](https://github.com/microsoft/testfx/compare/v1.2.1...v1.3.1)
 
 ### Added
 
