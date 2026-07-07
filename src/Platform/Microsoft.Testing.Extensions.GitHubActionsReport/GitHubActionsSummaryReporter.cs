@@ -98,7 +98,7 @@ internal sealed class GitHubActionsSummaryReporter :
             }
 
             TestNodeStateProperty? state = update.TestNode.Properties.FirstOrDefault<TestNodeStateProperty>();
-            TerminalKind kind = GetTerminalKind(state);
+            TerminalKind kind = SummaryReporterHelpers.GetTerminalKind(state);
             if (kind == TerminalKind.NotTerminal)
             {
                 return Task.CompletedTask;
@@ -280,67 +280,8 @@ internal sealed class GitHubActionsSummaryReporter :
     }
 
     private static string FormatDuration(TimeSpan duration)
-    {
-        if (duration < TimeSpan.FromSeconds(1))
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}ms", (int)duration.TotalMilliseconds);
-        }
-
-        if (duration < TimeSpan.FromMinutes(1))
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0:0.00}s", duration.TotalSeconds);
-        }
-
-        if (duration < TimeSpan.FromHours(1))
-        {
-            return string.Format(CultureInfo.InvariantCulture, "{0}m {1:00}s", (int)duration.TotalMinutes, duration.Seconds);
-        }
-
-        long totalHours = (long)Math.Floor(duration.TotalHours);
-        return string.Format(CultureInfo.InvariantCulture, "{0}h {1:00}m {2:00}s", totalHours, duration.Minutes, duration.Seconds);
-    }
+        => SummaryReporterHelpers.FormatDuration(duration, "{0}m {1:00}s", "{0}h {1:00}m {2:00}s");
 
     private static string EscapeInlineCode(string value)
         => RoslynString.IsNullOrEmpty(value) ? value : value.Replace("`", "'").Replace("\r", string.Empty).Replace("\n", " ");
-
-    private static TerminalKind GetTerminalKind(TestNodeStateProperty? state)
-        => state switch
-        {
-            PassedTestNodeStateProperty => TerminalKind.Passed,
-            FailedTestNodeStateProperty => TerminalKind.Failed,
-            ErrorTestNodeStateProperty => TerminalKind.Failed,
-            TimeoutTestNodeStateProperty => TerminalKind.Failed,
-            SkippedTestNodeStateProperty => TerminalKind.Skipped,
-#pragma warning disable CS0618, MTP0001
-            CancelledTestNodeStateProperty => TerminalKind.Failed,
-#pragma warning restore CS0618, MTP0001
-            _ => TerminalKind.NotTerminal,
-        };
-
-    internal readonly struct TestRecord
-    {
-        public TestRecord(string displayName, string fullyQualifiedName, TerminalKind kind, TimeSpan duration)
-        {
-            DisplayName = displayName;
-            FullyQualifiedName = fullyQualifiedName;
-            Kind = kind;
-            Duration = duration;
-        }
-
-        public string DisplayName { get; }
-
-        public string FullyQualifiedName { get; }
-
-        public TerminalKind Kind { get; }
-
-        public TimeSpan Duration { get; }
-    }
-
-    internal enum TerminalKind
-    {
-        NotTerminal,
-        Passed,
-        Failed,
-        Skipped,
-    }
 }

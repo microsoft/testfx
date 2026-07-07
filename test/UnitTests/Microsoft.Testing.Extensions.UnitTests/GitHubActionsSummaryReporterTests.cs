@@ -5,6 +5,9 @@ extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
+using GitHubActionsTerminalKind = ghactions::Microsoft.Testing.Extensions.TerminalKind;
+using GitHubActionsTestRecord = ghactions::Microsoft.Testing.Extensions.TestRecord;
+
 namespace Microsoft.Testing.Extensions.UnitTests;
 
 [TestClass]
@@ -13,11 +16,11 @@ public sealed class GitHubActionsSummaryReporterTests
     [TestMethod]
     public void BuildMarkdown_AllPassing_UsesSuccessIconAndTotals()
     {
-        GitHubActionsSummaryReporter.TestRecord[] records =
+        GitHubActionsTestRecord[] records =
         [
-            new("Add", "CalculatorTests.Add", GitHubActionsSummaryReporter.TerminalKind.Passed, TimeSpan.FromMilliseconds(10)),
-            new("Sub", "CalculatorTests.Sub", GitHubActionsSummaryReporter.TerminalKind.Passed, TimeSpan.FromMilliseconds(20)),
-            new("Skip", "CalculatorTests.Skip", GitHubActionsSummaryReporter.TerminalKind.Skipped, TimeSpan.Zero),
+            new("Add", "CalculatorTests.Add", GitHubActionsTerminalKind.Passed, TimeSpan.FromMilliseconds(10)),
+            new("Sub", "CalculatorTests.Sub", GitHubActionsTerminalKind.Passed, TimeSpan.FromMilliseconds(20)),
+            new("Skip", "CalculatorTests.Skip", GitHubActionsTerminalKind.Skipped, TimeSpan.Zero),
         ];
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "CalculatorTests", "net9.0");
@@ -30,10 +33,10 @@ public sealed class GitHubActionsSummaryReporterTests
     [TestMethod]
     public void BuildMarkdown_WithFailures_UsesFailureIconAndListsFailures()
     {
-        GitHubActionsSummaryReporter.TestRecord[] records =
+        GitHubActionsTestRecord[] records =
         [
-            new("Pass", "StringUtilsTests.Pass", GitHubActionsSummaryReporter.TerminalKind.Passed, TimeSpan.FromMilliseconds(5)),
-            new("Boom", "StringUtilsTests.Boom", GitHubActionsSummaryReporter.TerminalKind.Failed, TimeSpan.FromMilliseconds(7)),
+            new("Pass", "StringUtilsTests.Pass", GitHubActionsTerminalKind.Passed, TimeSpan.FromMilliseconds(5)),
+            new("Boom", "StringUtilsTests.Boom", GitHubActionsTerminalKind.Failed, TimeSpan.FromMilliseconds(7)),
         ];
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "StringUtilsTests", "net9.0");
@@ -46,10 +49,10 @@ public sealed class GitHubActionsSummaryReporterTests
     [TestMethod]
     public void BuildMarkdown_EmitsSlowestTestsSortedByDuration()
     {
-        GitHubActionsSummaryReporter.TestRecord[] records =
+        GitHubActionsTestRecord[] records =
         [
-            new("Fast", "T.Fast", GitHubActionsSummaryReporter.TerminalKind.Passed, TimeSpan.FromMilliseconds(10)),
-            new("Slow", "T.Slow", GitHubActionsSummaryReporter.TerminalKind.Passed, TimeSpan.FromSeconds(65)),
+            new("Fast", "T.Fast", GitHubActionsTerminalKind.Passed, TimeSpan.FromMilliseconds(10)),
+            new("Slow", "T.Slow", GitHubActionsTerminalKind.Passed, TimeSpan.FromSeconds(65)),
         ];
 
         string markdown = GitHubActionsSummaryReporter.BuildMarkdown(records, "T", "net9.0");
