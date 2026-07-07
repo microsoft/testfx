@@ -51,6 +51,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-07 | Task 3 (MSTEST0062 AvoidOutRefTestMethodParameters edge cases), Task 4, Task 7 |
 | 2026-07-06 | Task 3 (MSTEST0020/0021 edge cases — redo after prior PR intent did not materialize), Task 7 |
 | 2026-07-05 | Task 3 (PreferConstructorOverTestInitialize MSTEST0020 + PreferDisposeOverTestCleanup MSTEST0021 edge cases), Task 7 |
 | 2026-07-04 | Task 3 (UseCooperativeCancellationForTimeout MSTEST0045: async method, non-TestClass, named arg), Task 7 |
@@ -66,11 +67,12 @@
 
 ## Last Run
 
-2026-07-06 23:19 UTC
+2026-07-07 23:15 UTC
 
 ## Completed Work (recent)
 
-- PR for MSTEST0020/0021 (pending, created 2026-07-06) — non-TestClass diagnostic + parameterized-ctor merge fixer; 3 new tests
+- PR for MSTEST0062 (created 2026-07-07) — AvoidOutRefTestMethodParameters edge cases: derived attr, no-TestClass guard, `in` parameter (3 new tests)
+- PR #9669 MERGED (2026-07-07 by Evangelink) — MSTEST0020/0021 edge cases (non-TestClass diagnostic + parameterized-ctor fixer merge)
 - PR #9615 MERGED — MSTEST0045/0050/0060 edge cases (merged 2026-07-05 by Evangelink)
 - PR #9516 merged — UseAttributeOnTestMethodAnalyzer (MSTEST0007) edge cases (merged 2026-06-30)
 - PR #9489 merged — DoNotUseShadowingAnalyzer MSTEST0036
