@@ -16,8 +16,6 @@ See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 ## <a name="2.3.1" />[2.3.1] - 2026-07-08
 
-See full log [of v4.3.0...v4.3.1](https://github.com/microsoft/testfx/compare/v4.3.0...v4.3.1)
-
 ### Fixed
 
 * Fix forward-compat crash (`MissingMethodException`) loading old 2.x extensions (Telemetry, TrxReport, VSTestBridge) on .NET Framework by @Evangelink in [#9739](https://github.com/microsoft/testfx/pull/9739)
