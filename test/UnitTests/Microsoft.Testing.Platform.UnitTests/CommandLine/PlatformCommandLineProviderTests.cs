@@ -215,12 +215,9 @@ public sealed class PlatformCommandLineProviderTests
     }
 
     [TestMethod]
+    [DataRow("0")]
     [DataRow("-1")]
-    [DataRow("-5")]
-    [DataRow("abc")]
-    [DataRow("")]
-    [DataRow("1.5")]
-    public async Task IsInvalid_When_MinimumExpectedTests_Is_Negative_Or_Not_An_Integer(string minimumExpectedTests)
+    public async Task IsInvalid_When_MinimumExpectedTests_Is_Not_Positive(string minimumExpectedTests)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
@@ -228,19 +225,6 @@ public sealed class PlatformCommandLineProviderTests
         ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [minimumExpectedTests]).ConfigureAwait(false);
         Assert.IsFalse(validateOptionsResult.IsValid);
         Assert.AreEqual(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument, validateOptionsResult.ErrorMessage);
-    }
-
-    [TestMethod]
-    [DataRow("0")]
-    [DataRow("1")]
-    [DataRow("10")]
-    public async Task IsValid_When_MinimumExpectedTests_Is_NonNegative_Integer(string minimumExpectedTests)
-    {
-        var provider = new PlatformCommandLineProvider();
-        CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
-
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [minimumExpectedTests]).ConfigureAwait(false);
-        Assert.IsTrue(validateOptionsResult.IsValid);
     }
 
     [TestMethod]

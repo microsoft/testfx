@@ -169,19 +169,7 @@ Test discovery summary: found 1 test\(s\)\ - .*\.(dll|exe) \(net.+\|.+\)
         TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests=-1", cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Option '--minimum-expected-tests' has invalid arguments: '--minimum-expected-tests' expects a single non-negative integer value");
-    }
-
-    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
-    [TestMethod]
-    public async Task Exec_WhenMinimumExpectedTestsIsZeroAndNoTestsRun_ResultIsOk(string tfm)
-    {
-        var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
-        // The uid filter matches no test, so zero tests run. An explicit '--minimum-expected-tests 0'
-        // accepts that empty run and supersedes the "zero tests ran" (exit code 8) verdict. See issue #7457.
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter-uid 2 --minimum-expected-tests 0", cancellationToken: TestContext.CancellationToken);
-
-        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Option '--minimum-expected-tests' has invalid arguments: '--minimum-expected-tests' expects a single non-zero positive integer value");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]

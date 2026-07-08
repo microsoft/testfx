@@ -497,7 +497,7 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
     <comment>{Locked="--list-tests"}{Locked="--minimum-expected-tests"}</comment>
   </data>
   <data name="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument" xml:space="preserve">
-    <value>'--minimum-expected-tests' expects a single non-negative integer value
+    <value>'--minimum-expected-tests' expects a single non-zero positive integer value
 (e.g. '--minimum-expected-tests 10')</value>
     <comment>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</comment>
   </data>
