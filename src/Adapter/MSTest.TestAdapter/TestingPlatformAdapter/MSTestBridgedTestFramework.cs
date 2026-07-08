@@ -22,12 +22,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [StackTraceHidden]
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework
 {
-    // Opt-in switch for the experimental native Microsoft.Testing.Platform integration: when enabled, MSTest
-    // publishes test nodes directly from its neutral execution model instead of routing discovery and results
-    // through the VSTest bridge object model. Off by default, so the shipping behavior is unchanged.
-    private static readonly bool UseNativeMtpProduction =
-        Environment.GetEnvironmentVariable("MSTEST_EXPERIMENTAL_NATIVE_MTP") is "1" or "true" or "True";
-
     private readonly BridgedConfiguration? _configuration;
     private readonly ILoggerFactory _loggerFactory;
 
@@ -50,16 +44,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        var discoverer = new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender());
-        if (UseNativeMtpProduction && SessionUid is { } sessionUid)
-        {
-            // Publish discovered test nodes directly from the neutral model; the VSTest discovery sink in the
-            // request is bypassed (no VSTest TestCase materialization / ObjectModelConverters round-trip).
-            var elementSink = new MtpUnitTestElementSink(messageBus, this, sessionUid, IsTrxEnabled);
-            return discoverer.DiscoverTestsAsync(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, elementSink, _configuration, isMTP: true);
-        }
-
-        return discoverer.DiscoverTestsAsync(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration, isMTP: true);
+        return new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender()).DiscoverTestsAsync(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink, _configuration, isMTP: true);
     }
 
     /// <inheritdoc />
@@ -73,20 +58,6 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
         }
 
         MSTestExecutor testExecutor = new(cancellationToken, CreateTelemetrySender());
-        if (UseNativeMtpProduction && SessionUid is { } sessionUid)
-        {
-            // Report results directly as native test nodes; the framework handle is still used for message logging
-            // and apartment-state handling, but its VSTest RecordResult / ObjectModelConverters path is bypassed.
-            await testExecutor.RunTestsAsync(
-                request.AssemblyPaths,
-                request.RunContext,
-                request.FrameworkHandle,
-                settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
-                _configuration,
-                isMTP: true).ConfigureAwait(false);
-            return;
-        }
-
         await testExecutor.RunTestsAsync(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, _configuration, isMTP: true).ConfigureAwait(false);
     }
 
