@@ -12,7 +12,7 @@ See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
 
-## <a name="4.3.0" />[4.3.0] - UNRELEASED
+## <a name="4.3.0" />[4.3.0] - 2026-07-08
 
 See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
 
