@@ -1,1 +1,5 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Extensions.GitHubActionsExtensions
+[TPEXP]static Microsoft.Testing.Extensions.GitHubActionsExtensions.AddGitHubActionsProvider(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder) -> void
+Microsoft.Testing.Extensions.GitHubActionsReport.TestingPlatformBuilderHook
+static Microsoft.Testing.Extensions.GitHubActionsReport.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! _) -> void
