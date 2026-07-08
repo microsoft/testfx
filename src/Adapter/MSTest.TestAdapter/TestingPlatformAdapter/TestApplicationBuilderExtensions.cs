@@ -43,12 +43,20 @@ public static class TestApplicationBuilderExtensions
         testApplicationBuilder.AddTestRunParametersService(extension);
         testApplicationBuilder.AddMaximumFailedTestsService(extension);
         testApplicationBuilder.AddRunSettingsEnvironmentVariableProvider(extension);
+
+        // When the experimental native MTP integration is enabled, MSTest plugs into Microsoft.Testing.Platform
+        // directly (no VSTest bridge object model on the request path). Off by default, so shipping behavior is
+        // the bridged framework.
+        bool useNativeMtp = Environment.GetEnvironmentVariable("MSTEST_EXPERIMENTAL_NATIVE_MTP") is "1" or "true" or "True";
+
         testApplicationBuilder.RegisterTestFramework(
             serviceProvider => new TestFrameworkCapabilities(
                 new MSTestCapabilities(),
                 new MSTestBannerCapability(serviceProvider.GetRequiredService<IPlatformInformation>()),
                 MSTestGracefulStopTestExecutionCapability.Instance),
-            (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
+            (capabilities, serviceProvider) => useNativeMtp
+                ? new MSTestTestFramework(extension, getTestAssemblies, serviceProvider, capabilities)
+                : new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
     }
 }
 #endif
