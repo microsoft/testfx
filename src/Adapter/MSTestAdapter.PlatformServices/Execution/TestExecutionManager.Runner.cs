@@ -8,7 +8,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal partial class TestExecutionManager
 {
-    internal void SendTestResults(
+    internal async Task SendTestResultsAsync(
         UnitTestElement test,
         TestTools.UnitTesting.TestResult[] unitTestResults,
         DateTimeOffset startTime,
@@ -17,7 +17,7 @@ internal partial class TestExecutionManager
     {
         if (unitTestResults.Length == 0)
         {
-            testResultRecorder.RecordEmptyResult(test);
+            await testResultRecorder.RecordEmptyResultAsync(test).ConfigureAwait(false);
             return;
         }
 
@@ -26,12 +26,12 @@ internal partial class TestExecutionManager
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
 #if !WINDOWS_UWP && !WIN_UI
-            if (testResultRecorder.RecordResult(test, unitTestResult, startTime, endTime))
+            if (await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false))
             {
                 _hasAnyTestFailed = true;
             }
 #else
-            testResultRecorder.RecordResult(test, unitTestResult, startTime, endTime);
+            await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false);
 #endif
         }
     }
@@ -81,7 +81,7 @@ internal partial class TestExecutionManager
 
             // Report through the neutral recorder using the element itself; the adapter-side recorder resolves
             // the host test case (preserving host-injected TCM / data-collector properties) with full fidelity.
-            _testResultRecorder.RecordStart(currentTest);
+            await _testResultRecorder.RecordStartAsync(currentTest).ConfigureAwait(false);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
@@ -119,7 +119,7 @@ internal partial class TestExecutionManager
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
-            SendTestResults(currentTest, unitTestResult, startTime, endTime, _testResultRecorder);
+            await SendTestResultsAsync(currentTest, unitTestResult, startTime, endTime, _testResultRecorder).ConfigureAwait(false);
         }
     }
 }

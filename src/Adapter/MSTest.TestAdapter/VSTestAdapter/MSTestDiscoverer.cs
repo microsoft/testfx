@@ -59,6 +59,31 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
 
     internal async Task DiscoverTestsAsync(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration, bool isMTP)
     {
+        if (discoverySink is null)
+        {
+            throw new ArgumentNullException(nameof(discoverySink));
+        }
+
+        await DiscoverTestsCoreAsync(sources, discoveryContext, logger, elementSink: null, discoverySink, configuration, isMTP).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Discovers tests, reporting each discovered element directly to a platform-agnostic
+    /// <see cref="IUnitTestElementSink"/> (used by the native Microsoft.Testing.Platform integration, which
+    /// publishes test nodes itself and does not need a VSTest <see cref="ITestCaseDiscoverySink"/>).
+    /// </summary>
+    internal async Task DiscoverTestsAsync(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, IUnitTestElementSink elementSink, IConfiguration? configuration, bool isMTP)
+    {
+        if (elementSink is null)
+        {
+            throw new ArgumentNullException(nameof(elementSink));
+        }
+
+        await DiscoverTestsCoreAsync(sources, discoveryContext, logger, elementSink, discoverySink: null, configuration, isMTP).ConfigureAwait(false);
+    }
+
+    private async Task DiscoverTestsCoreAsync(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger logger, IUnitTestElementSink? elementSink, ITestCaseDiscoverySink? discoverySink, IConfiguration? configuration, bool isMTP)
+    {
         if (sources is null)
         {
             throw new ArgumentNullException(nameof(sources));
@@ -67,11 +92,6 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         if (logger is null)
         {
             throw new ArgumentNullException(nameof(logger));
-        }
-
-        if (discoverySink is null)
-        {
-            throw new ArgumentNullException(nameof(discoverySink));
         }
 
         // Initialize telemetry collection if not already set (e.g. first call in the session).
@@ -85,9 +105,10 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         try
         {
             IAdapterMessageLogger adapterLogger = logger.ToAdapterMessageLogger();
+            IUnitTestElementSink unitTestElementSink = elementSink ?? discoverySink!.ToUnitTestElementSink();
             if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext?.RunSettings?.SettingsXml, adapterLogger, configuration, _testSourceHandler))
             {
-                new UnitTestDiscoverer(_testSourceHandler).DiscoverTests(sources, adapterLogger, discoverySink.ToUnitTestElementSink(), discoveryContext?.RunSettings?.SettingsXml, new TestElementFilterProvider(discoveryContext), isMTP);
+                await new UnitTestDiscoverer(_testSourceHandler).DiscoverTestsAsync(sources, adapterLogger, unitTestElementSink, discoveryContext?.RunSettings?.SettingsXml, new TestElementFilterProvider(discoveryContext), isMTP).ConfigureAwait(false);
             }
         }
         finally

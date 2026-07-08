@@ -22,7 +22,7 @@ internal class UnitTestDiscoverer
     /// <param name="settingsXml"> The run settings XML, or <see langword="null"/> when none was provided. </param>
     /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
-    internal void DiscoverTests(
+    internal async Task DiscoverTestsAsync(
         IEnumerable<string> sources,
         IAdapterMessageLogger logger,
         IUnitTestElementSink discoverySink,
@@ -32,7 +32,7 @@ internal class UnitTestDiscoverer
     {
         foreach (string source in sources)
         {
-            DiscoverTestsInSource(source, logger, discoverySink, settingsXml, filterProvider, isMTP);
+            await DiscoverTestsInSourceAsync(source, logger, discoverySink, settingsXml, filterProvider, isMTP).ConfigureAwait(false);
         }
     }
 
@@ -45,7 +45,7 @@ internal class UnitTestDiscoverer
     /// <param name="settingsXml"> The run settings XML, or <see langword="null"/> when none was provided. </param>
     /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
-    internal virtual void DiscoverTestsInSource(
+    internal virtual async Task DiscoverTestsInSourceAsync(
         string source,
         IAdapterMessageLogger logger,
         IUnitTestElementSink discoverySink,
@@ -100,12 +100,12 @@ internal class UnitTestDiscoverer
                 source);
         }
 
-        SendTestCases(testElements, discoverySink, filterProvider, logger);
+        await SendTestCasesAsync(testElements, discoverySink, filterProvider, logger).ConfigureAwait(false);
     }
 
     private readonly ITestSourceHandler _testSource;
 
-    internal static void SendTestCases(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, ITestElementFilterProvider? filterProvider, IAdapterMessageLogger logger)
+    internal static async Task SendTestCasesAsync(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, ITestElementFilterProvider? filterProvider, IAdapterMessageLogger logger)
     {
         // Get filter and skip discovery in case filter expression has parsing error.
         bool filterHasError = false;
@@ -123,7 +123,7 @@ internal class UnitTestDiscoverer
                 continue;
             }
 
-            discoverySink.SendTestElement(testElement);
+            await discoverySink.SendTestElementAsync(testElement).ConfigureAwait(false);
         }
     }
 }

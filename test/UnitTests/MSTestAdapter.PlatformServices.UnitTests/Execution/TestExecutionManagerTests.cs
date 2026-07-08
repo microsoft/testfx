@@ -135,12 +135,12 @@ public class TestExecutionManagerTests : TestContainer
         expectedResultList.SequenceEqual(_frameworkHandle.ResultsList).Should().BeTrue();
     }
 
-    public void SendTestResults_WhenUnitTestResultsIsEmpty_RecordsEndWithoutResult()
+    public async Task SendTestResults_WhenUnitTestResultsIsEmpty_RecordsEndWithoutResult()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
         Microsoft.VisualStudio.TestTools.UnitTesting.TestResult[] unitTestResults = [];
 
-        _testExecutionManager.SendTestResults(ToUnitTestElement(testCase), unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle.ToTestResultRecorder(EnvironmentWrapper.Instance.MachineName, MSTestSettings.CurrentSettings));
+        await _testExecutionManager.SendTestResultsAsync(ToUnitTestElement(testCase), unitTestResults, DateTimeOffset.Now, DateTimeOffset.Now, _frameworkHandle.ToTestResultRecorder(EnvironmentWrapper.Instance.MachineName, MSTestSettings.CurrentSettings));
 
         _frameworkHandle.TestCaseEndList.Should().Equal("PassingTest:None");
         _frameworkHandle.ResultsList.Should().BeEmpty();

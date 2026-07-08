@@ -24,5 +24,6 @@ internal interface IUnitTestElementSink
     /// Reports a discovered <paramref name="testElement"/> to the running test host.
     /// </summary>
     /// <param name="testElement">The discovered test element.</param>
-    void SendTestElement(UnitTestElement testElement);
+    /// <returns>A task that completes once the element has been reported.</returns>
+    Task SendTestElementAsync(UnitTestElement testElement);
 }
