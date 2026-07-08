@@ -47,7 +47,7 @@ internal static class TestRunParameters
 
                     break;
                 default:
-                    throw new InvalidRunSettingsException(
+                    throw new AdapterSettingsException(
                         string.Format(
                             CultureInfo.CurrentCulture,
                             Resource.InvalidSettingsXmlElement,
