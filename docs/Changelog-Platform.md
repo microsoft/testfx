@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="2.3.0" />[2.3.0] - UNRELEASED
+## <a name="2.4.0" />[2.4.0] - UNRELEASED
+
+See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.0...v4.4.0)
+
+### Added
+
+* Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
+* Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
+* Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
+
+## <a name="2.3.0" />[2.3.0] - 2026-07-07
 
 See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
 
@@ -44,9 +54,6 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Forward Azure DevOps logging commands over the dotnet test pipe for multi-assembly test runs by @Evangelink in [#9463](https://github.com/microsoft/testfx/pull/9463)
 * Add `PropertyBag.FirstOrDefault<TProperty>()` for efficient single-property lookup without per-call array allocation by @Evangelink in [#9488](https://github.com/microsoft/testfx/pull/9488)
 * Add experimental `Microsoft.Testing.Extensions.GitHubActionsReport` extension emitting GitHub Actions workflow commands (per-assembly log groups, failure annotations, job summary, slow-test notices) by @azat-msft in [#9541](https://github.com/microsoft/testfx/pull/9541)
-* Add `--report-azdo-groups <on|off>` and `--report-azdo-annotations <on|off>` toggles to Azure DevOps report extension by @Evangelink in [#9542](https://github.com/microsoft/testfx/pull/9542)
-* Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
-* Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
 * Emit `::warning` annotations for skipped tests in `Microsoft.Testing.Extensions.GitHubActionsReport` by @Evangelink in [#9641](https://github.com/microsoft/testfx/pull/9641)
 
 ### Fixed
@@ -86,6 +93,18 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Fix --list-tests json output under --server mode by streaming discovered tests to the SDK over the dotnet-test pipe by @Evangelink in [#9192](https://github.com/microsoft/testfx/pull/9192)
 * Make AzureDevOps summary report file name unique per assembly by @Evangelink in [#9264](https://github.com/microsoft/testfx/pull/9264)
 * Fix `--treenode-filter` + `--filter-uid` mutual exclusion: validated during command-line validation (proper `InvalidCommandLine` exit code) instead of a late `NotSupportedException`; documentation gaps for the `!` NOT operator and property-filter semantics addressed by @Evangelink in [#9458](https://github.com/microsoft/testfx/pull/9458)
+
+### Artifacts
+
+* Microsoft.Testing.Platform: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.3.0)
+* Microsoft.Testing.Platform.MSBuild: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.3.0)
+* Microsoft.Testing.Extensions.CrashDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.3.0)
+* Microsoft.Testing.Extensions.HangDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.3.0)
+* Microsoft.Testing.Extensions.HotReload: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.3.0)
+* Microsoft.Testing.Extensions.Retry: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.3.0)
+* Microsoft.Testing.Extensions.Telemetry: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.3.0)
+* Microsoft.Testing.Extensions.TrxReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.3.0)
+* Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.3.0)
 
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 
