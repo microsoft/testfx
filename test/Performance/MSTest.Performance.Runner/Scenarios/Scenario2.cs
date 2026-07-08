@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.TestInfrastructure;
@@ -113,7 +113,7 @@ internal class Scenario2 : IStep<NoInputOutput, SingleProject>
             addPublicFeeds: true);
 
         context.AddDisposable(generator);
-        return new SingleProject(["net9.0"], generator, nameof(Scenario2));
+        return new SingleProject([_tfm], generator, nameof(Scenario2));
     }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
