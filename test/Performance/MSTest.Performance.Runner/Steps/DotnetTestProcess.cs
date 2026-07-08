@@ -31,6 +31,8 @@ namespace MSTest.Performance.Runner.Steps;
 /// </remarks>
 internal class DotnetTestProcess : IStep<BuildArtifact, Files>
 {
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
     private readonly string _reportFileName;
     private readonly BuildConfiguration _buildConfiguration;
     private readonly int _numberOfRun;
@@ -117,11 +119,9 @@ internal class DotnetTestProcess : IStep<BuildArtifact, Files>
             results.Add(result);
         }
 
-#pragma warning disable CA1869 // Cache and reuse 'JsonSerializerOptions' instances
         await File.AppendAllTextAsync(
             Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "Result.json"),
-            JsonSerializer.Serialize(results, new JsonSerializerOptions { WriteIndented = true }));
-#pragma warning restore CA1869
+            JsonSerializer.Serialize(results, JsonOptions));
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
