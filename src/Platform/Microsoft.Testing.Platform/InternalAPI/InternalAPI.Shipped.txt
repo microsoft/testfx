@@ -108,7 +108,6 @@ const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLA
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER = "TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER" -> string!
 const Microsoft.Testing.Platform.Helpers.StackTraceRegexHelper.MatchTimeoutMilliseconds = 1000 -> int
 const Microsoft.Testing.Platform.Helpers.TaskExtensions.MaxSupportedTimeoutMs = 4294967294 -> long
-const Microsoft.Testing.Platform.Hosts.ServerTestHost.ProtocolVersion = "2.4.0-dev" -> string!
 const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.ExecutionId = 1 -> ushort
 const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.InstanceId = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.LogText = 3 -> ushort
