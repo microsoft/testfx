@@ -3,7 +3,7 @@
     <!-- MSTest version -->
     <VersionPrefix>4.3.0</VersionPrefix>
     <!-- Testing Platform version -->
-    <TestingPlatformVersionPrefix>2.3.0</TestingPlatformVersionPrefix>
+    <TestingPlatformVersionPrefix>2.3.1</TestingPlatformVersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
