@@ -592,9 +592,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+        <source>'--minimum-expected-tests' expects a single non-negative integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests' には、0 以外の正の整数値が 1 つ必要です
+        <target state="needs-review-translation">'--minimum-expected-tests' には、0 以外の正の整数値が 1 つ必要です
 (例: '--minimum-expected-tests 10')</target>
         <note>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</note>
       </trans-unit>
