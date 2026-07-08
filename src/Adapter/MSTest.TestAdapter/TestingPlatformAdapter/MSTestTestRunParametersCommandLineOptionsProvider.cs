@@ -26,15 +26,10 @@ internal sealed class MSTestTestRunParametersCommandLineOptionsProvider : Comman
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        foreach (string argument in arguments)
-        {
-            if (!argument.Contains('='))
-            {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, PlatformAdapterResources.TestRunParameterOptionArgumentIsNotParameter, argument));
-            }
-        }
-
-        return ValidationResult.ValidTask;
+        string? invalidArgument = arguments.FirstOrDefault(argument => !argument.Contains('='));
+        return invalidArgument is not null
+            ? ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, PlatformAdapterResources.TestRunParameterOptionArgumentIsNotParameter, invalidArgument))
+            : ValidationResult.ValidTask;
     }
 }
 #endif
