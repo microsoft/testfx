@@ -78,7 +78,6 @@ const Microsoft.Testing.Platform.Configurations.PlatformConfigurationConstants.P
 const Microsoft.Testing.Platform.Configurations.PlatformConfigurationConstants.PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds = "platformOptions:testHostControllersManager:namedPipeClient:connectTimeoutSeconds" -> string!
 const Microsoft.Testing.Platform.Configurations.PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds = "platformOptions:testHostControllersManager:singleConnectionNamedPipeServer:waitConnectionTimeoutSeconds" -> string!
 const Microsoft.Testing.Platform.Configurations.PlatformConfigurationConstants.PlatformTestHostWorkingDirectory = "platformOptions:testHostWorkingDirectory" -> string!
-const Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>.ValidateCompositionErrorMessage = "You cannot compose extensions that belong to different areas.\r\nValid composition are:\r\nTestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider\r\nTestHost: IDataConsumer, ITestApplicationLifetime" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT = "DOTNET_CLI_TELEMETRY_OPTOUT" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_NOLOGO = "DOTNET_NOLOGO" -> string!

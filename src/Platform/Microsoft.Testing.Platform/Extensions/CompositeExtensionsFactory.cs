@@ -27,6 +27,10 @@ public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory,
     private readonly Func<TExtension>? _factory;
     private TExtension? _instance;
 
+    // This raw string literal's value embeds the source file's line endings (CRLF on Windows, LF on Linux),
+    // so its compile-time const value is not deterministic across platforms and must not be tracked by the
+    // internal API analyzers.
+#pragma warning disable RS0051 // Add internal types and members to the declared API
     internal const /* for testing */ string ValidateCompositionErrorMessage =
 """
 You cannot compose extensions that belong to different areas.
@@ -34,6 +38,7 @@ Valid composition are:
 TestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
 TestHost: IDataConsumer, ITestApplicationLifetime
 """;
+#pragma warning restore RS0051 // Add internal types and members to the declared API
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CompositeExtensionFactory{TExtension}"/> class.
