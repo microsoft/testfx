@@ -23,19 +23,12 @@ using CreateTestSessionContext = Microsoft.Testing.Platform.Extensions.TestFrame
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// A native Microsoft.Testing.Platform (MTP) test framework for MSTest. Unlike <see cref="MSTestBridgedTestFramework"/>
-/// it does not derive from the VSTest bridge: it handles the MTP discovery/run requests directly, builds the run
-/// context, filter and runsettings natively (see <see cref="MSTestRunContext"/> / <see cref="MSTestDiscoveryContext"/>
-/// / <see cref="MSTestRunSettings"/>), and publishes test nodes through the native <see cref="MtpUnitTestElementSink"/>
-/// / <see cref="MtpTestResultRecorder"/>. It reuses MSTest's existing <see cref="MSTestDiscoverer"/> /
-/// <see cref="MSTestExecutor"/> engine.
+/// A native Microsoft.Testing.Platform (MTP) test framework for MSTest. It does not derive from the VSTest bridge:
+/// it handles the MTP discovery/run requests directly, builds the run context, filter and runsettings natively
+/// (see <see cref="MSTestRunContext"/> / <see cref="MSTestDiscoveryContext"/> / <see cref="MSTestRunSettings"/>), and
+/// publishes test nodes through the native <see cref="MtpUnitTestElementSink"/> / <see cref="MtpTestResultRecorder"/>.
+/// It reuses MSTest's existing <see cref="MSTestDiscoverer"/> / <see cref="MSTestExecutor"/> engine.
 /// </summary>
-/// <remarks>
-/// This is opt-in (behind <c>MSTEST_EXPERIMENTAL_NATIVE_MTP</c>) while the native path reaches full parity with the
-/// bridge. It still relies on the bridge only for the shared command-line options (<c>--filter</c>, <c>--settings</c>,
-/// <c>--test-parameter</c>) and the runsettings configuration/environment-variable providers; retiring those and the
-/// bridge package reference is the final step of the migration.
-/// </remarks>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 [StackTraceHidden]
 internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisposable
@@ -44,7 +37,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     private readonly Func<IEnumerable<Assembly>> _getTestAssemblies;
     private readonly IServiceProvider _serviceProvider;
     private readonly ITrxReportCapability? _trxReportCapability;
-    private readonly BridgedConfiguration _configuration;
+    private readonly PlatformServicesConfigurationAdapter _configuration;
     private readonly ILoggerFactory _loggerFactory;
     private readonly CountdownEvent _incomingRequestCounter = new(1);
     private bool? _isTrxEnabled;

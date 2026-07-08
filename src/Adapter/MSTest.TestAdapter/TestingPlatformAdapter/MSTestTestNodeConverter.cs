@@ -22,9 +22,9 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// VSTest object model (<c>TestCase</c>/<c>TestResult</c>) or the VSTest bridge.
 /// </summary>
 /// <remarks>
-/// This mirrors, field-for-field, the mapping that the bridge performs today in
+/// This mirrors, field-for-field, the mapping that the VSTest bridge performed in
 /// <c>ObjectModelConverters.ToTestNode</c> (combined with <c>UnitTestElementExtensions.ToTestCase</c>,
-/// <c>TestResultExtensions.ToTestResult</c> and <c>MSTestBridgedTestFramework.AddAdditionalProperties</c>), so
+/// <c>TestResultExtensions.ToTestResult</c> and the bridge's <c>AddAdditionalProperties</c>), so
 /// switching MSTest to a native Microsoft.Testing.Platform integration produces identical <see cref="TestNode"/>s.
 /// MSTest does not use the <c>vstestProvider</c> named-feature capability, so the VSTest provider properties the
 /// bridge conditionally emits are intentionally not reproduced here.
@@ -133,7 +133,7 @@ internal static class MSTestTestNodeConverter
     private static void AddTestMethodIdentifier(TestNode testNode, TestMethod testMethod)
     {
         // NOTE: ManagedMethodName, in case of MSTest, carries the parameter types, so we prefer it to display the
-        // parameter types in Test Explorer. This mirrors MSTestBridgedTestFramework.AddAdditionalProperties.
+        // parameter types in Test Explorer. This mirrors what the VSTest bridge did in AddAdditionalProperties.
         if (!testMethod.HasManagedMethodAndTypeProperties)
         {
             return;
