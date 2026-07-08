@@ -88,6 +88,11 @@
          reference is not added for UWP (see above), and PlatformServices no longer references the object model,
          so it is referenced explicitly here for UWP. -->
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " />
+
+    <!-- The native Microsoft.Testing.Platform integration (TestingPlatformAdapter\MSTestFilterContext, guarded by
+         !WINDOWS_UWP) parses VSTest filter expressions via the Filter source package. It flows in transitively via
+         the VSTestBridge today (PrivateAssets=all there), so reference it explicitly where the native path builds. -->
+    <PackageReference Include="Microsoft.TestPlatform.Filter.Source" PrivateAssets="all" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>

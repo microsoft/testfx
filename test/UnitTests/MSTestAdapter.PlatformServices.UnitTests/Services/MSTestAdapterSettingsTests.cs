@@ -227,7 +227,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         void ShouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
-        new Action(ShouldThrowException).Should().Throw<InvalidRunSettingsException>();
+        new Action(ShouldThrowException).Should().Throw<AdapterSettingsException>();
     }
 
     #endregion

@@ -6,6 +6,12 @@
   <PropertyGroup>
     <!-- Platform and extensions use TestingPlatform version, not MSTest version. -->
     <VersionPrefix>$(TestingPlatformVersionPrefix)</VersionPrefix>
+
+    <!-- Exclusive upper bound used as a safety net on the in-repo Microsoft.Testing.Platform package
+         dependency of the extensions (see Directory.Build.targets): the next major after the current
+         Testing Platform version. For a 2.x platform this evaluates to 3.0.0, producing a [self, 3.0.0)
+         dependency range so an extension built against 2.x never silently resolves a breaking next major. -->
+    <TestingPlatformNextMajorVersion Condition=" '$(TestingPlatformNextMajorVersion)' == '' ">$([MSBuild]::Add($(TestingPlatformVersionPrefix.Split('.')[0]), 1)).0.0</TestingPlatformNextMajorVersion>
   </PropertyGroup>
 
   <!-- Build config -->

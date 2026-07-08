@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
-## <a name="4.3.0" />[4.3.0] - UNRELEASED
+## <a name="4.4.0" />[4.4.0] - UNRELEASED
+
+See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.0...v4.4.0)
+
+### Fixed
+
+* Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
+
+## <a name="4.3.0" />[4.3.0] - 2026-07-08
 
 See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
 
@@ -53,7 +61,6 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Remove redundant `actual type:` line from Assert.Throws\* failure message by @Evangelink in [#9195](https://github.com/microsoft/testfx/pull/9195)
 * Include full exception (stack trace + inner exceptions) in Assert.Throws\* failure messages by @Evangelink in [#9212](https://github.com/microsoft/testfx/pull/9212)
 * Fix `[ClassCleanup]` resource leak when `ITestFilter` drops the last test of an initialized class by @Evangelink in [#9503](https://github.com/microsoft/testfx/pull/9503)
-* Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
 
 ### Changed
 
@@ -1109,7 +1116,7 @@ See full log [of v3.6.3...v3.6.4](https://github.com/microsoft/testfx/compare/v3
 ### Fixed
 
 * Bump MS CC to 17.13.0 by @Evangelink in [#4212](https://github.com/microsoft/testfx/pull/4212)
-* Bump vulnerable deps by @Evangelink in [#4218)(https://github.com/microsoft/testfx/pull/4218)
+* Bump vulnerable deps by @Evangelink in [#4218](https://github.com/microsoft/testfx/pull/4218)
 
 ### Artifacts
 
