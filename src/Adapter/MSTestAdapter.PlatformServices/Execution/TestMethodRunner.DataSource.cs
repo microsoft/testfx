@@ -52,7 +52,7 @@ internal sealed partial class TestMethodRunner
         try
         {
             IEnumerable<object>? dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(_testMethodInfo, _testContext);
-            if (dataRows == null)
+            if (dataRows is null)
             {
                 var inconclusiveResult = new TestResult
                 {
