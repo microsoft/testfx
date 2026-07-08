@@ -1,0 +1,30 @@
+#nullable enable
+~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
+~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.Culture.set -> void
+~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
+~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.PackagedAppExtensionDescription.get -> string
+~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.PackagedAppExtensionDisplayName.get -> string
+~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
+const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
+ExtensionVersion
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle.Dispose() -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle.ExitCode.get -> int
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle.HasExited.get -> bool
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle.Identifier.get -> string?
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle.PackagedAppTestHostHandle(System.Diagnostics.Process! process, string! deploymentDirectory) -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle.Terminate() -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle.WaitForExitAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.Description.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.DisplayName.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.LaunchTestHostAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.TestHostLaunchContext! context, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle!>!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PackagedAppTestHostLauncher() -> void
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.Uid.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.Version.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void

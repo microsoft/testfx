@@ -3,18 +3,18 @@
 Set-StrictMode -version 2.0
 $ErrorActionPreference = "Stop"
 
-function Set-AsShipped([Parameter(Mandatory)][string]$Directory) {
-    $shippedFilePath = "$Directory/PublicAPI.Shipped.txt"
+function Set-AsShipped([Parameter(Mandatory)][string]$Directory, [Parameter(Mandatory)][string]$Prefix) {
+    $shippedFilePath = "$Directory/$Prefix.Shipped.txt"
     [array]$shipped = Get-Content $shippedFilePath -Encoding utf8
     if ($null -eq $shipped) {
         $shipped = @()
     }
 
-    $unshippedFilePath = "$Directory/PublicAPI.Unshipped.txt"
+    $unshippedFilePath = "$Directory/$Prefix.Unshipped.txt"
     [array]$unshipped = Get-Content $unshippedFilePath -Encoding utf8
     $removed = @()
     $removedPrefix = "*REMOVED*";
-    Write-Host "Processing $Directory"
+    Write-Host "Processing $shippedFilePath"
 
     foreach ($item in $unshipped) {
         if ($item.Length -gt 0) {
@@ -32,7 +32,8 @@ function Set-AsShipped([Parameter(Mandatory)][string]$Directory) {
     "#nullable enable" | Out-File $unshippedFilePath -Encoding utf8
 }
 
-foreach ($file in Get-ChildItem "$PSScriptRoot\..\src" -Recurse -Include "PublicApi.Shipped.txt") {
+foreach ($file in Get-ChildItem "$PSScriptRoot\..\src" -Recurse -Include "PublicAPI.Shipped.txt", "InternalAPI.Shipped.txt") {
     $Directory = Split-Path -parent $file
-    Set-AsShipped $Directory
+    $Prefix = (Split-Path -Leaf $file) -replace '\.Shipped\.txt$', ''
+    Set-AsShipped $Directory $Prefix
 }

@@ -1,0 +1,138 @@
+#nullable enable
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CannotFindExpectedCrashDumpFile.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CannotFindExpectedCrashReportFile.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpArtifactDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpArtifactDisplayName.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpDisplayName.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpFileNameOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpInvalidEnvironmentVariableValueErrorMessage.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpNotSupportedInNonNetCoreErrorMessage.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpProcessCrashed.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpProcessCrashedDumpAndReportFileCreated.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpProcessCrashedDumpFileCreated.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpProcessCrashedReportFileCreated.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpSequenceArtifactDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpSequenceArtifactDisplayName.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpSequenceFileReadError.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpTestsRunningAtCrash.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpTypeOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpTypeOptionInvalidType.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashDumpTypeOptionTooManyArguments.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportArtifactDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportArtifactDisplayName.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportIfSupportedIgnoredOnNetFrameworkInfoMessage.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportIfSupportedIgnoredOnWindowsInfoMessage.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportIfSupportedOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashReportOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashSequenceOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.CrashSequenceOptionInvalidArgument.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.Culture.get -> System.Globalization.CultureInfo
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.Culture.set -> void
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.MissingCrashDumpMainOption.get -> string
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.ResourceManager.get -> System.Resources.ResourceManager
+~static Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources.UnsupportedRequestTypeErrorMessage.get -> string
+const ExtensionVersion.DefaultSemVer = "2.4.0-dev" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineOptions.CrashDumpFileNameOptionName = "crashdump-filename" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineOptions.CrashDumpOptionName = "crashdump" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineOptions.CrashDumpTypeOptionName = "crashdump-type" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName = "crash-report-if-supported" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineOptions.CrashReportOptionName = "crash-report" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineOptions.CrashSequenceOptionName = "crash-sequence" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.SequenceFileEnvironmentVariableName = "TESTINGPLATFORM_CRASHDUMP_SEQUENCE_FILE" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.EndedEvent = "ENDED" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.StartedEvent = "STARTED" -> string!
+ExtensionVersion
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineOptions
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineProvider
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineProvider.CrashDumpCommandLineProvider() -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration.CrashDumpConfiguration() -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration.DumpFileNamePattern.get -> string?
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration.DumpFileNamePattern.set -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration.Enable.get -> bool
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration.Enable.set -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration.SequenceFileName.get -> string?
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration.SequenceFileName.set -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.CrashDumpEnvironmentVariableProvider(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration! crashDumpGeneratorConfiguration, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.Description.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.DisplayName.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.Uid.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.UpdateAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.Version.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.BeforeTestHostProcessStartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.CrashDumpProcessLifetimeHandler(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDisplay, Microsoft.Testing.Extensions.Diagnostics.CrashDumpConfiguration! netCoreCrashDumpGeneratorConfiguration) -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.DataTypesProduced.get -> System.Type![]!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.Description.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.DisplayName.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.OnTestHostProcessExitedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.OnTestHostProcessStartedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.Uid.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.Version.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.CrashDumpSequenceLogger(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory) -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.Description.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.DisplayName.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.Dispose() -> void
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.Uid.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.Version.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.Resources.CrashDumpResources
+Microsoft.Testing.Platform.Helpers.ApplicationStateGuard
+Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser
+Microsoft.Testing.Platform.Resources.PlatformResources
+Microsoft.Testing.Platform.RoslynString
+Microsoft.Testing.Platform.Services.ArtifactNamingHelper
+override Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.Diagnostics.CrashDumpCommandLineProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Extensions.Diagnostics.CrashDumpEnvironmentVariableProvider.IsCrashReportEffective(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegex(string! fileName) -> System.Text.RegularExpressions.Regex!
+static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.BuildDumpFileNameRegexPattern(string! fileName) -> string!
+static Microsoft.Testing.Extensions.Diagnostics.CrashDumpProcessLifetimeHandler.GetDumpDirectory(string! dumpFileNamePattern) -> string!
+static Microsoft.Testing.Extensions.Diagnostics.CrashDumpSequenceLogger.FormatLine(string! eventName, System.DateTimeOffset timestamp, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! uid, string! lastField) -> string!
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string! errorMessage) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string? path = null, int line = 0) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Unreachable(string? path = null, int line = 0) -> System.Diagnostics.UnreachableException!
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFramework(string? frameworkDescription) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetPlatformName(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
+static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
+static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void

@@ -1,0 +1,19 @@
+#nullable enable
+const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.Beta2SectionName = "microsoft.visualstudio.qualitytools" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.ConnectionStringAttributeName = "connectionString" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataAccessMethodAttributeName = "dataAccessMethod" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataSourcesSectionName = "dataSources" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataTableAttributeName = "dataTableName" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.NameAttributeName = "name" -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.SectionName = "microsoft.visualstudio.testtools" -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames
+Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Key.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper
+Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.RuntimeTypeHelper() -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.CompareMethodSigAndName(System.Reflection.MethodBase! m1, System.Reflection.MethodBase! m2) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostDerivedNewSlotMeth(System.Reflection.MethodBase![]! match, int cMatches) -> System.Reflection.MethodBase?
+static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecific(System.Reflection.ParameterInfo![]! p1, int[]! paramOrder1, System.Type? paramArrayType1, System.Reflection.ParameterInfo![]! p2, int[]! paramOrder2, System.Type? paramArrayType2, System.Type![]! types, object?[]? args) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificMethod(System.Reflection.MethodBase! m1, int[]! paramOrder1, System.Type? paramArrayType1, System.Reflection.MethodBase! m2, int[]! paramOrder2, System.Type? paramArrayType2, System.Type![]! types, object?[]? args) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificType(System.Type! c1, System.Type! c2, System.Type! t) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.GetHierarchyDepth(System.Type! t) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.SelectMethod(System.Reflection.MethodBase![]! match, System.Type![]! types) -> System.Reflection.MethodBase?

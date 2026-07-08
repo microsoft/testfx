@@ -1,0 +1,36 @@
+#nullable enable
+const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
+ExtensionVersion
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.Logging.LogLevelMapper
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggerAdapter
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggerAdapter.IsEnabled(Microsoft.Testing.Platform.Logging.LogLevel logLevel) -> bool
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggerAdapter.Log<TState>(Microsoft.Testing.Platform.Logging.LogLevel logLevel, TState state, System.Exception? exception, System.Func<TState, System.Exception?, string!>! formatter) -> void
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggerAdapter.LogAsync<TState>(Microsoft.Testing.Platform.Logging.LogLevel logLevel, TState state, System.Exception? exception, System.Func<TState, System.Exception?, string!>! formatter) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggerAdapter.MicrosoftExtensionsLoggerAdapter(Microsoft.Extensions.Logging.ILogger! inner) -> void
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggingProvider
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggingProvider.CreateLogger(string! categoryName) -> Microsoft.Testing.Platform.Logging.ILogger!
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggingProvider.Dispose() -> void
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggingProvider.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Extensions.Logging.MicrosoftExtensionsLoggingProvider.MicrosoftExtensionsLoggingProvider(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory, bool ownsFactory) -> void
+Microsoft.Testing.Extensions.Logging.NopLoggerProvider
+Microsoft.Testing.Extensions.Logging.NopLoggerProvider.CreateLogger(string! categoryName) -> Microsoft.Testing.Platform.Logging.ILogger!
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Extensions.Logging.LogLevelMapper.ToMicrosoftExtensions(Microsoft.Testing.Platform.Logging.LogLevel level) -> Microsoft.Extensions.Logging.LogLevel
+static Microsoft.Testing.Extensions.Logging.NopLoggerProvider.Instance.get -> Microsoft.Testing.Extensions.Logging.NopLoggerProvider!
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void

@@ -1,0 +1,698 @@
+#nullable enable
+~override Microsoft.Testing.Extensions.ReportEngineContext.Equals(object obj) -> bool
+~override Microsoft.Testing.Extensions.ReportEngineContext.ToString() -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.Culture.set -> void
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.InvalidTestApplicationBuilderType.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolBaselineFileOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolBothFilesMustBeSpecified.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolDescription.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolDisplayName.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolOptionExpectsSingleArgument.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolOtherFileOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxFileExistsAndWillBeOverwritten.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportArtifactDescription.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportArtifactDisplayName.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameExtensionIsNotTrx.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameMustNotBeEmpty.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameRelativePathMustStayUnderResultsDirectory.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameRequiresTrxReport.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameShouldNotContainPath.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorDescription.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorDisplayName.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportIsNotValidForDiscovery.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportOptionDescription.get -> string
+~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.UnsupportedRequestTypeErrorMessage.get -> string
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Description.get -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.DisplayName.get -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.GetInvalidEnvironmentVariableValueErrorMessage(string! environmentVariableName, string? actualValue, string! expectedValue) -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.GetMissingEnvironmentVariableErrorMessage(string! environmentVariableName) -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Uid.get -> string!
+abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.DeserializeCore(System.IO.Stream! stream) -> T
+abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Id.get -> int
+abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.SerializeCore(T objectToSerialize, System.IO.Stream! stream) -> void
+const ExtensionVersion.DefaultSemVer = "2.4.0-dev" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.ToolName = "ms-trxcompare" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.BaselineTrxOptionName = "baseline-trx" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.TrxToCompareOptionName = "trx-to-compare" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxEnvironmentVariableProvider.TRXNAMEDPIPENAME = "TRXNAMEDPIPENAME" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGeneratorCommandLine.TrxReportFileNameOptionName = "report-trx-filename" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGeneratorCommandLine.TrxReportOptionName = "report-trx" -> string!
+const Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions.CrashDumpFileNameOptionName = "crashdump-filename" -> string!
+const Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions.CrashDumpOptionName = "crashdump" -> string!
+const Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions.CrashDumpTypeOptionName = "crashdump-type" -> string!
+const Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName = "crash-report-if-supported" -> string!
+const Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions.CrashReportOptionName = "crash-report" -> string!
+const Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions.CrashSequenceOptionName = "crash-sequence" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT = "DOTNET_CLI_TELEMETRY_OPTOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_NOLOGO = "DOTNET_NOLOGO" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_WATCH = "DOTNET_WATCH" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT = "TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC = "TESTINGPLATFORM_DIAGNOSTIC" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX = "TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE = "TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY = "TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION = "TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE = "TESTINGPLATFORM_EXITCODE_IGNORE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED = "TESTINGPLATFORM_HOTRELOAD_ENABLED" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER = "TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS = "TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER = "TESTINGPLATFORM_NOBANNER" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT = "TESTINGPLATFORM_TELEMETRY_OPTOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION = "TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID = "TESTINGPLATFORM_TRX_TESTRUN_ID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER = "TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER" -> string!
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.LogText = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.MessagesSerializerId = 11 -> int
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Description = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsBuiltIn = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsHidden = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Name = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.MessagesSerializerId = 3 -> int
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.ModulePath = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.FilePath = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.LineNumber = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.MethodName = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.Namespace = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.ParameterTypeFullNames = 9 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.Traits = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.TypeName = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.MessagesSerializerId = 5 -> int
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.Level = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.MessagesSerializerId = 12 -> int
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.Text = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.ErrorMessage = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.ErrorType = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.StackTrace = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Duration = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.ErrorOutput = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.ExceptionMessageList = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Reason = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.SessionUid = 9 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.StandardOutput = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.State = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Description = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.FullPath = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.SessionUid = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.TestDisplayName = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.TestUid = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.FileArtifactMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.MessagesSerializerId = 7 -> int
+const Microsoft.Testing.Platform.IPC.HandshakeMessageFieldsId.MessagesSerializerId = 9 -> int
+const Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId.Kind = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId.MessagesSerializerId = 14 -> int
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Duration = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.ErrorOutput = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Reason = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.SessionUid = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.StandardOutput = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.State = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestHostCompletedRequestFieldsId.MessagesSerializerId = 1 -> int
+const Microsoft.Testing.Platform.IPC.TestHostProcessPIDRequestFieldsId.MessagesSerializerId = 2 -> int
+const Microsoft.Testing.Platform.IPC.TestInProgressMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.MessagesSerializerId = 10 -> int
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.TestInProgressMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.FailedTestMessageList = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.MessagesSerializerId = 6 -> int
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.SuccessfulTestMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.ExecutionId = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.MessagesSerializerId = 8 -> int
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.SessionType = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.SessionUid = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Key = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Value = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.VoidResponseFieldsId.MessagesSerializerId = 0 -> int
+const Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId.MessagesSerializerId = 13 -> int
+const System.IO.Hashing.XxHashShared.AccumulatorCount = 8 -> int
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_0 = 9295848262624092985 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_1 = 7914194659941938988 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_10 = 17228863761319568023 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_11 = 8573350489219836230 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_12 = 13536968629829821247 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_13 = 16163852396094277575 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_2 = 11835586108195898345 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_3 = 16607528436649670564 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_4 = 15013455763555273806 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_5 = 5046485836271438973 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_6 = 10391458616325699444 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_7 = 5920048007935066598 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_8 = 7336514198459093435 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecret3UInt64_9 = 5216419214072683403 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_0 = 13712233961653862072 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_1 = 2066345149520216444 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_10 = 5690594596133299313 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_11 = 15613098826807580984 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_12 = 4554437623014685352 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_13 = 2111919702937427193 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_14 = 3556072174620004746 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_15 = 7238261902898274248 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_2 = 15823274712020931806 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_3 = 2262974939099578482 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_4 = 8711581037947681227 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_5 = 2410270004345854594 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_6 = 10242386182634080440 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_7 = 5487137525590930912 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_8 = 14627906620379768892 -> ulong
+const System.IO.Hashing.XxHashShared.DefaultSecretUInt64_9 = 11758427054878871688 -> ulong
+const System.IO.Hashing.XxHashShared.InternalBufferLengthBytes = 256 -> int
+const System.IO.Hashing.XxHashShared.InternalBufferStripes = 4 -> int
+const System.IO.Hashing.XxHashShared.MidSizeMaxBytes = 240 -> int
+const System.IO.Hashing.XxHashShared.NumStripesPerBlock = 16 -> int
+const System.IO.Hashing.XxHashShared.Prime32_1 = 2654435761 -> uint
+const System.IO.Hashing.XxHashShared.Prime32_2 = 2246822519 -> uint
+const System.IO.Hashing.XxHashShared.Prime32_3 = 3266489917 -> uint
+const System.IO.Hashing.XxHashShared.Prime32_4 = 668265263 -> uint
+const System.IO.Hashing.XxHashShared.Prime32_5 = 374761393 -> uint
+const System.IO.Hashing.XxHashShared.Prime64_1 = 11400714785074694791 -> ulong
+const System.IO.Hashing.XxHashShared.Prime64_2 = 14029467366897019727 -> ulong
+const System.IO.Hashing.XxHashShared.Prime64_3 = 1609587929392839161 -> ulong
+const System.IO.Hashing.XxHashShared.Prime64_4 = 9650029242287828579 -> ulong
+const System.IO.Hashing.XxHashShared.Prime64_5 = 2870177450012600261 -> ulong
+const System.IO.Hashing.XxHashShared.SecretConsumeRateBytes = 8 -> int
+const System.IO.Hashing.XxHashShared.SecretLastAccStartBytes = 7 -> int
+const System.IO.Hashing.XxHashShared.SecretLengthBytes = 192 -> int
+const System.IO.Hashing.XxHashShared.SecretMergeAccsStartBytes = 11 -> int
+const System.IO.Hashing.XxHashShared.SecretSizeMin = 136 -> int
+const System.IO.Hashing.XxHashShared.StripeLengthBytes = 64 -> int
+ExtensionVersion
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.EnvironmentVariableName.get -> string!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.PipeName.get -> string!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.PipeNameEnvironmentVariableProviderBase(string! pipeName, string! environmentVariableName) -> void
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.UpdateAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Version.get -> string!
+Microsoft.Testing.Extensions.ReportEngineBase
+Microsoft.Testing.Extensions.ReportEngineBase.BuildDefaultFileName(string! extension) -> string!
+Microsoft.Testing.Extensions.ReportEngineBase.ReportEngineBase(Microsoft.Testing.Extensions.ReportEngineContext context) -> void
+Microsoft.Testing.Extensions.ReportEngineBase.ResolveOutputPath(string! fileNameOptionName, string! extension) -> (string! FinalPath, bool WasExplicit)
+Microsoft.Testing.Extensions.ReportEngineBase.ResolveOutputPath(string! fileNameOptionName, System.Func<string!>! defaultFileNameFactory) -> (string! FinalPath, bool WasExplicit)
+Microsoft.Testing.Extensions.ReportEngineBase.ResolveProvidedFileName(string! template) -> string!
+Microsoft.Testing.Extensions.ReportEngineBase.WriteBytesAsync(string! path, System.IO.FileMode mode, byte[]! bytes) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.ReportEngineContext
+Microsoft.Testing.Extensions.ReportEngineContext.CancellationToken.get -> System.Threading.CancellationToken
+Microsoft.Testing.Extensions.ReportEngineContext.CancellationToken.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Clock.get -> Microsoft.Testing.Platform.Helpers.IClock!
+Microsoft.Testing.Extensions.ReportEngineContext.Clock.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.CommandLineOptions.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
+Microsoft.Testing.Extensions.ReportEngineContext.CommandLineOptions.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfiguration!
+Microsoft.Testing.Extensions.ReportEngineContext.Configuration.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Deconstruct(out Microsoft.Testing.Platform.Helpers.IFileSystem! FileSystem, out Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! TestApplicationModuleInfo, out Microsoft.Testing.Platform.Helpers.IEnvironment! Environment, out Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! CommandLineOptions, out Microsoft.Testing.Platform.Configurations.IConfiguration! Configuration, out Microsoft.Testing.Platform.Helpers.IClock! Clock, out Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! TestFramework, out System.DateTimeOffset TestStartTime, out int ExitCode, out System.Threading.CancellationToken CancellationToken) -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Environment.get -> Microsoft.Testing.Platform.Helpers.IEnvironment!
+Microsoft.Testing.Extensions.ReportEngineContext.Environment.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.Equals(Microsoft.Testing.Extensions.ReportEngineContext other) -> bool
+Microsoft.Testing.Extensions.ReportEngineContext.ExitCode.get -> int
+Microsoft.Testing.Extensions.ReportEngineContext.ExitCode.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.FileSystem.get -> Microsoft.Testing.Platform.Helpers.IFileSystem!
+Microsoft.Testing.Extensions.ReportEngineContext.FileSystem.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.ReportEngineContext() -> void
+Microsoft.Testing.Extensions.ReportEngineContext.ReportEngineContext(Microsoft.Testing.Platform.Helpers.IFileSystem! FileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! TestApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! Environment, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! CommandLineOptions, Microsoft.Testing.Platform.Configurations.IConfiguration! Configuration, Microsoft.Testing.Platform.Helpers.IClock! Clock, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! TestFramework, System.DateTimeOffset TestStartTime, int ExitCode, System.Threading.CancellationToken CancellationToken) -> void
+Microsoft.Testing.Extensions.ReportEngineContext.TestApplicationModuleInfo.get -> Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo!
+Microsoft.Testing.Extensions.ReportEngineContext.TestApplicationModuleInfo.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.TestFramework.get -> Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!
+Microsoft.Testing.Extensions.ReportEngineContext.TestFramework.init -> void
+Microsoft.Testing.Extensions.ReportEngineContext.TestStartTime.get -> System.DateTimeOffset
+Microsoft.Testing.Extensions.ReportEngineContext.TestStartTime.init -> void
+Microsoft.Testing.Extensions.ReportFileNameHelper
+Microsoft.Testing.Extensions.ReportFileNameSanitizer
+Microsoft.Testing.Extensions.ReportFileNameValidator
+Microsoft.Testing.Extensions.ReportFileWriterHelper
+Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase
+Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ReportGeneratorCommandLineBase(string! providerName, string! displayName, string! description, string! reportOptionName, string! reportFileNameOptionName, string! reportOptionDescription, string! reportFileNameOptionDescription, string! fileExtension, string! fileNameMustNotBeEmpty, string! fileNameExtensionIsNotExpected, string! relativePathMustStayUnderResultsDirectory, string! fileNameRequiresReport, string! reportIsNotValidForDiscovery) -> void
+Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.ReportFileNameRequest
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.ReportFileNameRequest.FileName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.ReportFileNameRequest.ReportFileNameRequest(string! fileName) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.ReportFileNameRequestSerializer
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.ReportFileNameRequestSerializer.ReportFileNameRequestSerializer() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TestAdapterInformationRequest
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TestAdapterInformationRequest.TestAdapterId.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TestAdapterInformationRequest.TestAdapterInformationRequest(string! testAdapterId, string! testAdapterVersion) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TestAdapterInformationRequest.TestAdapterVersion.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TestAdapterInformationRequestSerializer
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TestAdapterInformationRequestSerializer.TestAdapterInformationRequestSerializer() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TrxStreamLocationRequest
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TrxStreamLocationRequest.FilePath.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TrxStreamLocationRequest.TrxStreamLocationRequest(string! filePath) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TrxStreamLocationRequestSerializer
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TrxStreamLocationRequestSerializer.TrxStreamLocationRequestSerializer() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.BufferedCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.CompleteAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.CompletionTimedOut.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.Dispose() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.DroppedCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.Enqueue(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! result) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.FilePath.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.IsFaulted.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.ReadAll() -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.TrxResultStreamingStore(string! filePath, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Logging.ILogger! logger, int batchSize, int flushIntervalMs) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.TrxResultStreamingStore(string! filePath, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxResultStreamingStore.TryDelete() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessage
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessage.Kind.get -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessage.Kind.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessage.Message.get -> string?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessage.Message.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessage.TrxStreamMessage() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind.DebugOrTrace = 3 -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind.StandardError = 2 -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind.StandardOutput = 1 -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessageKind
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestFileArtifact
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestFileArtifact.FullPath.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestFileArtifact.FullPath.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestFileArtifact.TrxTestFileArtifact() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMetadata
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMetadata.Key.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMetadata.Key.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMetadata.TrxTestMetadata() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMetadata.Value.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMetadata.Value.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier.MethodName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier.MethodName.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier.Namespace.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier.Namespace.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier.TrxTestMethodIdentifier() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier.TypeName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier.TypeName.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome.Failed = 3 -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome.Passed = 1 -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome.Skipped = 2 -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome.Timeout = 4 -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Categories.get -> System.Collections.Generic.IReadOnlyList<string!>?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Categories.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.DisplayName.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Duration.get -> System.TimeSpan?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Duration.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.EndTime.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.EndTime.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.ExceptionMessage.get -> string?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.ExceptionMessage.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.ExceptionStackTrace.get -> string?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.ExceptionStackTrace.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.FileArtifacts.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestFileArtifact!>?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.FileArtifacts.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Messages.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxStreamMessage!>?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Messages.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Metadata.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMetadata!>?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Metadata.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Outcome.get -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestOutcome
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Outcome.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.StartTime.get -> System.DateTimeOffset?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.StartTime.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.TestMethodIdentifier.get -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestMethodIdentifier?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.TestMethodIdentifier.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.TrxFullyQualifiedTypeName.get -> string?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.TrxFullyQualifiedTypeName.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.TrxTestDefinitionName.get -> string?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.TrxTestDefinitionName.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.TrxTestResult() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult.Uid.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResultExtractor
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResultSerializer
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.CreateTrxCompareTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDisplay, Microsoft.Testing.Platform.Helpers.ITask! task) -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.CreateTrxCompareToolCommandLine() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.ToolTrxCompareFactory() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxCompareFactory.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.Name.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.TrxCompareTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Extensions.IExtension! extension, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDisplay, Microsoft.Testing.Platform.Helpers.ITask! task) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.ToolName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.TrxCompareToolCommandLine(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxEnvironmentVariableProvider
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxEnvironmentVariableProvider.TrxEnvironmentVariableProvider(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, string! pipeName) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.BeforeTestHostProcessStartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.DataTypesProduced.get -> System.Type![]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.Dispose() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.OnTestHostProcessExitedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.OnTestHostProcessStartedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.TrxProcessLifetimeHandler(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxProcessLifetimeHandler.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.AddArtifactsAsync(System.IO.FileInfo! trxFile, System.Collections.Generic.Dictionary<Microsoft.Testing.Platform.Extensions.IExtension!, System.Collections.Generic.List<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>!>! artifacts) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.GenerateReportAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult!>! testResults, string! testHostCrashInfo = "", bool isTestHostCrashed = false) -> System.Threading.Tasks.Task<(string! FileName, string? Warning)>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.TrxReportEngine(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptionsService, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IClock! clock, System.Collections.Generic.Dictionary<Microsoft.Testing.Platform.Extensions.IExtension!, System.Collections.Generic.List<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>!>! artifactsByExtension, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFrameworkAdapter, System.DateTimeOffset testStartTime, int exitCode, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.TrxReportEngine(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptionsService, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IClock! clock, System.Collections.Generic.Dictionary<Microsoft.Testing.Platform.Extensions.IExtension!, System.Collections.Generic.List<Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact!>!>! artifactsByExtension, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFrameworkAdapter, System.DateTimeOffset testStartTime, int exitCode) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.DataTypesProduced.get -> System.Type![]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.Dispose() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.TrxReportGenerator(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptionsService, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDisplay, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFramework, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities! testFrameworkCapabilities, Microsoft.Testing.Platform.Services.ITestApplicationProcessExitCode! testApplicationProcessExitCode, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks? trxTestApplicationLifecycleCallbacks, Microsoft.Testing.Platform.Logging.ILogger<Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator!>! logger) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGenerator.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGeneratorCommandLine
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportGeneratorCommandLine.TrxReportGeneratorCommandLine() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.BeforeRunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.Dispose() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.NamedPipeClient.get -> Microsoft.Testing.Platform.IPC.NamedPipeClient?
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.TrxTestApplicationLifecycleCallbacks(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptionsService, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions
+Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources
+Microsoft.Testing.Extensions.TrxReport.TrxModeHelpers
+Microsoft.Testing.Platform.Helpers.ApplicationStateGuard
+Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants
+Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.AtLeastOneTestFailed = 2 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.DependentProcessExited = 11 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.GenericFailure = 1 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.IncompatibleProtocolVersion = 12 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.InvalidCommandLine = 5 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.InvalidPlatformSetup = 4 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.MinimumExpectedTestsPolicyViolation = 9 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.Success = 0 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestAdapterTestSessionFailure = 10 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedForMaxFailedTests = 13 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestHostProcessExitedNonGracefully = 7 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestSessionAborted = 3 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.ZeroTests = 8 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.TimeoutHelper
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Days = 4 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Hours = 3 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Milliseconds = 0 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Minutes = 2 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Seconds = 1 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanParser
+Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId
+Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId
+Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId
+Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId
+Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId
+Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId
+Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId
+Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId
+Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId
+Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId
+Microsoft.Testing.Platform.IPC.HandshakeMessageFieldsId
+Microsoft.Testing.Platform.IPC.IClient
+Microsoft.Testing.Platform.IPC.IClient.ConnectAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.IClient.IsConnected.get -> bool
+Microsoft.Testing.Platform.IPC.IClient.RequestReplyAsync<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer.Deserialize(System.IO.Stream! stream) -> object!
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer.Id.get -> int
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer.Serialize(object! objectToSerialize, System.IO.Stream! stream) -> void
+Microsoft.Testing.Platform.IPC.IRequest
+Microsoft.Testing.Platform.IPC.IResponse
+Microsoft.Testing.Platform.IPC.IServer
+Microsoft.Testing.Platform.IPC.IServer.PipeName.get -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
+Microsoft.Testing.Platform.IPC.IServer.WaitConnectionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.Models.VoidResponse
+Microsoft.Testing.Platform.IPC.Models.VoidResponse.VoidResponse() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeBase
+Microsoft.Testing.Platform.IPC.NamedPipeBase.GetSerializer(int id) -> Microsoft.Testing.Platform.IPC.INamedPipeSerializer!
+Microsoft.Testing.Platform.IPC.NamedPipeBase.GetSerializer(System.Type! type) -> Microsoft.Testing.Platform.IPC.INamedPipeSerializer!
+Microsoft.Testing.Platform.IPC.NamedPipeBase.NamedPipeBase() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeBase.RegisterSerializer(Microsoft.Testing.Platform.IPC.INamedPipeSerializer! namedPipeSerializer, System.Type! type) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient
+Microsoft.Testing.Platform.IPC.NamedPipeClient.ConnectAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeClient.Dispose() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.IsConnected.get -> bool
+Microsoft.Testing.Platform.IPC.NamedPipeClient.NamedPipeClient(string! name, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, bool exitProcessOnConnectionLoss) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.NamedPipeClient(string! name, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.NamedPipeClient(string! name) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.PipeName.get -> string!
+Microsoft.Testing.Platform.IPC.NamedPipeClient.RequestReplyAsync<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.DisposeBuffers() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.NamedPipeConnectionBase() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Pipes.PipeStream! stream, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Pipes.PipeStream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeServer
+Microsoft.Testing.Platform.IPC.NamedPipeServer.Dispose() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, int maxNumberOfServerInstances, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.PipeName.get -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitConnectionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WasConnected.get -> bool
+Microsoft.Testing.Platform.IPC.PipeNameDescription
+Microsoft.Testing.Platform.IPC.PipeNameDescription.Name.get -> string!
+Microsoft.Testing.Platform.IPC.PipeNameDescription.PipeNameDescription(string! name) -> void
+Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer
+Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.BaseSerializer() -> void
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Deserialize(System.IO.Stream! stream) -> T
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.NamedPipeSerializer() -> void
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Serialize(T objectToSerialize, System.IO.Stream! stream) -> void
+Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer
+Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer.VoidResponseSerializer() -> void
+Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId
+Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId
+Microsoft.Testing.Platform.IPC.TestHostCompletedRequestFieldsId
+Microsoft.Testing.Platform.IPC.TestHostProcessPIDRequestFieldsId
+Microsoft.Testing.Platform.IPC.TestInProgressMessageFieldsId
+Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId
+Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId
+Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId
+Microsoft.Testing.Platform.IPC.TraitMessageFieldsId
+Microsoft.Testing.Platform.IPC.VoidResponseFieldsId
+Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId
+Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser
+Microsoft.Testing.Platform.Resources.PlatformResources
+Microsoft.Testing.Platform.RoslynString
+Microsoft.Testing.Platform.Services.ArtifactNamingHelper
+override Microsoft.Testing.Extensions.ReportEngineContext.GetHashCode() -> int
+override Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.ReportFileNameRequestSerializer.Id.get -> int
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TestAdapterInformationRequestSerializer.Id.get -> int
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers.TrxStreamLocationRequestSerializer.Id.get -> int
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxEnvironmentVariableProvider.Description.get -> string!
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxEnvironmentVariableProvider.DisplayName.get -> string!
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxEnvironmentVariableProvider.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+override Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxEnvironmentVariableProvider.Uid.get -> string!
+override Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer.Id.get -> int
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
+readonly Microsoft.Testing.Extensions.ReportEngineBase._cancellationToken -> System.Threading.CancellationToken
+readonly Microsoft.Testing.Extensions.ReportEngineBase._clock -> Microsoft.Testing.Platform.Helpers.IClock!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._commandLineOptions -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._configuration -> Microsoft.Testing.Platform.Configurations.IConfiguration!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._environment -> Microsoft.Testing.Platform.Helpers.IEnvironment!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._exitCode -> int
+readonly Microsoft.Testing.Extensions.ReportEngineBase._fileSystem -> Microsoft.Testing.Platform.Helpers.IFileSystem!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._testApplicationModuleInfo -> Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._testFramework -> Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!
+readonly Microsoft.Testing.Extensions.ReportEngineBase._testStartTime -> System.DateTimeOffset
+static Microsoft.Testing.Extensions.ReportEngineBase.BuildDefaultFileName(string! testApplicationModule, string! extension) -> string!
+static Microsoft.Testing.Extensions.ReportEngineBase.GetProvidedFileName(string![]? providedFileName) -> string!
+static Microsoft.Testing.Extensions.ReportEngineBase.ReplaceInvalidFileNameChars(string! fileName) -> string!
+static Microsoft.Testing.Extensions.ReportEngineContext.operator !=(Microsoft.Testing.Extensions.ReportEngineContext left, Microsoft.Testing.Extensions.ReportEngineContext right) -> bool
+static Microsoft.Testing.Extensions.ReportEngineContext.operator ==(Microsoft.Testing.Extensions.ReportEngineContext left, Microsoft.Testing.Extensions.ReportEngineContext right) -> bool
+static Microsoft.Testing.Extensions.ReportFileNameHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset now) -> string!
+static Microsoft.Testing.Extensions.ReportFileNameSanitizer.ReplaceInvalidFileNameChars(string! fileName) -> string!
+static Microsoft.Testing.Extensions.ReportFileNameValidator.EscapesResultsDirectory(string! path) -> bool
+static Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, string! reportOptionName, string! reportFileNameOptionName, string! fileNameRequiresReportErrorMessage, string! reportIsNotValidForDiscoveryErrorMessage, string! discoverTestsOptionName) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Extensions.ReportFileNameValidator.ValidateReportFileNameArgumentAsync(string![]! arguments, string! expectedExtension, string! emptyErrorMessage, string! badExtensionErrorMessage, string! escapesDirectoryErrorMessage) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Extensions.ReportFileWriterHelper.RetryWhenIOExceptionAsync<T>(Microsoft.Testing.Platform.Helpers.IClock! clock, System.Func<System.Threading.Tasks.Task<T>!>! func) -> System.Threading.Tasks.Task<T>!
+static Microsoft.Testing.Extensions.TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform() -> string!
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResultExtractor.Extract(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! message) -> (Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! Result, bool WasTruncated)
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResultSerializer.ReadAll(System.IO.Stream! stream, Microsoft.Testing.Platform.Logging.ILogger? logger = null) -> System.Collections.Generic.IEnumerable<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult!>!
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResultSerializer.Write(System.IO.BinaryWriter! writer, Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! result) -> void
+static Microsoft.Testing.Extensions.TrxReport.TrxModeHelpers.ShouldUseOutOfProcessTrxGeneration(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string! errorMessage) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string? path = null, int line = 0) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Unreachable(string? path = null, int line = 0) -> System.Diagnostics.UnreachableException!
+static Microsoft.Testing.Platform.Helpers.TimeoutHelper.DefaultHangTimeoutSeconds.get -> double
+static Microsoft.Testing.Platform.Helpers.TimeoutHelper.DefaultHangTimeSpanTimeout.get -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.Parse(string? time, Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit defaultUnit) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.Parse(string? time) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.ParseRequireSuffix(string? time) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParse(string? time, Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit defaultUnit, out System.TimeSpan result) -> bool
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParse(string? time, out System.TimeSpan result) -> bool
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParseRequireSuffix(string? time, out System.TimeSpan result) -> bool
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.GetPipeName(string! name) -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.DebugAssert(bool condition, string! message) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.IsNullOrEmpty<T>(T[]? list) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadBool(System.IO.Stream! stream) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadByte(System.IO.Stream! stream) -> byte
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadInt(System.IO.Stream! stream) -> int
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadLong(System.IO.Stream! stream) -> long
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadString(System.IO.Stream! stream) -> string!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadStringValue(System.IO.Stream! stream, int size) -> string!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadUShort(System.IO.Stream! stream) -> ushort
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.SetPosition(System.IO.Stream! stream, long position) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteAtPosition(System.IO.Stream! stream, int value, long position) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteBool(System.IO.Stream! stream, bool value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteByte(System.IO.Stream! stream, byte value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, byte? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, string? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, bool? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, byte? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, int? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, long? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, string? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteInt(System.IO.Stream! stream, int value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteLong(System.IO.Stream! stream, long value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteSize<T>(System.IO.Stream! stream) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteString(System.IO.Stream! stream, string! str) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteUShort(System.IO.Stream! stream, ushort value) -> void
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFramework(string? frameworkDescription) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetPlatformName(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
+static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
+static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
+static readonly Microsoft.Testing.Extensions.ReportFileWriterHelper.FileWriteRetryTimeout -> System.TimeSpan
+static readonly Microsoft.Testing.Platform.IPC.Models.VoidResponse.CachedInstance -> Microsoft.Testing.Platform.IPC.Models.VoidResponse!
+static readonly System.IO.Hashing.XxHashShared.DefaultSecret -> byte[]!
+static System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(uint value) -> uint
+static System.Buffers.Binary.BinaryPrimitives.ReverseEndianness(ulong value) -> ulong
+static System.IO.Hashing.XxHashShared.Accumulate512(ulong* accumulators, byte* source, byte* secret) -> void
+static System.IO.Hashing.XxHashShared.Append(ref System.IO.Hashing.XxHashShared.State state, byte[]! source) -> void
+static System.IO.Hashing.XxHashShared.Avalanche(ulong hash) -> ulong
+static System.IO.Hashing.XxHashShared.ConsumeStripes(ulong* accumulators, ref ulong stripesSoFar, ulong stripesPerBlock, byte* source, ulong stripes, byte* secret) -> void
+static System.IO.Hashing.XxHashShared.CopyAccumulators(ref System.IO.Hashing.XxHashShared.State state, ulong* accumulators) -> void
+static System.IO.Hashing.XxHashShared.DefaultSecret.get -> System.ReadOnlySpan<byte>
+static System.IO.Hashing.XxHashShared.DeriveSecretFromSeed(byte* destinationSecret, ulong seed) -> void
+static System.IO.Hashing.XxHashShared.DigestLong(ref System.IO.Hashing.XxHashShared.State state, ulong* accumulators, byte* secret) -> void
+static System.IO.Hashing.XxHashShared.HashInternalLoop(ulong* accumulators, byte* source, uint length, byte* secret) -> void
+static System.IO.Hashing.XxHashShared.Initialize(ref System.IO.Hashing.XxHashShared.State state, ulong seed) -> void
+static System.IO.Hashing.XxHashShared.InitializeAccumulators(ulong* accumulators) -> void
+static System.IO.Hashing.XxHashShared.MergeAccumulators(ulong* accumulators, byte* secret, ulong start) -> ulong
+static System.IO.Hashing.XxHashShared.Mix16Bytes(byte* source, ulong secretLow, ulong secretHigh, ulong seed) -> ulong
+static System.IO.Hashing.XxHashShared.Multiply32To64(uint v1, uint v2) -> ulong
+static System.IO.Hashing.XxHashShared.Multiply64To128(ulong left, ulong right, out ulong lower) -> ulong
+static System.IO.Hashing.XxHashShared.Multiply64To128ThenFold(ulong left, ulong right) -> ulong
+static System.IO.Hashing.XxHashShared.ReadUInt32LE(byte* data) -> uint
+static System.IO.Hashing.XxHashShared.ReadUInt64LE(byte* data) -> ulong
+static System.IO.Hashing.XxHashShared.Reset(ref System.IO.Hashing.XxHashShared.State state) -> void
+static System.IO.Hashing.XxHashShared.Rrmxmx(ulong hash, uint length) -> ulong
+static System.IO.Hashing.XxHashShared.XorShift(ulong value, int shift) -> ulong
+static System.Numerics.BitOperations.RotateLeft(uint value, int offset) -> uint
+static System.Numerics.BitOperations.RotateLeft(ulong value, int offset) -> ulong
+static System.Numerics.BitOperations.RotateRight(uint value, int offset) -> uint
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+static TestFx.Hashing.XxHash128.Hash(byte[]! source, byte[]! destination, long seed = 0) -> int
+static TestFx.Hashing.XxHash128.Hash(byte[]! source, long seed) -> byte[]!
+static TestFx.Hashing.XxHash128.Hash(byte[]! source) -> byte[]!
+static TestFx.Hashing.XxHash128.HashToUInt128(System.ReadOnlySpan<byte> source, long seed = 0) -> System.UInt128
+static TestFx.Hashing.XxHash128.TryHash(byte[]! source, byte[]! destination, out int bytesWritten, long seed = 0) -> bool
+System.Buffers.Binary.BinaryPrimitives
+System.IO.Hashing.XxHashShared
+System.IO.Hashing.XxHashShared.State
+System.IO.Hashing.XxHashShared.State.Accumulators -> ulong*
+System.IO.Hashing.XxHashShared.State.Buffer -> byte*
+System.IO.Hashing.XxHashShared.State.BufferedCount -> uint
+System.IO.Hashing.XxHashShared.State.Secret -> byte*
+System.IO.Hashing.XxHashShared.State.Seed -> ulong
+System.IO.Hashing.XxHashShared.State.State() -> void
+System.IO.Hashing.XxHashShared.State.StripesProcessedInCurrentBlock -> ulong
+System.IO.Hashing.XxHashShared.State.TotalLength -> ulong
+System.Numerics.BitOperations
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
+TestFx.Hashing.XxHash128
+TestFx.Hashing.XxHash128.Append(byte[]! source) -> void
+TestFx.Hashing.XxHash128.GetCurrentHash() -> byte[]!
+TestFx.Hashing.XxHash128.GetCurrentHashAsUInt128() -> System.UInt128
+TestFx.Hashing.XxHash128.Reset() -> void
+TestFx.Hashing.XxHash128.XxHash128() -> void
+TestFx.Hashing.XxHash128.XxHash128(long seed) -> void
+virtual Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.ShouldValidatePipeNameValue.get -> bool

@@ -1,0 +1,25 @@
+#nullable enable
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest.CreateFromOwnedArrays(string! fullyQualifiedTestClassName, string! testName, string? testDisplayName, string! assemblyPath, string? managedTypeName, string? managedMethodName, string? declaringFilePath, int? declaringLineNumber, string![]! testCategories, System.Collections.Generic.KeyValuePair<string!, string!>[]! testProperties) -> Microsoft.VisualStudio.TestTools.UnitTesting.PlannedTest!
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Current.set -> void
+[MSTESTEXP]static Microsoft.VisualStudio.TestTools.UnitTesting.TestRun.SetCurrent(Microsoft.VisualStudio.TestTools.UnitTesting.ITestRunInfo? info) -> void
+~static Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages.ArgumentXMustDeriveFromClassY.get -> string
+~static Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages.AsyncUITestMethodWithNoDispatcherQueue.get -> string
+~static Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages.Culture.get -> System.Globalization.CultureInfo
+~static Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages.Culture.set -> void
+~static Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages.GetResourceString(string resourceKey, string defaultValue = null) -> string
+~static Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages.ResourceManager.get -> System.Resources.ResourceManager
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkExtensionsMessages
+Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunCount.set -> void
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.FullyQualifiedTestClassNameLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ResultsDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestNameLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectoryLabel -> string!
+static readonly Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectoryLabel -> string!
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
