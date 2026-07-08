@@ -131,7 +131,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<InvalidRunSettingsException>();
+        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<AdapterSettingsException>();
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasNonParameterTypeChildNodes()
@@ -152,7 +152,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<InvalidRunSettingsException>();
+        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<AdapterSettingsException>();
     }
 
     public void GetTestRunParametersIgnoresMalformedKeyValues()
