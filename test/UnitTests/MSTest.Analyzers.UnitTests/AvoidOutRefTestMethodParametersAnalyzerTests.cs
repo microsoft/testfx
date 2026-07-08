@@ -232,7 +232,7 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodHasDerivedTestMethodAttributeAndOutParam_Diagnostic()
+    public async Task WhenTestMethodHasDerivedTestMethodAttributeAndOutParameter_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -274,7 +274,7 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenTestMethodOutsideTestClassHasOutParam_Diagnostic()
+    public async Task WhenTestMethodOutsideTestClassHasOutParameter_Diagnostic()
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
