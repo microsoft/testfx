@@ -20,7 +20,7 @@
           AfterTargets="_GetProjectReferenceVersions"
           Condition=" '$(TestingPlatformNextMajorVersion)' != '' ">
     <ItemGroup>
-      <_ProjectReferencesWithVersions Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' and !$([System.String]::Copy('%(ProjectVersion)').StartsWith('[')) ">
+      <_ProjectReferencesWithVersions Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' and !$([System.String]::new('%(ProjectVersion)').StartsWith('[')) ">
         <ProjectVersion>[%(ProjectVersion), $(TestingPlatformNextMajorVersion))</ProjectVersion>
       </_ProjectReferencesWithVersions>
     </ItemGroup>
