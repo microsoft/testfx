@@ -213,6 +213,23 @@ public sealed class TestApplicationResultTests : IDisposable
     }
 
     [TestMethod]
+    public void GetProcessExitCodeAsync_If_MinimumExpectedTests_Zero_And_No_Tests_Ran_Returns_Success()
+    {
+        // An explicit `--minimum-expected-tests 0` accepts an empty run, superseding the ZeroTests (8)
+        // verdict. This is how a `dotnet test --test-modules` orchestrator flows "zero is acceptable for
+        // this module" down to each module. See issue #7457.
+        TestApplicationResult testApplicationResult
+            = new(
+                new Mock<IOutputDevice>().Object,
+                new CommandLineOption(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, ["0"]),
+                new Mock<IEnvironment>().Object,
+                new Mock<IStopPoliciesService>().Object,
+                null);
+
+        Assert.AreEqual((int)ExitCode.Success, testApplicationResult.GetProcessExitCode());
+    }
+
+    [TestMethod]
     public void GetProcessExitCodeAsync_If_MinimumExpectedTests_Set_And_No_Tests_Ran_Returns_MinimumExpectedTestsPolicyViolation()
     {
         // When an explicit minimum is set, a zero-test run is reported as a minimum-expected violation (9)

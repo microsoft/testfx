@@ -591,9 +591,9 @@ Optionally accepts 'text' (the default human-readable output) or 'json' to print
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+        <source>'--minimum-expected-tests' expects a single non-negative integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests'에는 0이 아닌 단일 양의 정수 값이 필요합니다.
+        <target state="needs-review-translation">'--minimum-expected-tests'에는 0이 아닌 단일 양의 정수 값이 필요합니다.
 (예: '--minimum-expected-tests 10')</target>
         <note>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</note>
       </trans-unit>

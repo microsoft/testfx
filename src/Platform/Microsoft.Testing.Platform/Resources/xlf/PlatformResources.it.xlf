@@ -591,9 +591,9 @@ Facoltativamente accetta ''text'' (output leggibile predefinito) o ''json'' per 
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
-        <source>'--minimum-expected-tests' expects a single non-zero positive integer value
+        <source>'--minimum-expected-tests' expects a single non-negative integer value
 (e.g. '--minimum-expected-tests 10')</source>
-        <target state="translated">'--minimum-expected-tests' prevede un singolo valore intero positivo diverso da zero
+        <target state="needs-review-translation">'--minimum-expected-tests' prevede un singolo valore intero positivo diverso da zero
 (ad esempio '--minimum-expected-tests 10')</target>
         <note>{Locked="--minimum-expected-tests"}{Locked="--minimum-expected-tests 10"}</note>
       </trans-unit>
