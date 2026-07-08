@@ -22,6 +22,8 @@ const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxMessageLength = 16
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStackTraceLength = 32768 -> int
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStandardStreamLength = 32768 -> int
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxTraitFieldLength = 1024 -> int
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.CapturedExceptionDetails
 Microsoft.Testing.Extensions.CapturedExceptionDetails.CapturedExceptionDetails() -> void
 Microsoft.Testing.Extensions.CapturedExceptionDetails.CapturedExceptionDetails(string? ErrorMessage, string? StackTrace, string? ExceptionType) -> void
@@ -194,6 +196,8 @@ override Microsoft.Testing.Extensions.HtmlReport.HtmlReportGenerator.Uid.get -> 
 override Microsoft.Testing.Extensions.ReportEngineContext.GetHashCode() -> int
 override Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 override Microsoft.Testing.Extensions.ReportGeneratorCommandLineBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
 readonly Microsoft.Testing.Extensions.ReportEngineBase._cancellationToken -> System.Threading.CancellationToken
 readonly Microsoft.Testing.Extensions.ReportEngineBase._clock -> Microsoft.Testing.Platform.Helpers.IClock!
 readonly Microsoft.Testing.Extensions.ReportEngineBase._commandLineOptions -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
@@ -243,4 +247,18 @@ static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> b
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
 virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.OnTestNodeUpdate(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> void

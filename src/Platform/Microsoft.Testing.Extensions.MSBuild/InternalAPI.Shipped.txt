@@ -113,6 +113,8 @@ const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Key = 1 -> ushort
 const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Value = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.VoidResponseFieldsId.MessagesSerializerId = 0 -> int
 const Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId.MessagesSerializerId = 13 -> int
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.MSBuild.MSBuildCommandLineProvider
 Microsoft.Testing.Extensions.MSBuild.MSBuildCommandLineProvider.MSBuildCommandLineProvider() -> void
 Microsoft.Testing.Extensions.MSBuild.MSBuildConstants
@@ -316,6 +318,8 @@ override Microsoft.Testing.Extensions.MSBuild.Serializers.RunSummaryInfoRequest.
 override Microsoft.Testing.Extensions.MSBuild.Serializers.RunSummaryInfoRequest.ToString() -> string!
 override Microsoft.Testing.Extensions.MSBuild.Serializers.RunSummaryInfoRequestSerializer.Id.get -> int
 override Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer.Id.get -> int
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
 static Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest.operator !=(Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest? left, Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest? right) -> bool
 static Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest.operator ==(Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest? left, Microsoft.Testing.Extensions.MSBuild.Serializers.FailedTestInfoRequest? right) -> bool
 static Microsoft.Testing.Extensions.MSBuild.Serializers.ModuleInfoRequest.operator !=(Microsoft.Testing.Extensions.MSBuild.Serializers.ModuleInfoRequest? left, Microsoft.Testing.Extensions.MSBuild.Serializers.ModuleInfoRequest? right) -> bool
@@ -364,7 +368,21 @@ static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncD
 static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
 static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
 static readonly Microsoft.Testing.Platform.IPC.Models.VoidResponse.CachedInstance -> Microsoft.Testing.Platform.IPC.Models.VoidResponse!
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
 virtual Microsoft.Testing.Extensions.MSBuild.MSBuildLifecycleCallbacksBase.AfterRunAsync(int exitCode, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 virtual Microsoft.Testing.Extensions.MSBuild.MSBuildLifecycleCallbacksBase.Description.get -> string!
 virtual Microsoft.Testing.Extensions.MSBuild.MSBuildLifecycleCallbacksBase.RegisterAdditionalSerializers(Microsoft.Testing.Platform.IPC.NamedPipeClient! pipeClient) -> void
