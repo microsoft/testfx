@@ -1,13 +1,14 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-07-10 UTC
+2026-07-08 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session: **2, 3, 6, 7**
-Last run before this: Tasks 5, 3, 7 (2026-07-09)
-Next run should prioritise: Tasks 1 (validate commands), 4 (PR maintenance), 5 (issue comments), 7 (always)
+Tasks run this session: **5, 7**
+Last run before this: Tasks 2, 3, 6, 7 (2026-07-10)
+Last run before that: Tasks 5, 3, 7 (2026-07-09)
+Next run should prioritise: Tasks 1 (validate commands), 2 (scan code), 3 (implement), 7 (always)
 
 ## Build / Test / Benchmark Commands
 
@@ -28,18 +29,27 @@ Notes:
 ## Efficiency Notes
 
 - **Hot paths already optimised**: `TestMethodRunner`, `TestMethodInfo`, `ReflectionTestMethodInfo` — data-driven allocation paths covered by #9514 + #9617
-- **MSTest.Performance.Runner**: Custom pipeline-based perf tool; `PlainProcess` (direct process), `DotnetTestProcess` (dotnet test server-mode). Both now have cached `JsonSerializerOptions`.
-- **Only 1 scenario exists**: `Scenario1` (100×100 plain methods). No data-driven scenario — proposed in issue #aw_sc2issue (Task 6).
+- **MSTest.Performance.Runner**: Has Scenario1 (plain methods) and Scenario2 (data-driven, added by #9728). JsonSerializerOptions now cached as static readonly.
+- **TypeCache**: `ConcurrentDictionary.GetOrAdd` caches TestClassInfo per type name. Already well-optimized.
+- **TelemetryCollector**: `Lazy<bool>` for opt-out check, `ConcurrentDictionary` for counts, `AggressiveInlining`. Already optimal.
+- **Assert.That**: Compiles expression trees on every call (by design). Not cacheable without significant complexity.
 - **Report generators well-optimized**: CtrfReport uses custom `Utf8JsonWriter`-based streaming serialiser; HtmlReport is single-pass. No significant opportunities found.
 - **OpenTelemetry `Properties.OfType()`** in yield iterator — LOW priority, not worth changing without profiling evidence.
 
-## Open PRs
+## Open PRs / Issues Created by Efficiency Improver
 
-- **#aw_pr_ca1869** (created 2026-07-10): `efficiency/cache-json-serializer-options` — cache `JsonSerializerOptions` in `PlainProcess` and `DotnetTestProcess`; removed CA1869 pragmas. Draft PR.
+None currently open. Previous work:
+- #9713 (Scenario2 proposal) — closed as completed by Evangelink, resolved by #9728
+- #9714 (JsonSerializerOptions caching) — closed as completed by Evangelink, branch `efficiency/cache-json-serializer-options-cf226ce60ce3db6d` was pushed; merged into main
 
 ## Monthly Summary Issue
 
-- Issue #9594 — `[efficiency-improver] Monthly Activity 2026-07` — open, updated this run.
+- Issue #9594 — `[efficiency-improver] Monthly Activity 2026-07` — open
+
+## Issue Comments (Task 5)
+
+- **#8824** — commented 2026-06-24 (energy analysis of LLM output proposals). No new human comments since.
+- **#9712** — commented 2026-07-08 (energy impact of Azure.Identity dependency, energy-proportionality recommendation).
 
 ## Optimisation Backlog
 
@@ -48,15 +58,15 @@ Notes:
 | LOW | Code-Level | OpenTelemetry: `Properties.OfType()` in `yield` — needs non-iterator helper | Not worth changing without profiling |
 | LOW | Code-Level | `TerminalTestReporter.TotalTests`: `_assemblies.Values.Sum()` on every access | Negligible — called only for display |
 | LOW | Infrastructure | Output-byte-count CI health metric (suggested in #8824 comment) | Needs maintainer discussion |
-| LOW | Infrastructure | Scenario2: data-driven benchmark — proposed in issue #aw_sc2issue | Needs maintainer input |
 
 ## Completed Work
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
-| 2026-07-10 | #aw_pr_ca1869 | Cache JsonSerializerOptions in PlainProcess + DotnetTestProcess; remove CA1869 pragmas |
-| 2026-07-10 | #aw_sc2issue | Issue: propose Scenario2 data-driven benchmark for perf runner |
-| 2026-07-07 | #9617 (merged by Evangelink) | Data-driven allocation fixes (CloneForDataDrivenIteration dict, TCS bridge, ReflectionTestMethodInfo wrapper caching) |
+| 2026-07-08 | #9712 comment | Energy impact of Azure.Identity dependency; recommended TokenCredential abstraction |
+| 2026-07-10 | #9714 (closed) | Cache JsonSerializerOptions in PlainProcess + DotnetTestProcess; remove CA1869 pragmas |
+| 2026-07-10 | #9713 (closed) | Issue: propose Scenario2 data-driven benchmark for perf runner — resolved by #9728 |
+| 2026-07-07 | #9617 (merged) | Data-driven allocation fixes (CloneForDataDrivenIteration dict, TCS bridge, ReflectionTestMethodInfo wrapper caching) |
 | 2026-07-05 | #9614 (merged) | Cache `GetParameters()` in `TestMethodInfo.ParameterTypes` |
 | 2026-06-30 | #9514 (merged) | Cache `MethodInfo.GetParameters()` in `TestMethodInfo.ParameterTypes` |
 
@@ -66,6 +76,6 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅
-- Issue comments cursor: #8824 commented 2026-07-09
-- Next code scan area: `src/Platform/Microsoft.Testing.Platform/` extensions (MSBuild, VSTestBridge, Telemetry)
+- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅
+- Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
+- Next code scan area: MSBuild tasks area (`src/Platform/Microsoft.Testing.Platform.MSBuild/`)
