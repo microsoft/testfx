@@ -66,7 +66,10 @@ internal sealed class MSTestRunSettings : IRunSettings
     {
         _ = commandLineOptions.TryGetOptionArgumentList(RunSettingsOptionName, out string[]? fileNames);
 
-        if (fileNames is { Length: 1 } && fileSystem.ExistFile(fileNames[0]))
+        // Match the runsettings environment-variable provider (which reads the same --settings option): use the
+        // first provided path rather than requiring exactly one, so a valid value is not ignored when more than
+        // one argument is present.
+        if (fileNames is { Length: > 0 } && fileSystem.ExistFile(fileNames[0]))
         {
             return fileSystem.ReadAllText(fileNames[0]);
         }

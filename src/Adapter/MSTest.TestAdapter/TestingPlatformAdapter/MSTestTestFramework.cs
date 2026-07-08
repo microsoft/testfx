@@ -4,6 +4,7 @@
 #if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
+using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -90,7 +91,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
 
         if (_sessionUid is not null)
         {
-            throw new InvalidOperationException($"A test session '{_sessionUid.Value.Value}' was already created.");
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage, _sessionUid.Value.Value));
         }
 
         _sessionUid = context.SessionUid;

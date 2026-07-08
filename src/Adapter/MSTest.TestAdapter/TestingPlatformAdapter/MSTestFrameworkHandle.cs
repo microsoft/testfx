@@ -70,7 +70,7 @@ internal sealed class MSTestFrameworkHandle : IFrameworkHandle, IOutputDeviceDat
             _ => throw new NotSupportedException($"Unsupported logging level '{testMessageLevel}'."),
         };
 
-        _outputDevice.DisplayAsync(this, data, _cancellationToken).GetAwaiter().GetResult();
+        _outputDevice.DisplayAsync(this, data, _cancellationToken).ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     Task<bool> IExtension.IsEnabledAsync() => _extension.IsEnabledAsync();
