@@ -14,12 +14,14 @@
 // runtime binding without re-exposing the polyfill to source consumers.
 // See https://github.com/microsoft/testfx/issues/9710.
 
+using System;
 using System.Collections.Generic;
 
 namespace Polyfills;
 
 internal static partial class Polyfill
 {
+    [Obsolete("Binary-compatibility shim for pre-[Embedded] Polyfill extension assemblies (see https://github.com/microsoft/testfx/issues/9710). It has no source callers and MUST be removed in the next major version of Microsoft.Testing.Platform.")]
     public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> target, out TKey key, out TValue value)
     {
         key = target.Key;
