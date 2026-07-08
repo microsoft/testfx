@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -206,12 +206,9 @@ internal sealed class MSTestRunSettings : IRunSettings
             return;
         }
 
-        foreach (string unsupportedRunConfigurationSetting in UnsupportedRunConfigurationSettings)
+        foreach (string unsupportedRunConfigurationSetting in UnsupportedRunConfigurationSettings.Where(setting => runConfigurationElement.Element(setting) is not null))
         {
-            if (runConfigurationElement.Element(unsupportedRunConfigurationSetting) is not null)
-            {
-                messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, unsupportedRunConfigurationSetting));
-            }
+            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, unsupportedRunConfigurationSetting));
         }
     }
 }
