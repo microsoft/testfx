@@ -260,71 +260,25 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
-        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-#if NETFRAMEWORK
-                CallContext.HostContext = _hostContext;
-#endif
-
-                Task? task = methodInfo.GetInvokeResultAsync(classInstance, null);
-                if (task is not null)
-                {
-                    await task.ConfigureAwait(false);
-                }
-
-                CaptureExecutionContextAfterFixtureIfNeeded(timeout);
-
-#if NETFRAMEWORK
-                _hostContext = CallContext.HostContext;
-#endif
-            },
-            TestContext.Context.CancellationTokenSource,
-            timeout,
+        return await InvokeFixtureMethodAsync(
             methodInfo,
-            _executionContext,
+            classInstance,
+            arguments: null,
+            timeout,
+            timeoutTokenSource,
             Resource.TestInitializeWasCancelled,
-            Resource.TestInitializeTimedOut,
-            timeoutTokenSource is null
-                ? null
-                : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
-
-        return result;
+            Resource.TestInitializeTimedOut).ConfigureAwait(false);
     }
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalInitializeMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
-    {
-        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-#if NETFRAMEWORK
-                CallContext.HostContext = _hostContext;
-#endif
-
-                Task? task = methodInfo.GetInvokeResultAsync(null, [TestContext]);
-                if (task is not null)
-                {
-                    await task.ConfigureAwait(false);
-                }
-
-                CaptureExecutionContextAfterFixtureIfNeeded(timeoutInfo);
-
-#if NETFRAMEWORK
-                _hostContext = CallContext.HostContext;
-#endif
-            },
-            TestContext.Context.CancellationTokenSource,
-            timeoutInfo: timeoutInfo,
+        => await InvokeFixtureMethodAsync(
             methodInfo,
-            _executionContext,
+            classInstance: null,
+            arguments: [TestContext],
+            timeoutInfo,
+            timeoutTokenSource,
             Resource.TestInitializeWasCancelled,
-            Resource.TestInitializeTimedOut,
-            timeoutTokenSource is null
-                ? null
-                : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
-
-        return result;
-    }
+            Resource.TestInitializeTimedOut).ConfigureAwait(false);
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
@@ -334,6 +288,35 @@ internal partial class TestMethodInfo
             timeout = localTimeout;
         }
 
+        return await InvokeFixtureMethodAsync(
+            methodInfo,
+            classInstance,
+            arguments: null,
+            timeout,
+            timeoutTokenSource,
+            Resource.TestCleanupWasCancelled,
+            Resource.TestCleanupTimedOut).ConfigureAwait(false);
+    }
+
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
+        => await InvokeFixtureMethodAsync(
+            methodInfo,
+            classInstance: null,
+            arguments: [TestContext],
+            timeoutInfo,
+            timeoutTokenSource,
+            Resource.TestCleanupWasCancelled,
+            Resource.TestCleanupTimedOut).ConfigureAwait(false);
+
+    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeFixtureMethodAsync(
+        MethodInfo methodInfo,
+        object? classInstance,
+        object?[]? arguments,
+        TimeoutInfo? timeout,
+        CancellationTokenSource? timeoutTokenSource,
+        string cancelledMessage,
+        string timedOutMessage)
+    {
         TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
             async () =>
             {
@@ -341,7 +324,7 @@ internal partial class TestMethodInfo
                 CallContext.HostContext = _hostContext;
 #endif
 
-                Task? task = methodInfo.GetInvokeResultAsync(classInstance, null);
+                Task? task = methodInfo.GetInvokeResultAsync(classInstance, arguments);
                 if (task is not null)
                 {
                     await task.ConfigureAwait(false);
@@ -357,42 +340,8 @@ internal partial class TestMethodInfo
             timeout,
             methodInfo,
             _executionContext,
-            Resource.TestCleanupWasCancelled,
-            Resource.TestCleanupTimedOut,
-            timeoutTokenSource is null
-                ? null
-                : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
-
-        return result;
-    }
-
-    private async SynchronizationContextPreservingTask<TestFailedException?> InvokeGlobalCleanupMethodAsync(MethodInfo methodInfo, TimeoutInfo? timeoutInfo, CancellationTokenSource? timeoutTokenSource)
-    {
-        TestFailedException? result = await FixtureMethodRunner.RunWithTimeoutAndCancellationAsync(
-            async () =>
-            {
-#if NETFRAMEWORK
-                CallContext.HostContext = _hostContext;
-#endif
-
-                Task? task = methodInfo.GetInvokeResultAsync(null, [TestContext]);
-                if (task is not null)
-                {
-                    await task.ConfigureAwait(false);
-                }
-
-                CaptureExecutionContextAfterFixtureIfNeeded(timeoutInfo);
-
-#if NETFRAMEWORK
-                _hostContext = CallContext.HostContext;
-#endif
-            },
-            TestContext.Context.CancellationTokenSource,
-            timeoutInfo: timeoutInfo,
-            methodInfo,
-            _executionContext,
-            Resource.TestCleanupWasCancelled,
-            Resource.TestCleanupTimedOut,
+            cancelledMessage,
+            timedOutMessage,
             timeoutTokenSource is null
                 ? null
                 : (timeoutTokenSource, TimeoutInfo.Timeout)).ConfigureAwait(false);
