@@ -106,6 +106,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 
 * Microsoft.Testing.Platform: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform/2.3.0)
 * Microsoft.Testing.Platform.MSBuild: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Platform.MSBuild/2.3.0)
+* Microsoft.Testing.Extensions.AzureDevOpsReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.AzureDevOpsReport/2.3.0)
 * Microsoft.Testing.Extensions.CrashDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.3.0)
 * Microsoft.Testing.Extensions.HangDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.3.0)
 * Microsoft.Testing.Extensions.HotReload: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.3.0)
@@ -114,6 +115,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Microsoft.Testing.Extensions.Telemetry: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.3.0)
 * Microsoft.Testing.Extensions.TrxReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.3.0)
 * Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.3.0)
+* Microsoft.Testing.Extensions.VSTestBridge: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VSTestBridge/2.3.0)
 * Microsoft.Testing.Extensions.CtrfReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CtrfReport/1.0.0-alpha.26357.13)
 * Microsoft.Testing.Extensions.GitHubActionsReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.GitHubActionsReport/1.0.0-alpha.26357.13)
 * Microsoft.Testing.Extensions.JUnitReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.JUnitReport/1.0.0-alpha.26357.13)
