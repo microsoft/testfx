@@ -87,6 +87,12 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
     {
         context.CancellationToken.ThrowIfCancellationRequested();
+
+        if (_sessionUid is not null)
+        {
+            throw new InvalidOperationException($"A test session '{_sessionUid.Value.Value}' was already created.");
+        }
+
         _sessionUid = context.SessionUid;
         return Task.FromResult(new CreateTestSessionResult { IsSuccess = true });
     }
@@ -113,6 +119,9 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                 case RunTestExecutionRequest runRequest:
                     await RunTestsAsync(runRequest, context.MessageBus, context.CancellationToken).ConfigureAwait(false);
                     break;
+
+                default:
+                    throw new NotSupportedException($"The native MSTest framework does not support requests of type '{context.Request.GetType()}'.");
             }
         }
         finally

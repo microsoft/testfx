@@ -166,7 +166,9 @@ internal abstract class MSTestFilterContextBase
                     case '=':
                     case '!':
                     case '~':
-                        if (i - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
+                        // Escape the special char if it is not already escaped. Note: index into k-1 (the previous
+                        // character in this UID value), not i-1.
+                        if (k - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
                         {
                             filter.Append('\\');
                         }
