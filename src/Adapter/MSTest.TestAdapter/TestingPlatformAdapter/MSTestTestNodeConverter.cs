@@ -150,8 +150,8 @@ internal static class MSTestTestNodeConverter
         parameterTypes ??= [];
 
         int lastIndexOfDot = managedType.LastIndexOf('.');
-        string @namespace = lastIndexOfDot == -1 ? string.Empty : managedType.Substring(0, lastIndexOfDot);
-        string typeName = lastIndexOfDot == -1 ? managedType : managedType.Substring(lastIndexOfDot + 1);
+        string @namespace = lastIndexOfDot == -1 ? string.Empty : managedType[..lastIndexOfDot];
+        string typeName = lastIndexOfDot == -1 ? managedType : managedType[(lastIndexOfDot + 1)..];
 
         // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to match
         // the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
@@ -305,7 +305,7 @@ internal static class MSTestTestNodeConverter
             return false;
         }
 
-        fullyQualifiedType = fullyQualifiedName.Substring(0, lastDotIndexBeforeOpenBracket);
+        fullyQualifiedType = fullyQualifiedName[..lastDotIndexBeforeOpenBracket];
         return true;
     }
 }
