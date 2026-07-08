@@ -3,8 +3,6 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
-using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
-using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -16,6 +14,7 @@ using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -79,7 +78,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
     ];
 
     private bool IsTrxEnabled
-        => _isTrxEnabled ??= _trxReportCapability is IInternalVSTestBridgeTrxReportCapability internalCapability
+        => _isTrxEnabled ??= _trxReportCapability is IMSTestTrxReportCapability internalCapability
             ? internalCapability.IsTrxEnabled
             : _trxReportCapability is { IsSupported: true };
 
@@ -91,7 +90,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
 
         if (_sessionUid is not null)
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage, _sessionUid.Value.Value));
+            throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, PlatformAdapterResources.VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage, _sessionUid.Value.Value));
         }
 
         _sessionUid = context.SessionUid;

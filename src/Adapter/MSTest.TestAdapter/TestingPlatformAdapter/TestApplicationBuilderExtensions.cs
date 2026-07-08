@@ -4,11 +4,11 @@
 #if !WINDOWS_UWP
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
 using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
-using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -18,9 +18,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 public static class TestApplicationBuilderExtensions
 {
-    // NOTE: We intentionally use this class and not VSTestBridgeExtensionBaseCapabilities because
-    // we don't want MSTest to use vstestProvider capability
-    private sealed class MSTestCapabilities : IInternalVSTestBridgeTrxReportCapability
+    // NOTE: We intentionally do not use the bridge's VSTestBridgeExtensionBaseCapabilities because we don't want
+    // MSTest to use the vstestProvider capability. This implements BOTH the bridge's TRX capability interface (read
+    // by MSTestBridgedTestFramework, the current default) and MSTest's native one (read by MSTestTestFramework), so
+    // both frameworks observe the same TRX enablement.
+    private sealed class MSTestCapabilities : IInternalVSTestBridgeTrxReportCapability, IMSTestTrxReportCapability
     {
         public bool IsTrxEnabled { get; private set; }
 
@@ -38,11 +40,21 @@ public static class TestApplicationBuilderExtensions
     public static void AddMSTest(this ITestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)
     {
         MSTestExtension extension = new();
-        testApplicationBuilder.AddRunSettingsService(extension);
-        testApplicationBuilder.AddTestCaseFilterService(extension);
-        testApplicationBuilder.AddTestRunParametersService(extension);
+
+        // Register MSTest's own command-line options, runsettings configuration source and environment-variable
+        // provider natively (identical option names/descriptions to the VSTest bridge), so both the native and the
+        // bridged framework read them by name.
+        if (testApplicationBuilder is TestApplicationBuilder concreteBuilder)
+        {
+            concreteBuilder.Configuration.AddConfigurationSource(() => new MSTestRunSettingsConfigurationProvider(extension, new SystemFileSystem()));
+        }
+
+        testApplicationBuilder.CommandLine.AddProvider(() => new MSTestRunSettingsCommandLineOptionsProvider(extension));
+        testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestCaseFilterCommandLineOptionsProvider(extension));
+        testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestRunParametersCommandLineOptionsProvider(extension));
         testApplicationBuilder.AddMaximumFailedTestsService(extension);
-        testApplicationBuilder.AddRunSettingsEnvironmentVariableProvider(extension);
+        testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
+            => new MSTestRunSettingsEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem(), serviceProvider.GetEnvironment()));
 
         // When the experimental native MTP integration is enabled, MSTest plugs into Microsoft.Testing.Platform
         // directly (no VSTest bridge object model on the request path). Off by default, so shipping behavior is
