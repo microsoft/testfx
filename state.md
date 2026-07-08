@@ -1,63 +1,89 @@
-# Perf Improver State — microsoft/testfx
+# Perf Improver — Repo Memory
 
-## Build/Test Commands
+## Validated Commands
 
 ```sh
-./build.sh              # restore + build (Debug)
-./build.sh -c Release   # release build
-./build.sh -test        # unit tests (net8.0 + net9.0)
-./build.sh -pack        # produce NuGet packages
-./build.sh -pack -test -integrationTest  # full acceptance suite
-# Run single test project (after build):
-.dotnet/dotnet run --project <proj> -f net9.0 --no-build -- --treenode-filter "*/*/Class/Method"
-# Run perf timing (after -pack):
-.dotnet/dotnet run --project test/Performance/MSTest.Performance.Runner -c Release -- execute --pipelineNameFilter "*PlainProcess*"
+./build.sh                    # restore + build (Debug)
+./build.sh -test              # build + unit tests
+./build.sh -pack              # produce NuGet packages
+./build.sh -pack -test -integrationTest  # full suite (slow)
+
+# Perf runner (requires -pack first)
+.dotnet/dotnet run --project test/Performance/MSTest.Performance.Runner \
+  -- execute --pipelineNameFilter "*PlainProcess*"
+
+# Single test project
+.dotnet/dotnet run --project <proj> -f net9.0 --no-build \
+  -- --treenode-filter "*/*/MyTestClass/MyTestMethod"
 ```
+
+## Task Schedule (last run dates)
+
+| Task | Last Run     |
+|------|-------------|
+| 1    | 2026-07-04  |
+| 2    | 2026-07-08  |
+| 3    | 2026-07-07  |
+| 4    | 2026-07-08  |
+| 5    | 2026-07-08  |
+| 6    | 2026-07-07  |
+| 7    | 2026-07-08  |
+
+Next priority: Tasks 3 or 6 (oldest)
+
+## Completed Work
+
+| Date       | Item                                  | Notes                                      |
+|------------|---------------------------------------|--------------------------------------------|
+| 2026-07-08 | PR #9728 merged                       | Scenario2 data-driven + JsonSerializerOptions caching |
+| 2026-07-08 | PR #9706 merged                       | Native MTP integration (RFC 018), experimental |
+| 2026-07-07 | PR #9617 merged                       | All 4 data-driven hot-path optimisations   |
+| 2026-07-07 | PR #9636 merged                       | TCS fast-path skip                         |
+| 2026-07-07 | PR #9729 merged                       | TestMethodRunner split into partial classes|
+| 2026-07-07 | Issues #9602/#9603 closed             | Resolved by PR #9617/#9636                 |
 
 ## Work In Progress
 
 None.
 
-## Completed Work
-
-| Date | Change | Status |
-|---|---|---|
-| 2026-06-29 | Cache ParameterInfo[] in TestMethodInfo.ParameterTypes (PR #9514) | Merged 2026-06-30 |
-| 2026-07-05 | PR #9617: skip Dict alloc + TCS bridge + cache ReflectionTestMethodInfo + ParameterTypes — all 4 data-driven hot-path optimizations | Merged 2026-07-07 |
-| 2026-07-07 | PR perf-assist/scenario2-data-driven: add Scenario2 (data-driven) to perf runner + cache JsonSerializerOptions in PlainProcess | Draft PR submitted |
-
-## Optimization Backlog (prioritized)
-
-1. **[Draft PR]** Add Scenario2 data-driven perf scenario (branch `perf-assist/scenario2-data-driven`) — measurement infrastructure for the hot path in #9617
-2. `AntiTerminal.StopUpdate()` — `_stringBuilder.ToString()` on every flush; blocked on `IConsole`/netstandard2.0. Low priority.
-3. `SilenceDrivenHeartbeatRenderer` — allocs only on rare heartbeat paths. Low priority.
-4. `ClassifyOutcome` in `TestResultCaptureHelper.cs` — `Array.IndexOf` fallback. Very low priority.
-
-## Perf Notes
-
-- MethodInfo.GetParameters() always allocates a fresh ParameterInfo[] (CLR safety). Cache wherever used in loops or hot paths.
-- TestMethodInfo.ParameterTypes uses `field ??=` (C# 14) lazy init — valid because MethodInfo is get-only.
-- ITestDataSource test execution hot path: TestMethodRunner → ExecuteTestAsync → ExecuteInternalAsync → GetInvokeResultAsync. Each called N times (N = data rows).
-- Perf runner Scenario1: 100 classes × 100 methods × 1 row = 10,000 plain test executions.
-- Perf runner Scenario2 (new): 100 classes × 10 methods × 10 DataRow rows = 10,000 data-driven executions.
-- nightly perf CI: `perf-timing-nightly.yml` runs `*PlainProcess*` filter automatically.
-
 ## Monthly Activity Issue
 
-Issue #9604: [perf-improver] Monthly Activity 2026-07 (OPEN)
+- **July 2026**: #9604 (open)
 
-## Task Schedule (last run dates)
+## Performance Opportunities Backlog
 
-| Task | Last Run |
-|---|---|
-| Task 1: Discover commands | 2026-06-28 |
-| Task 2: Identify opportunities | 2026-07-06 |
-| Task 3: Implement improvements | 2026-07-06 |
-| Task 4: Maintain PRs | 2026-07-07 |
-| Task 5: Comment on issues | 2026-06-28 |
-| Task 6: Perf infra | 2026-07-07 |
-| Task 7: Monthly summary | 2026-07-07 |
+Priority order (highest first):
 
-## Next Run Priority
+1. `GetTestId()` in native MTP path — called 3× per test (discovered/in-progress/result);
+   `Encoding.Unicode.GetBytes()` + string alloc + hash per call. Cache on `UnitTestElement`.
+   Only relevant when `MSTEST_EXPERIMENTAL_NATIVE_MTP=1` is set. Very low priority while experimental.
 
-Tasks 2 and 5 (oldest) — identify new opportunities, comment on perf issues.
+2. `AntiTerminal.StopUpdate()` — `_stringBuilder.ToString()` on every flush.
+   Blocked: IConsole abstraction + netstandard2.0 compat. Low priority.
+
+3. `SilenceDrivenHeartbeatRenderer` — allocations on rare heartbeat paths. Low priority.
+
+4. `ClassifyOutcome` in `TestResultCaptureHelper.cs` — `Array.IndexOf` fallback. Very low priority.
+
+## Key Notes
+
+- The "efficiency-improver" workflow is ALSO active on this repo, generating `efficiency/*` branches.
+  These are separate from `perf-assist/*` branches. Do not duplicate their work.
+  All current `efficiency/*` branches appear merged into main (empty diffs vs main).
+- Native MTP path (RFC 018 / PR #9706) is opt-in via `MSTEST_EXPERIMENTAL_NATIVE_MTP=1`.
+  It uses MSTestTestNodeConverter to create TestNodes directly without VSTest bridge.
+- TestMethodRunner was split into partial class files in PR #9729 (2026-07-07):
+  TestMethodRunner.DataRow.cs, TestMethodRunner.Execution.cs, etc.
+- PR #9728 was created by Evangelink (not as a perf-assist/* branch) incorporating
+  the perf-improver's scenario2 work. The `perf-assist/scenario2-data-driven` branch
+  was never pushed as a PR — Evangelink picked it up directly.
+- Issues #9713 and #9714 (from efficiency-improver) are stale — resolved by PR #9728.
+  Commented on both 2026-07-08. Need maintainer to close them.
+
+## Previously Closed/Actioned Items (do not re-suggest)
+
+- PR #9617 (CloneForDataDrivenIteration + related) — merged
+- PR #9636 (TCS fast-path) — merged
+- Issues #9602/#9603 — closed (resolved by above PRs)
+- Scenario2 data-driven perf scenario — merged as PR #9728
+- JsonSerializerOptions caching in PlainProcess/DotnetTestProcess — merged as PR #9728
