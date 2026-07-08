@@ -9,11 +9,11 @@ using PlatformServicesConfiguration = Microsoft.VisualStudio.TestPlatform.MSTest
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
-internal sealed class BridgedConfiguration : PlatformServicesConfiguration
+internal sealed class PlatformServicesConfigurationAdapter : PlatformServicesConfiguration
 {
     private readonly IConfiguration _configuration;
 
-    public BridgedConfiguration(IConfiguration configuration)
+    public PlatformServicesConfigurationAdapter(IConfiguration configuration)
         => _configuration = configuration;
 
     public string? this[string key] => _configuration[key];
