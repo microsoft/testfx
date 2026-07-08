@@ -12,10 +12,6 @@ See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
 
-### Changed
-
-* Lower `MSTEST0050` (`GlobalTestFixtureShouldBeValidAnalyzer`) severity from `Error` to `Warning`, matching the six peer fixture analyzers (MSTEST0008–0013) by @Evangelink in [#9670](https://github.com/microsoft/testfx/pull/9670)
-
 ## <a name="4.3.0" />[4.3.0] - UNRELEASED
 
 See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
@@ -65,6 +61,10 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Remove redundant `actual type:` line from Assert.Throws\* failure message by @Evangelink in [#9195](https://github.com/microsoft/testfx/pull/9195)
 * Include full exception (stack trace + inner exceptions) in Assert.Throws\* failure messages by @Evangelink in [#9212](https://github.com/microsoft/testfx/pull/9212)
 * Fix `[ClassCleanup]` resource leak when `ITestFilter` drops the last test of an initialized class by @Evangelink in [#9503](https://github.com/microsoft/testfx/pull/9503)
+
+### Changed
+
+* Lower `MSTEST0050` (`GlobalTestFixtureShouldBeValidAnalyzer`) severity from `Error` to `Warning`, matching the six peer fixture analyzers (MSTEST0008–0013) by @Evangelink in [#9670](https://github.com/microsoft/testfx/pull/9670)
 
 ## <a name="4.2.3" />[4.2.3] - 2026-05-14
 

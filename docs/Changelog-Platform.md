@@ -101,10 +101,17 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Microsoft.Testing.Extensions.CrashDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/2.3.0)
 * Microsoft.Testing.Extensions.HangDump: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/2.3.0)
 * Microsoft.Testing.Extensions.HotReload: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/2.3.0)
+* Microsoft.Testing.Extensions.HtmlReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HtmlReport/2.3.0)
 * Microsoft.Testing.Extensions.Retry: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/2.3.0)
 * Microsoft.Testing.Extensions.Telemetry: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Telemetry/2.3.0)
 * Microsoft.Testing.Extensions.TrxReport: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/2.3.0)
 * Microsoft.Testing.Extensions.TrxReport.Abstractions: [2.3.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport.Abstractions/2.3.0)
+* Microsoft.Testing.Extensions.CtrfReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CtrfReport/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.GitHubActionsReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.GitHubActionsReport/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.JUnitReport: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.JUnitReport/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.Logging: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Logging/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.PackagedApp: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.PackagedApp/1.0.0-alpha.26357.13)
+* Microsoft.Testing.Extensions.VideoRecorder: [1.0.0-alpha.26357.13](https://www.nuget.org/packages/Microsoft.Testing.Extensions.VideoRecorder/1.0.0-alpha.26357.13)
 
 ## <a name="2.2.3" />[2.2.3] - 2026-05-14
 
