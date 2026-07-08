@@ -244,7 +244,7 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             [TestClass]
             public class MyTestClass
             {
-                [TestInitialize]
+                [TestCleanup]
                 public void TestCleanup()
                 {
                 }
@@ -384,5 +384,87 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzerTests
             """;
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenPublicVirtualMethodInTestClass_NoDiagnostic()
+    {
+        // A public virtual method is excluded by the IsVirtual early-return in the analyzer.
+        // Virtual methods may be intended as overridable hooks, not test entry points.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public virtual void VirtualHelper()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenPublicOverrideMethodInTestClass_NoDiagnostic()
+    {
+        // A public override method is excluded by the IsOverride early-return in the analyzer.
+        // The base class method was virtual so the override is an intentional polymorphic member.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseClass
+            {
+                public virtual void VirtualHelper()
+                {
+                }
+            }
+
+            [TestClass]
+            public class MyTestClass : BaseClass
+            {
+                public override void VirtualHelper()
+                {
+                }
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMethodIsPublicAndNotMarkedAsTestMethod_ChangeToPrivateFix()
+    {
+        // Exercises the second code fix option: "Change accessibility to private",
+        // which is distinct from the first option "Add [TestMethod]".
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                public void [|MyTestMethod|]()
+                {
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                private void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await new VerifyCS.Test
+        {
+            TestCode = code,
+            FixedCode = fixedCode,
+            CodeActionIndex = 1,
+        }.RunAsync();
     }
 }
