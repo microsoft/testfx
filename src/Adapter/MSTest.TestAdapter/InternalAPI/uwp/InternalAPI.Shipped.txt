@@ -1,5 +1,4 @@
 #nullable enable
-const MSTestVersion.SemanticVersion = "4.4.0-dev" -> string!
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.AdapterTestProperties
@@ -54,7 +53,6 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.UnitTestEleme
 Microsoft.VisualStudio.TestPlatform.TestExtensionTypesAttribute
 Microsoft.VisualStudio.TestPlatform.TestExtensionTypesAttribute.TestExtensionTypesAttribute(params System.Type![]! types) -> void
 Microsoft.VisualStudio.TestPlatform.TestExtensionTypesAttribute.Types.get -> System.Type![]!
-MSTestVersion
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TcmTestPropertiesProvider.GetTcmProperties(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase? testCase) -> System.Collections.Generic.IReadOnlyDictionary<string!, object?>?

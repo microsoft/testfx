@@ -1,9 +1,4 @@
 #nullable enable
-~static Microsoft.Testing.Extensions.AzureFoundry.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.AzureFoundry.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.AzureFoundry.Resources.ExtensionResources.EnvironmentVariableNotSet.get -> string
-~static Microsoft.Testing.Extensions.AzureFoundry.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.AzureFoundry.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider
@@ -15,7 +10,6 @@ Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.CreateCh
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.HasToolsCapability.get -> bool
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.IsAvailable.get -> bool
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.ModelName.get -> string!
-Microsoft.Testing.Extensions.AzureFoundry.Resources.ExtensionResources
 Microsoft.Testing.Platform.RoslynString
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)

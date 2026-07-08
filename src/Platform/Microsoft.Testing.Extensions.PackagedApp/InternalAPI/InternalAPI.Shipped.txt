@@ -1,12 +1,4 @@
 #nullable enable
-~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.PackagedAppExtensionDescription.get -> string
-~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.PackagedAppExtensionDisplayName.get -> string
-~static Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
-const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostHandle
@@ -25,6 +17,5 @@ Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.LaunchTestH
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.PackagedAppTestHostLauncher() -> void
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.Uid.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppTestHostLauncher.Version.get -> string!
-Microsoft.Testing.Extensions.PackagedApp.Resources.ExtensionResources
 System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
 System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void

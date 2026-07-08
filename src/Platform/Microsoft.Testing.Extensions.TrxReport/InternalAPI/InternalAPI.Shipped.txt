@@ -1,34 +1,6 @@
 #nullable enable
 ~override Microsoft.Testing.Extensions.ReportEngineContext.Equals(object obj) -> bool
 ~override Microsoft.Testing.Extensions.ReportEngineContext.ToString() -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.InvalidTestApplicationBuilderType.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolBaselineFileOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolBothFilesMustBeSpecified.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolDescription.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolDisplayName.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolOptionExpectsSingleArgument.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxComparerToolOtherFileOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxFileExistsAndWillBeOverwritten.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportArtifactDescription.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportArtifactDisplayName.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameExtensionIsNotTrx.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameMustNotBeEmpty.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameRelativePathMustStayUnderResultsDirectory.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameRequiresTrxReport.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFileNameShouldNotContainPath.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportFrameworkDoesNotSupportTrxReportCapability.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorBeforeTestHostProcessStartAsyncNotCalled.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorDescription.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorDisplayName.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportGeneratorMissingTrxNamedPipeEnvironmentVariable.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportIsNotValidForDiscovery.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.TrxReportOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources.UnsupportedRequestTypeErrorMessage.get -> string
 abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Description.get -> string!
 abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.GetInvalidEnvironmentVariableValueErrorMessage(string! environmentVariableName, string? actualValue, string! expectedValue) -> string!
@@ -38,7 +10,6 @@ abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Ui
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.DeserializeCore(System.IO.Stream! stream) -> T
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Id.get -> int
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.SerializeCore(T objectToSerialize, System.IO.Stream! stream) -> void
-const ExtensionVersion.DefaultSemVer = "2.4.0-dev" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.ToolName = "ms-trxcompare" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.BaselineTrxOptionName = "baseline-trx" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareToolCommandLine.TrxToCompareOptionName = "trx-to-compare" -> string!
@@ -212,7 +183,6 @@ const System.IO.Hashing.XxHashShared.SecretLengthBytes = 192 -> int
 const System.IO.Hashing.XxHashShared.SecretMergeAccsStartBytes = 11 -> int
 const System.IO.Hashing.XxHashShared.SecretSizeMin = 136 -> int
 const System.IO.Hashing.XxHashShared.StripeLengthBytes = 64 -> int
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase
@@ -435,7 +405,6 @@ Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleC
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.Uid.get -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxTestApplicationLifecycleCallbacks.Version.get -> string!
 Microsoft.Testing.Extensions.TrxReport.CrashDumpCommandLineOptions
-Microsoft.Testing.Extensions.TrxReport.Resources.ExtensionResources
 Microsoft.Testing.Extensions.TrxReport.TrxModeHelpers
 Microsoft.Testing.Platform.Helpers.ApplicationStateGuard
 Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants

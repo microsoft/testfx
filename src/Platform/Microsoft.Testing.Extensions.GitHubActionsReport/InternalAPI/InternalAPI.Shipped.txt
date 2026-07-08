@@ -1,26 +1,4 @@
 #nullable enable
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.AnnotationsOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.AnnotationTitle.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.Description.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.DisplayName.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.GroupsOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.GroupTitle.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.InvalidOnOffValue.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.InvalidSlowTestThreshold.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.NoFailureMessageFallback.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.NoSkipReasonFallback.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.OptionDescription.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.ResourceManager.get -> System.Resources.ResourceManager
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.SkippedAnnotationTitle.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.SlowTestNoticesOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.SlowTestNoticeTitle.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.SlowTestStillRunning.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.SlowTestThresholdOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.StepSummaryOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources.StepSummaryWriteFailedWarning.get -> string
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.Description.get -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
@@ -28,7 +6,6 @@ abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetTestName(Microsoft
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.IsEnabled.get -> bool
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.ResolveThreshold(string! testName) -> System.TimeSpan
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.Uid.get -> string!
-const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsAnnotations = "report-gh-annotations" -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsGroups = "report-gh-groups" -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsOptionName = "report-gh" -> string!
@@ -36,7 +13,6 @@ const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineO
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsSlowTestThreshold = "report-gh-slow-test-threshold" -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.GitHubActionsStepSummary = "report-gh-step-summary" -> string!
 const Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsCommandLineOptions.SlowTestThresholdDefaultSeconds = 60 -> int
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsAnnotationReporter
@@ -78,7 +54,6 @@ Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.On
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.Uid.get -> string!
 Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.Version.get -> string!
-Microsoft.Testing.Extensions.GitHubActionsReport.Resources.GitHubActionsResources
 Microsoft.Testing.Extensions.ReporterLoggingExtensions
 Microsoft.Testing.Extensions.SlowTestReporterBase
 Microsoft.Testing.Extensions.SlowTestReporterBase.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!

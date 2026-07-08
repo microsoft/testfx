@@ -1,90 +1,6 @@
 #nullable enable
 ~override Microsoft.Testing.Extensions.AzureDevOpsReport.LeaseReadResult.Equals(object obj) -> bool
 ~override Microsoft.Testing.Extensions.AzureDevOpsReport.LeaseReadResult.ToString() -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AnnotationsOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.ArtifactUploadOptionsRequireUploadArtifacts.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.ArtifactUploadRequiresTfBuildWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsAnnotationsRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresFlakyHistory.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsFlakyHistoryRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsGroupsRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingCompleteRunFailed.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingCreateRunFailed.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingFailedToDeleteCoordinationFile.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingFinalizeWaitTimedOut.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingHttpError.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingInvalidResponse.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingMissingConfiguration.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingMissingRunIdFile.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingPublishResultsFailed.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingRequestFailed.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingResultAttachmentFailed.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingResultIdParseFailedWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingRunAttachmentFailed.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingRunIdFileMismatch.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingTimeoutErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsLivePublishingTimeoutErrorMessageWithReason.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsQuarantineFileRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsReportSeverityRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsSlowTestHistoryRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsStackFrameFilterRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.AzureDevOpsSummaryRequiresAzureDevOps.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.DemoteKnownFlakyOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.Description.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.DisplayName.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryFailureAnnotation.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryLoadFailedWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryLoadTimedOutInfo.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryMissingEnvironmentWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryRegressionAnnotation.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryResultsPagingStoppedWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.FlakyHistoryRunsCappedInfo.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.GroupsOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidArtifactUploadGlob.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidArtifactUploadMode.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidFlakyHistoryDays.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidOnOffValue.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidSeverity.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidSlowTestHistoryDays.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidSlowTestHistoryMinSample.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidSlowTestHistoryMultiplier.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.InvalidStackFrameFilterRegex.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.LogGroupHeader.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.NoFailureMessageFallback.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.OptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.PublishAzdoRunNameOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.PublishAzdoRunNameRequiresPublishAzdoTestResults.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.PublishAzdoTestResultsOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.QuarantinedAnnotation.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.QuarantineFileLoadFailedWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.QuarantineFileMissingWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.QuarantineFileOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.QuarantinePatternsCappedWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.QuarantinePatternTooLongWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.ResourceManager.get -> System.Resources.ResourceManager
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SeverityOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SlowTestHistoryDecoration.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SlowTestHistoryMinSampleOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SlowTestHistoryMultiplierOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SlowTestHistoryOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SlowTestHistoryRequiresTfBuildWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SlowTestStillRunning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.StackFrameFilterOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.StackFrameFilterTooManyRegexes.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SummaryOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SummaryRequiresTfBuildWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.SummaryWriteFailedWarning.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.UploadArtifactExcludeOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.UploadArtifactIncludeOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.UploadArtifactNameOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources.UploadArtifactsOptionDescription.get -> string
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.Description.get -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
@@ -92,7 +8,6 @@ abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetTestName(Microsoft
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.IsEnabled.get -> bool
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.ResolveThreshold(string! testName) -> System.TimeSpan
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.Uid.get -> string!
-const ExtensionVersion.DefaultSemVer = "2.4.0-dev" -> string!
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsAttachmentTypes.CodeCoverage = "CodeCoverage" -> string!
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsAttachmentTypes.ConsoleLog = "ConsoleLog" -> string!
 const Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsAttachmentTypes.GeneralAttachment = "GeneralAttachment" -> string!
@@ -138,7 +53,6 @@ const Microsoft.Testing.Extensions.Reporting.AzureDevOpsCommandLineOptions.SlowT
 const Microsoft.Testing.Extensions.Reporting.AzureDevOpsCommandLineOptions.SlowTestStaticThresholdSeconds = 60 -> int
 const Microsoft.Testing.Extensions.Reporting.AzureDevOpsCommandLineProvider.MaxStackFrameFilterPatterns = 16 -> int
 const Microsoft.Testing.Extensions.Reporting.AzureDevOpsCommandLineProvider.StackFrameFilterMatchTimeoutMs = 500 -> int
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.AzureDevOpsArtifactUploader
@@ -453,7 +367,6 @@ Microsoft.Testing.Extensions.AzureDevOpsReport.QuarantineFile
 Microsoft.Testing.Extensions.AzureDevOpsReport.QuarantineFile.Matches(string! testFqn) -> bool
 Microsoft.Testing.Extensions.AzureDevOpsReport.QuarantineFile.QuarantineFile(string! path, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Logging.ILogger! logger) -> void
 Microsoft.Testing.Extensions.AzureDevOpsReport.QuarantineFile.QuarantineFile(System.Collections.Generic.IEnumerable<string!>! patterns) -> void
-Microsoft.Testing.Extensions.AzureDevOpsReport.Resources.AzureDevOpsResources
 Microsoft.Testing.Extensions.ReporterLoggingExtensions
 Microsoft.Testing.Extensions.ReportFileNameSanitizer
 Microsoft.Testing.Extensions.Reporting.AzDoEscaper

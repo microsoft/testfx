@@ -1,6 +1,4 @@
 #nullable enable
-const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.Logging.LogLevelMapper

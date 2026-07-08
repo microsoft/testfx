@@ -7,23 +7,6 @@
 ~override Microsoft.Testing.Extensions.CapturedTestResultProperties.ToString() -> string
 ~override Microsoft.Testing.Extensions.ReportEngineContext.Equals(object obj) -> bool
 ~override Microsoft.Testing.Extensions.ReportEngineContext.ToString() -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportArtifactDescription.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportArtifactDisplayName.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportFileExistsAndWillBeOverwritten.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportFileNameExtensionIsNotJson.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportFileNameMustNotBeEmpty.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportFileNameOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportFileNameRelativePathMustStayUnderResultsDirectory.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportFileNameRequiresCtrfReport.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportGeneratorDescription.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportGeneratorDisplayName.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportIsNotValidForDiscovery.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.CtrfReportOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.InvalidTestApplicationBuilderType.get -> string
-~static Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactDescription.get -> string!
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactDisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Description.get -> string!
@@ -32,7 +15,6 @@ abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedT
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.GetGenerationLogMessage(int testResultCount) -> string!
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.TryCapture(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> TCapturedTestResult?
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Uid.get -> string!
-const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
 const Microsoft.Testing.Extensions.CtrfReport.CtrfReportGeneratorCommandLine.CtrfReportFileNameOptionName = "report-ctrf-filename" -> string!
 const Microsoft.Testing.Extensions.CtrfReport.CtrfReportGeneratorCommandLine.CtrfReportOptionName = "report-ctrf" -> string!
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxIdentityFieldLength = 4096 -> int
@@ -40,7 +22,6 @@ const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxMessageLength = 16
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStackTraceLength = 32768 -> int
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStandardStreamLength = 32768 -> int
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxTraitFieldLength = 1024 -> int
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.CapturedExceptionDetails
@@ -136,7 +117,6 @@ Microsoft.Testing.Extensions.CtrfReport.CtrfReportGenerator
 Microsoft.Testing.Extensions.CtrfReport.CtrfReportGenerator.CtrfReportGenerator(System.IServiceProvider! serviceProvider) -> void
 Microsoft.Testing.Extensions.CtrfReport.CtrfReportGeneratorCommandLine
 Microsoft.Testing.Extensions.CtrfReport.CtrfReportGeneratorCommandLine.CtrfReportGeneratorCommandLine() -> void
-Microsoft.Testing.Extensions.CtrfReport.Resources.ExtensionResources
 Microsoft.Testing.Extensions.CtrfReport.TestResultCapture
 Microsoft.Testing.Extensions.ReportEngineBase
 Microsoft.Testing.Extensions.ReportEngineBase.BuildDefaultFileName(string! extension) -> string!

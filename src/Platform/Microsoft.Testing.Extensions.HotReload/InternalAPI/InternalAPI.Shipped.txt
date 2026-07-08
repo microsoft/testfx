@@ -1,11 +1,4 @@
 #nullable enable
-~static Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources.HotReloadHandlerUnsupportedFrameworkErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources.HotReloadSessionCompleted.get -> string
-~static Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources.HotReloadSessionStarted.get -> string
-~static Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT = "DOTNET_CLI_TELEMETRY_OPTOUT" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY" -> string!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_NOLOGO = "DOTNET_NOLOGO" -> string!
@@ -40,7 +33,6 @@ Microsoft.Testing.Extensions.Hosting.HotReloadHandler.HotReloadHandler(Microsoft
 Microsoft.Testing.Extensions.Hosting.HotReloadHandler.ShouldRunAsync(System.Threading.Tasks.Task? waitExecutionCompletion, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.Testing.Extensions.Hosting.HotReloadTestHostTestFrameworkInvoker
 Microsoft.Testing.Extensions.Hosting.HotReloadTestHostTestFrameworkInvoker.HotReloadTestHostTestFrameworkInvoker(System.IServiceProvider! serviceProvider) -> void
-Microsoft.Testing.Extensions.Hosting.Resources.ExtensionResources
 Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants
 override Microsoft.Testing.Extensions.Hosting.HotReloadTestHostTestFrameworkInvoker.ExecuteRequestAsync(Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFramework, Microsoft.Testing.Platform.Requests.TestExecutionRequest! request, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Polyfills.Polyfill

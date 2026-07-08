@@ -6,6 +6,8 @@ const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataSource
 const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.DataTableAttributeName = "dataTableName" -> string!
 const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.NameAttributeName = "name" -> string!
 const Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames.SectionName = "microsoft.visualstudio.testtools" -> string!
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ConfigurationNames
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.Key.get -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper
@@ -17,3 +19,7 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSp
 static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.FindMostSpecificType(System.Type! c1, System.Type! c2, System.Type! t) -> int
 static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.GetHierarchyDepth(System.Type! t) -> int
 static Microsoft.VisualStudio.TestTools.UnitTesting.RuntimeTypeHelper.SelectMethod(System.Reflection.MethodBase![]! match, System.Type![]! types) -> System.Reflection.MethodBase?
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void

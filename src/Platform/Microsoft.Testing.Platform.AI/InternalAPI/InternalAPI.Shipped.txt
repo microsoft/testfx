@@ -1,12 +1,6 @@
 #nullable enable
-~static Microsoft.Testing.Platform.AI.Resources.AIExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Platform.AI.Resources.AIExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Platform.AI.Resources.AIExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Platform.AI.Resources.AIExtensionResources.InvalidTestApplicationBuilderTypeForAI.get -> string
-~static Microsoft.Testing.Platform.AI.Resources.AIExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
-Microsoft.Testing.Platform.AI.Resources.AIExtensionResources
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool

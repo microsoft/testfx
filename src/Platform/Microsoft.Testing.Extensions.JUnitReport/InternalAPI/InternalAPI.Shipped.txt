@@ -9,23 +9,6 @@
 ~override Microsoft.Testing.Extensions.JUnitReport.TestResultCapture.ParentChainEntry.ToString() -> string
 ~override Microsoft.Testing.Extensions.ReportEngineContext.Equals(object obj) -> bool
 ~override Microsoft.Testing.Extensions.ReportEngineContext.ToString() -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.InvalidTestApplicationBuilderType.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportArtifactDescription.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportArtifactDisplayName.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportFileExistsAndWillBeOverwritten.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportFileNameExtensionIsNotXml.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportFileNameMustNotBeEmpty.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportFileNameOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportFileNameRelativePathMustStayUnderResultsDirectory.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportFileNameRequiresJUnitReport.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportGeneratorDescription.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportGeneratorDisplayName.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportIsNotValidForDiscovery.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.JUnitReportOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactDescription.get -> string!
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactDisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Description.get -> string!
@@ -34,7 +17,6 @@ abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedT
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.GetGenerationLogMessage(int testResultCount) -> string!
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.TryCapture(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage! update) -> TCapturedTestResult?
 abstract Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.Uid.get -> string!
-const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
 const Microsoft.Testing.Extensions.JUnitReport.JUnitReportEngine.MaxTestPathLength = 65536 -> int
 const Microsoft.Testing.Extensions.JUnitReport.JUnitReportGeneratorCommandLine.JUnitReportFileNameOptionName = "report-junit-filename" -> string!
 const Microsoft.Testing.Extensions.JUnitReport.JUnitReportGeneratorCommandLine.JUnitReportOptionName = "report-junit" -> string!
@@ -43,7 +25,6 @@ const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxMessageLength = 16
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStackTraceLength = 32768 -> int
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxStandardStreamLength = 32768 -> int
 const Microsoft.Testing.Extensions.TestResultCaptureHelper.MaxTraitFieldLength = 1024 -> int
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.CapturedExceptionDetails
@@ -141,7 +122,6 @@ Microsoft.Testing.Extensions.JUnitReport.JUnitSuiteBuilder.JUnitSuiteBuilder(Mic
 Microsoft.Testing.Extensions.JUnitReport.JUnitXmlWriter
 Microsoft.Testing.Extensions.JUnitReport.JUnitXmlWriter.JUnitXmlWriter(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework! testFramework, int exitCode, System.Threading.CancellationToken cancellationToken) -> void
 Microsoft.Testing.Extensions.JUnitReport.JUnitXmlWriter.WriteXmlAsync(string! tempPath, Microsoft.Testing.Extensions.JUnitReport.SuiteSet! suites) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Extensions.JUnitReport.Resources.ExtensionResources
 Microsoft.Testing.Extensions.JUnitReport.Suite
 Microsoft.Testing.Extensions.JUnitReport.Suite.Errors.get -> int
 Microsoft.Testing.Extensions.JUnitReport.Suite.Errors.init -> void

@@ -1,8 +1,6 @@
 #nullable enable
-const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
 const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.ActivitySourceName = "Microsoft.Testing.Platform" -> string!
 const Microsoft.Testing.Extensions.OpenTelemetry.OpenTelemetryPlatformService.MeterName = "Microsoft.Testing.Platform" -> string!
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.OpenTelemetry.ActivityWrapper

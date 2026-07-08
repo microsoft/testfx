@@ -1,38 +1,6 @@
 #nullable enable
 ~override Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.Equals(object obj) -> bool
 ~override Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.ToString() -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.CreatingDumpFile.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.DumpingProcess.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.DumpingProcessTree.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.ErrorGettingParentOfProcess.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.ErrorKillingProcess.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.ErrorWhileDumpingProcess.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpArtifactDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpArtifactDisplayName.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpEnvironmentVariableInvalidValueErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpEnvironmentVariableIsMissingErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpExtensionDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpExtensionDisplayName.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpFailed.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpFileNameOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTimeoutExpired.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTimeoutOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTimeoutOptionInvalidArgument.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTypeAndIfSupportedAreMutuallyExclusiveErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTypeIfSupportedFallbackInfoMessage.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTypeIfSupportedOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTypeOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpTypeOptionInvalidType.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangDumpUnsupportedRequestTypeErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangTestListArtifactDescription.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.HangTestListArtifactDisplayName.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.MissingHangDumpMainOption.get -> string
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
-~static Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources.RunningTestsWhileDumping.get -> string
 abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Description.get -> string!
 abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.GetInvalidEnvironmentVariableValueErrorMessage(string! environmentVariableName, string? actualValue, string! expectedValue) -> string!
@@ -42,7 +10,6 @@ abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Ui
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.DeserializeCore(System.IO.Stream! stream) -> T
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Id.get -> int
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.SerializeCore(T objectToSerialize, System.IO.Stream! stream) -> void
-const ExtensionVersion.DefaultSemVer = "2.4.0-dev" -> string!
 const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpFileNameOptionName = "hangdump-filename" -> string!
 const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpOptionName = "hangdump" -> string!
 const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpTimeoutOptionName = "hangdump-timeout" -> string!
@@ -159,7 +126,6 @@ const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Key = 1 -> ushort
 const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Value = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.VoidResponseFieldsId.MessagesSerializerId = 0 -> int
 const Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId.MessagesSerializerId = 13 -> int
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator
@@ -221,7 +187,6 @@ Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption.Mi
 Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter
 Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter.DisplayAsync(Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter.OutputDeviceWriter(Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! outputDeviceDataProducer) -> void
-Microsoft.Testing.Extensions.Diagnostics.Resources.ExtensionResources
 Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequest
 Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequestSerializer
 Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequestSerializer.ActivitySignalRequestSerializer() -> void

@@ -1,43 +1,4 @@
 #nullable enable
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ArtifactPerTestDescription.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ArtifactPerTestDisplayName.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ArtifactSessionDescription.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ArtifactSessionDisplayName.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.CapDurationDescription.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.CapSizeDescription.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ChapterTitleFormat.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.CommandLineProviderDescription.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ExtensionDescription.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ExtensionDisplayName.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.FailedToStartRecording.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.FfmpegNotFound.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.HintPerSession.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.HintPerTest.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.InvalidOptionPositiveInteger.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.InvalidOptionValue.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.NoUsableVideoProduced.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OptionDescriptionArgs.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OptionDescriptionCaptureVideo.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OptionDescriptionChapters.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OptionDescriptionGranularity.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OptionDescriptionMaxDuration.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OptionDescriptionSource.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OutcomeError.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OutcomeFailed.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OutcomePassed.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OutcomeSkipped.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.OutcomeTimeout.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.RecorderReady.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.RecordingCapReached.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.ResourceManager.get -> System.Resources.ResourceManager
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.StopTimeoutKilled.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.SubOptionsRequireEnable.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.WindowCaptureFallback.get -> string
-~static Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources.WindowCaptureUnsupportedOs.get -> string
-const ExtensionVersion.DefaultSemVer = "1.0.0-dev" -> string!
 const Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.ArgsOptionName = "capture-video-args" -> string!
 const Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.ChaptersOff = "off" -> string!
 const Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.ChaptersOn = "on" -> string!
@@ -52,7 +13,6 @@ const Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvide
 const Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.SourceOptionName = "capture-video-source" -> string!
 const Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.SourceScreen = "screen" -> string!
 const Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.SourceWindow = "window" -> string!
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder
@@ -67,7 +27,6 @@ Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.SegmentDirectory.
 Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.SegmentExtension.get -> string!
 Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.Start() -> void
 Microsoft.Testing.Extensions.VideoRecorder.FfmpegVideoRecorder.StopAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Extensions.VideoRecorder.Resources.VideoRecorderResources
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderCommandLineProvider.VideoRecorderCommandLineProvider() -> void
 Microsoft.Testing.Extensions.VideoRecorder.VideoRecorderSessionHandler

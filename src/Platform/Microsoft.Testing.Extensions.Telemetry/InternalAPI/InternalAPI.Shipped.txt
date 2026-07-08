@@ -1,9 +1,4 @@
 #nullable enable
-~static Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources.AddAppInsightsTelemetryProviderInvalidBuilder.get -> string
-~static Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.Telemetry.AppInsightsProvider
@@ -23,7 +18,6 @@ Microsoft.Testing.Extensions.Telemetry.ITelemetryClient.Flush() -> void
 Microsoft.Testing.Extensions.Telemetry.ITelemetryClient.TrackEvent(string! eventName, System.Collections.Generic.Dictionary<string!, string!>! properties, System.Collections.Generic.Dictionary<string!, double>! metrics) -> void
 Microsoft.Testing.Extensions.Telemetry.ITelemetryClientFactory
 Microsoft.Testing.Extensions.Telemetry.ITelemetryClientFactory.Create(string? currentSessionId, string! osVersion) -> Microsoft.Testing.Extensions.Telemetry.ITelemetryClient!
-Microsoft.Testing.Extensions.Telemetry.Resources.ExtensionResources
 Microsoft.Testing.Platform.Helpers.CIEnvironmentDetector
 Microsoft.Testing.Platform.Helpers.CIEnvironmentDetector.CIEnvironmentDetector(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
 Microsoft.Testing.Platform.Helpers.CIEnvironmentDetector.IsCIEnvironment() -> bool

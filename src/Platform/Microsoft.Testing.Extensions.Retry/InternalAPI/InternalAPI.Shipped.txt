@@ -1,44 +1,7 @@
 #nullable enable
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.Culture.get -> System.Globalization.CultureInfo
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.Culture.set -> void
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.FailedToCreateRetryDirectoryBecauseOfCollision.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.FailureThresholdPolicy.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.FailureThresholdPolicyMaxCount.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.FailureThresholdPolicyMaxPercentage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.GetResourceString(string resourceKey, string defaultValue = null) -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.ResourceManager.get -> System.Resources.ResourceManager
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryArtifactsMoved.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryAttemptFailedWillRetry.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryExtensionNotSupportedOnBrowserErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsDelayOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsDelayOptionInvalidArgument.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsExtensionDescription.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsExtensionDisplayName.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsMaxPercentageOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsMaxPercentageOptionIntegerBetween0And100ArgumentErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsMaxTestsOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsNotSupportedInHotReloadErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsNotSupportedInServerModeErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsOptionDescription.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsOptionIsMissingErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsOptionNonNegativeIntegerArgumentErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryFailedTestsPercentageAndCountCannotBeMixedErrorMessage.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryDurationLine.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryFailed.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryFailedLine.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryFlakyLine.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryPassed.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryPassedNoRetry.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryRetriedSuffix.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetrySummaryTotalLine.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.RetryWaitingBeforeNextAttempt.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect.get -> string
-~static Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources.TestSuiteFailedWithWrongExitCode.get -> string
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.DeserializeCore(System.IO.Stream! stream) -> T
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Id.get -> int
 abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.SerializeCore(T objectToSerialize, System.IO.Stream! stream) -> void
-const ExtensionVersion.DefaultSemVer = "2.4.0-dev" -> string!
 const Microsoft.Testing.Extensions.Policy.RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName = "retry-failed-tests-delay" -> string!
 const Microsoft.Testing.Extensions.Policy.RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName = "retry-failed-tests-max-percentage" -> string!
 const Microsoft.Testing.Extensions.Policy.RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName = "retry-failed-tests-max-tests" -> string!
@@ -154,10 +117,8 @@ const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Key = 1 -> ushort
 const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Value = 2 -> ushort
 const Microsoft.Testing.Platform.IPC.VoidResponseFieldsId.MessagesSerializerId = 0 -> int
 const Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId.MessagesSerializerId = 13 -> int
-ExtensionVersion
 Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
-Microsoft.Testing.Extensions.Policy.Resources.ExtensionResources
 Microsoft.Testing.Extensions.Policy.RetryArgumentsBuilder
 Microsoft.Testing.Extensions.Policy.RetryCommandLineOptionsProvider
 Microsoft.Testing.Extensions.Policy.RetryCommandLineOptionsProvider.RetryCommandLineOptionsProvider() -> void
