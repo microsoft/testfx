@@ -1,0 +1,29 @@
+<Project>
+
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+  <!--
+    Add a [self, nextMajor) upper bound on the in-repo Microsoft.Testing.Platform package dependency that
+    the extensions emit through their ProjectReference to Microsoft.Testing.Platform.csproj.
+
+    By default NuGet packs a project reference as an open-ended minimum-version dependency (e.g.
+    "2.4.0" == "[2.4.0, )"). That lets an extension built against Testing Platform 2.x silently resolve a
+    future breaking 3.0.0. Because the extensions and the platform are versioned and ship in lockstep, we
+    cap the dependency at the next major as a safety net: "[2.4.0, 3.0.0)".
+
+    This runs after NuGet's _GetProjectReferenceVersions, which populates @(_ProjectReferencesWithVersions)
+    (identity = referenced project's full path, so %(Filename) is the project name) with the resolved
+    %(ProjectVersion). We only rewrite the Microsoft.Testing.Platform entry, and only when it is still a
+    bare version (not already a range), so the change is idempotent.
+  -->
+  <Target Name="_AddTestingPlatformDependencyUpperBound"
+          AfterTargets="_GetProjectReferenceVersions"
+          Condition=" '$(TestingPlatformNextMajorVersion)' != '' ">
+    <ItemGroup>
+      <_ProjectReferencesWithVersions Condition=" '%(Filename)' == 'Microsoft.Testing.Platform' and !$([System.String]::Copy('%(ProjectVersion)').StartsWith('[')) ">
+        <ProjectVersion>[%(ProjectVersion), $(TestingPlatformNextMajorVersion))</ProjectVersion>
+      </_ProjectReferencesWithVersions>
+    </ItemGroup>
+  </Target>
+
+</Project>
