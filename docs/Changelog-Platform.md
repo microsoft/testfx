@@ -14,7 +14,7 @@ See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
 
-## <a name="2.3.1" />[2.3.1] - UNRELEASED
+## <a name="2.3.1" />[2.3.1] - 2026-07-08
 
 See full log [of v4.3.0...v4.3.1](https://github.com/microsoft/testfx/compare/v4.3.0...v4.3.1)
 
