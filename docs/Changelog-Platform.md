@@ -48,6 +48,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
 * Emit `::warning` annotations for skipped tests in `Microsoft.Testing.Extensions.GitHubActionsReport` by @Evangelink in [#9641](https://github.com/microsoft/testfx/pull/9641)
+* Let an explicit `--minimum-expected-tests N` govern the zero-tests verdict, so a run of fewer than N tests reports the minimum-expected violation (exit code 9) instead of "zero tests ran" (exit code 8) even when no test ran. This lets a `dotnet test --test-modules` orchestrator tell a stricter local-minimum violation apart from an empty module (#7457) by @Copilot in [#9709](https://github.com/microsoft/testfx/pull/9709)
 
 ### Fixed
 
