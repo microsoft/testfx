@@ -150,9 +150,13 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         // tell an explicit-minimum violation apart from a plain "ran nothing" run (e.g. so a
         // `dotnet test --test-modules` orchestrator can distinguish a stricter local minimum from an
         // empty module). See issue #7457.
-        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
+        // A malformed value (e.g. present with no argument) is rejected earlier by option validation, but
+        // we still guard the parse defensively and fall back to the zero-tests verdict if it ever slips through.
+        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList)
+            && argumentList is [string minimumExpectedTestsArgument]
+            && int.TryParse(minimumExpectedTestsArgument, out int minimumExpectedTests))
         {
-            exitCode = exitCode == ExitCode.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCode.MinimumExpectedTestsPolicyViolation : exitCode;
+            exitCode = exitCode == ExitCode.Success && _totalRanTests < minimumExpectedTests ? ExitCode.MinimumExpectedTestsPolicyViolation : exitCode;
         }
         else
         {
