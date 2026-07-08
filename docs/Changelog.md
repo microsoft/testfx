@@ -1109,7 +1109,7 @@ See full log [of v3.6.3...v3.6.4](https://github.com/microsoft/testfx/compare/v3
 ### Fixed
 
 * Bump MS CC to 17.13.0 by @Evangelink in [#4212](https://github.com/microsoft/testfx/pull/4212)
-* Bump vulnerable deps by @Evangelink in [#4218)(https://github.com/microsoft/testfx/pull/4218)
+* Bump vulnerable deps by @Evangelink in [#4218](https://github.com/microsoft/testfx/pull/4218)
 
 ### Artifacts
 
