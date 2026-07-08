@@ -26,8 +26,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatform
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal abstract class MSTestFilterContextBase
 {
-    // Keep in sync with the bridge's TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName.
-    private const string TestCaseFilterOptionName = "filter";
+    // References the native --filter option provider's name.
+    private const string TestCaseFilterOptionName = MSTestTestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName;
 
     protected MSTestFilterContextBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
     {

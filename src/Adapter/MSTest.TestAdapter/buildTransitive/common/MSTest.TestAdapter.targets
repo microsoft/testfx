@@ -48,13 +48,29 @@
 
   <Target Name="GetMSTestV2CultureHierarchy" Returns="@(MSTestV2Files)">
     <!--
+      MTP scenario (EnableMSTestRunner): the UI language is chosen at runtime (for example via
+      TESTINGPLATFORM_UI_LANGUAGE / DOTNET_CLI_UI_LANGUAGE), so the build-machine culture is irrelevant.
+      Every localized satellite must be copied to the output directory so any culture can be resolved at run time.
+      -->
+    <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
+      <MSTestV2Files Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\_localization'))\**\*.dll" />
+      <!-- Set UICulture from the satellite's culture folder. This is done via Update (not inline on Include) because
+           the well-known %(RecursiveDir) metadata is only available on items after they have been created. -->
+      <MSTestV2Files Update="@(MSTestV2Files)">
+        <UICulture>%(RecursiveDir)</UICulture>
+      </MSTestV2Files>
+    </ItemGroup>
+
+    <!--
+      VSTest scenario: the UI language is fixed to the build-machine culture, so only that culture's hierarchy
+      is copied to keep the output directory slim.
       Only traversing 5 levels in the culture hierarchy. This is the maximum length for all cultures and should be sufficient
       to get to a culture name that maps to a resource folder we package.
       The root culture name for all cultures is invariant whose name is '' (empty) and the parent for invariant culture is
       invariant itself. (https://msdn.microsoft.com/library/system.globalization.cultureinfo.parent.aspx)
       So the below code should not break build in any case.
       -->
-    <ItemGroup>
+    <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Name)" />
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name)' != '' "/>
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name)' != '' "/>
@@ -67,9 +83,9 @@
       This is populated here (rather than inside CopyMSTestV2Resources) so the item group is available when the
       Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
     -->
-    <ItemGroup>
+    <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
       <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
-        <UICulture>%(CurrentUICultureHierarchy.Identity)</UICulture>
+        <UICulture>%(CurrentUICultureHierarchy.Identity)\</UICulture>
       </MSTestV2Files>
     </ItemGroup>
   </Target>
@@ -79,12 +95,12 @@
           Condition=" '$(EnableMSTestV2CopyResources)' == 'true' "
           DependsOnTargets="GetMSTestV2CultureHierarchy"
           Inputs="@(MSTestV2Files)"
-          Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)\%(FileName)%(Extension)')">
+          Outputs="@(MSTestV2Files->'$(TargetDir)%(UICulture)%(FileName)%(Extension)')">
 
     <ItemGroup>
       <!-- Add the localization file as content so it gets copied from nuget to bin folder. -->
       <Content Include="@(MSTestV2Files->'%(FullPath)')">
-        <Link>%(MSTestV2Files.UICulture)\%(FileName).dll</Link>
+        <Link>%(MSTestV2Files.UICulture)%(FileName).dll</Link>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <BaseAssemblyFullPath>%(FullPath)</BaseAssemblyFullPath>
         <Visible>False</Visible>
