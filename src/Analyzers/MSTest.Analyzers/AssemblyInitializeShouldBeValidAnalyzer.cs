@@ -33,10 +33,11 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodAnalyzerHelper.RegisterAssemblyFixtureAnalyzer(
+        FixtureMethodAnalyzerHelper.RegisterFixtureAnalyzer(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute,
             Rule,
+            FixtureKind.Assembly,
             FixtureParameterMode.MustHaveTestContext);
     }
 }

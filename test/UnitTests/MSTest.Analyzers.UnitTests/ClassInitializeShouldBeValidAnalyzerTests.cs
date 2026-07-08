@@ -148,7 +148,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.Rule)
+            VerifyCS.Diagnostic()
                 .WithLocation(0)
                 .WithArguments("ClassInitialize"),
             fixedCode);

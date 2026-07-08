@@ -38,12 +38,44 @@ internal static class FixtureMethodAnalyzerHelper
     }
 
     /// <summary>
+    /// Registers the symbol analysis for a fixture-lifecycle analyzer based on <paramref name="kind"/>, so that
+    /// <paramref name="rule"/> is reported for methods carrying <paramref name="fixtureAttributeMetadataName"/>
+    /// that do not have a valid fixture signature. This is the shared entry point used by the near-identical
+    /// fixture analyzers (<c>TestInitialize</c>/<c>TestCleanup</c>, <c>ClassInitialize</c>/<c>ClassCleanup</c>,
+    /// <c>AssemblyInitialize</c>/<c>AssemblyCleanup</c>). Callers remain responsible for
+    /// <c>ConfigureGeneratedCodeAnalysis</c> / <c>EnableConcurrentExecution</c> as required by the RS1025/RS1026
+    /// analyzers.
+    /// </summary>
+    internal static void RegisterFixtureAnalyzer(
+        AnalysisContext context,
+        string fixtureAttributeMetadataName,
+        DiagnosticDescriptor rule,
+        FixtureKind kind,
+        FixtureParameterMode parameterMode = FixtureParameterMode.MustNotHaveTestContext)
+    {
+        switch (kind)
+        {
+            case FixtureKind.Instance:
+                RegisterInstanceFixtureAnalyzer(context, fixtureAttributeMetadataName, rule);
+                break;
+
+            case FixtureKind.Class:
+                RegisterClassFixtureAnalyzer(context, fixtureAttributeMetadataName, rule, parameterMode);
+                break;
+
+            default:
+                RegisterAssemblyFixtureAnalyzer(context, fixtureAttributeMetadataName, rule, parameterMode);
+                break;
+        }
+    }
+
+    /// <summary>
     /// Registers the standard symbol analysis for an instance fixture method (e.g. <c>[TestInitialize]</c> or
     /// <c>[TestCleanup]</c>): reports <paramref name="rule"/> for methods that do not have a valid instance
     /// fixture signature. Callers remain responsible for <c>ConfigureGeneratedCodeAnalysis</c> /
     /// <c>EnableConcurrentExecution</c> as required by the RS1025/RS1026 analyzers.
     /// </summary>
-    internal static void RegisterInstanceFixtureAnalyzer(
+    private static void RegisterInstanceFixtureAnalyzer(
         AnalysisContext context,
         string fixtureAttributeMetadataName,
         DiagnosticDescriptor rule)
@@ -114,7 +146,7 @@ internal static class FixtureMethodAnalyzerHelper
             SymbolKind.Method);
     }
 
-    internal static void RegisterClassFixtureAnalyzer(
+    private static void RegisterClassFixtureAnalyzer(
         AnalysisContext context,
         string fixtureAttributeMetadataName,
         DiagnosticDescriptor rule,
@@ -126,7 +158,7 @@ internal static class FixtureMethodAnalyzerHelper
             (rule, parameterMode),
             requireTestContextSymbol: parameterMode == FixtureParameterMode.MustHaveTestContext);
 
-    internal static void RegisterAssemblyFixtureAnalyzer(
+    private static void RegisterAssemblyFixtureAnalyzer(
         AnalysisContext context,
         string fixtureAttributeMetadataName,
         DiagnosticDescriptor rule,

@@ -33,10 +33,11 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodAnalyzerHelper.RegisterClassFixtureAnalyzer(
+        FixtureMethodAnalyzerHelper.RegisterFixtureAnalyzer(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute,
             Rule,
+            FixtureKind.Class,
             FixtureParameterMode.OptionalTestContext);
     }
 }

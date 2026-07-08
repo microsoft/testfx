@@ -16,8 +16,7 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
-    /// <inheritdoc cref="Resources.TestCleanupShouldBeValidTitle" />
-    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestCleanupShouldBeValidRuleId,
         FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestCleanupShouldBeValidTitle)),
         FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.TestCleanupShouldBeValidMessageFormat)),
@@ -34,9 +33,10 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodAnalyzerHelper.RegisterInstanceFixtureAnalyzer(
+        FixtureMethodAnalyzerHelper.RegisterFixtureAnalyzer(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute,
-            Rule);
+            Rule,
+            FixtureKind.Instance);
     }
 }

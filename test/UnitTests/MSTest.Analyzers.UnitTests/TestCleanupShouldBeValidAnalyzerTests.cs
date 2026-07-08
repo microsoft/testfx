@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -85,7 +85,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.Rule)
+            VerifyCS.Diagnostic()
                 .WithLocation(0)
                 .WithArguments("TestCleanup"),
             fixedCode);
@@ -126,7 +126,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.Rule)
+            VerifyCS.Diagnostic()
                 .WithLocation(0)
                 .WithArguments("TestCleanup"),
             fixedCode);

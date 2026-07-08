@@ -16,8 +16,7 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
-    /// <inheritdoc cref="Resources.ClassInitializeShouldBeValidTitle" />
-    public static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.ClassInitializeShouldBeValidRuleId,
         FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.ClassInitializeShouldBeValidTitle)),
         FixtureMethodAnalyzerHelper.CreateResourceString(nameof(Resources.ClassInitializeShouldBeValidMessageFormat)),
@@ -34,10 +33,11 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        FixtureMethodAnalyzerHelper.RegisterClassFixtureAnalyzer(
+        FixtureMethodAnalyzerHelper.RegisterFixtureAnalyzer(
             context,
             WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute,
             Rule,
+            FixtureKind.Class,
             FixtureParameterMode.MustHaveTestContext);
     }
 }
