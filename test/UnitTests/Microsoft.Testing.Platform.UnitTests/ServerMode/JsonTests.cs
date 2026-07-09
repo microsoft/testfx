@@ -202,6 +202,91 @@ public sealed class JsonTests
         Assert.Contains(nameof(TestJsonObjectSerializer), exception.Message);
     }
 
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithIsStatefulTrue_StjPath_SurfacesStatefulClient()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true, "isStateful": true } }
+            }
+            """;
+
+        // Act
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(initializeParams.AsMemory());
+
+        // Assert
+        Assert.IsTrue(args.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_InitializeRequest_WithoutIsStateful_StjPath_DefaultsToStateless()
+    {
+        // Arrange
+        Json json = new();
+        const string initializeParams = """
+            {
+                "processId": 1,
+                "clientInfo": { "name": "client", "version": "1.0.0" },
+                "capabilities": { "testing": { "debuggerProvider": true } }
+            }
+            """;
+
+        // Act
+        InitializeRequestArgs args = json.Deserialize<InitializeRequestArgs>(initializeParams.AsMemory());
+
+        // Assert
+        Assert.IsFalse(args.Capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithIsStatefulTrue_JsonitePath_SurfacesStatefulClient()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                    ["isStateful"] = true,
+                },
+            },
+        };
+
+        // Act
+        ClientCapabilities capabilities = SerializerUtilities.Deserialize<ClientCapabilities>(properties);
+
+        // Assert
+        Assert.IsTrue(capabilities.IsStateful);
+    }
+
+    [TestMethod]
+    public void Deserialize_ClientCapabilities_WithoutIsStateful_JsonitePath_DefaultsToStateless()
+    {
+        // Arrange
+        Dictionary<string, object?> properties = new()
+        {
+            ["capabilities"] = new Dictionary<string, object?>
+            {
+                ["testing"] = new Dictionary<string, object?>
+                {
+                    ["debuggerProvider"] = true,
+                },
+            },
+        };
+
+        // Act
+        ClientCapabilities capabilities = SerializerUtilities.Deserialize<ClientCapabilities>(properties);
+
+        // Assert
+        Assert.IsFalse(capabilities.IsStateful);
+    }
+
     private sealed class TestJsonObjectSerializer : JsonObjectSerializer;
 
     private sealed class Person

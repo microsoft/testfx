@@ -24,7 +24,7 @@ internal sealed class ConsoleTestHost(
     : CommonHost(serviceProvider)
 {
     private static readonly ClientInfo ClientInfoHost = new("testingplatform-console", PlatformVersion.Version);
-    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", PlatformVersion.Version);
+    private static readonly IClientInfo ClientInfoService = new ClientInfoService("testingplatform-console", PlatformVersion.Version, new ClientCapabilitiesService(IsStateful: false));
 
     private readonly ILogger<ConsoleTestHost> _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
     private readonly IClock _clock = serviceProvider.GetClock();
