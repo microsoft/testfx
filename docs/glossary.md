@@ -221,7 +221,7 @@ MSBuild properties that let users opt in to MSTest assembly-level parallelizatio
 
 ### MSTestTestFramework
 
-The native `ITestFramework` implementation that drives MSTest directly on Microsoft.Testing.Platform without routing execution through the [VSTestBridge](#vstestbridge). Introduced as part of [RFC 018](docs/RFCs/018-Native-MTP-Integration-For-MSTest.md) and shipped across several phases in [PR #9706](https://github.com/microsoft/testfx/pull/9706), [#9743](https://github.com/microsoft/testfx/pull/9743), [#9748](https://github.com/microsoft/testfx/pull/9748), and [#9755](https://github.com/microsoft/testfx/pull/9755) (MSTest 4.3).
+The native `ITestFramework` implementation that drives MSTest directly on Microsoft.Testing.Platform without routing execution through the [VSTestBridge](#vstestbridge). Introduced as part of RFC 018 (`docs/RFCs/018-Native-MTP-Integration-For-MSTest.md`) and shipped across several phases in [PR #9706](https://github.com/microsoft/testfx/pull/9706), [#9743](https://github.com/microsoft/testfx/pull/9743), [#9748](https://github.com/microsoft/testfx/pull/9748), and [#9755](https://github.com/microsoft/testfx/pull/9755) (MSTest 4.3).
 
 In the native path the engine (`TestExecutionManager`, `UnitTestDiscoverer`) still operates on MSTest's own neutral models (`UnitTestElement`, `FrameworkTestResult`). At the host boundary three native seams replace the former VSTest intermediaries:
 
@@ -232,6 +232,8 @@ In the native path the engine (`TestExecutionManager`, `UnitTestDiscoverer`) sti
 | `MSTestTestNodeConverter` | Shared converter mapping `UnitTestElement` + `FrameworkTestResult` to a fully-populated MTP `TestNode` |
 
 `MSTestTestFramework` reads `IMessageBus`, `ITestExecutionFilter`, `IConfiguration`, `IOutputDevice`, and `ICommandLineOptions` from MTP's `IServiceProvider` directly, eliminating the VSTest `IRunContext`/`IRunSettings` round-trip and the double object-model conversion that the bridge imposed. As of MSTest 4.3, MSTest no longer references `Microsoft.Testing.Extensions.VSTestBridge` on the MTP code path; the [VSTestBridge](#vstestbridge) extension is still used by NUnit, Expecto, and other third-party VSTest adapters. The VSTest adapter path (real VSTest host via `MSTestDiscoverer`/`MSTestExecutor`) is unaffected.
+
+See RFC 018 (`docs/RFCs/018-Native-MTP-Integration-For-MSTest.md`) for the design.
 
 ### MTP
 
@@ -390,4 +392,4 @@ Microsoft's previous-generation test platform (`vstest.console.exe`, `Microsoft.
 
 ### VSTestBridge
 
-An MTP extension (`Microsoft.Testing.Extensions.VSTestBridge`) that provides backward compatibility for test adapters written against the VSTest API. Allows existing VSTest-based test frameworks and adapters (NUnit, Expecto, and third-party VSTest adapters) to run on MTP without a full rewrite. Note: as of MSTest 4.3, **MSTest no longer depends on VSTestBridge** on the MTP code path — MSTest uses [MSTestTestFramework](#mstesttestframework) as a native `ITestFramework` instead (see [RFC 018](docs/RFCs/018-Native-MTP-Integration-For-MSTest.md) and [PR #9755](https://github.com/microsoft/testfx/pull/9755)).
+An MTP extension (`Microsoft.Testing.Extensions.VSTestBridge`) that provides backward compatibility for test adapters written against the VSTest API. Allows existing VSTest-based test frameworks and adapters (NUnit, Expecto, and third-party VSTest adapters) to run on MTP without a full rewrite. Note: as of MSTest 4.3, **MSTest no longer depends on VSTestBridge** on the MTP code path — MSTest uses [MSTestTestFramework](#mstesttestframework) as a native `ITestFramework` instead (see RFC 018 in `docs/RFCs/018-Native-MTP-Integration-For-MSTest.md` and [PR #9755](https://github.com/microsoft/testfx/pull/9755)).
