@@ -56,7 +56,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
     {
         string? executionId = null;
         string? instanceId = null;
-        FileArtifactMessage[]? fileArtifactMessages = null;
+        FileArtifactMessage[] fileArtifactMessages = [];
 
         ReadFields(stream, (fieldId, fieldSize) =>
         {
@@ -79,7 +79,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
             }
         });
 
-        return new(executionId, instanceId, fileArtifactMessages ?? []);
+        return new(executionId, instanceId, fileArtifactMessages);
     }
 
     private static FileArtifactMessage[] ReadFileArtifactMessagesPayload(Stream stream)

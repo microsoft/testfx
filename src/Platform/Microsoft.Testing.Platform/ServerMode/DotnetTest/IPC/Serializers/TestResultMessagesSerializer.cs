@@ -111,8 +111,8 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
     {
         string? executionId = null;
         string? instanceId = null;
-        SuccessfulTestResultMessage[]? successfulTestResultMessages = null;
-        FailedTestResultMessage[]? failedTestResultMessages = null;
+        SuccessfulTestResultMessage[] successfulTestResultMessages = [];
+        FailedTestResultMessage[] failedTestResultMessages = [];
 
         ReadFields(stream, (fieldId, fieldSize) =>
         {
@@ -142,8 +142,8 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         return new(
             executionId,
             instanceId,
-            successfulTestResultMessages ?? [],
-            failedTestResultMessages ?? []);
+            successfulTestResultMessages,
+            failedTestResultMessages);
     }
 
     private static SuccessfulTestResultMessage[] ReadSuccessfulTestMessagesPayload(Stream stream)
