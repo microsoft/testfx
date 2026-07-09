@@ -40,6 +40,11 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
 
+    // Parsed once in Execute() before base.Execute() spawns the test process and begins streaming output.
+    // bool.Parse() on every output line / failed-test notification is wasteful; cache the result here.
+    private bool _captureOutput;
+    private bool _showTestsFailure;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="InvokeTestingPlatformTask"/> class.
     /// </summary>

@@ -27,7 +27,7 @@ public partial class InvokeTestingPlatformTask
     /// <inheritdoc />
     protected override void LogEventsFromTextOutput(string singleLine, MessageImportance messageImportance)
     {
-        if (!bool.Parse(TestingPlatformCaptureOutput.ItemSpec))
+        if (!_captureOutput)
         {
             Log.LogMessage(MessageImportance.High, singleLine);
         }
@@ -67,6 +67,8 @@ public partial class InvokeTestingPlatformTask
     /// <inheritdoc />
     public override bool Execute()
     {
+        _captureOutput = bool.Parse(TestingPlatformCaptureOutput.ItemSpec);
+        _showTestsFailure = bool.Parse(TestingPlatformShowTestsFailure.ItemSpec);
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
         {
@@ -170,7 +172,7 @@ public partial class InvokeTestingPlatformTask
         if (request is FailedTestInfoRequest failedTestInfoRequest)
         {
             // TestingPlatformShowTestsFailure is not enabled, don't write errors to output.
-            if (!bool.Parse(TestingPlatformShowTestsFailure.ItemSpec))
+            if (!_showTestsFailure)
             {
                 return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
             }
