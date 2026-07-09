@@ -2,11 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using Microsoft.Testing.Extensions.VSTestBridge.Resources;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -24,10 +24,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatform
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal sealed class MSTestRunSettings : IRunSettings
 {
-    // Keep in sync with the bridge's option provider constants (options are still registered by the bridge).
-    private const string RunSettingsOptionName = "settings";
-    private const string TestRunParameterOptionName = "test-parameter";
-
     private static readonly char[] TestRunParameterSeparator = ['='];
 
     private static readonly string[] UnsupportedRunConfigurationSettings =
@@ -49,7 +45,8 @@ internal sealed class MSTestRunSettings : IRunSettings
         IClientInfo client,
         IMessageLogger messageLogger)
     {
-        string runSettingsXml = ReadRunSettings(commandLineOptions, fileSystem);
+        _ = commandLineOptions.TryGetOptionArgumentList(MSTestRunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? fileNames);
+        string runSettingsXml = ReadRunSettings(fileNames, fileSystem);
 
         XDocument runSettingsDocument = Patch(runSettingsXml, configuration, client, commandLineOptions);
         WarnOnUnsupportedEntries(runSettingsDocument, messageLogger);
@@ -62,13 +59,11 @@ internal sealed class MSTestRunSettings : IRunSettings
     // Not used by MSTest (matches the bridge's RunSettingsAdapter).
     public ISettingsProvider? GetSettings(string? settingsName) => throw new NotImplementedException();
 
-    internal static string ReadRunSettings(ICommandLineOptions commandLineOptions, IFileSystem fileSystem)
+    internal static string ReadRunSettings(string[]? fileNames, IFileSystem fileSystem)
     {
-        _ = commandLineOptions.TryGetOptionArgumentList(RunSettingsOptionName, out string[]? fileNames);
-
-        // Match the runsettings environment-variable provider (which reads the same --settings option): use the
-        // first provided path rather than requiring exactly one, so a valid value is not ignored when more than
-        // one argument is present.
+        // Use the first provided --settings path rather than requiring exactly one, matching the runsettings
+        // environment-variable provider that reads the same option, so a valid value is not ignored when more
+        // than one argument is present.
         if (fileNames is { Length: > 0 } && fileSystem.ExistFile(fileNames[0]))
         {
             return fileSystem.ReadAllText(fileNames[0]);
@@ -106,7 +101,7 @@ internal sealed class MSTestRunSettings : IRunSettings
         var document = XDocument.Parse(runSettingsXml);
         if (document.Element("RunSettings") is not { } runSettingsElement)
         {
-            throw new InvalidOperationException(ExtensionResources.MissingRunSettingsAttribute);
+            throw new InvalidOperationException(PlatformAdapterResources.MissingRunSettingsAttribute);
         }
 
         bool isPatchingCommentAdded = false;
@@ -156,7 +151,7 @@ internal sealed class MSTestRunSettings : IRunSettings
 
     private static void PatchTestRunParameters(XDocument runSettingsDocument, ICommandLineOptions commandLineOptions)
     {
-        if (!commandLineOptions.TryGetOptionArgumentList(TestRunParameterOptionName, out string[]? testRunParameters))
+        if (!commandLineOptions.TryGetOptionArgumentList(MSTestTestRunParametersCommandLineOptionsProvider.TestRunParameterOptionName, out string[]? testRunParameters))
         {
             return;
         }
@@ -196,12 +191,12 @@ internal sealed class MSTestRunSettings : IRunSettings
 
         if (runSettingsElement.Element("LoggerRunSettings") is not null)
         {
-            messageLogger.SendMessage(TestMessageLevel.Warning, ExtensionResources.UnsupportedRunsettingsLoggers);
+            messageLogger.SendMessage(TestMessageLevel.Warning, PlatformAdapterResources.UnsupportedRunsettingsLoggers);
         }
 
         if (runSettingsElement.Element("DataCollectionRunSettings") is not null)
         {
-            messageLogger.SendMessage(TestMessageLevel.Warning, ExtensionResources.UnsupportedRunsettingsDatacollectors);
+            messageLogger.SendMessage(TestMessageLevel.Warning, PlatformAdapterResources.UnsupportedRunsettingsDatacollectors);
         }
 
         if (runSettingsElement.Element("RunConfiguration") is not { } runConfigurationElement)
@@ -211,7 +206,7 @@ internal sealed class MSTestRunSettings : IRunSettings
 
         foreach (string unsupportedRunConfigurationSetting in UnsupportedRunConfigurationSettings.Where(setting => runConfigurationElement.Element(setting) is not null))
         {
-            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, ExtensionResources.UnsupportedRunconfigurationSetting, unsupportedRunConfigurationSetting));
+            messageLogger.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.UnsupportedRunconfigurationSetting, unsupportedRunConfigurationSetting));
         }
     }
 }

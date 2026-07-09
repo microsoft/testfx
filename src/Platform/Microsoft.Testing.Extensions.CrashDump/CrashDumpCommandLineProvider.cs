@@ -23,7 +23,8 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
 
     public CrashDumpCommandLineProvider()
         : base(
-            nameof(CrashDumpCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "CrashDumpCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
             CrashDumpResources.CrashDumpDisplayName,
             CrashDumpResources.CrashDumpDescription,

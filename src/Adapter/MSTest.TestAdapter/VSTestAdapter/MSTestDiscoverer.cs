@@ -26,7 +26,7 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
 
     // The parameterless constructor is required by VSTest, which instantiates the
     // discoverer via reflection. The internal constructor exists for tests and for the
-    // MTP bridge (MSTestBridgedTestFramework) which injects a telemetry sender.
+    // native Microsoft.Testing.Platform framework (MSTestTestFramework) which injects a telemetry sender.
     public MSTestDiscoverer()
         : this(new TestSourceHandler())
     {

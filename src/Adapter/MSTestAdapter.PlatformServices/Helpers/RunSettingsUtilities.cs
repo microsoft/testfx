@@ -35,13 +35,13 @@ internal static class RunSettingsUtilities
     /// Throws if the node has an attribute.
     /// </summary>
     /// <param name="reader"> The reader. </param>
-    /// <exception cref="InvalidRunSettingsException"> Thrown if the node has an attribute. </exception>
+    /// <exception cref="AdapterSettingsException"> Thrown if the node has an attribute. </exception>
     internal static void ThrowOnHasAttributes(XmlReader reader)
     {
         if (reader.HasAttributes)
         {
             reader.MoveToNextAttribute();
-            throw new InvalidRunSettingsException(
+            throw new AdapterSettingsException(
                 string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.InvalidSettingsXmlAttribute,

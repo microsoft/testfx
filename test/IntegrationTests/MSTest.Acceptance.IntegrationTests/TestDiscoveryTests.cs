@@ -90,9 +90,8 @@ public class TestDiscoveryTests : AcceptanceTestBase<TestDiscoveryTests.TestAsse
         }
 
         // Test1 should expose its TestMethodIdentifierProperty data, pinning every v1 schema field
-        // for that node from the outside. Note: MSTest's VSTestBridge currently leaves
-        // assemblyFullName and returnTypeFullName empty (TODO in MSTestBridgedTestFramework);
-        // assert presence only for those.
+        // for that node from the outside. MSTest currently leaves assemblyFullName and
+        // returnTypeFullName empty, so assert presence only for those.
         bool foundTest1WithType = false;
         for (int i = 0; i < tests.GetArrayLength(); i++)
         {

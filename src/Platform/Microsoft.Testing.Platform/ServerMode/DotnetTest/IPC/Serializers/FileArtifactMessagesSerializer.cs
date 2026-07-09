@@ -58,33 +58,26 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
         string? instanceId = null;
         FileArtifactMessage[]? fileArtifactMessages = null;
 
-        ushort fieldCount = ReadUShort(stream);
-
-        for (int i = 0; i < fieldCount; i++)
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
-            int fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
             switch (fieldId)
             {
                 case FileArtifactMessagesFieldsId.ExecutionId:
                     executionId = ReadStringValue(stream, fieldSize);
-                    break;
+                    return true;
 
                 case FileArtifactMessagesFieldsId.InstanceId:
                     instanceId = ReadStringValue(stream, fieldSize);
-                    break;
+                    return true;
 
                 case FileArtifactMessagesFieldsId.FileArtifactMessageList:
                     fileArtifactMessages = ReadFileArtifactMessagesPayload(stream);
-                    break;
+                    return true;
 
                 default:
-                    // If we don't recognize the field id, skip the payload corresponding to that field
-                    SetPosition(stream, stream.Position + fieldSize);
-                    break;
+                    return false;
             }
-        }
+        });
 
         return new(executionId, instanceId, fileArtifactMessages ?? []);
     }
@@ -98,44 +91,38 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
         {
             string? fullPath = null, displayName = null, description = null, testUid = null, testDisplayName = null, sessionUid = null;
 
-            int fieldCount = ReadUShort(stream);
-
-            for (int j = 0; j < fieldCount; j++)
+            ReadFields(stream, (fieldId, fieldSize) =>
             {
-                int fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case FileArtifactMessageFieldsId.FullPath:
                         fullPath = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case FileArtifactMessageFieldsId.DisplayName:
                         displayName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case FileArtifactMessageFieldsId.Description:
                         description = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case FileArtifactMessageFieldsId.TestUid:
                         testUid = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case FileArtifactMessageFieldsId.TestDisplayName:
                         testDisplayName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case FileArtifactMessageFieldsId.SessionUid:
                         sessionUid = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return false;
                 }
-            }
+            });
 
             fileArtifactMessages[i] = new FileArtifactMessage(fullPath, displayName, description, testUid, testDisplayName, sessionUid);
         }
@@ -155,36 +142,17 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
     }
 
     private static void WriteFileArtifactMessagesPayload(Stream stream, FileArtifactMessage[]? fileArtifactMessageList)
-    {
-        if (fileArtifactMessageList is null || fileArtifactMessageList.Length == 0)
+        => WriteListPayload(stream, FileArtifactMessagesFieldsId.FileArtifactMessageList, fileArtifactMessageList, static (s, fileArtifactMessage) =>
         {
-            return;
-        }
+            WriteUShort(s, GetFieldCount(fileArtifactMessage));
 
-        WriteUShort(stream, FileArtifactMessagesFieldsId.FileArtifactMessageList);
-
-        // We will reserve an int (4 bytes)
-        // so that we fill the size later, once we write the payload
-        WriteInt(stream, 0);
-
-        long before = stream.Position;
-        WriteInt(stream, fileArtifactMessageList.Length);
-        foreach (FileArtifactMessage fileArtifactMessage in fileArtifactMessageList)
-        {
-            WriteUShort(stream, GetFieldCount(fileArtifactMessage));
-
-            WriteField(stream, FileArtifactMessageFieldsId.FullPath, fileArtifactMessage.FullPath);
-            WriteField(stream, FileArtifactMessageFieldsId.DisplayName, fileArtifactMessage.DisplayName);
-            WriteField(stream, FileArtifactMessageFieldsId.Description, fileArtifactMessage.Description);
-            WriteField(stream, FileArtifactMessageFieldsId.TestUid, fileArtifactMessage.TestUid);
-            WriteField(stream, FileArtifactMessageFieldsId.TestDisplayName, fileArtifactMessage.TestDisplayName);
-            WriteField(stream, FileArtifactMessageFieldsId.SessionUid, fileArtifactMessage.SessionUid);
-        }
-
-        // NOTE: We are able to seek only if we are using a MemoryStream
-        // thus, the seek operation is fast as we are only changing the value of a property
-        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
-    }
+            WriteField(s, FileArtifactMessageFieldsId.FullPath, fileArtifactMessage.FullPath);
+            WriteField(s, FileArtifactMessageFieldsId.DisplayName, fileArtifactMessage.DisplayName);
+            WriteField(s, FileArtifactMessageFieldsId.Description, fileArtifactMessage.Description);
+            WriteField(s, FileArtifactMessageFieldsId.TestUid, fileArtifactMessage.TestUid);
+            WriteField(s, FileArtifactMessageFieldsId.TestDisplayName, fileArtifactMessage.TestDisplayName);
+            WriteField(s, FileArtifactMessageFieldsId.SessionUid, fileArtifactMessage.SessionUid);
+        });
 
     private static ushort GetFieldCount(FileArtifactMessages fileArtifactMessages) =>
         (ushort)((fileArtifactMessages.ExecutionId is null ? 0 : 1) +

@@ -14,9 +14,7 @@ See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 * Re-print errored assemblies in dotnet test end-of-run recap by @Evangelink in [#9545](https://github.com/microsoft/testfx/pull/9545)
 * Add server-initiated session cancellation to the dotnet test IPC protocol by @Evangelink in [#9549](https://github.com/microsoft/testfx/pull/9549)
 
-## <a name="2.3.1" />[2.3.1] - UNRELEASED
-
-See full log [of v4.3.0...v4.3.1](https://github.com/microsoft/testfx/compare/v4.3.0...v4.3.1)
+## <a name="2.3.1" />[2.3.1] - 2026-07-08
 
 ### Fixed
 
@@ -63,6 +61,7 @@ See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4
 * Add `PropertyBag.FirstOrDefault<TProperty>()` for efficient single-property lookup without per-call array allocation by @Evangelink in [#9488](https://github.com/microsoft/testfx/pull/9488)
 * Add experimental `Microsoft.Testing.Extensions.GitHubActionsReport` extension emitting GitHub Actions workflow commands (per-assembly log groups, failure annotations, job summary, slow-test notices) by @azat-msft in [#9541](https://github.com/microsoft/testfx/pull/9541)
 * Emit `::warning` annotations for skipped tests in `Microsoft.Testing.Extensions.GitHubActionsReport` by @Evangelink in [#9641](https://github.com/microsoft/testfx/pull/9641)
+* Let an explicit `--minimum-expected-tests N` govern the zero-tests verdict, so a run of fewer than N tests reports the minimum-expected violation (exit code 9) instead of "zero tests ran" (exit code 8) even when no tests ran. This lets a `dotnet test --test-modules` orchestrator tell a stricter local-minimum violation apart from an empty module (#7457) by @Copilot in [#9709](https://github.com/microsoft/testfx/pull/9709)
 
 ### Fixed
 
