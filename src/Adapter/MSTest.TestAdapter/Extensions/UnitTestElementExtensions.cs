@@ -152,9 +152,16 @@ internal static class UnitTestElementExtensions
     /// <returns>The stable, versioned test identifier.</returns>
     internal static Guid GetTestId(this UnitTestElement element)
     {
+        if (element.CachedTestNodeUid is { } cachedTestId)
+        {
+            return cachedTestId;
+        }
+
         TestMethod testMethod = element.TestMethod;
         string testFullName = $"{testMethod.FullClassName}.{testMethod.Name}";
-        return GenerateSerializedDataStrategyTestId(element, testFullName);
+        Guid testId = GenerateSerializedDataStrategyTestId(element, testFullName);
+        element.CachedTestNodeUid = testId;
+        return testId;
     }
 
     private static Guid GenerateSerializedDataStrategyTestId(UnitTestElement element, string testFullName)
