@@ -107,6 +107,8 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Adapter\Shared\BannerMessageHelper.cs" Link="Shared\BannerMessageHelper.cs" />
+    <!-- Dependency-free logic shared with the VSTestBridge runsettings/test-parameter providers (see issue #9762). -->
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsProviderHelper.cs" Link="Shared\RunSettingsProviderHelper.cs" />
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
