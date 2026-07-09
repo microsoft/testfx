@@ -134,7 +134,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void Contains<T>(T expected, ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsCore(expected, collection.ToArray(), "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
+        => ContainsCore(expected, collection, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
 
     /// <summary>
     /// Tests whether the specified span contains the given element.
@@ -207,7 +207,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void Contains<T>(T expected, ReadOnlySpan<T> collection, IEqualityComparer<T> comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsCore(expected, collection.ToArray(), comparer, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
+        => ContainsCore(expected, collection, comparer, "Assert.Contains", message, expectedExpression, collectionExpression, shouldContain: true);
 
     /// <summary>
     /// Tests whether the specified span contains the given element.
@@ -282,7 +282,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void Contains<T>(Func<T, bool> predicate, ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(predicate))] string predicateExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-        => ContainsCore(predicate, collection.ToArray(), "Assert.Contains", message, predicateExpression, collectionExpression, shouldContain: true);
+        => ContainsCore(predicate, collection, "Assert.Contains", message, predicateExpression, collectionExpression, shouldContain: true);
 
     /// <summary>
     /// Tests whether the specified span contains an element matching the given predicate.
