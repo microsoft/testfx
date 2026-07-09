@@ -121,4 +121,7 @@
     <value>Environment variable '{0}' is not set.</value>
     <comment>{0} is the environment variable name.</comment>
   </data>
+  <data name="NoAuthenticationConfigured" xml:space="preserve">
+    <value>No authentication is configured for the Azure OpenAI chat client provider. Set the 'AZURE_OPENAI_API_KEY' environment variable, or reference the 'Azure.Identity' package and pass a credential (for example 'new DefaultAzureCredential()') to 'AddAzureOpenAIChatClientProvider'.</value>
+  </data>
 </root>
