@@ -52,7 +52,7 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats
 
 ### AzureFoundry
 
-An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. It reads Azure OpenAI connection settings from environment variables and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
+An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. Reads Azure OpenAI connection settings from three environment variables — `AZURE_OPENAI_ENDPOINT` (required), `AZURE_OPENAI_DEPLOYMENT_NAME` (required), and `AZURE_OPENAI_API_KEY` (optional) — and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. Authentication uses `DefaultAzureCredential` (Managed Identity, Workload Identity, Azure CLI, Visual Studio, and other credential-chain sources) by default, which is recommended for Azure-hosted scenarios so no secret needs to be provisioned; providing `AZURE_OPENAI_API_KEY` switches to key-based authentication instead. To target a specific user-assigned managed identity, set `AZURE_CLIENT_ID` to its client ID. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
 
 ## C
 
@@ -219,6 +219,20 @@ A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MS
 
 MSBuild properties that let users opt in to MSTest assembly-level parallelization without authoring a C# source file. Setting `<MSTestParallelizeScope>` emits `[assembly: Parallelize(Scope = ExecutionScope.X)]`; setting `<MSTestParallelizeWorkers>` emits `[assembly: Parallelize(Workers = N)]`; both together emit `[assembly: Parallelize(Scope = …, Workers = …)]`. Setting scope to `None` emits `[assembly: DoNotParallelize]` instead. Both properties require `GenerateAssemblyInfo` to be `true` and act via the standard `AssemblyAttribute` MSBuild item. Introduced in [PR #8233](https://github.com/microsoft/testfx/pull/8233).
 
+### MSTestTestFramework
+
+The native `ITestFramework` implementation that drives MSTest directly on Microsoft.Testing.Platform without routing execution through the [VSTestBridge](#vstestbridge). Introduced as part of [RFC 018](docs/RFCs/018-Native-MTP-Integration-For-MSTest.md) and shipped across several phases in [PR #9706](https://github.com/microsoft/testfx/pull/9706), [#9743](https://github.com/microsoft/testfx/pull/9743), [#9748](https://github.com/microsoft/testfx/pull/9748), and [#9755](https://github.com/microsoft/testfx/pull/9755) (MSTest 4.3).
+
+In the native path the engine (`TestExecutionManager`, `UnitTestDiscoverer`) still operates on MSTest's own neutral models (`UnitTestElement`, `FrameworkTestResult`). At the host boundary three native seams replace the former VSTest intermediaries:
+
+| Native seam | Role |
+| --- | --- |
+| `MtpUnitTestElementSink` | Converts discovered `UnitTestElement`s to `TestNodeUpdateMessage` (replaces VSTest `ITestCaseDiscoverySink`) |
+| `MtpTestResultRecorder` | Converts `FrameworkTestResult` to `TestNodeUpdateMessage` (replaces VSTest `IFrameworkHandle`) |
+| `MSTestTestNodeConverter` | Shared converter mapping `UnitTestElement` + `FrameworkTestResult` to a fully-populated MTP `TestNode` |
+
+`MSTestTestFramework` reads `IMessageBus`, `ITestExecutionFilter`, `IConfiguration`, `IOutputDevice`, and `ICommandLineOptions` from MTP's `IServiceProvider` directly, eliminating the VSTest `IRunContext`/`IRunSettings` round-trip and the double object-model conversion that the bridge imposed. As of MSTest 4.3, MSTest no longer references `Microsoft.Testing.Extensions.VSTestBridge` on the MTP code path; the [VSTestBridge](#vstestbridge) extension is still used by NUnit, Expecto, and other third-party VSTest adapters. The VSTest adapter path (real VSTest host via `MSTestDiscoverer`/`MSTestExecutor`) is unaffected.
+
 ### MTP
 
 See **Microsoft.Testing.Platform**.
@@ -376,4 +390,4 @@ Microsoft's previous-generation test platform (`vstest.console.exe`, `Microsoft.
 
 ### VSTestBridge
 
-An MTP extension (`Microsoft.Testing.Extensions.VSTestBridge`) that provides backward compatibility for test adapters written against the VSTest API. Allows existing VSTest-based test frameworks and adapters to run on MTP without a full rewrite.
+An MTP extension (`Microsoft.Testing.Extensions.VSTestBridge`) that provides backward compatibility for test adapters written against the VSTest API. Allows existing VSTest-based test frameworks and adapters (NUnit, Expecto, and third-party VSTest adapters) to run on MTP without a full rewrite. Note: as of MSTest 4.3, **MSTest no longer depends on VSTestBridge** on the MTP code path — MSTest uses [MSTestTestFramework](#mstesttestframework) as a native `ITestFramework` instead (see [RFC 018](docs/RFCs/018-Native-MTP-Integration-For-MSTest.md) and [PR #9755](https://github.com/microsoft/testfx/pull/9755)).
