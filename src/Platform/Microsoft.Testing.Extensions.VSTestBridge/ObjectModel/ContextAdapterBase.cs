@@ -152,33 +152,11 @@ internal abstract class ContextAdapterBase
 
             TestNodeUid currentTestNodeUid = testNodesUid[i];
             filter.Append("FullyQualifiedName=");
-            for (int k = 0; k < currentTestNodeUid.Value.Length; k++)
-            {
-                char currentChar = currentTestNodeUid.Value[k];
-                switch (currentChar)
-                {
-                    case '\\':
-                    case '(':
-                    case ')':
-                    case '&':
-                    case '|':
-                    case '=':
-                    case '!':
-                    case '~':
-                        // If the symbol is not escaped, add an escape character.
-                        if (i - 1 < 0 || currentTestNodeUid.Value[k - 1] != '\\')
-                        {
-                            filter.Append('\\');
-                        }
 
-                        filter.Append(currentChar);
-                        break;
-
-                    default:
-                        filter.Append(currentChar);
-                        break;
-                }
-            }
+            // Use VSTest's canonical escaper rather than a hand-rolled loop. It escapes every filter
+            // operator ('\', '(', ')', '&', '|', '=', '!', '~') unconditionally, which is exactly what
+            // we need for a raw (un-escaped) test-node UID.
+            filter.Append(FilterHelper.Escape(currentTestNodeUid.Value));
         }
     }
 }
