@@ -19,12 +19,12 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
 
     private async Task<(string FileName, string? Warning)> GenerateReportCoreAsync(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        (string finalPath, bool fileNameExplicitlyProvided) = ResolveOutputPath(
+        (string finalPath, _) = ResolveOutputPath(
             CtrfReportGeneratorCommandLine.CtrfReportFileNameOptionName,
             () => BuildDefaultFileName(finishTime));
 
         byte[] bytes = BuildCtrfJson(results, finishTime);
 
-        return await WriteWithRetryAsync(finalPath, bytes, fileNameExplicitlyProvided).ConfigureAwait(false);
+        return await WriteAsync(finalPath, bytes).ConfigureAwait(false);
     }
 }
