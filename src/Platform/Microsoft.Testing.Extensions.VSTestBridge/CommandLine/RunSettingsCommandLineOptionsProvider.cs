@@ -41,25 +41,12 @@ internal sealed class RunSettingsCommandLineOptionsProvider : CommandLineOptions
         }
 
         // Even if the file exists, we want to validate we can open/read it.
-        if (!CanReadFile(filePath))
+        if (!RunSettingsProviderHelper.CanReadFile(_fileSystem, filePath))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, ExtensionResources.RunsettingsFileCannotBeRead, filePath));
         }
 
         // No problem found
         return ValidationResult.ValidTask;
-    }
-
-    private bool CanReadFile(string filePath)
-    {
-        try
-        {
-            using IFileStream stream = _fileSystem.NewFileStream(filePath, FileMode.Open, FileAccess.Read);
-            return true;
-        }
-        catch (IOException)
-        {
-            return false;
-        }
     }
 }

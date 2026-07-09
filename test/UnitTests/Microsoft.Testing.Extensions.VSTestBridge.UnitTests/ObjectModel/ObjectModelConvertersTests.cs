@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.UnitTests.ObjectModel;
 [TestClass]
 public sealed class ObjectModelConvertersTests
 {
-    private static readonly IClientInfo ClientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0");
+    private static readonly IClientInfo ClientInfo = new ClientInfoService(WellKnownClients.VisualStudio, "1.0.0", new ClientCapabilitiesService(IsStateful: false));
 
     [TestMethod]
     [DataRow(true)]

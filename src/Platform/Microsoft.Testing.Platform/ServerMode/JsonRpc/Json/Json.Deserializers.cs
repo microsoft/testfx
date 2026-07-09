@@ -128,8 +128,13 @@ internal sealed partial class Json
         {
             jsonElement.TryGetProperty(JsonRpcStrings.Testing, out JsonElement testing);
 
+            bool isStateful = testing.ValueKind == JsonValueKind.Object
+                && testing.TryGetProperty(JsonRpcStrings.IsStateful, out JsonElement statefulElement)
+                && statefulElement.ValueKind == JsonValueKind.True;
+
             return new ClientCapabilities(
-                    DebuggerProvider: json.Bind<bool>(testing, JsonRpcStrings.DebuggerProvider));
+                    DebuggerProvider: json.Bind<bool>(testing, JsonRpcStrings.DebuggerProvider),
+                    IsStateful: isStateful);
         });
 
         deserializers[typeof(InitializeResponseArgs)] = new JsonElementDeserializer<InitializeResponseArgs>(
