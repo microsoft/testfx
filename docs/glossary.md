@@ -231,7 +231,7 @@ In the native path the engine (`TestExecutionManager`, `UnitTestDiscoverer`) sti
 | `MtpTestResultRecorder` | Converts `FrameworkTestResult` to `TestNodeUpdateMessage` (replaces VSTest `IFrameworkHandle`) |
 | `MSTestTestNodeConverter` | Shared converter mapping `UnitTestElement` + `FrameworkTestResult` to a fully-populated MTP `TestNode` |
 
-`MSTestTestFramework` reads `IMessageBus`, `ITestExecutionFilter`, `IConfiguration`, `IOutputDevice`, and `ICommandLineOptions` from MTP's `IServiceProvider` directly, eliminating the VSTest `IRunContext`/`IRunSettings` round-trip and the double object-model conversion that the bridge imposed. As of MSTest 4.3, MSTest no longer references `Microsoft.Testing.Extensions.VSTestBridge` on the MTP code path; the [VSTestBridge](#vstestbridge) extension is still used by NUnit, Expecto, and other third-party VSTest adapters. The VSTest adapter path (real VSTest host via `MSTestDiscoverer`/`MSTestExecutor`) is unaffected.
+`MSTestTestFramework` obtains `IConfiguration`, `IOutputDevice`, and `ICommandLineOptions` from MTP's `IServiceProvider`, and reads `IMessageBus` and `ITestExecutionFilter` from the per-request `ExecuteRequestContext`/request objects — eliminating the VSTest `IRunContext`/`IRunSettings` round-trip and the double object-model conversion that the bridge imposed. As of MSTest 4.3, MSTest no longer references `Microsoft.Testing.Extensions.VSTestBridge` on the MTP code path; the [VSTestBridge](#vstestbridge) extension is still used by NUnit, Expecto, and other third-party VSTest adapters. The VSTest adapter path (real VSTest host via `MSTestDiscoverer`/`MSTestExecutor`) is unaffected.
 
 See RFC 018 (`docs/RFCs/018-Native-MTP-Integration-For-MSTest.md`) for the design.
 
