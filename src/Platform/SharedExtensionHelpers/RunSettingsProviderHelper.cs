@@ -27,7 +27,7 @@ internal static class RunSettingsProviderHelper
             using IFileStream stream = fileSystem.NewFileStream(filePath, FileMode.Open, FileAccess.Read);
             return true;
         }
-        catch (IOException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             return false;
         }
