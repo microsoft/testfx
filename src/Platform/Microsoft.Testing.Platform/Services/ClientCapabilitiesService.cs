@@ -3,4 +3,4 @@
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed record ClientInfoService(string Id, string Version, IClientCapabilities Capabilities) : IClientInfo;
+internal sealed record ClientCapabilitiesService(bool IsStateful) : IClientCapabilities;

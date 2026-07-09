@@ -4,7 +4,7 @@
 using System.ClientModel;
 
 using Azure.AI.OpenAI;
-using Azure.Identity;
+using Azure.Core;
 
 using Microsoft.Extensions.AI;
 using Microsoft.Testing.Extensions.AzureFoundry.Resources;
@@ -18,10 +18,27 @@ namespace Microsoft.Testing.Extensions.AzureFoundry;
 /// </summary>
 internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
 {
-    // DefaultAzureCredential caches tokens on the instance and probes the whole credential chain
-    // (env vars, workload identity, managed identity via IMDS, Azure CLI, ...) on first use, which
-    // can be expensive. Reuse a single instance so the token cache and chain discovery are shared.
-    private static readonly Lazy<DefaultAzureCredential> DefaultCredential = new(() => new DefaultAzureCredential());
+    // Optional credential used for Entra ID / managed identity authentication. When null, the provider
+    // can only authenticate with an API key. Keeping the credential injectable means the core package does
+    // not need a dependency on Azure.Identity (and its MSAL graph); consumers that want managed identity
+    // reference Azure.Identity themselves and pass a credential (for example new DefaultAzureCredential()).
+    private readonly TokenCredential? _credential;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AzureOpenAIChatClientProvider"/> class that authenticates
+    /// with an API key read from the <c>AZURE_OPENAI_API_KEY</c> environment variable.
+    /// </summary>
+    public AzureOpenAIChatClientProvider()
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AzureOpenAIChatClientProvider"/> class that authenticates
+    /// with the provided <see cref="TokenCredential"/> when no API key is available.
+    /// </summary>
+    /// <param name="credential">The credential used for Entra ID / managed identity authentication.</param>
+    public AzureOpenAIChatClientProvider(TokenCredential credential)
+        => _credential = credential ?? throw new ArgumentNullException(nameof(credential));
 
     /// <summary>
     /// The authentication mode used to create the Azure OpenAI client.
@@ -29,20 +46,26 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
     internal enum AuthenticationMode
     {
         /// <summary>
+        /// No authentication is available (neither an API key nor a credential was provided).
+        /// </summary>
+        None,
+
+        /// <summary>
         /// Authenticate with an explicit API key (<c>AZURE_OPENAI_API_KEY</c>).
         /// </summary>
         ApiKey,
 
         /// <summary>
-        /// Authenticate with Entra ID / managed identity via <see cref="DefaultAzureCredential"/>.
+        /// Authenticate with an injected <see cref="Azure.Core.TokenCredential"/> (for example Entra ID / managed identity).
         /// </summary>
-        DefaultAzureCredential,
+        TokenCredential,
     }
 
     /// <inheritdoc />
     public bool IsAvailable =>
         !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
-        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME"));
+        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
+        GetAuthenticationMode(Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"), _credential) != AuthenticationMode.None;
 
     /// <inheritdoc />
     public bool HasToolsCapability => true;
@@ -50,13 +73,14 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
     /// <inheritdoc />
     public string ModelName => Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
 
-    // Prefer an explicit API key when provided, otherwise fall back to Entra ID / managed identity
-    // authentication via DefaultAzureCredential. This keeps the provider secure-by-default for
-    // Azure-hosted scenarios where distributing API keys is undesirable.
-    internal static AuthenticationMode GetAuthenticationMode(string? apiKey)
-        => RoslynString.IsNullOrEmpty(apiKey)
-            ? AuthenticationMode.DefaultAzureCredential
-            : AuthenticationMode.ApiKey;
+    // Prefer an explicit API key when provided, otherwise fall back to the injected credential (if any).
+    // When neither is available the provider cannot authenticate, so the caller must supply a credential.
+    internal static AuthenticationMode GetAuthenticationMode(string? apiKey, TokenCredential? credential)
+        => !RoslynString.IsNullOrEmpty(apiKey)
+            ? AuthenticationMode.ApiKey
+            : credential is not null
+                ? AuthenticationMode.TokenCredential
+                : AuthenticationMode.None;
 
     /// <inheritdoc />
     public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)
@@ -75,10 +99,11 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_DEPLOYMENT_NAME"));
         }
 
-        AzureOpenAIClient client = GetAuthenticationMode(apiKey) switch
+        AzureOpenAIClient client = GetAuthenticationMode(apiKey, _credential) switch
         {
             AuthenticationMode.ApiKey => new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey!)),
-            _ => new AzureOpenAIClient(new Uri(endpoint), DefaultCredential.Value),
+            AuthenticationMode.TokenCredential => new AzureOpenAIClient(new Uri(endpoint), _credential!),
+            _ => throw new InvalidOperationException(ExtensionResources.NoAuthenticationConfigured),
         };
 
         return Task.FromResult(client.GetChatClient(deploymentName).AsIChatClient());
