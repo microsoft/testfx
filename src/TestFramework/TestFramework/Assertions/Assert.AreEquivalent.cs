@@ -256,6 +256,310 @@ public sealed partial class Assert
         }
     }
 
+#if NETCOREAPP3_1_OR_GREATER
+
+    #region AreEquivalent span/memory
+
+    /// <summary>
+    /// Tests whether two spans are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="expected">The span the test expects.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(ReadOnlySpan<T> expected, ReadOnlySpan<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.ToArray(), actual.ToArray(), strict: false, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two spans are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="expected">The span the test expects.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(ReadOnlySpan<T> expected, ReadOnlySpan<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.ToArray(), actual.ToArray(), strict, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two spans are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="expected">The span the test expects.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(Span<T> expected, Span<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.ToArray(), actual.ToArray(), strict: false, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two spans are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="expected">The span the test expects.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(Span<T> expected, Span<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.ToArray(), actual.ToArray(), strict, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="expected">The memory the test expects.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.Span, actual.Span, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="expected">The memory the test expects.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.Span, actual.Span, strict, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="expected">The memory the test expects.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(Memory<T> expected, Memory<T> actual, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.Span, actual.Span, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are structurally equivalent (deep, order-sensitive element comparison).
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="expected">The memory the test expects.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreEquivalent<T>(Memory<T> expected, Memory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreEquivalent(expected.Span, actual.Span, strict, message, expectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two spans are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="notExpected">The span the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(ReadOnlySpan<T> notExpected, ReadOnlySpan<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict: false, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two spans are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="notExpected">The span the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(ReadOnlySpan<T> notExpected, ReadOnlySpan<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two spans are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="notExpected">The span the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(Span<T> notExpected, Span<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict: false, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two spans are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the spans.</typeparam>
+    /// <param name="notExpected">The span the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The span produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(Span<T> notExpected, Span<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.ToArray(), actual.ToArray(), strict, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="notExpected">The memory the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(ReadOnlyMemory<T> notExpected, ReadOnlyMemory<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.Span, actual.Span, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="notExpected">The memory the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(ReadOnlyMemory<T> notExpected, ReadOnlyMemory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.Span, actual.Span, strict, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="notExpected">The memory the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(Memory<T> notExpected, Memory<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.Span, actual.Span, message, notExpectedExpression, actualExpression);
+
+    /// <summary>
+    /// Tests whether two memory regions are NOT structurally equivalent.
+    /// </summary>
+    /// <typeparam name="T">The element type of the memory regions.</typeparam>
+    /// <param name="notExpected">The memory the test expects not to match <paramref name="actual"/>.</param>
+    /// <param name="actual">The memory produced by the code under test.</param>
+    /// <param name="strict">When <see langword="true"/>, the comparison is performed in strict mode.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="actualExpression">
+    /// The syntactic expression of actual as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreNotEquivalent<T>(Memory<T> notExpected, Memory<T> actual, bool strict, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
+        => AreNotEquivalent(notExpected.Span, actual.Span, strict, message, notExpectedExpression, actualExpression);
+
+    #endregion // AreEquivalent span/memory
+
+#endif
+
     [DoesNotReturn]
     private static void ReportAssertAreEquivalentFailed(EquivalenceMismatch mismatch, bool strict, string? userMessage, string expectedExpression, string actualExpression)
     {
