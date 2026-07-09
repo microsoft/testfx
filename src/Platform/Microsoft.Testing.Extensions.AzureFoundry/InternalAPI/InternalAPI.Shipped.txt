@@ -3,8 +3,6 @@ Microsoft.CodeAnalysis.EmbeddedAttribute
 Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
-Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.ApiKey = 0 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
-Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode.DefaultAzureCredential = 1 -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AzureOpenAIChatClientProvider() -> void
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.CreateChatClientAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Extensions.AI.IChatClient!>!
 Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.HasToolsCapability.get -> bool
@@ -13,7 +11,7 @@ Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.ModelNam
 Microsoft.Testing.Platform.RoslynString
 Polyfills.Polyfill
 Polyfills.Polyfill.extension(System.OperatingSystem)
-static Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.GetAuthenticationMode(string? apiKey) -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
+static Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.GetAuthenticationMode(string? apiKey, Azure.Core.TokenCredential? credential) -> Microsoft.Testing.Extensions.AzureFoundry.AzureOpenAIChatClientProvider.AuthenticationMode
 static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
 static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
 static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
