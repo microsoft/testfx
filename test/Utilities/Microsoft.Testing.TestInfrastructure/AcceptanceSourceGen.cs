@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.TestInfrastructure;
@@ -9,7 +9,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 /// two generators selected through the <c>MSTestSourceGenMode</c> MSBuild property. Each is exposed
 /// as a <see cref="MetadataMode"/>:
 /// <list type="bullet">
-///   <item><see cref="MetadataMode.SourceGeneration"/> builds with the default <c>Rooting</c> mode.</item>
+///   <item><see cref="MetadataMode.SourceGeneration"/> builds with the <c>Rooting</c> mode.</item>
 ///   <item><see cref="MetadataMode.AotSourceGeneration"/> builds with <c>MSTestSourceGenMode=ReflectionFree</c>.</item>
 /// </list>
 /// Referencing the package (together with <c>MSTest.TestAdapter</c>, which carries the runtime hook
@@ -77,9 +77,11 @@ public static class AcceptanceSourceGen
     /// <returns>The extra arguments to append to a <c>dotnet build</c> command.</returns>
     public static async Task<string> PrepareBuildArgumentsAsync(string assetDirectory, MetadataMode metadataMode)
     {
-        // Both source-gen variants ship in the single MSTest.SourceGeneration package; the
-        // reflection-free (AOT) path is selected at build time through MSTestSourceGenMode rather
-        // than by referencing a different package.
+        // Both source-gen variants ship in the single MSTest.SourceGeneration package; the mode is
+        // selected at build time through MSTestSourceGenMode rather than by referencing a different
+        // package. ReflectionFree is the shipped default (see MSTest.TestAdapter.targets), so we set
+        // the mode explicitly for BOTH variants here to keep each test independent of the product
+        // default and to keep the Rooting path exercised even though it is no longer the default.
         string outputSubFolder = GetOutputSubFolder(metadataMode);
         const string packageId = "MSTest.SourceGeneration";
         const string versionProperty = "MSTestSourceGenerationVersion";
@@ -89,12 +91,13 @@ public static class AcceptanceSourceGen
         string propsPath = Path.Combine(assetDirectory, propsFileName);
         await TempDirectory.WriteFileAsync(assetDirectory, propsFileName, BuildPropsContent(packageId, versionProperty));
 
-        // ReflectionFree mode selects the delegate-emitting generator inside the same package. The
-        // default (Rooting) mode needs no property. MSTestSourceGenMode is surfaced to the compiler
-        // as a CompilerVisibleProperty by MSTest.TestAdapter.targets, so a global -p: is sufficient.
+        // MSTestSourceGenMode selects which generator emits inside the same package. It is surfaced to
+        // the compiler as a CompilerVisibleProperty by MSTest.TestAdapter.targets, so a global -p: is
+        // sufficient. ReflectionFree is now the product default, but we pass Rooting explicitly for the
+        // Rooting variant so it stays covered regardless of the default.
         string sourceGenModeArg = metadataMode == MetadataMode.AotSourceGeneration
             ? " -p:MSTestSourceGenMode=ReflectionFree"
-            : string.Empty;
+            : " -p:MSTestSourceGenMode=Rooting";
 
         // - CustomBeforeMicrosoftCommonProps injects the source-generator PackageReference early
         //   enough for restore to see it, without clobbering any Directory.Build.props.

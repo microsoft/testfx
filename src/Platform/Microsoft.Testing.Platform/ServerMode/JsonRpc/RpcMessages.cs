@@ -90,7 +90,7 @@ internal sealed record InvalidRequestParamsArgs(int ErrorCode, string ErrorMessa
 
 internal sealed record ClientInfo(string Name, string Version);
 
-internal sealed record ClientCapabilities(bool DebuggerProvider);
+internal sealed record ClientCapabilities(bool DebuggerProvider, bool IsStateful);
 
 internal sealed record ServerInfo(string Name, string Version);
 

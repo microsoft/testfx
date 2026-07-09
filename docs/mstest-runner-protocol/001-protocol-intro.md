@@ -225,6 +225,13 @@ interface InitializeParams {
             // If true, the client supports the testing/testUpdates/attachments request.
             attachmentsSupport: true,
 
+            // If true, the client is stateful: it persists an addressable set of test nodes for the
+            // whole session and keeps each node in its last-known state until it is explicitly updated
+            // (for example, an IDE test explorer). If false or missing, the client is stateless: it
+            // consumes test updates as a stream and does not retain node state after the run
+            // (for example, `dotnet test`). Defaults to false.
+            isStateful: true,
+
             // If true, the client support a port to which child processes
             // can connect to.
             // Note: The test runner is expected to ensure the synchronization of messages

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -44,9 +44,11 @@ public sealed class ReflectionMetadataGenerator : IIncrementalGenerator
 
         IncrementalValueProvider<ImmutableArray<TestClassMetadata?>> collected = testClasses.Collect();
 
-        // MSTestSourceGenMode selects which generator emits. This (rooting) generator is the default;
-        // when the consumer opts into ReflectionFree, the reflection-free generator emits instead and
-        // this one stays silent so the assembly is never registered twice.
+        // MSTestSourceGenMode selects which generator emits. This (rooting) generator emits whenever
+        // the mode is not ReflectionFree -- that is, when the consumer opts into Rooting or leaves the
+        // property unset (IsReflectionFree returns false in both cases). When ReflectionFree is selected
+        // (the shipped default supplied by MSTest.TestAdapter.targets) the reflection-free generator
+        // emits instead and this one stays silent so the assembly is never registered twice.
         IncrementalValueProvider<bool> reflectionFree = context.AnalyzerConfigOptionsProvider
             .Select(static (provider, _) => SourceGenModeHelper.IsReflectionFree(provider.GlobalOptions));
 
