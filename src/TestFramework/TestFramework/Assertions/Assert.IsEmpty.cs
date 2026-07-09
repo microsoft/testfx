@@ -44,6 +44,62 @@ public sealed partial class Assert
             }
         }
 
+#if NETCOREAPP3_1_OR_GREATER
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsNotEmptyInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, ReadOnlySpan<TItem> collection, out bool shouldAppend)
+        {
+            shouldAppend = collection.Length == 0;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsNotEmptyInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, Span<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, (ReadOnlySpan<TItem>)collection, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsNotEmptyInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, ReadOnlyMemory<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, collection.Span, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertIsNotEmptyInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertIsNotEmptyInterpolatedStringHandler(int literalLength, int formattedCount, Memory<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, (ReadOnlyMemory<TItem>)collection, out shouldAppend)
+        {
+        }
+
+#endif
+
         internal void ComputeAssertion(string collectionExpression)
         {
             if (_builder is not null)
@@ -159,6 +215,294 @@ public sealed partial class Assert
 
         ReportAssertIsNotEmptyFailed(message, collectionExpression);
     }
+
+#if NETCOREAPP3_1_OR_GREATER
+
+    /// <summary>
+    /// Tests that the span is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsEmpty<T>(ReadOnlySpan<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsEmpty");
+        message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the span is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty<T>(ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(IsEmpty), 0, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests that the span is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsEmpty<T>(Span<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsEmpty");
+        message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the span is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty<T>(Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(IsEmpty), 0, collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests that the memory is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsEmpty<T>(ReadOnlyMemory<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsEmpty");
+        message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the memory is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty<T>(ReadOnlyMemory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(IsEmpty), 0, collection.Span, message, collectionExpression);
+
+    /// <summary>
+    /// Tests that the memory is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsEmpty<T>(Memory<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertCountInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsEmpty");
+        message.ComputeAssertion(nameof(IsEmpty), collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the memory is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsEmpty<T>(Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => HasCount(nameof(IsEmpty), 0, collection.Span, message, collectionExpression);
+
+    /// <summary>
+    /// Tests that the span is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsNotEmpty<T>(ReadOnlySpan<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+        message.ComputeAssertion(collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the span is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty<T>(ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
+        if (collection.Length != 0)
+        {
+            return;
+        }
+
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the span is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsNotEmpty<T>(Span<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+        message.ComputeAssertion(collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the span is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty<T>(Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
+        if (collection.Length != 0)
+        {
+            return;
+        }
+
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the memory is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsNotEmpty<T>(ReadOnlyMemory<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+        message.ComputeAssertion(collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the memory is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty<T>(ReadOnlyMemory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
+        if (collection.Span.Length != 0)
+        {
+            return;
+        }
+
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the memory is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+#pragma warning disable IDE0060 // Remove unused parameter
+    public static void IsNotEmpty<T>(Memory<T> collection, [InterpolatedStringHandlerArgument(nameof(collection))] ref AssertIsNotEmptyInterpolatedStringHandler<T> message, [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+#pragma warning restore IDE0060 // Remove unused parameter
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+        message.ComputeAssertion(collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests that the memory is not empty.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory.</param>
+    /// <param name="message">The message format to display when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void IsNotEmpty<T>(Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
+
+        if (collection.Span.Length != 0)
+        {
+            return;
+        }
+
+        ReportAssertIsNotEmptyFailed(message, collectionExpression);
+    }
+
+#endif
 
 #pragma warning restore RS0026 // Do not add multiple public overloads with optional parameters
 #pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
