@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Description" xml:space="preserve">
+    <value>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
+  </data>
+  <data name="AnnotationsOptionDescription" xml:space="preserve">
+    <value>Enable or disable GitHub Actions annotations for failed and skipped tests. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
+  </data>
+  <data name="AnnotationTitle" xml:space="preserve">
+    <value>Test failed: {0}</value>
+    <comment>{0} is the fully qualified test name.</comment>
+  </data>
+  <data name="SkippedAnnotationTitle" xml:space="preserve">
+    <value>Test skipped: {0}</value>
+    <comment>{0} is the fully qualified test name.</comment>
+  </data>
+  <data name="NoFailureMessageFallback" xml:space="preserve">
+    <value>The test failed without providing a failure message.</value>
+  </data>
+  <data name="NoSkipReasonFallback" xml:space="preserve">
+    <value>The test was skipped without providing a reason.</value>
+  </data>
+  <data name="StepSummaryOptionDescription" xml:space="preserve">
+    <value>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</comment>
+  </data>
+  <data name="StepSummaryWriteFailedWarning" xml:space="preserve">
+    <value>Failed to write the GitHub Actions job summary to '{0}': {1}</value>
+    <comment>{0} is the file path, {1} is the error message.</comment>
+  </data>
+  <data name="SlowTestNoticesOptionDescription" xml:space="preserve">
+    <value>Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
+  </data>
+  <data name="SlowTestThresholdOptionDescription" xml:space="preserve">
+    <value>The duration a test may run before a GitHub Actions slow-test notice is emitted. Accepts a bare number of seconds or a value with a unit suffix such as '90s', '2m', or '1.5h'. Defaults to 60s.</value>
+    <comment>{Locked="s"}{Locked="m"}{Locked="h"}</comment>
+  </data>
+  <data name="SlowTestNoticeTitle" xml:space="preserve">
+    <value>Slow test: {0}</value>
+    <comment>{0} is the fully qualified test name.</comment>
+  </data>
+  <data name="SlowTestStillRunning" xml:space="preserve">
+    <value>{0} still running after {1}s</value>
+    <comment>{0} is the fully qualified test name, {1} is the elapsed seconds.</comment>
+  </data>
+  <data name="InvalidSlowTestThreshold" xml:space="preserve">
+    <value>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</value>
+    <comment>{Locked="s"}{Locked="m"}</comment>
+  </data>
+  <data name="DisplayName" xml:space="preserve">
+    <value>GitHub Actions report generator</value>
+  </data>
+  <data name="GroupTitle" xml:space="preserve">
+    <value>Tests: {0} ({1})</value>
+    <comment>{0} is the assembly name, {1} is the target framework moniker.</comment>
+  </data>
+  <data name="GroupsOptionDescription" xml:space="preserve">
+    <value>Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
+  </data>
+  <data name="InvalidOnOffValue" xml:space="preserve">
+    <value>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</comment>
+  </data>
+  <data name="OptionDescription" xml:space="preserve">
+    <value>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
+  </data>
+</root>

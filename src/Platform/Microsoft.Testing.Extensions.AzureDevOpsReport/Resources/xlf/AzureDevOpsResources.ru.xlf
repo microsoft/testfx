@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../AzureDevOpsResources.resx">
     <body>
+      <trans-unit id="AnnotationsOptionDescription">
+        <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
+        <target state="new">Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
+      </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
         <source>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</source>
         <target state="translated">"--report-azdo-upload-artifact-include", "--report-azdo-upload-artifact-exclude" и "--report-azdo-upload-artifact-name" требуют, чтобы для "--report-azdo-upload-artifacts" было настроено значение, отличное от "off".</target>
@@ -11,6 +16,11 @@
         <source>Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</source>
         <target state="translated">Запрошена отправка артефактов Azure DevOps, но для TF_BUILD не настроено значение "true"; отправка артефактов Azure DevOps и теги сборки пропускаются.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsAnnotationsRequiresAzureDevOps">
+        <source>'--report-azdo-annotations' requires '--report-azdo' to be enabled</source>
+        <target state="translated">"--report-azdo-annotations" требует включения "--report-azdo"</target>
+        <note>{Locked="--report-azdo-annotations"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
         <source>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</source>
@@ -26,6 +36,11 @@
         <source>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</source>
         <target state="translated">"--report-azdo-flaky-history" требует включения "--report-azdo"</target>
         <note>{Locked="--report-azdo-flaky-history"}{Locked="--report-azdo"}</note>
+      </trans-unit>
+      <trans-unit id="AzureDevOpsGroupsRequiresAzureDevOps">
+        <source>'--report-azdo-groups' requires '--report-azdo' to be enabled</source>
+        <target state="translated">"--report-azdo-groups" требует включения "--report-azdo"</target>
+        <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
         <source>Azure DevOps live publishing failed to complete the test run.</source>
@@ -119,17 +134,17 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMinSampleRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-min-sample' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">"--report-azdo-slow-test-history-min-sample" требует включения "--report-azdo-slow-test-history"</target>
         <note>{Locked="--report-azdo-slow-test-history-min-sample"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryMultiplierRequiresSlowTestHistory">
         <source>'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history-multiplier' requires '--report-azdo-slow-test-history' to be enabled</target>
+        <target state="translated">"--report-azdo-slow-test-history-multiplier" требует включения "--report-azdo-slow-test-history"</target>
         <note>{Locked="--report-azdo-slow-test-history-multiplier"}{Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsSlowTestHistoryRequiresAzureDevOps">
         <source>'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-slow-test-history' requires '--report-azdo' to be enabled</target>
+        <target state="translated">"--report-azdo-slow-test-history" требует включения "--report-azdo"</target>
         <note>{Locked="--report-azdo-slow-test-history"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsStackFrameFilterRequiresAzureDevOps">
@@ -197,6 +212,11 @@
         <target state="translated">Журнал ненадежных экземпляров Azure DevOps вернул несколько ({0}) выполнений. Будут проверены только первые несколько ({1}) выполнений.</target>
         <note>{0} is the number of runs returned. {1} is the maximum number of runs to inspect.</note>
       </trans-unit>
+      <trans-unit id="GroupsOptionDescription">
+        <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
+        <target state="translated">Включить или отключить группы журналов Azure DevOps для каждой сборки ("on" или "off"). По умолчанию: "on". Требуется "--report-azdo".</target>
+        <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
+      </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
         <source>Invalid glob pattern {0}.</source>
         <target state="translated">Недопустимая стандартная маска {0}.</target>
@@ -212,6 +232,11 @@
         <target state="translated">Недопустимое значение "{0}" для "--report-azdo-flaky-history". Укажите целое число в диапазоне от 1 до 90.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-flaky-history"}</note>
       </trans-unit>
+      <trans-unit id="InvalidOnOffValue">
+        <source>Invalid value '{0}'. Valid values are 'on' and 'off'.</source>
+        <target state="translated">Недопустимое значение "{0}". Допустимые значения: "on" и "off".</target>
+        <note>{Locked="on"}{Locked="off"}</note>
+      </trans-unit>
       <trans-unit id="InvalidSeverity">
         <source>Invalid option {0}.</source>
         <target state="translated">Недопустимый параметр {0}.</target>
@@ -219,17 +244,17 @@
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryDays">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history'. Provide an integer between 1 and 90.</target>
+        <target state="translated">Недопустимое значение "{0}" для "--report-azdo-slow-test-history". Укажите целое число в диапазоне от 1 до 90.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMinSample">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-min-sample'. Provide an integer greater than or equal to 1.</target>
+        <target state="translated">Недопустимое значение "{0}" для "--report-azdo-slow-test-history-min-sample". Укажите целое число не менее 1.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-min-sample"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestHistoryMultiplier">
         <source>Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</source>
-        <target state="new">Invalid value '{0}' for '--report-azdo-slow-test-history-multiplier'. Provide a number greater than 0 and at most 10000.</target>
+        <target state="translated">Недопустимое значение "{0}" для "--report-azdo-slow-test-history-multiplier". Укажите число больше 0, но не более 10 000.</target>
         <note>{0} is the invalid value. {Locked="--report-azdo-slow-test-history-multiplier"}</note>
       </trans-unit>
       <trans-unit id="InvalidStackFrameFilterRegex">
@@ -239,7 +264,7 @@
       </trans-unit>
       <trans-unit id="LogGroupHeader">
         <source>Tests: {0}</source>
-        <target state="new">Tests: {0}</target>
+        <target state="translated">Тесты: {0}</target>
         <note>{0} is the test assembly name and target framework, e.g. 'MSTest.UnitTests (net9.0)'. This text is the collapsible Azure DevOps log group header.</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
@@ -304,32 +329,32 @@
       </trans-unit>
       <trans-unit id="SlowTestHistoryDecoration">
         <source>(historical p95 = {0}, p99 = {1}, samples = {2})</source>
-        <target state="new">(historical p95 = {0}, p99 = {1}, samples = {2})</target>
+        <target state="translated">(исторический p95 = {0}, p99 = {1}, примеры = {2})</target>
         <note>{0} is the p95 duration. {1} is the p99 duration. {2} is the sample count.</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMinSampleOptionDescription">
         <source>Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Minimum number of historical samples required before a test's history is used to adjust its slow-test threshold or decorate emitted lines. Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">Минимальное количество исторических примеров, которое необходимо, прежде чем журнал теста будет использоваться для корректировки порога медленного теста или декорирования выводимых строк. По умолчанию {0}. Требуется "--report-azdo-slow-test-history".</target>
         <note>{0} is the default minimum sample count. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryMultiplierOptionDescription">
         <source>Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</source>
-        <target state="new">Multiplier applied to a test's historical p99 duration to derive its slow-test threshold (threshold = min(static default, p99 * multiplier)). Defaults to {0}. Requires '--report-azdo-slow-test-history'.</target>
+        <target state="translated">Множитель, применяемый к исторической длительности p99 теста для выведения порога медленного теста (порог = мин(статическое значение по умолчанию, p99 * множитель)). По умолчанию {0}. Требуется "--report-azdo-slow-test-history".</target>
         <note>{0} is the default multiplier. {Locked="--report-azdo-slow-test-history"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryOptionDescription">
         <source>Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</source>
-        <target state="new">Query Azure DevOps test result history for the past N days (1-90) and lower the per-test 'still running' threshold for tests with a known-short historical runtime. Requires '--report-azdo'.</target>
+        <target state="translated">Выполняет запрос к журналу результатов тестов Azure DevOps за последние N дней (1–90) и снижает порог "еще выполняется" на тест для тестов с известной короткой исторической длительностью выполнения. Требуется "--report-azdo".</target>
         <note>{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SlowTestHistoryRequiresTfBuildWarning">
         <source>Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</source>
-        <target state="new">Azure DevOps slow-test history was requested, but TF_BUILD is not set to 'true'; skipping slow-test surfacing.</target>
+        <target state="translated">Был запрошен журнал медленных тестов Azure DevOps, но для TF_BUILD не установлено значение "true"; демонстрация медленных тестов пропускается.</target>
         <note>{Locked="TF_BUILD"}{Locked="true"}</note>
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] все еще выполняется после {0}: {1}</target>
         <note>{0} is the elapsed duration. {1} is the test name. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="StackFrameFilterOptionDescription">
@@ -344,7 +369,7 @@
       </trans-unit>
       <trans-unit id="SummaryOptionDescription">
         <source>Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</source>
-        <target state="new">Write a Markdown job summary at the end of the test run and upload it via '##vso[task.uploadsummary]'. An optional file path argument overrides the default location ('{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md'). Requires '--report-azdo'.</target>
+        <target state="translated">По завершении тестового запуска составьте краткий отчет в формате Markdown и загрузите его с помощью "##vso[task.uploadsummary]". Необязательный аргумент пути к файлу переопределяет расположение по умолчанию ("{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"). Требуется "--report-azdo".</target>
         <note>{Locked="Markdown"}{Locked="##vso[task.uploadsummary]"}{Locked="{testResultsDir}/azdo-summary-{assembly}-{tfm}-{arch}.md"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="SummaryRequiresTfBuildWarning">

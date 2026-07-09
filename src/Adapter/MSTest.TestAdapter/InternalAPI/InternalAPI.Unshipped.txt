@@ -1,0 +1,4 @@
+#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter
+Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.PlatformServicesConfigurationAdapter(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.this[string! key].get -> string?

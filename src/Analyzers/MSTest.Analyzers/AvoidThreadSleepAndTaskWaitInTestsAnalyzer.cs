@@ -28,7 +28,7 @@ public sealed class AvoidThreadSleepAndTaskWaitInTestsAnalyzer : DiagnosticAnaly
         Title,
         MessageFormat,
         Description,
-        Category.Usage,
+        Category.Performance,
         DiagnosticSeverity.Info,
         isEnabledByDefault: false);
 

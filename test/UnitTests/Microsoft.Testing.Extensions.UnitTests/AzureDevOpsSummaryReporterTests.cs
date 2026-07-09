@@ -63,19 +63,19 @@ public sealed class AzureDevOpsSummaryReporterTests
         await reporter.ConsumeAsync(CreateProducer(), CreatePassed("t1"), CancellationToken.None).ConfigureAwait(false);
         await reporter.OnTestSessionFinishingAsync(new TestSessionContext()).ConfigureAwait(false);
 
-        Assert.IsEmpty(GetFormattedLines());
+        Assert.IsEmpty(GetCommandLines());
     }
 
     [TestMethod]
     public void BuildMarkdown_RendersTotalsAndTopFailingAndSlowest()
     {
-        var records = new List<AzureDevOpsSummaryReporter.TestRecord>
+        var records = new List<TestRecord>
         {
-            new("Test1", "MyCo.Suite.ClassA.Test1", AzureDevOpsSummaryReporter.TerminalKind.Passed, TimeSpan.FromMilliseconds(100)),
-            new("Test2", "MyCo.Suite.ClassA.Test2", AzureDevOpsSummaryReporter.TerminalKind.Failed, TimeSpan.FromMilliseconds(200)),
-            new("Test3", "MyCo.Suite.ClassA.Test3", AzureDevOpsSummaryReporter.TerminalKind.Failed, TimeSpan.FromMilliseconds(50)),
-            new("Slowpoke", "MyCo.Suite.ClassB.Slowpoke", AzureDevOpsSummaryReporter.TerminalKind.Passed, TimeSpan.FromSeconds(12)),
-            new("Skipper", "MyCo.Suite.ClassC.Skipper", AzureDevOpsSummaryReporter.TerminalKind.Skipped, TimeSpan.Zero),
+            new("Test1", "MyCo.Suite.ClassA.Test1", TerminalKind.Passed, TimeSpan.FromMilliseconds(100)),
+            new("Test2", "MyCo.Suite.ClassA.Test2", TerminalKind.Failed, TimeSpan.FromMilliseconds(200)),
+            new("Test3", "MyCo.Suite.ClassA.Test3", TerminalKind.Failed, TimeSpan.FromMilliseconds(50)),
+            new("Slowpoke", "MyCo.Suite.ClassB.Slowpoke", TerminalKind.Passed, TimeSpan.FromSeconds(12)),
+            new("Skipper", "MyCo.Suite.ClassC.Skipper", TerminalKind.Skipped, TimeSpan.Zero),
         };
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
@@ -96,9 +96,9 @@ public sealed class AzureDevOpsSummaryReporterTests
     {
         // 25 hours 7 minutes 8 seconds total: TimeSpan custom format `hh` wraps at 24h
         // (would render as 01:07:08), so the implementation must use TotalHours for >= 1h.
-        var records = new List<AzureDevOpsSummaryReporter.TestRecord>
+        var records = new List<TestRecord>
         {
-            new("LongTest", "MyCo.X.LongTest", AzureDevOpsSummaryReporter.TerminalKind.Passed, new TimeSpan(25, 7, 8)),
+            new("LongTest", "MyCo.X.LongTest", TerminalKind.Passed, new TimeSpan(25, 7, 8)),
         };
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
@@ -110,9 +110,9 @@ public sealed class AzureDevOpsSummaryReporterTests
     [TestMethod]
     public void BuildMarkdown_FormatsTotalDurationAsMinutesAndSeconds_WhenBelowOneHour()
     {
-        var records = new List<AzureDevOpsSummaryReporter.TestRecord>
+        var records = new List<TestRecord>
         {
-            new("MidTest", "MyCo.X.MidTest", AzureDevOpsSummaryReporter.TerminalKind.Passed, new TimeSpan(0, 5, 30)),
+            new("MidTest", "MyCo.X.MidTest", TerminalKind.Passed, new TimeSpan(0, 5, 30)),
         };
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
@@ -123,10 +123,10 @@ public sealed class AzureDevOpsSummaryReporterTests
     [TestMethod]
     public void BuildMarkdown_EscapesPipesAndNewlinesInCells()
     {
-        var records = new List<AzureDevOpsSummaryReporter.TestRecord>
+        var records = new List<TestRecord>
         {
-            new("Has|Pipe", "MyCo.X.HasPipe", AzureDevOpsSummaryReporter.TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
-            new("Has\nNewline", "MyCo.X.HasNewline", AzureDevOpsSummaryReporter.TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+            new("Has|Pipe", "MyCo.X.HasPipe", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
+            new("Has\nNewline", "MyCo.X.HasNewline", TerminalKind.Failed, TimeSpan.FromMilliseconds(1)),
         };
 
         string md = AzureDevOpsSummaryReporter.BuildMarkdown(records, "MyAssembly", "net8.0");
@@ -157,7 +157,7 @@ public sealed class AzureDevOpsSummaryReporterTests
         string written = System.Text.Encoding.UTF8.GetString(memoryStream.ToArray());
         Assert.Contains("MyAssembly", written);
 
-        string[] lines = GetFormattedLines();
+        string[] lines = GetCommandLines();
         Assert.HasCount(1, lines);
         Assert.StartsWith("##vso[task.uploadsummary]", lines[0]);
         Assert.Contains("azdo-summary-", lines[0]);
@@ -198,8 +198,8 @@ public sealed class AzureDevOpsSummaryReporterTests
 
     private static IDataProducer CreateProducer() => new TestProducer();
 
-    private string[] GetFormattedLines()
-        => [.. _outputData.OfType<FormattedTextOutputDeviceData>().Select(output => output.Text)];
+    private string[] GetCommandLines()
+        => [.. _outputData.OfType<AzureDevOpsCommandOutputDeviceData>().Select(data => data.Text)];
 
     private string[] GetWarnings()
         => [.. _outputData.OfType<WarningMessageOutputDeviceData>().Select(output => output.Message)];

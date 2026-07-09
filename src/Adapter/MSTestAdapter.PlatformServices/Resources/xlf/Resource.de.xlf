@@ -168,7 +168,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="DeprecatedFlatOrderTestsByNameInClassKey">
         <source>The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</source>
-        <target state="new">The 'mstest:orderTestsByNameInClass' configuration key is deprecated and will be removed in a future version. Use 'mstest:execution:orderTestsByNameInClass' instead.</target>
+        <target state="translated">Der Konfigurationsschlüssel „mstest:orderTestsByNameInClass“ ist veraltet und wird in einer zukünftigen Version entfernt. Use „mstest:execution:orderTestsByNameInClass“ instead.</target>
         <note>{Locked="mstest:orderTestsByNameInClass"}{Locked="mstest:execution:orderTestsByNameInClass"}</note>
       </trans-unit>
       <trans-unit id="DiscoveryErrors">
@@ -250,7 +250,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="InvalidTimeoutValue">
         <source>Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</source>
-        <target state="new">Invalid value '{0}' for runsettings entry '{1}'. The timeout must be a strictly positive integer (in milliseconds); a value of 0 or less is not allowed. Omit the entry to use the default (no timeout). The setting will be ignored.</target>
+        <target state="translated">Ungültiger Wert „{0}“ für den runsettings-Eintrag „{1}“. Das Timeout muss eine ganze Zahl größer als 0 sein (in Millisekunden); ein Wert von 0 oder weniger ist nicht zulässig. Lassen Sie den Eintrag weg, um die Standardoption (kein Timeout) zu verwenden. Die Einstellung wird ignoriert.</target>
         <note>{0} is the invalid value. {1} is the runsettings entry name. {Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidValue">
@@ -408,6 +408,11 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Der Komponententestadapter konnte keine Verbindung mit der Datenquelle herstellen bzw. die Daten nicht lesen. Weitere Informationen zur Problembehandlung dieses Fehlers finden Sie unter "Problembehandlung von datengesteuerten Komponententests" (http://go.microsoft.com/fwlink/?LinkId=62412) in der MSDN Library. Fehlerdetails: {0}</target>
         <note>{0} is the error details. {Locked="http://go.microsoft.com/fwlink/?LinkId=62412"}{Locked="MSDN"}</note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorGenericValueTaskReturnType">
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. 'ValueTask&lt;T&gt;' is not a valid test method return type; use the non-generic 'ValueTask' instead. Example: public async ValueTask Test.Class1.Test()</source>
+        <target state="translated">UTA007: Die in der Klasse {0} definierte Methode {1} weist nicht die richtige Signatur auf. 'ValueTask&lt;T&gt;' ist kein gültiger Rückgabetyp für Testmethoden. Verwenden Sie stattdessen die nicht generische 'ValueTask'. Beispiel: public async ValueTask Test.Class1.Test()</target>
+        <note>{0} is the test class full name. {1} is the test method name. {Locked="UTA007"}{Locked="ValueTask&lt;T&gt;"}{Locked="ValueTask"}{Locked="public async ValueTask Test.Class1.Test()"}</note>
+      </trans-unit>
       <trans-unit id="UTA_ErrorInValidTestContextSignature">
         <source>UTA031: class {0} does not have valid TestContext property. TestContext must be of type TestContext, must be non-static, and must be public. For example: public TestContext TestContext.</source>
         <target state="translated">UTA031: Die Klasse {0} weist keine gültige TestContext-Eigenschaft auf. TestContext muss vom Typ TestContext sein, muss non-static und public sein. Beispiel: public TestContext TestContext.</target>
@@ -524,6 +529,41 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <source>The {0}.TestContext has incorrect type.</source>
         <target state="translated">"{0}.TestContext" weist einen falschen Typ auf.</target>
         <note>{0} is the test class name. {Locked="TestContext"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderInstantiationFailed">
+        <source>UTA077: Failed to instantiate type '{0}' referenced by [TestFilterProvider]. The type must declare a public parameterless constructor. {1}</source>
+        <target state="translated">UTA077: Fehler beim Instanziieren des Typs „{0}“, auf den von [TestFilterProvider] verwiesen wird. Der Typ muss einen öffentlichen parameterlosen Konstruktor deklarieren. {1}</target>
+        <note>{0} is the type name. {1} is the exception details. {Locked="UTA077"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderLoadFailed">
+        <source>UTA073: Failed to load [TestFilterProvider] marker from assembly '{0}'. {1}</source>
+        <target state="translated">UTA073: Fehler beim Laden des [TestFilterProvider]-Markers aus assembly „{0}“. {1}</target>
+        <note>{0} is the assembly path. {1} is the exception details. {Locked="UTA073"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderMultipleDeclared">
+        <source>UTA079: Assembly '{0}' declares more than one [TestFilterProvider] attribute. At most one is allowed per test assembly; compose multiple filtering strategies inside a single ITestFilter implementation.</source>
+        <target state="translated">UTA079: Die Assembly „{0}“ deklariert mehr als ein [TestFilterProvider]-Attribut. Pro Testassembly ist höchstens ein Wert zulässig. Erstellen sie mehrere Filterstrategien innerhalb einer einzelnen ITestFilter-Implementierung.</target>
+        <note>{0} is the assembly path. {Locked="UTA079"}{Locked="[TestFilterProvider]"}{Locked="ITestFilter"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderThrew">
+        <source>UTA078: The [TestFilterProvider] filter '{0}' threw an exception while evaluating test '{1}'. {2}</source>
+        <target state="translated">UTA078: Der [TestFilterProvider]-Filter „{0}“ hat beim Auswerten von Test „{1}“ eine Ausnahme ausgelöst. {2}</target>
+        <note>{0} is the filter type name. {1} is the test name. {2} is the exception details. {Locked="UTA078"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeDoesNotImplementInterface">
+        <source>UTA076: Type '{0}' referenced by [TestFilterProvider] must implement '{1}'.</source>
+        <target state="translated">UTA076: Der Typ „{0}“, auf den von [TestFilterProvider] verwiesen wird, muss „{1}“ implementieren.</target>
+        <note>{0} is the type name. {1} is the required interface name. {Locked="UTA076"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsGeneric">
+        <source>UTA074: Type '{0}' referenced by [TestFilterProvider] must not be generic.</source>
+        <target state="translated">UTA074: Der Typ „{0}“, auf den von [TestFilterProvider] verwiesen wird, darf nicht generisch sein.</target>
+        <note>{0} is the type name. {Locked="UTA074"}{Locked="[TestFilterProvider]"}</note>
+      </trans-unit>
+      <trans-unit id="UTA_TestFilterProviderTypeIsNotInstantiable">
+        <source>UTA075: Type '{0}' referenced by [TestFilterProvider] must be a concrete class, not an interface or abstract class.</source>
+        <target state="translated">UTA075: Der Typ „{0}“, auf den von [TestFilterProvider] verwiesen wird, muss eine konkrete Klasse sein, keine Schnittstelle oder abstrakte Klasse.</target>
+        <note>{0} is the type name. {Locked="UTA075"}{Locked="[TestFilterProvider]"}</note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>

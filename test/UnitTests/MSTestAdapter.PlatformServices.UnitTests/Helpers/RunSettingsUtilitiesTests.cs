@@ -4,7 +4,7 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
@@ -131,7 +131,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<SettingsException>();
+        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<AdapterSettingsException>();
     }
 
     public void GetTestRunParametersThrowsWhenTRPNodeHasNonParameterTypeChildNodes()
@@ -152,7 +152,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             </RunSettings>
             """;
 
-        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<SettingsException>();
+        new Action(() => RunSettingsUtilities.GetTestRunParameters(settingsXml)).Should().Throw<AdapterSettingsException>();
     }
 
     public void GetTestRunParametersIgnoresMalformedKeyValues()

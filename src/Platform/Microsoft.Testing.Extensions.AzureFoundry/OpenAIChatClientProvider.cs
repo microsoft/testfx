@@ -4,6 +4,7 @@
 using System.ClientModel;
 
 using Azure.AI.OpenAI;
+using Azure.Identity;
 
 using Microsoft.Extensions.AI;
 using Microsoft.Testing.Extensions.AzureFoundry.Resources;
@@ -17,17 +18,45 @@ namespace Microsoft.Testing.Extensions.AzureFoundry;
 /// </summary>
 internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
 {
+    // DefaultAzureCredential caches tokens on the instance and probes the whole credential chain
+    // (env vars, workload identity, managed identity via IMDS, Azure CLI, ...) on first use, which
+    // can be expensive. Reuse a single instance so the token cache and chain discovery are shared.
+    private static readonly Lazy<DefaultAzureCredential> DefaultCredential = new(() => new DefaultAzureCredential());
+
+    /// <summary>
+    /// The authentication mode used to create the Azure OpenAI client.
+    /// </summary>
+    internal enum AuthenticationMode
+    {
+        /// <summary>
+        /// Authenticate with an explicit API key (<c>AZURE_OPENAI_API_KEY</c>).
+        /// </summary>
+        ApiKey,
+
+        /// <summary>
+        /// Authenticate with Entra ID / managed identity via <see cref="DefaultAzureCredential"/>.
+        /// </summary>
+        DefaultAzureCredential,
+    }
+
     /// <inheritdoc />
     public bool IsAvailable =>
         !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")) &&
-        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME")) &&
-        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY"));
+        !RoslynString.IsNullOrEmpty(Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME"));
 
     /// <inheritdoc />
     public bool HasToolsCapability => true;
 
     /// <inheritdoc />
     public string ModelName => Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "unknown";
+
+    // Prefer an explicit API key when provided, otherwise fall back to Entra ID / managed identity
+    // authentication via DefaultAzureCredential. This keeps the provider secure-by-default for
+    // Azure-hosted scenarios where distributing API keys is undesirable.
+    internal static AuthenticationMode GetAuthenticationMode(string? apiKey)
+        => RoslynString.IsNullOrEmpty(apiKey)
+            ? AuthenticationMode.DefaultAzureCredential
+            : AuthenticationMode.ApiKey;
 
     /// <inheritdoc />
     public Task<IChatClient> CreateChatClientAsync(CancellationToken cancellationToken)
@@ -46,14 +75,11 @@ internal sealed class AzureOpenAIChatClientProvider : IChatClientProvider
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_DEPLOYMENT_NAME"));
         }
 
-        if (RoslynString.IsNullOrEmpty(apiKey))
+        AzureOpenAIClient client = GetAuthenticationMode(apiKey) switch
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, ExtensionResources.EnvironmentVariableNotSet, "AZURE_OPENAI_API_KEY"));
-        }
-
-        var client = new AzureOpenAIClient(
-            new Uri(endpoint),
-            new ApiKeyCredential(apiKey));
+            AuthenticationMode.ApiKey => new AzureOpenAIClient(new Uri(endpoint), new ApiKeyCredential(apiKey!)),
+            _ => new AzureOpenAIClient(new Uri(endpoint), DefaultCredential.Value),
+        };
 
         return Task.FromResult(client.GetChatClient(deploymentName).AsIChatClient());
     }

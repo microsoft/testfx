@@ -24,6 +24,12 @@ steps:
   name: Test
   displayName: Test
   condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
+  env:
+    # Expose the build's OAuth token so the report-azdo history options (slow-test-history / flaky-history
+    # injected by test/Directory.Build.targets) can query this pipeline's own test-result history. Secret
+    # variables are not auto-exposed to scripts, so the explicit mapping is required. Fork PR builds don't
+    # receive the secret, so the history service simply no-ops there; trusted branch builds run it end-to-end.
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 # Integration tests are redundant in Release—they spawn child processes that already cover
 # both Debug and Release configurations. Use --test-modules to run only unit tests.
@@ -48,6 +54,12 @@ steps:
   name: TestRelease
   displayName: Test (unit tests only)
   condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
+  env:
+    # Expose the build's OAuth token so the report-azdo history options (slow-test-history / flaky-history in
+    # $(_ReleaseUnitTestReportArgs)) can query this pipeline's own test-result history. Secret variables are
+    # not auto-exposed to scripts, so the explicit mapping is required. Fork PR builds don't receive the
+    # secret, so the history service simply no-ops there; trusted branch builds run it end-to-end.
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Test Results folders'

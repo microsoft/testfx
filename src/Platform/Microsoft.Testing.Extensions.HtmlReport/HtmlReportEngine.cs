@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.HtmlReport.Resources;
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.HtmlReport;
 
@@ -18,31 +14,6 @@ internal sealed class HtmlReportEngine : ReportEngineBase
 
     public HtmlReportEngine(ReportEngineContext context)
         : base(context)
-    {
-    }
-
-    public HtmlReportEngine(
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IEnvironment environment,
-        ICommandLineOptions commandLineOptions,
-        IConfiguration configuration,
-        IClock clock,
-        ITestFramework testFramework,
-        DateTimeOffset testStartTime,
-        int exitCode,
-        CancellationToken cancellationToken)
-        : this(new(
-            fileSystem,
-            testApplicationModuleInfo,
-            environment,
-            commandLineOptions,
-            configuration,
-            clock,
-            testFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken))
     {
     }
 
@@ -73,24 +44,12 @@ internal sealed class HtmlReportEngine : ReportEngineBase
         // provided or generated from the default <asm>_<tfm>_<arch>.html shape. Emit a warning
         // when overwriting so users have a single, predictable rule to reason about.
         bool willOverwrite = _fileSystem.ExistFile(finalPath);
-        await WriteFileAsync(finalPath, bytes).ConfigureAwait(false);
+        await WriteBytesAsync(finalPath, FileMode.Create, bytes).ConfigureAwait(false);
         return (
             finalPath,
             willOverwrite
                 ? string.Format(CultureInfo.InvariantCulture, ExtensionResources.HtmlReportFileExistsAndWillBeOverwritten, finalPath)
                 : null);
-    }
-
-    private async Task WriteFileAsync(string path, byte[] bytes)
-    {
-        // Note that we need to dispose the IFileStream, not the inner stream.
-        // IFileStream implementations will be responsible to dispose their inner stream.
-        using IFileStream stream = _fileSystem.NewFileStream(path, FileMode.Create);
-#if NETCOREAPP
-        await stream.Stream.WriteAsync(bytes.AsMemory(), _cancellationToken).ConfigureAwait(false);
-#else
-        await stream.Stream.WriteAsync(bytes, 0, bytes.Length, _cancellationToken).ConfigureAwait(false);
-#endif
     }
 
     private static string LoadTemplate()

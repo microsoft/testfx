@@ -3,6 +3,8 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -116,13 +118,55 @@ internal static class MethodInfoExtensions
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
 
-    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+    /// <summary>
+    /// Invokes a static lifecycle fixture method (assembly/class initialize or cleanup) and captures the
+    /// <see cref="ExecutionContext"/> that results from its execution.
+    /// </summary>
+    /// <param name="methodInfo">The fixture method to invoke.</param>
+    /// <param name="testContext">The test context to set as current and (when the method is parameterized) pass to the method.</param>
+    /// <param name="setExecutionContext">
+    /// Receives the <see cref="ExecutionContext"/> captured after the fixture method executed. This context
+    /// contains async locals set by the fixture method and is used to flow state to subsequent lifecycle methods.
+    /// </param>
+    /// <param name="afterExecutionContextCaptured">Optional callback invoked after the execution context has been captured (e.g. to snapshot test context properties).</param>
+    internal static async SynchronizationContextPreservingTask InvokeAsFixtureMethodAsync(
+        this MethodInfo methodInfo,
+        TestContext testContext,
+        Action<ExecutionContext?> setExecutionContext,
+        Action? afterExecutionContextCaptured = null)
     {
-        ParameterInfo[]? methodParameters = methodInfo.GetParameters();
+        // NOTE: It's unclear what the effect is if we reset the current test context before vs after the capture.
+        // It's safer to reset it before the capture.
+        using (TestContextImplementation.SetCurrentTestContext(testContext))
+        {
+            Task? task = methodInfo.GetParameters().Length == 0
+                ? methodInfo.GetInvokeResultAsync(null)
+                : methodInfo.GetInvokeResultAsync(null, testContext);
+            if (task is not null)
+            {
+                await task.ConfigureAwait(false);
+            }
+        }
 
+        // **After** we have executed the fixture method, we save the current context.
+        // This context will contain async locals set by the fixture method.
+        setExecutionContext(ExecutionContext.Capture());
+
+        afterExecutionContextCaptured?.Invoke();
+    }
+
+    internal static Task? GetInvokeResultAsync(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
+        // MethodInfo.GetParameters() allocates a fresh ParameterInfo[] on every call (CLR safety
+        // guarantee). Non-hot-path callers go through this thin wrapper; the hot path (data-driven
+        // test invocation) calls GetInvokeResultWithParametersAsync directly with an already-cached
+        // array to avoid the per-invocation allocation.
+        => methodInfo.GetInvokeResultWithParametersAsync(classInstance, methodInfo.GetParameters(), arguments);
+
+    internal static Task? GetInvokeResultWithParametersAsync(this MethodInfo methodInfo, object? classInstance, ParameterInfo[] methodParameters, params object?[]? arguments)
+    {
         // check if test method expected parameter values but no test data was provided,
         // throw error with appropriate message.
-        if (methodParameters is { Length: > 0 } && arguments == null)
+        if (methodParameters is { Length: > 0 } && arguments is null)
         {
             throw new TestFailedException(
                 UnitTestOutcome.Error,
@@ -150,7 +194,7 @@ internal static class MethodInfoExtensions
             // IndexOutOfRangeException. Mirror the reflection path's friendly diagnostic instead. We
             // only validate the count here — a type mismatch surfaces as the test's own exception and
             // must not be reinterpreted as an arguments error.
-            int expectedParameterCount = methodParameters?.Length ?? 0;
+            int expectedParameterCount = methodParameters.Length;
             int providedArgumentCount = sourceGeneratedArguments?.Length ?? 0;
             if (expectedParameterCount != providedArgumentCount)
             {
@@ -162,7 +206,7 @@ internal static class MethodInfoExtensions
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
                         expectedParameterCount,
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? []),
+                        string.Join(", ", methodParameters.Select(p => p.ParameterType.Name)),
                         providedArgumentCount,
                         string.Join(", ", sourceGeneratedArguments?.Select(a => a?.GetType().Name ?? "null") ?? [])));
             }
@@ -184,7 +228,7 @@ internal static class MethodInfoExtensions
         }
         else
         {
-            int methodParametersLengthOrZero = methodParameters?.Length ?? 0;
+            int methodParametersLengthOrZero = methodParameters.Length;
             int argumentsLengthOrZero = arguments?.Length ?? 0;
 
 #if WINDOWS_UWP
@@ -203,7 +247,7 @@ internal static class MethodInfoExtensions
             {
                 if (methodInfo.IsGenericMethod)
                 {
-                    methodInfo = ConstructGenericMethod(methodInfo, arguments);
+                    methodInfo = ConstructGenericMethod(methodInfo, methodParameters, arguments);
                 }
 
                 invokeResult = methodInfo.Invoke(classInstance, arguments);
@@ -218,7 +262,7 @@ internal static class MethodInfoExtensions
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
                         methodParametersLengthOrZero,
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? []),
+                        string.Join(", ", methodParameters.Select(p => p.ParameterType.Name)),
                         argumentsLengthOrZero,
                         string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? [])), ex);
             }
@@ -285,7 +329,7 @@ internal static class MethodInfoExtensions
     // public void TestMethod<T1, T2>(T2 p0, T1, p1) { }
     [UnconditionalSuppressMessage("ReflectionAnalysis", "IL2060:Call to 'System.Reflection.MethodInfo.MakeGenericMethod' can not be statically analyzed.", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
     [UnconditionalSuppressMessage("Aot", "IL3050:Avoid calling members annotated with 'RequiresDynamicCodeAttribute' when publishing as Native AOT", Justification = "Generic test methods with substituted type arguments are part of MSTest's reflection-mode adapter. Native AOT support relies on MSTest source-generated metadata, not on this code path.")]
-    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, object?[]? arguments)
+    private static MethodInfo ConstructGenericMethod(MethodInfo methodInfo, ParameterInfo[] parameters, object?[]? arguments)
     {
         DebugEx.Assert(methodInfo.IsGenericMethod, "ConstructGenericMethod should only be called for a generic method.");
 
@@ -304,7 +348,6 @@ internal static class MethodInfoExtensions
             map[i] = (genericDefinitions[i], null);
         }
 
-        ParameterInfo[] parameters = methodInfo.GetParameters();
         for (int i = 0; i < parameters.Length; i++)
         {
             Type parameterType = parameters[i].ParameterType;

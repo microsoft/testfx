@@ -23,7 +23,8 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
 
     public CrashDumpCommandLineProvider()
         : base(
-            nameof(CrashDumpCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "CrashDumpCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
             CrashDumpResources.CrashDumpDisplayName,
             CrashDumpResources.CrashDumpDescription,
@@ -33,12 +34,12 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
 
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName
-            && !DumpTypeOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
+        if (commandOption.Name == CrashDumpCommandLineOptions.CrashDumpTypeOptionName)
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpTypeOptionInvalidType, arguments[0]));
+            return ValidateAllowedValuesAsync(arguments[0], DumpTypeOptions, CrashDumpResources.CrashDumpTypeOptionInvalidType);
         }
-        else if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName
+
+        if (commandOption.Name == CrashDumpCommandLineOptions.CrashSequenceOptionName
             && !CommandLineOptionArgumentValidator.IsValidBooleanArgument(arguments[0]))
         {
             return ValidationResult.InvalidTask(CrashDumpResources.CrashSequenceOptionInvalidArgument);
@@ -51,13 +52,16 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
     }
 
     public override Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => IsCrashDumpMainOptionMissing(commandLineOptions)
-        ? ValidationResult.InvalidTask(CrashDumpResources.MissingCrashDumpMainOption)
-        : AreCrashReportOptionsMutuallyExclusive(commandLineOptions)
-        ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage)
-        : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
-        ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage)
-        : ValidationResult.ValidTask;
+        => RequiresMainOption(
+            commandLineOptions,
+            [CrashDumpCommandLineOptions.CrashDumpFileNameOptionName, CrashDumpCommandLineOptions.CrashDumpTypeOptionName, CrashDumpCommandLineOptions.CrashSequenceOptionName],
+            [CrashDumpCommandLineOptions.CrashDumpOptionName, CrashDumpCommandLineOptions.CrashReportOptionName, CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName],
+            () => CrashDumpResources.MissingCrashDumpMainOption)
+        ?? (AreCrashReportOptionsMutuallyExclusive(commandLineOptions)
+            ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportAndIfSupportedAreMutuallyExclusiveErrorMessage)
+            : IsCrashReportUnsupportedOnCurrentPlatform(commandLineOptions)
+            ? ValidationResult.InvalidTask(CrashDumpResources.CrashReportNotSupportedOnWindowsErrorMessage)
+            : ValidationResult.ValidTask);
 
     private static bool AreCrashReportOptionsMutuallyExclusive(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) &&
@@ -66,16 +70,4 @@ internal sealed class CrashDumpCommandLineProvider : CommandLineOptionsProviderB
     private static bool IsCrashReportUnsupportedOnCurrentPlatform(ICommandLineOptions commandLineOptions)
         => commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) &&
             RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-    private static bool IsCrashDumpMainOptionMissing(ICommandLineOptions commandLineOptions)
-    {
-        bool hasCrashDumpSubOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpFileNameOptionName) ||
-            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpTypeOptionName) ||
-            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashSequenceOptionName);
-        bool hasCrashDumpMainOption = commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashDumpOptionName) ||
-            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportOptionName) ||
-            commandLineOptions.IsOptionSet(CrashDumpCommandLineOptions.CrashReportIfSupportedOptionName);
-
-        return hasCrashDumpSubOption && !hasCrashDumpMainOption;
-    }
 }

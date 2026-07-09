@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope;
@@ -21,16 +18,21 @@ internal partial class TestExecutionManager
     /// Execute the parameter tests.
     /// </summary>
     /// <param name="tests">Tests to execute.</param>
-    /// <param name="runContext">The run context.</param>
-    /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
+    /// <param name="deploymentContext">Host-provided test-run directory and run settings XML.</param>
+    /// <param name="messageLogger">Logger used to report test messages back to the host.</param>
+    /// <param name="testResultRecorder">Recorder used to report test results back to the host.</param>
+    /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    internal virtual async Task ExecuteTestsAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    internal virtual async Task ExecuteTestsAsync(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, ITestResultRecorder testResultRecorder, ITestElementFilterProvider? filterProvider, bool isDeploymentDone)
     {
-        InitializeRandomTestOrder(frameworkHandle);
+        _testResultRecorder = testResultRecorder;
+        _testElementFilterProvider = filterProvider;
+
+        InitializeRandomTestOrder(messageLogger);
 
         var testsBySource = (from test in tests
-                             group test by test.Source into testGroup
-                             select new { Source = testGroup.Key, Tests = (IEnumerable<TestCase>)testGroup }).ToArray();
+                             group test by test.TestMethod.AssemblyName into testGroup
+                             select new { Source = testGroup.Key, Tests = (IEnumerable<UnitTestElement>)testGroup }).ToArray();
 
         if (_testOrderRandom is { } random)
         {
@@ -40,7 +42,7 @@ internal partial class TestExecutionManager
         foreach (var group in testsBySource)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
-            await ExecuteTestsInSourceAsync(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone).ConfigureAwait(false);
+            await ExecuteTestsInSourceAsync(group.Tests, deploymentContext, messageLogger, group.Source, isDeploymentDone).ConfigureAwait(false);
         }
     }
 
@@ -48,11 +50,11 @@ internal partial class TestExecutionManager
     /// Execute the parameter tests present in parameter source.
     /// </summary>
     /// <param name="tests">Tests to execute.</param>
-    /// <param name="runContext">The run context.</param>
-    /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
+    /// <param name="deploymentContext">Host-provided test-run directory and run settings XML.</param>
+    /// <param name="messageLogger">Logger used to report test messages back to the host.</param>
     /// <param name="source">The test container for the tests.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    private async Task ExecuteTestsInSourceAsync(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
+    private async Task ExecuteTestsInSourceAsync(IEnumerable<UnitTestElement> tests, DeploymentContext deploymentContext, IAdapterMessageLogger messageLogger, string source, bool isDeploymentDone)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
@@ -63,7 +65,9 @@ internal partial class TestExecutionManager
         }
 #endif
 
-        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings);
+        IAdapterMessageLogger adapterMessageLogger = messageLogger;
+
+        using ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, deploymentContext.RunSettingsXml);
         bool usesAppDomains = isolationHost is TestSourceHost { UsesAppDomain: true };
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
@@ -72,7 +76,8 @@ internal partial class TestExecutionManager
         }
 
         // Default test set is filtered tests based on user provided filter criteria
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, frameworkHandle, out bool filterHasError);
+        bool filterHasError = false;
+        ITestElementFilter? filter = _testElementFilterProvider?.GetTestElementFilter(adapterMessageLogger, out filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
@@ -112,13 +117,13 @@ internal partial class TestExecutionManager
 
         int parallelWorkers = sourceSettings.Workers;
         ExecutionScope parallelScope = sourceSettings.Scope;
-        TestCase[] testsToRun = [.. tests.Where(t => MatchTestFilter(filterExpression, t, _testMethodFilter))];
+        UnitTestElement[] testsToRun = [.. tests.Where(t => MatchTestFilter(filter, t, source))];
         if (_testOrderRandom is { } sourceRandom)
         {
             Shuffle(sourceRandom, testsToRun);
         }
 
-        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.ToUnitTestElementWithUpdatedSource(source))];
+        UnitTestElement[] unitTestElements = [.. testsToRun.Select(e => e.WithUpdatedSource(source))];
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
@@ -142,17 +147,17 @@ internal partial class TestExecutionManager
         if (!MSTestSettings.CurrentSettings.DisableParallelization && sourceSettings.CanParallelizeAssembly && parallelWorkers > 0)
         {
             // Parallelization is enabled. Let's do further classification for sets.
-            frameworkHandle.SendMessage(
-                TestMessageLevel.Informational,
+            adapterMessageLogger.SendMessage(
+                MessageLevel.Informational,
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
             // Create test sets for execution, we can execute them in parallel based on parallel settings
             // Parallel and not parallel sets.
             // Single-pass partition: enumerate testsToRun once via GroupBy (lazy GroupBy evaluated twice
             // — once per FirstOrDefault — caused 2 full passes over testsToRun).
-            IEnumerable<TestCase>? parallelizableTestSet = null;
-            IEnumerable<TestCase>? nonParallelizableTestSet = null;
-            foreach (IGrouping<bool, TestCase> group in testsToRun.GroupBy(t => t.GetPropertyValue(EngineConstants.DoNotParallelizeProperty, false)))
+            IEnumerable<UnitTestElement>? parallelizableTestSet = null;
+            IEnumerable<UnitTestElement>? nonParallelizableTestSet = null;
+            foreach (IGrouping<bool, UnitTestElement> group in testsToRun.GroupBy(t => t.DoNotParallelize))
             {
                 if (group.Key)
                 {
@@ -166,7 +171,7 @@ internal partial class TestExecutionManager
 
             if (parallelizableTestSet != null)
             {
-                ConcurrentQueue<IEnumerable<TestCase>>? queue = null;
+                ConcurrentQueue<IEnumerable<UnitTestElement>>? queue = null;
 
                 // Chunk the sets into further groups based on parallel level
                 switch (parallelScope)
@@ -174,13 +179,13 @@ internal partial class TestExecutionManager
                     case ExecutionScope.MethodLevel:
                         if (_testOrderRandom is { } methodRandom)
                         {
-                            IEnumerable<TestCase>[] methodChunks = [.. parallelizableTestSet.Select(t => (IEnumerable<TestCase>)[t])];
+                            IEnumerable<UnitTestElement>[] methodChunks = [.. parallelizableTestSet.Select(t => (IEnumerable<UnitTestElement>)[t])];
                             Shuffle(methodRandom, methodChunks);
-                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(methodChunks);
+                            queue = new ConcurrentQueue<IEnumerable<UnitTestElement>>(methodChunks);
                         }
                         else
                         {
-                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
+                            queue = new ConcurrentQueue<IEnumerable<UnitTestElement>>(parallelizableTestSet.Select(t => new[] { t }));
                         }
 
                         break;
@@ -188,18 +193,18 @@ internal partial class TestExecutionManager
                     case ExecutionScope.ClassLevel:
                         if (_testOrderRandom is { } classRandom)
                         {
-                            IEnumerable<TestCase>[] classChunks =
+                            IEnumerable<UnitTestElement>[] classChunks =
                             [
                                 .. parallelizableTestSet
-                                    .GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string)
-                                    .Select(g => (IEnumerable<TestCase>)g.ToArray()),
+                                    .GroupBy(t => t.TestMethod.FullClassName)
+                                    .Select(g => (IEnumerable<UnitTestElement>)g.ToArray()),
                             ];
                             Shuffle(classRandom, classChunks);
-                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(classChunks);
+                            queue = new ConcurrentQueue<IEnumerable<UnitTestElement>>(classChunks);
                         }
                         else
                         {
-                            queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(EngineConstants.TestClassNameProperty) as string));
+                            queue = new ConcurrentQueue<IEnumerable<UnitTestElement>>(parallelizableTestSet.GroupBy(t => t.TestMethod.FullClassName));
                         }
 
                         break;
@@ -219,9 +224,9 @@ internal partial class TestExecutionManager
                             {
                                 _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-                                if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
+                                if (queue.TryDequeue(out IEnumerable<UnitTestElement>? testSet))
                                 {
-                                    await ExecuteTestsWithTestRunnerAsync(testSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                                    await ExecuteTestsWithTestRunnerAsync(testSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
                                 }
                             }
                         }
@@ -248,7 +253,7 @@ internal partial class TestExecutionManager
                         PlatformServiceProvider.Instance.AdapterTraceLogger.Error("Error occurred while executing tests in parallel{0}{1}", Environment.NewLine, exceptionToString);
                     }
 
-                    frameworkHandle.SendMessage(TestMessageLevel.Error, exceptionToString);
+                    adapterMessageLogger.SendMessage(MessageLevel.Error, exceptionToString);
                     throw;
                 }
             }
@@ -256,17 +261,17 @@ internal partial class TestExecutionManager
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
-                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+                await ExecuteTestsWithTestRunnerAsync(nonParallelizableTestSet, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
             }
         }
         else
         {
-            await ExecuteTestsWithTestRunnerAsync(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
+            await ExecuteTestsWithTestRunnerAsync(testsToRun, adapterMessageLogger, source, sourceLevelParameters, testRunner, usesAppDomains).ConfigureAwait(false);
         }
 
         if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
         {
-            testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(frameworkHandle));
+            testRunner.ForceCleanup(sourceLevelParameters!, new RemotingMessageLogger(adapterMessageLogger));
         }
 
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)

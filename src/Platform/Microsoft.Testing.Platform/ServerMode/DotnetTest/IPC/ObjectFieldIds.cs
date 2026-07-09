@@ -176,3 +176,38 @@ internal static class TestInProgressMessageFieldsId
     public const ushort Uid = 1;
     public const ushort DisplayName = 2;
 }
+
+[Embedded]
+internal static class AzureDevOpsLogMessageFieldsId
+{
+    public const int MessagesSerializerId = 11;
+
+    public const ushort ExecutionId = 1;
+    public const ushort InstanceId = 2;
+    public const ushort LogText = 3;
+}
+
+[Embedded]
+internal static class DisplayMessageFieldsId
+{
+    public const int MessagesSerializerId = 12;
+
+    public const ushort ExecutionId = 1;
+    public const ushort InstanceId = 2;
+    public const ushort Level = 3;
+    public const ushort Text = 4;
+}
+
+[Embedded]
+internal static class WaitForServerControlRequestFieldsId
+{
+    public const int MessagesSerializerId = 13;
+}
+
+[Embedded]
+internal static class ServerControlMessageFieldsId
+{
+    public const int MessagesSerializerId = 14;
+
+    public const ushort Kind = 1;
+}

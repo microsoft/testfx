@@ -23,6 +23,12 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
 
     private static readonly string[] SeverityOptions = ["error", "warning"];
 
+    private static readonly string[] OnOffOptions =
+    [
+        AzureDevOpsCommandLineOptions.OptionOn,
+        AzureDevOpsCommandLineOptions.OptionOff,
+    ];
+
     internal const int MaxStackFrameFilterPatterns = 16;
     internal const int StackFrameFilterMatchTimeoutMs = 500;
 
@@ -49,14 +55,17 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
 
     public AzureDevOpsCommandLineProvider()
         : base(
-            nameof(AzureDevOpsCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "AzureDevOpsCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
             AzureDevOpsResources.DisplayName,
             AzureDevOpsResources.Description,
             [
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName, AzureDevOpsResources.OptionDescription, ArgumentArity.Zero, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations, AzureDevOpsResources.AnnotationsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky, DemoteKnownFlakyOptionDescriptionFormatted, ArgumentArity.Zero, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory, AzureDevOpsResources.FlakyHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
+                new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsGroups, AzureDevOpsResources.GroupsOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsQuarantineFile, AzureDevOpsResources.QuarantineFileOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsReportSeverity, AzureDevOpsResources.SeverityOptionDescription, ArgumentArity.ExactlyOne, false),
                 new CommandLineOption(AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory, AzureDevOpsResources.SlowTestHistoryOptionDescription, ArgumentArity.ExactlyOne, false),
@@ -77,6 +86,9 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
         => commandOption.Name switch
         {
+            AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations or AzureDevOpsCommandLineOptions.AzureDevOpsGroups
+                when !OnOffOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase)
+                => ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.InvalidOnOffValue, arguments[0])),
             AzureDevOpsCommandLineOptions.AzureDevOpsFlakyHistory => ValidateFlakyHistoryArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistory => ValidateSlowTestHistoryArgumentsAsync(arguments),
             AzureDevOpsCommandLineOptions.AzureDevOpsSlowTestHistoryMinSample => ValidateSlowTestHistoryMinSampleArgumentsAsync(arguments),
@@ -96,7 +108,15 @@ internal sealed class AzureDevOpsCommandLineProvider : CommandLineOptionsProvide
         string? errorMessage = null;
         if (!commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName))
         {
-            if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky))
+            if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsAnnotations))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsAnnotationsRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsGroups))
+            {
+                errorMessage = AzureDevOpsResources.AzureDevOpsGroupsRequiresAzureDevOps;
+            }
+            else if (commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsDemoteKnownFlaky))
             {
                 errorMessage = AzureDevOpsResources.AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps;
             }

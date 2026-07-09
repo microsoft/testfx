@@ -4,172 +4,177 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">Přerušeno</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">Skutečnost</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>canceled</source>
-        <target state="new">canceled</target>
+        <target state="translated">zrušeno</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
-        <target state="new">Canceling the test session...</target>
+        <target state="translated">Ruší se testovací relace...</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
-        <target state="new">Console is already in batching mode.</target>
+        <target state="translated">Konzole je již v režimu dávkování.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>
-        <target state="new">Discovered {0} tests in assembly</target>
+        <target state="translated">Počet zjištěných testů v sestavení: {0}</target>
         <note>Per-assembly discovery header printed by the dotnet test orchestrator; followed by the assembly path/target framework/architecture. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummary">
         <source>Discovered {0} tests in {1} assemblies.</source>
-        <target state="new">Discovered {0} tests in {1} assemblies.</target>
+        <target state="translated">Počet zjištěných testů v(e) {1} sestaveních: {0}</target>
         <note>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsSummarySingular">
         <source>Discovered {0} tests.</source>
-        <target state="new">Discovered {0} tests.</target>
+        <target state="translated">Počet zjištěných testů: {0}.</target>
         <note>dotnet test orchestrator discovery total for a single assembly. {0} is the discovered test count.</note>
       </trans-unit>
       <trans-unit id="DiscoveringTestsFrom">
         <source>Discovering tests from</source>
-        <target state="new">Discovering tests from</target>
+        <target state="translated">Zjišťování testů z</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before discovering tests in an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="DurationLowercase">
         <source>duration</source>
-        <target state="new">duration</target>
+        <target state="translated">doba trvání</target>
         <note />
       </trans-unit>
       <trans-unit id="Error">
         <source>error</source>
-        <target state="new">error</target>
+        <target state="translated">Chyba</target>
         <note>Label for the count of assemblies that failed without producing a failed test (crash / non-zero exit / handshake failure) in the run summary, e.g. 'error: 1'.</note>
+      </trans-unit>
+      <trans-unit id="ErroredAssembliesHeader">
+        <source>Errored assemblies:</source>
+        <target state="new">Errored assemblies:</target>
+        <note />
       </trans-unit>
       <trans-unit id="ExitCode">
         <source>Exit code</source>
-        <target state="new">Exit code</target>
+        <target state="translated">Ukončovací kód</target>
         <note />
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">Očekáváno</target>
         <note />
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">Neúspěšné</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">selhalo</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedWithErrors">
         <source>failed with {0} error(s)</source>
-        <target state="new">failed with {0} error(s)</target>
+        <target state="translated">selhalo s {0} chybou/chybami.</target>
         <note>{0} is the number of errors in an assembly summary line</note>
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">Pro testování</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="HandshakeFailuresHeader">
         <source>Handshake failures:</source>
-        <target state="new">Handshake failures:</target>
+        <target state="translated">Chyby metody handshake:</target>
         <note />
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">Vytvořené artefakty souboru v procesu:</target>
         <note />
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">Minimální očekávané porušení zásad testů, spuštěné testy: {0}, očekávané minimum: {1}</target>
         <note>{0} is the number of tests that ran. {1} is the minimum expected number of tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_MoreTestsCount">
         <source>and {0} more</source>
-        <target state="new">and {0} more</target>
+        <target state="translated">a ještě {0}</target>
         <note>{0} is the number of additional active tests.</note>
       </trans-unit>
       <trans-unit id="ActiveTestsRunning_FullTestsCount">
         <source>{0} tests running</source>
-        <target state="new">{0} tests running</target>
+        <target state="translated">Spuštěné testy: {0}</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">Vytvořené artefakty souboru mimo proces:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">Úspěšné</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">úspěch</target>
         <note />
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
         <source>Press Ctrl+C again to force exit.</source>
-        <target state="new">Press Ctrl+C again to force exit.</target>
+        <target state="translated">Dalším stisknutím kombinace kláves Ctrl+C vynutíte ukončení.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
       <trans-unit id="Retried">
         <source>retried</source>
-        <target state="new">retried</target>
+        <target state="translated">zkoušeno opakovaně</target>
         <note>Suffix appended to the total test count in the run summary to indicate how many failed tests were retried, e.g. 'total: 5 (+2 retried)'.</note>
       </trans-unit>
       <trans-unit id="RunningTestsFrom">
         <source>Running tests from</source>
-        <target state="new">Running tests from</target>
+        <target state="translated">Spouštění testů z</target>
         <note>Per-assembly banner printed by the dotnet test orchestrator before running an assembly; followed by the assembly path/target framework/architecture.</note>
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">vynecháno</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
-        <target state="new">at</target>
+        <target state="translated">v</target>
         <note>at that is used for a stack frame location in a stack trace, is followed by a class and method name</note>
       </trans-unit>
       <trans-unit id="StackFrameIn">
         <source>in</source>
-        <target state="new">in</target>
+        <target state="translated">v</target>
         <note>in that is used in stack frame it is followed by file name</note>
       </trans-unit>
       <trans-unit id="StandardError">
         <source>Error output</source>
-        <target state="new">Error output</target>
+        <target state="translated">Chybový výstup</target>
         <note />
       </trans-unit>
       <trans-unit id="StandardOutput">
         <source>Standard output</source>
-        <target state="new">Standard output</target>
+        <target state="translated">Standardní výstup</target>
         <note />
       </trans-unit>
       <trans-unit id="SucceededLowercase">
         <source>succeeded</source>
-        <target state="new">succeeded</target>
+        <target state="translated">úspěšné</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionDescription">
@@ -185,39 +190,39 @@ When both --ansi and --no-ansi are provided, --ansi wins.</target>
       </trans-unit>
       <trans-unit id="TerminalAnsiOptionInvalidArgument">
         <source>--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--ansi expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Přepínač --ansi očekává jeden parametr s hodnotou auto, on (nebo true, enable, 1) nebo off (nebo false, disable, 0).</target>
         <note>{Locked="--ansi"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalNoAnsiOptionDescription">
         <source>Disable outputting ANSI escape characters to screen.</source>
-        <target state="new">Disable outputting ANSI escape characters to screen.</target>
+        <target state="translated">Zakažte výstup řídicích znaků ANSI na obrazovku.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalNoProgressOptionDescription">
         <source>[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</source>
-        <target state="new">[Deprecated, use '--progress off' instead] Disable reporting progress to screen.</target>
+        <target state="translated">[Zastaralé, místo toho použijte '--progress off'] Vypněte zobrazování průběhu na obrazovce.</target>
         <note>{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionDescription">
         <source>Output verbosity when reporting tests.
 Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</source>
-        <target state="new">Output verbosity when reporting tests.
-Valid values are 'Normal', 'Detailed'. Default is 'Normal'.</target>
+        <target state="translated">Podrobnosti výstupu při vytváření sestav testů.
+Platné hodnoty jsou Normal a Detailed. Výchozí hodnota je Normal.</target>
         <note>{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalOutputOptionInvalidArgument">
         <source>--output expects a single parameter with value 'Normal' or 'Detailed'.</source>
-        <target state="new">--output expects a single parameter with value 'Normal' or 'Detailed'.</target>
+        <target state="translated">--output očekává jeden parametr s hodnotou Normal nebo Detailed.</target>
         <note>{Locked="--output"}{Locked="Normal"}{Locked="Detailed"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeat">
         <source>running... {0} completed, {1} failed</source>
-        <target state="new">running... {0} completed, {1} failed</target>
+        <target state="translated">spuštěno... {0} dokončeno, {1} neúspěšné</target>
         <note>Heartbeat line emitted on non-cursor terminals when the run goes silent. {0} is the number of completed tests, {1} is the number of failed tests.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressHeartbeatActiveSuffix">
         <source> | active: {0}</source>
-        <target state="new"> | active: {0}</target>
+        <target state="translated"> | aktivní: {0}</target>
         <note>Suffix appended to the heartbeat line naming the currently active test. {0} is the active test name.</note>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionDescription">
@@ -233,66 +238,66 @@ This option takes precedence over the deprecated --no-progress flag.</target>
       </trans-unit>
       <trans-unit id="TerminalProgressOptionInvalidArgument">
         <source>--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">--progress expects a single parameter with value 'auto', 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">--progress očekává jeden příznak s hodnotou auto, on (nebo true, enable, 1) nebo off (nebo false, disable, 0).</target>
         <note>{Locked="--progress"}{Locked="auto"}{Locked="on"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="off"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="TerminalProgressSlowTest">
         <source>[slow] still running after {0}: {1}</source>
-        <target state="new">[slow] still running after {0}: {1}</target>
+        <target state="translated">[slow] stále běží po {0}: {1}</target>
         <note>Line emitted on non-cursor terminals when a single test runs longer than the slow-test threshold. {0} is the elapsed duration, {1} is the test description. {Locked="[slow]"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowOutputOptionInvalidArgument">
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
-        <target state="new">--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</target>
+        <target state="translated">--show-stdout a --show-stderr očekávají jeden parametr s hodnotou All, Failed nebo None.</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured error output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Určuje, kdy se má zobrazit zachycený výstup chyby testu.
+Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All (nebo Failed, když se zjistí prostředí LLM / agenta AI).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStdoutOptionDescription">
         <source>Determines when to show captured standard output of a test.
 Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</source>
-        <target state="new">Determines when to show captured standard output of a test.
-Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).</target>
+        <target state="translated">Určuje, kdy se má zobrazit zachycený standardní výstup testu.
+Platné hodnoty jsou All, Failed, None. Výchozí hodnota je All (nebo Failed, když se zjistí prostředí LLM / agenta AI).</target>
         <note>{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
       </trans-unit>
       <trans-unit id="TerminalTestReporterDescription">
         <source>Writes test results to terminal.</source>
-        <target state="new">Writes test results to terminal.</target>
+        <target state="translated">Zapíše výsledky testu do terminálu.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalTestReporterDisplayName">
         <source>Terminal test reporter</source>
-        <target state="new">Terminal test reporter</target>
+        <target state="translated">Oznamovatel testu terminálu</target>
         <note />
       </trans-unit>
       <trans-unit id="TestDiscoverySummarySingular">
         <source>Test discovery summary: found {0} test(s)</source>
-        <target state="new">Test discovery summary: found {0} test(s)</target>
+        <target state="translated">Souhrn zjišťování testů: nalezené testy: {0}</target>
         <note>{0} is the number of discovered tests.</note>
       </trans-unit>
       <trans-unit id="TestRunSummary">
         <source>Test run summary:</source>
-        <target state="new">Test run summary:</target>
+        <target state="translated">Souhrn testovacího běhu:</target>
         <note />
       </trans-unit>
       <trans-unit id="Try">
         <source>try {0}</source>
-        <target state="new">try {0}</target>
+        <target state="translated">{0} pokus</target>
         <note>number of tries of the current test assembly when test assembly is being retried. {0} is number that starts at 1</note>
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">Spustila se nula testů</target>
         <note />
       </trans-unit>
       <trans-unit id="TotalLowercase">
         <source>total</source>
-        <target state="new">total</target>
+        <target state="translated">celkem</target>
         <note />
       </trans-unit>
     </body>

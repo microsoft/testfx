@@ -561,25 +561,23 @@ The type declaring these methods should also respect the following rules:
 The type declaring these methods should also respect the following rules:
 -The type should be a class
 -The class should be 'public'
--The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">標示為 '[GlobalTestInitialize]' 或 '[GlobalTestCleanup]' 的方法應該遵循下列配置才能有效：
--其不能在泛型 class 上宣告
--其應為 'public'
--其應為 'static'
--其不應為 'async void'
--其不應為特殊方法 (完成項、運算子...)。
--其不應為泛型
--其應該接受類型為 'TestContext' 的一個參數
--傳回類型應為 'void'、'Task' 或 'ValueTask'
+        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-宣告這些方法的類型還應遵循以下規則:
--類型應為 class
--class 應為 'public'
--class 不應為 'static'
--class 應標示為 '[TestClass]' (或衍生屬性)
--class 不應為泛型。</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -664,17 +662,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
-        <target state="new">Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</target>
+        <target state="translated">將測試方法上的 'DisplayName' 設定為與方法名稱相同的值是多餘的，因為方法名稱預設已做為顯示名稱。可以移除重複的 'DisplayName'，而不需變更測試的報告方式。</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameMessageFormat">
         <source>The 'DisplayName' is the same as the test method name '{0}' and can be removed</source>
-        <target state="new">The 'DisplayName' is the same as the test method name '{0}' and can be removed</target>
+        <target state="translated">'DisplayName' 與測試方法名稱 '{0}' 相同，可予以移除</target>
         <note>{0} is the test method name. {Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameTitle">
         <source>Test method should not specify a display name equal to its name</source>
-        <target state="new">Test method should not specify a display name equal to its name</target>
+        <target state="translated">測試方法不得指定等於其名稱的顯示名稱</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">

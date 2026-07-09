@@ -26,12 +26,18 @@
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" />
 
     <AdditionalFiles Include="PublicAPI\net\PublicAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
     <AdditionalFiles Include="PublicAPI\net\PublicAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
+    <AdditionalFiles Include="InternalAPI\net\InternalAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
+    <AdditionalFiles Include="InternalAPI\net\InternalAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))" />
 
     <AdditionalFiles Include="PublicAPI\net9.0\PublicAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
     <AdditionalFiles Include="PublicAPI\net9.0\PublicAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+    <AdditionalFiles Include="InternalAPI\net9.0\InternalAPI.Shipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+    <AdditionalFiles Include="InternalAPI\net9.0\InternalAPI.Unshipped.txt" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,6 +64,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
     <InternalsVisibleTo Include="MSTestAdapter.PlatformServices" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestFramework.Extensions" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests" Key="$(VsPublicKey)" />

@@ -80,6 +80,13 @@
     -->
     <MicrosoftTestingExtensionsJUnitReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsJUnitReportVersionPrefix>
 
+    <MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsGitHubActionsReportPreReleaseVersionLabel>
+
+    <!--
+    This is an early preview package, keep 1.0.0-alpha or similar suffix even in official builds.
+    -->
+    <MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix>1.0.0</MicrosoftTestingExtensionsGitHubActionsReportVersionPrefix>
+
     <MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>alpha</MicrosoftTestingExtensionsOpenTelemetryPreReleaseVersionLabel>
 
     <!--

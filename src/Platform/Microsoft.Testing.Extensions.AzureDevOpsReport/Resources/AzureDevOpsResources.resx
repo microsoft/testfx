@@ -117,6 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AnnotationsOptionDescription" xml:space="preserve">
+    <value>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</comment>
+  </data>
   <data name="ArtifactUploadOptionsRequireUploadArtifacts" xml:space="preserve">
     <value>'--report-azdo-upload-artifact-include', '--report-azdo-upload-artifact-exclude', and '--report-azdo-upload-artifact-name' require '--report-azdo-upload-artifacts' to be set to a value other than 'off'.</value>
     <comment>{Locked="--report-azdo-upload-artifact-include"}{Locked="--report-azdo-upload-artifact-exclude"}{Locked="--report-azdo-upload-artifact-name"}{Locked="--report-azdo-upload-artifacts"}{Locked="off"}</comment>
@@ -124,6 +128,10 @@
   <data name="ArtifactUploadRequiresTfBuildWarning" xml:space="preserve">
     <value>Azure DevOps artifact upload was requested, but TF_BUILD is not set to 'true'; skipping Azure DevOps artifact upload and build tags.</value>
     <comment>{Locked="TF_BUILD"}{Locked="true"}</comment>
+  </data>
+  <data name="AzureDevOpsAnnotationsRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-annotations' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked="--report-azdo-annotations"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-demote-known-flaky' requires '--report-azdo' to be enabled</value>
@@ -136,6 +144,10 @@
   <data name="AzureDevOpsFlakyHistoryRequiresAzureDevOps" xml:space="preserve">
     <value>'--report-azdo-flaky-history' requires '--report-azdo' to be enabled</value>
     <comment>{Locked="--report-azdo-flaky-history"}{Locked="--report-azdo"}</comment>
+  </data>
+  <data name="AzureDevOpsGroupsRequiresAzureDevOps" xml:space="preserve">
+    <value>'--report-azdo-groups' requires '--report-azdo' to be enabled</value>
+    <comment>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</comment>
   </data>
   <data name="AzureDevOpsLivePublishingCompleteRunFailed" xml:space="preserve">
     <value>Azure DevOps live publishing failed to complete the test run.</value>
@@ -250,6 +262,10 @@
     <value>Azure DevOps flaky history for run '{0}' exceeded {1} pages or returned an unchanged continuation token. Remaining results will be ignored.</value>
     <comment>{0} is the Azure DevOps run URL. {1} is the maximum number of pages.</comment>
   </data>
+  <data name="GroupsOptionDescription" xml:space="preserve">
+    <value>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</value>
+    <comment>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</comment>
+  </data>
   <data name="InvalidArtifactUploadGlob" xml:space="preserve">
     <value>Invalid glob pattern {0}.</value>
     <comment>{0} is the invalid glob pattern.</comment>
@@ -261,6 +277,10 @@
   <data name="InvalidFlakyHistoryDays" xml:space="preserve">
     <value>Invalid value '{0}' for '--report-azdo-flaky-history'. Provide an integer between 1 and 90.</value>
     <comment>{0} is the invalid value. {Locked="--report-azdo-flaky-history"}</comment>
+  </data>
+  <data name="InvalidOnOffValue" xml:space="preserve">
+    <value>Invalid value '{0}'. Valid values are 'on' and 'off'.</value>
+    <comment>{Locked="on"}{Locked="off"}</comment>
   </data>
   <data name="InvalidSeverity" xml:space="preserve">
     <value>Invalid option {0}.</value>

@@ -4,8 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -13,13 +11,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 [SuppressMessage("Performance", "CA1852: Seal internal types", Justification = "Overrides required for testability")]
 internal class UnitTestDiscoverer
 {
-    private readonly TestMethodFilter _testMethodFilter;
-
-    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler)
-    {
-        _testMethodFilter = new TestMethodFilter();
-        _testSource = testSourceHandler;
-    }
+    internal UnitTestDiscoverer(ITestSourceHandler testSourceHandler) => _testSource = testSourceHandler;
 
     /// <summary>
     /// Discovers the tests available from the provided sources.
@@ -27,18 +19,20 @@ internal class UnitTestDiscoverer
     /// <param name="sources"> The sources. </param>
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
-    /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="settingsXml"> The run settings XML, or <see langword="null"/> when none was provided. </param>
+    /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
-    internal void DiscoverTests(
+    internal async Task DiscoverTestsAsync(
         IEnumerable<string> sources,
-        IMessageLogger logger,
-        ITestCaseDiscoverySink discoverySink,
-        IDiscoveryContext discoveryContext,
+        IAdapterMessageLogger logger,
+        IUnitTestElementSink discoverySink,
+        string? settingsXml,
+        ITestElementFilterProvider? filterProvider,
         bool isMTP)
     {
         foreach (string source in sources)
         {
-            DiscoverTestsInSource(source, logger, discoverySink, discoveryContext, isMTP);
+            await DiscoverTestsInSourceAsync(source, logger, discoverySink, settingsXml, filterProvider, isMTP).ConfigureAwait(false);
         }
     }
 
@@ -48,16 +42,18 @@ internal class UnitTestDiscoverer
     /// <param name="source"> The source. </param>
     /// <param name="logger"> The logger. </param>
     /// <param name="discoverySink"> The discovery Sink. </param>
-    /// <param name="discoveryContext"> The discovery context. </param>
+    /// <param name="settingsXml"> The run settings XML, or <see langword="null"/> when none was provided. </param>
+    /// <param name="filterProvider">Provider for the test filter, or <see langword="null"/> for no filter.</param>
     /// <param name="isMTP">Flag set to true when the platform running discovery is MTP.</param>
-    internal virtual void DiscoverTestsInSource(
+    internal virtual async Task DiscoverTestsInSourceAsync(
         string source,
-        IMessageLogger logger,
-        ITestCaseDiscoverySink discoverySink,
-        IDiscoveryContext? discoveryContext,
+        IAdapterMessageLogger logger,
+        IUnitTestElementSink discoverySink,
+        string? settingsXml,
+        ITestElementFilterProvider? filterProvider,
         bool isMTP)
     {
-        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, _testSource, isMTP, out List<string> warnings);
+        ICollection<UnitTestElement>? testElements = AssemblyEnumeratorWrapper.GetTests(source, settingsXml, _testSource, isMTP, out List<string> warnings);
 
         if (MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors)
         {
@@ -86,7 +82,7 @@ internal class UnitTestDiscoverer
                 }
 
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
-                logger.SendMessage(TestMessageLevel.Warning, message);
+                logger.SendMessage(MessageLevel.Warning, message);
             }
         }
 
@@ -104,15 +100,16 @@ internal class UnitTestDiscoverer
                 source);
         }
 
-        SendTestCases(testElements, discoverySink, discoveryContext, logger);
+        await SendTestCasesAsync(testElements, discoverySink, filterProvider, logger).ConfigureAwait(false);
     }
 
     private readonly ITestSourceHandler _testSource;
 
-    internal void SendTestCases(IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
+    internal static async Task SendTestCasesAsync(IEnumerable<UnitTestElement> testElements, IUnitTestElementSink discoverySink, ITestElementFilterProvider? filterProvider, IAdapterMessageLogger logger)
     {
-        // Get filter expression and skip discovery in case filter expression has parsing error.
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
+        // Get filter and skip discovery in case filter expression has parsing error.
+        bool filterHasError = false;
+        ITestElementFilter? filter = filterProvider?.GetTestElementFilter(logger, out filterHasError);
         if (filterHasError)
         {
             return;
@@ -120,15 +117,13 @@ internal class UnitTestDiscoverer
 
         foreach (UnitTestElement testElement in testElements)
         {
-            var testCase = testElement.ToTestCase();
-
-            // Filter tests based on test case filters
-            if (filterExpression != null && !filterExpression.MatchTestCase(testCase, p => _testMethodFilter.PropertyValueProvider(testCase, p)))
+            // Filter tests based on test case filters.
+            if (filter is not null && !filter.Matches(testElement))
             {
                 continue;
             }
 
-            discoverySink.SendTestCase(testCase);
+            await discoverySink.SendTestElementAsync(testElement).ConfigureAwait(false);
         }
     }
 }

@@ -1,12 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Services;
-
 namespace Microsoft.Testing.Extensions.CtrfReport;
 
 internal sealed partial class CtrfReportEngine : ReportEngineBase
@@ -20,42 +14,17 @@ internal sealed partial class CtrfReportEngine : ReportEngineBase
     {
     }
 
-    public CtrfReportEngine(
-        IFileSystem fileSystem,
-        ITestApplicationModuleInfo testApplicationModuleInfo,
-        IEnvironment environment,
-        ICommandLineOptions commandLineOptions,
-        IConfiguration configuration,
-        IClock clock,
-        ITestFramework testFramework,
-        DateTimeOffset testStartTime,
-        int exitCode,
-        CancellationToken cancellationToken)
-        : this(new(
-            fileSystem,
-            testApplicationModuleInfo,
-            environment,
-            commandLineOptions,
-            configuration,
-            clock,
-            testFramework,
-            testStartTime,
-            exitCode,
-            cancellationToken))
-    {
-    }
-
     public Task<(string FileName, string? Warning)> GenerateReportAsync(CapturedTestResult[] results)
         => GenerateReportCoreAsync(results, _clock.UtcNow);
 
     private async Task<(string FileName, string? Warning)> GenerateReportCoreAsync(CapturedTestResult[] results, DateTimeOffset finishTime)
     {
-        (string finalPath, bool fileNameExplicitlyProvided) = ResolveOutputPath(
+        (string finalPath, _) = ResolveOutputPath(
             CtrfReportGeneratorCommandLine.CtrfReportFileNameOptionName,
             () => BuildDefaultFileName(finishTime));
 
         byte[] bytes = BuildCtrfJson(results, finishTime);
 
-        return await WriteWithRetryAsync(finalPath, bytes, fileNameExplicitlyProvided).ConfigureAwait(false);
+        return await WriteAsync(finalPath, bytes).ConfigureAwait(false);
     }
 }

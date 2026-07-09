@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under dual-license. See LICENSE.PLATFORMTOOLS.txt file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Policy.Resources;
@@ -98,48 +98,9 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         ApplicationStateGuard.Ensure(cmdRetries is not null);
         int userMaxRetryCount = int.Parse(cmdRetries[0], CultureInfo.InvariantCulture);
 
-        // Find out the retry args index inside the arguments to after cleanup the command line when we restart
-        List<int> indexToCleanup = [];
+        // Find out the retry args indices so we can clean up the command line when we restart.
         string[] executableArguments = [.. executableInfo.Arguments];
-        int argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsOptionName, executableArguments);
-        if (argIndex < 0)
-        {
-            throw ApplicationStateGuard.Unreachable();
-        }
-
-        indexToCleanup.Add(argIndex);
-        indexToCleanup.Add(argIndex + 1);
-
-        argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            indexToCleanup.Add(argIndex + 1);
-        }
-
-        argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            indexToCleanup.Add(argIndex + 1);
-        }
-
-        argIndex = GetOptionArgumentIndex(RetryCommandLineOptionsProvider.RetryFailedTestsDelayOptionName, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            if (argIndex + 1 < executableArguments.Length)
-            {
-                indexToCleanup.Add(argIndex + 1);
-            }
-        }
-
-        argIndex = GetOptionArgumentIndex(PlatformCommandLineProvider.ResultDirectoryOptionKey, executableArguments);
-        if (argIndex > -1)
-        {
-            indexToCleanup.Add(argIndex);
-            indexToCleanup.Add(argIndex + 1);
-        }
+        List<int> indexToCleanup = RetryArgumentsBuilder.ComputeIndicesToCleanup(executableArguments);
 
         // Override the result directory with the attempt one
         string resultDirectory = configuration.GetTestResultDirectory();
@@ -149,12 +110,20 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
         IFileSystem fileSystem = _serviceProvider.GetFileSystem();
 
         int attemptCount = 0;
-        List<string> finalArguments = [];
         string[]? lastListOfFailedId = null;
         string? currentTryResultFolder = null;
         bool thresholdPolicyKickedIn = false;
         string retryRootFolder = CreateRetriesDirectory(resultDirectory);
         bool retryInterrupted = false;
+
+        // Retry summary accounting (single-assembly). The orchestrator only learns each attempt's failed UID set and
+        // the total number of tests that ran, so the richer passed/skipped split stays in the per-attempt child
+        // summaries; here we reconcile the attempts into one headline (mirroring the platform run summary idiom).
+        var orchestrationStopwatch = Stopwatch.StartNew();
+        int suiteTotalTests = 0;
+        int firstAttemptFailedTests = 0;
+        int finalFailedTests = 0;
+        int retriedExecutions = 0;
 
         // Parse the delay once before the loop since command-line options don't change.
         TimeSpan? retryDelay = null;
@@ -171,289 +140,129 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
 
             if (attemptCount > 1 && retryDelay is { } delay)
             {
-                await logger.LogDebugAsync($"Waiting {delay:c} before retry attempt {attemptCount}").ConfigureAwait(false);
+                await outputDevice.DisplayAsync(
+                    this,
+                    new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryWaitingBeforeNextAttempt, RetryOrchestratorHelper.FormatDelay(delay), attemptCount, userMaxRetryCount + 1))
+                    {
+                        ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGray },
+                    },
+                    cancellationToken).ConfigureAwait(false);
                 await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             }
 
-            // Cleanup the arguments
-            for (int i = 0; i < executableArguments.Length; i++)
-            {
-                if (indexToCleanup.Contains(i))
-                {
-                    continue;
-                }
-
-                finalArguments.Add(executableArguments[i]);
-            }
-
-            // Fix result folder
             currentTryResultFolder = Path.Combine(retryRootFolder, attemptCount.ToString(CultureInfo.InvariantCulture));
-            finalArguments.Add($"--{PlatformCommandLineProvider.ResultDirectoryOptionKey}");
-            finalArguments.Add(currentTryResultFolder);
 
-            // Prepare the pipeserver
+            // Prepare the pipe server that collects the child process's failed test UIDs.
             using RetryFailedTestsPipeServer retryFailedTestsPipeServer = new(_serviceProvider, lastListOfFailedId ?? [], logger);
-            finalArguments.Add($"--{RetryCommandLineOptionsProvider.RetryFailedTestsPipeNameOptionName}");
-            finalArguments.Add(retryFailedTestsPipeServer.PipeName);
 
-            // When retrying, replace any existing test filter with --filter-uid for the failed tests
-            if (lastListOfFailedId is { Length: > 0 })
+            List<string> finalArguments = await RetryArgumentsBuilder.BuildAttemptArgumentsAsync(
+                _fileSystem,
+                executableArguments,
+                indexToCleanup,
+                currentTryResultFolder,
+                retryRootFolder,
+                retryFailedTestsPipeServer.PipeName,
+                lastListOfFailedId,
+                attemptCount).ConfigureAwait(false);
+
+            RetryTestHostRunner.AttemptResult attemptResult = await RetryTestHostRunner.RunAttemptAsync(
+                _serviceProvider,
+                this,
+                outputDevice,
+                logger,
+                retryFailedTestsPipeServer,
+                executableInfo,
+                finalArguments,
+                attemptCount,
+                userMaxRetryCount,
+                cancellationToken).ConfigureAwait(false);
+
+            if (attemptResult.ExitedBeforeConnect)
             {
-                RemoveOption(finalArguments, TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter);
-                RemoveOption(finalArguments, PlatformCommandLineProvider.FilterUidOptionKey);
-
-                // Strip --minimum-expected-tests on retry attempts: a retry only re-runs the previously
-                // failed tests, so propagating the original threshold (computed against the full test
-                // set) would always trip the policy and fail the run. See issue #5639.
-                RemoveOption(finalArguments, PlatformCommandLineProvider.MinimumExpectedTestsOptionKey);
-
-                // The RSP parser (ResponseFileHelper.SplitCommandLine) strips all '"' characters
-                // from tokens, so UIDs containing literal '"' (e.g. parameterized tests with
-                // string arguments that include double quotes) cannot safely round-trip through
-                // a response file. In that case we must always use inline arguments.
-                bool hasUidsWithQuotes = false;
-                foreach (string uid in lastListOfFailedId)
-                {
-                    if (uid.IndexOf('"') >= 0)
-                    {
-                        hasUidsWithQuotes = true;
-                        break;
-                    }
-                }
-
-                bool useResponseFile = false;
-                if (!hasUidsWithQuotes)
-                {
-                    // Estimate command line length to avoid hitting OS limits (~32K on Windows).
-                    // Add per-argument overhead to account for PasteArguments quoting on pre-.NET 8
-                    // targets where each argument may gain wrapping quotes and a separator space.
-                    const int CommandLineLengthLimit = 30_000;
-                    const int PerArgumentOverhead = 3;
-                    int predictedLength = 0;
-                    foreach (string arg in finalArguments)
-                    {
-                        predictedLength += arg.Length + PerArgumentOverhead;
-                    }
-
-                    predictedLength += 2 + PlatformCommandLineProvider.FilterUidOptionKey.Length + 1;
-                    foreach (string uid in lastListOfFailedId)
-                    {
-                        predictedLength += uid.Length + PerArgumentOverhead;
-                    }
-
-                    useResponseFile = predictedLength > CommandLineLengthLimit;
-                }
-
-                if (!useResponseFile)
-                {
-                    finalArguments.Add($"--{PlatformCommandLineProvider.FilterUidOptionKey}");
-                    finalArguments.AddRange(lastListOfFailedId);
-                }
-                else
-                {
-                    // Use a response file to avoid exceeding command-line length limits.
-                    // Write to retryRootFolder (not the per-attempt folder) so it won't be included
-                    // in the final results move.
-                    string responseFilePath = Path.Combine(retryRootFolder, $"retry-filter-uids-{attemptCount}.rsp");
-                    using (IFileStream stream = _fileSystem.NewFileStream(responseFilePath, FileMode.Create, FileAccess.Write))
-                    using (var writer = new StreamWriter(stream.Stream))
-                    {
-                        // Write all UIDs on a single line, each quoted. The RSP parser splits
-                        // by whitespace and uses '"' for grouping, so quoting handles UIDs
-                        // containing whitespace or starting with '#' (comment marker).
-                        await writer.WriteAsync($"--{PlatformCommandLineProvider.FilterUidOptionKey}").ConfigureAwait(false);
-                        foreach (string uid in lastListOfFailedId)
-                        {
-                            await writer.WriteAsync($" \"{uid}\"").ConfigureAwait(false);
-                        }
-
-                        await writer.WriteLineAsync().ConfigureAwait(false);
-                    }
-
-                    finalArguments.Add($"@{responseFilePath}");
-                }
+                return (int)ExitCode.GenericFailure;
             }
 
-#if NET8_0_OR_GREATER
-            // On net8.0+, we can pass the arguments as a collection directly to ProcessStartInfo.
-            // When passing the collection, it's expected to be unescaped, so we pass what we have directly.
-            List<string> arguments = finalArguments;
-#else
-            // Current target framework (.NET Framework and .NET Standard 2.0) only supports arguments as a single string.
-            // In this case, escaping is essential. For example, one of the arguments could already contain spaces.
-            // PasteArguments is borrowed from dotnet/runtime.
-            var builder = new StringBuilder();
-            foreach (string arg in finalArguments)
+            exitCodes.Add(attemptResult.ExitCode);
+
+            int failedThisAttempt = retryFailedTestsPipeServer.FailedUID?.Count ?? 0;
+            if (attemptCount == 1)
             {
-                PasteArguments.AppendArgument(builder, arg);
+                // The first attempt runs the full suite, so its total is the suite size that the final summary
+                // reconciles against; its failed set is the upper bound for the "flaky" (failed-then-passed) count.
+                suiteTotalTests = retryFailedTestsPipeServer.TotalTestRan;
+                firstAttemptFailedTests = failedThisAttempt;
             }
 
-            string arguments = builder.ToString();
-#endif
-
-            // Prepare the process start
-            ProcessStartInfo processStartInfo = new(executableInfo.FilePath, arguments)
+            if (attemptResult.ExitCode != (int)ExitCode.Success)
             {
-                UseShellExecute = false,
-            };
-
-            await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
-            using IProcess testHostProcess = _serviceProvider.GetProcessHandler().Start(processStartInfo)
-                ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));
-
-            using var processExitedCancellationToken = new CancellationTokenSource();
-            EventHandler exitedHandler = (sender, e) =>
-            {
-                try
+                if (attemptResult.ExitCode != (int)ExitCode.AtLeastOneTestFailed)
                 {
-                    processExitedCancellationToken.Cancel();
-                }
-                catch (ObjectDisposedException ex)
-                {
-                    // The handler can race with the end-of-iteration cleanup: if the OS process
-                    // exit signal is queued to the thread pool before we detach the handler but
-                    // executes after the CTS has been disposed, Cancel() throws. Log at debug
-                    // level so an unexpected pattern stays observable without becoming a fatal
-                    // failure in the retry loop.
-                    logger.LogDebug($"CancellationTokenSource already disposed when process exited: {ex.Message}");
-                }
-
-                logger.LogDebug($"Test host process exited, PID: '{(sender as Process)?.Id}'");
-            };
-
-            testHostProcess.Exited += exitedHandler;
-            try
-            {
-                using var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
-                using var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-                using var linkedToken2 = CancellationTokenSource.CreateLinkedTokenSource(linkedToken.Token, processExitedCancellationToken.Token);
-
-                await logger.LogDebugAsync("Wait connection from the test host process").ConfigureAwait(false);
-                try
-                {
-#if NETCOREAPP
-                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).ConfigureAwait(false);
-#else
-                    // We don't know why but if the cancellation is called quickly in `testHostProcess.Exited`: `processExitedCancellationToken.Cancel();` for netfx we stuck sometime here, like if
-                    // the token we pass to the named pipe is not "correctly" verified inside the pipe implementation self.
-                    // We fallback with our custom agnostic cancellation mechanism in that case.
-                    // We see it happen only in .NET FX and not in .NET Core so for now we don't do it for core.
-                    await retryFailedTestsPipeServer.WaitForConnectionAsync(linkedToken2.Token).WithCancellationAsync(linkedToken2.Token).ConfigureAwait(false);
-#endif
-                }
-                catch (OperationCanceledException) when (processExitedCancellationToken.IsCancellationRequested)
-                {
-                    await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestHostProcessExitedBeforeRetryCouldConnect, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
-                    return (int)ExitCode.GenericFailure;
-                }
-            }
-            finally
-            {
-                testHostProcess.Exited -= exitedHandler;
-            }
-
-            await testHostProcess.WaitForExitAsync(CancellationToken.None).ConfigureAwait(false);
-
-            exitCodes.Add(testHostProcess.ExitCode);
-            if (testHostProcess.ExitCode != (int)ExitCode.Success)
-            {
-                if (testHostProcess.ExitCode != (int)ExitCode.AtLeastOneTestFailed)
-                {
-                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
+                    await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedWithWrongExitCode, attemptResult.ExitCode)), cancellationToken).ConfigureAwait(false);
                     retryInterrupted = true;
                     break;
                 }
 
-                await outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailed, retryFailedTestsPipeServer.FailedUID?.Count ?? 0, testHostProcess.ExitCode, attemptCount, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
+                finalFailedTests = failedThisAttempt;
 
-                // Check thresholds
-                if (attemptCount == 1)
+                // Check thresholds only on the first attempt (computed against the full suite).
+                if (attemptCount == 1 && await RetryThresholdPolicy.EvaluateAsync(_commandLineOptions, this, outputDevice, retryFailedTestsPipeServer, cancellationToken).ConfigureAwait(false))
                 {
-                    double? maxFailedTests = null;
-                    double? maxPercentage = null;
-                    double? maxCount = null;
-                    if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxPercentageOptionName, out string[]? retryFailedTestsMaxPercentage))
-                    {
-                        maxPercentage = double.Parse(retryFailedTestsMaxPercentage[0], CultureInfo.InvariantCulture);
-                        maxFailedTests = maxPercentage / 100 * retryFailedTestsPipeServer.TotalTestRan;
-                    }
-
-                    if (_commandLineOptions.TryGetOptionArgumentList(RetryCommandLineOptionsProvider.RetryFailedTestsMaxTestsOptionName, out string[]? retryFailedTestsMaxCount))
-                    {
-                        maxCount = double.Parse(retryFailedTestsMaxCount[0], CultureInfo.InvariantCulture);
-                        maxFailedTests = maxCount.Value;
-                    }
-
-                    // If threshold policy enable
-                    if (maxFailedTests is not null)
-                    {
-                        if ((retryFailedTestsPipeServer.FailedUID?.Count ?? 0) > maxFailedTests)
-                        {
-                            thresholdPolicyKickedIn = true;
-                            StringBuilder explanation = new();
-                            explanation.AppendLine(ExtensionResources.FailureThresholdPolicy);
-                            if (maxPercentage is not null)
-                            {
-                                double failedPercentage = Math.Round(retryFailedTestsPipeServer.FailedUID!.Count / (double)retryFailedTestsPipeServer.TotalTestRan * 100, 2);
-                                explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxPercentage, maxPercentage, failedPercentage, retryFailedTestsPipeServer.FailedUID.Count, retryFailedTestsPipeServer.TotalTestRan));
-                            }
-
-                            if (maxCount is not null)
-                            {
-                                explanation.AppendLine(string.Format(CultureInfo.InvariantCulture, ExtensionResources.FailureThresholdPolicyMaxCount, maxCount, retryFailedTestsPipeServer.FailedUID!.Count));
-                            }
-
-                            await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(explanation.ToString()), cancellationToken).ConfigureAwait(false);
-                            break;
-                        }
-                    }
+                    thresholdPolicyKickedIn = true;
+                    break;
                 }
 
-                finalArguments.Clear();
+                // Only announce an attempt as "retrying" when another attempt will actually follow; the final
+                // failed attempt is reported by the summary verdict instead. Amber (not red) keeps mid-run
+                // failures visually "expected", reserving red for the give-up summary.
+                bool willRetry = attemptCount < userMaxRetryCount + 1;
+                if (willRetry)
+                {
+                    await outputDevice.DisplayAsync(
+                        this,
+                        new FormattedTextOutputDeviceData(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryAttemptFailedWillRetry, attemptCount, userMaxRetryCount + 1, failedThisAttempt))
+                        {
+                            ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkYellow },
+                        },
+                        cancellationToken).ConfigureAwait(false);
+
+                    // Each retried attempt re-runs exactly this attempt's failed set, so its failed count is the
+                    // number of extra executions added by the retry — the platform "(+N retried)" semantics.
+                    retriedExecutions += failedThisAttempt;
+                }
+
                 lastListOfFailedId = retryFailedTestsPipeServer.FailedUID?.ToArray();
             }
             else
             {
+                finalFailedTests = 0;
                 break;
             }
         }
 
+        orchestrationStopwatch.Stop();
+
         if (!thresholdPolicyKickedIn && !retryInterrupted)
         {
-            if (exitCodes[^1] != (int)ExitCode.Success)
-            {
-                await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteFailedInAllAttempts, userMaxRetryCount + 1)), cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                await outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.TestSuiteCompletedSuccessfully, attemptCount)) { ForegroundColor = new SystemConsoleColor { ConsoleColor = ConsoleColor.DarkGreen } }, cancellationToken).ConfigureAwait(false);
-            }
+            await RetrySummaryReporter.ReportSummaryAsync(
+                this,
+                outputDevice,
+                new RetryRunSummary
+                {
+                    ExitCodes = exitCodes,
+                    AttemptCount = attemptCount,
+                    UserMaxRetryCount = userMaxRetryCount,
+                    SuiteTotalTests = suiteTotalTests,
+                    FirstAttemptFailedTests = firstAttemptFailedTests,
+                    FinalFailedTests = finalFailedTests,
+                    RetriedExecutions = retriedExecutions,
+                    Elapsed = orchestrationStopwatch.Elapsed,
+                },
+                cancellationToken).ConfigureAwait(false);
         }
 
         ApplicationStateGuard.Ensure(currentTryResultFolder is not null);
 
-        string[] filesToMove = _fileSystem.GetFiles(currentTryResultFolder, "*.*", SearchOption.AllDirectories);
-        if (filesToMove.Length > 0)
-        {
-            await outputDevice.DisplayAsync(this, new TextOutputDeviceData(ExtensionResources.MoveFiles), cancellationToken).ConfigureAwait(false);
-
-            // Move last attempt assets
-            foreach (string file in filesToMove)
-            {
-                string finalFileLocation = file.Replace(currentTryResultFolder, resultDirectory);
-
-                // Create the directory if missing
-                fileSystem.CreateDirectory(Path.GetDirectoryName(finalFileLocation)!);
-
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.MovingFileToLocation, file, finalFileLocation)), cancellationToken).ConfigureAwait(false);
-#if NETCOREAPP
-                fileSystem.MoveFile(file, finalFileLocation, overwrite: true);
-#else
-                fileSystem.CopyFile(file, finalFileLocation, overwrite: true);
-                fileSystem.DeleteFile(file);
-#endif
-            }
-        }
+        await RetrySummaryReporter.MoveArtifactsAsync(this, outputDevice, fileSystem, logger, currentTryResultFolder, resultDirectory, cancellationToken).ConfigureAwait(false);
 
         return exitCodes[^1];
     }
@@ -462,55 +271,4 @@ internal sealed class RetryOrchestrator : ITestHostExecutionOrchestrator, IOutpu
     private static bool IsHotReloadEnabled(IEnvironment environment)
         => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
         || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
-
-    private static int GetOptionArgumentIndex(string optionName, string[] executableArgs)
-    {
-        int index = Array.IndexOf(executableArgs, "-" + optionName);
-        if (index >= 0)
-        {
-            return index;
-        }
-
-        index = Array.IndexOf(executableArgs, "--" + optionName);
-        return index >= 0 ? index : -1;
-    }
-
-    private static void RemoveOption(List<string> arguments, string optionName)
-    {
-        string longForm = $"--{optionName}";
-        string shortForm = $"-{optionName}";
-
-        // Remove all occurrences since options like --filter-uid can appear multiple times.
-        // Also handle --option=value and --option:value forms produced by the command-line parser.
-        while (true)
-        {
-            int idx = -1;
-            for (int i = 0; i < arguments.Count; i++)
-            {
-                string arg = arguments[i];
-                if (arg == longForm || arg == shortForm
-                    || arg.StartsWith(longForm + "=", StringComparison.Ordinal) || arg.StartsWith(longForm + ":", StringComparison.Ordinal)
-                    || arg.StartsWith(shortForm + "=", StringComparison.Ordinal) || arg.StartsWith(shortForm + ":", StringComparison.Ordinal))
-                {
-                    idx = i;
-                    break;
-                }
-            }
-
-            if (idx < 0)
-            {
-                break;
-            }
-
-            arguments.RemoveAt(idx);
-
-            // Always remove subsequent non-option arguments (the option's values),
-            // even when the first value was provided inline with = or :, because
-            // multi-arity options (e.g. --filter-uid=1 2) can have trailing values.
-            while (idx < arguments.Count && (arguments[idx].Length == 0 || arguments[idx][0] != '-'))
-            {
-                arguments.RemoveAt(idx);
-            }
-        }
-    }
 }

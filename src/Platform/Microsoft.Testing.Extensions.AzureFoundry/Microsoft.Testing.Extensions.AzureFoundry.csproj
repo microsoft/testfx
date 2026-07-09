@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.AI.OpenAI" />
+    <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
   </ItemGroup>
 
@@ -42,7 +43,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
   </ItemGroup>
 </Project>

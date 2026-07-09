@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.AzureDevOpsReport.Resources;
@@ -53,7 +53,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _logger = loggerFactory.CreateLogger<AzureDevOpsLogGroupReporter>();
-        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMoniker);
+        _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
     }
 
     public string Uid => nameof(AzureDevOpsLogGroupReporter);
@@ -69,7 +69,8 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
     public Task<bool> IsEnabledAsync()
         => Task.FromResult(
             _commandLineOptions.IsOptionSet(AzureDevOpsCommandLineOptions.AzureDevOpsOptionName)
-            && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment));
+            && AzureDevOpsConstants.IsRunningInAzureDevOps(_environment)
+            && AzureDevOpsConstants.IsFeatureKnobEnabled(_commandLineOptions, AzureDevOpsCommandLineOptions.AzureDevOpsGroups));
 
     // No-op: this consumer subscribes to data only to be ordered in the consumer phase at session
     // end (see the type-level remarks). It does not act on individual messages.
@@ -84,7 +85,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
 
             string name = $"{_testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown"} ({_targetFrameworkMoniker.Value})";
             string line = $"##[group]{AzDoEscaper.Escape(string.Format(CultureInfo.InvariantCulture, AzureDevOpsResources.LogGroupHeader, name))}";
-            await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData(line), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = true;
         }
         catch (OperationCanceledException)
@@ -93,7 +94,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
+            _logger.LogUnexpectedException(nameof(OnTestSessionStartingAsync), ex);
         }
     }
 
@@ -108,7 +109,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
                 return;
             }
 
-            await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("##[endgroup]"), testSessionContext.CancellationToken).ConfigureAwait(false);
+            await _outputDevice.DisplayAsync(this, new AzureDevOpsCommandOutputDeviceData("##[endgroup]"), testSessionContext.CancellationToken).ConfigureAwait(false);
             _groupOpened = false;
         }
         catch (OperationCanceledException)
@@ -117,15 +118,7 @@ internal sealed class AzureDevOpsLogGroupReporter : IDataConsumer, ITestSessionL
         }
         catch (Exception ex)
         {
-            LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
-        }
-    }
-
-    private void LogUnexpectedException(string callbackName, Exception ex)
-    {
-        if (_logger.IsEnabled(LogLevel.Warning))
-        {
-            _logger.LogWarning($"Unexpected exception in {callbackName}: {ex}");
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
         }
     }
 }

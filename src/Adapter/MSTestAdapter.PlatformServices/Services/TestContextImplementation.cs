@@ -10,7 +10,6 @@ using System.Collections.ObjectModel;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
@@ -71,7 +70,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 #else
     private readonly object _propertiesLock = new();
 #endif
-    private readonly IMessageLogger? _messageLogger;
+    private readonly IAdapterMessageLogger? _messageLogger;
     private readonly TestRunCancellationToken? _testRunCancellationToken;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
@@ -113,7 +112,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="properties">Properties/configuration passed in.</param>
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
-    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
+    internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
@@ -428,7 +427,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     /// <inheritdoc/>
     public override void DisplayMessage(MessageLevel messageLevel, string message)
-        => _messageLogger?.SendMessage(messageLevel.ToTestMessageLevel(), message);
+        => _messageLogger?.SendMessage(messageLevel, message);
     #endregion
 
     /// <inheritdoc/>
@@ -524,16 +523,15 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <returns>A fresh context suitable for one folded data-driven iteration.</returns>
     internal TestContextImplementation CloneForDataDrivenIteration()
     {
-        // Take a shallow snapshot of the current property bag so that the clone starts with
-        // the same properties (including TestNameLabel / FullyQualifiedTestClassNameLabel and
-        // anything merged from AssemblyInitialize / ClassInitialize) but is otherwise isolated.
-        // Per-iteration mutations to the clone's property bag won't leak back to this instance
-        // nor to subsequent iterations.
-        var snapshot = new Dictionary<string, object?>(_properties);
-
-        // Pass testMethod: null and testClassFullName: null because the relevant labels are
-        // already in the snapshot. The constructor will copy the snapshot as-is.
-        var clone = new TestContextImplementation(testMethod: null, testClassFullName: null, snapshot, _messageLogger, _testRunCancellationToken);
+        // Pass _properties directly and testMethod: null / testClassFullName: null because the
+        // relevant labels (including TestNameLabel / FullyQualifiedTestClassNameLabel and anything
+        // merged from AssemblyInitialize / ClassInitialize) are already in the property bag. The
+        // constructor's null/null branch copies the supplied properties into a fresh dictionary
+        // via the [with(properties)] spread, so no intermediate snapshot allocation is needed and
+        // isolation is preserved: per-iteration mutations to the clone's property bag won't leak
+        // back to this instance nor to subsequent iterations, and mutations to this instance after
+        // clone creation won't leak into the clone.
+        var clone = new TestContextImplementation(testMethod: null, testClassFullName: null, _properties, _messageLogger, _testRunCancellationToken);
 
         // Preserve TestRunCount so user code that observes it (e.g. retry-aware tests) sees
         // the same value it would see in the unfolded path. TestRunCount represents the

@@ -1,0 +1,409 @@
+#nullable enable
+~override Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.Equals(object obj) -> bool
+~override Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.ToString() -> string
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Description.get -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.DisplayName.get -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.GetInvalidEnvironmentVariableValueErrorMessage(string! environmentVariableName, string? actualValue, string! expectedValue) -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.GetMissingEnvironmentVariableErrorMessage(string! environmentVariableName) -> string!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+abstract Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Uid.get -> string!
+abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.DeserializeCore(System.IO.Stream! stream) -> T
+abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Id.get -> int
+abstract Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.SerializeCore(T objectToSerialize, System.IO.Stream! stream) -> void
+const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpFileNameOptionName = "hangdump-filename" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpOptionName = "hangdump" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpTimeoutOptionName = "hangdump-timeout" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpTypeIfSupportedOptionName = "hangdump-type-if-supported" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpTypeOptionName = "hangdump-type" -> string!
+const Microsoft.Testing.Extensions.Diagnostics.HangDumpEnvironmentVariableProvider.PipeNameEnvironmentVariableName = "TESTINGPLATFORM_HANGDUMP_PIPENAME" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT = "DOTNET_CLI_TELEMETRY_OPTOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = "DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_NOLOGO = "DOTNET_NOLOGO" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.DOTNET_WATCH = "DOTNET_WATCH" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT = "TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC = "TESTINGPLATFORM_DIAGNOSTIC" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX = "TESTINGPLATFORM_DIAGNOSTIC_FILE_PREFIX" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE = "TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX = "TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE = "TESTINGPLATFORM_DIAGNOSTIC_SYNCHRONOUS_WRITE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY = "TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID = "TESTINGPLATFORM_DOTNETTEST_EXECUTIONID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION = "TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE = "TESTINGPLATFORM_EXITCODE_IGNORE" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED = "TESTINGPLATFORM_HOTRELOAD_ENABLED" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER = "TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS = "TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER = "TESTINGPLATFORM_NOBANNER" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT = "TESTINGPLATFORM_TELEMETRY_OPTOUT" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION = "TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME = "TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_TRX_TESTRUN_ID = "TESTINGPLATFORM_TRX_TESTRUN_ID" -> string!
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER = "TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER" -> string!
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.LogText = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId.MessagesSerializerId = 11 -> int
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Description = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsBuiltIn = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.IsHidden = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId.Name = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.MessagesSerializerId = 3 -> int
+const Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId.ModulePath = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.FilePath = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.LineNumber = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.MethodName = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.Namespace = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.ParameterTypeFullNames = 9 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.Traits = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.TypeName = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId.MessagesSerializerId = 5 -> int
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.Level = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.MessagesSerializerId = 12 -> int
+const Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId.Text = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.ErrorMessage = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.ErrorType = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId.StackTrace = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Duration = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.ErrorOutput = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.ExceptionMessageList = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Reason = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.SessionUid = 9 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.StandardOutput = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.State = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Description = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.FullPath = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.SessionUid = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.TestDisplayName = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.TestUid = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.FileArtifactMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId.MessagesSerializerId = 7 -> int
+const Microsoft.Testing.Platform.IPC.HandshakeMessageFieldsId.MessagesSerializerId = 9 -> int
+const Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId.Kind = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId.MessagesSerializerId = 14 -> int
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Duration = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.ErrorOutput = 7 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Reason = 5 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.SessionUid = 8 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.StandardOutput = 6 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.State = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestHostCompletedRequestFieldsId.MessagesSerializerId = 1 -> int
+const Microsoft.Testing.Platform.IPC.TestHostProcessPIDRequestFieldsId.MessagesSerializerId = 2 -> int
+const Microsoft.Testing.Platform.IPC.TestInProgressMessageFieldsId.DisplayName = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessageFieldsId.Uid = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.MessagesSerializerId = 10 -> int
+const Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId.TestInProgressMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.ExecutionId = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.FailedTestMessageList = 4 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.InstanceId = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.MessagesSerializerId = 6 -> int
+const Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId.SuccessfulTestMessageList = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.ExecutionId = 3 -> ushort
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.MessagesSerializerId = 8 -> int
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.SessionType = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId.SessionUid = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Key = 1 -> ushort
+const Microsoft.Testing.Platform.IPC.TraitMessageFieldsId.Value = 2 -> ushort
+const Microsoft.Testing.Platform.IPC.VoidResponseFieldsId.MessagesSerializerId = 0 -> int
+const Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId.MessagesSerializerId = 13 -> int
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.DataTypesConsumed.get -> System.Type![]!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.Description.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.DisplayName.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.Dispose() -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.HangDumpActivityIndicator(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.OnTestSessionFinishingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.OnTestSessionStartingAsync(Microsoft.Testing.Platform.Services.ITestSessionContext! testSessionContext) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.Uid.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpActivityIndicator.Version.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider
+Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.HangDumpCommandLineProvider() -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpEnvironmentVariableProvider
+Microsoft.Testing.Extensions.Diagnostics.HangDumpEnvironmentVariableProvider.HangDumpEnvironmentVariableProvider(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, string! pipeName) -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.BeforeTestHostProcessStartAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DataTypesProduced.get -> System.Type![]!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.Description.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DisplayName.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.Dispose() -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.ArtifactDumpFileName.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.ArtifactDumpFileName.init -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.Deconstruct(out string! WriteDumpFileName, out string! ArtifactDumpFileName) -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.DumpFileNames() -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.DumpFileNames(string! WriteDumpFileName, string! ArtifactDumpFileName) -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.Equals(Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames other) -> bool
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.WriteDumpFileName.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.WriteDumpFileName.init -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.HangDumpProcessLifetimeHandler(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Helpers.IProcessHandler! processHandler, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.OnTestHostProcessExitedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.OnTestHostProcessStartedAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation! testHostProcessInformation, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.Uid.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.Version.get -> string!
+Microsoft.Testing.Extensions.Diagnostics.Helpers.IProcessExtensions
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.Level.get -> int
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.Level.set -> void
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.ParentId.get -> int
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.ParentId.set -> void
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.ParentProcess.get -> System.Diagnostics.Process?
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.ParentProcess.set -> void
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.Process.get -> Microsoft.Testing.Platform.Helpers.IProcess?
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.Process.set -> void
+Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode.ProcessTreeNode() -> void
+Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump
+Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption
+Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption.Full = 0 -> Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption
+Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption.Heap = 1 -> Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption
+Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption.Mini = 2 -> Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption
+Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter
+Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter.DisplayAsync(Microsoft.Testing.Platform.OutputDevice.IOutputDeviceData! data, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter.OutputDeviceWriter(Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Extensions.OutputDevice.IOutputDeviceDataProducer! outputDeviceDataProducer) -> void
+Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequest
+Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequestSerializer
+Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequestSerializer.ActivitySignalRequestSerializer() -> void
+Microsoft.Testing.Extensions.HangDump.Serializers.ConsumerPipeNameRequest
+Microsoft.Testing.Extensions.HangDump.Serializers.ConsumerPipeNameRequest.ConsumerPipeNameRequest(string! pipeName) -> void
+Microsoft.Testing.Extensions.HangDump.Serializers.ConsumerPipeNameRequest.PipeName.get -> string!
+Microsoft.Testing.Extensions.HangDump.Serializers.ConsumerPipeNameRequestSerializer
+Microsoft.Testing.Extensions.HangDump.Serializers.ConsumerPipeNameRequestSerializer.ConsumerPipeNameRequestSerializer() -> void
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsRequest
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsRequest.GetInProgressTestsRequest() -> void
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsRequestSerializer
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsRequestSerializer.GetInProgressTestsRequestSerializer() -> void
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsResponse
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsResponse.GetInProgressTestsResponse((string!, int)[]! tests) -> void
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsResponse.Tests.get -> (string!, int)[]!
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsResponseSerializer
+Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsResponseSerializer.GetInProgressTestsResponseSerializer() -> void
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.EnvironmentVariableName.get -> string!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.PipeName.get -> string!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.PipeNameEnvironmentVariableProviderBase(string! pipeName, string! environmentVariableName) -> void
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.UpdateAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.Version.get -> string!
+Microsoft.Testing.Platform.Helpers.ApplicationStateGuard
+Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants
+Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.AtLeastOneTestFailed = 2 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.DependentProcessExited = 11 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.GenericFailure = 1 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.IncompatibleProtocolVersion = 12 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.InvalidCommandLine = 5 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.InvalidPlatformSetup = 4 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.MinimumExpectedTestsPolicyViolation = 9 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.Success = 0 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestAdapterTestSessionFailure = 10 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestExecutionStoppedForMaxFailedTests = 13 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestHostProcessExitedNonGracefully = 7 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.TestSessionAborted = 3 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.ExitCode.ZeroTests = 8 -> Microsoft.Testing.Platform.Helpers.ExitCode
+Microsoft.Testing.Platform.Helpers.TimeoutHelper
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Days = 4 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Hours = 3 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Milliseconds = 0 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Minutes = 2 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit.Seconds = 1 -> Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit
+Microsoft.Testing.Platform.Helpers.TimeSpanParser
+Microsoft.Testing.Platform.IPC.AzureDevOpsLogMessageFieldsId
+Microsoft.Testing.Platform.IPC.CommandLineOptionMessageFieldsId
+Microsoft.Testing.Platform.IPC.CommandLineOptionMessagesFieldsId
+Microsoft.Testing.Platform.IPC.DiscoveredTestMessageFieldsId
+Microsoft.Testing.Platform.IPC.DiscoveredTestMessagesFieldsId
+Microsoft.Testing.Platform.IPC.DisplayMessageFieldsId
+Microsoft.Testing.Platform.IPC.ExceptionMessageFieldsId
+Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId
+Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId
+Microsoft.Testing.Platform.IPC.FileArtifactMessagesFieldsId
+Microsoft.Testing.Platform.IPC.HandshakeMessageFieldsId
+Microsoft.Testing.Platform.IPC.IClient
+Microsoft.Testing.Platform.IPC.IClient.ConnectAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.IClient.IsConnected.get -> bool
+Microsoft.Testing.Platform.IPC.IClient.RequestReplyAsync<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer.Deserialize(System.IO.Stream! stream) -> object!
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer.Id.get -> int
+Microsoft.Testing.Platform.IPC.INamedPipeSerializer.Serialize(object! objectToSerialize, System.IO.Stream! stream) -> void
+Microsoft.Testing.Platform.IPC.IRequest
+Microsoft.Testing.Platform.IPC.IResponse
+Microsoft.Testing.Platform.IPC.IServer
+Microsoft.Testing.Platform.IPC.IServer.PipeName.get -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
+Microsoft.Testing.Platform.IPC.IServer.WaitConnectionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.Models.VoidResponse
+Microsoft.Testing.Platform.IPC.Models.VoidResponse.VoidResponse() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeBase
+Microsoft.Testing.Platform.IPC.NamedPipeBase.GetSerializer(int id) -> Microsoft.Testing.Platform.IPC.INamedPipeSerializer!
+Microsoft.Testing.Platform.IPC.NamedPipeBase.GetSerializer(System.Type! type) -> Microsoft.Testing.Platform.IPC.INamedPipeSerializer!
+Microsoft.Testing.Platform.IPC.NamedPipeBase.NamedPipeBase() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeBase.RegisterSerializer(Microsoft.Testing.Platform.IPC.INamedPipeSerializer! namedPipeSerializer, System.Type! type) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient
+Microsoft.Testing.Platform.IPC.NamedPipeClient.ConnectAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeClient.Dispose() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.IsConnected.get -> bool
+Microsoft.Testing.Platform.IPC.NamedPipeClient.NamedPipeClient(string! name, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, bool exitProcessOnConnectionLoss) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.NamedPipeClient(string! name, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.NamedPipeClient(string! name) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeClient.PipeName.get -> string!
+Microsoft.Testing.Platform.IPC.NamedPipeClient.RequestReplyAsync<TRequest, TResponse>(TRequest request, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TResponse>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.DisposeBuffers() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.NamedPipeConnectionBase() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.ReadNextMessageAsync(System.IO.Pipes.PipeStream! stream, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<object?>!
+Microsoft.Testing.Platform.IPC.NamedPipeConnectionBase.WriteMessageAsync(System.IO.Pipes.PipeStream! stream, Microsoft.Testing.Platform.IPC.INamedPipeSerializer! serializer, object! message, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeServer
+Microsoft.Testing.Platform.IPC.NamedPipeServer.Dispose() -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.DisposeAsync() -> System.Threading.Tasks.ValueTask
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, int maxNumberOfServerInstances, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(Microsoft.Testing.Platform.IPC.PipeNameDescription! pipeNameDescription, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.NamedPipeServer(string! name, System.Func<Microsoft.Testing.Platform.IPC.IRequest!, System.Threading.Tasks.Task<Microsoft.Testing.Platform.IPC.IResponse!>!>! callback, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Platform.Helpers.ITask! task, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Platform.IPC.NamedPipeServer.PipeName.get -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WaitConnectionAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.IPC.NamedPipeServer.WasConnected.get -> bool
+Microsoft.Testing.Platform.IPC.PipeNameDescription
+Microsoft.Testing.Platform.IPC.PipeNameDescription.Name.get -> string!
+Microsoft.Testing.Platform.IPC.PipeNameDescription.PipeNameDescription(string! name) -> void
+Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer
+Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.BaseSerializer() -> void
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Deserialize(System.IO.Stream! stream) -> T
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.NamedPipeSerializer() -> void
+Microsoft.Testing.Platform.IPC.Serializers.NamedPipeSerializer<T>.Serialize(T objectToSerialize, System.IO.Stream! stream) -> void
+Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer
+Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer.VoidResponseSerializer() -> void
+Microsoft.Testing.Platform.IPC.ServerControlMessageFieldsId
+Microsoft.Testing.Platform.IPC.SuccessfulTestResultMessageFieldsId
+Microsoft.Testing.Platform.IPC.TestHostCompletedRequestFieldsId
+Microsoft.Testing.Platform.IPC.TestHostProcessPIDRequestFieldsId
+Microsoft.Testing.Platform.IPC.TestInProgressMessageFieldsId
+Microsoft.Testing.Platform.IPC.TestInProgressMessagesFieldsId
+Microsoft.Testing.Platform.IPC.TestResultMessagesFieldsId
+Microsoft.Testing.Platform.IPC.TestSessionEventFieldsId
+Microsoft.Testing.Platform.IPC.TraitMessageFieldsId
+Microsoft.Testing.Platform.IPC.VoidResponseFieldsId
+Microsoft.Testing.Platform.IPC.WaitForServerControlRequestFieldsId
+Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser
+Microsoft.Testing.Platform.Resources.PlatformResources
+Microsoft.Testing.Platform.RoslynString
+Microsoft.Testing.Platform.Services.ArtifactNamingHelper
+override Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.Diagnostics.HangDumpEnvironmentVariableProvider.Description.get -> string!
+override Microsoft.Testing.Extensions.Diagnostics.HangDumpEnvironmentVariableProvider.DisplayName.get -> string!
+override Microsoft.Testing.Extensions.Diagnostics.HangDumpEnvironmentVariableProvider.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+override Microsoft.Testing.Extensions.Diagnostics.HangDumpEnvironmentVariableProvider.Uid.get -> string!
+override Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.GetHashCode() -> int
+override Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequestSerializer.Id.get -> int
+override Microsoft.Testing.Extensions.HangDump.Serializers.ConsumerPipeNameRequestSerializer.Id.get -> int
+override Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsRequestSerializer.Id.get -> int
+override Microsoft.Testing.Extensions.HangDump.Serializers.GetInProgressTestsResponseSerializer.Id.get -> int
+override Microsoft.Testing.Platform.IPC.Serializers.VoidResponseSerializer.Id.get -> int
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.IsHangDumpTypeSupportedOnCurrentRuntime(string! value) -> bool
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpCommandLineProvider.MapToSupportedDumpType(string! requested) -> string!
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpOptions.IsEnabled(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> bool
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.operator !=(Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames left, Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames right) -> bool
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames.operator ==(Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames left, Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames right) -> bool
+static Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.GetDumpFileNames(string! dumpFileName) -> Microsoft.Testing.Extensions.Diagnostics.HangDumpProcessLifetimeHandler.DumpFileNames
+static Microsoft.Testing.Extensions.Diagnostics.Helpers.IProcessExtensions.GetParentPidAsync(System.Diagnostics.Process! process, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter! outputDisplay, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+static Microsoft.Testing.Extensions.Diagnostics.Helpers.IProcessExtensions.GetParentPidLinux(System.Diagnostics.Process! process) -> int
+static Microsoft.Testing.Extensions.Diagnostics.Helpers.IProcessExtensions.GetParentPidMacOsAsync(System.Diagnostics.Process! process, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter! outputDisplay, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+static Microsoft.Testing.Extensions.Diagnostics.Helpers.IProcessExtensions.GetParentPidWindows(System.Diagnostics.Process! process) -> int
+static Microsoft.Testing.Extensions.Diagnostics.Helpers.IProcessExtensions.GetProcessTreeAsync(this Microsoft.Testing.Platform.Helpers.IProcess! process, Microsoft.Testing.Platform.Logging.ILogger! logger, Microsoft.Testing.Extensions.Diagnostics.OutputDeviceWriter! outputDisplay, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<System.Collections.Generic.List<Microsoft.Testing.Extensions.Diagnostics.Helpers.ProcessTreeNode!>!>!
+static Microsoft.Testing.Extensions.Diagnostics.Helpers.IProcessExtensions.ParseParentPidFromProcStat(string! stat) -> int
+static Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.CollectDumpUsingMiniDumpWriteDump(int pid, string! outputFile, Microsoft.Testing.Extensions.Diagnostics.MiniDumpWriteDump.MiniDumpTypeOption type) -> void
+static Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequest.Instance.get -> Microsoft.Testing.Extensions.HangDump.Serializers.ActivitySignalRequest!
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string! errorMessage) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Ensure(bool condition, string? path = null, int line = 0) -> void
+static Microsoft.Testing.Platform.Helpers.ApplicationStateGuard.Unreachable(string? path = null, int line = 0) -> System.Diagnostics.UnreachableException!
+static Microsoft.Testing.Platform.Helpers.TimeoutHelper.DefaultHangTimeoutSeconds.get -> double
+static Microsoft.Testing.Platform.Helpers.TimeoutHelper.DefaultHangTimeSpanTimeout.get -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.Parse(string? time, Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit defaultUnit) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.Parse(string? time) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.ParseRequireSuffix(string? time) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParse(string? time, Microsoft.Testing.Platform.Helpers.TimeSpanDefaultUnit defaultUnit, out System.TimeSpan result) -> bool
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParse(string? time, out System.TimeSpan result) -> bool
+static Microsoft.Testing.Platform.Helpers.TimeSpanParser.TryParseRequireSuffix(string? time, out System.TimeSpan result) -> bool
+static Microsoft.Testing.Platform.IPC.NamedPipeServer.GetPipeName(string! name) -> Microsoft.Testing.Platform.IPC.PipeNameDescription!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.DebugAssert(bool condition, string! message) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.IsNullOrEmpty<T>(T[]? list) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadBool(System.IO.Stream! stream) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadByte(System.IO.Stream! stream) -> byte
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadInt(System.IO.Stream! stream) -> int
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadLong(System.IO.Stream! stream) -> long
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadString(System.IO.Stream! stream) -> string!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadStringValue(System.IO.Stream! stream, int size) -> string!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadUShort(System.IO.Stream! stream) -> ushort
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.SetPosition(System.IO.Stream! stream, long position) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteAtPosition(System.IO.Stream! stream, int value, long position) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteBool(System.IO.Stream! stream, bool value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteByte(System.IO.Stream! stream, byte value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, byte? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, string? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, bool? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, byte? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, int? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, long? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteField(System.IO.Stream! stream, ushort id, string? value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteInt(System.IO.Stream! stream, int value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteLong(System.IO.Stream! stream, long value) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteSize<T>(System.IO.Stream! stream) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteString(System.IO.Stream! stream, string! str) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteUShort(System.IO.Stream! stream, ushort value) -> void
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.BuildTargetFrameworkMoniker(string? shortTargetFramework, string? targetPlatformName) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFramework(string? frameworkDescription) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetShortTargetFrameworkIncludingPlatform(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.OutputDevice.TargetFrameworkParser.GetTargetPlatformName(System.Reflection.Assembly? entryAssembly) -> string?
+static Microsoft.Testing.Platform.Resources.PlatformResources.GetResourceString(string! resourceKey) -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.ResourceManager.get -> System.Resources.ResourceManager!
+static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
+static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.GetStandardReplacements(string! processName, string! processId, System.DateTimeOffset timestamp) -> System.Collections.Generic.Dictionary<string!, string!>!
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveTemplate(string! template, System.Collections.Generic.IDictionary<string!, string!>? replacements = null) -> string!
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
+static readonly Microsoft.Testing.Platform.IPC.Models.VoidResponse.CachedInstance -> Microsoft.Testing.Platform.IPC.Models.VoidResponse!
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
+virtual Microsoft.Testing.Extensions.PipeNameEnvironmentVariableProviderBase.ShouldValidatePipeNameValue.get -> bool

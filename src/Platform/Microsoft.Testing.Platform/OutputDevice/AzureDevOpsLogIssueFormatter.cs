@@ -23,11 +23,21 @@ internal static class AzureDevOpsLogIssueFormatter
 
     /// <summary>
     /// Returns <c>true</c> when the current process is running on an Azure DevOps agent
+    /// (<c>TF_BUILD=true</c>), regardless of the <c>TESTINGPLATFORM_AZDO_OUTPUT</c> opt-out. Use this
+    /// for the AzureDevOpsReport extension's explicit <c>--report-azdo</c> output (the user opted in via
+    /// the option), and reserve <see cref="IsAzureDevOpsEnvironment"/> for the platform's automatic
+    /// <c>##vso[task.logissue]</c> emission, which the opt-out disables.
+    /// </summary>
+    public static bool IsAzureDevOpsAgent(IEnvironment environment)
+        => bool.TryParse(environment.GetEnvironmentVariable("TF_BUILD"), out bool tfBuild) && tfBuild;
+
+    /// <summary>
+    /// Returns <c>true</c> when the current process is running on an Azure DevOps agent
     /// (TF_BUILD=true) and the user has not opted out via <c>TESTINGPLATFORM_AZDO_OUTPUT=off|false|0</c>.
     /// </summary>
     public static bool IsAzureDevOpsEnvironment(IEnvironment environment)
     {
-        if (!bool.TryParse(environment.GetEnvironmentVariable("TF_BUILD"), out bool tfBuild) || !tfBuild)
+        if (!IsAzureDevOpsAgent(environment))
         {
             return false;
         }

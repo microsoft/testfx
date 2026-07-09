@@ -86,7 +86,8 @@ internal sealed class PlatformCommandLineProvider : CommandLineOptionsProviderBa
 
     public PlatformCommandLineProvider()
         : base(
-            nameof(PlatformCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "PlatformCommandLineProvider",
             PlatformVersion.Version,
             PlatformResources.PlatformCommandLineProviderDisplayName,
             PlatformResources.PlatformCommandLineProviderDescription,

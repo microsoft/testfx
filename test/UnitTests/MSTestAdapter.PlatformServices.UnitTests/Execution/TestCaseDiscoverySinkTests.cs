@@ -4,7 +4,7 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
@@ -18,25 +18,31 @@ public class TestCaseDiscoverySinkTests : TestContainer
 
     public void TestCaseDiscoverySinkConstructorShouldInitializeTests()
     {
-        _testCaseDiscoverySink.Tests.Should().NotBeNull();
-        _testCaseDiscoverySink.Tests.Count.Should().Be(0);
+        _testCaseDiscoverySink.TestElements.Should().NotBeNull();
+        _testCaseDiscoverySink.TestElements.Count.Should().Be(0);
     }
 
-    public void SendTestCaseShouldNotAddTestIfTestCaseIsNull()
+    public async Task SendTestElementShouldAddTheTestElement()
     {
-        _testCaseDiscoverySink.SendTestCase(null);
+        var testElement = new UnitTestElement(new TestMethod("M", "C", "A", displayName: null));
 
-        _testCaseDiscoverySink.Tests.Should().NotBeNull();
-        _testCaseDiscoverySink.Tests.Count.Should().Be(0);
+        await _testCaseDiscoverySink.SendTestElementAsync(testElement);
+
+        _testCaseDiscoverySink.TestElements.Should().NotBeNull();
+        _testCaseDiscoverySink.TestElements.Count.Should().Be(1);
+        _testCaseDiscoverySink.TestElements.ToArray()[0].Should().BeSameAs(testElement);
     }
 
-    public void SendTestCaseShouldAddTheTestCaseToTests()
+    public async Task SendTestElementShouldAddEachTestElementInOrder()
     {
-        TestCase tc = new("TAttribute", new Uri("executor://TestExecutorUri"), "A");
-        _testCaseDiscoverySink.SendTestCase(tc);
+        var testElement1 = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: null));
+        var testElement2 = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: null));
 
-        _testCaseDiscoverySink.Tests.Should().NotBeNull();
-        _testCaseDiscoverySink.Tests.Count.Should().Be(1);
-        _testCaseDiscoverySink.Tests.ToArray()[0].Should().Be(tc);
+        await _testCaseDiscoverySink.SendTestElementAsync(testElement1);
+        await _testCaseDiscoverySink.SendTestElementAsync(testElement2);
+
+        _testCaseDiscoverySink.TestElements.Count.Should().Be(2);
+        _testCaseDiscoverySink.TestElements.ToArray()[0].Should().BeSameAs(testElement1);
+        _testCaseDiscoverySink.TestElements.ToArray()[1].Should().BeSameAs(testElement2);
     }
 }

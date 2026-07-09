@@ -2,8 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
@@ -139,12 +142,26 @@ internal sealed class MSTestExecutor : ITestExecutor
 
         try
         {
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, configuration, new TestSourceHandler()))
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext?.RunSettings?.SettingsXml, frameworkHandle.ToAdapterMessageLogger(), configuration, new TestSourceHandler()))
             {
                 return;
             }
 
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(tests, runContext, frameworkHandle, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+            // Convert the host test cases into the neutral model at this boundary so the execution engine runs
+            // on UnitTestElement end-to-end. Each element keeps its originating test case as an opaque handle
+            // (for full-fidelity result recording and deployment) plus the host execution-context (TCM)
+            // properties surfaced through TestContext.
+            UnitTestElement[] testElements = [.. tests.Select(ToUnitTestElement)];
+
+            // Translate the VSTest recorder into the platform-agnostic result recorder at this boundary; the
+            // execution engine reports results through this neutral recorder and never constructs VSTest results.
+            ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
+
+            // Extract the neutral run inputs (test-run directory + run settings XML) from the host run context at
+            // this boundary so the execution engine no longer depends on the VSTest run context.
+            var deploymentContext = new DeploymentContext(runContext?.TestRunDirectory, runContext?.RunSettings?.SettingsXml);
+
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(testElements, deploymentContext, frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, new TestElementFilterProvider(runContext), testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {
@@ -152,7 +169,29 @@ internal sealed class MSTestExecutor : ITestExecutor
         }
     }
 
-    internal async Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
+    private static UnitTestElement ToUnitTestElement(TestCase testCase)
+    {
+        UnitTestElement testElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
+        testElement.ExecutionContextProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        testElement.HostRecordingHandle = testCase;
+        return testElement;
+    }
+
+    internal Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
+        => RunTestsFromSourcesCoreAsync(sources, runContext, frameworkHandle, settings => frameworkHandle!.ToTestResultRecorder(Environment.MachineName, settings), configuration, isMTP);
+
+    /// <summary>
+    /// Runs the tests from sources, reporting results to a caller-provided platform-agnostic
+    /// <see cref="ITestResultRecorder"/> (used by the native Microsoft.Testing.Platform integration, which
+    /// publishes test nodes itself instead of recording through the VSTest <see cref="IFrameworkHandle"/>).
+    /// The <paramref name="frameworkHandle"/> is still used for message logging and apartment-state handling.
+    /// The recorder is created via <paramref name="recorderFactory"/> after settings are resolved so it observes
+    /// the effective <see cref="MSTestSettings"/>.
+    /// </summary>
+    internal Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, Func<MSTestSettings, ITestResultRecorder> recorderFactory, IConfiguration? configuration, bool isMTP)
+        => RunTestsFromSourcesCoreAsync(sources, runContext, frameworkHandle, recorderFactory, configuration, isMTP);
+
+    private async Task RunTestsFromSourcesCoreAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, Func<MSTestSettings, ITestResultRecorder> recorderFactory, IConfiguration? configuration, bool isMTP)
     {
         if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
         {
@@ -183,13 +222,23 @@ internal sealed class MSTestExecutor : ITestExecutor
         try
         {
             TestSourceHandler testSourceHandler = new();
-            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, configuration, testSourceHandler))
+            if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext?.RunSettings?.SettingsXml, frameworkHandle.ToAdapterMessageLogger(), configuration, testSourceHandler))
             {
                 return;
             }
 
             sources = testSourceHandler.GetTestSources(sources);
-            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, runContext, frameworkHandle, testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
+
+            // Build the neutral result recorder now that settings have been resolved by InitializeDiscovery; the
+            // execution engine reports results through this recorder and never constructs VSTest results. For the
+            // VSTest path this wraps the framework handle; for the native MTP path it publishes test nodes directly.
+            ITestResultRecorder testResultRecorder = recorderFactory(MSTestSettings.CurrentSettings);
+
+            // Extract the neutral run inputs (test-run directory + run settings XML) from the host run context at
+            // this boundary so the execution engine no longer depends on the VSTest run context.
+            var deploymentContext = new DeploymentContext(runContext?.TestRunDirectory, runContext?.RunSettings?.SettingsXml);
+
+            await RunTestsFromRightContextAsync(frameworkHandle, async testRunToken => await TestExecutionManager.RunTestsAsync(sources, deploymentContext, frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, new TestElementFilterProvider(runContext), testSourceHandler, isMTP, testRunToken).ConfigureAwait(false)).ConfigureAwait(false);
         }
         finally
         {

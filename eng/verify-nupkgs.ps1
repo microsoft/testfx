@@ -21,10 +21,9 @@ function Confirm-NugetPackages {
     $expectedNumOfFiles = @{
         "MSTest.Sdk"                                  = 15
         "MSTest.TestFramework"                        = 105
-        "MSTest.TestAdapter"                          = 53
+        "MSTest.TestAdapter"                          = 66
         "MSTest"                                      = 10
         "MSTest.Analyzers"                            = 56
-        "MSTest.AotReflection.SourceGeneration"       = 6
     }
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"

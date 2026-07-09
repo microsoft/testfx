@@ -22,23 +22,15 @@
         <target state="translated">失敗率のしきい値は {0} % で、失敗したテストは {1} % です ({2}/{3})</target>
         <note>{0} is the maximum failed tests percentage threshold. {1} is the actual failed tests percentage. {2} is the failed tests count. {3} is the total tests count.</note>
       </trans-unit>
-      <trans-unit id="MoveFiles">
-        <source>
-=====================
-Moving last attempt asset files to the default result directory
-=====================
-</source>
-        <target state="translated">
-=====================
-前回試行した資産ファイルを既定の結果ディレクトリに移動しています
-=====================
-</target>
-        <note />
+      <trans-unit id="RetryArtifactsMoved">
+        <source>Retry: moved {0} result file(s) to '{1}'</source>
+        <target state="translated">再試行: {0} 個の結果ファイルを '{1}' に移動しました</target>
+        <note>{0} is the number of files moved. {1} is the destination result directory.</note>
       </trans-unit>
-      <trans-unit id="MovingFileToLocation">
-        <source>Moving file '{0}' to '{1}'</source>
-        <target state="translated">ファイル '{0}' を '{1}' に移動しています</target>
-        <note>{0} is the source file path. {1} is the destination file path.</note>
+      <trans-unit id="RetryAttemptFailedWillRetry">
+        <source>Retry: attempt {0}/{1} failed - {2} failing test(s), retrying</source>
+        <target state="translated">再試行: 試行 {0}/{1} 件が失敗 - {2} 件のテストが失敗、再試行中</target>
+        <note>{0} is the current attempt number. {1} is the total number of attempts. {2} is the number of failing tests in this attempt.</note>
       </trans-unit>
       <trans-unit id="RetryExtensionNotSupportedOnBrowserErrorMessage">
         <source>The retry extension is not supported on browser platform. Browser-based tests cannot be retried due to platform limitations.</source>
@@ -115,45 +107,55 @@ Moving last attempt asset files to the default result directory
         <target state="translated">オプション '{0}' と '{1}' を一緒に使用することはできません</target>
         <note>{0} is the first option name. {1} is the second option name.</note>
       </trans-unit>
+      <trans-unit id="RetrySummaryDurationLine">
+        <source>  duration: {0}</source>
+        <target state="translated">  期間: {0}</target>
+        <note>{0} is the total retry orchestration duration. Two leading spaces and the lowercase 'duration:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFailed">
+        <source>Retry summary: Failed! after {0}/{1} attempts</source>
+        <target state="translated">再試行の概要: 失敗! {0}/{1} 件試行後</target>
+        <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Failed!' parallel to the platform 'Test run summary: Failed!' wording.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFailedLine">
+        <source>  failed: {0}</source>
+        <target state="translated">  失敗: {0}</target>
+        <note>{0} is the number of tests still failing after the final attempt. Two leading spaces and the lowercase 'failed:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryFlakyLine">
+        <source>  flaky: {0}</source>
+        <target state="translated">  不安定: {0} 件</target>
+        <note>{0} is the number of tests that failed at least once but eventually passed. Two leading spaces and the lowercase 'flaky:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryPassed">
+        <source>Retry summary: Passed! after {0}/{1} attempts</source>
+        <target state="translated">再試行のサマリー: {0}/{1} 件の試行後に合格!</target>
+        <note>{0} is the number of attempts used. {1} is the maximum number of attempts. Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryPassedNoRetry">
+        <source>Retry summary: Passed! on the first attempt (no retries needed)</source>
+        <target state="translated">再試行のサマリー: 最初の試行で合格! (再試行は必要ありません)</target>
+        <note>Keep 'Retry summary:' and 'Passed!' parallel to the platform 'Test run summary: Passed!' wording.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryRetriedSuffix">
+        <source> (+{0} retried)</source>
+        <target state="translated"> (+{0} 件廃止済み)</target>
+        <note>{0} is the number of test executions that were retried. Appended to the total line, mirroring the platform '(+N retried)' suffix.</note>
+      </trans-unit>
+      <trans-unit id="RetrySummaryTotalLine">
+        <source>  total: {0}</source>
+        <target state="translated">  合計: {0} 件</target>
+        <note>{0} is the total number of tests in the suite. Two leading spaces and the lowercase 'total:' label mirror the platform run summary.</note>
+      </trans-unit>
+      <trans-unit id="RetryWaitingBeforeNextAttempt">
+        <source>Retry: waiting {0} before attempt {1}/{2}</source>
+        <target state="translated">再試行: {1}/{2} 件の試行前に {0} 待機中</target>
+        <note>{0} is the delay (e.g. '1s'). {1} is the next attempt number. {2} is the total number of attempts.</note>
+      </trans-unit>
       <trans-unit id="TestHostProcessExitedBeforeRetryCouldConnect">
         <source>Test host process exited before the retry service could connect to it. Exit code: {0}</source>
         <target state="translated">再試行サービスが接続する前に、テスト ホスト プロセスが終了しました。終了コード: {0}</target>
         <note>{0} is the test host process exit code.</note>
-      </trans-unit>
-      <trans-unit id="TestSuiteCompletedSuccessfully">
-        <source>
-=====================
-Tests suite completed successfully in {0} attempts
-=====================</source>
-        <target state="translated">
-=====================
-テスト スイートが {0} 回の試行で正常に完了しました
-=====================</target>
-        <note>{0} is the total attempt count.</note>
-      </trans-unit>
-      <trans-unit id="TestSuiteFailed">
-        <source>
-=====================
-Tests suite failed, total failed tests: {0}, exit code: {1}, attempt: {2}/{3}
-=====================
-</source>
-        <target state="translated">
-=====================
-テスト スイートが失敗しました。失敗したテストの合計数: {0}、終了コード: {1}、試行: {2}/{3}
-=====================
-</target>
-        <note>{0} is the failed tests count. {1} is the exit code. {2} is the current attempt number. {3} is the total attempt count.</note>
-      </trans-unit>
-      <trans-unit id="TestSuiteFailedInAllAttempts">
-        <source>
-=====================
-Tests suite failed in all {0} attempts
-=====================</source>
-        <target state="translated">
-=====================
-テスト スイートが {0} 回の試行すべてで失敗しました
-=====================</target>
-        <note>{0} is the total attempt count.</note>
       </trans-unit>
       <trans-unit id="TestSuiteFailedWithWrongExitCode">
         <source>Test suite failed with and exit code different that 2 (failed tests). Failure related to an unexpected condition. Exit code '{0}'</source>

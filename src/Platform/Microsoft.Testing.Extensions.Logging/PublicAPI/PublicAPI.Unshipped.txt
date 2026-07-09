@@ -1,4 +1,1 @@
 #nullable enable
-[TPEXP]Microsoft.Testing.Extensions.MicrosoftExtensionsLoggingBuilderExtensions
-[TPEXP]static Microsoft.Testing.Extensions.MicrosoftExtensionsLoggingBuilderExtensions.AddMicrosoftExtensionsLogging(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory) -> Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!
-[TPEXP]static Microsoft.Testing.Extensions.MicrosoftExtensionsLoggingBuilderExtensions.AddMicrosoftExtensionsLogging(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! builder, System.Action<Microsoft.Extensions.Logging.ILoggingBuilder!>! configure) -> Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!

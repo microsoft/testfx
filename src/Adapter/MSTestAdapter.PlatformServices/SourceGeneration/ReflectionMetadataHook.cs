@@ -52,8 +52,8 @@ public static class ReflectionMetadataHook
     /// <param name="types">All types directly annotated with <c>[TestClass]</c> in the assembly.</param>
     /// <param name="testMethods">
     /// A map from each test class to its <c>[TestMethod]</c>-annotated <see cref="MethodInfo"/>
-    /// set. The dictionary and arrays are copied defensively; the caller may mutate the inputs
-    /// after the call.
+    /// set. Ownership transfers to the adapter: the source generator hands over freshly-built
+    /// collections and must not mutate them after the call (see the remarks on the full overload).
     /// </param>
     /// <remarks>
     /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
@@ -120,8 +120,21 @@ public static class ReflectionMetadataHook
     /// assigns it directly.
     /// </param>
     /// <remarks>
+    /// <para>
     /// Do not call this method from hand-written code; it is meant to be invoked exclusively from
     /// the <c>[ModuleInitializer]</c> emitted by the MSTest source generator.
+    /// </para>
+    /// <para>
+    /// <b>Ownership transfer.</b> The adapter takes ownership of every collection passed in
+    /// (the <paramref name="types"/> array, the <paramref name="assemblyAttributes"/> array, and
+    /// each dictionary with its value arrays) and stores them without cloning; the read-only
+    /// dictionaries are held as-is behind <see cref="IReadOnlyDictionary{TKey, TValue}"/>. Callers
+    /// MUST hand over freshly-built collections and MUST NOT mutate them after the call returns;
+    /// the source generator (the only intended caller) already emits fresh, throwaway collections
+    /// that satisfy this. This is a contract about ownership and mutation, not caller identity: it
+    /// trades the previous defensive copies for zero-copy startup on the understanding that the
+    /// inputs are the adapter's to keep.
+    /// </para>
     /// </remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static void Register(
@@ -174,29 +187,14 @@ public static class ReflectionMetadataHook
             throw new ArgumentNullException(nameof(propertySetters));
         }
 
-        var typesCopy = (Type[])types.Clone();
-
-        var testMethodsCopy = new Dictionary<Type, MethodInfo[]>(testMethods.Count);
-        foreach (KeyValuePair<Type, MethodInfo[]> kvp in testMethods)
-        {
-            testMethodsCopy[kvp.Key] = (MethodInfo[])kvp.Value.Clone();
-        }
-
-        var typeAttributesCopy = new Dictionary<Type, Attribute[]>(typeAttributes.Count);
-        foreach (KeyValuePair<Type, Attribute[]> kvp in typeAttributes)
-        {
-            typeAttributesCopy[kvp.Key] = (Attribute[])kvp.Value.Clone();
-        }
-
-        object[] assemblyAttributesCopy = (object[])assemblyAttributes.Clone();
-
-        var methodInvokersCopy = new Dictionary<MethodInfo, Func<object?, object?[]?, object?>>(methodInvokers.Count);
-        foreach (KeyValuePair<MethodInfo, Func<object?, object?[]?, object?>> kvp in methodInvokers)
-        {
-            methodInvokersCopy[kvp.Key] = kvp.Value;
-        }
-
-        var constructorInvokersCopy = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>(constructorInvokers.Count);
+        // Ownership transfer (see the remarks on this method): the source generator hands over
+        // freshly-built, throwaway collections and never mutates them after the call, so we store
+        // the passed arrays and read-only dictionaries directly instead of copying them.
+        //
+        // ConstructorInvokerInfo (public struct) still has to be projected onto the adapter's
+        // internal ConstructorInvoker type; this is a representation change, not a defensive copy,
+        // and the parameter-type arrays are taken by reference.
+        var constructorInvokersMap = new Dictionary<Type, SourceGeneratedReflectionDataProvider.ConstructorInvoker[]>(constructorInvokers.Count);
         foreach (KeyValuePair<Type, ConstructorInvokerInfo[]> kvp in constructorInvokers)
         {
             var invokers = new SourceGeneratedReflectionDataProvider.ConstructorInvoker[kvp.Value.Length];
@@ -205,26 +203,20 @@ public static class ReflectionMetadataHook
                 ConstructorInvokerInfo info = kvp.Value[i];
                 invokers[i] = new SourceGeneratedReflectionDataProvider.ConstructorInvoker
                 {
-                    Parameters = (Type[])info.ParameterTypes.Clone(),
+                    Parameters = info.ParameterTypes,
                     Invoker = info.Invoker,
                 };
             }
 
-            constructorInvokersCopy[kvp.Key] = invokers;
-        }
-
-        var propertySettersCopy = new Dictionary<PropertyInfo, Action<object?, object?>>(propertySetters.Count);
-        foreach (KeyValuePair<PropertyInfo, Action<object?, object?>> kvp in propertySetters)
-        {
-            propertySettersCopy[kvp.Key] = kvp.Value;
+            constructorInvokersMap[kvp.Key] = invokers;
         }
 
         // TypesByName must always match Type.FullName at runtime (see comment in the source
         // generator emitter): compute it on the runtime side from typeof(T).FullName so the
         // generator emits less code and the same FullName conventions are honored for nested
         // and generic types.
-        var typesByName = new Dictionary<string, Type>(typesCopy.Length, StringComparer.Ordinal);
-        foreach (Type type in typesCopy)
+        var typesByName = new Dictionary<string, Type>(types.Length, StringComparer.Ordinal);
+        foreach (Type type in types)
         {
             if (type.FullName is { } fullName)
             {
@@ -236,14 +228,14 @@ public static class ReflectionMetadataHook
         {
             Assembly = assembly,
             AssemblyName = assembly.GetName().Name ?? string.Empty,
-            Types = typesCopy,
+            Types = types,
             TypesByName = typesByName,
-            TypeMethods = testMethodsCopy,
-            TypeAttributes = typeAttributesCopy,
-            AssemblyAttributes = assemblyAttributesCopy,
-            TypeMethodInvokers = methodInvokersCopy,
-            TypeConstructorsInvoker = constructorInvokersCopy,
-            TypePropertySetters = propertySettersCopy,
+            TypeMethods = testMethods,
+            TypeAttributes = typeAttributes,
+            AssemblyAttributes = assemblyAttributes,
+            TypeMethodInvokers = methodInvokers,
+            TypeConstructorsInvoker = constructorInvokersMap,
+            TypePropertySetters = propertySetters,
         };
 
         lock (Lock)

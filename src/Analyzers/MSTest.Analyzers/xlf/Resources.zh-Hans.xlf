@@ -561,25 +561,23 @@ The type declaring these methods should also respect the following rules:
 The type declaring these methods should also respect the following rules:
 -The type should be a class
 -The class should be 'public'
--The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">标记有 "[GlobalTestInitialize]" 或 "[GlobalTestCleanup]" 的方法应遵循以下布局才会有效:
-- 不能在泛型 class 上声明它
-- 它应为 "public"
-- 它应为 "static"
-- 它不应为 "async void"
-- 它不应是特殊方法(终结器、运算符...)。
-- 它不应是泛型的
-- 它应采用 "TestContext" 类型的一个参数
-- 返回类型应为 "void"、"Task" 或 "ValueTask"
+        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-声明这些方法的类型还应遵循以下规则:
-- 类型应为 class
-- class 应该为 "public"
-- class 不应为 "static"
-- 应使用 "[TestClass]"（或派生属性）标记 class
-- class 不应是泛型的。</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -664,17 +662,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
-        <target state="new">Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</target>
+        <target state="translated">将测试方法的 "DisplayName" 设置为与方法名称相同的值是多余的，因为默认情况下，方法名称会用作显示名称。可以删除多余的 "DisplayName"，这不会更改测试报告方式。</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameMessageFormat">
         <source>The 'DisplayName' is the same as the test method name '{0}' and can be removed</source>
-        <target state="new">The 'DisplayName' is the same as the test method name '{0}' and can be removed</target>
+        <target state="translated">"DisplayName" 与测试方法名称 "{0}" 相同，可以删除</target>
         <note>{0} is the test method name. {Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameTitle">
         <source>Test method should not specify a display name equal to its name</source>
-        <target state="new">Test method should not specify a display name equal to its name</target>
+        <target state="translated">测试方法不应指定与其名称相同的显示名称</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
@@ -1006,7 +1004,7 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <target state="translated">Asynchronous 测试固定例程方法不需要 'Async' 后缀</target>
         <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">

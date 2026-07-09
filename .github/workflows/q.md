@@ -17,6 +17,7 @@ permissions:
   actions: read
   issues: read
   pull-requests: read
+  copilot-requests: write
 
 network: defaults
 
@@ -38,7 +39,7 @@ tools:
     min-integrity: none # This workflow is allowed to examine any PR because it's invoked by a repo maintainer
 
 timeout-minutes: 15
-source: githubnext/agentics/workflows/q.md@d63b34de41bc0dc052096e094c732cf28eafc659
+source: githubnext/agentics/workflows/q.md@1c6668b751c51af8571f01204ceffb19362e0f66
 ---
 
 # Q - Agentic Workflow Optimizer

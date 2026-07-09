@@ -10,9 +10,8 @@ using ExecutionScope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionSco
 #endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
+using MessageLevel = Microsoft.VisualStudio.TestTools.UnitTesting.MessageLevel;
 using StringEx = Microsoft.VisualStudio.TestTools.UnitTesting.StringEx;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -20,34 +19,34 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal sealed partial class MSTestSettings
 {
     /// <summary>
-    /// Populate adapter settings from the context.
+    /// Populate adapter settings from the run settings XML.
     /// </summary>
-    /// <param name="context">The discovery context.</param>
+    /// <param name="settingsXml">The run settings XML, or <see langword="null"/> when none was provided.</param>
     /// <param name="logger"> The logger for messages. </param>
     /// <param name="configuration">The configuration.</param>
-    internal static void PopulateSettings(IDiscoveryContext? context, IMessageLogger? logger, IConfiguration? configuration)
+    internal static void PopulateSettings(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)
     {
 #if !WINDOWS_UWP
         if (configuration?["mstest"] is not null
-            && context?.RunSettings is not null
-            && RunSettingsFileHasMSTestSettings(context.RunSettings.SettingsXml))
+            && settingsXml is not null
+            && RunSettingsFileHasMSTestSettings(settingsXml))
         {
             throw new InvalidOperationException(Resource.DuplicateConfigurationError);
         }
 #endif
 
         var settings = new MSTestSettings();
-        var runConfigurationSettings = RunConfigurationSettings.GetSettings(context?.RunSettings?.SettingsXml);
+        var runConfigurationSettings = RunConfigurationSettings.GetSettings(settingsXml);
 
 #if !WINDOWS_UWP
-        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml) && configuration?["mstest"] is null)
+        if (!StringEx.IsNullOrEmpty(settingsXml) && configuration?["mstest"] is null)
 #else
-        if (!StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml))
+        if (!StringEx.IsNullOrEmpty(settingsXml))
 #endif
         {
-            MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias, logger);
-            settings = aliasSettings ?? GetSettings(context.RunSettings.SettingsXml, SettingsName, logger) ?? new MSTestSettings();
-            SetGlobalSettings(context.RunSettings.SettingsXml, settings, logger);
+            MSTestSettings? aliasSettings = GetSettings(settingsXml, SettingsNameAlias, logger);
+            settings = aliasSettings ?? GetSettings(settingsXml, SettingsName, logger) ?? new MSTestSettings();
+            SetGlobalSettings(settingsXml, settings, logger);
         }
 #if !WINDOWS_UWP
         else if (configuration?["mstest"] is not null)
@@ -62,7 +61,7 @@ internal sealed partial class MSTestSettings
 
         if (settings.RandomizeTestOrder && settings.OrderTestsByNameInClass)
         {
-            logger?.SendMessage(TestMessageLevel.Warning, Resource.RandomTestOrderAndOrderTestsByNameInClassConflict);
+            logger?.SendMessage(MessageLevel.Warning, Resource.RandomTestOrderAndOrderTestsByNameInClassConflict);
         }
 
         // Track configuration source for telemetry.
@@ -71,14 +70,14 @@ internal sealed partial class MSTestSettings
         {
             telemetry.ConfigurationSource = configuration?["mstest"] is not null
                 ? "testconfig.json"
-                : !StringEx.IsNullOrEmpty(context?.RunSettings?.SettingsXml)
+                : !StringEx.IsNullOrEmpty(settingsXml)
                     ? "runsettings"
                     : "none";
         }
 #endif
     }
 
-    private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings, IMessageLogger? logger)
+    private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings, IAdapterMessageLogger? logger)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml).Element("RunSettings")?.Element("RunConfiguration");
         if (runConfigElement == null)
@@ -93,12 +92,12 @@ internal sealed partial class MSTestSettings
         }
         else if (disableParallelizationString is not null)
         {
-            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, disableParallelizationString, "DisableParallelization"));
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, disableParallelizationString, "DisableParallelization"));
         }
     }
 
 #if !WINDOWS_UWP
-    private static void ParseBooleanSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<bool> setSetting)
+    private static void ParseBooleanSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<bool> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
         {
@@ -111,11 +110,11 @@ internal sealed partial class MSTestSettings
         }
         else
         {
-            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
         }
     }
 
-    private static void ParseDebuggerLaunchModeSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<DebuggerLaunchMode> setSetting)
+    private static void ParseDebuggerLaunchModeSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<DebuggerLaunchMode> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
         {
@@ -128,11 +127,11 @@ internal sealed partial class MSTestSettings
         }
         else
         {
-            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
         }
     }
 
-    private static void ParseTimeoutSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
+    private static void ParseTimeoutSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<int> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
         {
@@ -149,11 +148,11 @@ internal sealed partial class MSTestSettings
         }
         else
         {
-            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, value, key));
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidTimeoutValue, value, key));
         }
     }
 
-    private static void ParseSignedIntegerSetting(IConfiguration configuration, string key, IMessageLogger? logger, Action<int> setSetting)
+    private static void ParseSignedIntegerSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<int> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
         {
@@ -166,7 +165,7 @@ internal sealed partial class MSTestSettings
         }
         else
         {
-            logger?.SendMessage(TestMessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
         }
     }
 
@@ -176,7 +175,7 @@ internal sealed partial class MSTestSettings
     /// <param name="configuration">Configuration to load the settings from.</param>
     /// <param name="logger"> The logger for messages. </param>
     /// <param name="settings">The MSTest settings.</param>
-    internal static void SetSettingsFromConfig(IConfiguration configuration, IMessageLogger? logger, MSTestSettings settings)
+    internal static void SetSettingsFromConfig(IConfiguration configuration, IAdapterMessageLogger? logger, MSTestSettings settings)
     {
         // 'orderTestsByNameInClass' has moved under 'execution:' for consistency with the other execution settings.
         // Prefer the new 'mstest:execution:orderTestsByNameInClass' key. Only fall back to the deprecated flat
@@ -188,7 +187,7 @@ internal sealed partial class MSTestSettings
         }
         else if (configuration["mstest:orderTestsByNameInClass"] is not null)
         {
-            logger?.SendMessage(TestMessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey);
+            logger?.SendMessage(MessageLevel.Warning, Resource.DeprecatedFlatOrderTestsByNameInClassKey);
             ParseBooleanSetting(configuration, "orderTestsByNameInClass", logger, value => settings.OrderTestsByNameInClass = value);
         }
 

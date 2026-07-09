@@ -561,25 +561,23 @@ The type declaring these methods should also respect the following rules:
 The type declaring these methods should also respect the following rules:
 -The type should be a class
 -The class should be 'public'
--The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">'[GlobalTestInitialize]' または '[GlobalTestCleanup]' でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
-- ジェネリック class で宣言することはできません
-- 'public' である必要があります
-- 'static' である必要があります
-- 'async void' にすることはできません
-- 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。
-- ジェネリックにすることはできません
-- 'TestContext' 型のパラメーターを 1 つ受け取る必要があります
-- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-これらのメソッドを宣言する型も、次の規則に従う必要があります:
-- 型は class である必要があります
--class は 'public' である必要があります
-- class を 'static' にすることはできません
-- class は '[TestClass]' (または派生属性) でマークする必要があります
-- class をジェネリックにすることはできません。</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -664,17 +662,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
-        <target state="new">Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</target>
+        <target state="translated">テスト メソッドに対して、メソッド名と同一の値を 'DisplayName' に設定するのは冗長です。既定では、メソッド名自体が表示名として使用されるためです。冗長な 'DisplayName' は、テストの報告方法を変えずに削除できます。</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameMessageFormat">
         <source>The 'DisplayName' is the same as the test method name '{0}' and can be removed</source>
-        <target state="new">The 'DisplayName' is the same as the test method name '{0}' and can be removed</target>
+        <target state="translated">'DisplayName' はテスト メソッド名 '{0}' と同じなので、削除できます</target>
         <note>{0} is the test method name. {Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameTitle">
         <source>Test method should not specify a display name equal to its name</source>
-        <target state="new">Test method should not specify a display name equal to its name</target>
+        <target state="translated">テスト メソッドでは、その名前と同じ表示名を指定しないでください</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">

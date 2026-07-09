@@ -26,6 +26,17 @@ internal static class SessionEventTypes
 }
 
 [Embedded]
+internal static class DisplayMessageLevels
+{
+    // The severity of a generic host display message forwarded over the pipe. The SDK maps each level
+    // to its TerminalTestReporter sink: Information -> WriteMessage, Warning -> WriteWarningMessage,
+    // Error -> WriteErrorMessage. Values must stay stable (they flow over IPC to dotnet test).
+    internal const byte Information = 0;
+    internal const byte Warning = 1;
+    internal const byte Error = 2;
+}
+
+[Embedded]
 internal static class HandshakeMessagePropertyNames
 {
     internal const byte PID = 0;
@@ -50,6 +61,32 @@ internal static class HandshakeMessagePropertyNames
     // dotnet test in the SDK) can understand why an orchestrator is participating
     // in the run. The value is the orchestrator extension Uid.
     internal const byte OrchestratorFeature = 11;
+
+    // Carries the OS-level name of the reverse "server control" pipe. Only ever sent by the SDK
+    // (dotnet test) in its handshake reply. Its presence is the capability signal for
+    // server-initiated session cancellation: when the test host sees a non-empty value it opens a
+    // NamedPipeClient to that pipe and parks a long-poll WaitForServerControlRequest so the SDK can
+    // push a ServerControlMessage (e.g. CancelSession) at any time - even while the test host is
+    // otherwise silent. An older SDK never sends this property, so the feature stays disabled.
+    //
+    // SDK-side contract (duplicated by hand in dotnet/sdk - keep in sync):
+    //   * Every process that performs the handshake and receives this property (test host, test host
+    //     controller, orchestrator) opens its own client to the advertised name, so the SDK must be able to
+    //     accept one control connection per connecting process (e.g. one server instance per process, or a
+    //     distinct pipe name advertised per handshake reply).
+    //   * The SDK MUST keep the control pipe open for the whole data session. The test host treats an early
+    //     pipe drop as "host gone => cancel", so closing the control pipe before the data session ends would be
+    //     interpreted as a cancellation.
+    internal const byte ServerControlPipeName = 12;
+}
+
+[Embedded]
+internal static class ServerControlKinds
+{
+    // The kind of a ServerControlMessage the SDK pushes to the test host over the reverse control pipe.
+    // Values must stay stable (they flow over IPC to dotnet test). Reserve additional values for future
+    // signals (drain, pause, ...).
+    internal const byte CancelSession = 1;
 }
 
 [Embedded]
@@ -92,10 +129,37 @@ internal static class ProtocolConstants
     // When both sides advertise 1.1.0 and we negotiate to that version, the SDK can keep its
     // live output enabled.
     //
-    // NOTE: The no-op output device is installed for all pipe-protocol connections, regardless
-    // of the negotiated protocol version. With an old SDK that only supports 1.0.0, both sides
-    // will produce no live output (the SDK suppresses its TerminalTestReporter to avoid colliding
-    // with the host output it expected before this change). Users must update to an SDK that
-    // negotiates 1.1.0 to see live output via the SDK's TerminalTestReporter.
-    internal const string SupportedVersions = "1.0.0;1.1.0";
+    // 1.2.0 adds the AzureDevOpsLogMessage: under the pipe protocol the host installs a no-op output
+    // device (see below), so any Azure DevOps logging commands (##[group], ##vso[...]) produced by the
+    // AzureDevOpsReport extension would otherwise be swallowed. When both sides negotiate 1.2.0 the host
+    // forwards those marked lines to the SDK over the pipe, and the SDK writes them verbatim to its
+    // TerminalTestReporter so they reach the pipeline log. An older SDK that only negotiates 1.1.0 never
+    // receives the message (the host gates forwarding on the negotiated version), so it stays compatible.
+    //
+    // 1.3.0 adds the generic DisplayMessage: under the pipe protocol the host's forwarding output device still
+    // discards regular (informational) output, but relays warning/error host messages
+    // (WarningMessageOutputDeviceData / ErrorMessageOutputDeviceData) to the SDK as DisplayMessage so that
+    // host-side diagnostics produced outside test results (hang/crash dump diagnostics, retry summaries, generic
+    // extension/framework warnings and errors) are no longer swallowed in multi-assembly runs. The SDK routes each
+    // DisplayMessage to its TerminalTestReporter's WriteWarningMessage / WriteErrorMessage. Unlike the AzureDevOps
+    // path, this is not gated on an Azure DevOps agent. The host gates forwarding on the negotiated version, so an
+    // older SDK (<= 1.2.0) never receives the message.
+    //
+    // NOTE: Under the pipe protocol the host installs a forwarding output device
+    // (DotnetTestPassthroughOutputDevice) regardless of the negotiated protocol version (the SDK's
+    // TerminalTestReporter owns user-facing output). It still discards regular (informational) output but,
+    // depending on the negotiated version, relays: Azure DevOps logging commands as AzureDevOpsLogMessage (1.2.0+,
+    // only on an Azure DevOps agent) and warning/error host messages as DisplayMessage (1.3.0+, always). See
+    // OutputDeviceManager.BuildAsync. With an old SDK that only supports 1.0.0, both sides will produce no live
+    // output (the SDK suppresses its TerminalTestReporter to avoid colliding with the host output it expected
+    // before this change). Users must update to an SDK that negotiates 1.1.0 to see live output via the SDK's
+    // TerminalTestReporter.
+    // 1.4.0 adds the reverse "server control" channel used for server-initiated session cancellation. When the
+    // SDK advertises a ServerControlPipeName in its handshake reply, the test host opens a NamedPipeClient to that
+    // pipe and parks a long-poll WaitForServerControlRequest; the SDK completes it with a ServerControlMessage
+    // (e.g. CancelSession) whenever it wants the test host to stop cooperatively (global --maximum-failed-tests,
+    // --timeout, ...). The feature is gated on the presence of the handshake property (a capability), not on this
+    // version string, so an older SDK that never advertises the pipe leaves the feature disabled. The version is
+    // still bumped so the negotiated-version state advances in lockstep.
+    internal const string SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0";
 }

@@ -66,7 +66,8 @@
 
     <!-- Curated package dependencies. PrivateAssets="none" so all assets (including build/buildTransitive
          targets, e.g. from Microsoft.Testing.Platform.MSBuild) flow to consumers. -->
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.VSTestBridge\Microsoft.Testing.Extensions.VSTestBridge.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport.Abstractions\Microsoft.Testing.Extensions.TrxReport.Abstractions.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.MSBuild\Microsoft.Testing.Platform.MSBuild.csproj" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " PrivateAssets="none" />
     <!-- On Windows the package depends on MSTest.TestFramework, matching the historical MSTest.TestAdapter.nuspec.
          The historical MSTest.TestAdapter.NonWindows.nuspec did NOT declare this dependency, so on non-Windows builds
@@ -82,6 +83,17 @@
          that reference is suppressed above, so they are referenced explicitly here. -->
     <PackageReference Include="System.Threading.Tasks.Extensions" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
     <PackageReference Include="System.Memory" Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' OR '$(TargetFramework)' == '$(UwpMinimum)' " />
+
+    <!-- The adapter's VSTest-facing code (VSTestAdapter\*, AdapterTestProperties) and the native Microsoft.Testing.Platform
+         integration (TestingPlatformAdapter\MSTestFilterContext) use the VSTest object model directly. It used to flow
+         in transitively via Microsoft.Testing.Extensions.VSTestBridge; now that the bridge reference is gone it is
+         referenced explicitly for every TFM. -->
+    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
+
+    <!-- The native Microsoft.Testing.Platform integration (TestingPlatformAdapter\MSTestFilterContext, guarded by
+         !WINDOWS_UWP) parses VSTest filter expressions via the Filter source package. It flows in transitively via
+         the VSTestBridge today (PrivateAssets=all there), so reference it explicitly where the native path builds. -->
+    <PackageReference Include="Microsoft.TestPlatform.Filter.Source" PrivateAssets="all" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
@@ -89,8 +101,12 @@
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\uwp\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\uwp\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == '$(UwpMinimum)' OR '$(TargetFramework)' == '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
+    <AdditionalFiles Include="InternalAPI\InternalAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' AND '$(TargetFramework)' != '$(ModernUwpMinimum)' " />
   </ItemGroup>
 
   <ItemGroup>
@@ -193,6 +209,7 @@
   <ItemGroup>
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTestAdapter.PlatformServices.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.VstestConsoleWrapper.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.IntegrationTests" Key="$(VsPublicKey)" />
 

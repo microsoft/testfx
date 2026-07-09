@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
@@ -87,33 +85,26 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         string? instanceId = null;
         DiscoveredTestMessage[]? discoveredTestMessages = [];
 
-        ushort fieldCount = ReadUShort(stream);
-
-        for (int i = 0; i < fieldCount; i++)
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
-            int fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
             switch (fieldId)
             {
                 case DiscoveredTestMessagesFieldsId.ExecutionId:
                     executionId = ReadStringValue(stream, fieldSize);
-                    break;
+                    return true;
 
                 case DiscoveredTestMessagesFieldsId.InstanceId:
                     instanceId = ReadStringValue(stream, fieldSize);
-                    break;
+                    return true;
 
                 case DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList:
                     discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
-                    break;
+                    return true;
 
                 default:
-                    // If we don't recognize the field id, skip the payload corresponding to that field
-                    SetPosition(stream, stream.Position + fieldSize);
-                    break;
+                    return false;
             }
-        }
+        });
 
         return new(executionId, instanceId, discoveredTestMessages);
     }
@@ -131,59 +122,53 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
             string? @namespace = null;
             string? typeName = null;
             string? methodName = null;
-            TestMetadataProperty[] traits = [];
+            TraitMessage[] traits = [];
             string[] parameterTypeFullNames = [];
 
-            int fieldCount = ReadUShort(stream);
-
-            for (int j = 0; j < fieldCount; j++)
+            ReadFields(stream, (fieldId, fieldSize) =>
             {
-                int fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case DiscoveredTestMessageFieldsId.Uid:
                         uid = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.DisplayName:
                         displayName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.FilePath:
                         filePath = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.LineNumber:
                         lineNumber = ReadInt(stream);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.Namespace:
                         @namespace = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.TypeName:
                         typeName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.MethodName:
                         methodName = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.Traits:
                         traits = ReadTraitsPayload(stream);
-                        break;
+                        return true;
 
                     case DiscoveredTestMessageFieldsId.ParameterTypeFullNames:
                         parameterTypeFullNames = ReadParameterTypeFullNamesPayload(stream);
-                        break;
+                        return true;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return false;
                 }
-            }
+            });
 
             discoveredTestMessages[i] = new DiscoveredTestMessage(uid, displayName, filePath, lineNumber, @namespace, typeName, methodName, parameterTypeFullNames, traits);
         }
@@ -204,40 +189,35 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         return parameterTypeFullNames;
     }
 
-    private static TestMetadataProperty[] ReadTraitsPayload(Stream stream)
+    private static TraitMessage[] ReadTraitsPayload(Stream stream)
     {
         int length = ReadInt(stream);
-        var traits = new TestMetadataProperty[length];
+        var traits = new TraitMessage[length];
         for (int i = 0; i < length; i++)
         {
             string? key = null;
             string? value = null;
-            int fieldCount = ReadUShort(stream);
 
-            for (int j = 0; j < fieldCount; j++)
+            ReadFields(stream, (fieldId, fieldSize) =>
             {
-                int fieldId = ReadUShort(stream);
-                int fieldSize = ReadInt(stream);
-
                 switch (fieldId)
                 {
                     case TraitMessageFieldsId.Key:
                         key = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     case TraitMessageFieldsId.Value:
                         value = ReadStringValue(stream, fieldSize);
-                        break;
+                        return true;
 
                     default:
-                        SetPosition(stream, stream.Position + fieldSize);
-                        break;
+                        return false;
                 }
-            }
+            });
 
-            _ = key ?? throw ApplicationStateGuard.Unreachable();
-            _ = value ?? throw ApplicationStateGuard.Unreachable();
-            traits[i] = new TestMetadataProperty(key, value);
+            _ = key ?? throw new InvalidOperationException("Trait key is required.");
+            _ = value ?? throw new InvalidOperationException("Trait value is required.");
+            traits[i] = new TraitMessage(key, value);
         }
 
         return traits;
@@ -245,7 +225,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     protected override void SerializeCore(DiscoveredTestMessages objectToSerialize, Stream stream)
     {
-        RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
         WriteUShort(stream, GetFieldCount(objectToSerialize));
 
@@ -255,92 +235,32 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
     }
 
     private static void WriteDiscoveredTestMessagesPayload(Stream stream, DiscoveredTestMessage[]? discoveredTestMessageList)
-    {
-        if (discoveredTestMessageList is null || discoveredTestMessageList.Length == 0)
+        => WriteListPayload(stream, DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList, discoveredTestMessageList, static (s, discoveredTestMessage) =>
         {
-            return;
-        }
+            WriteUShort(s, GetFieldCount(discoveredTestMessage));
 
-        WriteUShort(stream, DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList);
+            WriteField(s, DiscoveredTestMessageFieldsId.Uid, discoveredTestMessage.Uid);
+            WriteField(s, DiscoveredTestMessageFieldsId.DisplayName, discoveredTestMessage.DisplayName);
+            WriteField(s, DiscoveredTestMessageFieldsId.FilePath, discoveredTestMessage.FilePath);
+            WriteField(s, DiscoveredTestMessageFieldsId.LineNumber, discoveredTestMessage.LineNumber);
+            WriteField(s, DiscoveredTestMessageFieldsId.Namespace, discoveredTestMessage.Namespace);
+            WriteField(s, DiscoveredTestMessageFieldsId.TypeName, discoveredTestMessage.TypeName);
+            WriteField(s, DiscoveredTestMessageFieldsId.MethodName, discoveredTestMessage.MethodName);
+            WriteParameterTypeFullNamesPayload(s, discoveredTestMessage.ParameterTypeFullNames);
+            WriteTraitsPayload(s, discoveredTestMessage.Traits);
+        });
 
-        // We will reserve an int (4 bytes)
-        // so that we fill the size later, once we write the payload
-        WriteInt(stream, 0);
-
-        long before = stream.Position;
-        WriteInt(stream, discoveredTestMessageList.Length);
-        foreach (DiscoveredTestMessage discoveredTestMessage in discoveredTestMessageList)
+    private static void WriteTraitsPayload(Stream stream, TraitMessage[]? traits)
+        => WriteListPayload(stream, DiscoveredTestMessageFieldsId.Traits, traits, static (s, trait) =>
         {
-            WriteUShort(stream, GetFieldCount(discoveredTestMessage));
+            WriteUShort(s, GetFieldCount(trait));
 
-            WriteField(stream, DiscoveredTestMessageFieldsId.Uid, discoveredTestMessage.Uid);
-            WriteField(stream, DiscoveredTestMessageFieldsId.DisplayName, discoveredTestMessage.DisplayName);
-            WriteField(stream, DiscoveredTestMessageFieldsId.FilePath, discoveredTestMessage.FilePath);
-            WriteField(stream, DiscoveredTestMessageFieldsId.LineNumber, discoveredTestMessage.LineNumber);
-            WriteField(stream, DiscoveredTestMessageFieldsId.Namespace, discoveredTestMessage.Namespace);
-            WriteField(stream, DiscoveredTestMessageFieldsId.TypeName, discoveredTestMessage.TypeName);
-            WriteField(stream, DiscoveredTestMessageFieldsId.MethodName, discoveredTestMessage.MethodName);
-            WriteParameterTypeFullNamesPayload(stream, discoveredTestMessage.ParameterTypeFullNames);
-            WriteTraitsPayload(stream, discoveredTestMessage.Traits);
-        }
-
-        // NOTE: We are able to seek only if we are using a MemoryStream
-        // thus, the seek operation is fast as we are only changing the value of a property
-        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
-    }
-
-    private static void WriteTraitsPayload(Stream stream, TestMetadataProperty[]? traits)
-    {
-        if (traits is null || traits.Length == 0)
-        {
-            return;
-        }
-
-        WriteUShort(stream, DiscoveredTestMessageFieldsId.Traits);
-
-        // We will reserve an int (4 bytes)
-        // so that we fill the size later, once we write the payload
-        WriteInt(stream, 0);
-
-        long before = stream.Position;
-        WriteInt(stream, traits.Length);
-        foreach (TestMetadataProperty trait in traits)
-        {
-            WriteUShort(stream, GetFieldCount(trait));
-
-            WriteField(stream, TraitMessageFieldsId.Key, trait.Key);
-            WriteField(stream, TraitMessageFieldsId.Value, trait.Value);
-        }
-
-        // NOTE: We are able to seek only if we are using a MemoryStream
-        // thus, the seek operation is fast as we are only changing the value of a property
-        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
-    }
+            WriteField(s, TraitMessageFieldsId.Key, trait.Key);
+            WriteField(s, TraitMessageFieldsId.Value, trait.Value);
+        });
 
     private static void WriteParameterTypeFullNamesPayload(Stream stream, string[]? parameterTypeFullNames)
-    {
-        if (parameterTypeFullNames is null || parameterTypeFullNames.Length == 0)
-        {
-            return;
-        }
-
-        WriteUShort(stream, DiscoveredTestMessageFieldsId.ParameterTypeFullNames);
-
-        // We will reserve an int (4 bytes)
-        // so that we fill the size later, once we write the payload
-        WriteInt(stream, 0);
-
-        long before = stream.Position;
-        WriteInt(stream, parameterTypeFullNames.Length);
-        foreach (string parameterTypeFullName in parameterTypeFullNames)
-        {
-            WriteString(stream, parameterTypeFullName);
-        }
-
-        // NOTE: We are able to seek only if we are using a MemoryStream
-        // thus, the seek operation is fast as we are only changing the value of a property
-        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
-    }
+        => WriteListPayload(stream, DiscoveredTestMessageFieldsId.ParameterTypeFullNames, parameterTypeFullNames, static (s, parameterTypeFullName) => WriteString(s, parameterTypeFullName));
 
     private static ushort GetFieldCount(DiscoveredTestMessages discoveredTestMessages) =>
         (ushort)((discoveredTestMessages.ExecutionId is null ? 0 : 1) +
@@ -358,7 +278,7 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
         (IsNullOrEmpty(discoveredTestMessage.ParameterTypeFullNames) ? 0 : 1) +
         (IsNullOrEmpty(discoveredTestMessage.Traits) ? 0 : 1));
 
-    private static ushort GetFieldCount(TestMetadataProperty trait) =>
+    private static ushort GetFieldCount(TraitMessage trait) =>
         (ushort)((trait.Key is null ? 0 : 1) +
         (trait.Value is null ? 0 : 1));
 }

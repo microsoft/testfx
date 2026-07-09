@@ -1,10 +1,12 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -89,7 +91,7 @@ public class TestMethodFilterTests : TestContainer
     public void GetFilterExpressionForNullRunContextReturnsNull()
     {
         TestableTestExecutionRecorder recorder = new();
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(null, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(null, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
         filterHasError.Should().BeFalse();
@@ -100,7 +102,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableRunContext runContext = new(() => dummyFilterExpression);
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().Be(dummyFilterExpression);
         filterHasError.Should().BeFalse();
@@ -114,7 +116,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => dummyFilterExpression);
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().Be(dummyFilterExpression);
         filterHasError.Should().BeFalse();
@@ -127,7 +129,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
         filterHasError.Should().BeFalse();
@@ -137,7 +139,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableRunContext runContext = new(() => throw new TestPlatformFormatException("DummyException"));
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(runContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
         filterHasError.Should().BeTrue();
@@ -152,9 +154,58 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
-        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
+        ITestCaseFilterExpression? filterExpression = _testMethodFilter.GetFilterExpression(discoveryContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
 
         filterExpression.Should().BeNull();
+        filterHasError.Should().BeTrue();
+        recorder.Message.Should().Be("DummyException");
+        recorder.TestMessageLevel.Should().Be(TestMessageLevel.Error);
+    }
+
+    public void GetTestElementFilterForNullContextReturnsNull()
+    {
+        TestableTestExecutionRecorder recorder = new();
+        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(null, recorder.ToAdapterMessageLogger(), out bool filterHasError);
+
+        filter.Should().BeNull();
+        filterHasError.Should().BeFalse();
+    }
+
+    public void GetTestElementFilterForContextWithoutFilterReturnsNull()
+    {
+        TestableTestExecutionRecorder recorder = new();
+        TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
+        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(discoveryContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
+
+        filter.Should().BeNull();
+        filterHasError.Should().BeFalse();
+    }
+
+    public void GetTestElementFilterMatchesElementsUsingUnderlyingFilterExpression()
+    {
+        TestableTestExecutionRecorder recorder = new();
+        MatchingTestCaseFilterExpression matchingFilterExpression = new(testCase => testCase.DisplayName == "M1");
+        TestableRunContext runContext = new(() => matchingFilterExpression);
+
+        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(runContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
+
+        filter.Should().NotBeNull();
+        filterHasError.Should().BeFalse();
+
+        var matching = new UnitTestElement(new TestMethod("M1", "C", "A", displayName: "M1"));
+        var nonMatching = new UnitTestElement(new TestMethod("M2", "C", "A", displayName: "M2"));
+
+        filter!.Matches(matching).Should().BeTrue();
+        filter.Matches(nonMatching).Should().BeFalse();
+    }
+
+    public void GetTestElementFilterForFilterErrorReturnsNullWithFilterHasErrorTrue()
+    {
+        TestableTestExecutionRecorder recorder = new();
+        TestableRunContext runContext = new(() => throw new TestPlatformFormatException("DummyException"));
+        ITestElementFilter? filter = _testMethodFilter.GetTestElementFilter(runContext, recorder.ToAdapterMessageLogger(), out bool filterHasError);
+
+        filter.Should().BeNull();
         filterHasError.Should().BeTrue();
         recorder.Message.Should().Be("DummyException");
         recorder.TestMessageLevel.Should().Be(TestMessageLevel.Error);
@@ -227,9 +278,20 @@ public class TestMethodFilterTests : TestContainer
 
     private sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpression
     {
-        public string TestCaseFilterValue => null!;
+        public string TestCaseFilterValue => string.Empty;
 
         public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => throw new NotImplementedException();
+    }
+
+    private sealed class MatchingTestCaseFilterExpression : ITestCaseFilterExpression
+    {
+        private readonly Func<TestCase, bool> _matchTestCase;
+
+        public MatchingTestCaseFilterExpression(Func<TestCase, bool> matchTestCase) => _matchTestCase = matchTestCase;
+
+        public string TestCaseFilterValue => string.Empty;
+
+        public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider) => _matchTestCase(testCase);
     }
 
     private class DummyTestClassAttribute : TestClassAttribute;

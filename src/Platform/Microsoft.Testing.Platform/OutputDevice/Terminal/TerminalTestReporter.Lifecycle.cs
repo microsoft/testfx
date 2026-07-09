@@ -123,6 +123,16 @@ internal sealed partial class TerminalTestReporter
         }
 
         _terminalWithProgress.WriteToTerminal(terminal => AppendExecutableSummary(terminal, exitCode, outputData, errorData));
+
+        // A non-zero exit with no failed test is a process-level error (crash, FailFast, hang-dump kill, an option
+        // rejected after the handshake, ...) whose inline output above is easily lost in a large run. Record it so
+        // it is re-printed in the end-of-run recap (see AppendErroredAssemblyRecap). Assemblies that exit non-zero
+        // *because* tests failed are intentionally excluded: those failures are already reported per-test, and this
+        // set mirrors the "error: N" count in the summary (failedAssembliesWithoutFailedTests).
+        if (assemblyRun.FailedTests == 0)
+        {
+            RecordErroredAssembly(assemblyRun, exitCode, outputData, errorData);
+        }
     }
 
     public void TestExecutionCompleted(DateTimeOffset endTime, int? exitCode)
@@ -137,14 +147,19 @@ internal sealed partial class TerminalTestReporter
 
         // This is relevant for HotReload scenarios. We want the next test sessions to start fresh, so we reset all
         // per-run state here (after the summary above has consumed it): the per-assembly runs, the collected
-        // artifacts, the handshake failures, and the cancellation flag. Otherwise a later session would re-print the
-        // previous session's artifacts/handshake failures or stay stuck in the aborted state.
+        // artifacts, the handshake failures, the errored assemblies, and the cancellation flag. Otherwise a later
+        // session would re-print the previous session's artifacts/failures or stay stuck in the aborted state.
         _assemblies.Clear();
         _artifacts.Clear();
         WasCancelled = false;
         lock (_handshakeFailuresLock)
         {
             _handshakeFailures.Clear();
+        }
+
+        lock (_erroredAssembliesLock)
+        {
+            _erroredAssemblies.Clear();
         }
 
         _testExecutionStartTime = null;

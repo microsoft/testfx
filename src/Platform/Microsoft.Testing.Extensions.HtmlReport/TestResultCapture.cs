@@ -19,27 +19,13 @@ internal static class TestResultCapture
         }
 
         CapturedTestResultCoreData core = coreData.GetValueOrDefault();
-        return new CapturedTestResult
+        var result = new CapturedTestResult
         {
-            // Identity fields are test-controlled and can be unbounded (e.g. very long
-            // UIDs/display names from generated data), so we also cap them to keep the
-            // session-wide result list and generated HTML within a predictable budget.
-            Uid = TestResultCaptureHelper.Truncate(node.Uid.Value, TestResultCaptureHelper.MaxIdentityFieldLength)!,
-            DisplayName = TestResultCaptureHelper.Truncate(node.DisplayName, TestResultCaptureHelper.MaxIdentityFieldLength)!,
             // HTML does not special-case cancellation — it falls through to the shared
             // helper which maps it to "failed", unlike JUnit which maps it to "cancelled".
             Outcome = TestResultCaptureHelper.ClassifyOutcome(core.State),
-            Duration = core.Duration,
-            StartTime = core.Properties.Timing?.GlobalTiming.StartTime,
-            EndTime = core.Properties.Timing?.GlobalTiming.EndTime,
-            ClassName = TestResultCaptureHelper.Truncate(core.ClassName, TestResultCaptureHelper.MaxIdentityFieldLength),
-            MethodName = TestResultCaptureHelper.Truncate(core.MethodName, TestResultCaptureHelper.MaxIdentityFieldLength),
-            ErrorMessage = TestResultCaptureHelper.Truncate(core.ExceptionDetails.ErrorMessage, TestResultCaptureHelper.MaxMessageLength),
-            ExceptionType = core.ExceptionDetails.ExceptionType,
-            StackTrace = TestResultCaptureHelper.Truncate(core.ExceptionDetails.StackTrace, TestResultCaptureHelper.MaxStackTraceLength),
-            StandardOutput = TestResultCaptureHelper.Truncate(core.Properties.StandardOutput?.StandardOutput, TestResultCaptureHelper.MaxStandardStreamLength),
-            StandardError = TestResultCaptureHelper.Truncate(core.Properties.StandardError?.StandardError, TestResultCaptureHelper.MaxStandardStreamLength),
-            Traits = core.Properties.Traits,
         };
+        result.PopulateBaseFields(node, core);
+        return result;
     }
 }

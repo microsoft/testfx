@@ -52,7 +52,7 @@ An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats
 
 ### AzureFoundry
 
-An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. It reads Azure OpenAI connection settings from environment variables and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
+An MTP extension (`Microsoft.Testing.Extensions.AzureFoundry`) that integrates [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) (Azure OpenAI) with Microsoft.Testing.Platform as an [IChatClientProvider](#ichatclientprovider) implementation. It reads Azure OpenAI connection settings from three environment variables — `AZURE_OPENAI_ENDPOINT` (required), `AZURE_OPENAI_DEPLOYMENT_NAME` (required), and `AZURE_OPENAI_API_KEY` (optional) — and supplies AI chat-client capabilities to any testing extension that consumes the [Microsoft.Testing.Platform.AI](#microsofttestingplatformai) abstractions. Authentication uses `DefaultAzureCredential` (Managed Identity, Workload Identity, Azure CLI, Visual Studio, and other credential-chain sources) by default, which is recommended for Azure-hosted scenarios so no secret needs to be provisioned; providing `AZURE_OPENAI_API_KEY` switches to key-based authentication instead. To target a specific user-assigned managed identity, set `AZURE_CLIENT_ID` to its client ID. This is the reference implementation of the `Microsoft.Testing.Platform.AI` abstractions.
 
 ## C
 
@@ -108,6 +108,19 @@ The practice of using formal mathematical proofs to establish correctness proper
 
 A specific code component (function, struct, or class) selected for formal verification. Each FV target progresses through defined phases: (1) identified, (2) informal spec extracted, (3) Lean 4 formal spec written, (4) implementation model extracted, (5) proofs completed. Current targets are listed in `formal-verification/TARGETS.md`.
 
+## G
+
+### GitHubActionsReport
+
+An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits GitHub Actions-native workflow commands so test runs on GitHub Actions produce a first-class CI experience. The extension activates only when the test run executes inside GitHub Actions (`GITHUB_ACTIONS=true`) and the `--report-gh` master switch is passed; it no-ops otherwise. When active, it provides four independently toggleable features:
+
+- **Per-assembly log groups** (`--report-gh-groups`): emits `::group::`/`::endgroup::` workflow commands so each test assembly's output is collapsed by default in the runner UI.
+- **Failure and skip annotations** (`--report-gh-annotations`): emits a `::error` workflow command for each failing test (with file/line source location when resolvable, so failures appear in the PR "Files changed" diff gutter) and a `::warning` workflow command for each skipped test; both surface in the workflow **Annotations** tab.
+- **Job summary** (`--report-gh-step-summary`): appends a markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page.
+- **Slow-test notices** (`--report-gh-slow-test-notices`): emits a `::notice` workflow command for any test running past a configured threshold (default 60 seconds; set with `--report-gh-slow-test-threshold`).
+
+When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. Not supported in NativeAOT or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
+
 ## H
 
 ### HangDump
@@ -131,6 +144,18 @@ An intermediate artifact in the [Formal Verification (FV)](#formal-verification-
 ### IsTestingPlatformApplication
 
 An MSBuild property (`<IsTestingPlatformApplication>true</IsTestingPlatformApplication>`) that marks a project as an MTP test application. When set, the project builds into a self-contained test runner executable rather than a class library consumed by a separate test host.
+
+### ITestFilter
+
+An MSTest interface (`Microsoft.VisualStudio.TestTools.UnitTesting.ITestFilter`, `[Experimental("MSTESTEXP")]` — suppress with `#pragma warning disable MSTESTEXP`) that enables programmatic test filtering, evaluated **before** any test type is loaded and before `[AssemblyInitialize]` or `[ClassInitialize]` runs. The single method is `TestFilterResult Filter(TestFilterContext context)`. Implement this interface and register it with `[assembly: TestFilterProvider(typeof(MyFilter))]` to include, drop, or skip tests based on categories, traits, priority, or name — without incurring type-loading cost. Exceptions thrown from `Filter` produce an error result (`UTA078`) rather than silently dropping tests. The filter instance is resolved once per source assembly and cached for the entire run. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [TestFilterContext](#testfiltercontext), [TestFilterProvider](#testfilterprovider), and [TestFilterResult](#testfilterresult).
+
+### ITestHostHandle
+
+An experimental MTP interface (`Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostHandle`, `[Experimental("TPEXP")]`) representing the lifecycle of a test host started by an [ITestHostLauncher](#itesthostlauncher). Exposes: `WaitForExitAsync(CancellationToken)`, `ExitCode`, `HasExited`, `Terminate`, `IDisposable`, and an optional `string? Identifier` for diagnostics — free-form and could be a PID string, container id, AUMID token, `host:pid`, or `null`; the platform never uses it for control flow. Returned by `ITestHostLauncher.LaunchTestHostAsync`. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454).
+
+### ITestHostLauncher
+
+An experimental MTP interface (`Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostLauncher`, `[Experimental("TPEXP")]`) that lets an extension replace the default `Process.Start` used to start the out-of-process test host. Register via `ITestHostControllersManager.AddTestHostLauncher(...)`. The platform assembles all arguments, environment variables, and the IPC pipe, then delegates the actual launch to `LaunchTestHostAsync(TestHostLaunchContext, CancellationToken)`; the launcher returns an [ITestHostHandle](#itesthosthandle) and the platform resumes ownership of monitoring and exit-code reconciliation. At most one launcher may be registered per run. Motivating scenario: packaged Windows apps (UWP / WinUI) that require AUMID activation rather than `Process.Start`. See `docs/RFCs/017-TestHost-Launcher.md` and [PR #9454](https://github.com/microsoft/testfx/pull/9454). See also [Microsoft.Testing.Extensions.PackagedApp](#microsofttestingextensionspackagedapp).
 
 ## J
 
@@ -194,6 +219,22 @@ A Roslyn C# source-generator package (`MSTest.SourceGeneration`) that enables MS
 
 MSBuild properties that let users opt in to MSTest assembly-level parallelization without authoring a C# source file. Setting `<MSTestParallelizeScope>` emits `[assembly: Parallelize(Scope = ExecutionScope.X)]`; setting `<MSTestParallelizeWorkers>` emits `[assembly: Parallelize(Workers = N)]`; both together emit `[assembly: Parallelize(Scope = …, Workers = …)]`. Setting scope to `None` emits `[assembly: DoNotParallelize]` instead. Both properties require `GenerateAssemblyInfo` to be `true` and act via the standard `AssemblyAttribute` MSBuild item. Introduced in [PR #8233](https://github.com/microsoft/testfx/pull/8233).
 
+### MSTestTestFramework
+
+The native `ITestFramework` implementation that drives MSTest directly on Microsoft.Testing.Platform without routing execution through the [VSTestBridge](#vstestbridge). Introduced as part of RFC 018 (`docs/RFCs/018-Native-MTP-Integration-For-MSTest.md`) and shipped across several phases in [PR #9706](https://github.com/microsoft/testfx/pull/9706), [#9743](https://github.com/microsoft/testfx/pull/9743), [#9748](https://github.com/microsoft/testfx/pull/9748), and [#9755](https://github.com/microsoft/testfx/pull/9755) (MSTest 4.4).
+
+In the native path the engine (`TestExecutionManager`, `UnitTestDiscoverer`) still operates on MSTest's own neutral models (`UnitTestElement`, `FrameworkTestResult`). At the host boundary three native seams replace the former VSTest intermediaries:
+
+| Native seam | Role |
+| --- | --- |
+| `MtpUnitTestElementSink` | Converts discovered `UnitTestElement`s to `TestNodeUpdateMessage` (replaces VSTest `ITestCaseDiscoverySink`) |
+| `MtpTestResultRecorder` | Converts `FrameworkTestResult` to `TestNodeUpdateMessage` (replaces VSTest `IFrameworkHandle`) |
+| `MSTestTestNodeConverter` | Shared converter mapping `UnitTestElement` + `FrameworkTestResult` to a fully-populated MTP `TestNode` |
+
+`MSTestTestFramework` obtains `IConfiguration`, `IOutputDevice`, and `ICommandLineOptions` from MTP's `IServiceProvider`, and reads `IMessageBus` and `ITestExecutionFilter` from the per-request `ExecuteRequestContext`/request objects — eliminating the VSTest `IRunContext`/`IRunSettings` round-trip and the double object-model conversion that the bridge imposed. As of MSTest 4.4, MSTest no longer references `Microsoft.Testing.Extensions.VSTestBridge` on the MTP code path; the [VSTestBridge](#vstestbridge) extension is still used by NUnit, Expecto, and other third-party VSTest adapters. The VSTest adapter path (real VSTest host via `MSTestDiscoverer`/`MSTestExecutor`) is unaffected.
+
+See RFC 018 (`docs/RFCs/018-Native-MTP-Integration-For-MSTest.md`) for the design.
+
 ### MTP
 
 See **Microsoft.Testing.Platform**.
@@ -209,6 +250,10 @@ A NuGet package (`Microsoft.Testing.Platform.AI`) that provides AI extensibility
 ### Microsoft.Testing.Extensions.Logging
 
 An experimental MTP extension (`Microsoft.Testing.Extensions.Logging`, `[TPEXP]`) that bridges Microsoft Testing Platform diagnostic logs to any `Microsoft.Extensions.Logging` provider (e.g., Console, Serilog, Application Insights, OpenTelemetry exporters). Register via `AddMicrosoftExtensionsLogging()` on `ITestApplicationBuilder`, passing either an existing `ILoggerFactory` or a configuration delegate for the logging builder. The minimum log level is bounded by the platform's effective diagnostic level; per-category filters in the `ILoggingBuilder` can narrow but not widen it. MTP core (`Microsoft.Testing.Platform`) does not depend on `Microsoft.Extensions.Logging`; this package provides an additive opt-in bridge only. Currently **experimental** — API surface may change without notice. See `docs/RFCs/013-Microsoft-Extensions-Bridges.md` for the design.
+
+### Microsoft.Testing.Extensions.PackagedApp
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.PackagedApp`, `[Experimental("TPEXP")]`, ships as `1.0.0-alpha`) that enables testing packaged Windows apps (UWP / WinUI) by deploying the test payload to an isolated directory and launching it via the [ITestHostLauncher](#itesthostlauncher) extension point, rather than a plain `Process.Start`. Register via `builder.AddPackagedAppDeployment()`. Full AUMID activation (for apps requiring the app identity manifest) is planned for a follow-up release. Introduced in [PR #9454](https://github.com/microsoft/testfx/pull/9454). See also [ITestHostLauncher](#itesthostlauncher).
 
 ## N
 
@@ -282,6 +327,24 @@ The per-project configuration file for Microsoft.Testing.Platform, placed at the
 
 An abstract base class (`TestFramework.ForTestingMSTest.TestContainer`) in the internal [`TestFramework.ForTestingMSTest`](../test/Utilities/TestFramework.ForTestingMSTest) framework used to unit-test MSTest itself. Any class that inherits from `TestContainer` is treated as a test class; every `public` parameterless method on that class is treated as a test — no `[TestClass]` or `[TestMethod]` attributes are needed. The constructor runs before each test and `Dispose(bool)` runs after each test. This framework is used only in `test/UnitTests/TestFramework.UnitTests`; all other test projects in this repository use standard MSTest or MTP.
 
+### TestFilterContext
+
+A sealed MSTest class (`Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterContext`, `[Experimental("MSTESTEXP")]`) passed to `ITestFilter.Filter()`. Exposes test metadata available **without loading the test type**. Always-populated: `FullyQualifiedName`, `DisplayName`, `MethodName`, `Source` (assembly file path). Optionally populated — parsed from the managed name with no reflection or type-load: `Namespace`, `ClassName`, `ManagedTypeName`, `ManagedMethodName`, `MethodArity`, `ParameterTypeFullNames`. Test metadata: `Categories`, `Traits`, `Priority`. Uses a parameterless constructor with mutable properties (no `init`) so new fields can be added additively in future releases without breaking existing callers. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [ITestFilter](#itestfilter).
+
+### TestFilterProvider
+
+An MSTest assembly-level attribute (`[assembly: TestFilterProvider(typeof(T))]` in `Microsoft.VisualStudio.TestTools.UnitTesting`, `[Experimental("MSTESTEXP")]`) that registers an [ITestFilter](#itestfilter) implementation for the test assembly. `AllowMultiple = false` — applying more than one raises error `UTA079`. The filter type must be non-generic, non-abstract, implement `ITestFilter`, and have a public parameterless constructor; violations produce `UTA074`–`UTA077` (`UTA073` is reported separately when the `[TestFilterProvider]` marker itself fails to load from the assembly). Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [ITestFilter](#itestfilter).
+
+### TestFilterResult
+
+A readonly MSTest struct (`Microsoft.VisualStudio.TestTools.UnitTesting.TestFilterResult`, `[Experimental("MSTESTEXP")]`) returned by `ITestFilter.Filter()` that declares the filtering decision for a test. Three static members:
+
+- `TestFilterResult.Run` — execute the test normally.
+- `TestFilterResult.Drop` — silently exclude the test (zero `[AssemblyInitialize]` / `[ClassInitialize]` cost, no result emitted).
+- `TestFilterResult.Skip(string reason)` — mark the test Skipped (outcome: `Skipped`) with the given reason (throws `ArgumentNullException` if `reason` is `null`, `ArgumentException` if empty or whitespace-only).
+
+The underlying `TestFilterAction` enum values are `Run = 0`, `Drop = 1`, `Skip = 2`. Introduced in [PR #8896](https://github.com/microsoft/testfx/pull/8896). See also [ITestFilter](#itestfilter).
+
 ### TestNode
 
 A core MTP class (`Microsoft.Testing.Platform.Extensions.Messages.TestNode`) that represents a single test item — either discovered or executed. Each `TestNode` carries a unique `Uid` (`TestNodeUid`), a human-readable `DisplayName`, and a [PropertyBag](#propertybag) of typed properties (state, timing, file location, metadata, etc.). `TestNode` instances are published to the `IMessageBus` by test framework adapters during discovery and execution phases.
@@ -308,10 +371,25 @@ An MTP component (`TreeNodeFilter.cs`) that evaluates filter expressions against
 
 ## V
 
+### VideoRecorder
+
+An experimental MTP extension (`Microsoft.Testing.Extensions.VideoRecorder`, `[Experimental("TPEXP")]`, ships as `1.0.0-alpha`) that records the screen during a test run using an external **ffmpeg** process and attaches the produced video clips as session artifacts. Recording is **continuous** — not started/stopped per test — to avoid races with parallel tests: the extension runs a rolling segment mux throughout the session and losslessly slices per-test clips (or a single chaptered session video) from timing data after each test completes.
+
+| Option | Values | Description |
+| --- | --- | --- |
+| `--capture-video` | *(none)*, `on-failure`, `always` | Enable recording. Default retention: `on-failure` (keep only failing-test clips). |
+| `--capture-video-granularity` | `test` (default), `session` | One clip per test, or one chaptered video for the whole session. |
+| `--capture-video-source` | `screen` (default), `window` | Full screen, or the current-process window (Windows; falls back to screen on headless/CI). |
+| `--capture-video-max-duration` | seconds | Rolling buffer cap — keep ~the last N seconds on disk. |
+| `--capture-video-chapters` | `on` (default), `off` | Chapter bookmarks in the per-session video. |
+| `--capture-video-args` | any string | Extra arguments forwarded to ffmpeg. |
+
+Register via `builder.AddVideoRecorderProvider()`. See `src/Platform/Microsoft.Testing.Extensions.VideoRecorder/DESIGN.md` for format and licensing notes. Introduced in [PR #9377](https://github.com/microsoft/testfx/pull/9377).
+
 ### VSTest
 
 Microsoft's previous-generation test platform (`vstest.console.exe`, `Microsoft.TestPlatform.*`). MSTest v2 originally ran on top of VSTest. MTP is the modern successor to VSTest, offering better performance and a simplified extension model.
 
 ### VSTestBridge
 
-An MTP extension (`Microsoft.Testing.Extensions.VSTestBridge`) that provides backward compatibility for test adapters written against the VSTest API. Allows existing VSTest-based test frameworks and adapters to run on MTP without a full rewrite.
+An MTP extension (`Microsoft.Testing.Extensions.VSTestBridge`) that provides backward compatibility for test adapters written against the VSTest API. Allows existing VSTest-based test frameworks and adapters (NUnit, Expecto, and third-party VSTest adapters) to run on MTP without a full rewrite. Note: as of MSTest 4.4, **MSTest no longer depends on VSTestBridge** on the MTP code path — MSTest uses [MSTestTestFramework](#mstesttestframework) as a native `ITestFramework` instead (see RFC 018 in `docs/RFCs/018-Native-MTP-Integration-For-MSTest.md` and [PR #9755](https://github.com/microsoft/testfx/pull/9755)).

@@ -1,28 +1,35 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal partial class TestExecutionManager
 {
+    /// <summary>
+    /// A message logger that can be marshaled into the isolation (child app-domain) host so log messages
+    /// raised while running a test cross back to the parent-domain <see cref="IAdapterMessageLogger"/>.
+    /// Marshaling is by reference (the wrapped logger stays in the parent domain), so no VSTest object-model
+    /// type is required in the child domain.
+    /// </summary>
     private sealed class RemotingMessageLogger :
 #if NETFRAMEWORK
         MarshalByRefObject,
 #endif
-        IMessageLogger
+        IAdapterMessageLogger
     {
-        private readonly IMessageLogger _realMessageLogger;
+        private readonly IAdapterMessageLogger _realMessageLogger;
 
-        public RemotingMessageLogger(IMessageLogger messageLogger)
+        public RemotingMessageLogger(IAdapterMessageLogger messageLogger)
             => _realMessageLogger = messageLogger;
 
-        public void SendMessage(TestMessageLevel testMessageLevel, string message)
-            => _realMessageLogger.SendMessage(testMessageLevel, message);
+        public void SendMessage(MessageLevel level, string message)
+            => _realMessageLogger.SendMessage(level, message);
     }
 
-    private void InitializeRandomTestOrder(IMessageLogger frameworkHandle)
+    private void InitializeRandomTestOrder(IAdapterMessageLogger messageLogger)
     {
         if (!MSTestSettings.CurrentSettings.RandomizeTestOrder)
         {
@@ -36,8 +43,8 @@ internal partial class TestExecutionManager
         int seed = MSTestSettings.CurrentSettings.RandomTestOrderSeed ?? Guid.NewGuid().GetHashCode();
         _testOrderRandom = new Random(seed);
 
-        frameworkHandle.SendMessage(
-            TestMessageLevel.Informational,
+        messageLogger.SendMessage(
+            MessageLevel.Informational,
             string.Format(CultureInfo.CurrentCulture, Resource.RandomTestOrderBanner, seed));
     }
 

@@ -289,12 +289,14 @@ internal class AssemblyEnumerator
 
         var discoveredTests = new List<UnitTestElement>();
         bool dataSourceHasData = false;
+        // PERF: Hoist outside the loop — MethodInfo.GetParameters() returns a fresh array copy on each
+        // call (CLR safety guarantee), so calling it per row allocates N identical arrays for N data rows.
+        ParameterInfo[] parameters = methodInfo.GetParameters();
 
         foreach (object?[] dataOrTestDataRow in dataEnumerable)
         {
             dataSourceHasData = true;
             object?[] d = dataOrTestDataRow;
-            ParameterInfo[] parameters = methodInfo.GetParameters();
 
             // The effective ignore message for this row is the row-level ignore message (from
             // TestDataRow<T>), falling back to the whole-source ignore message. It must be

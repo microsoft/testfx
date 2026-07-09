@@ -393,7 +393,7 @@ public class CtrfReportEngineTests
     {
         string? pathSeen = null;
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 pathSeen = path;
@@ -409,7 +409,7 @@ public class CtrfReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 2, 3, 4, 5, 6, TimeSpan.Zero));
 
-        var engine = new CtrfReportEngine(
+        var engine = new CtrfReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -419,7 +419,7 @@ public class CtrfReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
         (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
@@ -485,20 +485,19 @@ public class CtrfReportEngineTests
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_AppendsDisambiguatingSuffix_When_DefaultFileExists()
+    public async Task GenerateReportAsync_OverwritesAndWarns_When_DefaultFileExists()
     {
-        var bytesSeen = new List<string>();
-        int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        // Default-name path uses the same overwrite-and-warn semantics as the explicit-name
+        // path: a single, predictable rule. When the file already exists, the engine
+        // overwrites it (FileMode.Create) and surfaces the CtrfReportFileExistsAndWillBeOverwritten
+        // warning.
+        string? pathSeen = null;
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
-                callCount++;
-                bytesSeen.Add(path);
-                return callCount == 1
-                    ? throw new IOException("file exists")
-                    : new MemoryFileStream();
+                pathSeen = path;
+                return new MemoryFileStream();
             });
-
         _ = _fileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(true);
 
         _ = _configurationMock.SetupGet(_ => _[It.IsAny<string>()]).Returns(string.Empty);
@@ -510,7 +509,7 @@ public class CtrfReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-        var engine = new CtrfReportEngine(
+        var engine = new CtrfReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -520,20 +519,24 @@ public class CtrfReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
-        (string finalPath, _) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
+        (string finalPath, string? warning) = await engine.GenerateReportAsync([Captured("a", "A", "passed")]);
 
-        Assert.AreEqual(2, callCount);
-        Assert.AreEqual(bytesSeen[1], finalPath);
-        Assert.Contains("_1.ctrf.json", finalPath);
+        Assert.AreEqual(pathSeen, finalPath);
+        Assert.DoesNotContain("_1.ctrf.json", finalPath);
+        Assert.IsNotNull(warning);
+        Assert.Contains(finalPath, warning!);
     }
 
     [TestMethod]
-    public async Task GenerateReportAsync_PropagatesIOException_When_FileDoesNotExist()
+    public async Task GenerateReportAsync_PropagatesIOException_When_WriteFails()
     {
+        // An IOException during the write (e.g. disk full, permission denied, path too
+        // long) must propagate to the caller — there is no longer any disambiguation
+        // loop that could mask such failures behind a retry budget.
         int callCount = 0;
-        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.CreateNew))
+        _ = _fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Create))
             .Returns<string, FileMode>((path, _) =>
             {
                 callCount++;
@@ -551,7 +554,7 @@ public class CtrfReportEngineTests
         _ = _testFrameworkMock.SetupGet(_ => _.DisplayName).Returns("F");
         _ = _clockMock.SetupGet(_ => _.UtcNow).Returns(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
 
-        var engine = new CtrfReportEngine(
+        var engine = new CtrfReportEngine(new(
             _fileSystem.Object,
             _testApplicationModuleInfoMock.Object,
             _environmentMock.Object,
@@ -561,7 +564,7 @@ public class CtrfReportEngineTests
             _testFrameworkMock.Object,
             DateTimeOffset.UtcNow,
             0,
-            CancellationToken.None);
+            CancellationToken.None));
 
         await Assert.ThrowsExactlyAsync<IOException>(() => engine.GenerateReportAsync([Captured("a", "A", "passed")]));
         Assert.AreEqual(1, callCount);

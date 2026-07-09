@@ -561,25 +561,23 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
 The type declaring these methods should also respect the following rules:
 -The type should be a class
 -The class should be 'public'
--The class shouldn't be 'static'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="translated">Metody oznaczone znakiem „[GlobalTestInitialize]” lub „[GlobalTestCleanup]” powinny być zgodne z następującym układem, aby były prawidłowe:
-— nie może być zadeklarowana w class ogólnej
-— powinna być typu „public”
-— powinna mieć wartość „static”
-— nie powinna to być wartość „async void”
-— nie powinna to być metoda specjalna (finalizator, operator...).
-— nie powinna być ogólna
-— powinna przyjmować jeden parametr typu „TestContext”
-— zwracany typ powinien mieć wartość „void”, „Task” lub „ValueTask”
+        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
+-it can't be declared on a generic class
+-it should be 'public'
+-it should be 'static'
+-it should not be 'async void'
+-it should not be a special method (finalizer, operator...).
+-it should not be generic
+-it should take one parameter of type 'TestContext'
+-return type should be 'void', 'Task' or 'ValueTask'
 
-Typ deklarujący te metody powinien również przestrzegać następujących reguł:
-— typ powinien być class
-— class powinna być „publiczna”
-— class nie powinna mieć wartości „static”
-— class powinna być oznaczona „[TestClass]” (lub atrybutem pochodnym)
-— class nie powinna być ogólna.</target>
+The type declaring these methods should also respect the following rules:
+-The type should be a class
+-The class should be 'public'
+-The class should be marked with '[TestClass]' (or a derived attribute)
+-the class should not be generic.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">
@@ -664,17 +662,17 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameDescription">
         <source>Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</source>
-        <target state="new">Setting a 'DisplayName' on a test method to a value that is identical to the method name is redundant because the method name is already used as the display name by default. The redundant 'DisplayName' can be removed without changing how the test is reported.</target>
+        <target state="translated">Ustawienie „DisplayName” w metodzie testowej na wartość identyczną z nazwą metody jest zbędne, ponieważ nazwa metody jest już domyślnie używana jako nazwa wyświetlana. Zbędne „DisplayName” można usunąć bez zmiany sposobu raportowania testu.</target>
         <note>{Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameMessageFormat">
         <source>The 'DisplayName' is the same as the test method name '{0}' and can be removed</source>
-        <target state="new">The 'DisplayName' is the same as the test method name '{0}' and can be removed</target>
+        <target state="translated">„DisplayName” jest taka sama jak nazwa metody testowej „{0}” i można ją usunąć</target>
         <note>{0} is the test method name. {Locked="DisplayName"}</note>
       </trans-unit>
       <trans-unit id="RedundantTestMethodDisplayNameTitle">
         <source>Test method should not specify a display name equal to its name</source>
-        <target state="new">Test method should not specify a display name equal to its name</target>
+        <target state="translated">Metoda testowa nie powinna mieć nazwy wyświetlanej takiej samej jak jej nazwa</target>
         <note />
       </trans-unit>
       <trans-unit id="ReviewAlwaysTrueAssertConditionAnalyzerMessageFormat">
@@ -1006,12 +1004,12 @@ Typ deklarujący te metody powinien również przestrzegać następujących regu
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <target state="translated">Asynchroniczne metody testowe nie wymagają sufiksu 'Async'</target>
         <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
+        <target state="translated">Asynchroniczne metody testowe nie wymagają sufiksu 'Async'</target>
         <note>{Locked="'Async'"}</note>
       </trans-unit>
       <trans-unit id="UnusedParameterSuppressorJustification">

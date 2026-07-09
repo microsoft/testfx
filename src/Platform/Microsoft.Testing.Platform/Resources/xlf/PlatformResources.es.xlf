@@ -436,7 +436,7 @@
       </trans-unit>
       <trans-unit id="OnlyOneTestHostLauncherSupported">
         <source>Only one test host launcher can be registered.</source>
-        <target state="new">Only one test host launcher can be registered.</target>
+        <target state="translated">Solo se puede registrar un iniciador de host de prueba.</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
@@ -665,14 +665,14 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyInvalidArgument">
         <source>Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</source>
-        <target state="new">Invalid value '{0}' for '--zero-tests-policy'. Valid values are {1}.</target>
+        <target state="translated">Valor no válido "{0}" para "--zero-tests-policy". Los valores válidos son {1}.</target>
         <note>{Locked="--zero-tests-policy"}</note>
       </trans-unit>
       <trans-unit id="PlatformCommandLineZeroTestsPolicyOptionDescription">
         <source>Specifies how a run that executed no tests is treated.
 Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</source>
-        <target state="new">Specifies how a run that executed no tests is treated.
-Valid values are 'allow-skipped' (the default) which counts skipped tests as run, so only a run where no test was found at all fails with exit code 8, and 'strict' which treats skipped tests as not run, so a run where every test was skipped (or no test was found) fails with exit code 8.</target>
+        <target state="translated">Especifica cómo se trata una ejecución que no ejecutó ninguna prueba.
+Los valores válidos son "allow-skipped" (valor predeterminado) que cuenta las pruebas omitidas como ejecutadas, por lo que solo se produce un error en una ejecución en la que no se encontró ninguna prueba con el código de salida 8 y "strict", que trata las pruebas omitidas como no ejecutadas, por lo que se produce un error en una ejecución en la que se omitió todas las pruebas (o no se encontró ninguna prueba) con el código de salida 8.</target>
         <note>{Locked="strict"}{Locked="allow-skipped"}</note>
       </trans-unit>
       <trans-unit id="PressCtrlCAgainToForceExit">
@@ -812,7 +812,7 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       </trans-unit>
       <trans-unit id="TerminalNoProgressDeprecatedWarning">
         <source>warning: --no-progress is deprecated; use --progress off instead.</source>
-        <target state="new">warning: --no-progress is deprecated; use --progress off instead.</target>
+        <target state="translated">advertencia: --no-progress está en desuso; use --progress off en su lugar.</target>
         <note>{Locked="--no-progress"}{Locked="--progress off"}</note>
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">

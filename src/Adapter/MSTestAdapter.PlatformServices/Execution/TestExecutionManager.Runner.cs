@@ -1,68 +1,45 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal partial class TestExecutionManager
 {
-    internal void SendTestResults(
-        TestCase test,
+    internal async Task SendTestResultsAsync(
+        UnitTestElement test,
         TestTools.UnitTesting.TestResult[] unitTestResults,
         DateTimeOffset startTime,
         DateTimeOffset endTime,
-        ITestExecutionRecorder testExecutionRecorder)
+        ITestResultRecorder testResultRecorder)
     {
+        if (unitTestResults.Length == 0)
+        {
+            await testResultRecorder.RecordEmptyResultAsync(test).ConfigureAwait(false);
+            return;
+        }
+
         foreach (TestTools.UnitTesting.TestResult unitTestResult in unitTestResults)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
 
-            var testResult = unitTestResult.ToTestResult(
-                test,
-                startTime,
-                endTime,
-                _environment.MachineName,
-                MSTestSettings.CurrentSettings);
-
-            testExecutionRecorder.RecordEnd(test, testResult.Outcome);
-
-            if (testResult.Outcome == TestOutcome.Failed)
-            {
-                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
-                {
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor:Test {0} failed. ErrorMessage:{1}, ErrorStackTrace:{2}.", testResult.TestCase.FullyQualifiedName, testResult.ErrorMessage, testResult.ErrorStackTrace);
-                }
-
 #if !WINDOWS_UWP && !WIN_UI
+            if (await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false))
+            {
                 _hasAnyTestFailed = true;
+            }
+#else
+            await testResultRecorder.RecordResultAsync(test, unitTestResult, startTime, endTime).ConfigureAwait(false);
 #endif
-            }
-
-            try
-            {
-                if (testResult.Outcome != TestOutcome.NotFound
-                    || !RuntimeContext.IsHotReloadEnabled)
-                {
-                    testExecutionRecorder.RecordResult(testResult);
-                }
-            }
-            catch (TestCanceledException)
-            {
-                // Ignore this exception
-            }
         }
     }
 
-    private static bool MatchTestFilter(ITestCaseFilterExpression? filterExpression, TestCase test, TestMethodFilter testMethodFilter)
+    private static bool MatchTestFilter(ITestElementFilter? filter, UnitTestElement test, string source)
     {
-        if (filterExpression != null
-            && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
+        if (filter is not null
+            && !filter.Matches(test.WithUpdatedSource(source)))
         {
             // Skip test if not fitting filter criteria.
             return false;
@@ -72,24 +49,27 @@ internal partial class TestExecutionManager
     }
 
     private async Task ExecuteTestsWithTestRunnerAsync(
-        IEnumerable<TestCase> tests,
-        ITestExecutionRecorder testExecutionRecorder,
+        IEnumerable<UnitTestElement> tests,
+        IAdapterMessageLogger adapterMessageLogger,
         string source,
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner,
         bool usesAppDomains)
     {
-        IEnumerable<TestCase> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass && !MSTestSettings.CurrentSettings.RandomizeTestOrder
-            ? tests.OrderBy(t => t.GetManagedType()).ThenBy(t => t.GetManagedMethod())
+        // Ordering keys mirror the historical VSTest ManagedType/ManagedMethod test-case properties, which are
+        // only populated when the test method carries managed method metadata (see UnitTestElement.ToTestCase).
+        IEnumerable<UnitTestElement> orderedTests = MSTestSettings.CurrentSettings.OrderTestsByNameInClass && !MSTestSettings.CurrentSettings.RandomizeTestOrder
+            ? tests.OrderBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedTypeName : null)
+                .ThenBy(t => t.TestMethod.HasManagedMethodAndTypeProperties ? t.TestMethod.ManagedMethodName : null)
             : tests;
 
-        // If testRunner is in a different AppDomain, we cannot pass the testExecutionRecorder directly.
+        // If testRunner is in a different AppDomain, we cannot pass the message logger directly.
         // Instead, we pass a proxy (remoting object) that is marshallable by ref.
-        IMessageLogger remotingMessageLogger = usesAppDomains
-            ? new RemotingMessageLogger(testExecutionRecorder)
-            : testExecutionRecorder;
+        IAdapterMessageLogger remotingMessageLogger = usesAppDomains
+            ? new RemotingMessageLogger(adapterMessageLogger)
+            : adapterMessageLogger;
 
-        foreach (TestCase currentTest in orderedTests)
+        foreach (UnitTestElement currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
             if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
@@ -97,9 +77,11 @@ internal partial class TestExecutionManager
                 break;
             }
 
-            UnitTestElement unitTestElement = currentTest.ToUnitTestElementWithUpdatedSource(source);
+            UnitTestElement unitTestElement = currentTest.WithUpdatedSource(source);
 
-            testExecutionRecorder.RecordStart(currentTest);
+            // Report through the neutral recorder using the element itself; the adapter-side recorder resolves
+            // the host test case (preserving host-injected TCM / data-collector properties) with full fidelity.
+            await _testResultRecorder.RecordStartAsync(currentTest).ConfigureAwait(false);
 
             DateTimeOffset startTime = DateTimeOffset.Now;
 
@@ -109,7 +91,7 @@ internal partial class TestExecutionManager
             }
 
             // Run single test passing test context properties to it.
-            IDictionary<TestProperty, object?>? tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
+            IReadOnlyDictionary<string, object?>? tcmProperties = currentTest.ExecutionContextProperties;
             Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters, unitTestElement);
 
             TestTools.UnitTesting.TestResult[] unitTestResult;
@@ -137,7 +119,7 @@ internal partial class TestExecutionManager
 
             DateTimeOffset endTime = DateTimeOffset.Now;
 
-            SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
+            await SendTestResultsAsync(currentTest, unitTestResult, startTime, endTime, _testResultRecorder).ConfigureAwait(false);
         }
     }
 }
