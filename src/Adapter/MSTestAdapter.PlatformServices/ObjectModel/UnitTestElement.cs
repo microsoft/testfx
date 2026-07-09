@@ -102,6 +102,13 @@ internal sealed class UnitTestElement
 #endif
     internal object? HostRecordingHandle { get; set; }
 
+    /// <summary>
+    /// Gets or sets the cached <see cref="Guid"/> test node UID for the native Microsoft.Testing.Platform path.
+    /// Populated lazily by <c>UnitTestElementExtensions.GetTestId</c> and cleared by any clone operation that
+    /// changes the assembly source (<see cref="CloneWithSource"/>, <see cref="CloneWithUpdatedSource"/>).
+    /// </summary>
+    internal Guid? CachedTestNodeUid { get; set; }
+
     internal UnitTestElement Clone()
     {
         var clone = (UnitTestElement)MemberwiseClone();
@@ -118,6 +125,7 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.CloneWithUpdatedSource(source);
+        clone.CachedTestNodeUid = null;
         return clone;
     }
 
@@ -127,6 +135,7 @@ internal sealed class UnitTestElement
     {
         var clone = (UnitTestElement)MemberwiseClone();
         clone.TestMethod = TestMethod.CloneWithSource(source);
+        clone.CachedTestNodeUid = null;
         return clone;
     }
 
