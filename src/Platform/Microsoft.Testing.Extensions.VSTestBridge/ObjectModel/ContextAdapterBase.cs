@@ -15,6 +15,11 @@ namespace Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 internal abstract class ContextAdapterBase
 {
     protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
+        : this(commandLineOptions, runSettings, filter, useFullyQualifiedNameAsUid: false)
+    {
+    }
+
+    protected ContextAdapterBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter, bool useFullyQualifiedNameAsUid)
     {
         RunSettings = runSettings;
 
@@ -31,7 +36,7 @@ internal abstract class ContextAdapterBase
             filterFromCommandLineOption = filterExpressions[0];
         }
 
-        HandleFilter(filter, filterFromRunsettings, filterFromCommandLineOption);
+        HandleFilter(filter, filterFromRunsettings, filterFromCommandLineOption, useFullyQualifiedNameAsUid);
     }
 
     public IRunSettings? RunSettings { get; }
@@ -76,7 +81,7 @@ internal abstract class ContextAdapterBase
         return new BridgeFilterExpression(new TestCaseFilterExpression(FilterExpressionWrapper));
     }
 
-    private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption)
+    private void HandleFilter(ITestExecutionFilter? filter, string? filterFromRunsettings, string? filterFromCommandLineOption, bool useFullyQualifiedNameAsUid)
     {
         // No filters at all, we can return immediately as there is nothing to do.
         if (filter is null or NopFilter
@@ -94,7 +99,7 @@ internal abstract class ContextAdapterBase
         if (filter is TestNodeUidListFilter testNodeUidListFilter)
         {
             StartFilter(filterBuilder);
-            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder);
+            BuildFilter(testNodeUidListFilter.TestNodeUids, filterBuilder, useFullyQualifiedNameAsUid);
             EndFilter(filterBuilder);
         }
 
@@ -132,9 +137,13 @@ internal abstract class ContextAdapterBase
             => builder.Append(')');
     }
 
-    // We use heuristic to understand if the filter should be a TestCaseId or FullyQualifiedName.
-    // We know that in VSTest TestCaseId is a GUID and FullyQualifiedName is a string.
-    private static void BuildFilter(TestNodeUid[] testNodesUid, StringBuilder filter)
+    // The UID value is produced by ObjectModelConverters.ToTestNode, which sets it to either
+    // TestCase.FullyQualifiedName or TestCase.Id depending on useFullyQualifiedNameAsUid. We use that
+    // same discriminator here to decide the clause type, rather than guessing from the value with
+    // Guid.TryParse. Guessing is wrong for a FullyQualifiedName that happens to be GUID-shaped (e.g. a
+    // data-driven test whose display name is exactly a GUID string), which would then be emitted as an
+    // Id= clause and select the wrong test (or no test).
+    private static void BuildFilter(TestNodeUid[] testNodesUid, StringBuilder filter, bool useFullyQualifiedNameAsUid)
     {
         for (int i = 0; i < testNodesUid.Length; i++)
         {
@@ -143,7 +152,7 @@ internal abstract class ContextAdapterBase
                 filter.Append('|');
             }
 
-            if (Guid.TryParse(testNodesUid[i].Value, out Guid guid))
+            if (!useFullyQualifiedNameAsUid && Guid.TryParse(testNodesUid[i].Value, out Guid guid))
             {
                 filter.Append("Id=");
                 filter.Append(guid.ToString());

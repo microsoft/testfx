@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Extensions.VSTestBridge.ObjectModel;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -50,5 +51,51 @@ public class RunContextAdapterTests
         RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object, new NopFilter());
         Assert.IsNull(runContextAdapter.TestRunDirectory);
         Assert.IsNotNull(runContextAdapter.RunSettings);
+    }
+
+    [TestMethod]
+    public void BuildFilter_WhenUsingFullyQualifiedNameAsUid_GuidShapedName_EmitsFullyQualifiedNameClause()
+    {
+        _runSettings.Setup(x => x.SettingsXml).Returns("<RunSettings></RunSettings>");
+
+        // A data-driven test whose FullyQualifiedName happens to be exactly a GUID-shaped string.
+        const string GuidShapedFullyQualifiedName = "12345678-1234-1234-1234-1234567890ab";
+        var filter = new TestNodeUidListFilter([new TestNodeUid(GuidShapedFullyQualifiedName)]);
+
+        RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object, filter, useFullyQualifiedNameAsUid: true);
+
+        ITestCaseFilterExpression? filterExpression = runContextAdapter.GetTestCaseFilter(null, _ => null);
+        Assert.IsNotNull(filterExpression);
+        Assert.AreEqual($"(FullyQualifiedName={GuidShapedFullyQualifiedName})", filterExpression.TestCaseFilterValue);
+    }
+
+    [TestMethod]
+    public void BuildFilter_WhenNotUsingFullyQualifiedNameAsUid_GuidValue_EmitsIdClause()
+    {
+        _runSettings.Setup(x => x.SettingsXml).Returns("<RunSettings></RunSettings>");
+
+        const string GuidValue = "12345678-1234-1234-1234-1234567890ab";
+        var filter = new TestNodeUidListFilter([new TestNodeUid(GuidValue)]);
+
+        RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object, filter, useFullyQualifiedNameAsUid: false);
+
+        ITestCaseFilterExpression? filterExpression = runContextAdapter.GetTestCaseFilter(null, _ => null);
+        Assert.IsNotNull(filterExpression);
+        Assert.AreEqual($"(Id={GuidValue})", filterExpression.TestCaseFilterValue);
+    }
+
+    [TestMethod]
+    public void BuildFilter_WhenUsingFullyQualifiedNameAsUid_NonGuidName_EmitsFullyQualifiedNameClause()
+    {
+        _runSettings.Setup(x => x.SettingsXml).Returns("<RunSettings></RunSettings>");
+
+        const string FullyQualifiedName = "MyNamespace.MyClass.MyTest";
+        var filter = new TestNodeUidListFilter([new TestNodeUid(FullyQualifiedName)]);
+
+        RunContextAdapter runContextAdapter = new(_commandLineOptions.Object, _runSettings.Object, filter, useFullyQualifiedNameAsUid: true);
+
+        ITestCaseFilterExpression? filterExpression = runContextAdapter.GetTestCaseFilter(null, _ => null);
+        Assert.IsNotNull(filterExpression);
+        Assert.AreEqual($"(FullyQualifiedName={FullyQualifiedName})", filterExpression.TestCaseFilterValue);
     }
 }
