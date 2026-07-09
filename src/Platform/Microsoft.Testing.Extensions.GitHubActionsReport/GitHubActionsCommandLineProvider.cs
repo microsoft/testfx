@@ -13,7 +13,8 @@ internal sealed class GitHubActionsCommandLineProvider : CommandLineOptionsProvi
 {
     public GitHubActionsCommandLineProvider()
         : base(
-            nameof(GitHubActionsCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "GitHubActionsCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
             GitHubActionsResources.DisplayName,
             GitHubActionsResources.Description,
