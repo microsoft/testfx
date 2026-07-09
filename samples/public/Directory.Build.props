@@ -9,8 +9,11 @@
       non-SDK Native AOT runner sample (mstest-runner/NativeAotRunner). It is kept at the highest version
       mirrored to the dotnet-public NuGet feed used by these samples. MSTestEngineVersion aliases it for the
       same reason. Note: the SDK-style Native AOT sample (DemoMSTestSdk/ProjectWithNativeAOT) does not use
-      these properties; MSTest.Sdk 4.3.0 drives its source generator via MSTestSourceGenerationVersion, which
-      must stay aligned with MSTestVersion above (the generated code calls into the matching MSTest adapter).
+      these properties; MSTest.Sdk 4.3.0 drives its source generator via its own independent
+      MSTestSourceGenerationVersion (an early-preview 2.0.0-alpha.* build, decoupled from the 4.x MSTestVersion).
+      The generated code calls runtime hooks (e.g. ReflectionMetadataHook) that only exist in a recent-enough
+      MSTest adapter, so MSTestVersion above must be new enough (4.2.2 was too old); it does not need to, and
+      cannot, match the source-generation package version.
     -->
     <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
