@@ -1,8 +1,8 @@
 <Project>
 
   <PropertyGroup>
-    <AspireTestingVersion>13.2.1</AspireTestingVersion>
-    <CodeCoverageVersion>18.5.2</CodeCoverageVersion>
+    <AspireTestingVersion>13.4.6</AspireTestingVersion>
+    <CodeCoverageVersion>18.9.0</CodeCoverageVersion>
     <MSTestVersion>4.3.0</MSTestVersion>
     <!--
       MSTestAOTVersion pins the experimental MSTest.Engine / MSTest.SourceGeneration packages used by the
@@ -17,9 +17,9 @@
     -->
     <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
-    <PlaywrightVersion>1.58.0</PlaywrightVersion>
+    <PlaywrightVersion>1.61.0</PlaywrightVersion>
     <TestingPlatformVersion>2.2.2</TestingPlatformVersion>
-    <VSTestVersion>18.3.0</VSTestVersion>
+    <VSTestVersion>18.7.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
