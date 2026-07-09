@@ -71,11 +71,21 @@ internal sealed class FileLogger : IDisposable
                 // We want to unlink the caller from the consumer
                 AllowSynchronousContinuations = false,
             });
-#else
-            _channel = new SingleConsumerUnboundedChannel<string>();
-#endif
 
             _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
+#else
+            _channel = new SingleConsumerUnboundedChannel<string>();
+
+            // On .NET Framework (the netstandard2.0 build) the FileLogger is disposed synchronously because there is
+            // no IAsyncDisposable / StreamWriter.DisposeAsync available at runtime, so Dispose blocks on this loop's
+            // task via _logLoop.Wait(). We therefore run a fully synchronous drain loop: passing a synchronous
+            // delegate to Task.Run means the whole loop runs to completion on a single worker thread and blocks on the
+            // channel without ever scheduling a continuation. This makes shutdown immune to thread-pool starvation
+            // (e.g. many test processes running concurrently on a CI / Helix agent), which could otherwise delay the
+            // async continuation past the flush timeout and crash the test host on an otherwise successful run.
+            // See https://github.com/dotnet/sdk/issues/55215.
+            _logLoop = task.Run(WriteLogToFile);
+#endif
         }
 
         if (_options.FileName is not null)
@@ -232,6 +242,7 @@ internal sealed class FileLogger : IDisposable
     private string BuildLogEntry<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
         => $"{_clock.UtcNow:O} {category} {logLevel.ToString().ToUpper(CultureInfo.InvariantCulture)} {formatter(state, exception)}";
 
+#if NETCOREAPP
     private async Task WriteLogToFileAsync()
     {
         // We do this check out of the try because we want to crash the process if the _channel is null.
@@ -240,26 +251,41 @@ internal sealed class FileLogger : IDisposable
         try
         {
             // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
-#if NETCOREAPP
             while (await _channel.Reader.WaitToReadAsync().ConfigureAwait(false))
             {
                 await _writer.WriteLineAsync(await _channel.Reader.ReadAsync().ConfigureAwait(false)).ConfigureAwait(false);
             }
-#else
-            while (await _channel.WaitToReadAsync(CancellationToken.None).ConfigureAwait(false))
-            {
-                while (_channel.TryRead(out string message))
-                {
-                    await _writer.WriteLineAsync(message).ConfigureAwait(false);
-                }
-            }
-#endif
         }
         catch (Exception ex)
         {
             _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
         }
     }
+#else
+    private void WriteLogToFile()
+    {
+        // We do this check out of the try because we want to crash the process if the _channel is null.
+        ApplicationStateGuard.Ensure(_channel is not null);
+
+        try
+        {
+            // We don't need a cancellation token because the loop stops when the channel is completed thanks to the
+            // call to Complete() inside the Dispose method. The wait and the writes are fully synchronous, so this
+            // loop never yields back to the thread pool and cannot be starved during shutdown.
+            while (_channel.WaitToRead())
+            {
+                while (_channel.TryRead(out string message))
+                {
+                    _writer.WriteLine(message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
+        }
+    }
+#endif
 
     [MemberNotNull(nameof(_channel), nameof(_logLoop))]
     private void EnsureAsyncLogObjectsAreNotNull()
@@ -279,16 +305,18 @@ internal sealed class FileLogger : IDisposable
         {
             EnsureAsyncLogObjectsAreNotNull();
 
-            // Wait for all logs to be written
+            // Signal the consumer that no more logs will be written, then wait for it to flush everything.
 #if NETCOREAPP
             _channel.Writer.TryComplete();
 #else
             _channel.Complete();
 #endif
 
+            // A logger failing to flush must never crash an otherwise successful test run, so on timeout we warn and
+            // continue disposing instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
             }
         }
 
@@ -311,9 +339,18 @@ internal sealed class FileLogger : IDisposable
         {
             EnsureAsyncLogObjectsAreNotNull();
 
-            // Wait for all logs to be written
+            // Wait for all logs to be written. A logger failing to flush must never crash an otherwise successful
+            // test run, so on timeout we warn and continue disposing instead of throwing.
+            // See https://github.com/dotnet/sdk/issues/55215.
             _channel.Writer.TryComplete();
-            await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            try
+            {
+                await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+            }
+            catch (TimeoutException)
+            {
+                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+            }
         }
 
         _semaphore.Dispose();

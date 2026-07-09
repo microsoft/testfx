@@ -11,6 +11,7 @@ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bo
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? other) -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.init -> void
+Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version, Microsoft.Testing.Platform.Services.IClientCapabilities! Capabilities) -> void

@@ -43,6 +43,10 @@ internal sealed class SingleConsumerUnboundedChannel<T>
 
             _items.Enqueue(item);
 
+            // Wake up a consumer that is blocked inside the synchronous WaitToRead.
+            // This is a no-op when nobody is waiting on the monitor (e.g. consumers using WaitToReadAsync).
+            Monitor.Pulse(SyncObj);
+
             // If WaitToReadAsync was called previously, we want to complete the task it returned.
             // We complete it with value true because we have an item that can be read now.
             if (_waitingReader is { } waitingReader)
@@ -57,6 +61,29 @@ internal sealed class SingleConsumerUnboundedChannel<T>
 
     public bool TryRead(out T item)
         => _items.TryDequeue(out item);
+
+    /// <summary>
+    /// Synchronously blocks the calling thread until an item is available to read or the channel is completed.
+    /// Returns <see langword="true"/> when there may be items to read, or <see langword="false"/> when the channel
+    /// is completed and empty.
+    /// </summary>
+    /// <remarks>
+    /// This is intended for a single dedicated consumer that drains the channel synchronously and therefore does not
+    /// use <see cref="WaitToReadAsync"/>. Because the loop never yields back to the thread pool, it cannot be starved
+    /// (e.g. during process shutdown under heavy thread-pool contention).
+    /// </remarks>
+    public bool WaitToRead()
+    {
+        lock (SyncObj)
+        {
+            while (_items.IsEmpty && !_completed)
+            {
+                Monitor.Wait(SyncObj);
+            }
+
+            return !_items.IsEmpty;
+        }
+    }
 
     public Task<bool> WaitToReadAsync(CancellationToken cancellationToken)
     {
@@ -109,6 +136,10 @@ internal sealed class SingleConsumerUnboundedChannel<T>
         lock (SyncObj)
         {
             _completed = true;
+
+            // Wake up a consumer that is blocked inside the synchronous WaitToRead so it can observe completion.
+            // This is a no-op when nobody is waiting on the monitor (e.g. consumers using WaitToReadAsync).
+            Monitor.Pulse(SyncObj);
 
             // If there was previously a call to WaitToReadAsync, and we had no items in the queue, and we are completing now.
             // Then there is nothing to read. So we set the task value to false.
