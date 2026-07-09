@@ -47,6 +47,7 @@ internal static class CountDownEventExtensions
     }
 
     [UnsupportedOSPlatform("browser")]
+    [UnsupportedOSPlatform("wasi")]
     private static async Task<bool> WaitMultiThreadedAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
     {
         RegisteredWaitHandle? registeredHandle = null;
