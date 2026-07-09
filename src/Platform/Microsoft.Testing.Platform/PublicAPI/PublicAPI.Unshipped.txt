@@ -1,1 +1,4 @@
 #nullable enable
+Microsoft.Testing.Platform.Services.IArtifactNamingService
+Microsoft.Testing.Platform.Services.IArtifactNamingService.ResolveFileName(string! template) -> string!
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetArtifactNamingService(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Services.IArtifactNamingService!

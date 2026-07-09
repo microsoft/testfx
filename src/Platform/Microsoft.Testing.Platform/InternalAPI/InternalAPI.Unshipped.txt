@@ -1,1 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer
+Microsoft.Testing.Platform.Services.ArtifactNamingService
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ArtifactNamingService(Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ResolveFileName(string! template) -> string!
+static Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer.ReplaceInvalidFileNameChars(string! fileName) -> string!

@@ -72,6 +72,14 @@ public static class ServiceProviderExtensions
         => serviceProvider.GetRequiredService<IConfiguration>();
 
     /// <summary>
+    /// Gets the artifact naming service from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The artifact naming service.</returns>
+    public static IArtifactNamingService GetArtifactNamingService(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredService<IArtifactNamingService>();
+
+    /// <summary>
     /// Gets the command line options from the <see cref="IServiceProvider"/>.
     /// </summary>
     /// <param name="serviceProvider">The service provider.</param>
