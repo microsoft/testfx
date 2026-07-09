@@ -266,15 +266,16 @@ internal sealed class FileLogger : IDisposable
     {
         // We do this check out of the try because we want to crash the process if the _channel is null.
         ApplicationStateGuard.Ensure(_channel is not null);
+        SingleConsumerUnboundedChannel<string> channel = _channel;
 
         try
         {
             // We don't need a cancellation token because the loop stops when the channel is completed thanks to the
             // call to Complete() inside the Dispose method. The wait and the writes are fully synchronous, so this
             // loop never yields back to the thread pool and cannot be starved during shutdown.
-            while (_channel.WaitToRead())
+            while (channel.WaitToRead())
             {
-                while (_channel.TryRead(out string message))
+                while (channel.TryRead(out string message))
                 {
                     _writer.WriteLine(message);
                 }
