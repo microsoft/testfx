@@ -213,10 +213,7 @@ public sealed partial class Assert
     /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
     /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
     public static void AreNotSequenceEqual<T>(Span<T> notExpected, Span<T> actual, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.AreNotSequenceEqual");
-        AreNotSequenceEqualImpl(notExpected.ToArray(), actual.ToArray(), EqualityComparer<T>.Default, comparerName: null, hasComparerArgument: false, SequenceOrder.InOrder, hasOrderArgument: false, message, notExpectedExpression, actualExpression);
-    }
+        => AreNotSequenceEqual((ReadOnlySpan<T>)notExpected, actual, message, notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether two spans differ using the specified order semantics and throws an exception if they do not.
@@ -229,10 +226,7 @@ public sealed partial class Assert
     /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
     /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
     public static void AreNotSequenceEqual<T>(Span<T> notExpected, Span<T> actual, SequenceOrder order, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.AreNotSequenceEqual");
-        AreNotSequenceEqualImpl(notExpected.ToArray(), actual.ToArray(), EqualityComparer<T>.Default, comparerName: null, hasComparerArgument: false, order, hasOrderArgument: true, message, notExpectedExpression, actualExpression);
-    }
+        => AreNotSequenceEqual((ReadOnlySpan<T>)notExpected, actual, order, message, notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether two spans differ in the same order using the specified comparer and throws an exception if they do not.
@@ -245,10 +239,7 @@ public sealed partial class Assert
     /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
     /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
     public static void AreNotSequenceEqual<T>(Span<T> notExpected, Span<T> actual, IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.AreNotSequenceEqual");
-        AreNotSequenceEqualImpl(notExpected.ToArray(), actual.ToArray(), comparer ?? EqualityComparer<T>.Default, comparer?.GetType().Name, hasComparerArgument: true, SequenceOrder.InOrder, hasOrderArgument: false, message, notExpectedExpression, actualExpression);
-    }
+        => AreNotSequenceEqual((ReadOnlySpan<T>)notExpected, actual, comparer, message, notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether two spans differ using the specified comparer and order semantics and throws an exception if they do not.
@@ -262,10 +253,7 @@ public sealed partial class Assert
     /// <param name="notExpectedExpression">The syntactic expression of notExpected as given by the compiler via caller argument expression.</param>
     /// <param name="actualExpression">The syntactic expression of actual as given by the compiler via caller argument expression.</param>
     public static void AreNotSequenceEqual<T>(Span<T> notExpected, Span<T> actual, IEqualityComparer<T>? comparer, SequenceOrder order, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(actual))] string actualExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.AreNotSequenceEqual");
-        AreNotSequenceEqualImpl(notExpected.ToArray(), actual.ToArray(), comparer ?? EqualityComparer<T>.Default, comparer?.GetType().Name, hasComparerArgument: true, order, hasOrderArgument: true, message, notExpectedExpression, actualExpression);
-    }
+        => AreNotSequenceEqual((ReadOnlySpan<T>)notExpected, actual, comparer, order, message, notExpectedExpression, actualExpression);
 
     /// <summary>
     /// Tests whether two memory regions differ in the same order and throws an exception if they do not.

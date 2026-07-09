@@ -244,10 +244,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void ContainsAll<T>(Span<T> expected, Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
-        ContainsAllImpl<T>(expected.ToArray(), collection.ToArray(), EqualityComparer<T>.Default, comparerName: null, message, expectedExpression, collectionExpression);
-    }
+        => ContainsAll((ReadOnlySpan<T>)expected, collection, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
@@ -266,11 +263,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void ContainsAll<T>(Span<T> expected, Span<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
-        CheckParameterNotNull(comparer, "Assert.ContainsAll", "comparer");
-        ContainsAllImpl<T>(expected.ToArray(), collection.ToArray(), comparer, comparer.GetType().Name, message, expectedExpression, collectionExpression);
-    }
+        => ContainsAll((ReadOnlySpan<T>)expected, collection, comparer, message, expectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
@@ -582,10 +575,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContainAll<T>(Span<T> notExpected, Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
-        DoesNotContainAllImpl<T>(notExpected.ToArray(), collection.ToArray(), EqualityComparer<T>.Default, comparerName: null, message, notExpectedExpression, collectionExpression);
-    }
+        => DoesNotContainAll((ReadOnlySpan<T>)notExpected, collection, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
@@ -604,11 +594,7 @@ public sealed partial class Assert
     /// Users shouldn't pass a value for this parameter.
     /// </param>
     public static void DoesNotContainAll<T>(Span<T> notExpected, Span<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
-    {
-        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
-        CheckParameterNotNull(comparer, "Assert.DoesNotContainAll", "comparer");
-        DoesNotContainAllImpl<T>(notExpected.ToArray(), collection.ToArray(), comparer, comparer.GetType().Name, message, notExpectedExpression, collectionExpression);
-    }
+        => DoesNotContainAll((ReadOnlySpan<T>)notExpected, collection, comparer, message, notExpectedExpression, collectionExpression);
 
     /// <summary>
     /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
