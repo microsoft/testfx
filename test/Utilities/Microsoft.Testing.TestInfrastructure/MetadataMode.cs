@@ -25,11 +25,11 @@ public enum MetadataMode
 
     /// <summary>
     /// A build with the shipping <c>MSTest.SourceGeneration</c> package injected and
-    /// <c>MSTestSourceGenMode=ReflectionFree</c> selected, so the package's reflection-free generator
-    /// emits. In addition to the type and test-method rooting the default (<c>Rooting</c>) mode
-    /// performs, it also publishes materialized type- and assembly-level attributes plus delegate-based
-    /// invokers through <c>ReflectionMetadataHook</c> so the adapter serves them without runtime
-    /// reflection (the AOT-reflection path).
+    /// <c>MSTestSourceGenMode=ReflectionFree</c> selected (this is also the shipped default), so the
+    /// package's reflection-free generator emits. In addition to the type and test-method rooting the
+    /// <c>Rooting</c> mode performs, it also publishes materialized type- and assembly-level attributes
+    /// plus delegate-based invokers through <c>ReflectionMetadataHook</c> so the adapter serves them
+    /// without runtime reflection (the AOT-reflection path).
     /// Output lands under <c>bin/AotSourceGen/&lt;config&gt;/&lt;tfm&gt;</c>.
     /// </summary>
     AotSourceGeneration,
