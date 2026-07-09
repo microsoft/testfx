@@ -59,6 +59,18 @@ public sealed class RunContextAdapterFilterTests
     }
 
     [TestMethod]
+    public void GetTestCaseFilter_WithEmptyNodeList_ThrowsOnEmptyGroup()
+    {
+        // An empty UID list is constructible and builds the empty group "()", which the VSTest filter
+        // parser rejects, so GetTestCaseFilter surfaces a format error. Pinning this guards the edge
+        // case now that this suite owns the filter-building coverage.
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter());
+
+        TestPlatformFormatException exception = Assert.ThrowsExactly<TestPlatformFormatException>(() => adapter.GetTestCaseFilter(null, _ => null));
+        Assert.AreEqual("()", exception.FilterValue);
+    }
+
+    [TestMethod]
     public void GetTestCaseFilter_WithMultipleNodes_JoinsWithOrOperator()
     {
         RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter("A.B.Test1", "C.D.Test2"));
@@ -160,6 +172,17 @@ public sealed class RunContextAdapterFilterTests
     }
 
     [TestMethod]
+    public void GetTestCaseFilter_WithSingleNodeStartingWithSpecialCharacter_DoesNotThrowAndEscapes()
+    {
+        // Companion to the multi-node regression above, exhaustive over the index dimension: the
+        // single-node case (i == 0) never threw under the old code because the "i - 1 < 0" guard
+        // short-circuited before the bogus Value[k - 1] read. It must still escape the leading operator.
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter("(weird"));
+
+        Assert.AreEqual("(FullyQualifiedName=\\(weird)", GetFilterValue(adapter));
+    }
+
+    [TestMethod]
     public void GetTestCaseFilter_WithSecondNodeStartingWithSpecialCharacter_DoesNotThrowAndEscapes()
     {
         // Regression: the "already-escaped" guard in BuildFilter used the node index (i) instead of
@@ -172,16 +195,22 @@ public sealed class RunContextAdapterFilterTests
     }
 
     [TestMethod]
+    public void GetTestCaseFilter_WithOperator_EscapesOperator()
+    {
+        // A bare operator ('|') in the name must be escaped so it stays a literal instead of being
+        // parsed as an OR that splits the clause.
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter("A.B|C"));
+
+        Assert.AreEqual("(FullyQualifiedName=A.B\\|C)", GetFilterValue(adapter));
+    }
+
+    [TestMethod]
     public void GetTestCaseFilter_WithBackslashFollowedBySpecialCharacter_EscapesBoth()
     {
         // Regression: the buggy "already-escaped" guard treated the operator following a literal
         // backslash as if it were already escaped, so it emitted the operator un-escaped. A raw
         // backslash in the name must be escaped to "\\" AND the following operator must still be
         // escaped, otherwise the operator (e.g. '|') is parsed as an OR and the clause is split.
-        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter("A.B|C"));
-
-        Assert.AreEqual("(FullyQualifiedName=A.B\\|C)", GetFilterValue(adapter));
-
         RunContextAdapter adapterBackslash = CreateAdapter(EmptyRunSettings, CreateUidFilter("A.B\\|C"));
 
         Assert.AreEqual("(FullyQualifiedName=A.B\\\\\\|C)", GetFilterValue(adapterBackslash));
