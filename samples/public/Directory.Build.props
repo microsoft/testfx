@@ -3,13 +3,16 @@
   <PropertyGroup>
     <AspireTestingVersion>13.2.1</AspireTestingVersion>
     <CodeCoverageVersion>18.5.2</CodeCoverageVersion>
-    <MSTestVersion>4.2.2</MSTestVersion>
-    <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
+    <MSTestVersion>4.3.0</MSTestVersion>
     <!--
-      MSTest.Sdk 4.2.3 defaults MSTestEngineVersion to 2.0.0-alpha.26264.3, which is not yet mirrored to the
-      dotnet-public NuGet feed used by these samples. Override it to the highest version available in
-      dotnet-public until the mirror catches up.
+      MSTestAOTVersion pins the experimental MSTest.Engine / MSTest.SourceGeneration packages used by the
+      non-SDK Native AOT runner sample (mstest-runner/NativeAotRunner). It is kept at the highest version
+      mirrored to the dotnet-public NuGet feed used by these samples. MSTestEngineVersion aliases it for the
+      same reason. Note: the SDK-style Native AOT sample (DemoMSTestSdk/ProjectWithNativeAOT) does not use
+      these properties; MSTest.Sdk 4.3.0 drives its source generator via MSTestSourceGenerationVersion, which
+      must stay aligned with MSTestVersion above (the generated code calls into the matching MSTest adapter).
     -->
+    <MSTestAOTVersion>2.0.0-alpha.26228.3</MSTestAOTVersion>
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
     <PlaywrightVersion>1.58.0</PlaywrightVersion>
     <TestingPlatformVersion>2.2.2</TestingPlatformVersion>
