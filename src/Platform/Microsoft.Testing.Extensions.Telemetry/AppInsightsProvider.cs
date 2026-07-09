@@ -118,7 +118,14 @@ internal sealed partial class AppInsightsProvider :
         _payloads = new SingleConsumerUnboundedChannel<(string EventName, IDictionary<string, object> ParamsMap)>();
 #endif
 
-        _telemetryTask = task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken);
+        // On single-threaded wasm runtimes (browser-wasm / wasi-wasm) there is no thread pool, so the
+        // background ingest loop (started via Task.Run) would never run and Dispose's blocking
+        // _telemetryTask.Wait(...) would throw PlatformNotSupportedException. Telemetry requires a
+        // background sender, so skip the loop entirely there and keep Dispose non-blocking by leaving
+        // the task completed. Events written via LogEventAsync are simply never shipped.
+        _telemetryTask = RuntimeFeatureHelper.IsMultiThreaded
+            ? task.Run(IngestLoopAsync, _testApplicationCancellationTokenSource.CancellationToken)
+            : Task.CompletedTask;
         _logger = loggerFactory.CreateLogger<AppInsightsProvider>();
     }
 

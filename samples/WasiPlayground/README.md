@@ -54,25 +54,49 @@ Then:
 
 ## Status
 
-After publishing, Microsoft.Testing.Platform now boots on `wasi-wasm` (the
-banner reads `[wasi-wasm - net10.0]`) thanks to [#7137](https://github.com/microsoft/testfx/pull/7137).
-Test execution itself currently fails with:
+After publishing, Microsoft.Testing.Platform boots on `wasi-wasm` (the banner
+reads `[wasi-wasm - net10.0]`) thanks to [#7137](https://github.com/microsoft/testfx/pull/7137),
+and MSTest tests now **run to completion** end-to-end (issue
+[#2196](https://github.com/microsoft/testfx/issues/2196)):
 
 ```console
-Microsoft.Testing.Platform v2.3.0-dev (UTC ...) [wasi-wasm - net10.0]
+MSTest v4.4.0-dev (UTC ...)
 ...
-Unhandled Exception:
-System.PlatformNotSupportedException: Arg_PlatformNotSupported
-   at System.Threading.Tasks.Task.InternalWaitCore(...)
-   at System.Threading.Tasks.Task.InternalWait(...)
-   at Program.<Main>(String[] args)
+/managed/WasmTestProject.dll (net10.0|wasi-wasm)
+Test run summary: Passed!
+  total: 2
+  failed: 0
+  succeeded: 2
+  skipped: 0
 ```
 
-The exception comes from the C# compiler's synthetic `Main` wrapper for
-`async Task Main`, which calls `Task.GetAwaiter().GetResult()` &rarr;
-`Task.Wait()`. On single-threaded `wasi-wasm` (no thread pool) this throws
-`PlatformNotSupportedException`. Tracked in [#5366](https://github.com/microsoft/testfx/issues/5366)
-so this sample can act as the canonical repro.
+### Why it works now
+
+A user-authored `async Task Main` is fine on single-threaded `wasi-wasm`: the
+compiler-synthesized entry point only blocks (`GetAwaiter().GetResult()`) if the
+awaited task has not already completed, so as long as the pipeline never hops to
+a background thread it completes synchronously and the wait is a no-op.
+
+The real constraint is **threads**, not `async`/`await`. `wasi-wasm` links
+wasi-emulated / synthetic pthreads, so there is no thread pool: `Task.Run`
+continuations never execute and blocking waits throw
+`PlatformNotSupportedException`. The platform and the MSTest adapter detect this
+(`RuntimeFeatureHelper.IsMultiThreaded` / `RuntimeContext.IsMultiThreaded`,
+derived from `OperatingSystem.IsWasi()`; .NET 11 will expose
+`RuntimeFeature.IsMultithreadingSupported`, see
+[dotnet/runtime#77541](https://github.com/dotnet/runtime/issues/77541)) and fall
+back to inline/synchronous execution for the handful of thread-dependent spots on
+the run path — the message-bus consumers, the shutdown watchdog, the telemetry
+ingest loop, the countdown-event wait, and the adapter's per-test task factory.
+
+This scenario is covered, in automated form, by the gated
+`WasmExecutionTests.WasmExecution_RunsTestsUnderWasmtime` acceptance test
+(see [`test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs)).
+That test publishes a minimal MSTest `wasi-wasm` project and runs it under
+`wasmtime`; it is skipped automatically when the `wasm-tools` workload or
+`wasmtime` is not available, and otherwise asserts the tests actually run. A
+companion always-on `WasmBuild_GeneratesTestingPlatformEntryPoint` test guards
+the build/entry-point plumbing on every CI leg.
 
 ## Build configuration notes
 

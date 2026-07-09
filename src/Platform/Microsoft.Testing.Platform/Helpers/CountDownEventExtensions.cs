@@ -12,11 +12,19 @@ internal static class CountDownEventExtensions
         => await countdownEvent.WaitAsync((uint)timeout.TotalMilliseconds, cancellationToken).ConfigureAwait(false);
 
     internal static async Task<bool> WaitAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
-        => OperatingSystem.IsBrowser()
-            ? await countdownEvent.WaitBrowserAsync(millisecondsTimeOutInterval, cancellationToken).ConfigureAwait(false)
-            : await countdownEvent.WaitNonBrowserAsync(millisecondsTimeOutInterval, cancellationToken).ConfigureAwait(false);
+        // RuntimeFeatureHelper.IsMultiThreaded is false for both browser-wasm and wasi-wasm, so the
+        // multithreaded (thread-pool) path is never reached on browser. The analyzer can't see through
+        // the helper, so suppress the browser-unsupported warning here.
+#pragma warning disable CA1416 // Validate platform compatibility
+        => RuntimeFeatureHelper.IsMultiThreaded
+            ? await countdownEvent.WaitMultiThreadedAsync(millisecondsTimeOutInterval, cancellationToken).ConfigureAwait(false)
+            : await countdownEvent.WaitSingleThreadedAsync(millisecondsTimeOutInterval, cancellationToken).ConfigureAwait(false);
+#pragma warning restore CA1416 // Validate platform compatibility
 
-    private static async Task<bool> WaitBrowserAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
+    // Single-threaded runtimes (browser-wasm / wasi-wasm) have no thread pool, so
+    // ThreadPool.RegisterWaitForSingleObject (used by the multithreaded path) would register a
+    // callback that never fires. Poll the countdown cooperatively instead.
+    private static async Task<bool> WaitSingleThreadedAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
     {
         const int pollIntervalMs = 10;
         uint elapsedMs = 0;
@@ -39,7 +47,7 @@ internal static class CountDownEventExtensions
     }
 
     [UnsupportedOSPlatform("browser")]
-    private static async Task<bool> WaitNonBrowserAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
+    private static async Task<bool> WaitMultiThreadedAsync(this CountdownEvent countdownEvent, uint millisecondsTimeOutInterval, CancellationToken cancellationToken)
     {
         RegisteredWaitHandle? registeredHandle = null;
         CancellationTokenRegistration tokenRegistration = default;
