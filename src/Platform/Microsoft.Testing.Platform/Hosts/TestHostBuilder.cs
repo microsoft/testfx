@@ -47,6 +47,8 @@ internal sealed partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFe
 
     public IToolsManager Tools { get; } = new ToolsManager();
 
+    public IOutputDeviceManager OutputDevice => _outputDisplay;
+
     private readonly TestHostOrchestratorManager _testHostOrchestratorManager = new Extensions.TestHostOrchestrator.TestHostOrchestratorManager();
 
     public ITestHostOrchestratorManager TestHostOrchestrator => _testHostOrchestratorManager;

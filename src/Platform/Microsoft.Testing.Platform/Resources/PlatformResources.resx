@@ -838,4 +838,7 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
     <value>Waiting for debugger to attach (TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1) is not supported on wasi.</value>
     <comment>{Locked="TESTINGPLATFORM_WAIT_ATTACH_DEBUGGER=1"}{Locked="wasi"}</comment>
   </data>
+  <data name="PlatformOutputDeviceAlreadyRegisteredErrorMessage" xml:space="preserve">
+    <value>A custom output device has already been registered.</value>
+  </data>
 </root>

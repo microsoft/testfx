@@ -680,6 +680,11 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
         <target state="translated">강제 종료하려면 Ctrl+C를 한 번 더 누르세요.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
+      <trans-unit id="PlatformOutputDeviceAlreadyRegisteredErrorMessage">
+        <source>A custom output device has already been registered.</source>
+        <target state="new">A custom output device has already been registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">이 값을 결정하려면 프로세스가 종료되어야 합니다.</target>

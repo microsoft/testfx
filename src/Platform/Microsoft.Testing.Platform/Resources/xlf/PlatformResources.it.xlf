@@ -680,6 +680,11 @@ I valori validi sono ''allow-skipped'' (impostazione predefinita) che conta i te
         <target state="translated">Premere di nuovo Ctrl+C per forzare l'uscita.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
+      <trans-unit id="PlatformOutputDeviceAlreadyRegisteredErrorMessage">
+        <source>A custom output device has already been registered.</source>
+        <target state="new">A custom output device has already been registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Il processo dovrebbe essere terminato prima di poter determinare questo valore</target>

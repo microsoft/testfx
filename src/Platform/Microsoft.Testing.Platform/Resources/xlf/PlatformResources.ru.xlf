@@ -680,6 +680,11 @@ Valid values are 'allow-skipped' (the default) which counts skipped tests as run
         <target state="translated">Нажмите Ctrl+C еще раз, чтобы выполнить принудительный выход.</target>
         <note>{Locked="Ctrl+C"}</note>
       </trans-unit>
+      <trans-unit id="PlatformOutputDeviceAlreadyRegisteredErrorMessage">
+        <source>A custom output device has already been registered.</source>
+        <target state="new">A custom output device has already been registered.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="translated">Процесс должен быть завершен, прежде чем мы сможем определить это значение</target>
