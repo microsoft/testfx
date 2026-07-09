@@ -211,8 +211,8 @@ public sealed class DotnetTestProtocolSerializerTests
             "executionId",
             "instanceId",
             [
-                new FileArtifactMessage("full/path.txt", "artifact", "desc", "testUid", "testDisplay", "sessionUid"),
-                new FileArtifactMessage("other.txt", "other", null, null, null, null),
+                new FileArtifactMessage("full/path.txt", "artifact", "desc", "testUid", "testDisplay", "sessionUid", "microsoft.testing.trx"),
+                new FileArtifactMessage("other.txt", "other", null, null, null, null, null),
             ]);
 
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
@@ -221,8 +221,10 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.HasCount(2, actual.FileArtifacts);
         Assert.AreEqual("full/path.txt", actual.FileArtifacts[0].FullPath);
         Assert.AreEqual("sessionUid", actual.FileArtifacts[0].SessionUid);
+        Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
         Assert.AreEqual("other.txt", actual.FileArtifacts[1].FullPath);
         Assert.IsNull(actual.FileArtifacts[1].Description);
+        Assert.IsNull(actual.FileArtifacts[1].Kind);
     }
 
     [TestMethod]

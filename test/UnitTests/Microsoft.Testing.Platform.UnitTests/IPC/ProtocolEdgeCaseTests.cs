@@ -125,9 +125,9 @@ public sealed class ProtocolEdgeCaseTests
             "exec",
             "inst",
             [
-                new FileArtifactMessage("/a/b.trx", "b.trx", "a trx", "uid", "Test", "session"),
-                new FileArtifactMessage("/c/d.coverage", "d.coverage", null, null, null, null),
-                new FileArtifactMessage("/e/f.txt", null, null, "uid2", null, "session2"),
+                new FileArtifactMessage("/a/b.trx", "b.trx", "a trx", "uid", "Test", "session", "microsoft.testing.trx"),
+                new FileArtifactMessage("/c/d.coverage", "d.coverage", null, null, null, null, null),
+                new FileArtifactMessage("/e/f.txt", null, null, "uid2", null, "session2", null),
             ]);
 
         FileArtifactMessages actual = RoundTrip(new FileArtifactMessagesSerializer(), message);
@@ -136,6 +136,8 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("inst", actual.InstanceId);
         Assert.AreEqual("/c/d.coverage", actual.FileArtifacts[1].FullPath);
         Assert.IsNull(actual.FileArtifacts[1].Description);
+        Assert.AreEqual("microsoft.testing.trx", actual.FileArtifacts[0].Kind);
+        Assert.IsNull(actual.FileArtifacts[1].Kind);
         Assert.AreEqual("session2", actual.FileArtifacts[2].SessionUid);
         Assert.IsNull(actual.FileArtifacts[2].DisplayName);
     }

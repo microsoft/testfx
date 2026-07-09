@@ -1,1 +1,5 @@
 #nullable enable
+virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTestResult>.ArtifactKind.get -> string?
+Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.Merge(System.Collections.Generic.IReadOnlyList<string!>! inputReports) -> string!
+static Microsoft.Testing.Extensions.CtrfReport.CtrfReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!

@@ -1,4 +1,6 @@
 #nullable enable
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.Kind.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.SessionFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.IO.FileInfo! fileInfo, string! displayName, string? description, string? kind) -> void
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities.IsStateful.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!

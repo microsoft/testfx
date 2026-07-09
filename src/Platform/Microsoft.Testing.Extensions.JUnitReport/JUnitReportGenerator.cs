@@ -33,6 +33,8 @@ internal sealed class JUnitReportGenerator : ReportGeneratorBase<JUnitReportGene
 
     protected override string ArtifactDisplayName => ExtensionResources.JUnitReportArtifactDisplayName;
 
+    protected override string? ArtifactKind => "microsoft.testing.junit";
+
     protected override string ArtifactDescription => ExtensionResources.JUnitReportArtifactDescription;
 
     protected override string GetGenerationLogMessage(int testResultCount)

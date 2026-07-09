@@ -89,7 +89,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
 
         for (int i = 0; i < length; i++)
         {
-            string? fullPath = null, displayName = null, description = null, testUid = null, testDisplayName = null, sessionUid = null;
+            string? fullPath = null, displayName = null, description = null, testUid = null, testDisplayName = null, sessionUid = null, kind = null;
 
             ReadFields(stream, (fieldId, fieldSize) =>
             {
@@ -119,12 +119,16 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
                         sessionUid = ReadStringValue(stream, fieldSize);
                         return true;
 
+                    case FileArtifactMessageFieldsId.Kind:
+                        kind = ReadStringValue(stream, fieldSize);
+                        return true;
+
                     default:
                         return false;
                 }
             });
 
-            fileArtifactMessages[i] = new FileArtifactMessage(fullPath, displayName, description, testUid, testDisplayName, sessionUid);
+            fileArtifactMessages[i] = new FileArtifactMessage(fullPath, displayName, description, testUid, testDisplayName, sessionUid, kind);
         }
 
         return fileArtifactMessages;
@@ -152,6 +156,7 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
             WriteField(s, FileArtifactMessageFieldsId.TestUid, fileArtifactMessage.TestUid);
             WriteField(s, FileArtifactMessageFieldsId.TestDisplayName, fileArtifactMessage.TestDisplayName);
             WriteField(s, FileArtifactMessageFieldsId.SessionUid, fileArtifactMessage.SessionUid);
+            WriteField(s, FileArtifactMessageFieldsId.Kind, fileArtifactMessage.Kind);
         });
 
     private static ushort GetFieldCount(FileArtifactMessages fileArtifactMessages) =>
@@ -165,5 +170,6 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
         (fileArtifactMessage.Description is null ? 0 : 1) +
         (fileArtifactMessage.TestUid is null ? 0 : 1) +
         (fileArtifactMessage.TestDisplayName is null ? 0 : 1) +
-        (fileArtifactMessage.SessionUid is null ? 0 : 1));
+        (fileArtifactMessage.SessionUid is null ? 0 : 1) +
+        (fileArtifactMessage.Kind is null ? 0 : 1));
 }
