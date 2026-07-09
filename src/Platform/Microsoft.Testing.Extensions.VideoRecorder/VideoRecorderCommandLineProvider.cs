@@ -49,7 +49,8 @@ internal sealed class VideoRecorderCommandLineProvider : CommandLineOptionsProvi
 
     public VideoRecorderCommandLineProvider()
         : base(
-            nameof(VideoRecorderCommandLineProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "VideoRecorderCommandLineProvider",
             ExtensionVersion.DefaultSemVer,
             VideoRecorderResources.ExtensionDisplayName,
             VideoRecorderResources.CommandLineProviderDescription,
