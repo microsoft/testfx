@@ -642,7 +642,7 @@ Registered command line providers:
         Supports the following placeholders: {pname} (test application name), {pid} (process ID), {asm} (entry assembly name), {tfm} (target framework moniker), {arch} (process architecture), {time} (timestamp).
         Example: MyReport_{tfm}.xml
   MSBuildCommandLineProvider
-    Name: MSBuildCommandLineProvider
+    Name: MSBuild integration
     Version: *
     Description: Extension used to pass parameters from MSBuild node and the hosts
     Options:

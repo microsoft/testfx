@@ -27,7 +27,8 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
 
     public TerminalTestReporterCommandLineOptionsProvider()
         : base(
-            nameof(TerminalTestReporterCommandLineOptionsProvider),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "TerminalTestReporterCommandLineOptionsProvider",
             PlatformVersion.Version,
             TerminalResources.TerminalTestReporterDisplayName,
             TerminalResources.TerminalTestReporterDescription,
