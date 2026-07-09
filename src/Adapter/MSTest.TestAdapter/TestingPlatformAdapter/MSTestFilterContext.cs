@@ -19,15 +19,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatform
 /// context adapters.
 /// </summary>
 /// <remarks>
-/// This mirrors, for the MSTest native path, what <c>ContextAdapterBase</c> / <c>RunContextAdapter</c> /
-/// <c>DiscoveryContextAdapter</c> do in <c>Microsoft.Testing.Extensions.VSTestBridge</c>. The filter-expression
-/// parsing itself reuses the VSTest <c>Microsoft.TestPlatform.Filter.Source</c> package, exactly like the bridge.
+/// This mirrors, for the MSTest native path, the former bridge context-adapter behavior
+/// (<c>ContextAdapterBase</c> / <c>RunContextAdapter</c> / <c>DiscoveryContextAdapter</c>). The
+/// filter-expression parsing itself reuses the VSTest <c>Microsoft.TestPlatform.Filter.Source</c> package.
 /// </remarks>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 internal abstract class MSTestFilterContextBase
 {
-    // Keep in sync with the bridge's TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName.
-    private const string TestCaseFilterOptionName = "filter";
+    // References the native --filter option provider's name.
+    private const string TestCaseFilterOptionName = MSTestTestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName;
 
     protected MSTestFilterContextBase(ICommandLineOptions commandLineOptions, IRunSettings runSettings, ITestExecutionFilter filter)
     {

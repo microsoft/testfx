@@ -144,19 +144,31 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         exitCode = exitCode == ExitCode.Success && _failedTestsCount > 0 ? ExitCode.AtLeastOneTestFailed : exitCode;
         exitCode = exitCode == ExitCode.Success && _policiesService.IsAbortTriggered ? ExitCode.TestSessionAborted : exitCode;
 
-        // Determine whether the run should be treated as having executed zero tests. Skipped tests are excluded
-        // from `_totalRanTests`. Under the default `allow-skipped` policy (#9385) skipped tests count as run, so only
-        // a run that discovered nothing at all counts as zero tests; under `strict` an all-skipped run also counts
-        // as zero tests.
-        ZeroTestsPolicy zeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions);
-        bool ranZeroTests = zeroTestsPolicy == ZeroTestsPolicy.AllowSkipped
-            ? _totalRanTests == 0 && _skippedTestsCount == 0
-            : _totalRanTests == 0;
-        exitCode = exitCode == ExitCode.Success && ranZeroTests ? ExitCode.ZeroTests : exitCode;
-
-        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
+        // An explicitly-provided `--minimum-expected-tests` governs the count-based verdict and
+        // supersedes the ZeroTests (8) verdict below: a run of fewer than N tests yields
+        // ExitCode.MinimumExpectedTestsPolicyViolation (9), even when zero tests ran. This lets callers
+        // tell an explicit-minimum violation apart from a plain "ran nothing" run (e.g. so a
+        // `dotnet test --test-modules` orchestrator can distinguish a stricter local minimum from an
+        // empty module). See issue #7457.
+        // A malformed value (e.g. present with no argument) is rejected earlier by option validation, but
+        // we still guard the parse defensively and fall back to the zero-tests verdict if it ever slips through.
+        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList)
+            && argumentList is [string minimumExpectedTestsArgument]
+            && int.TryParse(minimumExpectedTestsArgument, out int minimumExpectedTests))
         {
-            exitCode = exitCode == ExitCode.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCode.MinimumExpectedTestsPolicyViolation : exitCode;
+            exitCode = exitCode == ExitCode.Success && _totalRanTests < minimumExpectedTests ? ExitCode.MinimumExpectedTestsPolicyViolation : exitCode;
+        }
+        else
+        {
+            // Determine whether the run should be treated as having executed zero tests. Skipped tests are excluded
+            // from `_totalRanTests`. Under the default `allow-skipped` policy (#9385) skipped tests count as run, so only
+            // a run that discovered nothing at all counts as zero tests; under `strict` an all-skipped run also counts
+            // as zero tests.
+            ZeroTestsPolicy zeroTestsPolicy = PlatformCommandLineProvider.GetZeroTestsPolicy(_commandLineOptions);
+            bool ranZeroTests = zeroTestsPolicy == ZeroTestsPolicy.AllowSkipped
+                ? _totalRanTests == 0 && _skippedTestsCount == 0
+                : _totalRanTests == 0;
+            exitCode = exitCode == ExitCode.Success && ranZeroTests ? ExitCode.ZeroTests : exitCode;
         }
 
         // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.

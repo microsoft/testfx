@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net8.0</TargetFrameworks>
-    <IsPackable>false</IsPackable>
+    <TargetFrameworks>$(NetFrameworkMinimum);net8.0</TargetFrameworks>
     <DependencyCopyBehavior>PreserveNewest</DependencyCopyBehavior>
   </PropertyGroup>
 

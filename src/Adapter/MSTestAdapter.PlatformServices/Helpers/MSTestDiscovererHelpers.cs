@@ -26,7 +26,9 @@ internal static class MSTestDiscovererHelpers
             throw new NotSupportedException(Resource.SourcesNotSupported);
         }
 
-        // Populate the runsettings.
+        // Populate the runsettings. Any settings-format error (invalid MSTest setting value or a structural
+        // runsettings error) surfaces as an AdapterSettingsException; it is logged as an error and treated as a
+        // graceful bail-out (discovery reports no tests / execution runs nothing) rather than escaping to the host.
         try
         {
             MSTestSettings.PopulateSettings(settingsXml, messageLogger, configuration);

@@ -1,0 +1,134 @@
+#nullable enable
+const Microsoft.Testing.Extensions.VSTestBridge.CommandLine.RunSettingsCommandLineOptionsProvider.RunSettingsOptionName = "settings" -> string!
+const Microsoft.Testing.Extensions.VSTestBridge.CommandLine.TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName = "filter" -> string!
+const Microsoft.Testing.Extensions.VSTestBridge.CommandLine.TestRunParametersCommandLineOptionsProvider.TestRunParameterOptionName = "test-parameter" -> string!
+const Microsoft.Testing.Extensions.VSTestBridge.Constants.ExecutorUri = "executor://testingplatform-bridge/v2" -> string!
+const Microsoft.Testing.Extensions.VSTestBridge.VSTestTestNodeProperties.OriginalExecutorUriPropertyName = "vstest.original-executor-uri" -> string!
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.IInternalVSTestBridgeTrxReportCapability
+Microsoft.Testing.Extensions.VSTestBridge.Capabilities.IInternalVSTestBridgeTrxReportCapability.IsTrxEnabled.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.CommandLine.RunSettingsCommandLineOptionsProvider
+Microsoft.Testing.Extensions.VSTestBridge.CommandLine.RunSettingsCommandLineOptionsProvider.RunSettingsCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> void
+Microsoft.Testing.Extensions.VSTestBridge.CommandLine.RunSettingsCommandLineOptionsProvider.RunSettingsCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+Microsoft.Testing.Extensions.VSTestBridge.CommandLine.TestCaseFilterCommandLineOptionsProvider
+Microsoft.Testing.Extensions.VSTestBridge.CommandLine.TestCaseFilterCommandLineOptionsProvider.TestCaseFilterCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+Microsoft.Testing.Extensions.VSTestBridge.CommandLine.TestRunParametersCommandLineOptionsProvider
+Microsoft.Testing.Extensions.VSTestBridge.CommandLine.TestRunParametersCommandLineOptionsProvider.TestRunParametersCommandLineOptionsProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.BuildAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Configurations.IConfigurationProvider!>!
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.Description.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.DisplayName.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.LoadAsync() -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.Order.get -> int
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.RunSettingsConfigurationProvider(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> void
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.TryGet(string! key, out string? value) -> bool
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.Uid.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.Version.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.Constants
+Microsoft.Testing.Extensions.VSTestBridge.Helpers.DebugUtils
+Microsoft.Testing.Extensions.VSTestBridge.Helpers.RunSettingsHelpers
+Microsoft.Testing.Extensions.VSTestBridge.Helpers.SynchronousAwaiter
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ClientCompatibilityService
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ClientCompatibilityService.ClientCompatibilityService() -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ClientCompatibilityService.ClientCompatibilityService(Microsoft.Testing.Platform.Services.IClientInfo! clientInfo) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ClientCompatibilityService.UseVSTestTestCaseLocationProperties.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ContextAdapterBase
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ContextAdapterBase.ContextAdapterBase(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ContextAdapterBase.GetTestCaseFilter(System.Collections.Generic.IEnumerable<string!>? supportedProperties, System.Func<string!, Microsoft.VisualStudio.TestPlatform.ObjectModel.TestProperty?>! propertyProvider) -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ITestCaseFilterExpression?
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ContextAdapterBase.RunSettings.get -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings?
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.DiscoveryContextAdapter
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.DiscoveryContextAdapter.DiscoveryContextAdapter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.EnableShutdownAfterTestRun.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.EnableShutdownAfterTestRun.set -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.FrameworkHandlerAdapter(Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase! adapterExtensionBase, Microsoft.Testing.Platform.TestHost.TestSessionContext! session, string![]! testAssemblyPaths, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Capabilities.TestFramework.INamedFeatureCapability? namedFeatureCapability, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Services.IClientInfo! clientInfo, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, bool isTrxEnabled, System.Threading.CancellationToken cancellationToken, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle = null) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.LaunchProcessWithDebuggerAttached(string! filePath, string? workingDirectory, string? arguments, System.Collections.Generic.IDictionary<string!, string?>? environmentVariables) -> int
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.RecordAttachments(System.Collections.Generic.IList<Microsoft.VisualStudio.TestPlatform.ObjectModel.AttachmentSet!>! attachmentSets) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.RecordEnd(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase, Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome outcome) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.RecordResult(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult! testResult) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.RecordStart(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.FrameworkHandlerAdapter.SendMessage(Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestMessageLevel testMessageLevel, string! message) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.MessageLoggerAdapter
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.MessageLoggerAdapter.MessageLoggerAdapter(Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice, Microsoft.Testing.Platform.Extensions.IExtension! extension, Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger? messageLogger, System.Threading.CancellationToken cancellationToken) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.MessageLoggerAdapter.SendMessage(Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.TestMessageLevel testMessageLevel, string! message) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ObjectModelConverters
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.InIsolation.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.IsBeingDebugged.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.IsDataCollectionEnabled.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.KeepAlive.get -> bool
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.RunContextAdapter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.SolutionDirectory.get -> string?
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.TestRunDirectory.get -> string?
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunSettingsAdapter
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunSettingsAdapter.GetSettings(string? settingsName) -> Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ISettingsProvider?
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunSettingsAdapter.RunSettingsAdapter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Services.IClientInfo! client, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger! messageLogger) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunSettingsAdapter.SettingsXml.get -> string?
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunSettingsPatcher
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.TestCaseDiscoverySinkAdapter
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.TestCaseDiscoverySinkAdapter.SendTestCase(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! discoveredTest) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.TestCaseDiscoverySinkAdapter.TestCaseDiscoverySinkAdapter(Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase! adapterExtension, Microsoft.Testing.Platform.TestHost.TestSessionContext! session, string![]! testAssemblyPaths, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Capabilities.TestFramework.INamedFeatureCapability? namedFeatureCapability, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Services.IClientInfo! clientInfo, Microsoft.Testing.Platform.Messages.IMessageBus! messageBus, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, bool isTrxEnabled, System.Threading.CancellationToken cancellationToken, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ITestCaseDiscoverySink? testCaseDiscoverySink = null) -> void
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.VSTestException
+Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.VSTestException.VSTestException(string? message, string? stackTrace) -> void
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.ClientInfo.get -> Microsoft.Testing.Platform.Services.IClientInfo!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.CommandLineOptions.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.Configuration.get -> Microsoft.Testing.Platform.Configurations.IConfiguration!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.FileSystem.get -> Microsoft.Testing.Platform.Helpers.IFileSystem!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.LoggerFactory.get -> Microsoft.Testing.Platform.Logging.ILoggerFactory!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.MessageBus.get -> Microsoft.Testing.Platform.Messages.IMessageBus!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.NamedFeatureCapability.get -> Microsoft.Testing.Platform.Capabilities.TestFramework.INamedFeatureCapability?
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.OutputDevice.get -> Microsoft.Testing.Platform.OutputDevice.IOutputDevice!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.TestApplicationModuleInfo.get -> Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo!
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.VSTestBridgeRequestContext() -> void
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestBridgeRequestContext.VSTestBridgeRequestContext(Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase! adapterExtension) -> void
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest.VSTestDiscoverTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter, string![]! assemblyPaths, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext! discoveryContext, Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger! messageLogger, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.ITestCaseDiscoverySink! discoverySink) -> void
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequestFactory
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest.VSTestRunTestExecutionRequest(Microsoft.Testing.Platform.TestHost.TestSessionContext! session, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! executionFilter, string![]! assemblyPaths, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunContext! runContext, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IFrameworkHandle! frameworkHandle) -> void
+Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequestFactory
+Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.SessionUid.get -> Microsoft.Testing.Platform.TestHost.SessionUid?
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.Description.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.DisplayName.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.RunSettingsEnvironmentVariableProvider(Microsoft.Testing.Platform.Extensions.IExtension! extension, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> void
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.Uid.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.UpdateAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.VSTestBridge.TestHostControllers.RunSettingsEnvironmentVariableProvider.Version.get -> string!
+Microsoft.Testing.Extensions.VSTestBridge.VSTestTestNodeProperties
+Microsoft.Testing.Platform.RoslynString
+override Microsoft.Testing.Extensions.VSTestBridge.CommandLine.RunSettingsCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.VSTestBridge.CommandLine.TestRunParametersCommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+override Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.VSTestException.StackTrace.get -> string?
+Polyfills.Polyfill
+Polyfills.Polyfill.extension(System.OperatingSystem)
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.DebugUtils.LaunchAttachDebugger() -> void
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.RunSettingsHelpers.ReadRunSettings(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> string!
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.RunSettingsHelpers.ReadRunSettings(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem) -> string!
+static Microsoft.Testing.Extensions.VSTestBridge.Helpers.SynchronousAwaiter.Await(this System.Threading.Tasks.Task! valueTask, bool busyWait = true) -> void
+static Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ObjectModelConverters.FixUpTestCase(this Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase) -> void
+static Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ObjectModelConverters.ToTestNode(this Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase! testCase, bool isTrxEnabled, bool useFullyQualifiedNameAsUid, System.Action<Microsoft.Testing.Platform.Extensions.Messages.TestNode!, Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase!>! addAdditionalProperties, Microsoft.Testing.Platform.Capabilities.TestFramework.INamedFeatureCapability? namedFeatureCapability, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Services.IClientInfo! clientInfo, string? displayNameFromTestResult = null) -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
+static Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ObjectModelConverters.ToTestNode(this Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult! testResult, bool isTrxEnabled, bool useFullyQualifiedNameAsUid, System.Action<Microsoft.Testing.Platform.Extensions.Messages.TestNode!, Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase!>! addAdditionalProperties, Microsoft.Testing.Platform.Capabilities.TestFramework.INamedFeatureCapability? namedFeatureCapability, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Services.IClientInfo! clientInfo) -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
+static Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunSettingsPatcher.Patch(string? runSettingsXml, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration, Microsoft.Testing.Platform.Services.IClientInfo! client, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Xml.Linq.XDocument!
+static Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequestFactory.CreateRequest(Microsoft.Testing.Platform.Requests.DiscoverTestExecutionRequest! discoverTestExecutionRequest, Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase! adapterExtension, string![]! testAssemblyPaths, System.Threading.CancellationToken cancellationToken) -> Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestDiscoverTestExecutionRequest!
+static Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequestFactory.CreateRequest(Microsoft.Testing.Platform.Requests.RunTestExecutionRequest! runTestExecutionRequest, Microsoft.Testing.Extensions.VSTestBridge.VSTestBridgedTestFrameworkBase! adapterExtension, string![]! testAssemblyPaths, System.Threading.CancellationToken cancellationToken) -> Microsoft.Testing.Extensions.VSTestBridge.Requests.VSTestRunTestExecutionRequest!
+static Microsoft.Testing.Extensions.VSTestBridge.SynchronizedSingleSessionVSTestBridgedTestFramework.GetAssemblyPath(System.Reflection.Assembly! assembly) -> string!
+static Microsoft.Testing.Platform.RoslynString.IsNullOrEmpty(string? value) -> bool
+static Microsoft.Testing.Platform.RoslynString.IsNullOrWhiteSpace(string? value) -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsAndroid() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsBrowser() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsIOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsTvOS() -> bool
+static Polyfills.Polyfill.extension(System.OperatingSystem).IsWasi() -> bool
+static Polyfills.Polyfill.IsAndroid() -> bool
+static Polyfills.Polyfill.IsBrowser() -> bool
+static Polyfills.Polyfill.IsIOS() -> bool
+static Polyfills.Polyfill.IsTvOS() -> bool
+static Polyfills.Polyfill.IsWasi() -> bool
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
