@@ -1,1 +1,7 @@
 #nullable enable
+Microsoft.Testing.Extensions.RunSettingsProviderHelper
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.ApplyEnvironmentVariables(System.Xml.Linq.XDocument! runSettings, Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> void
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.CanReadFile(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! filePath) -> bool
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.FindInvalidTestParameter(string![]! arguments) -> string?
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.HasEnvironmentVariables(System.Xml.Linq.XDocument! runSettings) -> bool
+static Microsoft.Testing.Extensions.RunSettingsProviderHelper.TryLoadRunSettingsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! runSettingsOptionName) -> System.Threading.Tasks.Task<System.Xml.Linq.XDocument?>!

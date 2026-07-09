@@ -24,14 +24,9 @@ internal sealed class TestRunParametersCommandLineOptionsProvider : CommandLineO
     /// <inheritdoc />
     public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        foreach (string argument in arguments)
-        {
-            if (!argument.Contains('='))
-            {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.TestRunParameterOptionArgumentIsNotParameter, argument));
-            }
-        }
-
-        return ValidationResult.ValidTask;
+        string? invalidArgument = RunSettingsProviderHelper.FindInvalidTestParameter(arguments);
+        return invalidArgument is not null
+            ? ValidationResult.InvalidTask(string.Format(CultureInfo.CurrentCulture, ExtensionResources.TestRunParameterOptionArgumentIsNotParameter, invalidArgument))
+            : ValidationResult.ValidTask;
     }
 }

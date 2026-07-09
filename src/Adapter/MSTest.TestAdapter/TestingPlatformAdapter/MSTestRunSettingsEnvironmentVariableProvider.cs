@@ -2,12 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 using IEnvironment = Microsoft.Testing.Platform.Helpers.IEnvironment;
-using IFileStream = Microsoft.Testing.Platform.Helpers.IFileStream;
 using IFileSystem = Microsoft.Testing.Platform.Helpers.IFileSystem;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter;
@@ -44,59 +44,18 @@ internal sealed class MSTestRunSettingsEnvironmentVariableProvider : ITestHostEn
 
     public async Task<bool> IsEnabledAsync()
     {
-        string? runSettingsFilePath = null;
-        string? runSettingsContent = null;
+        _runSettings = await RunSettingsProviderHelper.TryLoadRunSettingsAsync(
+            _commandLineOptions,
+            _fileSystem,
+            _environment,
+            MSTestRunSettingsCommandLineOptionsProvider.RunSettingsOptionName).ConfigureAwait(false);
 
-        if (_commandLineOptions.TryGetOptionArgumentList(MSTestRunSettingsCommandLineOptionsProvider.RunSettingsOptionName, out string[]? runsettings)
-            && runsettings.Length > 0
-            && _fileSystem.ExistFile(runsettings[0]))
-        {
-            runSettingsFilePath = runsettings[0];
-        }
-
-        if (runSettingsFilePath is null)
-        {
-            runSettingsContent = _environment.GetEnvironmentVariable("TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS");
-        }
-
-        if (runSettingsFilePath is null && string.IsNullOrEmpty(runSettingsContent))
-        {
-            string? envVarFilePath = _environment.GetEnvironmentVariable("TESTINGPLATFORM_VSTESTBRIDGE_RUNSETTINGS_FILE");
-            if (!string.IsNullOrEmpty(envVarFilePath) && _fileSystem.ExistFile(envVarFilePath!))
-            {
-                runSettingsFilePath = envVarFilePath;
-            }
-        }
-
-        if (runSettingsFilePath is not null)
-        {
-            using IFileStream fileStream = _fileSystem.NewFileStream(runSettingsFilePath, FileMode.Open, FileAccess.Read);
-#if NETCOREAPP
-            _runSettings = await XDocument.LoadAsync(fileStream.Stream, LoadOptions.None, CancellationToken.None).ConfigureAwait(false);
-#else
-            using StreamReader streamReader = new(fileStream.Stream);
-            _runSettings = XDocument.Parse(await streamReader.ReadToEndAsync().ConfigureAwait(false));
-#endif
-        }
-        else if (!string.IsNullOrEmpty(runSettingsContent))
-        {
-            _runSettings = XDocument.Parse(runSettingsContent);
-        }
-        else
-        {
-            return false;
-        }
-
-        return _runSettings.Element("RunSettings")?.Element("RunConfiguration")?.Element("EnvironmentVariables") is not null;
+        return _runSettings is not null && RunSettingsProviderHelper.HasEnvironmentVariables(_runSettings);
     }
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-        foreach (XElement element in _runSettings!.Element("RunSettings")!.Element("RunConfiguration")!.Element("EnvironmentVariables")!.Elements())
-        {
-            environmentVariables.SetVariable(new(element.Name.ToString(), element.Value, true, true));
-        }
-
+        RunSettingsProviderHelper.ApplyEnvironmentVariables(_runSettings!, environmentVariables);
         return Task.CompletedTask;
     }
 

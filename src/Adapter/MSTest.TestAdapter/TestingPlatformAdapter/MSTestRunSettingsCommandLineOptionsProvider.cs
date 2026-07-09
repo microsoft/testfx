@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
@@ -38,22 +39,9 @@ internal sealed class MSTestRunSettingsCommandLineOptionsProvider : CommandLineO
 
         return !_fileSystem.ExistFile(filePath)
             ? ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.RunsettingsFileDoesNotExist, filePath))
-            : !CanReadFile(filePath)
+            : !RunSettingsProviderHelper.CanReadFile(_fileSystem, filePath)
                 ? ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.RunsettingsFileCannotBeRead, filePath))
                 : ValidationResult.ValidTask;
-    }
-
-    private bool CanReadFile(string filePath)
-    {
-        try
-        {
-            using IFileStream stream = _fileSystem.NewFileStream(filePath, FileMode.Open, FileAccess.Read);
-            return true;
-        }
-        catch (IOException)
-        {
-            return false;
-        }
     }
 }
 #endif
