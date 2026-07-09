@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
@@ -11,7 +12,6 @@ Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Deconstruct(out bo
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? other) -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.get -> bool
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.IsStateful.init -> void
-Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
 Microsoft.Testing.Platform.Services.ClientInfoService.Capabilities.init -> void
 Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version, Microsoft.Testing.Platform.Services.IClientCapabilities! Capabilities) -> void
