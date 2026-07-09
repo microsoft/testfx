@@ -454,7 +454,7 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
 
-        if (collection.Span.Length != 0)
+        if (collection.Length != 0)
         {
             return;
         }
@@ -494,7 +494,7 @@ public sealed partial class Assert
     {
         TelemetryCollector.TrackAssertionCall("Assert.IsNotEmpty");
 
-        if (collection.Span.Length != 0)
+        if (collection.Length != 0)
         {
             return;
         }
