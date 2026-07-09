@@ -350,6 +350,55 @@ internal abstract class BaseSerializer
         SetPosition(stream, currentPosition);
     }
 
+    /// <summary>
+    /// Reads the standard field envelope (a <c>ushort</c> field count followed by that many
+    /// <c>[ushort id][int size][payload]</c> triples) and dispatches each field to <paramref name="tryReadField"/>.
+    /// When the callback returns <see langword="false"/> (an unrecognized field id), the field payload is skipped so
+    /// that the reader stays aligned and remains forward-compatible with newer producers.
+    /// </summary>
+    protected static void ReadFields(Stream stream, Func<ushort, int, bool> tryReadField)
+    {
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+            if (!tryReadField(fieldId, fieldSize))
+            {
+                // If we don't recognize the field id, skip the payload corresponding to that field.
+                SetPosition(stream, stream.Position + fieldSize);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Writes a length-prefixed list payload using the deferred-size-backfill protocol: the field id, a reserved
+    /// 4-byte size slot, the element count, then each element via <paramref name="writeItem"/>. The reserved slot is
+    /// finally patched with the payload size. A <see langword="null"/> or empty list writes nothing.
+    /// </summary>
+    /// <typeparam name="T">The element type of the list being serialized.</typeparam>
+    protected static void WriteListPayload<T>(Stream stream, ushort fieldId, T[]? list, Action<Stream, T> writeItem)
+    {
+        if (list is null || list.Length == 0)
+        {
+            return;
+        }
+
+        WriteUShort(stream, fieldId);
+        // We will reserve an int (4 bytes) so that we fill the size later, once we write the payload.
+        WriteInt(stream, 0);
+        long before = stream.Position;
+        WriteInt(stream, list.Length);
+        foreach (T item in list)
+        {
+            writeItem(stream, item);
+        }
+
+        // NOTE: We are able to seek only if we are using a MemoryStream
+        // thus, the seek operation is fast as we are only changing the value of a property.
+        WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
+    }
+
     private static int GetSize<T>() => typeof(T) switch
     {
         Type type when type == typeof(int) => sizeof(int),

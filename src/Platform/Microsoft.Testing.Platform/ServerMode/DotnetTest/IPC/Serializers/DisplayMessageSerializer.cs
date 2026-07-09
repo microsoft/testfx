@@ -36,22 +36,17 @@ internal sealed class DisplayMessageSerializer : NamedPipeSerializer<DisplayMess
         byte level = DisplayMessageLevels.Information;
         string? text = null;
 
-        ushort fieldCount = ReadUShort(stream);
-
-        for (int i = 0; i < fieldCount; i++)
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
-            ushort fieldId = ReadUShort(stream);
-            int fieldSize = ReadInt(stream);
-
             switch (fieldId)
             {
                 case DisplayMessageFieldsId.ExecutionId:
                     executionId = ReadStringValue(stream, fieldSize);
-                    break;
+                    return true;
 
                 case DisplayMessageFieldsId.InstanceId:
                     instanceId = ReadStringValue(stream, fieldSize);
-                    break;
+                    return true;
 
                 case DisplayMessageFieldsId.Level:
                     level = ReadByte(stream);
@@ -64,18 +59,16 @@ internal sealed class DisplayMessageSerializer : NamedPipeSerializer<DisplayMess
                         SetPosition(stream, stream.Position + (fieldSize - 1));
                     }
 
-                    break;
+                    return true;
 
                 case DisplayMessageFieldsId.Text:
                     text = ReadStringValue(stream, fieldSize);
-                    break;
+                    return true;
 
                 default:
-                    // If we don't recognize the field id, skip the payload corresponding to that field
-                    SetPosition(stream, stream.Position + fieldSize);
-                    break;
+                    return false;
             }
-        }
+        });
 
         return new(executionId, instanceId, level, text);
     }
