@@ -1,14 +1,14 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-07-08 UTC
+2026-07-09 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session: **5, 7**
-Last run before this: Tasks 2, 3, 6, 7 (2026-07-10)
-Last run before that: Tasks 5, 3, 7 (2026-07-09)
-Next run should prioritise: Tasks 1 (validate commands), 2 (scan code), 3 (implement), 7 (always)
+Tasks run this session: **2, 3, 7**
+Last run before this: Tasks 5, 7 (2026-07-08)
+Last run before that: Tasks 2, 3, 6, 7 (2026-07-10)
+Next run should prioritise: Tasks 1 (validate), 4 (maintain PRs), 5 (issue comments), 7 (always)
 
 ## Build / Test / Benchmark Commands
 
@@ -21,10 +21,9 @@ Next run should prioritise: Tasks 1 (validate commands), 2 (scan code), 3 (imple
 
 Notes:
 - Repo-local SDK at `.dotnet/dotnet` (Arcade-provisioned). Must run `./build.sh` first to install.
-- Required SDK version: `11.0.100-preview.5.26302.115`
+- Required SDK version: `11.0.100-preview.7.26359.110`
 - `--no-restore` flag is broken; always run with full restore.
 - Performance runner: `test/Performance/MSTest.Performance.Runner/`
-  - Build: `.dotnet/dotnet build test/Performance/MSTest.Performance.Runner/MSTest.Performance.Runner.csproj -f net9.0 -c Debug`
 
 ## Efficiency Notes
 
@@ -35,12 +34,14 @@ Notes:
 - **Assert.That**: Compiles expression trees on every call (by design). Not cacheable without significant complexity.
 - **Report generators well-optimized**: CtrfReport uses custom `Utf8JsonWriter`-based streaming serialiser; HtmlReport is single-pass. No significant opportunities found.
 - **OpenTelemetry `Properties.OfType()`** in yield iterator — LOW priority, not worth changing without profiling evidence.
+- **MSBuildCompatibilityHelper**: Already caches MSBuild version and feature-check results with `??=` pattern.
 
 ## Open PRs / Issues Created by Efficiency Improver
 
-None currently open. Previous work:
-- #9713 (Scenario2 proposal) — closed as completed by Evangelink, resolved by #9728
-- #9714 (JsonSerializerOptions caching) — closed as completed by Evangelink, branch `efficiency/cache-json-serializer-options-cf226ce60ce3db6d` was pushed; merged into main
+- **branch `efficiency/cache-bool-parse-invoke-task`** pushed 2026-07-09 — Cache `bool.Parse` results in `InvokeTestingPlatformTask` (hot path: every output line). PR pending assignment of number.
+- Previous work:
+  - #9713 (Scenario2 proposal) — closed as completed by Evangelink, resolved by #9728
+  - #9714 (JsonSerializerOptions caching) — closed as completed by Evangelink
 
 ## Monthly Summary Issue
 
@@ -63,6 +64,7 @@ None currently open. Previous work:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
+| 2026-07-09 | branch pushed (PR# TBD) | Cache `bool.Parse` results in `InvokeTestingPlatformTask`; eliminate repeated string scanning on every output line |
 | 2026-07-08 | #9712 comment | Energy impact of Azure.Identity dependency; recommended TokenCredential abstraction |
 | 2026-07-10 | #9714 (closed) | Cache JsonSerializerOptions in PlainProcess + DotnetTestProcess; remove CA1869 pragmas |
 | 2026-07-10 | #9713 (closed) | Issue: propose Scenario2 data-driven benchmark for perf runner — resolved by #9728 |
@@ -76,6 +78,6 @@ None currently open. Previous work:
 
 ## Backlog Cursor
 
-- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅
+- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅, MSBuild tasks ✅
 - Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
-- Next code scan area: MSBuild tasks area (`src/Platform/Microsoft.Testing.Platform.MSBuild/`)
+- Next code scan area: `src/Platform/Microsoft.Testing.Extensions.TrxReport/` — TRX streaming serialiser
