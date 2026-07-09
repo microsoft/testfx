@@ -187,6 +187,45 @@ public sealed class RunContextAdapterFilterTests
         Assert.AreEqual("(FullyQualifiedName=A.B\\\\\\|C)", GetFilterValue(adapterBackslash));
     }
 
+    [TestMethod]
+    public void GetTestCaseFilter_WithSpecialCharactersInName_RoundTripsAndMatchesOnlyExactName()
+    {
+        // Verify the full escape -> parse -> match path (not just the emitted string): a name full of
+        // filter operators must, once escaped, parse back to a filter that matches a test case whose
+        // FullyQualifiedName is exactly that name and rejects any other name.
+        const string name = "Ns.PrintArg(\"as|\")";
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter(name));
+
+        Assert.IsTrue(MatchesFullyQualifiedName(adapter, name));
+        Assert.IsFalse(MatchesFullyQualifiedName(adapter, "Ns.PrintArg(\"as\")"));
+    }
+
+    [TestMethod]
+    public void GetTestCaseFilter_WithBackslashFollowedBySpecialCharacter_RoundTripsAndMatchesOnlyExactName()
+    {
+        // Regression guard for the round trip: if the backslash-then-operator sequence were under-escaped
+        // the parser would split the value at the operator, so the filter would no longer match the exact
+        // name (and might match a truncated one).
+        const string name = "A.B\\|C";
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter(name));
+
+        Assert.IsTrue(MatchesFullyQualifiedName(adapter, name));
+        Assert.IsFalse(MatchesFullyQualifiedName(adapter, "A.B"));
+    }
+
+    [TestMethod]
+    public void GetTestCaseFilter_WithMultipleNodes_MatchesEitherNodeButNotOthers()
+    {
+        // The '|' joining the two clauses must stay an OR operator while a '|' inside a name stays a
+        // literal, so the filter matches each node's exact name (including the special-character one) and
+        // nothing else.
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter("A.B.Test1", "PrintArg(\"as|\")"));
+
+        Assert.IsTrue(MatchesFullyQualifiedName(adapter, "A.B.Test1"));
+        Assert.IsTrue(MatchesFullyQualifiedName(adapter, "PrintArg(\"as|\")"));
+        Assert.IsFalse(MatchesFullyQualifiedName(adapter, "A.B.Test2"));
+    }
+
     private static TestNodeUidListFilter CreateUidFilter(params string[] uids)
         => new([.. uids.Select(uid => new TestNodeUid(uid))]);
 
@@ -195,6 +234,19 @@ public sealed class RunContextAdapterFilterTests
         ITestCaseFilterExpression? filterExpression = adapter.GetTestCaseFilter(null, _ => null);
         Assert.IsNotNull(filterExpression);
         return filterExpression.TestCaseFilterValue;
+    }
+
+    private static bool MatchesFullyQualifiedName(RunContextAdapter adapter, string fullyQualifiedName)
+    {
+        ITestCaseFilterExpression? filterExpression = adapter.GetTestCaseFilter(null, _ => null);
+        Assert.IsNotNull(filterExpression);
+
+        var testCase = new TestCase(fullyQualifiedName, new Uri("executor://mstest"), "source.dll");
+        return filterExpression.MatchTestCase(
+            testCase,
+            propertyName => string.Equals(propertyName, "FullyQualifiedName", StringComparison.OrdinalIgnoreCase)
+                ? fullyQualifiedName
+                : null);
     }
 
     private static RunContextAdapter CreateAdapter(string runSettingsXml, ITestExecutionFilter filter, string? commandLineFilter = null)
