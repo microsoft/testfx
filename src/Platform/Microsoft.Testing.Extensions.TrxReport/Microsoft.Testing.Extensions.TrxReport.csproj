@@ -66,6 +66,8 @@ This package extends Microsoft Testing Platform to provide TRX test reports.]]>
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
+    <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>
