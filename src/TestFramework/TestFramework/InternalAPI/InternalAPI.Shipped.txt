@@ -1,0 +1,210 @@
+#nullable enable
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryContext.RetryContext(System.Func<System.Threading.Tasks.Task<Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!>!>! executeTaskGetter, Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! firstRunResults) -> void
+[MSTESTEXP]Microsoft.VisualStudio.TestTools.UnitTesting.RetryResult.TryGetLast() -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]?
+~override Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.Equals(object obj) -> bool
+~override Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.ToString() -> string
+const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseAssertEquals = "Assert.Equals should not be used for Assertions. Please use Assert.AreEqual & overloads instead." -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseAssertReferenceEquals = "Assert.ReferenceEquals should not be used for Assertions. Please use Assert.AreSame & overloads instead." -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseCollectionAssertEquals = "CollectionAssert.Equals should not be used for Assertions. Please use CollectionAssert.AreEqual & overloads instead." -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseCollectionAssertReferenceEquals = "CollectionAssert.ReferenceEquals should not be used for Assertions. Please use CollectionAssert methods or Assert.AreSame & overloads instead." -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseStringAssertEquals = "StringAssert.Equals should not be used for Assertions. Please use StringAssert methods or Assert.AreEqual & overloads instead." -> string!
+const Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants.DoNotUseStringAssertReferenceEquals = "StringAssert.ReferenceEquals should not be used for Assertions. Please use StringAssert methods or Assert.AreSame & overloads instead." -> string!
+Microsoft.CodeAnalysis.EmbeddedAttribute
+Microsoft.CodeAnalysis.EmbeddedAttribute.EmbeddedAttribute() -> void
+Microsoft.Testing.Platform.RoslynHashCode
+Microsoft.Testing.Platform.RoslynHashCode.Add<T>(T value, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
+Microsoft.Testing.Platform.RoslynHashCode.Add<T>(T value) -> void
+Microsoft.Testing.Platform.RoslynHashCode.RoslynHashCode() -> void
+Microsoft.Testing.Platform.RoslynHashCode.ToHashCode() -> int
+Microsoft.VisualStudio.TestTools.UnitTesting.ApplicationStateGuard
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreEqualInterpolatedStringHandler<TArgument>.ComputeAssertion(string! expectedExpression, string! actualExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotEqualInterpolatedStringHandler<TArgument>.ComputeAssertion(string! notExpectedExpression, string! actualExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreNotSameInterpolatedStringHandler<TArgument>.ComputeAssertion(string! notExpectedExpression, string! actualExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertAreSameInterpolatedStringHandler<TArgument>.ComputeAssertion(string! expectedExpression, string! actualExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertCountInterpolatedStringHandler<TItem>.ComputeAssertion(string! assertionName, string! collectionExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsExactInstanceOfTypeInterpolatedStringHandler<TArg>.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsInstanceOfTypeInterpolatedStringHandler<TArg>.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotExactInstanceOfTypeInterpolatedStringHandler<TArg>.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertGenericIsNotInstanceOfTypeInterpolatedStringHandler<TArg>.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsExactInstanceOfTypeInterpolatedStringHandler.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsFalseInterpolatedStringHandler.ComputeAssertion(string! conditionExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsInstanceOfTypeInterpolatedStringHandler.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotEmptyInterpolatedStringHandler<TItem>.ComputeAssertion(string! collectionExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotExactInstanceOfTypeInterpolatedStringHandler.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotInstanceOfTypeInterpolatedStringHandler.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNotNullInterpolatedStringHandler.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsNullInterpolatedStringHandler.ComputeAssertion(string! valueExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertIsTrueInterpolatedStringHandler.ComputeAssertion(string! conditionExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreEqualInterpolatedStringHandler.ComputeAssertion(string! expectedExpression, string! actualExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonGenericAreNotEqualInterpolatedStringHandler.ComputeAssertion(string! notExpectedExpression, string! actualExpression) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsAsyncInterpolatedStringHandler<TException>.ComputeAssertion(string! actionExpression) -> TException!
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertNonStrictThrowsInterpolatedStringHandler<TException>.ComputeAssertion(string! actionExpression) -> TException!
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertSingleInterpolatedStringHandler<TItem>.ComputeAssertion(string! collectionExpression) -> TItem
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyAsyncInterpolatedStringHandler<TException>.ComputeAssertion(string! actionExpression) -> TException!
+Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AssertThrowsExactlyInterpolatedStringHandler<TException>.ComputeAssertion(string! actionExpression) -> TException!
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ActualText.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.ExpectedText.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueFormatterRegistry
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueRenderer
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertScope
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertScope.AddError(Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException! error) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertScope.AssertScope() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertScope.Dispose() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.CIEnvironmentDetector
+Microsoft.VisualStudio.TestTools.UnitTesting.CIEnvironmentDetector.CIEnvironmentDetector(Microsoft.VisualStudio.TestTools.UnitTesting.IEnvironment! environment) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.CIEnvironmentDetector.IsCIEnvironment() -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.DebugEx
+Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode
+Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode.Disabled = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode
+Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode.Enabled = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode
+Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode.EnabledExcludingCI = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode
+Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations
+Microsoft.VisualStudio.TestTools.UnitTesting.EmptyDataSourceExceptionInfoExtensions
+Microsoft.VisualStudio.TestTools.UnitTesting.EnvironmentWrapper
+Microsoft.VisualStudio.TestTools.UnitTesting.EnvironmentWrapper.GetEnvironmentVariable(string! name) -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.EnvironmentWrapper.MachineName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.EnvironmentWrapper.SetEnvironmentVariable(string! variable, string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock.AddLine(string! label, string! value) -> Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock!
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock.EvidenceBlock() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock.Format() -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock.Lines.get -> System.Collections.Generic.IReadOnlyList<Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine>!
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.Deconstruct(out string! Label, out string! Value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.Equals(Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine other) -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.EvidenceLine() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.EvidenceLine(string! Label, string! Value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.Label.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.Label.init -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.Value.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.Value.init -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.FrameworkConstants
+Microsoft.VisualStudio.TestTools.UnitTesting.GenerateAssertInterpolatedStringAppendMethodsAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.GenerateAssertInterpolatedStringAppendMethodsAttribute.GenerateAssertInterpolatedStringAppendMethodsAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.GenerateAssertInterpolatedStringAppendMethodsAttribute.NullableLiteralParameter.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.GenerateAssertInterpolatedStringAppendMethodsAttribute.NullableLiteralParameter.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.IEnvironment
+Microsoft.VisualStudio.TestTools.UnitTesting.IEnvironment.GetEnvironmentVariable(string! name) -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.IEnvironment.MachineName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.IEnvironment.SetEnvironmentVariable(string! variable, string? value) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.DisplayName.get -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.ReflectionTestMethodInfo(System.Reflection.MethodInfo! methodInfo, string? displayName) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.DisplayName.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.IgnoreMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.TestCategories.get -> System.Collections.Generic.IList<string!>?
+Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataRow.Value.get -> object?
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestException
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestException.MSTestException() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestException.MSTestException(string! msg, System.Exception! ex) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestException.MSTestException(string! msg) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.MSTestException.MSTestException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.SingleThreadedSTASynchronizationContext
+Microsoft.VisualStudio.TestTools.UnitTesting.SingleThreadedSTASynchronizationContext.Complete() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.SingleThreadedSTASynchronizationContext.Dispose() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.SingleThreadedSTASynchronizationContext.SingleThreadedSTASynchronizationContext() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.StringEx
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.ActualText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.ExpectedText.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.Format() -> string!
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.StructuredAssertionMessage(string! summary) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.WithAdditionalSummaryLine(string! line) -> Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage!
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.WithCallSiteExpression(string? callSiteExpression) -> Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage!
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.WithEvidence(Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock! evidenceBlock) -> Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage!
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.WithExpectedAndActual(string? expectedText, string? actualText) -> Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage!
+Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.WithUserMessage(string? userMessage) -> Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage!
+Microsoft.VisualStudio.TestTools.UnitTesting.TelemetryCollector
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.AssociatedUnitTestElement.get -> object?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.AssociatedUnitTestElement.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionMessage.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionMessage.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionStackTrace.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.ExceptionStackTrace.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IgnoreReason.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.IgnoreReason.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.HasCorrectTimeout.get -> bool
+Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.IsCooperativeCancellationSet.get -> bool
+override Microsoft.Testing.Platform.RoslynHashCode.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.RoslynHashCode.GetHashCode() -> int
+override Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.GetHashCode() -> int
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.Attributes.get -> System.Reflection.MethodAttributes
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.ContainsGenericParameters.get -> bool
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.DeclaringType.get -> System.Type?
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.GetBaseDefinition() -> System.Reflection.MethodInfo!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.GetCustomAttributes(bool inherit) -> object![]!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.GetCustomAttributes(System.Type! attributeType, bool inherit) -> object![]!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.GetGenericArguments() -> System.Type![]!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.GetGenericMethodDefinition() -> System.Reflection.MethodInfo!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.GetMethodImplementationFlags() -> System.Reflection.MethodImplAttributes
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.GetParameters() -> System.Reflection.ParameterInfo![]!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.Invoke(object? obj, System.Reflection.BindingFlags invokeAttr, System.Reflection.Binder? binder, object?[]? parameters, System.Globalization.CultureInfo? culture) -> object?
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.IsDefined(System.Type! attributeType, bool inherit) -> bool
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.IsGenericMethod.get -> bool
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.IsGenericMethodDefinition.get -> bool
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.MakeGenericMethod(params System.Type![]! typeArguments) -> System.Reflection.MethodInfo!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.MethodHandle.get -> System.RuntimeMethodHandle
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.Name.get -> string!
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.ReflectedType.get -> System.Type?
+override Microsoft.VisualStudio.TestTools.UnitTesting.Internal.ReflectionTestMethodInfo.ReturnTypeCustomAttributes.get -> System.Reflection.ICustomAttributeProvider!
+override Microsoft.VisualStudio.TestTools.UnitTesting.SingleThreadedSTASynchronizationContext.Post(System.Threading.SendOrPostCallback! d, object? state) -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.SingleThreadedSTASynchronizationContext.Send(System.Threading.SendOrPostCallback! d, object? state) -> void
+override Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage.ToString() -> string!
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1, T2, T3, T4, T5, T6, T7, T8>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7, T8 value8) -> int
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1, T2, T3, T4, T5, T6, T7>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6, T7 value7) -> int
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1, T2, T3, T4, T5, T6>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5, T6 value6) -> int
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1, T2, T3, T4, T5>(T1 value1, T2 value2, T3 value3, T4 value4, T5 value5) -> int
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1, T2, T3, T4>(T1 value1, T2 value2, T3 value3, T4 value4) -> int
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1, T2, T3>(T1 value1, T2 value2, T3 value3) -> int
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1, T2>(T1 value1, T2 value2) -> int
+static Microsoft.Testing.Platform.RoslynHashCode.Combine<T1>(T1 value1) -> int
+static Microsoft.VisualStudio.TestTools.UnitTesting.ApplicationStateGuard.Unreachable(string? path = null, int line = 0) -> System.Diagnostics.UnreachableException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.BuildUserMessage(string? format) -> string!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.CheckParameterNotNull(object? param, string! assertionName, string! parameterName) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.FormatCallSiteExpression(string! assertionMethodName, string! expression, string! placeholderOrParamName = "<value>") -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.FormatCallSiteExpression(string! assertionMethodName, string! expression1, string! expression2, string! expression3, string! placeholder1 = "<arg1>", string! placeholder2 = "<arg2>", string! placeholder3 = "<arg3>") -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.FormatCallSiteExpression(string! assertionMethodName, string! expression1, string! expression2, string! placeholder1 = "<arg1>", string! placeholder2 = "<arg2>") -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ReplaceNulls(object? input) -> string!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ReportAssertFailed(Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage! structuredMessage) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ReportAssertFailed(string! assertionName, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowAssertFailed(Microsoft.VisualStudio.TestTools.UnitTesting.StructuredAssertionMessage! structuredMessage) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowAssertFailed(string! assertionName, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendFormatted(System.Text.StringBuilder! builder, object? value, int alignment = 0, string? format = null) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendFormatted(System.Text.StringBuilder! builder, string? value, int alignment = 0, string? format = null) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendFormatted(System.Text.StringBuilder! builder, string? value) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendFormatted(System.Text.StringBuilder! builder, System.ReadOnlySpan<char> value) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendFormatted<T>(System.Text.StringBuilder! builder, T value, int alignment, string? format) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendFormatted<T>(System.Text.StringBuilder! builder, T value, int alignment) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendFormatted<T>(System.Text.StringBuilder! builder, T value, string? format) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertInterpolatedStringHandlerAppender.AppendLiteral(System.Text.StringBuilder! builder, string? value) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.LaunchDebuggerOnAssertionFailure.get -> Microsoft.VisualStudio.TestTools.UnitTesting.DebuggerLaunchMode
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionFailureSettings.LaunchDebuggerOnAssertionFailure.set -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueFormatterRegistry.Add(System.Func<System.Func<object?, string!>!, System.Func<object?, string!>!>! factory) -> System.IDisposable!
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueFormatterRegistry.HasFormatters.get -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueFormatterRegistry.Render(object? value, System.Func<object?, string!>! builtIn) -> string!
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertionValueRenderer.RenderValue(object? value) -> string!
+static Microsoft.VisualStudio.TestTools.UnitTesting.AssertScope.Current.get -> Microsoft.VisualStudio.TestTools.UnitTesting.AssertScope?
+static Microsoft.VisualStudio.TestTools.UnitTesting.CIEnvironmentDetector.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CIEnvironmentDetector!
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOfHelper(System.Collections.ICollection! subset, System.Collections.ICollection! superset) -> System.Tuple<bool, System.Collections.Generic.ICollection<object?>!>!
+static Microsoft.VisualStudio.TestTools.UnitTesting.DebugEx.Assert(bool b, string! message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.GetData(System.Type? dynamicDataDeclaringType, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType dynamicDataSourceType, string! dynamicDataSourceName, object?[]! dynamicDataSourceArguments, System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object![]!>!
+static Microsoft.VisualStudio.TestTools.UnitTesting.EmptyDataSourceExceptionInfoExtensions.GetExceptionForEmptyDataSource(this Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource! dataSource, System.Reflection.MethodInfo! testMethodInfo) -> System.ArgumentException!
+static Microsoft.VisualStudio.TestTools.UnitTesting.EnvironmentWrapper.Instance.get -> Microsoft.VisualStudio.TestTools.UnitTesting.EnvironmentWrapper!
+static Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock.Create() -> Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceBlock!
+static Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.operator !=(Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine left, Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine right) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine.operator ==(Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine left, Microsoft.VisualStudio.TestTools.UnitTesting.EvidenceLine right) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.Internal.TestDataSourceUtilities.ComputeDefaultDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.RetryBaseAttribute.IsAcceptableResultForRetry(Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! results) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringEx.IsNullOrEmpty(string? value) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringEx.IsNullOrWhiteSpace(string? value) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.TelemetryCollector.DrainAssertionCallCounts() -> System.Collections.Generic.Dictionary<string!, long>!
+static Microsoft.VisualStudio.TestTools.UnitTesting.TelemetryCollector.TrackAssertionCall(string! assertionName) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestResult.CreateIgnoredResult(string? ignoreReason) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!
+static System.Numerics.Hashing.HashHelpers.Combine(int h1, int h2) -> int
+System.Numerics.Hashing.HashHelpers
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
+System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void

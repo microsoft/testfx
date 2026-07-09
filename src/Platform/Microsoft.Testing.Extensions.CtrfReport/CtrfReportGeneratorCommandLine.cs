@@ -12,7 +12,8 @@ internal sealed class CtrfReportGeneratorCommandLine : ReportGeneratorCommandLin
 
     public CtrfReportGeneratorCommandLine()
         : base(
-            nameof(CtrfReportGeneratorCommandLine),
+            // Stable extension UID. Do not change: it feeds telemetry, --info output, and artifact metadata.
+            "CtrfReportGeneratorCommandLine",
             ExtensionResources.CtrfReportGeneratorDisplayName,
             ExtensionResources.CtrfReportGeneratorDescription,
             CtrfReportOptionName,
