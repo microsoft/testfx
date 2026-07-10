@@ -6,16 +6,17 @@
 # AFTER InitializeDotNetCli has bootstrapped the repo-local .dotnet/ SDK, so
 # $repo_root and the helpers from eng/common/tools.sh are in scope.
 #
-# Currently required by the wasi-wasm acceptance tests in
-# test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs
-# whose generated assets set <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload> and would
-# otherwise fail their `dotnet build -r wasi-wasm` step with NETSDK1147 in CI.
+# Required by the wasi-wasm acceptance tests:
+#   - test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs
+#   - test/IntegrationTests/MSTest.Acceptance.IntegrationTests/WasmExecutionTests.cs
+# Their generated assets set <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>; the
+# `wasi-experimental-net10` workload is needed by the always-on `dotnet build -r wasi-wasm` assertions
+# (otherwise NETSDK1147 in CI), and `wasm-tools-net10` is needed by the gated `dotnet publish -r
+# wasi-wasm` step the execution tests perform (otherwise the publish fails and they self-skip).
+# Running the execution tests to completion additionally needs `wasmtime` on PATH; when it is absent
+# the tests mark themselves inconclusive.
 
-required_workloads=('wasi-experimental-net10')
-
-# Note: `wasm-tools-net10` is only needed for the `dotnet publish -r wasi-wasm` step that the gated
-# WasmExecution/RawPlatform execution tests perform; it is not needed by `dotnet build`, so we keep
-# the CI install minimal and let those tests self-skip when it (and wasmtime) are absent.
+required_workloads=('wasi-experimental-net10' 'wasm-tools-net10')
 
 if [[ -n "${DOTNET_INSTALL_DIR:-}" ]]; then
   dotnet_root="$DOTNET_INSTALL_DIR"
