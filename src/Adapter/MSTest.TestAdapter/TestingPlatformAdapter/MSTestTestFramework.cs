@@ -23,11 +23,12 @@ using CreateTestSessionContext = Microsoft.Testing.Platform.Extensions.TestFrame
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// A native Microsoft.Testing.Platform (MTP) test framework for MSTest. It does not derive from the VSTest bridge:
-/// it handles the MTP discovery/run requests directly, builds the run context, filter and runsettings natively
-/// (see <see cref="MSTestRunContext"/> / <see cref="MSTestDiscoveryContext"/> / <see cref="MSTestRunSettings"/>), and
-/// publishes test nodes through the native <see cref="MtpUnitTestElementSink"/> / <see cref="MtpTestResultRecorder"/>.
-/// It reuses MSTest's existing <see cref="MSTestDiscoverer"/> / <see cref="MSTestExecutor"/> engine.
+/// A native Microsoft.Testing.Platform (MTP) test framework for MSTest. It does not derive from the VSTest bridge
+/// and it no longer routes through the VSTest <c>MSTestDiscoverer</c> / <c>MSTestExecutor</c> classes: it handles the
+/// MTP discovery/run requests directly, builds the run context, filter and runsettings natively
+/// (see <see cref="MSTestRunContext"/> / <see cref="MSTestDiscoveryContext"/> / <see cref="MSTestRunSettings"/>),
+/// publishes test nodes through the native <see cref="MtpUnitTestElementSink"/> / <see cref="MtpTestResultRecorder"/>,
+/// and drives discovery/execution through the platform-agnostic <see cref="MSTestEngine"/>.
 /// </summary>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
 [StackTraceHidden]
@@ -138,8 +139,18 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         var discoveryContext = new MSTestDiscoveryContext(_serviceProvider.GetCommandLineOptions(), runSettings, request.Filter);
         var elementSink = new MtpUnitTestElementSink(messageBus, this, sessionUid, IsTrxEnabled);
 
-        await new MSTestDiscoverer(new TestSourceHandler(), CreateTelemetrySender())
-            .DiscoverTestsAsync(assemblyPaths, discoveryContext, handle, elementSink, _configuration, isMTP: true)
+        // Call the platform-agnostic engine directly with neutral inputs; the native MTP path no longer routes
+        // through the VSTest MSTestDiscoverer class.
+        await new MSTestEngine(cancellationToken, CreateTelemetrySender())
+            .DiscoverAsync(
+                assemblyPaths,
+                runSettings.SettingsXml,
+                handle.ToAdapterMessageLogger(),
+                elementSink,
+                new TestElementFilterProvider(discoveryContext),
+                _configuration,
+                new TestSourceHandler(),
+                isMTP: true)
             .ConfigureAwait(false);
     }
 
@@ -156,13 +167,18 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         MSTestRunSettings runSettings = CreateRunSettings(handle);
         var runContext = new MSTestRunContext(_serviceProvider.GetCommandLineOptions(), runSettings, request.Filter);
 
-        await new MSTestExecutor(cancellationToken, CreateTelemetrySender())
-            .RunTestsAsync(
+        // Call the platform-agnostic engine directly with neutral inputs; the native MTP path no longer routes
+        // through the VSTest MSTestExecutor class. Results are published natively via MtpTestResultRecorder.
+        await new MSTestEngine(cancellationToken, CreateTelemetrySender())
+            .RunFromSourcesAsync(
                 assemblyPaths,
-                runContext,
-                handle,
+                runSettings.SettingsXml,
+                runContext.TestRunDirectory,
+                handle.ToAdapterMessageLogger(),
                 settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
+                new TestElementFilterProvider(runContext),
                 _configuration,
+                new TestSourceHandler(),
                 isMTP: true)
             .ConfigureAwait(false);
     }
