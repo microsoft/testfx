@@ -152,13 +152,13 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         var successfulTestResultMessages = new SuccessfulTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
-            var fields = new CommonTestResultFields();
+            CommonTestResultFields fields = default;
 
             ReadFields(stream, (fieldId, fieldSize) => TryReadCommonTestResultField(
                 stream,
                 fieldId,
                 fieldSize,
-                fields,
+                ref fields,
                 SuccessfulTestResultMessageFieldsId.StandardOutput,
                 SuccessfulTestResultMessageFieldsId.ErrorOutput,
                 SuccessfulTestResultMessageFieldsId.SessionUid));
@@ -175,7 +175,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         var failedTestResultMessages = new FailedTestResultMessage[length];
         for (int i = 0; i < length; i++)
         {
-            var fields = new CommonTestResultFields();
+            CommonTestResultFields fields = default;
             ExceptionMessage[] exceptionMessages = [];
 
             ReadFields(stream, (fieldId, fieldSize) =>
@@ -190,7 +190,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                     stream,
                     fieldId,
                     fieldSize,
-                    fields,
+                    ref fields,
                     FailedTestResultMessageFieldsId.StandardOutput,
                     FailedTestResultMessageFieldsId.ErrorOutput,
                     FailedTestResultMessageFieldsId.SessionUid);
@@ -206,7 +206,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
     // result messages, so they can be matched directly. The StandardOutput, ErrorOutput and SessionUid field ids
     // differ between the two message types (a failed message inserts ExceptionMessageList before them), so they
     // are passed in by the caller.
-    private static bool TryReadCommonTestResultField(Stream stream, ushort fieldId, int fieldSize, CommonTestResultFields fields, ushort standardOutputFieldId, ushort errorOutputFieldId, ushort sessionUidFieldId)
+    private static bool TryReadCommonTestResultField(Stream stream, ushort fieldId, int fieldSize, ref CommonTestResultFields fields, ushort standardOutputFieldId, ushort errorOutputFieldId, ushort sessionUidFieldId)
     {
         switch (fieldId)
         {
@@ -379,8 +379,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         (exceptionMessage.StackTrace is null ? 0 : 1));
 
     // Mutable holder for the fields shared by successful and failed test result messages, used while reading so
-    // the common field-parsing logic can be shared across both message types.
-    private sealed class CommonTestResultFields
+    // the common field-parsing logic can be shared across both message types. It is a struct captured by the
+    // reading closure (and passed by ref to the helper) to avoid an extra heap allocation per test result.
+    private struct CommonTestResultFields
     {
         public string? Uid { get; set; }
 
