@@ -273,6 +273,60 @@ internal abstract class BaseSerializer
         WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
     }
 
+    // ExecutionId and InstanceId are the two leading fields shared verbatim by every "execution-scoped" message
+    // envelope on the 'dotnet test' protocol (DiscoveredTestMessages, TestResultMessages, TestInProgressMessages,
+    // FileArtifactMessages). Their wire ids are pinned to 1 and 2 for all of those serializers and MUST NOT change.
+    private const ushort ExecutionScopedExecutionIdFieldId = 1;
+    private const ushort ExecutionScopedInstanceIdFieldId = 2;
+
+    /// <summary>
+    /// Reads the shared execution-scoped message envelope: the leading <c>ExecutionId</c> (id 1) and
+    /// <c>InstanceId</c> (id 2) string fields common to every 'dotnet test' messages payload, delegating any other
+    /// field id to <paramref name="tryReadPayloadField"/> (the type-specific message-list reader). Returns the two
+    /// envelope values so the caller can build its concrete message object.
+    /// </summary>
+    protected static (string? ExecutionId, string? InstanceId) ReadExecutionScopedFields(Stream stream, Func<ushort, int, bool> tryReadPayloadField)
+    {
+        string? executionId = null;
+        string? instanceId = null;
+
+        ReadFields(stream, (fieldId, fieldSize) =>
+        {
+            switch (fieldId)
+            {
+                case ExecutionScopedExecutionIdFieldId:
+                    executionId = ReadStringValue(stream, fieldSize);
+                    return true;
+
+                case ExecutionScopedInstanceIdFieldId:
+                    instanceId = ReadStringValue(stream, fieldSize);
+                    return true;
+
+                default:
+                    return tryReadPayloadField(fieldId, fieldSize);
+            }
+        });
+
+        return (executionId, instanceId);
+    }
+
+    /// <summary>
+    /// Writes the shared execution-scoped message envelope: a field-count prefix (the <c>ExecutionId</c> and
+    /// <c>InstanceId</c> fields when non-<see langword="null"/> plus <paramref name="payloadFieldCount"/>), followed by
+    /// the <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2) fields, then <paramref name="writePayload"/> which
+    /// appends the type-specific message list(s).
+    /// </summary>
+    protected static void WriteExecutionScopedFields(Stream stream, string? executionId, string? instanceId, ushort payloadFieldCount, Action<Stream> writePayload)
+    {
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
+
+        WriteUShort(stream, (ushort)((executionId is null ? 0 : 1) + (instanceId is null ? 0 : 1) + payloadFieldCount));
+
+        WriteField(stream, ExecutionScopedExecutionIdFieldId, executionId);
+        WriteField(stream, ExecutionScopedInstanceIdFieldId, instanceId);
+        writePayload(stream);
+    }
+
     private static int GetSize<T>() => typeof(T) switch
     {
         Type type when type == typeof(int) => sizeof(int),

@@ -81,29 +81,17 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     protected override DiscoveredTestMessages DeserializeCore(Stream stream)
     {
-        string? executionId = null;
-        string? instanceId = null;
         DiscoveredTestMessage[]? discoveredTestMessages = [];
 
-        ReadFields(stream, (fieldId, fieldSize) =>
+        (string? executionId, string? instanceId) = ReadExecutionScopedFields(stream, (fieldId, fieldSize) =>
         {
-            switch (fieldId)
+            if (fieldId == DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList)
             {
-                case DiscoveredTestMessagesFieldsId.ExecutionId:
-                    executionId = ReadStringValue(stream, fieldSize);
-                    return true;
-
-                case DiscoveredTestMessagesFieldsId.InstanceId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    return true;
-
-                case DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList:
-                    discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
-                    return true;
-
-                default:
-                    return false;
+                discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
+                return true;
             }
+
+            return false;
         });
 
         return new(executionId, instanceId, discoveredTestMessages);
@@ -224,15 +212,12 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
     }
 
     protected override void SerializeCore(DiscoveredTestMessages objectToSerialize, Stream stream)
-    {
-        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
-
-        WriteUShort(stream, GetFieldCount(objectToSerialize));
-
-        WriteField(stream, DiscoveredTestMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
-        WriteField(stream, DiscoveredTestMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
-        WriteDiscoveredTestMessagesPayload(stream, objectToSerialize.DiscoveredMessages);
-    }
+        => WriteExecutionScopedFields(
+            stream,
+            objectToSerialize.ExecutionId,
+            objectToSerialize.InstanceId,
+            (ushort)(IsNullOrEmpty(objectToSerialize.DiscoveredMessages) ? 0 : 1),
+            s => WriteDiscoveredTestMessagesPayload(s, objectToSerialize.DiscoveredMessages));
 
     private static void WriteDiscoveredTestMessagesPayload(Stream stream, DiscoveredTestMessage[]? discoveredTestMessageList)
         => WriteListPayload(stream, DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList, discoveredTestMessageList, static (s, discoveredTestMessage) =>
@@ -261,11 +246,6 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     private static void WriteParameterTypeFullNamesPayload(Stream stream, string[]? parameterTypeFullNames)
         => WriteListPayload(stream, DiscoveredTestMessageFieldsId.ParameterTypeFullNames, parameterTypeFullNames, static (s, parameterTypeFullName) => WriteString(s, parameterTypeFullName));
-
-    private static ushort GetFieldCount(DiscoveredTestMessages discoveredTestMessages) =>
-        (ushort)((discoveredTestMessages.ExecutionId is null ? 0 : 1) +
-        (discoveredTestMessages.InstanceId is null ? 0 : 1) +
-        (IsNullOrEmpty(discoveredTestMessages.DiscoveredMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(DiscoveredTestMessage discoveredTestMessage) =>
         (ushort)((discoveredTestMessage.Uid is null ? 0 : 1) +
