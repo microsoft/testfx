@@ -66,6 +66,27 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                 public DataRowAttribute(object? data1) { }
                 public DataRowAttribute(object? data1, params object?[] moreData) { }
             }
+
+            public enum DynamicDataSourceType { Property = 0, Method = 1, AutoDetect = 2, Field = 3 }
+
+            [System.AttributeUsage(System.AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
+            public class DynamicDataAttribute : System.Attribute
+            {
+                public DynamicDataAttribute(string sourceName) { }
+                public DynamicDataAttribute(string sourceName, DynamicDataSourceType sourceType) { }
+                public DynamicDataAttribute(string sourceName, System.Type declaringType) { }
+                public DynamicDataAttribute(string sourceName, System.Type declaringType, DynamicDataSourceType sourceType) { }
+                public DynamicDataAttribute(string sourceName, params object?[] arguments) { }
+                public DynamicDataAttribute(string sourceName, System.Type declaringType, params object?[] arguments) { }
+                public string? DynamicDataDisplayName { get; set; }
+                public System.Type? DynamicDataDisplayNameDeclaringType { get; set; }
+            }
+
+            public static class DynamicDataSourceResolver
+            {
+                public static void RegisterDataProvider(System.Type declaringType, string sourceName, System.Func<object?[], object?> dataProvider) { }
+                public static void RegisterDisplayNameProvider(System.Type declaringType, string methodName, System.Func<System.Reflection.MethodInfo, object?[]?, string?> displayNameProvider) { }
+            }
         }
         """;
 
@@ -2402,6 +2423,203 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         GeneratorRunResult result = driver.GetRunResult().Results[0];
         result.Diagnostics.Should().BeEmpty();
         result.GeneratedSources.Should().BeEmpty("the reflection-free generator must not emit in rooting mode");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForPropertySource()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DynamicDataSources = new DynamicDataSourceReflectionInfo[]");
+        registry.Should().Contain("SourceName = \"Data\"");
+        registry.Should().Contain("DeclaringType = typeof(global::Sample.MyTests)");
+        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.Data");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForMethodSourceWithArguments()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> GetData(int count, string label) => new[] { new object[] { count, label } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(GetData), 3, "x")]
+                    public void Test1(int a, string b) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.GetData((int)args[0]!, (string)args[1]!)");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForFieldSource()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static readonly IEnumerable<object[]> DataField = new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(DataField), DynamicDataSourceType.Field)]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.DataField");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDynamicDataAccessor_ForCrossTypeSource()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                public static class DataHolder
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+                }
+
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    [DynamicData(nameof(DataHolder.Data), typeof(DataHolder))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DeclaringType = typeof(global::Sample.DataHolder)");
+        registry.Should().Contain("GetData = static args => (object?)global::Sample.DataHolder.Data");
+    }
+
+    [TestMethod]
+    public void Generator_EmitsDisplayNameAccessor_WhenCustomDisplayNameSpecified()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    public static string GetName(MethodInfo methodInfo, object[] data) => "custom";
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), DynamicDataDisplayName = nameof(GetName))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DisplayNameMethodName = \"GetName\"");
+        registry.Should().Contain("GetDisplayName = static (methodInfo, data) => global::Sample.MyTests.GetName(methodInfo, data!)");
+    }
+
+    [TestMethod]
+    public void Generator_SkipsUnresolvableDynamicDataSource()
+    {
+        // The source name does not match any member, so the generator must not emit an accessor
+        // (the runtime falls back to reflection for it).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    [TestMethod]
+                    [DynamicData("DoesNotExist")]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_DynamicDataRegistration_Compiles()
+    {
+        const string userCode = """
+            using System.Collections.Generic;
+            using System.Reflection;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    public static string GetName(MethodInfo methodInfo, object[] data) => "custom";
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), DynamicDataDisplayName = nameof(GetName))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        Compilation outputCompilation = RunGeneratorAndGetCompilation(MinimalMSTestStub, userCode);
+
+        outputCompilation.GetDiagnostics()
+            .Where(d => d.Severity == DiagnosticSeverity.Error)
+            .Should().BeEmpty();
     }
 
     private static string GetRegistry(GeneratorRunResult result)

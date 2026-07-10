@@ -78,7 +78,7 @@ internal static class TestClassModelBuilder
                         string key = BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
-                            TestMethodModel model = BuildMethod(method, consumingAssembly);
+                            TestMethodModel model = BuildMethod(method, typeSymbol, consumingAssembly);
                             methodsByKey[key] = model;
                             methods.Add(model);
                         }
@@ -238,7 +238,7 @@ internal static class TestClassModelBuilder
         return sb.ToString();
     }
 
-    private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
+    private static TestMethodModel BuildMethod(IMethodSymbol method, INamedTypeSymbol testClassSymbol, IAssemblySymbol consumingAssembly)
     {
         ITypeSymbol returnType = method.ReturnType;
         string returnTypeFqn = returnType.ToDisplayString(FullyQualifiedFormat);
@@ -263,7 +263,162 @@ internal static class TestClassModelBuilder
             IsTestMethod: IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
             Attributes: BuildAttributes(inheritedAttributes, consumingAssembly),
-            DataRows: BuildDataRows(inheritedAttributes));
+            DataRows: BuildDataRows(inheritedAttributes),
+            DynamicDataSources: BuildDynamicDataSources(inheritedAttributes, testClassSymbol));
+    }
+
+    // Resolves each [DynamicData(...)] on a test method to a concrete source member (and optional custom
+    // display-name method) at compile time so the generator can register a reflection-free accessor with
+    // DynamicDataSourceResolver. Sources the generator cannot resolve (missing member, inaccessible, wrong
+    // shape) are skipped: at runtime DynamicDataOperations falls back to reflection for those.
+    private static EquatableArray<DynamicDataSourceModel> BuildDynamicDataSources(ImmutableArray<AttributeData> attributes, INamedTypeSymbol testClassSymbol)
+    {
+        if (attributes.IsDefaultOrEmpty)
+        {
+            return EquatableArray<DynamicDataSourceModel>.Empty;
+        }
+
+        ImmutableArray<DynamicDataSourceModel>.Builder? builder = null;
+        foreach (AttributeData attribute in attributes)
+        {
+            if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::" + MSTestAttributeNames.DynamicData)
+            {
+                continue;
+            }
+
+            if (TryBuildDynamicDataSource(attribute, testClassSymbol) is { } model)
+            {
+                (builder ??= ImmutableArray.CreateBuilder<DynamicDataSourceModel>()).Add(model);
+            }
+        }
+
+        return builder is null
+            ? EquatableArray<DynamicDataSourceModel>.Empty
+            : new EquatableArray<DynamicDataSourceModel>(builder.ToImmutable());
+    }
+
+    private static DynamicDataSourceModel? TryBuildDynamicDataSource(AttributeData attribute, INamedTypeSymbol testClassSymbol)
+    {
+        ImmutableArray<TypedConstant> ctorArgs = attribute.ConstructorArguments;
+        if (ctorArgs.IsDefaultOrEmpty || ctorArgs[0].Value is not string sourceName)
+        {
+            return null;
+        }
+
+        // The declaring type is either an explicit typeof(...) constructor argument or, by default, the test
+        // class. (DynamicDataSourceType and the params object[] arguments do not affect member resolution here.)
+        INamedTypeSymbol declaringType = testClassSymbol;
+        for (int i = 1; i < ctorArgs.Length; i++)
+        {
+            if (ctorArgs[i].Kind == TypedConstantKind.Type && ctorArgs[i].Value is INamedTypeSymbol explicitType)
+            {
+                declaringType = explicitType;
+                break;
+            }
+        }
+
+        if (ResolveDynamicDataMember(declaringType, sourceName) is not { } resolved)
+        {
+            return null;
+        }
+
+        (DynamicDataMemberKind memberKind, EquatableArray<string> methodParameterTypes) = resolved;
+
+        // Resolve the optional custom display-name method (DynamicDataDisplayName /
+        // DynamicDataDisplayNameDeclaringType named arguments).
+        string? displayNameMethodName = null;
+        string? displayNameDeclaringTypeFqn = null;
+        INamedTypeSymbol displayNameDeclaringType = testClassSymbol;
+        foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
+        {
+            switch (named.Key)
+            {
+                case "DynamicDataDisplayName" when named.Value.Value is string name:
+                    displayNameMethodName = name;
+                    break;
+                case "DynamicDataDisplayNameDeclaringType" when named.Value.Value is INamedTypeSymbol type:
+                    displayNameDeclaringType = type;
+                    break;
+            }
+        }
+
+        if (displayNameMethodName is not null)
+        {
+            if (IsValidDisplayNameMethod(displayNameDeclaringType, displayNameMethodName))
+            {
+                displayNameDeclaringTypeFqn = displayNameDeclaringType.ToDisplayString(FullyQualifiedFormat);
+            }
+            else
+            {
+                // Unresolvable / wrong-shape display-name method: leave both null so the runtime reflection
+                // fallback handles it (and reports the proper diagnostic there).
+                displayNameMethodName = null;
+            }
+        }
+
+        return new DynamicDataSourceModel(
+            DeclaringTypeFullyQualifiedName: declaringType.ToDisplayString(FullyQualifiedFormat),
+            SourceName: sourceName,
+            MemberKind: memberKind,
+            MethodParameterTypes: methodParameterTypes,
+            DisplayNameDeclaringTypeFullyQualifiedName: displayNameDeclaringTypeFqn,
+            DisplayNameMethodName: displayNameMethodName);
+    }
+
+    // Resolves a DynamicData source member by name to a supported, accessible, static property/method/field.
+    // Mirrors DynamicDataOperations' AutoDetect order (property, then method, then field). Returns null when
+    // nothing suitable is found so the caller degrades to the runtime reflection fallback.
+    private static (DynamicDataMemberKind Kind, EquatableArray<string> MethodParameterTypes)? ResolveDynamicDataMember(INamedTypeSymbol declaringType, string sourceName)
+    {
+        for (INamedTypeSymbol? current = declaringType; current is not null && current.SpecialType != SpecialType.System_Object; current = current.BaseType)
+        {
+            foreach (ISymbol member in current.GetMembers(sourceName))
+            {
+                switch (member)
+                {
+                    case IPropertySymbol { IsStatic: true, GetMethod: not null } property when IsAccessibleFromConsumer(property):
+                        return (DynamicDataMemberKind.Property, EquatableArray<string>.Empty);
+
+                    case IMethodSymbol { IsStatic: true, MethodKind: MethodKind.Ordinary, IsGenericMethod: false } dataMethod when IsAccessibleFromConsumer(dataMethod):
+                        ImmutableArray<string>.Builder parameterTypes = ImmutableArray.CreateBuilder<string>(dataMethod.Parameters.Length);
+                        foreach (IParameterSymbol parameter in dataMethod.Parameters)
+                        {
+                            if (parameter.RefKind != RefKind.None)
+                            {
+                                return null;
+                            }
+
+                            parameterTypes.Add(parameter.Type.ToDisplayString(FullyQualifiedFormat));
+                        }
+
+                        return (DynamicDataMemberKind.Method, new EquatableArray<string>(parameterTypes.ToImmutable()));
+
+                    case IFieldSymbol { IsStatic: true } field when IsAccessibleFromConsumer(field):
+                        return (DynamicDataMemberKind.Field, EquatableArray<string>.Empty);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsValidDisplayNameMethod(INamedTypeSymbol declaringType, string methodName)
+    {
+        for (INamedTypeSymbol? current = declaringType; current is not null && current.SpecialType != SpecialType.System_Object; current = current.BaseType)
+        {
+            foreach (ISymbol member in current.GetMembers(methodName))
+            {
+                if (member is IMethodSymbol { IsStatic: true, DeclaredAccessibility: Accessibility.Public, Parameters.Length: 2, IsGenericMethod: false } method
+                    && method.ReturnType.SpecialType == SpecialType.System_String
+                    && method.Parameters[0].Type.ToDisplayString(FullyQualifiedFormat) == "global::System.Reflection.MethodInfo"
+                    && method.Parameters[1].Type is IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object })
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // Walks the attribute list and reifies each [DataRow(...)] application into a flat

@@ -67,8 +67,22 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
                 sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
+                sb.AppendLine("/// <summary>Source-generated accessors for this method's <c>[DynamicData]</c> sources (empty when none were resolved), registered with <c>DynamicDataSourceResolver</c> so the data is read without runtime reflection.</summary>");
+                sb.AppendLine("public IReadOnlyList<DynamicDataSourceReflectionInfo> DynamicDataSources { get; set; } = Array.Empty<DynamicDataSourceReflectionInfo>();");
                 sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
                 sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("/// <summary>A compile-time-resolved <c>[DynamicData]</c> source: the declaring type, the source name, an accessor that returns the raw data object, and (optionally) a custom display-name accessor.</summary>");
+            using (sb.Block("internal sealed class DynamicDataSourceReflectionInfo"))
+            {
+                sb.AppendLine("public Type DeclaringType { get; set; } = null!;");
+                sb.AppendLine("public string SourceName { get; set; } = string.Empty;");
+                sb.AppendLine("public Func<object?[], object?> GetData { get; set; } = static _ => null;");
+                sb.AppendLine("public Type? DisplayNameDeclaringType { get; set; }");
+                sb.AppendLine("public string? DisplayNameMethodName { get; set; }");
+                sb.AppendLine("public Func<System.Reflection.MethodInfo, object?[]?, string?>? GetDisplayName { get; set; }");
             }
 
             sb.AppendLine();
@@ -239,6 +253,8 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine(",");
                     EmitDataRows(sb, method.DataRows);
                     sb.AppendLine(",");
+                    EmitDynamicDataSources(sb, method.DynamicDataSources);
+                    sb.AppendLine(",");
                     EmitMethodInvoker(sb, fqn, method);
                 }
 
@@ -372,6 +388,77 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine();
                 }
             }
+        }
+    }
+
+    private static void EmitDynamicDataSources(IndentedStringBuilder sb, EquatableArray<DynamicDataSourceModel> sources)
+    {
+        if (sources.Length == 0)
+        {
+            sb.Append("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+            sb.AppendLine();
+            return;
+        }
+
+        sb.AppendLine("DynamicDataSources = new DynamicDataSourceReflectionInfo[]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < sources.Length; i++)
+            {
+                DynamicDataSourceModel source = sources[i];
+                sb.AppendLine("new DynamicDataSourceReflectionInfo");
+                using (sb.Block(null))
+                {
+                    sb.AppendLine($"DeclaringType = typeof({source.DeclaringTypeFullyQualifiedName}),");
+                    sb.AppendLine($"SourceName = \"{Escape(source.SourceName)}\",");
+                    sb.AppendLine($"GetData = static args => {BuildDynamicDataAccessor(source)},");
+
+                    if (source.DisplayNameMethodName is { } displayNameMethod && source.DisplayNameDeclaringTypeFullyQualifiedName is { } displayNameType)
+                    {
+                        sb.AppendLine($"DisplayNameDeclaringType = typeof({displayNameType}),");
+                        sb.AppendLine($"DisplayNameMethodName = \"{Escape(displayNameMethod)}\",");
+                        sb.AppendLine($"GetDisplayName = static (methodInfo, data) => {displayNameType}.{displayNameMethod}(methodInfo, data!),");
+                    }
+                }
+
+                if (i < sources.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
+    }
+
+    private static string BuildDynamicDataAccessor(DynamicDataSourceModel source)
+    {
+        switch (source.MemberKind)
+        {
+            case DynamicDataMemberKind.Property:
+            case DynamicDataMemberKind.Field:
+                // Ignore the (unused) source arguments; read the static property/field value.
+                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{source.SourceName}";
+
+            case DynamicDataMemberKind.Method:
+                EquatableArray<string> parameterTypes = source.MethodParameterTypes;
+                if (parameterTypes.Length == 0)
+                {
+                    return $"(object?){source.DeclaringTypeFullyQualifiedName}.{source.SourceName}()";
+                }
+
+                string[] castArgs = new string[parameterTypes.Length];
+                for (int i = 0; i < parameterTypes.Length; i++)
+                {
+                    castArgs[i] = $"({parameterTypes[i]})args[{i}]!";
+                }
+
+                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{source.SourceName}({string.Join(", ", castArgs)})";
+
+            default:
+                return "null";
         }
     }
 

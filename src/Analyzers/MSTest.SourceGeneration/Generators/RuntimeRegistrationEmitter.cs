@@ -137,6 +137,18 @@ internal static class RuntimeRegistrationEmitter
                         sb.AppendLine("testMethodRoots.Add(methodInfo);");
                     }
                 }
+
+                // Register the source-generated DynamicData accessors so the runtime reads dynamic data
+                // without reflecting over the declaring type (trim / Native AOT safe).
+                using (sb.Block("for (int sourceIndex = 0; sourceIndex < method.DynamicDataSources.Count; sourceIndex++)"))
+                {
+                    sb.AppendLine($"{RegistryNamespace}.DynamicDataSourceReflectionInfo dynamicDataSource = method.DynamicDataSources[sourceIndex];");
+                    sb.AppendLine($"{Constants.DynamicDataSourceResolverFullName}.RegisterDataProvider(dynamicDataSource.DeclaringType, dynamicDataSource.SourceName, dynamicDataSource.GetData);");
+                    using (sb.Block("if (dynamicDataSource.DisplayNameDeclaringType is not null && dynamicDataSource.DisplayNameMethodName is not null && dynamicDataSource.GetDisplayName is not null)"))
+                    {
+                        sb.AppendLine($"{Constants.DynamicDataSourceResolverFullName}.RegisterDisplayNameProvider(dynamicDataSource.DisplayNameDeclaringType, dynamicDataSource.DisplayNameMethodName, dynamicDataSource.GetDisplayName);");
+                    }
+                }
             }
 
             sb.AppendLine("testMethods[type] = testMethodRoots.ToArray();");
