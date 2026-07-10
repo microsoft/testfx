@@ -53,20 +53,22 @@ internal sealed class FileLoggerProvider(
         }
 
         string fileName = Path.GetFileName(FileLogger.FileName);
-        await DisposeHelper.DisposeAsync(FileLogger).ConfigureAwait(false);
+        FileLogger previousLogger = FileLogger;
+        string previousFileName = previousLogger.FileName;
+        await DisposeHelper.DisposeAsync(previousLogger).ConfigureAwait(false);
 
-        // If disposal timed out while flushing, the consumer loop may still own the file handle (the stream was opened
-        // with FileShare.Read, so a move would fail on Windows). Skip the relocation in that degenerate case and keep
-        // the existing logger rather than turning a non-fatal flush timeout into a fatal IOException.
-        // See https://github.com/dotnet/sdk/issues/55215.
-        if (!FileLogger.IsFileHandleReleased)
+        // If disposal completed cleanly, relocate the log file into the test result directory. If a flush timed out,
+        // the previous consumer loop may still own the file handle (the stream was opened with FileShare.Read, so a
+        // move would fail on Windows) — in that case we leave the old file in place and skip the move rather than
+        // turning a non-fatal flush timeout into a fatal IOException. See https://github.com/dotnet/sdk/issues/55215.
+        if (previousLogger.IsFileHandleReleased)
         {
-            return;
+            _fileSystem.MoveFile(previousFileName, Path.Combine(testResultDirectory, fileName));
         }
 
-        // Move the log file to the new directory
-        _fileSystem.MoveFile(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
-
+        // Always install a fresh logger pointing at the test result directory so subsequent diagnostics keep working.
+        // The previous instance's channel is completed, so writing to it would throw; replacing it here keeps logging
+        // alive even on the degenerate timeout path (the old loop/handle are reclaimed at process exit).
         FileLogger = new FileLogger(
             new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
             LogLevel,
