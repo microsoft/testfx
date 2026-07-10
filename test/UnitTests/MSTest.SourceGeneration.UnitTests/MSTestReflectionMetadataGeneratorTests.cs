@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -2368,9 +2368,11 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     public void Generator_EmitsNothing_InRootingMode()
     {
         // The reflection-free generator must stay completely silent unless the consumer opts in via
-        // <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>. In the default rooting mode the
-        // separate rooting generator owns emission, so this generator emits no sources at all —
-        // otherwise the assembly would be registered twice.
+        // <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>. When the property is unset (no
+        // options provider below) the generator falls back to rooting, where the separate rooting
+        // generator owns emission, so this generator emits no sources at all — otherwise the assembly
+        // would be registered twice. (The shipped product default is ReflectionFree, supplied by
+        // MSTest.TestAdapter.targets; this test exercises the generator's unset fallback directly.)
         const string userCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -2387,7 +2389,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         CSharpCompilation compilation = CreateCompilation(MinimalMSTestStub, userCode);
 
-        // No options provider => MSTestSourceGenMode is unset => defaults to rooting.
+        // No options provider => MSTestSourceGenMode is unset => generator falls back to rooting
+        // (independent of the shipped ReflectionFree product default, which comes from MSBuild targets).
         GeneratorDriver driver = CSharpGeneratorDriver.Create(
             generators: new ISourceGenerator[] { new MSTestReflectionMetadataGenerator().AsSourceGenerator() },
             additionalTexts: null,

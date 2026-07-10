@@ -43,7 +43,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
     protected override CommandLineOptionMessages DeserializeCore(Stream stream)
     {
         string? moduleName = null;
-        CommandLineOptionMessage[]? commandLineOptionMessages = null;
+        CommandLineOptionMessage[]? commandLineOptionMessages = [];
 
         ReadFields(stream, (fieldId, fieldSize) =>
         {
@@ -62,7 +62,7 @@ internal sealed class CommandLineOptionMessagesSerializer : NamedPipeSerializer<
             }
         });
 
-        return new(moduleName, commandLineOptionMessages ?? []);
+        return new(moduleName, commandLineOptionMessages);
     }
 
     private static CommandLineOptionMessage[] ReadCommandLineOptionMessagesPayload(Stream stream)

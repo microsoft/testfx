@@ -88,6 +88,19 @@ public sealed class RunContextAdapterFilterTests
     }
 
     [TestMethod]
+    public void GetTestCaseFilter_WithGuidShapedFullyQualifiedName_AndUseFullyQualifiedNameAsUid_BuildsFullyQualifiedNameFilter()
+    {
+        // Regression for #9784: when the UID was produced from TestCase.FullyQualifiedName
+        // (useFullyQualifiedNameAsUid = true), a name that happens to be GUID-shaped (e.g. a
+        // data-driven test whose display name is exactly a GUID string) must still be emitted as a
+        // FullyQualifiedName= clause, not misclassified as an Id= clause by a Guid.TryParse heuristic.
+        const string GuidShapedName = "12345678-1234-1234-1234-1234567890ab";
+        RunContextAdapter adapter = CreateAdapter(EmptyRunSettings, CreateUidFilter(GuidShapedName), useFullyQualifiedNameAsUid: true);
+
+        Assert.AreEqual($"(FullyQualifiedName={GuidShapedName})", GetFilterValue(adapter));
+    }
+
+    [TestMethod]
     public void GetTestCaseFilter_WithMixedGuidAndNameNodes_BuildsIdAndFullyQualifiedNameFilters()
     {
         var guid = new Guid("12345678-1234-1234-1234-1234567890ab");
@@ -278,7 +291,7 @@ public sealed class RunContextAdapterFilterTests
                 : null);
     }
 
-    private static RunContextAdapter CreateAdapter(string runSettingsXml, ITestExecutionFilter filter, string? commandLineFilter = null)
+    private static RunContextAdapter CreateAdapter(string runSettingsXml, ITestExecutionFilter filter, string? commandLineFilter = null, bool useFullyQualifiedNameAsUid = false)
     {
         var runSettings = new Mock<IRunSettings>();
         runSettings.Setup(x => x.SettingsXml).Returns(runSettingsXml);
@@ -289,6 +302,6 @@ public sealed class RunContextAdapterFilterTests
             .Setup(x => x.TryGetOptionArgumentList(TestCaseFilterCommandLineOptionsProvider.TestCaseFilterOptionName, out commandLineFilterArguments))
             .Returns(commandLineFilter is not null);
 
-        return new RunContextAdapter(commandLineOptions.Object, runSettings.Object, filter);
+        return new RunContextAdapter(commandLineOptions.Object, runSettings.Object, filter, useFullyQualifiedNameAsUid);
     }
 }

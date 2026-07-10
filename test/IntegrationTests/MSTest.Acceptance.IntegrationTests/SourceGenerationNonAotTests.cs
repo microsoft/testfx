@@ -88,13 +88,17 @@ public class UnitTest1
         // Static evidence the source generator actually ran in the build (not just that
         // the package was restored). EmitCompilerGeneratedFiles writes the generator
         // output under obj/<config>/<tfm>/generated/<generator-assembly>/<full-type-name>/<hintname>.
-        // The hint name uses the assembly name (from the csproj filename), not the asset
-        // directory name (which we suffix with tfm to keep parallel TFM runs isolated).
+        // The emitted hint name depends on which generator ran, and that is selected by the
+        // MSTestSourceGenMode default (ReflectionFree) supplied by MSTest.TestAdapter.targets:
+        //   - Rooting        -> '<AssemblyName>.MSTestReflectionMetadata.g.cs'
+        //   - ReflectionFree -> 'MSTestReflectionMetadata.Registry.g.cs' (plus SupportTypes/Registration)
+        // Both contain 'MSTestReflectionMetadata' and end with '.g.cs', so match either with a glob
+        // to keep this smoke test independent of the default mode.
         string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
         string[] generatedFiles = Directory.Exists(objGenerated)
-            ? Directory.GetFiles(objGenerated, $"{AssetName}.MSTestReflectionMetadata.g.cs", SearchOption.AllDirectories)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
-        Assert.IsNotEmpty(generatedFiles, $"the source generator should have emitted '{AssetName}.MSTestReflectionMetadata.g.cs' under '{objGenerated}'");
+        Assert.IsNotEmpty(generatedFiles, $"the source generator should have emitted a '*MSTestReflectionMetadata*.g.cs' file under '{objGenerated}'");
 
         // Behavioral evidence: tests still discover and run when the source-generated
         // ReflectionMetadataHook is the only metadata provider wired in at module init.

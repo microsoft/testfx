@@ -1,10 +1,16 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.init -> void
+Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer
+Microsoft.Testing.Platform.Services.ArtifactNamingService
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ArtifactNamingService(Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ResolveFileName(string! template) -> string!
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.<Clone>$() -> Microsoft.Testing.Platform.Services.ClientCapabilitiesService!
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool IsStateful) -> void
@@ -19,11 +25,12 @@ Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.GetHashCode() -> int
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ToString() -> string!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
+static Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer.ReplaceInvalidFileNameChars(string! fileName) -> string!
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator !=(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator ==(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id, out string! Version) -> void
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void

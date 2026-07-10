@@ -64,6 +64,7 @@ internal sealed partial class TestHostBuilder
         serviceProvider.TryAddService(_testApplicationModuleInfo);
         serviceProvider.TryAddService(testHostControllerInfo);
         serviceProvider.TryAddService(systemClock);
+        serviceProvider.TryAddService(new ArtifactNamingService(_testApplicationModuleInfo, systemEnvironment, systemClock));
 
         SystemMonitor systemMonitor = new();
         serviceProvider.TryAddService(systemMonitor);
