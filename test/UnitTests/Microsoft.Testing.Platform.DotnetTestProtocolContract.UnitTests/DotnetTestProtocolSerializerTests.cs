@@ -131,6 +131,21 @@ public sealed class DotnetTestProtocolSerializerTests
     }
 
     [TestMethod]
+    public void FailedTestResultMessageFieldIds_Expected_And_Actual_AreStable()
+    {
+        // These are externally shared wire ids: the SDK decodes them with its own vendored copy of the same
+        // numbers, so renumbering either one would silently break cross-process decoding without failing the
+        // round-trip tests (which use the same constant on both writer and reader). Pin the literals here.
+        // The declared values are read via reflection (a runtime read, not a compile-time constant) so that
+        // renumbering the constant is actually caught rather than folded away by the compiler.
+        Assert.AreEqual((ushort)10, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Expected)));
+        Assert.AreEqual((ushort)11, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Actual)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(FailedTestResultMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
     public void DiscoveredTestMessages_RoundTripsWithTraitsAndParameters()
     {
         var message = new DiscoveredTestMessages(
@@ -157,7 +172,7 @@ public sealed class DotnetTestProtocolSerializerTests
 
         DiscoveredTestMessage second = actual.DiscoveredMessages[1];
         Assert.AreEqual("Uid2", second.Uid);
-        Assert.HasCount(0, second.Traits);
+        Assert.IsEmpty(second.Traits);
     }
 
     [TestMethod]

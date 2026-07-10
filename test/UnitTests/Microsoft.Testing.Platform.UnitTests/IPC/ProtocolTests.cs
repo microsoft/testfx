@@ -340,7 +340,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
         Assert.AreEqual(message.InstanceId, actual.InstanceId);
         Assert.IsNotNull(actual.InProgressMessages);
-        Assert.HasCount(0, actual.InProgressMessages);
+        Assert.IsEmpty(actual.InProgressMessages);
     }
 
     [TestMethod]

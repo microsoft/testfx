@@ -47,7 +47,7 @@ internal static class VSTestRunTestExecutionRequestFactory
             requestContext.ClientInfo,
             requestContext.LoggerFactory,
             frameworkHandlerAdapter);
-        RunContextAdapter runContext = new(requestContext.CommandLineOptions, runSettings, runTestExecutionRequest.Filter);
+        RunContextAdapter runContext = new(requestContext.CommandLineOptions, runSettings, runTestExecutionRequest.Filter, adapterExtension.UseFullyQualifiedNameAsTestNodeUid);
 
         return new(runTestExecutionRequest.Session, runTestExecutionRequest.Filter, testAssemblyPaths, runContext, frameworkHandlerAdapter);
     }

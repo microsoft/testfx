@@ -2,3 +2,6 @@
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities.IsStateful.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
+Microsoft.Testing.Platform.Services.IArtifactNamingService
+Microsoft.Testing.Platform.Services.IArtifactNamingService.ResolveFileName(string! template) -> string!
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetArtifactNamingService(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Services.IArtifactNamingService!

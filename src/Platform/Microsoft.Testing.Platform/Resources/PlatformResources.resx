@@ -338,9 +338,9 @@
     <comment>{0} is the timeout in seconds.</comment>
   </data>
   <data name="UnexpectedExceptionInFileLoggerErrorMessage" xml:space="preserve">
-    <value>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
+    <value>An unexpected exception occurred in the 'FileLogger' write loop.
 {0}</value>
-    <comment>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</comment>
+    <comment>{0} is the exception ToString output. {Locked="FileLogger"}</comment>
   </data>
   <data name="RetryFailedAfterTriesErrorMessage" xml:space="preserve">
     <value>Retry failed after {0} times</value>
