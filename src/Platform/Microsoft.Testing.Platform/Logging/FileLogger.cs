@@ -28,6 +28,7 @@ internal sealed class FileLogger : IDisposable
     private readonly IFileStream _fileStream;
     private readonly StreamWriter _writer;
     private readonly Task? _logLoop;
+    private readonly TimeSpan _flushTimeout;
 
 #if NETCOREAPP
     private readonly Channel<string>? _channel;
@@ -51,12 +52,14 @@ internal sealed class FileLogger : IDisposable
         ITask task,
         IConsole console,
         IFileSystem fileSystem,
-        IFileStreamFactory fileStreamFactory)
+        IFileStreamFactory fileStreamFactory,
+        TimeSpan? flushTimeout = null)
     {
         _options = options;
         _clock = clock;
         _logLevel = logLevel;
         _console = console;
+        _flushTimeout = flushTimeout ?? TimeoutHelper.DefaultHangTimeSpanTimeout;
 
         if (_options.SyncFlush)
         {
@@ -331,9 +334,9 @@ internal sealed class FileLogger : IDisposable
 
             // A logger failing to flush must never crash an otherwise successful test run, so on timeout we warn and
             // return instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
-            if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+            if (!_logLoop.Wait(_flushTimeout))
             {
-                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, _flushTimeout.TotalSeconds));
 
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
@@ -374,11 +377,11 @@ internal sealed class FileLogger : IDisposable
             _channel.Writer.TryComplete();
             try
             {
-                await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false);
+                await _logLoop.TimeoutAfterAsync(_flushTimeout).ConfigureAwait(false);
             }
             catch (TimeoutException)
             {
-                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, _flushTimeout.TotalSeconds));
 
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the

@@ -338,8 +338,163 @@ public sealed class FileLoggerTests : IDisposable
         }
     }
 
+    // Deterministic guard for the fix in https://github.com/dotnet/sdk/issues/55215.
+    // On .NET Framework (the netstandard2.0 build) the consumer loop MUST be started with the synchronous
+    // ITask.Run(Action) overload so that Dispose()'s blocking Wait() can never be starved by the thread pool.
+    // The previous implementation used the asynchronous ITask.Run(Func<Task>, ...) overload, which is exactly the
+    // regression this test locks down.
+    [TestMethod]
+    public void FileLogger_WhenAsyncFlush_StartsConsumerLoopWithExpectedTaskOverload()
+    {
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+
+        var recordingTask = new RecordingTask();
+        using (FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Trace,
+            _mockClock.Object,
+            recordingTask,
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object))
+        {
+        }
+
+#if NETCOREAPP
+        Assert.IsTrue(recordingTask.StartedAsynchronousLoop, "netcore must run the awaited async consumer loop.");
+        Assert.IsFalse(recordingTask.StartedSynchronousLoop);
+#else
+        Assert.IsTrue(recordingTask.StartedSynchronousLoop, "netstandard must run a fully synchronous consumer loop that cannot be thread-pool starved during Dispose.");
+        Assert.IsFalse(recordingTask.StartedAsynchronousLoop);
+#endif
+    }
+
+    [TestMethod]
+    public void FileLogger_AfterSuccessfulDispose_ReportsFileHandleReleased()
+    {
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+
+        FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Trace,
+            _mockClock.Object,
+            new SystemTask(),
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object);
+
+        fileLogger.Log(LogLevel.Trace, Message, null, Formatter, Category);
+        fileLogger.Dispose();
+
+        Assert.IsTrue(fileLogger.IsFileHandleReleased);
+    }
+
+    // Deterministic non-fatal-timeout test: the consumer loop never completes (simulating a hung flush), and a short
+    // injected flush timeout forces the timeout branch. Dispose must NOT throw, must warn, and must report that the
+    // file handle was not released so callers (e.g. FileLoggerProvider) can skip the file move.
+    [TestMethod]
+#if NETCOREAPP
+    public async Task FileLogger_WhenFlushTimesOut_IsNonFatalAndReportsHandleNotReleased()
+#else
+    public void FileLogger_WhenFlushTimesOut_IsNonFatalAndReportsHandleNotReleased()
+#endif
+    {
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+
+        FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Trace,
+            _mockClock.Object,
+            new NeverCompletingTask(),
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object,
+            flushTimeout: TimeSpan.FromMilliseconds(50));
+
+        fileLogger.Log(LogLevel.Trace, Message, null, Formatter, Category);
+
+        // Must not throw even though the consumer loop never drains.
+#if NETCOREAPP
+        await fileLogger.DisposeAsync();
+#else
+        fileLogger.Dispose();
+#endif
+
+        Assert.IsFalse(fileLogger.IsFileHandleReleased, "A flush timeout must leave the file handle owned by the still-running consumer.");
+        _mockConsole.Verify(x => x.WriteLine(It.Is<string>(s => s.Contains("Failed to flush logs"))), Times.Once);
+    }
+
     void IDisposable.Dispose()
         => _memoryStream.Dispose();
+
+    // ITask that records which overload was used to start the file-logger consumer loop, delegating the actual work
+    // to the real SystemTask.
+    private sealed class RecordingTask : ITask
+    {
+        private readonly ITask _inner = new SystemTask();
+
+        public bool StartedSynchronousLoop { get; private set; }
+
+        public bool StartedAsynchronousLoop { get; private set; }
+
+        public Task Run(Func<Task> function, CancellationToken cancellationToken)
+        {
+            StartedAsynchronousLoop = true;
+            return _inner.Run(function, cancellationToken);
+        }
+
+        public Task Run(Action action)
+        {
+            StartedSynchronousLoop = true;
+            return _inner.Run(action);
+        }
+
+        public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
+            => _inner.Run(function, cancellationToken);
+
+        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
+            => _inner.RunLongRunning(action, name, cancellationToken);
+
+        public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
+
+        public Task Delay(int millisecondDelay) => _inner.Delay(millisecondDelay);
+
+        public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken) => _inner.Delay(timeSpan, cancellationToken);
+    }
+
+    // ITask whose loop-starting overloads return a task that never completes, simulating a hung consumer so the
+    // dispose-time flush timeout is deterministically triggered without running any real loop.
+    private sealed class NeverCompletingTask : ITask
+    {
+        private readonly ITask _inner = new SystemTask();
+
+        public Task Run(Func<Task> function, CancellationToken cancellationToken)
+            => new TaskCompletionSource<bool>().Task;
+
+        public Task Run(Action action)
+            => new TaskCompletionSource<bool>().Task;
+
+        public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
+            => _inner.Run(function, cancellationToken);
+
+        public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
+            => _inner.RunLongRunning(action, name, cancellationToken);
+
+        public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
+
+        public Task Delay(int millisecondDelay) => _inner.Delay(millisecondDelay);
+
+        public Task Delay(TimeSpan timeSpan, CancellationToken cancellationToken) => _inner.Delay(timeSpan, cancellationToken);
+    }
 
     private sealed class CustomMemoryStream : MemoryStream
     {
