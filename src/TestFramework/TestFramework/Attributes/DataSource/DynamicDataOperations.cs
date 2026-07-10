@@ -7,10 +7,22 @@ internal static class DynamicDataOperations
 {
     private const BindingFlags MemberLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
-    public static IEnumerable<object[]> GetData(Type? dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments, MethodInfo methodInfo)
+    /// <summary>
+    /// The set of members that a dynamic data source type may expose. It mirrors <see cref="MemberLookup"/> (public and
+    /// non-public properties, fields, and methods) so that the trimmer preserves them on any <see cref="Type"/> annotated
+    /// with this value, keeping <see cref="DynamicDataAttribute"/> safe under trimming and NativeAOT.
+    /// </summary>
+    internal const DynamicallyAccessedMemberTypes RequiredMemberTypes =
+        DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties
+        | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields
+        | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
+
+    public static IEnumerable<object[]> GetData([DynamicallyAccessedMembers(RequiredMemberTypes)] Type? dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
-        dynamicDataDeclaringType ??= methodInfo.DeclaringType;
+        // The declaring type of the test method is always rooted by test discovery, so its members are preserved even
+        // though MethodInfo.DeclaringType is not statically annotated with DynamicallyAccessedMembersAttribute.
+        dynamicDataDeclaringType ??= GetTestMethodDeclaringType(methodInfo);
         DebugEx.Assert(dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
 
         object? obj = null;
@@ -170,4 +182,9 @@ internal static class DynamicDataOperations
         data = null;
         return false;
     }
+
+    [return: DynamicallyAccessedMembers(RequiredMemberTypes)]
+    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "The declaring type of the test method is always rooted by test discovery, so its members are preserved by the trimmer.")]
+    internal static Type? GetTestMethodDeclaringType(MethodInfo methodInfo)
+        => methodInfo.DeclaringType;
 }
