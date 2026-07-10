@@ -55,6 +55,15 @@ internal sealed class FileLoggerProvider(
         string fileName = Path.GetFileName(FileLogger.FileName);
         await DisposeHelper.DisposeAsync(FileLogger).ConfigureAwait(false);
 
+        // If disposal timed out while flushing, the consumer loop may still own the file handle (the stream was opened
+        // with FileShare.Read, so a move would fail on Windows). Skip the relocation in that degenerate case and keep
+        // the existing logger rather than turning a non-fatal flush timeout into a fatal IOException.
+        // See https://github.com/dotnet/sdk/issues/55215.
+        if (!FileLogger.IsFileHandleReleased)
+        {
+            return;
+        }
+
         // Move the log file to the new directory
         _fileSystem.MoveFile(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
 

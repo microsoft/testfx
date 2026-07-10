@@ -36,6 +36,14 @@ internal sealed class FileLogger : IDisposable
 #endif
     private bool _disposed;
 
+    /// <summary>
+    /// Gets a value indicating whether disposal fully drained the logs and released the underlying file handle.
+    /// This is <see langword="false"/> when disposal timed out waiting for the flush: in that case the consumer loop
+    /// may still own the file, so callers that need exclusive access to it (e.g. to move the log file) must not
+    /// proceed. See the dispose methods and https://github.com/dotnet/sdk/issues/55215.
+    /// </summary>
+    public bool IsFileHandleReleased { get; private set; }
+
     public FileLogger(
         FileLoggerOptions options,
         LogLevel logLevel,
@@ -329,9 +337,11 @@ internal sealed class FileLogger : IDisposable
 
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
-                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
-                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
-                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
+                // log. We therefore leave them for the OS to reclaim at process exit and leave IsFileHandleReleased
+                // false so callers know the file handle is still held. Records already written are on disk (the writer
+                // uses AutoFlush); any records still queued may be lost if the process exits before the loop drains
+                // them. The semaphore is not shared with the consumer loop (it's only used on the SyncFlush path), so
+                // it's safe to dispose here.
                 _semaphore.Dispose();
                 _disposed = true;
                 return;
@@ -342,6 +352,7 @@ internal sealed class FileLogger : IDisposable
         _writer.Flush();
         _writer.Dispose();
         _fileStream.Dispose();
+        IsFileHandleReleased = true;
         _disposed = true;
     }
 
@@ -371,9 +382,11 @@ internal sealed class FileLogger : IDisposable
 
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
-                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
-                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
-                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
+                // log. We therefore leave them for the OS to reclaim at process exit and leave IsFileHandleReleased
+                // false so callers know the file handle is still held. Records already written are on disk (the writer
+                // uses AutoFlush); any records still queued may be lost if the process exits before the loop drains
+                // them. The semaphore is not shared with the consumer loop (it's only used on the SyncFlush path), so
+                // it's safe to dispose here.
                 _semaphore.Dispose();
                 _disposed = true;
                 return;
@@ -384,6 +397,7 @@ internal sealed class FileLogger : IDisposable
         await _writer.FlushAsync().ConfigureAwait(false);
         await _writer.DisposeAsync().ConfigureAwait(false);
         await _fileStream.DisposeAsync().ConfigureAwait(false);
+        IsFileHandleReleased = true;
         _disposed = true;
     }
 #endif
