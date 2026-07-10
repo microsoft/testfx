@@ -260,6 +260,13 @@ public sealed partial class Assert
 
     #region AreEquivalent span/memory
 
+    // NOTE: The span overloads below delegate through `.ToArray()` to the same-named `AreEquivalent`/`AreNotEquivalent`
+    // method. This does NOT recurse: `.ToArray()` produces a `T[]`, which is an exact match for the single-value
+    // `AreEquivalent<T[]>(T?, T?, ...)`/`AreNotEquivalent<T[]>(T?, T?, ...)` overload. An exact match outranks the
+    // implicit `T[]`-to-`ReadOnlySpan<T>` conversion during overload resolution, so the call binds to the array-based
+    // deep-comparison overload rather than back to the span overload. The `ReadOnlyMemory`/`Memory` overloads similarly
+    // delegate via `.Span` to the corresponding `ReadOnlySpan` overload.
+
     /// <summary>
     /// Tests whether two spans are structurally equivalent (deep, order-sensitive element comparison).
     /// </summary>
