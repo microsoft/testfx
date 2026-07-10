@@ -282,43 +282,38 @@ internal abstract class BaseSerializer
     private const ushort ExecutionScopedInstanceIdFieldId = 2;
 
     /// <summary>
-    /// Reads the shared collection-envelope prefix: the leading <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2)
-    /// string fields common to the four 'dotnet test' list-carrying messages payloads, delegating any other field id to
-    /// <paramref name="tryReadPayloadField"/> (the type-specific message-list reader). Returns the two envelope values
-    /// so the caller can build its concrete message object.
+    /// Matches the two leading collection-envelope fields (<c>ExecutionId</c> id 1 / <c>InstanceId</c> id 2) shared by
+    /// the four 'dotnet test' list-carrying messages payloads, assigning the value into <paramref name="executionId"/>
+    /// or <paramref name="instanceId"/> and returning <see langword="true"/> when the field is one of them. The caller
+    /// invokes this from its own single <see cref="ReadFields"/> callback and handles its type-specific message-list
+    /// field ids when this returns <see langword="false"/>. Kept as a <see langword="ref"/>-based matcher (rather than a
+    /// wrapping callback) so it adds no closure/delegate allocation on the hot per-test IPC read path.
     /// </summary>
-    protected static (string? ExecutionId, string? InstanceId) ReadExecutionScopedFields(Stream stream, Func<ushort, int, bool> tryReadPayloadField)
+    protected static bool TryReadExecutionScopedField(Stream stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId)
     {
-        string? executionId = null;
-        string? instanceId = null;
-
-        ReadFields(stream, (fieldId, fieldSize) =>
+        switch (fieldId)
         {
-            switch (fieldId)
-            {
-                case ExecutionScopedExecutionIdFieldId:
-                    executionId = ReadStringValue(stream, fieldSize);
-                    return true;
+            case ExecutionScopedExecutionIdFieldId:
+                executionId = ReadStringValue(stream, fieldSize);
+                return true;
 
-                case ExecutionScopedInstanceIdFieldId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    return true;
+            case ExecutionScopedInstanceIdFieldId:
+                instanceId = ReadStringValue(stream, fieldSize);
+                return true;
 
-                default:
-                    return tryReadPayloadField(fieldId, fieldSize);
-            }
-        });
-
-        return (executionId, instanceId);
+            default:
+                return false;
+        }
     }
 
     /// <summary>
-    /// Writes the shared collection-envelope prefix: a field-count prefix (the <c>ExecutionId</c> and
-    /// <c>InstanceId</c> fields when non-<see langword="null"/> plus <paramref name="payloadFieldCount"/>), followed by
-    /// the <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2) fields, then <paramref name="writePayload"/> which
-    /// appends the type-specific message list(s).
+    /// Writes the shared collection-envelope header: a field-count prefix (the <c>ExecutionId</c> and <c>InstanceId</c>
+    /// fields when non-<see langword="null"/> plus <paramref name="payloadFieldCount"/>), followed by the
+    /// <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2) fields. The caller writes its type-specific message
+    /// list(s) directly afterwards. Kept callback-free so it adds no closure/delegate allocation on the hot per-test
+    /// IPC write path.
     /// </summary>
-    protected static void WriteExecutionScopedFields(Stream stream, string? executionId, string? instanceId, ushort payloadFieldCount, Action<Stream> writePayload)
+    protected static void WriteExecutionScopedHeader(Stream stream, string? executionId, string? instanceId, ushort payloadFieldCount)
     {
         DebugAssert(stream.CanSeek, "We expect a seekable stream.");
 
@@ -326,7 +321,6 @@ internal abstract class BaseSerializer
 
         WriteField(stream, ExecutionScopedExecutionIdFieldId, executionId);
         WriteField(stream, ExecutionScopedInstanceIdFieldId, instanceId);
-        writePayload(stream);
     }
 
     private static int GetSize<T>() => typeof(T) switch

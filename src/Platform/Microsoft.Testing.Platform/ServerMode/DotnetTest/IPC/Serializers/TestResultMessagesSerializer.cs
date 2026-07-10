@@ -109,11 +109,18 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
     protected override TestResultMessages DeserializeCore(Stream stream)
     {
+        string? executionId = null;
+        string? instanceId = null;
         SuccessfulTestResultMessage[]? successfulTestResultMessages = [];
         FailedTestResultMessage[]? failedTestResultMessages = [];
 
-        (string? executionId, string? instanceId) = ReadExecutionScopedFields(stream, (fieldId, fieldSize) =>
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+            {
+                return true;
+            }
+
             switch (fieldId)
             {
                 case TestResultMessagesFieldsId.SuccessfulTestMessageList:
@@ -294,17 +301,17 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
     }
 
     protected override void SerializeCore(TestResultMessages objectToSerialize, Stream stream)
-        => WriteExecutionScopedFields(
+    {
+        WriteExecutionScopedHeader(
             stream,
             objectToSerialize.ExecutionId,
             objectToSerialize.InstanceId,
             (ushort)((IsNullOrEmpty(objectToSerialize.SuccessfulTestMessages) ? 0 : 1) +
-                (IsNullOrEmpty(objectToSerialize.FailedTestMessages) ? 0 : 1)),
-            s =>
-            {
-                WriteSuccessfulTestMessagesPayload(s, objectToSerialize.SuccessfulTestMessages);
-                WriteFailedTestMessagesPayload(s, objectToSerialize.FailedTestMessages);
-            });
+                (IsNullOrEmpty(objectToSerialize.FailedTestMessages) ? 0 : 1)));
+
+        WriteSuccessfulTestMessagesPayload(stream, objectToSerialize.SuccessfulTestMessages);
+        WriteFailedTestMessagesPayload(stream, objectToSerialize.FailedTestMessages);
+    }
 
     private static void WriteSuccessfulTestMessagesPayload(Stream stream, SuccessfulTestResultMessage[]? successfulTestResultMessages)
         => WriteListPayload(stream, TestResultMessagesFieldsId.SuccessfulTestMessageList, successfulTestResultMessages, static (s, successfulTestResultMessage) =>

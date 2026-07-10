@@ -38,10 +38,17 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
 
     protected override TestInProgressMessages DeserializeCore(Stream stream)
     {
+        string? executionId = null;
+        string? instanceId = null;
         TestInProgressMessage[]? inProgressMessages = [];
 
-        (string? executionId, string? instanceId) = ReadExecutionScopedFields(stream, (fieldId, fieldSize) =>
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+            {
+                return true;
+            }
+
             if (fieldId == TestInProgressMessagesFieldsId.TestInProgressMessageList)
             {
                 inProgressMessages = ReadInProgressMessagesPayload(stream);
@@ -87,12 +94,15 @@ internal sealed class TestInProgressMessagesSerializer : NamedPipeSerializer<Tes
     }
 
     protected override void SerializeCore(TestInProgressMessages objectToSerialize, Stream stream)
-        => WriteExecutionScopedFields(
+    {
+        WriteExecutionScopedHeader(
             stream,
             objectToSerialize.ExecutionId,
             objectToSerialize.InstanceId,
-            (ushort)(IsNullOrEmpty(objectToSerialize.InProgressMessages) ? 0 : 1),
-            s => WriteInProgressMessagesPayload(s, objectToSerialize.InProgressMessages));
+            (ushort)(IsNullOrEmpty(objectToSerialize.InProgressMessages) ? 0 : 1));
+
+        WriteInProgressMessagesPayload(stream, objectToSerialize.InProgressMessages);
+    }
 
     private static void WriteInProgressMessagesPayload(Stream stream, TestInProgressMessage[]? inProgressMessageList)
         => WriteListPayload(stream, TestInProgressMessagesFieldsId.TestInProgressMessageList, inProgressMessageList, static (s, inProgressMessage) =>

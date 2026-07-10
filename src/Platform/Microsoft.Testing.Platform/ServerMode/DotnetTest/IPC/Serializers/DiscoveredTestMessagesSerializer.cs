@@ -81,10 +81,17 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
 
     protected override DiscoveredTestMessages DeserializeCore(Stream stream)
     {
+        string? executionId = null;
+        string? instanceId = null;
         DiscoveredTestMessage[]? discoveredTestMessages = [];
 
-        (string? executionId, string? instanceId) = ReadExecutionScopedFields(stream, (fieldId, fieldSize) =>
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+            {
+                return true;
+            }
+
             if (fieldId == DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList)
             {
                 discoveredTestMessages = ReadDiscoveredTestMessagesPayload(stream);
@@ -212,12 +219,15 @@ internal sealed class DiscoveredTestMessagesSerializer : NamedPipeSerializer<Dis
     }
 
     protected override void SerializeCore(DiscoveredTestMessages objectToSerialize, Stream stream)
-        => WriteExecutionScopedFields(
+    {
+        WriteExecutionScopedHeader(
             stream,
             objectToSerialize.ExecutionId,
             objectToSerialize.InstanceId,
-            (ushort)(IsNullOrEmpty(objectToSerialize.DiscoveredMessages) ? 0 : 1),
-            s => WriteDiscoveredTestMessagesPayload(s, objectToSerialize.DiscoveredMessages));
+            (ushort)(IsNullOrEmpty(objectToSerialize.DiscoveredMessages) ? 0 : 1));
+
+        WriteDiscoveredTestMessagesPayload(stream, objectToSerialize.DiscoveredMessages);
+    }
 
     private static void WriteDiscoveredTestMessagesPayload(Stream stream, DiscoveredTestMessage[]? discoveredTestMessageList)
         => WriteListPayload(stream, DiscoveredTestMessagesFieldsId.DiscoveredTestMessageList, discoveredTestMessageList, static (s, discoveredTestMessage) =>

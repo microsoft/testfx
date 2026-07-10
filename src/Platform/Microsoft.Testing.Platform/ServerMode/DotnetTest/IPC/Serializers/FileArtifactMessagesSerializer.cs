@@ -54,10 +54,17 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
 
     protected override FileArtifactMessages DeserializeCore(Stream stream)
     {
+        string? executionId = null;
+        string? instanceId = null;
         FileArtifactMessage[]? fileArtifactMessages = [];
 
-        (string? executionId, string? instanceId) = ReadExecutionScopedFields(stream, (fieldId, fieldSize) =>
+        ReadFields(stream, (fieldId, fieldSize) =>
         {
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+            {
+                return true;
+            }
+
             if (fieldId == FileArtifactMessagesFieldsId.FileArtifactMessageList)
             {
                 fileArtifactMessages = ReadFileArtifactMessagesPayload(stream);
@@ -119,12 +126,15 @@ internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileA
     }
 
     protected override void SerializeCore(FileArtifactMessages objectToSerialize, Stream stream)
-        => WriteExecutionScopedFields(
+    {
+        WriteExecutionScopedHeader(
             stream,
             objectToSerialize.ExecutionId,
             objectToSerialize.InstanceId,
-            (ushort)(IsNullOrEmpty(objectToSerialize.FileArtifacts) ? 0 : 1),
-            s => WriteFileArtifactMessagesPayload(s, objectToSerialize.FileArtifacts));
+            (ushort)(IsNullOrEmpty(objectToSerialize.FileArtifacts) ? 0 : 1));
+
+        WriteFileArtifactMessagesPayload(stream, objectToSerialize.FileArtifacts);
+    }
 
     private static void WriteFileArtifactMessagesPayload(Stream stream, FileArtifactMessage[]? fileArtifactMessageList)
         => WriteListPayload(stream, FileArtifactMessagesFieldsId.FileArtifactMessageList, fileArtifactMessageList, static (s, fileArtifactMessage) =>
