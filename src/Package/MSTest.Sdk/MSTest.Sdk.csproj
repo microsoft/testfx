@@ -46,13 +46,6 @@
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <!-- https://github.com/dotnet/arcade/blob/cb9979d0e7061c2252f4a3057c20eb72f503cff7/src/Microsoft.DotNet.Arcade.Sdk/tools/Version.BeforeCommonTargets.targets#L111-L114 -->
-      <_MSTestSourceGenerationPreReleaseVersionLabel>$(MSTestSourceGenerationPreReleaseVersionLabel)</_MSTestSourceGenerationPreReleaseVersionLabel>
-      <_MSTestSourceGenerationPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MSTestSourceGenerationPreReleaseVersionLabel>
-      <_MSTestSourceGenerationPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MSTestSourceGenerationPreReleaseVersionLabel>
-      <_MSTestSourceGenerationVersionSuffix>$(_MSTestSourceGenerationPreReleaseVersionLabel)$(_BuildNumberLabels)</_MSTestSourceGenerationVersionSuffix>
-      <_MSTestSourceGenerationVersion>$(MSTestSourceGenerationVersionPrefix)</_MSTestSourceGenerationVersion>
-      <_MSTestSourceGenerationVersion Condition="'$(_MSTestSourceGenerationVersionSuffix)' != ''">$(_MSTestSourceGenerationVersion)-$(_MSTestSourceGenerationVersionSuffix)</_MSTestSourceGenerationVersion>
-
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>$(MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel)</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
       <_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">dev</_MicrosoftTestingExtensionsCtrfReportPreReleaseVersionLabel>
@@ -81,7 +74,7 @@
       <_MicrosoftTestingExtensionsOpenTelemetryVersion>$(MicrosoftTestingExtensionsOpenTelemetryVersionPrefix)</_MicrosoftTestingExtensionsOpenTelemetryVersion>
       <_MicrosoftTestingExtensionsOpenTelemetryVersion Condition="'$(_MicrosoftTestingExtensionsOpenTelemetryVersionSuffix)' != ''">$(_MicrosoftTestingExtensionsOpenTelemetryVersion)-$(_MicrosoftTestingExtensionsOpenTelemetryVersionSuffix)</_MicrosoftTestingExtensionsOpenTelemetryVersion>
 
-      <_TemplateProperties>MSTestSourceGenerationVersion=$(_MSTestSourceGenerationVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion);MicrosoftTestingExtensionsGitHubActionsReportVersion=$(_MicrosoftTestingExtensionsGitHubActionsReportVersion);MicrosoftTestingExtensionsOpenTelemetryVersion=$(_MicrosoftTestingExtensionsOpenTelemetryVersion)</_TemplateProperties>
+      <_TemplateProperties>MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(Version.Replace('$(VersionPrefix)', '$(TestingPlatformVersionPrefix)'));MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion);MicrosoftTestingExtensionsFakesVersion=$(MicrosoftTestingExtensionsFakesVersion);MicrosoftTestingExtensionsCtrfReportVersion=$(_MicrosoftTestingExtensionsCtrfReportVersion);MicrosoftTestingExtensionsJUnitReportVersion=$(_MicrosoftTestingExtensionsJUnitReportVersion);MicrosoftTestingExtensionsGitHubActionsReportVersion=$(_MicrosoftTestingExtensionsGitHubActionsReportVersion);MicrosoftTestingExtensionsOpenTelemetryVersion=$(_MicrosoftTestingExtensionsOpenTelemetryVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--
