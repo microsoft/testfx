@@ -295,33 +295,46 @@ public sealed class FileLoggerTests : IDisposable
             for (int producer = 0; producer < producerCount; producer++)
             {
                 int producerId = producer;
-                producers[producer] = Task.Run(() =>
-                {
-                    startGate.Wait();
-                    for (int message = 0; message < messagesPerProducer; message++)
+                producers[producer] = Task.Run(
+                    () =>
                     {
-                        fileLogger.Log(LogLevel.Trace, $"P{producerId}M{message}", null, Formatter, Category);
-                    }
-                });
+#pragma warning disable CA1416 // ManualResetEventSlim.Wait is unsupported on 'browser' — this test never targets browser
+                        startGate.Wait(TestContext.CancellationToken);
+#pragma warning restore CA1416
+                        for (int message = 0; message < messagesPerProducer; message++)
+                        {
+                            fileLogger.Log(LogLevel.Trace, $"P{producerId}M{message}", null, Formatter, Category);
+                        }
+                    },
+                    TestContext.CancellationToken);
             }
 
             startGate.Set();
-            Task.WaitAll(producers);
+#pragma warning disable CA1416 // Task.WaitAll is unsupported on 'browser' — this test never targets browser
+            Task.WaitAll(producers, TestContext.CancellationToken);
+#pragma warning restore CA1416
 
             // Dispose must drain everything still sitting in the queue without crashing.
             fileLogger.Dispose();
 
             string content = Encoding.UTF8.GetString(memoryStream.ToArray());
             string[] lines = content.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
-            Assert.AreEqual(producerCount * messagesPerProducer, lines.Length, $"Iteration {iteration}: every queued message must be flushed exactly once.");
+            Assert.HasCount(producerCount * messagesPerProducer, lines, $"Iteration {iteration}: every queued message must be flushed exactly once.");
 
+            // Compare against the exact set of expected messages. Each log line ends with the message payload
+            // (the log format is "<timestamp> <category> <level> <message>"), so we extract the last token and
+            // require an exact set match. This detects loss/duplication even for prefix-overlapping IDs such as
+            // "P0M1" vs "P0M10", which a substring check would miss.
+            var actualMessages = new HashSet<string>(lines.Select(line => line[(line.LastIndexOf(' ') + 1)..]));
             for (int producer = 0; producer < producerCount; producer++)
             {
                 for (int message = 0; message < messagesPerProducer; message++)
                 {
-                    Assert.Contains($"P{producer}M{message}", content, $"Iteration {iteration}: message P{producer}M{message} was lost or corrupted.");
+                    Assert.Contains($"P{producer}M{message}", actualMessages, $"Iteration {iteration}: message P{producer}M{message} was lost or corrupted.");
                 }
             }
+
+            Assert.HasCount(producerCount * messagesPerProducer, actualMessages, $"Iteration {iteration}: no duplicate or unexpected messages must be written.");
         }
     }
 
