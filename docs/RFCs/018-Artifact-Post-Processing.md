@@ -290,7 +290,9 @@ while any(not g.covered for g in groups):
         covered_group_count(a, groups),
         produced_input_count(a, groups),
         tfm_order(a.tfm),
-        lexical(a.path)))   # ascending, deterministic (matches Appendix A.3)
+        -lexical(a.path)))  # negated so the lexically SMALLEST path wins the
+                            # final tie-break, matching Appendix A.3
+                            # (`.ThenBy(a => a.ModulePath, Ordinal).First()`)
     assign(app, [g for g in groups if not g.covered and app in g.candidates])
 return plan
 ```
