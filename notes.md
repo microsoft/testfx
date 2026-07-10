@@ -51,6 +51,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-10 | Task 3 (MSTEST0063 fix: exact-match→Inherits for TestClassAttribute guard; 4 tests for STATestClass/custom derived attrs), Task 7 |
 | 2026-07-09 (2nd run) | Task 3 (MSTEST0061 UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer: OSPlatform.Create known+unknown, IsIOS, IsAndroid), Task 7 |
 | 2026-07-09 | Task 3 (MSTEST0029 PublicMethodShouldBeTestMethod: virtual/override NoDiagnostic, make-private fixer, fix misleading [TestInitialize]→[TestCleanup] in existing test), Task 7 |
 | 2026-07-07 | Task 3 (MSTEST0062 AvoidOutRefTestMethodParameters edge cases), Task 4, Task 7 |
@@ -69,11 +70,12 @@
 
 ## Last Run
 
-2026-07-09 23:21 UTC (second run)
+2026-07-10 23:16 UTC
 
 ## Completed Work (recent)
 
-- PR for MSTEST0061 (created 2026-07-09) — UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer: 4 edge cases: OSPlatform.Create (known/unknown platform), OperatingSystem.IsIOS(), OperatingSystem.IsAndroid()
+- PR for MSTEST0063 fix (created 2026-07-10) — Fixed exact-match→IsTestClass() guard so [STATestClass] and derived attrs trigger the constructor validity diagnostic. 4 new tests.
+- PR for MSTEST0061 (created 2026-07-09) — MERGED: UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer: 4 edge cases
 - PR for MSTEST0029 (created 2026-07-09) — PublicMethodShouldBeTestMethod edge cases: virtual/override NoDiagnostic paths (IsVirtual/IsOverride analyzer guard), make-private code fix (CodeActionIndex=1), fix misleading [TestInitialize]→[TestCleanup] in existing test (3 new tests + 1 fix)
 - PR #9731 MERGED (2026-07-08 by Evangelink) — MSTEST0062 edge cases (derived attr, no-TestClass guard, `in` parameter)
 - PR for MSTEST0062 (created 2026-07-07) — AvoidOutRefTestMethodParameters edge cases: derived attr, no-TestClass guard, `in` parameter (3 new tests)
