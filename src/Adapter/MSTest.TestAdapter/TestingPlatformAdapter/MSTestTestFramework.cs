@@ -140,14 +140,15 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         var elementSink = new MtpUnitTestElementSink(messageBus, this, sessionUid, IsTrxEnabled);
 
         // Call the platform-agnostic engine directly with neutral inputs; the native MTP path no longer routes
-        // through the VSTest MSTestDiscoverer class.
+        // through the VSTest MSTestDiscoverer class. The MTP-specific filter provider evaluates the filter from the
+        // neutral UnitTestElement model so this path never materializes a vstest TestCase (see #9769).
         await new MSTestEngine(cancellationToken, CreateTelemetrySender())
             .DiscoverAsync(
                 assemblyPaths,
                 runSettings.SettingsXml,
                 handle.ToAdapterMessageLogger(),
                 elementSink,
-                new TestElementFilterProvider(discoveryContext),
+                new MtpTestElementFilterProvider(discoveryContext),
                 _configuration,
                 new TestSourceHandler(),
                 isMTP: true)
@@ -168,7 +169,9 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
         var runContext = new MSTestRunContext(_serviceProvider.GetCommandLineOptions(), runSettings, request.Filter);
 
         // Call the platform-agnostic engine directly with neutral inputs; the native MTP path no longer routes
-        // through the VSTest MSTestExecutor class. Results are published natively via MtpTestResultRecorder.
+        // through the VSTest MSTestExecutor class. Results are published natively via MtpTestResultRecorder and the
+        // MTP-specific filter provider evaluates the filter from the neutral UnitTestElement model so this path
+        // never materializes a vstest TestCase (see #9769).
         await new MSTestEngine(cancellationToken, CreateTelemetrySender())
             .RunFromSourcesAsync(
                 assemblyPaths,
@@ -176,7 +179,7 @@ internal sealed class MSTestTestFramework : ITestFramework, IDataProducer, IDisp
                 runContext.TestRunDirectory,
                 handle.ToAdapterMessageLogger(),
                 settings => new MtpTestResultRecorder(messageBus, this, sessionUid, IsTrxEnabled, settings),
-                new TestElementFilterProvider(runContext),
+                new MtpTestElementFilterProvider(runContext),
                 _configuration,
                 new TestSourceHandler(),
                 isMTP: true)

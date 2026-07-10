@@ -1,5 +1,10 @@
 #nullable enable
 Microsoft.Testing.Extensions.RunSettingsProviderHelper
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IUnitTestElementFilterExpression
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IUnitTestElementFilterExpression.MatchTestElement(System.Func<string!, object?>! propertyValueProvider) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MtpTestElementFilterProvider
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MtpTestElementFilterProvider.GetTestElementFilter(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterMessageLogger! logger, out bool filterHasError) -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestElementFilter?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MtpTestElementFilterProvider.MtpTestElementFilterProvider(Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestFilterContextBase! filterContext) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.PlatformServicesConfigurationAdapter(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.this[string! key].get -> string?
