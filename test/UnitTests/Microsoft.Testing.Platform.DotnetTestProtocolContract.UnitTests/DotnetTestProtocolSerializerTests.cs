@@ -117,7 +117,7 @@ public sealed class DotnetTestProtocolSerializerTests
     public void TestResultMessages_RoundTrips()
     {
         var success = new SuccessfulTestResultMessage("uid", "displayName", TestStates.Passed, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
-        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
+        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid", "expectedValue", "actualValue");
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
@@ -126,6 +126,8 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual(message.InstanceId, actual.InstanceId);
         Assert.AreEqual("uid", actual.SuccessfulTestMessages[0].Uid);
         Assert.AreEqual("errorMessage", actual.FailedTestMessages[0].Exceptions?[0].ErrorMessage);
+        Assert.AreEqual("expectedValue", actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual("actualValue", actual.FailedTestMessages[0].Actual);
     }
 
     [TestMethod]

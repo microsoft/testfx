@@ -210,6 +210,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         for (int i = 0; i < length; i++)
         {
             string? uid = null, displayName = null, reason = null, sessionUid = null, standardOutput = null, errorOutput = null;
+            string? expected = null, actual = null;
             ExceptionMessage[] exceptionMessages = [];
             byte? state = null;
             long? duration = null;
@@ -254,12 +255,20 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                         sessionUid = ReadStringValue(stream, fieldSize);
                         return true;
 
+                    case FailedTestResultMessageFieldsId.Expected:
+                        expected = ReadStringValue(stream, fieldSize);
+                        return true;
+
+                    case FailedTestResultMessageFieldsId.Actual:
+                        actual = ReadStringValue(stream, fieldSize);
+                        return true;
+
                     default:
                         return false;
                 }
             });
 
-            failedTestResultMessages[i] = new FailedTestResultMessage(uid, displayName, state, duration, reason, exceptionMessages, standardOutput, errorOutput, sessionUid);
+            failedTestResultMessages[i] = new FailedTestResultMessage(uid, displayName, state, duration, reason, exceptionMessages, standardOutput, errorOutput, sessionUid, expected, actual);
         }
 
         return failedTestResultMessages;
@@ -344,6 +353,8 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             WriteField(s, FailedTestResultMessageFieldsId.StandardOutput, failedTestResultMessage.StandardOutput);
             WriteField(s, FailedTestResultMessageFieldsId.ErrorOutput, failedTestResultMessage.ErrorOutput);
             WriteField(s, FailedTestResultMessageFieldsId.SessionUid, failedTestResultMessage.SessionUid);
+            WriteField(s, FailedTestResultMessageFieldsId.Expected, failedTestResultMessage.Expected);
+            WriteField(s, FailedTestResultMessageFieldsId.Actual, failedTestResultMessage.Actual);
         });
 
     private static void WriteExceptionMessagesPayload(Stream stream, ExceptionMessage[]? exceptionMessages)
@@ -381,7 +392,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         (IsNullOrEmpty(failedTestResultMessage.Exceptions) ? 0 : 1) +
         (failedTestResultMessage.StandardOutput is null ? 0 : 1) +
         (failedTestResultMessage.ErrorOutput is null ? 0 : 1) +
-        (failedTestResultMessage.SessionUid is null ? 0 : 1));
+        (failedTestResultMessage.SessionUid is null ? 0 : 1) +
+        (failedTestResultMessage.Expected is null ? 0 : 1) +
+        (failedTestResultMessage.Actual is null ? 0 : 1));
 
     private static ushort GetFieldCount(ExceptionMessage exceptionMessage) =>
         (ushort)((exceptionMessage.ErrorMessage is null ? 0 : 1) +
