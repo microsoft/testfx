@@ -23,11 +23,11 @@
 |------|-------------|
 | 1    | 2026-07-04  |
 | 2    | 2026-07-08  |
-| 3    | 2026-07-09  |
-| 4    | 2026-07-09  |
+| 3    | 2026-07-10  |
+| 4    | 2026-07-10  |
 | 5    | 2026-07-08  |
 | 6    | 2026-07-07  |
-| 7    | 2026-07-09  |
+| 7    | 2026-07-10  |
 
 Next priority: Tasks 5 and 6 (oldest)
 
@@ -35,18 +35,17 @@ Next priority: Tasks 5 and 6 (oldest)
 
 | Date       | Item                                  | Notes                                      |
 |------------|---------------------------------------|--------------------------------------------|
-| 2026-07-09 | PR #aw_pr_uid_cache (TBD number)      | Cache GetTestId on UnitTestElement (native MTP path) |
+| 2026-07-10 | PR #9800 merged (by Evangelink)       | Cache GetTestId on UnitTestElement         |
+| 2026-07-10 | PR created: lazy testFullName         | MSTestTestNodeConverter alloc elimination  |
 | 2026-07-08 | PR #9728 merged                       | Scenario2 data-driven + JsonSerializerOptions caching |
-| 2026-07-08 | PR #9706 merged                       | Native MTP integration (RFC 018), experimental |
+| 2026-07-08 | PR #9706 merged                       | Native MTP integration (RFC 018)           |
 | 2026-07-07 | PR #9617 merged                       | All 4 data-driven hot-path optimisations   |
 | 2026-07-07 | PR #9636 merged                       | TCS fast-path skip                         |
-| 2026-07-07 | PR #9729 merged                       | TestMethodRunner split into partial classes|
-| 2026-07-07 | Issues #9602/#9603 closed             | Resolved by PR #9617/#9636                 |
-| 2026-07-08 | Issues #9713/#9714 closed             | Closed by Evangelink 2026-07-08            |
 
 ## Work In Progress
 
-None.
+- Branch `perf-assist/lazy-testfullname-allocation`: eliminate eager `testFullName` string
+  allocation in `MSTestTestNodeConverter` — PR submitted 2026-07-10.
 
 ## Monthly Activity Issue
 
@@ -65,22 +64,19 @@ Priority order (highest first):
 
 ## Key Notes
 
-- Native MTP path (MSTestTestFramework) is now THE default for all MTP runs —
-  no more experimental flag. MSTestTestNodeConverter.CreateBaseTestNode calls
-  GetTestId() for discovered/in-progress/result nodes.
-- GetTestId() caching PR submitted 2026-07-09 (branch: perf-assist/cache-test-node-uid).
-  Saves 1 hash+alloc per test per execution run (RecordStart+RecordResult share same element).
+- PR #9726 (open): removes VSTest support, makes MTP the default. MSTestTestNodeConverter
+  is now the primary execution path for all MTP runs.
+- GetTestId() caching is in place (PR #9800 merged). `CachedTestNodeUid` on UnitTestElement.
+- `testMethod.DisplayName` is always non-null (constructor: `displayName ?? name`). Safe to use directly.
+- Pre-existing CA1416 build errors in `FileLoggerTests.cs` on Linux prevent full ./build.sh -test.
+  Product code builds fine; unit tests for adapter fail due to net48/net462 NU1201 restore issues.
 - The "efficiency-improver" workflow is ALSO active on this repo, generating `efficiency/*` branches.
-  These are separate from `perf-assist/*` branches. Do not duplicate their work.
-- TestMethodRunner was split into partial class files in PR #9729 (2026-07-07):
-  TestMethodRunner.DataRow.cs, TestMethodRunner.Execution.cs, etc.
-- Issues #9713 and #9714 (from efficiency-improver) closed by Evangelink 2026-07-08.
 
 ## Previously Closed/Actioned Items (do not re-suggest)
 
-- PR #9617 (CloneForDataDrivenIteration + related) — merged
-- PR #9636 (TCS fast-path) — merged
-- Issues #9602/#9603 — closed (resolved by above PRs)
-- Scenario2 data-driven perf scenario — merged as PR #9728
-- JsonSerializerOptions caching in PlainProcess/DotnetTestProcess — merged as PR #9728
+- PR #9617 — merged
+- PR #9636 — merged
+- PR #9728 — merged
+- Issues #9602/#9603 — closed
 - Issues #9713/#9714 — closed by Evangelink 2026-07-08
+- PR #9800 — merged by Evangelink 2026-07-10 (GetTestId caching)
