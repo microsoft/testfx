@@ -565,9 +565,9 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.ContainsSingle(Array.Empty<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        Func<Task> action = async () => Assert.ContainsSingle(new List<int>(), $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*0*Assert.ContainsSingle(Array.Empty<int>())*");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*0*Assert.ContainsSingle(new List<int>())*");
         o.WasToStringCalled.Should().BeTrue();
     }
 
@@ -575,9 +575,9 @@ public partial class AssertTests
     {
         DummyClassTrackingToStringCalls o = new();
         DateTime dateTime = DateTime.Now;
-        Func<Task> action = async () => Assert.ContainsSingle([1, 2, 3], $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
+        Func<Task> action = async () => Assert.ContainsSingle(new List<int> { 1, 2, 3 }, $"User-provided message. {o}, {o,35}, {await GetHelloStringAsync()}, {new DummyIFormattable()}, {dateTime:tt}, {dateTime,5:tt}");
         (await action.Should().ThrowAsync<Exception>())
-            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*3*Assert.ContainsSingle([1, 2, 3])*");
+            .WithMessage($"*Expected collection to contain exactly one element.*User-provided message. DummyClassTrackingToStringCalls,     DummyClassTrackingToStringCalls, Hello, DummyIFormattable.ToString(), {string.Format(null, "{0:tt}", dateTime)}, {string.Format(null, "{0,5:tt}", dateTime)}*expected count:*1*actual count:*3*Assert.ContainsSingle(new List<int>*");
         o.WasToStringCalled.Should().BeTrue();
     }
 

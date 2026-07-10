@@ -104,4 +104,68 @@ public sealed partial class Assert
     }
 
     #endregion // AreAllNotNull
+
+#if NETCOREAPP3_1_OR_GREATER
+
+    #region AreAllNotNull span/memory
+
+    /// <summary>
+    /// Tests whether all items in the specified span are non-null.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span in which to search for null elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllNotNull<T>(ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.AreAllNotNull");
+        AreAllNotNullImpl(collection.ToArray(), message, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether all items in the specified span are non-null.
+    /// </summary>
+    /// <typeparam name="T">The type of the span items.</typeparam>
+    /// <param name="collection">The span in which to search for null elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllNotNull<T>(Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllNotNull((ReadOnlySpan<T>)collection, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified memory are non-null.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory in which to search for null elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllNotNull<T>(ReadOnlyMemory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllNotNull(collection.Span, message, collectionExpression);
+
+    /// <summary>
+    /// Tests whether all items in the specified memory are non-null.
+    /// </summary>
+    /// <typeparam name="T">The type of the memory items.</typeparam>
+    /// <param name="collection">The memory in which to search for null elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void AreAllNotNull<T>(Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => AreAllNotNull(collection.Span, message, collectionExpression);
+
+    #endregion // AreAllNotNull span/memory
+
+#endif
+
 }

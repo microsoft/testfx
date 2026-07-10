@@ -180,6 +180,169 @@ public sealed partial class Assert
 
     #endregion // ContainsAll
 
+#if NETCOREAPP3_1_OR_GREATER
+
+    #region ContainsAll span/memory
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The span of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(ReadOnlySpan<T> expected, ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
+        ContainsAllImpl<T>(expected.ToArray(), collection.ToArray(), EqualityComparer<T>.Default, comparerName: null, message, expectedExpression, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The span of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(ReadOnlySpan<T> expected, ReadOnlySpan<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.ContainsAll");
+        CheckParameterNotNull(comparer, "Assert.ContainsAll", "comparer");
+        ContainsAllImpl<T>(expected.ToArray(), collection.ToArray(), comparer, comparer.GetType().Name, message, expectedExpression, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The span of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(Span<T> expected, Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll((ReadOnlySpan<T>)expected, collection, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The span of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(Span<T> expected, Span<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll((ReadOnlySpan<T>)expected, collection, comparer, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The memory of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll(expected.Span, collection.Span, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The memory of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(ReadOnlyMemory<T> expected, ReadOnlyMemory<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll(expected.Span, collection.Span, comparer, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The memory of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(Memory<T> expected, Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll(expected.Span, collection.Span, message, expectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> contains every element of <paramref name="expected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="expected">The memory of items expected to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected to contain every item of <paramref name="expected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="expectedExpression">
+    /// The syntactic expression of expected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void ContainsAll<T>(Memory<T> expected, Memory<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(expected))] string expectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => ContainsAll(expected.Span, collection.Span, comparer, message, expectedExpression, collectionExpression);
+
+    #endregion // ContainsAll span/memory
+
+#endif
+
     #region DoesNotContainAll
 
     /// <summary>
@@ -347,6 +510,169 @@ public sealed partial class Assert
     }
 
     #endregion // DoesNotContainAll
+
+#if NETCOREAPP3_1_OR_GREATER
+
+    #region DoesNotContainAll span/memory
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The span of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(ReadOnlySpan<T> notExpected, ReadOnlySpan<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
+        DoesNotContainAllImpl<T>(notExpected.ToArray(), collection.ToArray(), EqualityComparer<T>.Default, comparerName: null, message, notExpectedExpression, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The span of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(ReadOnlySpan<T> notExpected, ReadOnlySpan<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotContainAll");
+        CheckParameterNotNull(comparer, "Assert.DoesNotContainAll", "comparer");
+        DoesNotContainAllImpl<T>(notExpected.ToArray(), collection.ToArray(), comparer, comparer.GetType().Name, message, notExpectedExpression, collectionExpression);
+    }
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The span of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(Span<T> notExpected, Span<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll((ReadOnlySpan<T>)notExpected, collection, message, notExpectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The span of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The span expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(Span<T> notExpected, Span<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll((ReadOnlySpan<T>)notExpected, collection, comparer, message, notExpectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The memory of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(ReadOnlyMemory<T> notExpected, ReadOnlyMemory<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll(notExpected.Span, collection.Span, message, notExpectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The memory of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(ReadOnlyMemory<T> notExpected, ReadOnlyMemory<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll(notExpected.Span, collection.Span, comparer, message, notExpectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The memory of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(Memory<T> notExpected, Memory<T> collection, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll(notExpected.Span, collection.Span, message, notExpectedExpression, collectionExpression);
+
+    /// <summary>
+    /// Tests whether <paramref name="collection"/> does not contain every element of <paramref name="notExpected"/> (with multiplicity).
+    /// </summary>
+    /// <typeparam name="T">The type of the collection items.</typeparam>
+    /// <param name="notExpected">The memory of items the test expects not to all be present in <paramref name="collection"/>.</param>
+    /// <param name="collection">The memory expected not to contain every item of <paramref name="notExpected"/>.</param>
+    /// <param name="comparer">The equality comparer to use when comparing elements.</param>
+    /// <param name="message">The message to include in the exception when the assertion fails.</param>
+    /// <param name="notExpectedExpression">
+    /// The syntactic expression of notExpected as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    /// <param name="collectionExpression">
+    /// The syntactic expression of collection as given by the compiler via caller argument expression.
+    /// Users shouldn't pass a value for this parameter.
+    /// </param>
+    public static void DoesNotContainAll<T>(Memory<T> notExpected, Memory<T> collection, [NotNull] IEqualityComparer<T>? comparer, string? message = "", [CallerArgumentExpression(nameof(notExpected))] string notExpectedExpression = "", [CallerArgumentExpression(nameof(collection))] string collectionExpression = "")
+        => DoesNotContainAll(notExpected.Span, collection.Span, comparer, message, notExpectedExpression, collectionExpression);
+
+    #endregion // DoesNotContainAll span/memory
+
+#endif
 
     private static void ContainsAllImpl<T>(IEnumerable<T?> expected, IEnumerable<T?> collection, IEqualityComparer<T> comparer, string? comparerName, string? message, string expectedExpression, string collectionExpression)
     {
