@@ -155,7 +155,7 @@ public sealed class DotnetTestProtocolSerializerTests
 
         DiscoveredTestMessage second = actual.DiscoveredMessages[1];
         Assert.AreEqual("Uid2", second.Uid);
-        Assert.HasCount(0, second.Traits);
+        Assert.IsEmpty(second.Traits);
     }
 
     [TestMethod]
