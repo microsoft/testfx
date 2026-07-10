@@ -116,16 +116,13 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
         ReadFields(stream, (fieldId, fieldSize) =>
         {
+            if (TryReadExecutionScopedField(stream, fieldId, fieldSize, ref executionId, ref instanceId))
+            {
+                return true;
+            }
+
             switch (fieldId)
             {
-                case TestResultMessagesFieldsId.ExecutionId:
-                    executionId = ReadStringValue(stream, fieldSize);
-                    return true;
-
-                case TestResultMessagesFieldsId.InstanceId:
-                    instanceId = ReadStringValue(stream, fieldSize);
-                    return true;
-
                 case TestResultMessagesFieldsId.SuccessfulTestMessageList:
                     successfulTestResultMessages = ReadSuccessfulTestMessagesPayload(stream);
                     return true;
@@ -292,12 +289,13 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
 
     protected override void SerializeCore(TestResultMessages objectToSerialize, Stream stream)
     {
-        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
+        WriteExecutionScopedHeader(
+            stream,
+            objectToSerialize.ExecutionId,
+            objectToSerialize.InstanceId,
+            (ushort)((IsNullOrEmpty(objectToSerialize.SuccessfulTestMessages) ? 0 : 1) +
+                (IsNullOrEmpty(objectToSerialize.FailedTestMessages) ? 0 : 1)));
 
-        WriteUShort(stream, GetFieldCount(objectToSerialize));
-
-        WriteField(stream, TestResultMessagesFieldsId.ExecutionId, objectToSerialize.ExecutionId);
-        WriteField(stream, TestResultMessagesFieldsId.InstanceId, objectToSerialize.InstanceId);
         WriteSuccessfulTestMessagesPayload(stream, objectToSerialize.SuccessfulTestMessages);
         WriteFailedTestMessagesPayload(stream, objectToSerialize.FailedTestMessages);
     }
@@ -345,12 +343,6 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             WriteField(s, ExceptionMessageFieldsId.ErrorType, exceptionMessage.ErrorType);
             WriteField(s, ExceptionMessageFieldsId.StackTrace, exceptionMessage.StackTrace);
         });
-
-    private static ushort GetFieldCount(TestResultMessages testResultMessages) =>
-        (ushort)((testResultMessages.ExecutionId is null ? 0 : 1) +
-        (testResultMessages.InstanceId is null ? 0 : 1) +
-        (IsNullOrEmpty(testResultMessages.SuccessfulTestMessages) ? 0 : 1) +
-        (IsNullOrEmpty(testResultMessages.FailedTestMessages) ? 0 : 1));
 
     private static ushort GetFieldCount(SuccessfulTestResultMessage successfulTestResultMessage) =>
         (ushort)((successfulTestResultMessage.Uid is null ? 0 : 1) +
