@@ -1,4 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
