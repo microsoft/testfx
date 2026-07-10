@@ -85,12 +85,11 @@ internal static class MSTestTestNodeConverter
     private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride)
     {
         TestMethod testMethod = element.TestMethod;
-        string testFullName = $"{testMethod.FullClassName}.{testMethod.Name}";
 
         TestNode testNode = new()
         {
             Uid = new TestNodeUid(element.GetTestId().ToString()),
-            DisplayName = displayNameOverride ?? testMethod.DisplayName ?? testFullName,
+            DisplayName = displayNameOverride ?? testMethod.DisplayName ?? $"{testMethod.FullClassName}.{testMethod.Name}",
         };
 
         AddCategoriesAndTraits(testNode, element, isTrxEnabled);
@@ -194,8 +193,7 @@ internal static class MSTestTestNodeConverter
         }
 
         TestMethod testMethod = element.TestMethod;
-        string testFullName = $"{testMethod.FullClassName}.{testMethod.Name}";
-        testNode.Properties.Add(new TrxTestDefinitionName(testMethod.DisplayName ?? testFullName));
+        testNode.Properties.Add(new TrxTestDefinitionName(testMethod.DisplayName));
 
         TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
         if (testMethodIdentifierProperty is not null)
@@ -205,13 +203,9 @@ internal static class MSTestTestNodeConverter
                     ? testMethodIdentifierProperty.TypeName
                     : $"{testMethodIdentifierProperty.Namespace}.{testMethodIdentifierProperty.TypeName}"));
         }
-        else if (TryParseFullyQualifiedType(testFullName, out string? fullyQualifiedType))
-        {
-            testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(fullyQualifiedType));
-        }
         else
         {
-            throw new InvalidOperationException("Unable to parse fully qualified type name from test: " + testFullName);
+            testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(testMethod.FullClassName));
         }
     }
 
@@ -290,23 +284,6 @@ internal static class MSTestTestNodeConverter
             string pathToResultFile = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(resultFile);
             testNode.Properties.Add(new FileArtifactProperty(new FileInfo(pathToResultFile), Resource.AttachmentSetDisplayName, resultFile));
         }
-    }
-
-    private static bool TryParseFullyQualifiedType(string fullyQualifiedName, [NotNullWhen(true)] out string? fullyQualifiedType)
-    {
-        fullyQualifiedType = null;
-
-        int openBracketIndex = fullyQualifiedName.IndexOf('(');
-        int lastDotIndexBeforeOpenBracket = openBracketIndex <= 0
-            ? fullyQualifiedName.LastIndexOf('.')
-            : fullyQualifiedName.LastIndexOf('.', openBracketIndex - 1);
-        if (lastDotIndexBeforeOpenBracket <= 0)
-        {
-            return false;
-        }
-
-        fullyQualifiedType = fullyQualifiedName[..lastDotIndexBeforeOpenBracket];
-        return true;
     }
 }
 #endif
