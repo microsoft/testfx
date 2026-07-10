@@ -314,10 +314,17 @@ internal sealed class FileLogger : IDisposable
 #endif
 
             // A logger failing to flush must never crash an otherwise successful test run, so on timeout we warn and
-            // continue disposing instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
+            // return instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+
+                // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
+                // writer uses AutoFlush, so every already-written line is already on disk.
+                _disposed = true;
+                return;
             }
         }
 
@@ -341,7 +348,7 @@ internal sealed class FileLogger : IDisposable
             EnsureAsyncLogObjectsAreNotNull();
 
             // Wait for all logs to be written. A logger failing to flush must never crash an otherwise successful
-            // test run, so on timeout we warn and continue disposing instead of throwing.
+            // test run, so on timeout we warn and return instead of throwing.
             // See https://github.com/dotnet/sdk/issues/55215.
             _channel.Writer.TryComplete();
             try
@@ -351,6 +358,13 @@ internal sealed class FileLogger : IDisposable
             catch (TimeoutException)
             {
                 _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+
+                // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
+                // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
+                // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
+                // writer uses AutoFlush, so every already-written line is already on disk.
+                _disposed = true;
+                return;
             }
         }
 
