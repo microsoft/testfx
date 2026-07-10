@@ -71,20 +71,8 @@ internal sealed class FileLogger : IDisposable
                 // We want to unlink the caller from the consumer
                 AllowSynchronousContinuations = false,
             });
-
-            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
 #else
             _channel = new SingleConsumerUnboundedChannel<string>();
-
-            // On .NET Framework (the netstandard2.0 build) the FileLogger is disposed synchronously because there is
-            // no IAsyncDisposable / StreamWriter.DisposeAsync available at runtime, so Dispose blocks on this loop's
-            // task via _logLoop.Wait(). We therefore run a fully synchronous drain loop: passing a synchronous
-            // delegate to Task.Run means the whole loop runs to completion on a single worker thread and blocks on the
-            // channel without ever scheduling a continuation. This makes shutdown immune to thread-pool starvation
-            // (e.g. many test processes running concurrently on a CI / Helix agent), which could otherwise delay the
-            // async continuation past the flush timeout and crash the test host on an otherwise successful run.
-            // See https://github.com/dotnet/sdk/issues/55215.
-            _logLoop = task.Run(WriteLogToFile);
 #endif
         }
 
@@ -109,6 +97,26 @@ internal sealed class FileLogger : IDisposable
         {
             AutoFlush = true,
         };
+
+        // Start the consumer loop only after _writer is fully initialized. The loop dereferences _writer, so starting
+        // it earlier could race with the rest of the constructor and hit a null _writer (Task.Run may schedule the
+        // loop on another thread immediately).
+        if (!_options.SyncFlush)
+        {
+#if NETCOREAPP
+            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
+#else
+            // On .NET Framework (the netstandard2.0 build) the FileLogger is disposed synchronously because there is
+            // no IAsyncDisposable / StreamWriter.DisposeAsync available at runtime, so Dispose blocks on this loop's
+            // task via _logLoop.Wait(). We therefore run a fully synchronous drain loop: passing a synchronous
+            // delegate to Task.Run means the whole loop runs to completion on a single worker thread and blocks on the
+            // channel without ever scheduling a continuation. This makes shutdown immune to thread-pool starvation
+            // (e.g. many test processes running concurrently on a CI / Helix agent), which could otherwise delay the
+            // async continuation past the flush timeout and crash the test host on an otherwise successful run.
+            // See https://github.com/dotnet/sdk/issues/55215.
+            _logLoop = task.Run(WriteLogToFile);
+#endif
+        }
     }
 
     public string FileName { get; private set; }
@@ -250,7 +258,7 @@ internal sealed class FileLogger : IDisposable
 
         try
         {
-            // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
+            // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to TryComplete() inside the Dispose/DisposeAsync method.
             while (await _channel.Reader.WaitToReadAsync().ConfigureAwait(false))
             {
                 await _writer.WriteLineAsync(await _channel.Reader.ReadAsync().ConfigureAwait(false)).ConfigureAwait(false);
@@ -322,7 +330,9 @@ internal sealed class FileLogger : IDisposable
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
                 // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
-                // writer uses AutoFlush, so every already-written line is already on disk.
+                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
+                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
+                _semaphore.Dispose();
                 _disposed = true;
                 return;
             }
@@ -362,7 +372,9 @@ internal sealed class FileLogger : IDisposable
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
                 // log. We therefore leave them for the OS to reclaim at process exit. No data is lost because the
-                // writer uses AutoFlush, so every already-written line is already on disk.
+                // writer uses AutoFlush, so every already-written line is already on disk. The semaphore is not shared
+                // with the consumer loop (it's only used on the SyncFlush path), so it's safe to dispose here.
+                _semaphore.Dispose();
                 _disposed = true;
                 return;
             }

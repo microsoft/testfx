@@ -246,6 +246,85 @@ public sealed class FileLoggerTests : IDisposable
         }
     }
 
+    // Chaos test for https://github.com/dotnet/sdk/issues/55215.
+    // Stresses the async-flush path: many threads log concurrently and then the logger is disposed while messages are
+    // still queued. Repeated across many iterations to shake out races in consumer-loop startup and shutdown draining.
+    // The logger must never crash, must drain the whole queue on Dispose, and must not lose or corrupt any message.
+    [TestMethod]
+    public void Log_WhenAsyncFlush_ConcurrentLoggingIsDrainedOnDisposeWithoutLoss()
+    {
+        const int iterations = 50;
+        const int producerCount = 8;
+        const int messagesPerProducer = 50;
+
+        var clock = new Mock<IClock>();
+        clock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(2023, 5, 29, 3, 42, 13, TimeSpan.Zero));
+
+        for (int iteration = 0; iteration < iterations; iteration++)
+        {
+            using var memoryStream = new CustomMemoryStream();
+
+            var mockStream = new Mock<IFileStream>();
+            mockStream.Setup(x => x.Stream).Returns(memoryStream);
+            mockStream.Setup(x => x.Name).Returns(FileName);
+            mockStream.Setup(x => x.Dispose());
+#if NETCOREAPP
+            mockStream.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
+#endif
+
+            var mockFileSystem = new Mock<IFileSystem>();
+            mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+
+            var mockFileStreamFactory = new Mock<IFileStreamFactory>();
+            mockFileStreamFactory
+                .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+                .Returns(mockStream.Object);
+
+            var fileLogger = new FileLogger(
+                new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+                LogLevel.Trace,
+                clock.Object,
+                new SystemTask(),
+                _mockConsole.Object,
+                mockFileSystem.Object,
+                mockFileStreamFactory.Object);
+
+            // Release all producers at the same time to maximize contention right after construction.
+            using var startGate = new ManualResetEventSlim(false);
+            var producers = new Task[producerCount];
+            for (int producer = 0; producer < producerCount; producer++)
+            {
+                int producerId = producer;
+                producers[producer] = Task.Run(() =>
+                {
+                    startGate.Wait();
+                    for (int message = 0; message < messagesPerProducer; message++)
+                    {
+                        fileLogger.Log(LogLevel.Trace, $"P{producerId}M{message}", null, Formatter, Category);
+                    }
+                });
+            }
+
+            startGate.Set();
+            Task.WaitAll(producers);
+
+            // Dispose must drain everything still sitting in the queue without crashing.
+            fileLogger.Dispose();
+
+            string content = Encoding.UTF8.GetString(memoryStream.ToArray());
+            string[] lines = content.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
+            Assert.AreEqual(producerCount * messagesPerProducer, lines.Length, $"Iteration {iteration}: every queued message must be flushed exactly once.");
+
+            for (int producer = 0; producer < producerCount; producer++)
+            {
+                for (int message = 0; message < messagesPerProducer; message++)
+                {
+                    Assert.Contains($"P{producer}M{message}", content, $"Iteration {iteration}: message P{producer}M{message} was lost or corrupted.");
+                }
+            }
+        }
+    }
+
     void IDisposable.Dispose()
         => _memoryStream.Dispose();
 
