@@ -10,8 +10,9 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
 {
     // Source code for a project that validates MSTest supporting Native AOT.
-    // Uses MSTest.SourceGeneration to emit reflection-free metadata so the runtime
-    // does not need to fall back to reflection for test discovery or invocation.
+    // Sets MSTestSourceGenMode=ReflectionFree explicitly (this is also the shipped default now) so
+    // MSTest.SourceGeneration emits reflection-free metadata (materialized attributes + delegate-based
+    // invokers) and the runtime does not fall back to reflection for user test discovery or invocation.
     private const string SourceCode = """
 #file MSTestNativeAotTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -24,6 +25,9 @@ public class NativeAotTests : AcceptanceTestBase<NopAssetFixture>
         <LangVersion>preview</LangVersion>
         <EnableMSTestRunner>true</EnableMSTestRunner>
         <PublishAot>true</PublishAot>
+        <!-- Reflection-free is now the default, but pin it so the test stays meaningful even if the
+             product default ever changes again. -->
+        <MSTestSourceGenMode>ReflectionFree</MSTestSourceGenMode>
         <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
         <TrimmerSingleWarn>false</TrimmerSingleWarn>
     </PropertyGroup>
@@ -83,12 +87,15 @@ public class UnitTest1
             .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
             addPublicFeeds: true);
 
-        // Do NOT pass warnAsError: true here. MSTest.TestAdapter (required for the source-generator
-        // runtime hook host MSTestAdapter.PlatformServices.dll) transitively depends on the vstest
-        // Microsoft.TestPlatform.ObjectModel submodule and System.Private.DataContractSerialization,
-        // both of which emit trim/AOT warnings (IL20xx/IL30xx) outside this repo's control. Promoting
-        // them to errors would fail publish with NETSDK1144 before we can inspect the warning list.
-        // Instead, we assert below that MSTest-owned source files do not appear in publish output.
+        // Do NOT pass warnAsError: true here. Even in reflection-free source-gen mode, MSTest.TestAdapter
+        // (required for the source-generator runtime hook host MSTestAdapter.PlatformServices.dll) drives
+        // the native MTP path (TestingPlatformAdapter\MSTestTestNodeConverter, MSTestFilterContext), which
+        // uses the vstest Microsoft.TestPlatform.ObjectModel TestCase/TestProperty types directly. That
+        // submodule (plus System.Private.DataContractSerialization) emits trim/AOT warnings (IL20xx/IL30xx)
+        // outside this repo's control, and the source-gen mode does not change that reachability. Promoting
+        // them to errors would fail publish with NETSDK1144 before we can inspect the warning list. Enabling
+        // warnAsError here is blocked until that ObjectModel reachability is removed (see #9769). Instead, we
+        // assert below that MSTest-owned source files do not appear in publish output.
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
             warnAsError: false,

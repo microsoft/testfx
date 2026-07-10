@@ -30,6 +30,7 @@ internal static class MetadataRegistryEmitter
 
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine();
 
@@ -38,6 +39,12 @@ internal static class MetadataRegistryEmitter
             sb.AppendLine("/// <summary>Describes one test class as discovered at compile-time. Mirrors what <c>IReflectionOperations</c> would return at runtime.</summary>");
             using (sb.Block("internal sealed class TestClassReflectionInfo"))
             {
+                // The stored Type flows into ResolveMethod / ResolveProperty at registration time, which
+                // require these members to be kept for trimming/AOT. Annotate the property so the trimmer
+                // propagates the requirement; the registry assigns typeof(<concrete class>), which the
+                // trimmer treats as satisfying any DynamicallyAccessedMembers requirement, so no warning
+                // is produced at the assignment site.
+                sb.AppendLine("[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties)]");
                 sb.AppendLine("public Type Type { get; set; } = null!;");
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("public IReadOnlyList<TestMethodReflectionInfo> Methods { get; set; } = Array.Empty<TestMethodReflectionInfo>();");

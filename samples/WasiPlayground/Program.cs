@@ -16,7 +16,10 @@ testApplicationBuilder.AddAppInsightsTelemetryProvider();
 testApplicationBuilder.AddCrashDumpProvider();
 // AddHangDumpProvider is intentionally not registered: hang dumps rely on
 // System.Diagnostics.Process which is unsupported on wasi (see #8557).
-testApplicationBuilder.AddAzureDevOpsProvider();
+// AddAzureDevOpsProvider is intentionally not registered: its HttpClient sets
+// AutomaticDecompression, which the wasi HttpClientHandler
+// (System.Net.Http.WasiHttpHandler) does not support and throws
+// PlatformNotSupportedException from its static initializer.
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
 
