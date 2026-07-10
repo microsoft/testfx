@@ -101,6 +101,14 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---FailedTestMessageList[0].SessionUid Id---| (2 bytes)
       |---FailedTestMessageList[0].SessionUid Size---| (4 bytes)
       |---FailedTestMessageList[0].SessionUid Value---| (n bytes)
+
+      |---FailedTestMessageList[0].Expected Id---| (2 bytes)
+      |---FailedTestMessageList[0].Expected Size---| (4 bytes)
+      |---FailedTestMessageList[0].Expected Value---| (n bytes)
+
+      |---FailedTestMessageList[0].Actual Id---| (2 bytes)
+      |---FailedTestMessageList[0].Actual Size---| (4 bytes)
+      |---FailedTestMessageList[0].Actual Value---| (n bytes)
   */
 
 internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestResultMessages>, INamedPipeSerializer
