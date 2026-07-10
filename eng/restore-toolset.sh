@@ -6,15 +6,16 @@
 # AFTER InitializeDotNetCli has bootstrapped the repo-local .dotnet/ SDK, so
 # $repo_root and the helpers from eng/common/tools.sh are in scope.
 #
-# Currently required by samples/WasiPlayground/WasiPlayground.csproj which
-# targets net10.0 with <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>
-# and would otherwise fail with NETSDK1147 in CI.
+# Currently required by the wasi-wasm acceptance tests in
+# test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs
+# whose generated assets set <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload> and would
+# otherwise fail their `dotnet build -r wasi-wasm` step with NETSDK1147 in CI.
 
 required_workloads=('wasi-experimental-net10')
 
-# Note: `wasm-tools-net10` is documented in samples/WasiPlayground/README.md
-# as a prerequisite for `dotnet publish`, but it is not needed by the repo's
-# `dotnet build` so we keep the CI install minimal.
+# Note: `wasm-tools-net10` is only needed for the `dotnet publish -r wasi-wasm` step that the gated
+# WasmExecution/RawPlatform execution tests perform; it is not needed by `dotnet build`, so we keep
+# the CI install minimal and let those tests self-skip when it (and wasmtime) are absent.
 
 if [[ -n "${DOTNET_INSTALL_DIR:-}" ]]; then
   dotnet_root="$DOTNET_INSTALL_DIR"
