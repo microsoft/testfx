@@ -37,6 +37,33 @@ public abstract class AcceptanceTestBase
 
     public static string MSTestVersion { get; private set; }
 
+    // The classic VSTest "dotnet test" runner is no longer supported for Microsoft.Testing.Platform
+    // applications starting with the .NET 10 SDK (see the _MTPBeforeVSTest error in
+    // Microsoft.Testing.Platform.MSBuild.targets). MSTest v5 projects always run on Microsoft.Testing.Platform,
+    // so tests exercising the VSTest runner can only run on the .NET 9 SDK and earlier. Acceptance tests run
+    // through the SDK pinned in global.json (the repo's .dotnet folder), so we read the major version from there.
+    public static int DotnetSdkMajorVersion { get; } = GetDotnetSdkMajorVersion();
+
+    private static int GetDotnetSdkMajorVersion()
+    {
+        string globalJson = File.ReadAllText(Path.Combine(RootFinder.Find(), "global.json"));
+        Match match = Regex.Match(globalJson, "\"sdk\"\\s*:\\s*\\{[^}]*?\"version\"\\s*:\\s*\"(?<major>\\d+)\\.");
+
+        // Default to a high value (treat as unsupported) if the version can't be parsed, so we skip rather
+        // than emit a spurious failure.
+        return match.Success ? int.Parse(match.Groups["major"].Value, CultureInfo.InvariantCulture) : int.MaxValue;
+    }
+
+    // Marks a test inconclusive when it relies on the classic VSTest "dotnet test" runner but the current
+    // .NET SDK (>= 10) no longer supports that runner for Microsoft.Testing.Platform apps.
+    protected static void SkipIfVSTestRunnerIsUnsupportedByCurrentSdk()
+    {
+        if (DotnetSdkMajorVersion >= 10)
+        {
+            Assert.Inconclusive("The classic VSTest 'dotnet test' runner is not supported for Microsoft.Testing.Platform apps on the .NET 10 SDK and later. MSTest v5 projects always run on Microsoft.Testing.Platform.");
+        }
+    }
+
     public static string MSTestSourceGenerationVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
@@ -212,7 +239,10 @@ public abstract class AcceptanceTestBase<TFixture> : AcceptanceTestBase
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
+    <!-- In v5 MSTest always runs on Microsoft.Testing.Platform, so the VSTest meta-package
+         (Microsoft.NET.Test.Sdk) is not required. Referencing it also pulls Microsoft.CodeCoverage,
+         whose build assets inject an older System.Memory (4.0.2.0) into net462 publish output that
+         does not match the auto-generated binding redirect (4.0.5.0) and crashes the host. -->
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
@@ -234,7 +264,7 @@ public class UnitTest1
 #file global.json
 {
   "test": {
-    "runner": "VSTest"
+    "runner": "Microsoft.Testing.Platform"
   }
 }
 """;

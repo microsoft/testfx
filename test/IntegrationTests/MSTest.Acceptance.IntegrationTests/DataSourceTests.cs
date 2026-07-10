@@ -91,8 +91,7 @@ num1,num2,expectedSum
             "DataSourceTests",
             SourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion));
 
         await DotnetCli.RunAsync(
             $"build {generator.TargetAssetPath} -c Release",

@@ -40,6 +40,8 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
+        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
+
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
         string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? testHost.FullName

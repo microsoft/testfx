@@ -1,4 +1,4 @@
-<Project InitialTargets="NETStandardCompatError_MSTest_TestAdapter">
+<Project InitialTargets="NETStandardCompatError_MSTest_TestAdapter;MSTest_InfoOnObsoleteEnableMSTestRunner">
 
     <Target Name="NETStandardCompatError_MSTest_TestAdapter"
             Condition="'$(SuppressTfmSupportBuildWarnings)' == ''">
@@ -6,12 +6,25 @@
                  Text="MSTest.TestAdapter does not support the target framework '$(TargetFramework)' and has not been tested with it. Test libraries (projects that don't directly run tests) should not reference MSTest.TestAdapter or the MSTest metapackage. Instead, reference only MSTest.TestFramework. To suppress this warning and proceed at your own risk, add &lt;SuppressTfmSupportBuildWarnings&gt;true&lt;/SuppressTfmSupportBuildWarnings&gt; to your project file." />
     </Target>
 
-  <!-- Handle the coexistence between testing platform and Microsoft.NET.Test.Sdk  -->
-  <PropertyGroup>
-    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
-    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
+    <!--
+      Transitional migration notice: 'EnableMSTestRunner' was the v4 opt-in for Microsoft.Testing.Platform.
+      In v5 it is no longer used (MSTest always runs on MTP), so a leftover value is silently ignored. This is
+      an informational message (not a warning) on purpose: the leftover property is harmless, so it must not
+      fail builds that use TreatWarningsAsErrors. Suppress with <SuppressMSTestRunnerObsoleteMessage>true</...>.
+    -->
+    <Target Name="MSTest_InfoOnObsoleteEnableMSTestRunner"
+            Condition="'$(EnableMSTestRunner)' != '' AND '$(SuppressMSTestRunnerObsoleteMessage)' != 'true'">
+        <Message Importance="high" Text="The 'EnableMSTestRunner' property is no longer used in MSTest v5: MSTest always runs on Microsoft.Testing.Platform. You can remove 'EnableMSTestRunner' from your project file. To suppress this message, set &lt;SuppressMSTestRunnerObsoleteMessage&gt;true&lt;/SuppressMSTestRunnerObsoleteMessage&gt;." />
+    </Target>
 
-    <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+  <!--
+    MSTest v5 always runs on Microsoft.Testing.Platform (MTP). The legacy VSTest opt-in property
+    'EnableMSTestRunner' has been removed: the adapter is always a testing platform application.
+  -->
+  <PropertyGroup>
+    <IsTestingPlatformApplication Condition=" '$(IsTestingPlatformApplication)' == '' ">true</IsTestingPlatformApplication>
+
+    <GenerateProgramFile Condition=" '$(IsTestingPlatformApplication)' == 'true' ">false</GenerateProgramFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
@@ -50,11 +63,11 @@
 
   <Target Name="GetMSTestV2CultureHierarchy" Returns="@(MSTestV2Files)">
     <!--
-      MTP scenario (EnableMSTestRunner): the UI language is chosen at runtime (for example via
+      MTP scenario (the default in v5): the UI language is chosen at runtime (for example via
       TESTINGPLATFORM_UI_LANGUAGE / DOTNET_CLI_UI_LANGUAGE), so the build-machine culture is irrelevant.
       Every localized satellite must be copied to the output directory so any culture can be resolved at run time.
       -->
-    <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
+    <ItemGroup Condition=" '$(IsTestingPlatformApplication)' == 'true' ">
       <MSTestV2Files Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\_localization'))\**\*.dll" />
       <!-- Set UICulture from the satellite's culture folder. This is done via Update (not inline on Include) because
            the well-known %(RecursiveDir) metadata is only available on items after they have been created. -->
@@ -64,7 +77,7 @@
     </ItemGroup>
 
     <!--
-      VSTest scenario: the UI language is fixed to the build-machine culture, so only that culture's hierarchy
+      Non-MTP fallback: the UI language is fixed to the build-machine culture, so only that culture's hierarchy
       is copied to keep the output directory slim.
       Only traversing 5 levels in the culture hierarchy. This is the maximum length for all cultures and should be sufficient
       to get to a culture name that maps to a resource folder we package.
@@ -72,7 +85,7 @@
       invariant itself. (https://msdn.microsoft.com/library/system.globalization.cultureinfo.parent.aspx)
       So the below code should not break build in any case.
       -->
-    <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
+    <ItemGroup Condition=" '$(IsTestingPlatformApplication)' != 'true' ">
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Name)" />
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Name)' != '' "/>
       <CurrentUICultureHierarchy Include="$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name)"  Condition=" '$([System.Globalization.CultureInfo]::CurrentUICulture.Parent.Parent.Name)' != '' "/>
@@ -85,7 +98,7 @@
       This is populated here (rather than inside CopyMSTestV2Resources) so the item group is available when the
       Inputs/Outputs of CopyMSTestV2Resources are evaluated for incremental build.
     -->
-    <ItemGroup Condition=" '$(EnableMSTestRunner)' != 'true' ">
+    <ItemGroup Condition=" '$(IsTestingPlatformApplication)' != 'true' ">
       <MSTestV2Files Include="$(MSBuildThisFileDirectory)..\_localization\%(CurrentUICultureHierarchy.Identity)\*.dll">
         <UICulture>%(CurrentUICultureHierarchy.Identity)\</UICulture>
       </MSTestV2Files>

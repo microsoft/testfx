@@ -78,7 +78,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase<AssemblyResolut
         private VSSolution CreateTestAsset()
         {
             VSSolution solution = new(Path.Combine(_testAssetDirectory.Path, "MSTestSolution"), "MSTestSolution");
-            solution.AddOrUpdateFileContent("NuGet.config", TestAsset.GetNuGetConfig(false, false));
+            solution.AddOrUpdateFileContent("NuGet.config", TestAsset.GetNuGetConfig(false));
 
             CSharpProject mainProject = solution.CreateCSharpProject(ProjectName, TargetFramework);
             mainProject.AddOrUpdateFileContent(mainProject.ProjectFile, $"""

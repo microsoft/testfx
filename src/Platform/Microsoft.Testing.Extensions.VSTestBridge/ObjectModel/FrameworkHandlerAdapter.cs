@@ -80,6 +80,10 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
     }
 
     /// <inheritdoc/>
+    // IFrameworkHandle.EnableShutdownAfterTestRun is obsolete ("has no effect") in newer VSTest, but we
+    // must still implement the interface member and preserve the historical pass-through to the wrapped
+    // handle. The delegation is harmless because the underlying property is now a no-op.
+#pragma warning disable CS0618 // Type or member is obsolete
     public bool EnableShutdownAfterTestRun
     {
         get => _frameworkHandle?.EnableShutdownAfterTestRun ?? false;
@@ -89,6 +93,7 @@ internal sealed class FrameworkHandlerAdapter : IFrameworkHandle
             _frameworkHandle?.EnableShutdownAfterTestRun = value;
         }
     }
+#pragma warning restore CS0618
 
     /// <inheritdoc/>
     public int LaunchProcessWithDebuggerAttached(string filePath, string? workingDirectory, string? arguments,

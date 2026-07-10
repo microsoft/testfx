@@ -3,7 +3,6 @@
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -12,25 +11,12 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Contains the discovery logic for this adapter.
 /// </summary>
-[DefaultExecutorUri(MSTestAdapter.PlatformServices.EngineConstants.ExecutorUriString)]
-[FileExtension(".xap")]
-[FileExtension(".appx")]
-[FileExtension(".dll")]
-[FileExtension(".exe")]
-internal sealed class MSTestDiscoverer : ITestDiscoverer
+internal sealed class MSTestDiscoverer
 {
     private readonly ITestSourceHandler _testSourceHandler;
 #if !WINDOWS_UWP && !WIN_UI
     private readonly Func<string, IDictionary<string, object>, Task>? _telemetrySender;
 #endif
-
-    // The parameterless constructor is required by VSTest, which instantiates the
-    // discoverer via reflection. The internal constructor exists for tests and for the
-    // native Microsoft.Testing.Platform framework (MSTestTestFramework) which injects a telemetry sender.
-    public MSTestDiscoverer()
-        : this(new TestSourceHandler())
-    {
-    }
 
     internal MSTestDiscoverer(ITestSourceHandler testSourceHandler, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
@@ -41,21 +27,6 @@ internal sealed class MSTestDiscoverer : ITestDiscoverer
         _ = telemetrySender;
 #endif
     }
-
-    /// <summary>
-    /// Discovers the tests available from the provided source. Not supported for .xap source.
-    /// </summary>
-    /// <param name="sources">Collection of test containers.</param>
-    /// <param name="discoveryContext">Context in which discovery is being performed.</param>
-    /// <param name="logger">Logger used to log messages.</param>
-    /// <param name="discoverySink">Used to send testcases and discovery related events back to Discoverer manager.</param>
-    [System.Security.SecurityCritical]
-    [SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0", Justification = "Discovery context can be null.")]
-    public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink)
-        // VSTest's ITestDiscoverer is a synchronous interface. The telemetry sender is null in
-        // this code path (only the MTP bridge supplies one), so the awaited send below completes
-        // synchronously and GetAwaiter().GetResult() does not actually block on I/O.
-        => DiscoverTestsAsync(sources, discoveryContext, logger, discoverySink, configuration: null, isMTP: false).GetAwaiter().GetResult();
 
     internal async Task DiscoverTestsAsync(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IConfiguration? configuration, bool isMTP)
     {

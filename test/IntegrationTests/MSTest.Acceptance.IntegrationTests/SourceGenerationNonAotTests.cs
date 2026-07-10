@@ -74,8 +74,7 @@ public class UnitTest1
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion));
 
         // Plain `dotnet build` — no -r RID, no publish, no PublishAot, no PublishTrimmed.
         // This is the scenario the follow-up review surfaced: the source generator must also

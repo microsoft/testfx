@@ -41,10 +41,9 @@ internal class TestablePlatformServiceProvider : IPlatformServiceProvider
     public IFileOperations FileOperations => MockFileOperations.Object;
 
     // The getter always returns the mock so tests can verify trace logging. The setter is a no-op:
-    // MSTest.TestAdapter's [ModuleInitializer] (MSTestExecutor.SetPlatformLogger) legitimately assigns
-    // PlatformServiceProvider.Instance.AdapterTraceLogger when that module is first touched (e.g. via the
-    // ToAdapterMessageLogger bridge), so this double must tolerate the assignment exactly as the real
-    // PlatformServiceProvider does, rather than throwing.
+    // MSTest.TestAdapter (and MTP) legitimately assign PlatformServiceProvider.Instance.AdapterTraceLogger,
+    // so this double must tolerate the assignment exactly as the real PlatformServiceProvider does, rather
+    // than throwing.
     public ITraceLogger AdapterTraceLogger { get => MockTraceLogger.Object; set => _ = value; }
 
 #if !WINDOWS_UWP && !WIN_UI

@@ -129,6 +129,8 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_RunTests_Succeeds(string tfm)
     {
+        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
+
         // Pre-build the VSTest project for this TFM exactly once, then run `dotnet test`
         // with `--no-build --no-restore` so the build/restore targets that write to
         // `bin/<tfm>/TelemetryVSTestProject.runtimeconfig.json` do not run per-test.
@@ -154,6 +156,8 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_DiscoverTests_Succeeds(string tfm)
     {
+        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
+
         await AssetFixture.EnsureVSTestProjectBuiltAsync(tfm, TestContext.CancellationToken);
 
         DotnetMuxerResult testResult = await DotnetCli.RunAsync(

@@ -84,8 +84,7 @@ public class UnitTest1
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion));
 
         // Do NOT pass warnAsError: true here. Even in reflection-free source-gen mode, MSTest.TestAdapter
         // (required for the source-generator runtime hook host MSTestAdapter.PlatformServices.dll) drives
