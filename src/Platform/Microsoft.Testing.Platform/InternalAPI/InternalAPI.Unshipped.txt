@@ -1,5 +1,8 @@
 #nullable enable
 Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
+Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void
+Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
+Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
@@ -32,6 +35,7 @@ static Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer.ReplaceInva
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator !=(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator ==(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider) -> void
+*REMOVED*Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id, out string! Version) -> void
