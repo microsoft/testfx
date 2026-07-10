@@ -4,7 +4,6 @@
 using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
@@ -26,41 +25,7 @@ public class MSTestExecutorTests : TestContainer
         _mockRunContext = new Mock<IRunContext>();
         _mockRunSettings = new Mock<IRunSettings>();
         _mockFrameworkHandle = new Mock<IFrameworkHandle>();
-        _mstestExecutor = new MSTestExecutor();
-    }
-
-    public void MSTestExecutorShouldProvideTestExecutionUri()
-    {
-        var testExecutor = new MSTestExecutor();
-
-        var extensionUriString = (ExtensionUriAttribute)testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single();
-
-        extensionUriString.ExtensionUri.Should().Be(EngineConstants.ExecutorUriString);
-    }
-
-    public async Task RunTestsShouldReportErrorAndBailOutOnSettingsException()
-    {
-        var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v4"), Assembly.GetExecutingAssembly().Location);
-        TestCase[] tests = [testCase];
-        string runSettingsXml =
-            """
-            <RunSettings>
-              <MSTest>
-                <Parallelize>
-                  <Scope>Pond</Scope>
-                </Parallelize>
-              </MSTest>
-            </RunSettings>
-            """;
-        _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
-
-        // Act.
-        await _mstestExecutor.RunTestsAsync(tests, _mockRunContext.Object, _mockFrameworkHandle.Object, null);
-
-        // Assert.
-        _mockFrameworkHandle.Verify(fh => fh.RecordStart(tests[0]), Times.Never);
-        _mockFrameworkHandle.Verify(fh => fh.SendMessage(TestPlatform.ObjectModel.Logging.TestMessageLevel.Error, "Invalid value 'Pond' specified for 'Scope'. Supported scopes are ClassLevel, MethodLevel."), Times.Once);
+        _mstestExecutor = new MSTestExecutor(CancellationToken.None);
     }
 
     public async Task RunTestsWithSourcesShouldReportErrorAndBailOutOnSettingsException()

@@ -53,70 +53,35 @@ public class MSTestDiscovererTests : TestContainer
         }
     }
 
-    public void MSTestDiscovererHasMSTestAdapterAsExecutorUri()
+    public async Task DiscoverTestsShouldThrowIfSourcesIsNull()
     {
-        DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetCustomAttributes<DefaultExecutorUriAttribute>().First();
-        attribute.Should().NotBeNull();
-        attribute.ExecutorUri.Should().Be("executor://MSTestAdapter/v4");
+        Func<Task> action = async () => await _discoverer.DiscoverTestsAsync(null!, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, configuration: null, isMTP: false);
+        await action.Should().ThrowAsync<ArgumentNullException>();
     }
 
-    public void MSTestDiscovererHasXapAsFileExtension()
+    public async Task DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        attributes.Should().NotBeNull();
-        attributes.Count(attribute => attribute.FileExtension == ".xap").Should().Be(1);
+        Func<Task> action = async () => await _discoverer.DiscoverTestsAsync(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, (ITestCaseDiscoverySink)null!, configuration: null, isMTP: false);
+        await action.Should().ThrowAsync<ArgumentNullException>();
     }
 
-    public void MSTestDiscovererHasAppxAsFileExtension()
+    public async Task DiscoverTestsShouldThrowIfLoggerIsNull()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        attributes.Should().NotBeNull();
-        attributes.Count(attribute => attribute.FileExtension == ".appx").Should().Be(1);
+        Func<Task> action = async () => await _discoverer.DiscoverTestsAsync(new List<string>(), _mockDiscoveryContext.Object, null!, _mockTestCaseDiscoverySink.Object, configuration: null, isMTP: false);
+        await action.Should().ThrowAsync<ArgumentNullException>();
     }
 
-    public void MSTestDiscovererHasDllAsFileExtension()
-    {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        attributes.Should().NotBeNull();
-        attributes.Count(attribute => attribute.FileExtension == ".dll").Should().Be(1);
-    }
-
-    public void MSTestDiscovererHasExeAsFileExtension()
-    {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes<FileExtensionAttribute>();
-        object value = attributes.Should().NotBeNull();
-        attributes.Count(attribute => attribute.FileExtension == ".exe").Should().Be(1);
-    }
-
-    public void DiscoverTestsShouldThrowIfSourcesIsNull()
-    {
-        Action action = () => _discoverer.DiscoverTests(null!, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        action.Should().Throw<ArgumentNullException>();
-    }
-
-    public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
-    {
-        Action action = () => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null!);
-        action.Should().Throw<ArgumentNullException>();
-    }
-
-    public void DiscoverTestsShouldThrowIfLoggerIsNull()
-    {
-        Action action = () => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null!, _mockTestCaseDiscoverySink.Object);
-        action.Should().Throw<ArgumentNullException>();
-    }
-
-    public void DiscoverTestsShouldThrowIfSourcesAreNotValid()
+    public async Task DiscoverTestsShouldThrowIfSourcesAreNotValid()
     {
         // Setup Mocks.
         _mockTestSourceHandler.Setup(tsv => tsv.ValidSourceExtensions)
             .Returns(new List<string> { });
 
-        Action action = () => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        action.Should().Throw<NotSupportedException>();
+        Func<Task> action = async () => await _discoverer.DiscoverTestsAsync(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, configuration: null, isMTP: false);
+        await action.Should().ThrowAsync<NotSupportedException>();
     }
 
-    public void DiscoverTestsShouldNotThrowIfDiscoveryContextIsNull()
+    public async Task DiscoverTestsShouldNotThrowIfDiscoveryContextIsNull()
     {
         string source = GetCurrentAssembly();
 
@@ -128,10 +93,10 @@ public class MSTestDiscovererTests : TestContainer
             .Returns(true);
 
         // This call should not throw a null reference exception.
-        _discoverer.DiscoverTests(new List<string> { source }, null!, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
+        await _discoverer.DiscoverTestsAsync(new List<string> { source }, null!, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, configuration: null, isMTP: false);
     }
 
-    public void DiscoverTestsShouldDiscoverTests()
+    public async Task DiscoverTestsShouldDiscoverTests()
     {
         string source = GetCurrentAssembly();
 
@@ -150,7 +115,7 @@ public class MSTestDiscovererTests : TestContainer
             ih => ih.CreateInstanceForType(It.IsAny<Type>(), It.IsAny<object[]>()))
             .Returns(new AssemblyEnumerator());
 
-        _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
+        await _discoverer.DiscoverTestsAsync(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, configuration: null, isMTP: false);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.AtLeastOnce);
@@ -159,7 +124,7 @@ public class MSTestDiscovererTests : TestContainer
     private static string GetCurrentAssembly()
         => Assembly.GetExecutingAssembly().Location.Replace(".exe", ".dll");
 
-    public void DiscoveryShouldReportAndBailOutOnSettingsException()
+    public async Task DiscoveryShouldReportAndBailOutOnSettingsException()
     {
         string runSettingsXml =
             """
@@ -176,7 +141,7 @@ public class MSTestDiscovererTests : TestContainer
         _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
         string source = GetCurrentAssembly();
-        _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
+        await _discoverer.DiscoverTestsAsync(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, configuration: null, isMTP: false);
 
         // Assert.
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.IsAny<TestCase>()), Times.Never);

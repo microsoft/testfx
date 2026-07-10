@@ -75,8 +75,7 @@ public class UnitTest1
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion)
-            .PatchCodeWithReplace("$TargetFramework$", tfm),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$TargetFramework$", tfm));
 
         DotnetMuxerResult result = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
@@ -160,8 +159,7 @@ public class UnitTest1
             TrimAnalysisWithTestAdapterSourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$TargetFramework$", tfm),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$TargetFramework$", tfm));
 
         // Do NOT pass warnAsError: true here. The reflection-mode adapter still depends on the
         // vstest Microsoft.TestPlatform.ObjectModel submodule, on System.Private.DataContractSerialization

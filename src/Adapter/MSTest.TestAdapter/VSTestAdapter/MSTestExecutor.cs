@@ -2,13 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.VSTestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -17,20 +13,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// <summary>
 /// Contains the execution logic for this adapter.
 /// </summary>
-[ExtensionUri(EngineConstants.ExecutorUriString)]
 [StackTraceHidden]
-internal sealed class MSTestExecutor : ITestExecutor
+internal sealed class MSTestExecutor
 {
     private readonly MSTestEngine _engine;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="MSTestExecutor"/> class.
-    /// </summary>
-    public MSTestExecutor()
-    {
-        TestExecutionManager = new TestExecutionManager();
-        _engine = new MSTestEngine(CancellationToken.None, testExecutionManager: TestExecutionManager);
-    }
 
     internal MSTestExecutor(CancellationToken cancellationToken, Func<string, IDictionary<string, object>, Task>? telemetrySender = null)
     {
@@ -47,15 +33,7 @@ internal sealed class MSTestExecutor : ITestExecutor
     [ModuleInitializer]
 #pragma warning restore CA2255 // The 'ModuleInitializer' attribute should not be used in libraries
     internal static void MSTestModuleInitializer()
-    {
-        SetPlatformLogger();
-        EnsureAdapterAndFrameworkVersions();
-    }
-
-    private static void SetPlatformLogger()
-        // We set the logger to the VSTest EqtTrace logger as soon as possible via ModuleInitializer.
-        // If MTP is used, this will get replaced later.
-        => PlatformServiceProvider.Instance.AdapterTraceLogger = EqtTraceLogger.Instance;
+        => EnsureAdapterAndFrameworkVersions();
 
     private static void EnsureAdapterAndFrameworkVersions()
     {
@@ -66,80 +44,6 @@ internal sealed class MSTestExecutor : ITestExecutor
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, Resource.VersionMismatchBetweenAdapterAndFramework, adapterVersion, frameworkVersion));
         }
-    }
-
-    /// <summary>
-    /// Runs the tests.
-    /// </summary>
-    /// <param name="tests">The collection of test cases to run.</param>
-    /// <param name="runContext">The run context.</param>
-    /// <param name="frameworkHandle">The handle to the framework.</param>
-#if DEBUG && NET8_0_OR_GREATER
-    [Obsolete("Use RunTestsAsync instead.", DiagnosticId = "MSTEST0106", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
-#elif DEBUG
-    [Obsolete("Use RunTestsAsync instead.")]
-#endif
-    public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => RunTestsAsync(tests, runContext, frameworkHandle, null).GetAwaiter().GetResult();
-
-    /// <summary>
-    /// Runs the tests.
-    /// </summary>
-    /// <param name="sources">The collection of assemblies to run.</param>
-    /// <param name="runContext">The run context.</param>
-    /// <param name="frameworkHandle">The handle to the framework.</param>
-#if DEBUG && NET8_0_OR_GREATER
-    [Obsolete("Use RunTestsAsync instead.", DiagnosticId = "MSTEST0106", UrlFormat = "https://aka.ms/mstest/diagnostics#{0}")]
-#elif DEBUG
-    [Obsolete("Use RunTestsAsync instead.")]
-#endif
-    public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
-        => RunTestsAsync(sources, runContext, frameworkHandle, null, false).GetAwaiter().GetResult();
-
-    internal async Task RunTestsAsync(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration)
-    {
-        if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
-        {
-            PlatformServiceProvider.Instance.AdapterTraceLogger.Info("MSTestExecutor.RunTests: Running tests from testcases.");
-        }
-
-        if (frameworkHandle is null)
-        {
-            throw new ArgumentNullException(nameof(frameworkHandle));
-        }
-
-        // VSTest annotates the IEnumerable as nullable; the exact reason is unclear.
-        if (tests is null)
-        {
-            throw new ArgumentNullException(nameof(tests));
-        }
-
-        Ensure.NotEmpty(tests);
-
-        // Unwrap the VSTest run context / framework handle into neutral inputs and delegate to the
-        // platform-agnostic engine, which owns telemetry, apartment-state handling and the platform-services
-        // execution pipeline. The host test cases are converted into the neutral model lazily (after settings are
-        // resolved) so a settings error bails out before any conversion, matching the historical order. Each
-        // element keeps its originating test case as an opaque handle plus the host execution-context (TCM)
-        // properties surfaced through TestContext.
-        await _engine.RunFromTestElementsAsync(
-            () => [.. tests.Select(ToUnitTestElement)],
-            from test in tests select test.Source,
-            runContext?.RunSettings?.SettingsXml,
-            runContext?.TestRunDirectory,
-            frameworkHandle.ToAdapterMessageLogger(),
-            settings => frameworkHandle.ToTestResultRecorder(Environment.MachineName, settings),
-            new TestElementFilterProvider(runContext),
-            configuration,
-            new TestSourceHandler()).ConfigureAwait(false);
-    }
-
-    private static UnitTestElement ToUnitTestElement(TestCase testCase)
-    {
-        UnitTestElement testElement = testCase.ToUnitTestElementWithUpdatedSource(testCase.Source);
-        testElement.ExecutionContextProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
-        testElement.HostRecordingHandle = testCase;
-        return testElement;
     }
 
     internal Task RunTestsAsync(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle, IConfiguration? configuration, bool isMTP)
@@ -193,6 +97,6 @@ internal sealed class MSTestExecutor : ITestExecutor
     /// <summary>
     /// Cancel the test run.
     /// </summary>
-    public void Cancel()
+    internal void Cancel()
         => _engine.Cancel();
 }

@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -13,66 +12,24 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
 {
     private const string AssetName = "AppDomainTests";
 
+    // In v5 MSTest always runs on Microsoft.Testing.Platform. The test asset is a net462 MTP
+    // executable, so we validate MSTest's .NET Framework AppDomain isolation by running the app
+    // standalone on Microsoft.Testing.Platform. The DisableAppDomain run setting (child-AppDomain
+    // isolation on/off) is honored by MSTest via the passed .runsettings.
     [TestMethod]
     [DataRow(true)]
     [DataRow(false)]
     [DataRow(null)]
-    public async Task RunTests_With_VSTest(bool? disableAppDomain)
+    public async Task RunTests_Standalone(bool? disableAppDomain)
     {
-        string disableAppDomainCommand = disableAppDomain switch
-        {
-            true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.DisableAppDomain=false",
-            null => string.Empty,
-        };
+        string exePath = GetTestExePath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
+        Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Release --no-build {AssetFixture.TargetAssetPath}{disableAppDomainCommand}", workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, compilationResult.ExitCode);
-
-        compilationResult.AssertOutputContains(@"Passed!  - Failed:     0, Passed:     2, Skipped:     0, Total:     2");
-    }
-
-    [TestMethod]
-    [DataRow(true)]
-    [DataRow(false)]
-    [DataRow(null)]
-    public async Task DiscoverTests_With_VSTest(bool? disableAppDomain)
-    {
-        string disableAppDomainCommand = disableAppDomain switch
-        {
-            true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.DisableAppDomain=false",
-            null => string.Empty,
-        };
-
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c Release --no-build {AssetFixture.TargetAssetPath} --list-tests{disableAppDomainCommand}", workingDirectory: AssetFixture.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
-        Assert.AreEqual(0, compilationResult.ExitCode);
-    }
-
-    [TestMethod]
-    [DataRow(true)]
-    [DataRow(false)]
-    [DataRow(null)]
-    public async Task RunTests_With_VSTestConsole_Directly(bool? disableAppDomain)
-    {
-        // Get the DLL path
-        string dllPath = GetTestDllPath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
-        Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
-
-        // Run tests using vstest.console.exe directly
-        string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
-        string disableAppDomainCommand = disableAppDomain switch
-        {
-            true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.DisableAppDomain=false",
-            null => string.Empty,
-        };
-
-        string arguments = $"\"{dllPath}\"{disableAppDomainCommand}";
+        string settingsArgument = GetRunSettingsArgument(disableAppDomain);
 
         using var commandLine = new CommandLine();
         await commandLine.RunAsync(
-            $"\"{vstestConsolePath}\" {arguments}",
+            $"\"{exePath}\"{settingsArgument}",
             cancellationToken: TestContext.CancellationToken);
     }
 
@@ -80,30 +37,46 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
     [DataRow(true)]
     [DataRow(false)]
     [DataRow(null)]
-    public async Task DiscoverTests_With_VSTestConsole_Directly(bool? disableAppDomain)
+    public async Task DiscoverTests_Standalone(bool? disableAppDomain)
     {
-        // Get the DLL path
-        string dllPath = GetTestDllPath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
-        Assert.IsTrue(File.Exists(dllPath), $"Test DLL not found at {dllPath}");
+        string exePath = GetTestExePath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
+        Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
 
-        // Run discovery using vstest.console.exe directly
-        string vstestConsolePath = VSTestConsoleLocator.GetConsoleRunnerPath();
-        string disableAppDomainCommand = disableAppDomain switch
-        {
-            true => " -- RunConfiguration.DisableAppDomain=true",
-            false => " -- RunConfiguration.DisableAppDomain=false",
-            null => string.Empty,
-        };
-        string arguments = $"\"{dllPath}\" /ListTests{disableAppDomainCommand}";
+        string settingsArgument = GetRunSettingsArgument(disableAppDomain);
 
         using var commandLine = new CommandLine();
         await commandLine.RunAsync(
-            $"\"{vstestConsolePath}\" {arguments}",
+            $"\"{exePath}\" --list-tests{settingsArgument}",
             cancellationToken: TestContext.CancellationToken);
     }
 
-    private static string GetTestDllPath(string assetPath, string targetFramework) =>
-        Path.Combine(assetPath, "bin", "Release", targetFramework, $"{AssetName}.dll");
+    // Produces a '--settings <file>' argument for the Microsoft.Testing.Platform host, writing a temp
+    // .runsettings that toggles DisableAppDomain. When the value is null we don't pass any settings so
+    // MSTest uses its default (AppDomain isolation enabled on .NET Framework).
+    private static string GetRunSettingsArgument(bool? disableAppDomain)
+    {
+        if (disableAppDomain is not bool value)
+        {
+            return string.Empty;
+        }
+
+        string runSettingsPath = Path.Combine(Path.GetTempPath(), $"AppDomainTests-{Guid.NewGuid():N}.runsettings");
+        File.WriteAllText(
+            runSettingsPath,
+            $"""
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>{(value ? "true" : "false")}</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        return $" --settings \"{runSettingsPath}\"";
+    }
+
+    private static string GetTestExePath(string assetPath, string targetFramework) =>
+        Path.Combine(assetPath, "bin", "Release", targetFramework, $"{AssetName}.exe");
 
     public TestContext TestContext { get; set; }
 
@@ -111,22 +84,23 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
     {
         private const string SingleTestSourceCode = """
 #file AppDomainTests.csproj
-<Project Sdk="MSTest.Sdk/$MSTestVersion$" >
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!--
-        This property is not required by users and is only set to simplify our testing infrastructure. When testing out in local or ci,
-        we end up with a -dev or -ci version which will lose resolution over -preview dependency of code coverage. Because we want to
-        ensure we are testing with locally built version, we force adding the platform dependency.
-    -->
-    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <PlatformTarget>x64</PlatformTarget>
     <TargetFramework>$TargetFramework$</TargetFramework>
-    <NoWarn>$(NoWarn);NU1507</NoWarn>
-    <UseVSTest>true</UseVSTest>
+    <!-- Build as a Microsoft.Testing.Platform executable so it runs standalone on MTP. -->
+    <OutputType>Exe</OutputType>
+    <!-- Force the locally-built Microsoft.Testing.Platform (our test infrastructure keys the local -dev
+         platform dependency off this property); otherwise a preview transitive would win. -->
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <NoWarn>$(NoWarn);NU1507;NETSDK1201</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageDownload Include="Microsoft.TestPlatform" Version="[$MicrosoftNETTestSdkVersion$]" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
@@ -134,7 +108,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
 #file global.json
 {
   "test": {
-    "runner": "VSTest"
+    "runner": "Microsoft.Testing.Platform"
   }
 }
 
@@ -149,22 +123,27 @@ namespace AppDomainTests
     [TestClass]
     public class UnitTest1
     {
+        // AppDomain.BaseDirectory carries a trailing directory separator while Path.GetDirectoryName
+        // does not, so normalize both before comparing. This validates that MSTest still runs .NET
+        // Framework tests in an AppDomain based at the test assembly's directory (isolation).
+        private static string NormalizeDir(string path) => Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar);
+
         [TestMethod]
         public void TestMethod1()
         {
-            Assert.AreEqual(Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location), AppDomain.CurrentDomain.BaseDirectory);
+            Assert.AreEqual(NormalizeDir(Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location)), NormalizeDir(AppDomain.CurrentDomain.BaseDirectory));
         }
 
         [TestMethod]
         [DynamicData(nameof(GetData))]
         public void TestMethod2(int _)
         {
-            Assert.AreEqual(Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location), AppDomain.CurrentDomain.BaseDirectory);
+            Assert.AreEqual(NormalizeDir(Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location)), NormalizeDir(AppDomain.CurrentDomain.BaseDirectory));
         }
 
         public static IEnumerable<int> GetData()
         {
-            if (Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location) != AppDomain.CurrentDomain.BaseDirectory)
+            if (NormalizeDir(Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location)) != NormalizeDir(AppDomain.CurrentDomain.BaseDirectory))
             {
                 Environment.FailFast(
                     $"Expected {Path.GetDirectoryName(typeof(UnitTest1).Assembly.Location)} to be equal to {AppDomain.CurrentDomain.BaseDirectory}");

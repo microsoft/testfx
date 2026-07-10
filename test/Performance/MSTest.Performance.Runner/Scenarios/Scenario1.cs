@@ -98,8 +98,7 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
             .PatchCodeWithReplace("$Extra$", string.Empty)
             .PatchCodeWithReplace("$Tests$", stringBuilder.ToString())
             .PatchCodeWithReplace("$ExecutionScope$", _executionScope.ToString())
-            .PatchCodeWithReplace("$Workers$", _workers.ToString(CultureInfo.InvariantCulture)),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$Workers$", _workers.ToString(CultureInfo.InvariantCulture)));
 
         context.AddDisposable(generator);
         return new SingleProject(["net9.0"], generator, nameof(Scenario1));

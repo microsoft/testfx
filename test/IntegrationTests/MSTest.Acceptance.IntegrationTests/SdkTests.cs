@@ -65,6 +65,8 @@ namespace MSTestSdkTest
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
+        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
+
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
             SingleTestSourceCodeVSTest
@@ -267,7 +269,7 @@ namespace MSTestSdkTest
                SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
-               .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"), addPublicFeeds: true);
+               .PatchCodeWithReplace("$ExtraProperties$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
@@ -346,8 +348,7 @@ namespace MSTestSdkTest
                 <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
                 <!-- Show individual trim/AOT warnings instead of a single IL2104 per assembly -->
                 <TrimmerSingleWarn>false</TrimmerSingleWarn>
-                """),
-            addPublicFeeds: true);
+                """));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish -r {RID} -f {TargetFrameworks.NetCurrent} {testAsset.TargetAssetPath}",

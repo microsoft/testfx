@@ -65,7 +65,18 @@ public sealed class CommandLine : IDisposable
         }
 
         int endQuote = commandLine.IndexOf('"', 1);
-        return (commandLine.Substring(1, endQuote - 1), commandLine.Substring(endQuote + 2));
+        string command = commandLine.Substring(1, endQuote - 1);
+
+        // Skip the closing quote and, when present, the single separating space before the arguments.
+        // Guard against a bare quoted command with no arguments (e.g. '"path\to.exe"').
+        int argumentsStart = endQuote + 1;
+        if (argumentsStart < commandLine.Length && commandLine[argumentsStart] == ' ')
+        {
+            argumentsStart++;
+        }
+
+        string arguments = argumentsStart < commandLine.Length ? commandLine.Substring(argumentsStart) : string.Empty;
+        return (command, arguments);
     }
 
     public async Task<int> RunAsyncAndReturnExitCodeAsync(

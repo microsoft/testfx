@@ -44,8 +44,7 @@ System.Console.WriteLine("This project validates trim/AOT compatibility via dotn
             $"TrimAnalysisTest_{tfm}",
             TrimAnalysisSourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$TargetFramework$", tfm),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$TargetFramework$", tfm));
 
         await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID}",

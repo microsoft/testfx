@@ -82,8 +82,7 @@ internal class DummyTestFramework : ITestFramework, IDataProducer
             $"NativeAotTests_{tfm}",
             SourceCode
             .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-            .PatchCodeWithReplace("$TargetFramework$", tfm),
-            addPublicFeeds: true);
+            .PatchCodeWithReplace("$TargetFramework$", tfm));
 
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID}",

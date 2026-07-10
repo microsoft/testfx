@@ -79,9 +79,9 @@ public class TestAsset : IDisposable
         return (name, content);
     }
 
-    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
+    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true)
     {
-        TestAsset testAsset = new(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code);
+        TestAsset testAsset = new(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig()) : code);
         string[] splitFiles = testAsset._assetCode.Split([FileTag], StringSplitOptions.RemoveEmptyEntries);
         foreach (string fileContent in splitFiles)
         {
@@ -92,9 +92,9 @@ public class TestAsset : IDisposable
         return testAsset;
     }
 
-    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, TempDirectory tempDirectory, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
+    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, TempDirectory tempDirectory, bool addDefaultNuGetConfigFile = true)
     {
-        TestAsset testAsset = new(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code, tempDirectory);
+        TestAsset testAsset = new(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig()) : code, tempDirectory);
         string[] splitFiles = testAsset._assetCode.Split([FileTag], StringSplitOptions.RemoveEmptyEntries);
         foreach (string fileContent in splitFiles)
         {
@@ -105,28 +105,16 @@ public class TestAsset : IDisposable
         return testAsset;
     }
 
-    public static string GetNuGetConfig(bool addPublicFeeds = false, bool addHashFileHeader = true)
+    public static string GetNuGetConfig(bool addHashFileHeader = true)
     {
-        string publicFeedsFragment = addPublicFeeds
-            ? """
-                <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
-            """
-            : string.Empty;
-
-        string publicFeedsMapping = addPublicFeeds
-            ? """
-            <packageSource key="test-tools">
-                <package pattern="*" />
-            </packageSource>
-            """
-            : string.Empty;
-
+        // The 'test-tools' feed is always included: the repo pins Microsoft.NET.Test.Sdk / TestPlatform to
+        // preview builds that only exist on that feed, so every generated asset that references them needs it.
         string defaultNuGetConfig = $"""
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
     <packageSources>
         <clear/>
-        {publicFeedsFragment}
+        <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
         <add key="local-nonshipping" value="{Constants.ArtifactsPackagesNonShipping}" />
         <add key="local-shipping" value="{Constants.ArtifactsPackagesShipping}" />
         <add key="local-tmp-packages" value="{Constants.ArtifactsTmpPackages}" />
@@ -136,7 +124,9 @@ public class TestAsset : IDisposable
         <add key="dotnet11" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet11/nuget/v3/index.json" />
     </packageSources>
     <packageSourceMapping>
-        {publicFeedsMapping}
+        <packageSource key="test-tools">
+            <package pattern="*" />
+        </packageSource>
         <packageSource key="local-nonshipping">
             <package pattern="*" />
         </packageSource>

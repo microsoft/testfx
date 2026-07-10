@@ -22,6 +22,8 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
     [TestMethod]
     public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
+        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
+
         var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
         string exeOrDllName = GetTestExecutablePath(testHost);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
