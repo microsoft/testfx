@@ -273,17 +273,19 @@ internal abstract class BaseSerializer
         WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
     }
 
-    // ExecutionId and InstanceId are the two leading fields shared verbatim by every "execution-scoped" message
-    // envelope on the 'dotnet test' protocol (DiscoveredTestMessages, TestResultMessages, TestInProgressMessages,
-    // FileArtifactMessages). Their wire ids are pinned to 1 and 2 for all of those serializers and MUST NOT change.
+    // ExecutionId and InstanceId are the two leading fields shared verbatim by the four 'dotnet test' collection
+    // message envelopes that carry a list payload (DiscoveredTestMessages, TestResultMessages, TestInProgressMessages,
+    // FileArtifactMessages). Their wire ids are pinned to 1 and 2 for those serializers and MUST NOT change. Note that
+    // AzureDevOpsLogMessage/DisplayMessage also place ExecutionId/InstanceId at ids 1/2, but they carry scalar payloads
+    // rather than a message list, so they do not use these helpers.
     private const ushort ExecutionScopedExecutionIdFieldId = 1;
     private const ushort ExecutionScopedInstanceIdFieldId = 2;
 
     /// <summary>
-    /// Reads the shared execution-scoped message envelope: the leading <c>ExecutionId</c> (id 1) and
-    /// <c>InstanceId</c> (id 2) string fields common to every 'dotnet test' messages payload, delegating any other
-    /// field id to <paramref name="tryReadPayloadField"/> (the type-specific message-list reader). Returns the two
-    /// envelope values so the caller can build its concrete message object.
+    /// Reads the shared collection-envelope prefix: the leading <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2)
+    /// string fields common to the four 'dotnet test' list-carrying messages payloads, delegating any other field id to
+    /// <paramref name="tryReadPayloadField"/> (the type-specific message-list reader). Returns the two envelope values
+    /// so the caller can build its concrete message object.
     /// </summary>
     protected static (string? ExecutionId, string? InstanceId) ReadExecutionScopedFields(Stream stream, Func<ushort, int, bool> tryReadPayloadField)
     {
@@ -311,7 +313,7 @@ internal abstract class BaseSerializer
     }
 
     /// <summary>
-    /// Writes the shared execution-scoped message envelope: a field-count prefix (the <c>ExecutionId</c> and
+    /// Writes the shared collection-envelope prefix: a field-count prefix (the <c>ExecutionId</c> and
     /// <c>InstanceId</c> fields when non-<see langword="null"/> plus <paramref name="payloadFieldCount"/>), followed by
     /// the <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2) fields, then <paramref name="writePayload"/> which
     /// appends the type-specific message list(s).
