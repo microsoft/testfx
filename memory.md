@@ -1,14 +1,14 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-07-09 UTC
+2026-07-10 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session: **2, 3, 7**
-Last run before this: Tasks 5, 7 (2026-07-08)
-Last run before that: Tasks 2, 3, 6, 7 (2026-07-10)
-Next run should prioritise: Tasks 1 (validate), 4 (maintain PRs), 5 (issue comments), 7 (always)
+Tasks run this session: **4, 5, 2, 3, 7**
+Last run before this: Tasks 2, 3, 7 (2026-07-09)
+Last run before that: Tasks 5, 7 (2026-07-08)
+Next run should prioritise: Tasks 1 (validate), 5 (issue comments), 6 (infra), 7 (always)
 
 ## Build / Test / Benchmark Commands
 
@@ -21,7 +21,7 @@ Next run should prioritise: Tasks 1 (validate), 4 (maintain PRs), 5 (issue comme
 
 Notes:
 - Repo-local SDK at `.dotnet/dotnet` (Arcade-provisioned). Must run `./build.sh` first to install.
-- Required SDK version: `11.0.100-preview.7.26359.110`
+- Required SDK version: `11.0.100-preview.7.26359.110` (not available in agent env)
 - `--no-restore` flag is broken; always run with full restore.
 - Performance runner: `test/Performance/MSTest.Performance.Runner/`
 
@@ -35,10 +35,14 @@ Notes:
 - **Report generators well-optimized**: CtrfReport uses custom `Utf8JsonWriter`-based streaming serialiser; HtmlReport is single-pass. No significant opportunities found.
 - **OpenTelemetry `Properties.OfType()`** in yield iterator — LOW priority, not worth changing without profiling evidence.
 - **MSBuildCompatibilityHelper**: Already caches MSBuild version and feature-check results with `??=` pattern.
+- **TrxReport**: Well-optimized — binary format for streaming store, XElement DOM only at report-generation time (not hot path).
+- **bool.Parse in InvokeTestingPlatformTask**: Already cached as fields in RFC 018 commit (c66515a). No pending PR needed.
+- **StackTraceHelper.TryFindLocationFromStackFrame (MSBuild)**: Was using Regex.Split+LINQ Take(20); replaced with string.Split+for loop (PR pending).
+- **Server mode TestNode serializer**: Uses LINQ Select().ToList() per test update — minor, dominated by network I/O, not worth changing.
 
 ## Open PRs / Issues Created by Efficiency Improver
 
-- **branch `efficiency/cache-bool-parse-invoke-task`** pushed 2026-07-09 — Cache `bool.Parse` results in `InvokeTestingPlatformTask` (hot path: every output line). PR pending assignment of number.
+- **PR for branch `efficiency/stacktrace-string-split`** — Replace Regex.Split+Take(20) with string.Split+for in MSBuild StackTraceHelper. PR number TBD.
 - Previous work:
   - #9713 (Scenario2 proposal) — closed as completed by Evangelink, resolved by #9728
   - #9714 (JsonSerializerOptions caching) — closed as completed by Evangelink
@@ -64,7 +68,8 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
-| 2026-07-09 | branch pushed (PR# TBD) | Cache `bool.Parse` results in `InvokeTestingPlatformTask`; eliminate repeated string scanning on every output line |
+| 2026-07-10 | branch pushed (PR# TBD) | Replace Regex.Split+Take(20) with string.Split+for in MSBuild StackTraceHelper |
+| 2026-07-09 | bool.Parse now in main | Cache `bool.Parse` results already in RFC 018 commit; no separate PR needed |
 | 2026-07-08 | #9712 comment | Energy impact of Azure.Identity dependency; recommended TokenCredential abstraction |
 | 2026-07-10 | #9714 (closed) | Cache JsonSerializerOptions in PlainProcess + DotnetTestProcess; remove CA1869 pragmas |
 | 2026-07-10 | #9713 (closed) | Issue: propose Scenario2 data-driven benchmark for perf runner — resolved by #9728 |
@@ -78,6 +83,6 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅, MSBuild tasks ✅
+- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅
 - Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
-- Next code scan area: `src/Platform/Microsoft.Testing.Extensions.TrxReport/` — TRX streaming serialiser
+- Next code scan area: `src/Platform/Microsoft.Testing.Platform/` — capabilities, lifecycle, test execution pipeline
