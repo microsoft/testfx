@@ -173,8 +173,17 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
         Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? DynamicDataOperations.GetTestMethodDeclaringType(methodInfo);
         DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-        MethodInfo method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
-            ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
+        // Prefer the source-generated accessor when available, so the display-name method is invoked without
+        // reflecting over the declaring type (trim / Native AOT safe). Falls back to reflection otherwise.
+        return DynamicDataSourceResolver.TryGetDisplayName(dynamicDisplayNameDeclaringType, DynamicDataDisplayName, methodInfo, data, out string? displayName)
+            ? displayName
+            : GetDisplayNameByReflection(dynamicDisplayNameDeclaringType, DynamicDataDisplayName, methodInfo, data);
+    }
+
+    private static string? GetDisplayNameByReflection([DynamicallyAccessedMembers(DynamicDataOperations.RequiredMemberTypes)] Type dynamicDisplayNameDeclaringType, string displayNameMethodName, MethodInfo methodInfo, object?[]? data)
+    {
+        MethodInfo method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(displayNameMethodName)
+            ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {displayNameMethodName}");
         ParameterInfo[] parameters = method.GetParameters();
         if (parameters.Length != 2
             || parameters[0].ParameterType != typeof(MethodInfo)
@@ -187,7 +196,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource, ITestData
                 string.Format(
                     CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataDisplayName,
-                    DynamicDataDisplayName,
+                    displayNameMethodName,
                     nameof(String),
                     string.Join(", ", nameof(MethodInfo), typeof(object[]).Name)));
         }
