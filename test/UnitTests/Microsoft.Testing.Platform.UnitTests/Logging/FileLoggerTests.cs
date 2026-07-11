@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -461,6 +461,7 @@ public sealed class FileLoggerTests : IDisposable
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
             => _inner.Run(function, cancellationToken);
 
+        [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
             => _inner.RunLongRunning(action, name, cancellationToken);
 
@@ -486,6 +487,7 @@ public sealed class FileLoggerTests : IDisposable
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
             => _inner.Run(function, cancellationToken);
 
+        [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
             => _inner.RunLongRunning(action, name, cancellationToken);
 
