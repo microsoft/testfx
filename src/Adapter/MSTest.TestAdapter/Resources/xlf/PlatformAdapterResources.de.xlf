@@ -44,12 +44,12 @@
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsDatacollectors">
         <source>Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings datacollectors are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Runsettings-Datacollectors werden von Microsoft.Testing.Platform nicht unterstützt und werden ignoriert.</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="UnsupportedRunsettingsLoggers">
         <source>Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</source>
-        <target state="new">Runsettings loggers are not supported by Microsoft.Testing.Platform and will be ignored</target>
+        <target state="translated">Runsettings-Protokollierungen werden von Microsoft.Testing.Platform nicht unterstützt und werden ignoriert.</target>
         <note>Do not localize {Locked="Runsettings"} or {Locked="Microsoft.Testing.Platform"}.</note>
       </trans-unit>
       <trans-unit id="VSTestBridgedTestFrameworkSessionAlreadyCreatedErrorMessage">
