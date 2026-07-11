@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">Test selhal: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,17 +14,17 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Generátor sestav GitHub Actions pro odesílání příkazů pracovního postupu, aby testovací běhy v GitHub Actions poskytovaly plnohodnotné prostředí.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">Generátor sestav GitHub Actions</target>
         <note />
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">Testy: {0} ({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Neplatná hodnota {0}. Platné hodnoty jsou on (nebo true, enable, 1) nebo off (nebo false, disable, 0).</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
@@ -44,27 +44,27 @@
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">Test neproběhl úspěšně bez poskytnutí zprávy o chybě.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">Test byl přeskočen bez poskytnutí důvodu.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Povolte generátor sestav GitHub Actions pro odesílání příkazů pracovního postupu, aby testovací běhy v GitHub Actions poskytovaly plnohodnotné prostředí.</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">Test byl přeskočen: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">Pomalý test: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{0} po uplynutí {1} s stále běží</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">Zápis souhrnu úlohy GitHub Actions do {0} se nezdařil: {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
       </trans-unit>
     </body>
