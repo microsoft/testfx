@@ -309,7 +309,7 @@
   <!-- The Test target is separated so that we can conditionally define it. -->
   <!-- Putting a condition on a target determines whether the target is **executed** or not -->
   <!-- We want to not define the Test target in the first place when the user sets TestingPlatformDisableCustomTestTarget to true, or when it's already defined by MSBuild -->
-  <Import Project="Microsoft.Testing.Platform.MSBuild.CustomTestTarget.targets" Condition="'$(TestingPlatformDisableCustomTestTarget)' == 'false' AND '$(UseMSBuildTestInfrastructure)' != 'true'" />
+  <Import Project="$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.MSBuild.CustomTestTarget.targets" Condition="'$(TestingPlatformDisableCustomTestTarget)' == 'false' AND '$(UseMSBuildTestInfrastructure)' != 'true'" />
 
   <!-- Override VSTest only in case of single tfm, for multitfm we rely on built-in mechanism -->
   <Import Project="$(MSBuildThisFileDirectory)Microsoft.Testing.Platform.MSBuild.VSTest.targets"

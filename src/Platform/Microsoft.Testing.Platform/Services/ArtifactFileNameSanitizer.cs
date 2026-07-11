@@ -5,10 +5,12 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
 
-// Mirrors the extension-side Microsoft.Testing.Extensions.ReportFileNameSanitizer (linked source in
-// src/Platform/SharedExtensionHelpers/ReportFileNameSanitizer.cs). The extension copy has SHIPPED
-// InternalAPI entries in five extensions, so it cannot be moved without churn/risk. This core-internal
-// copy exists pending future consolidation of the two.
+// Canonical file-name sanitization used both by the platform's artifact naming (ArtifactNamingService)
+// and, via a thin delegating wrapper, by the extension-side Microsoft.Testing.Extensions.ReportFileNameSanitizer
+// (linked source in src/Platform/SharedExtensionHelpers/ReportFileNameSanitizer.cs). Keeping the logic here
+// avoids duplicating the sanitization rules: the extension copy is SHIPPED InternalAPI in five extensions, so
+// its type name must remain, but those extensions can reach this internal type through the InternalsVisibleTo
+// grant and simply forward to it.
 internal static partial class ArtifactFileNameSanitizer
 {
     private const char ReplacementChar = '_';

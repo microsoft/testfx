@@ -34,6 +34,7 @@ jobs:
     name: Self-test script
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -48,6 +49,7 @@ jobs:
     name: Bump bundled Playwright
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # One in-flight update at a time so scheduled + manual runs don't race on the
     # shared update-bundled-playwright/autoupdate branch. Scoped to this job so
     # read-only PR self-tests are never gated behind the update lock.
@@ -72,7 +74,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.bump.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@67ccf781d68cd99b580ae25a5c18a1cc84ffff1f # v7
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v7
         with:
           commit-message: "Update bundled Playwright for .NET to ${{ steps.bump.outputs.new_version }}"
           title: "Update bundled Playwright for .NET to ${{ steps.bump.outputs.new_version }}"

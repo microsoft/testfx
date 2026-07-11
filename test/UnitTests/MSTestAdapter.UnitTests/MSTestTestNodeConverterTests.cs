@@ -230,12 +230,94 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         typeName!.FullyQualifiedTypeName.Should().Be("MyNamespace.MyClass");
     }
 
+    public void ToResultTestNode_UsesFullClassNameForTrxTypeName_WhenNoManagedMethodName()
+    {
+        // Without a managed method name, no TestMethodIdentifierProperty is added, so the TRX fully-qualified type
+        // name falls back to TestMethod.FullClassName directly (the behavior that replaced TryParseFullyQualifiedType).
+        UnitTestElement element = CreateElement(managedMethodName: null);
+        var result = new FrameworkTestResult { Outcome = UnitTestOutcome.Failed, ExceptionMessage = "boom", ExceptionStackTrace = "at X()" };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(element, result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: true, new MSTestSettings());
+
+        node.Properties.Any<TestMethodIdentifierProperty>().Should().BeFalse();
+        Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty? typeName =
+            node.Properties.SingleOrDefault<Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty>();
+        typeName.Should().NotBeNull();
+        typeName!.FullyQualifiedTypeName.Should().Be("MyNamespace.MyClass");
+    }
+
     public void ToResultTestNode_DoesNotAddTrxProperties_WhenTrxDisabled()
     {
         TestNode node = ResultNode(UnitTestOutcome.Passed);
 
         node.Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxExceptionProperty>().Should().BeFalse();
         node.Properties.Any<Testing.Extensions.TrxReport.Abstractions.TrxMessagesProperty>().Should().BeFalse();
+    }
+
+    // --- GetTestId caching ------------------------------------------------------------------------------------
+    public void GetTestId_CachesComputedId_AndReturnsSameValueOnSubsequentCalls()
+    {
+        UnitTestElement element = CreateElement();
+
+        element.CachedTestNodeUid.Should().BeNull();
+
+        Guid first = element.GetTestId();
+
+        element.CachedTestNodeUid.Should().Be(first);
+
+        Guid second = element.GetTestId();
+
+        second.Should().Be(first);
+    }
+
+    public void CloneWithSource_InvalidatesCachedTestId()
+    {
+        UnitTestElement element = CreateElement();
+        Guid original = element.GetTestId();
+        element.CachedTestNodeUid.Should().Be(original);
+
+        UnitTestElement clone = element.CloneWithSource("OtherAssembly.dll");
+
+        // The clone must start with a cleared cache and recompute a distinct id for the new source.
+        clone.CachedTestNodeUid.Should().BeNull();
+        clone.GetTestId().Should().NotBe(original);
+        // The original element keeps its cached id untouched.
+        element.CachedTestNodeUid.Should().Be(original);
+    }
+
+    public void WithUpdatedSource_InvalidatesCachedTestId_WhenSourceChanges()
+    {
+        UnitTestElement element = CreateElement();
+        Guid original = element.GetTestId();
+
+        UnitTestElement result = element.WithUpdatedSource("OtherAssembly.dll");
+
+        result.Should().NotBeSameAs(element);
+        result.CachedTestNodeUid.Should().BeNull();
+        result.GetTestId().Should().NotBe(original);
+    }
+
+    public void CloneWithUpdatedSource_InvalidatesCachedTestId()
+    {
+        UnitTestElement element = CreateElement();
+        element.GetTestId();
+        element.CachedTestNodeUid.Should().NotBeNull();
+
+        UnitTestElement clone = element.CloneWithUpdatedSource("OtherAssembly.dll");
+
+        clone.CachedTestNodeUid.Should().BeNull();
+    }
+
+    public void Clone_PreservesCachedTestId()
+    {
+        UnitTestElement element = CreateElement();
+        Guid original = element.GetTestId();
+
+        UnitTestElement clone = element.Clone();
+
+        // Clone() does not touch any hash input, so the cached id must be preserved.
+        clone.CachedTestNodeUid.Should().Be(original);
+        clone.GetTestId().Should().Be(original);
     }
 
     // --- Seams ------------------------------------------------------------------------------------------------

@@ -12,10 +12,19 @@ permissions:
   pull-requests: write
   actions: write
 
+# Avoid interrupting an in-flight backport: a cancelled `git am` mid-apply would
+# leave a half-created branch/PR. Serialize per source PR (comment triggers) and
+# per ref (schedule) without cancelling running work.
+concurrency:
+  group: backport-${{ github.event.issue.number || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   backport:
     if: ${{ contains(github.event.comment.body, '/backport to') || github.event_name == 'schedule' }}
-    uses: microsoft/testfx/.github/workflows/backport-base.yml@main
+    # Pin the reusable workflow to the exact commit that triggered this run so a
+    # mid-PR push to `main` cannot change backport behavior while runs are in flight.
+    uses: microsoft/testfx/.github/workflows/backport-base.yml@${{ github.sha }}
     with:
       pr_description_template: |
         Backport of #%source_pr_number% to %target_branch%
