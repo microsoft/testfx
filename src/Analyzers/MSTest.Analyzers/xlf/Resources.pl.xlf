@@ -563,21 +563,21 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="new">Methods marked with '[GlobalTestInitialize]' or '[GlobalTestCleanup]' should follow the following layout to be valid:
--it can't be declared on a generic class
--it should be 'public'
--it should be 'static'
--it should not be 'async void'
--it should not be a special method (finalizer, operator...).
--it should not be generic
--it should take one parameter of type 'TestContext'
--return type should be 'void', 'Task' or 'ValueTask'
+        <target state="translated">Metody oznaczone znakiem „[GlobalTestInitialize]” lub „[GlobalTestCleanup]” powinny być zgodne z następującym układem, aby były prawidłowe:
+— nie może być zadeklarowana w class ogólnej
+— powinna być typu „public”
+— powinna mieć wartość „static”
+— nie powinna to być wartość „async void”
+— nie powinna to być metoda specjalna (finalizator, operator...).
+— nie powinna być ogólna
+— powinna przyjmować jeden parametr typu „TestContext”
+— zwracany typ powinien mieć wartość „void”, „Task” lub „ValueTask”
 
-The type declaring these methods should also respect the following rules:
--The type should be a class
--The class should be 'public'
--The class should be marked with '[TestClass]' (or a derived attribute)
--the class should not be generic.</target>
+Typ deklarujący te metody powinien również przestrzegać następujących reguł:
+— Typ powinien być class
+— class powinna być „publiczna”
+— class powinna być oznaczona znakiem „[TestClass]” (lub atrybutem pochodnym)
+— class nie powinna być ogólna.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">

@@ -40,8 +40,8 @@ public sealed class ProtocolEdgeCaseTests
         ];
         FailedTestResultMessage[] failed =
         [
-            new("f1", "Failed 1", TestStates.Failed, 30, "boom", [new ExceptionMessage("m1", "t1", "st1")], "out", "err", "s"),
-            new("f2", "Errored 2", TestStates.Error, 40, null, [new ExceptionMessage("m2", "t2", "st2"), new ExceptionMessage("m3", "t3", "st3")], null, null, null),
+            new("f1", "Failed 1", TestStates.Failed, 30, "boom", [new ExceptionMessage("m1", "t1", "st1")], "out", "err", "s", "exp1", "act1"),
+            new("f2", "Errored 2", TestStates.Error, 40, null, [new ExceptionMessage("m2", "t2", "st2"), new ExceptionMessage("m3", "t3", "st3")], null, null, null, null, null),
         ];
         var message = new TestResultMessages("exec", "inst", passed, failed);
 
@@ -64,7 +64,7 @@ public sealed class ProtocolEdgeCaseTests
     [TestMethod]
     public void FailedTestResultMessage_WhenNoExceptions_RoundTrips()
     {
-        var message = new TestResultMessages("exec", "inst", [], [new FailedTestResultMessage("f", "F", TestStates.Failed, 1, "reason", [], null, null, null)]);
+        var message = new TestResultMessages("exec", "inst", [], [new FailedTestResultMessage("f", "F", TestStates.Failed, 1, "reason", [], null, null, null, null, null)]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
 
@@ -72,6 +72,20 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual("inst", actual.InstanceId);
         Assert.IsNotNull(actual.FailedTestMessages[0].Exceptions);
         Assert.IsEmpty(actual.FailedTestMessages[0].Exceptions!);
+        Assert.IsNull(actual.FailedTestMessages[0].Expected);
+        Assert.IsNull(actual.FailedTestMessages[0].Actual);
+    }
+
+    [TestMethod]
+    public void FailedTestResultMessage_WithExpectedAndActual_RoundTrips()
+    {
+        var message = new TestResultMessages("exec", "inst", [], [new FailedTestResultMessage("f", "F", TestStates.Failed, 1, "reason", [], null, null, null, "expected value", "actual value")]);
+
+        TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
+
+        Assert.HasCount(1, actual.FailedTestMessages);
+        Assert.AreEqual("expected value", actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual("actual value", actual.FailedTestMessages[0].Actual);
     }
 
     [TestMethod]
@@ -84,7 +98,7 @@ public sealed class ProtocolEdgeCaseTests
             Tricky,
             "inst",
             [new SuccessfulTestResultMessage("uid", Tricky, TestStates.Passed, 1, Tricky, Tricky, Tricky, "s")],
-            [new FailedTestResultMessage("uid", Tricky, TestStates.Failed, 1, Tricky, [new ExceptionMessage(Tricky, Tricky, Tricky)], Tricky, Tricky, "s")]);
+            [new FailedTestResultMessage("uid", Tricky, TestStates.Failed, 1, Tricky, [new ExceptionMessage(Tricky, Tricky, Tricky)], Tricky, Tricky, "s", Tricky, Tricky)]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
 
@@ -92,6 +106,8 @@ public sealed class ProtocolEdgeCaseTests
         Assert.AreEqual(Tricky, actual.SuccessfulTestMessages[0].DisplayName);
         Assert.AreEqual(Tricky, actual.SuccessfulTestMessages[0].StandardOutput);
         Assert.AreEqual(Tricky, actual.FailedTestMessages[0].Exceptions![0].StackTrace);
+        Assert.AreEqual(Tricky, actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual(Tricky, actual.FailedTestMessages[0].Actual);
     }
 
     [TestMethod]
