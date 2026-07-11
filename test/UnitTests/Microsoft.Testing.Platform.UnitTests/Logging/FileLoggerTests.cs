@@ -461,6 +461,7 @@ public sealed class FileLoggerTests : IDisposable
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
             => _inner.Run(function, cancellationToken);
 
+        [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
             => _inner.RunLongRunning(action, name, cancellationToken);
 
@@ -486,6 +487,7 @@ public sealed class FileLoggerTests : IDisposable
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
             => _inner.Run(function, cancellationToken);
 
+        [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
             => _inner.RunLongRunning(action, name, cancellationToken);
 
