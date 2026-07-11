@@ -193,16 +193,19 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         //   3. '/tmp'                           - preserves the previous default when neither is set.
         (string directory, bool isExplicitOverride) = ResolvePipeDirectory();
 
+        // Normalize to an absolute path regardless of which precedence branch supplied the directory. An
+        // explicit override or a relative TMPDIR can be relative, and on Unix NamedPipeServerStream only treats
+        // rooted names as socket paths (it rejects separators in non-rooted names). The invariant also requires
+        // handing peers a fully-resolved path. This additionally collapses any '..' segments. '/tmp' and an
+        // already-absolute temp path are unchanged.
+        directory = Path.GetFullPath(directory);
+
         // Only actively validate the explicit override: it is user-supplied and the most likely to be wrong
-        // (typo, missing directory, wrong permissions), so we normalize, create it if needed, and fail fast
-        // with an actionable message. Path.GetTempPath()/'/tmp' are OS-managed and effectively always writable,
-        // so we skip the probe there to avoid extra I/O and a behavior change on every pipe creation.
+        // (typo, missing directory, wrong permissions), so we create it if needed and fail fast with an
+        // actionable message. Path.GetTempPath()/'/tmp' are OS-managed and effectively always writable, so we
+        // skip the probe there to avoid extra I/O and a behavior change on every pipe creation.
         if (isExplicitOverride)
         {
-            // Normalize a possibly-relative override to an absolute path: on Unix NamedPipeServerStream only
-            // treats rooted names as socket paths (it rejects separators in relative names), and the invariant
-            // requires handing peers a fully-resolved path. This also collapses any '..' segments.
-            directory = Path.GetFullPath(directory);
             EnsureDirectoryIsWritable(directory);
         }
 
@@ -214,7 +217,13 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     private static (string Directory, bool IsExplicitOverride) ResolvePipeDirectory()
         => ResolvePipeDirectory(
-            new SystemEnvironment().GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
+            // Read the environment variable directly rather than through IEnvironment: GetPipeName is a static
+            // method invoked before any NamedPipeServer instance (and its IEnvironment) exists, and this file is
+            // shared-compiled into extension projects that do not link the SystemEnvironment wrapper. The banned
+            // API is suppressed locally, mirroring how SystemEnvironment itself wraps Environment.
+#pragma warning disable RS0030 // Do not use banned APIs
+            Environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
+#pragma warning restore RS0030 // Do not use banned APIs
             Path.GetTempPath());
 
     // Pure resolution logic split out so it can be unit-tested on any OS (the Unix branch of GetPipeName
