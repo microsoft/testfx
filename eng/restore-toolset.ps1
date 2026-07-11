@@ -10,9 +10,13 @@
 
 $RequiredWorkloads = @('wasi-experimental-net10')
 
-# Note: `wasm-tools-net10` is documented in samples/WasiPlayground/README.md
-# as a prerequisite for `dotnet publish`, but it is not needed by the repo's
-# `dotnet build` so we keep the CI install minimal.
+# Note: `wasm-tools-net10` is documented in samples/WasiPlayground/README.md and
+# samples/BrowserPlayground/README.md as a prerequisite for `dotnet publish`
+# (and, for browser-wasm, even for `dotnet build`). It is not needed by the repo's
+# default `dotnet build` (which does not build the browser-wasm sample), so we keep
+# the CI install minimal and leave `wasm-tools-net10` as a manual/opt-in install.
+# The BrowserWasmExecutionTests acceptance test skips itself (Inconclusive) when the
+# `wasm-tools` workload or `node` is unavailable.
 
 $dotnetRoot = if (-not [string]::IsNullOrEmpty($env:DOTNET_INSTALL_DIR)) {
   $env:DOTNET_INSTALL_DIR

@@ -8,6 +8,10 @@ using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
+// Exercises FileLogger's background flush loop, which uses ITask.RunLongRunning — an API that is
+// unsupported on browser (single-threaded wasm has no thread pool). Mark the whole class as
+// unsupported there so CA1416 is satisfied, matching the sibling browser-unsupported test classes.
+[UnsupportedOSPlatform("browser")]
 [TestClass]
 public sealed class FileLoggerTests : IDisposable
 {

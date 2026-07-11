@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0</TargetFrameworks>
+    <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
+    <!--
+      Publishing browser-wasm must be self-contained so the mono browser-wasm runtime
+      pack is resolved; targeting net10.0 under an 11.0 SDK does not infer this on its own.
+    -->
+    <SelfContained>true</SelfContained>
+
+    <!--
+      The JS boot module that the WebAssembly runtime loads first. It creates the
+      .NET runtime via dotnet.js and invokes the (MTP-generated) Program.Main.
+      See wwwroot/main.js.
+    -->
+    <WasmMainJSPath>wwwroot\main.js</WasmMainJSPath>
+
+    <!-- Use the pre-built dotnet.native.wasm (no emscripten / wasm-sdk relink required). -->
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+
+    <Nullable>enable</Nullable>
+    <!--
+      IsTestingPlatformApplication is intentionally NOT set when running under
+      'dotnet test' (CI's Debug Test step on TestFx.slnx passes -p:UsingDotNetTest=true).
+      The browser-wasm output can only be launched through a JS host (a browser or
+      node importing dotnet.js), which is not wired into 'dotnet test'. Keeping the
+      property true during a normal build ensures the MTP entry point is still
+      generated and baked into the wasm bundle.
+    -->
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectCapability Include="DiagnoseCapabilities" />
+    <ProjectCapability Include="TestingPlatformServer" />
+    <ProjectCapability Include="TestContainer" />
+  </ItemGroup>
+
+  <!--
+    Ship the node headless runner and the browser page inside the published AppBundle.
+    The wasm SDK copies the WasmMainJSPath module (wwwroot/main.js) into the AppBundle;
+    WasmExtraFilesToDeploy places additional files (the node runner and index.html) next
+    to it so 'node runtests.mjs' / a browser can boot the app from the bundle (see README).
+  -->
+  <ItemGroup>
+    <WasmExtraFilesToDeploy Include="wwwroot\runtests.mjs" />
+    <WasmExtraFilesToDeploy Include="wwwroot\index.html" />
+  </ItemGroup>
+
+</Project>
