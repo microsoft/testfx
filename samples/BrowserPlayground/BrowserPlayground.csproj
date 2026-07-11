@@ -35,7 +35,6 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.TrxReport\Microsoft.Testing.Extensions.TrxReport.csproj" />
     <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Extensions.Telemetry\Microsoft.Testing.Extensions.Telemetry.csproj" />
   </ItemGroup>
 

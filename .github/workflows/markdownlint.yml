@@ -11,9 +11,14 @@ on:
       - ".markdownlintignore"
       - ".github/workflows/markdownlint.yml"
 
+concurrency:
+  group: markdownlint-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
     - uses: actions/checkout@v4

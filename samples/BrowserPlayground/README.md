@@ -116,13 +116,14 @@ are guarded off by `OperatingSystem.IsBrowser()` in the platform:
 
 | Feature | Reason |
 | --- | --- |
+| TRX report (`--report-trx`) | `TrxDataConsumer` creates a `TrxResultStreamingStore` whose background writer uses `BlockingCollection<T>` and `ITask.RunLongRunning`, both unsupported on browser; the TRX lifecycle handlers are gated by `OperatingSystem.IsBrowser()`. |
 | Hang dump / crash dump | Rely on `System.Diagnostics.Process`, unsupported in the browser (see [#8557](https://github.com/microsoft/testfx/issues/8557)). |
 | Azure DevOps report | Its `HttpClient` sets `AutomaticDecompression`, unsupported by the browser `HttpClientHandler`. |
 | Server mode / `dotnet test` pipe | Depends on TCP/named-pipe IPC, unavailable in the browser. |
 | `--exit-on-process-exit`, wait-for-debugger | No host process model in the browser. |
 | Synchronous file-logger flush | Not supported in the browser (throws `PlatformNotSupportedException`). |
 
-That is why `Program.cs` registers only the TRX report and telemetry providers.
+That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsTelemetryProvider`).
 
 ## Build configuration notes
 

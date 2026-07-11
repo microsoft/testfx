@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <c>node</c> via the same loader, which is what this test uses instead of a real browser.
 /// </para>
 ///
-/// <para>Two complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
+/// <para>Three complementary assertions, mirroring <see cref="WasmExecutionTests"/>:</para>
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
@@ -34,6 +34,12 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 ///     reported as failed. Skipped (inconclusive) only when the <c>wasm-tools</c> workload or
 ///     <c>node</c> is unavailable; otherwise publish must succeed and the run must exit with
 ///     <c>AtLeastOneTestFailed</c>.
+///   </item>
+///   <item>
+///     <see cref="BrowserWasmExecution_FrameworkWarningReachesNode"/> publishes a custom-framework
+///     project that emits a warning and an error through <c>IOutputDevice</c>, and asserts both reach
+///     the Node output via the <c>[JSImport]</c> console bindings without a JS-interop exception —
+///     directly guarding the <c>BrowserOutputDevice.JSConsoleWarn</c> fix. Same skip conditions.
 ///   </item>
 /// </list>
 /// </summary>
@@ -130,6 +136,92 @@ const exitCode = await runMain();
 process.exitCode = exitCode;
 """;
 
+    // Deterministic strings the warning asset emits and the test asserts reach Node output.
+    private const string WarningText = "browser-wasm framework warning marker";
+    private const string ErrorText = "browser-wasm framework error marker";
+
+    // A minimal custom-framework browser-wasm project (no MSTest) that emits a warning and an error
+    // through IOutputDevice, then reports a single passing test. Unlike the MSTest asset it hosts MTP
+    // via its own Program.Main (like samples/BrowserPlayground), so the warning path through
+    // BrowserOutputDevice.JSConsoleWarn is exercised end-to-end.
+    private const string WarningSourceCode = """
+#file BrowserWarningProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>$BrowserRid$</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+const { runMain } = await dotnet.withApplicationArgumentsFromQuery().create();
+const exitCode = await runMain();
+globalThis.mtpExitCode = exitCode;
+
+#file Program.cs
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
+
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.RegisterTestFramework(
+    _ => new TestFrameworkCapabilities(),
+    (_, serviceProvider) => new WarningFramework(serviceProvider.GetOutputDevice()));
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
+
+internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputDeviceDataProducer
+{
+    private readonly IOutputDevice _outputDevice;
+
+    public WarningFramework(IOutputDevice outputDevice) => _outputDevice = outputDevice;
+
+    public string Uid => nameof(WarningFramework);
+    public string Version => "1.0.0";
+    public string DisplayName => nameof(WarningFramework);
+    public string Description => nameof(WarningFramework);
+    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+        await _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData("$WarningText$"), CancellationToken.None);
+        await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData("$ErrorText$"), CancellationToken.None);
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
+        {
+            DisplayName = "PassingNode",
+            Uid = "Uid1",
+            Properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance),
+        }));
+        context.Complete();
+    }
+}
+""";
+
     public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
@@ -195,33 +287,7 @@ process.exitCode = exitCode;
 
         using TestAsset generator = await GenerateBrowserWasmAssetAsync();
 
-        // The workload is present, so a publish failure is a real browser-wasm regression: require success.
-        DotnetMuxerResult publishResult = await DotnetCli.RunAsync(
-            $"publish {generator.TargetAssetPath} -f {TargetFramework} -r {BrowserRid} -c Release",
-            warnAsError: false,
-            cancellationToken: TestContext.CancellationToken);
-
-        publishResult.AssertExitCodeIs(0);
-
-        string appBundle = Path.Combine(
-            generator.TargetAssetPath, "bin", "Release", TargetFramework, BrowserRid, "AppBundle");
-        Assert.IsTrue(
-            Directory.Exists(appBundle),
-            $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
-
-        // Stage the node runner next to the bundle so it can import ./_framework/dotnet.js.
-        string runnerPath = Path.Combine(appBundle, "runtests.mjs");
-        File.WriteAllText(runnerPath, NodeRunnerSource);
-
-        var commandLine = new TestInfrastructure.CommandLine();
-        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{node}\" runtests.mjs",
-            workingDirectory: appBundle,
-            cancellationToken: TestContext.CancellationToken);
-
-        string output = commandLine.StandardOutput;
-        string error = commandLine.ErrorOutput;
-        string combined = $"STDOUT:{Environment.NewLine}{output}{Environment.NewLine}STDERR:{Environment.NewLine}{error}";
+        (int exitCode, string output, string error, string combined) = await PublishAndRunUnderNodeAsync(generator, node);
 
         // A PlatformNotSupportedException (the single-threaded blocking-wait failure mode) would
         // indicate a regression in the wasm fallbacks.
@@ -248,6 +314,89 @@ process.exitCode = exitCode;
             $"Expected exit code {(int)ExitCode.AtLeastOneTestFailed} (AtLeastOneTestFailed) because one test fails.{Environment.NewLine}{combined}");
     }
 
+    [TestMethod]
+    public async Task BrowserWasmExecution_FrameworkWarningReachesNode()
+    {
+        // Guards the BrowserOutputDevice.JSConsoleWarn binding fix: the other execution test never
+        // emits a WarningMessageOutputDeviceData, so it would still pass if the console.warn interop
+        // were broken. Here a custom framework emits a deterministic warning (and error) that must
+        // reach the Node output via [JSImport] without a JS interop / PlatformNotSupportedException.
+        if (!await IsBrowserWasmWorkloadInstalledAsync())
+        {
+            Assert.Inconclusive(
+                "Skipping browser-wasm execution: the 'wasm-tools' workload is not installed. " +
+                "Install it with 'dotnet workload install wasm-tools' to exercise this test.");
+            return;
+        }
+
+        string? node = LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(
+                "Skipping browser-wasm execution: 'node' was not found on PATH (nor via NODE_EXE). " +
+                "Install Node.js to exercise this test.");
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmWarningAssetAsync();
+
+        (int exitCode, string output, string error, string combined) = await PublishAndRunUnderNodeAsync(generator, node);
+
+        // The warning routes through BrowserOutputDevice.ConsoleWarn -> JSConsoleWarn ->
+        // globalThis.console.warn (stderr under Node); the error routes through console.error. Both
+        // going through the wasm JS interop must not throw, and the text must actually surface.
+        Assert.IsFalse(
+            error.Contains("PlatformNotSupportedException", StringComparison.Ordinal)
+                || output.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
+            $"Microsoft.Testing.Platform hit an unexpected PlatformNotSupportedException under browser-wasm.{Environment.NewLine}{combined}");
+
+        Assert.IsTrue(
+            combined.Contains(WarningText, StringComparison.Ordinal),
+            $"Expected the framework warning to reach the Node output via console.warn interop.{Environment.NewLine}{combined}");
+        Assert.IsTrue(
+            combined.Contains(ErrorText, StringComparison.Ordinal),
+            $"Expected the framework error to reach the Node output via console.error interop.{Environment.NewLine}{combined}");
+
+        // The framework reports a single passing test and no failures, so the run succeeds.
+        Assert.AreEqual(
+            (int)ExitCode.Success,
+            exitCode,
+            $"Expected exit code {(int)ExitCode.Success} (Success) for the warning asset.{Environment.NewLine}{combined}");
+    }
+
+    // Publishes the generated browser-wasm asset (requiring success — the workload is known to be
+    // present by the callers), stages the Node runner next to the AppBundle, boots it under Node, and
+    // returns the process exit code plus captured stdout/stderr.
+    private async Task<(int ExitCode, string Output, string Error, string Combined)> PublishAndRunUnderNodeAsync(TestAsset generator, string node)
+    {
+        DotnetMuxerResult publishResult = await DotnetCli.RunAsync(
+            $"publish {generator.TargetAssetPath} -f {TargetFramework} -r {BrowserRid} -c Release",
+            warnAsError: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        publishResult.AssertExitCodeIs(0);
+
+        string appBundle = Path.Combine(
+            generator.TargetAssetPath, "bin", "Release", TargetFramework, BrowserRid, "AppBundle");
+        Assert.IsTrue(
+            Directory.Exists(appBundle),
+            $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
+
+        // Stage the node runner next to the bundle so it can import ./_framework/dotnet.js.
+        File.WriteAllText(Path.Combine(appBundle, "runtests.mjs"), NodeRunnerSource);
+
+        var commandLine = new TestInfrastructure.CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            $"\"{node}\" runtests.mjs",
+            workingDirectory: appBundle,
+            cancellationToken: TestContext.CancellationToken);
+
+        string output = commandLine.StandardOutput;
+        string error = commandLine.ErrorOutput;
+        string combined = $"STDOUT:{Environment.NewLine}{output}{Environment.NewLine}STDERR:{Environment.NewLine}{error}";
+        return (exitCode, output, error, combined);
+    }
+
     private Task<TestAsset> GenerateBrowserWasmAssetAsync()
         => TestAsset.GenerateAssetAsync(
             "BrowserTestProject",
@@ -255,6 +404,16 @@ process.exitCode = exitCode;
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", BrowserRid)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+    private Task<TestAsset> GenerateBrowserWasmWarningAssetAsync()
+        => TestAsset.GenerateAssetAsync(
+            "BrowserWarningProject",
+            WarningSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserRid$", BrowserRid)
+                .PatchCodeWithReplace("$WarningText$", WarningText)
+                .PatchCodeWithReplace("$ErrorText$", ErrorText)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
     // Detects whether the 'wasm-tools' workload (which provides the browser-wasm build/publish
     // toolchain) is installed for the SDK under test, by parsing 'dotnet workload list'. This lets

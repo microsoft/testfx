@@ -4,15 +4,19 @@
 # AFTER InitializeDotNetCli has bootstrapped the repo-local .dotnet/ SDK, so
 # $RepoRoot and the helpers from eng/common/tools.ps1 are in scope.
 #
-# Required by:
-# - samples/WasiPlayground/WasiPlayground.csproj (net10.0 with
-#   <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>) -> wasi-experimental-net10.
-# - the browser-wasm build/publish path exercised by
-#   test/IntegrationTests/.../BrowserWasmExecutionTests.cs and samples/BrowserPlayground
-#   -> wasm-tools-net10. Installing it here means CI actually exercises the browser-wasm
-#   build (and, where 'node' is present, the end-to-end run) instead of the acceptance
-#   test silently going Inconclusive on every leg.
-# Both would otherwise fail with NETSDK1147.
+# Required by the wasm acceptance tests and samples:
+#   - test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs
+#   - test/IntegrationTests/MSTest.Acceptance.IntegrationTests/WasmExecutionTests.cs
+#   - test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/BrowserWasmExecutionTests.cs
+#   - samples/WasiPlayground, samples/BrowserPlayground
+# `wasi-experimental-net10` is needed by the always-on `dotnet build -r wasi-wasm` assertions and the
+# WasiPlayground sample (<UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>); otherwise NETSDK1147
+# in CI. `wasm-tools-net10` is needed by the gated `dotnet publish -r wasi-wasm` step the wasi execution
+# tests perform AND by the browser-wasm build/publish path (BrowserWasmExecutionTests / BrowserPlayground) —
+# for browser-wasm it is required even by `dotnet build`. Installing it here means CI actually exercises the
+# browser-wasm build (and, where 'node' is present, the end-to-end run) instead of the acceptance test
+# silently going Inconclusive on every leg. Running the wasi execution tests to completion additionally needs
+# `wasmtime` on PATH; when it (or `node`, for browser-wasm) is absent the tests mark themselves inconclusive.
 
 $RequiredWorkloads = @('wasi-experimental-net10', 'wasm-tools-net10')
 

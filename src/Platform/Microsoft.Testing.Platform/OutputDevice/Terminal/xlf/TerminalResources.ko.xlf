@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="ErroredAssembliesHeader">
         <source>Errored assemblies:</source>
-        <target state="new">Errored assemblies:</target>
+        <target state="translated">오류가 발생한 어셈블리:</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCode">

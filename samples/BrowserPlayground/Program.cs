@@ -11,17 +11,21 @@ ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBui
 
 testApplicationBuilder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, _) => new DummyFramework());
 
-testApplicationBuilder.AddTrxReportProvider();
 testApplicationBuilder.AddAppInsightsTelemetryProvider();
 
 // The following extensions are intentionally NOT registered on browser-wasm:
+// - AddTrxReportProvider: with --report-trx enabled, TrxDataConsumer creates a
+//   TrxResultStreamingStore whose background writer calls ITask.RunLongRunning (and uses
+//   BlockingCollection<T>), both unsupported on browser; the TRX lifecycle handlers are
+//   themselves gated by OperatingSystem.IsBrowser() (see TrxReportExtensions). Registering it
+//   would let a user pass --report-trx and hit PlatformNotSupportedException.
 // - AddHangDumpProvider / AddCrashDumpProvider: dumps rely on System.Diagnostics.Process,
 //   which is unsupported in the browser sandbox (see #8557).
 // - AddAzureDevOpsProvider: its HttpClient sets AutomaticDecompression, which the browser
 //   HttpClientHandler does not support.
-// Threading is not an issue: the platform detects the single-threaded wasm runtime
-// (RuntimeFeatureHelper.IsMultiThreaded == false) and runs the pipeline inline, exactly
-// as it does on wasi-wasm.
+// Threading is not an issue for the registered providers: the platform detects the
+// single-threaded wasm runtime (RuntimeFeatureHelper.IsMultiThreaded == false) and runs the
+// pipeline inline, exactly as it does on wasi-wasm.
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
 
