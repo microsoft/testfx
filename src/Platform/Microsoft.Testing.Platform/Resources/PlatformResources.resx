@@ -582,6 +582,14 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Method '{0}' did not exit successfully</value>
     <comment>{0} is the method name.</comment>
   </data>
+  <data name="NamedPipePathTooLongErrorMessage" xml:space="preserve">
+    <value>The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Set the '{3}' environment variable (or 'TMPDIR') to a shorter directory.</value>
+    <comment>{0} is the full pipe path, {1} is its length in bytes, {2} is the maximum allowed length in bytes, {3} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</comment>
+  </data>
+  <data name="NamedPipeDirectoryNotWritableErrorMessage" xml:space="preserve">
+    <value>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable (or 'TMPDIR') to a writable directory.</value>
+    <comment>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</comment>
+  </data>
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
     <value>Do not report non successful exit value for specific exit codes
 (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>

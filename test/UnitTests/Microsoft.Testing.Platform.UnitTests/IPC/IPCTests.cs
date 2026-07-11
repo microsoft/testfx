@@ -21,6 +21,55 @@ public sealed class IPCTests
         => _testContext = testContext;
 
     [TestMethod]
+    public void ResolvePipeDirectory_WhenOverrideProvided_UsesOverrideAsExplicit()
+    {
+        (string directory, bool isExplicitOverride) = NamedPipeServer.ResolvePipeDirectory("/custom/pipe/dir", "/tmp");
+
+        Assert.AreEqual("/custom/pipe/dir", directory);
+        Assert.IsTrue(isExplicitOverride);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("")]
+    [DataRow("   ")]
+    public void ResolvePipeDirectory_WhenOverrideMissing_FallsBackToTempPath(string? overrideDirectory)
+    {
+        (string directory, bool isExplicitOverride) = NamedPipeServer.ResolvePipeDirectory(overrideDirectory, "/var/folders/tmp");
+
+        Assert.AreEqual("/var/folders/tmp", directory);
+        Assert.IsFalse(isExplicitOverride);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("")]
+    public void ResolvePipeDirectory_WhenNeitherOverrideNorTempPathAvailable_FallsBackToTmp(string? tempPath)
+    {
+        (string directory, bool isExplicitOverride) = NamedPipeServer.ResolvePipeDirectory(overrideDirectory: null, tempPath);
+
+        Assert.AreEqual("/tmp", directory);
+        Assert.IsFalse(isExplicitOverride);
+    }
+
+    [TestMethod]
+    public void EnsurePathLengthWithinLimit_WhenWithinLimit_DoesNotThrow()
+    {
+        string path = "/tmp/" + new string('a', NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes - "/tmp/".Length);
+
+        // Should not throw.
+        NamedPipeServer.EnsurePathLengthWithinLimit(path);
+    }
+
+    [TestMethod]
+    public void EnsurePathLengthWithinLimit_WhenExceedsLimit_Throws()
+    {
+        string path = "/tmp/" + new string('a', NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => NamedPipeServer.EnsurePathLengthWithinLimit(path));
+    }
+
+    [TestMethod]
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));

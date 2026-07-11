@@ -419,6 +419,16 @@
         <target state="translated">{0} тестов</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
+      <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
+        <source>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable (or 'TMPDIR') to a writable directory.</source>
+        <target state="new">The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable (or 'TMPDIR') to a writable directory.</target>
+        <note>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</note>
+      </trans-unit>
+      <trans-unit id="NamedPipePathTooLongErrorMessage">
+        <source>The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Set the '{3}' environment variable (or 'TMPDIR') to a shorter directory.</source>
+        <target state="new">The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Set the '{3}' environment variable (or 'TMPDIR') to a shorter directory.</target>
+        <note>{0} is the full pipe path, {1} is its length in bytes, {2} is the maximum allowed length in bytes, {3} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</note>
+      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">Недоступно</target>

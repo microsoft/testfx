@@ -25,6 +25,11 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     private static bool IsUnix => Path.DirectorySeparatorChar == '/';
 
+    // Maximum length, in bytes, of the path stored in sockaddr_un.sun_path for a Unix domain socket.
+    // The smallest limit across supported platforms is macOS' 104 bytes (Linux allows 108); we use the
+    // smaller value minus one for the NUL terminator so the resolved path stays portable.
+    internal const int MaxUnixDomainSocketPathLengthInBytes = 104 - 1;
+
     private readonly Func<IRequest, Task<IResponse>> _callback;
     private readonly IEnvironment _environment;
     private readonly NamedPipeServerStream _namedPipeServerStream;
@@ -158,6 +163,18 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         }
     }
 
+    /// <summary>
+    /// Computes the OS-level named pipe name for a friendly <paramref name="name"/>.
+    /// </summary>
+    /// <remarks>
+    /// Invariant (important for cross-version / cross-repo compatibility): the process that <b>creates</b> the
+    /// pipe resolves the directory locally and hands the <b>fully-resolved</b> path to the peer (via an
+    /// environment variable, a command-line argument, or the dotnet-test handshake). Peers use that path verbatim
+    /// and never recompute it. Do NOT turn the directory into a convention that both sides derive independently
+    /// from a shared friendly name/env var - doing so would couple the SDK and test-host versions. Because only
+    /// the creator's resolution is ever used, a difference in TESTINGPLATFORM_PIPE_DIRECTORY / TMPDIR between the
+    /// two processes is harmless.
+    /// </remarks>
     public static PipeNameDescription GetPipeName(string name)
     {
         if (!IsUnix)
@@ -165,8 +182,96 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
             return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}");
         }
 
-        // Similar to https://github.com/dotnet/roslyn/blob/99bf83c7bc52fa1ff27cf792db38755d5767c004/src/Compilers/Shared/NamedPipeUtil.cs#L26-L42
-        return new PipeNameDescription(Path.Combine("/tmp", name));
+        // On Unix the named pipe is backed by a Unix domain socket file on disk. Historically this file
+        // was always created under '/tmp' (similar to
+        // https://github.com/dotnet/roslyn/blob/99bf83c7bc52fa1ff27cf792db38755d5767c004/src/Compilers/Shared/NamedPipeUtil.cs#L26-L42).
+        // That is a problem in sandboxed environments that block '/tmp' (see
+        // https://github.com/microsoft/testfx/issues/9821), so we allow the directory to be relocated.
+        // Resolution precedence:
+        //   1. TESTINGPLATFORM_PIPE_DIRECTORY   - explicit opt-in override, a guaranteed escape hatch.
+        //   2. Path.GetTempPath()               - honors TMPDIR on Unix; usually a per-user, allowed dir.
+        //   3. '/tmp'                           - preserves the previous default when neither is set.
+        (string directory, bool isExplicitOverride) = ResolvePipeDirectory();
+
+        // Only actively validate the explicit override: it is user-supplied and the most likely to be wrong
+        // (typo, missing directory, wrong permissions), so we create it if needed and fail fast with an
+        // actionable message. Path.GetTempPath()/'/tmp' are OS-managed and effectively always writable, so we
+        // skip the probe there to avoid extra I/O and a behavior change on every pipe creation.
+        if (isExplicitOverride)
+        {
+            EnsureDirectoryIsWritable(directory);
+        }
+
+        string path = Path.Combine(directory, name);
+        EnsurePathLengthWithinLimit(path);
+
+        return new PipeNameDescription(path);
+    }
+
+    private static (string Directory, bool IsExplicitOverride) ResolvePipeDirectory()
+        => ResolvePipeDirectory(
+            Environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
+            Path.GetTempPath());
+
+    // Pure resolution logic split out so it can be unit-tested on any OS (the Unix branch of GetPipeName
+    // never runs on Windows) without mutating process-wide environment variables.
+    internal static (string Directory, bool IsExplicitOverride) ResolvePipeDirectory(string? overrideDirectory, string? tempPath)
+    {
+        if (!string.IsNullOrWhiteSpace(overrideDirectory))
+        {
+            return (overrideDirectory!, true);
+        }
+
+        // Path.GetTempPath() honors TMPDIR on Unix and already falls back to '/tmp' itself when TMPDIR is unset.
+        return string.IsNullOrWhiteSpace(tempPath)
+            ? ("/tmp", false)
+            : (tempPath!, false);
+    }
+
+    private static void EnsureDirectoryIsWritable(string directory)
+    {
+        try
+        {
+            Directory.CreateDirectory(directory);
+
+            // Probe write access with a short-lived file so a misconfigured directory fails fast with an
+            // actionable message instead of surfacing a cryptic socket bind failure later on.
+            string probePath = Path.Combine(directory, $"testingplatform.probe.{Guid.NewGuid():N}");
+            using (File.Create(probePath))
+            {
+            }
+
+            File.Delete(probePath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or NotSupportedException or ArgumentException)
+        {
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.NamedPipeDirectoryNotWritableErrorMessage,
+                    directory,
+                    ex.Message,
+                    EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
+                ex);
+        }
+    }
+
+    // Internal for unit testing: enforce the Unix domain socket sun_path budget so a too-long directory
+    // (e.g. a deep TMPDIR on macOS) fails with an actionable message instead of a cryptic bind error.
+    internal static void EnsurePathLengthWithinLimit(string path)
+    {
+        int byteLength = System.Text.Encoding.UTF8.GetByteCount(path);
+        if (byteLength > MaxUnixDomainSocketPathLengthInBytes)
+        {
+            throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    PlatformResources.NamedPipePathTooLongErrorMessage,
+                    path,
+                    byteLength,
+                    MaxUnixDomainSocketPathLengthInBytes,
+                    EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY));
+        }
     }
 
     public void Dispose()
