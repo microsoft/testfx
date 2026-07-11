@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -152,7 +152,8 @@ internal sealed class MtpTestElementFilterProvider : ITestElementFilterProvider
                 return element.Priority;
             }
 
-            // Everything that is not a supported property is matched against traits.
+            // Everything that is not a supported property is matched against traits. TestTrait is a value
+            // type, so a LINQ FirstOrDefault(...)?.Value is not available here; scan for the first match.
             if (element.Traits is { Length: > 0 } traits)
             {
                 foreach (TestTrait trait in traits)

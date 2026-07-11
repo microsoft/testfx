@@ -417,7 +417,7 @@ internal static class MetadataRegistryEmitter
                     {
                         sb.AppendLine($"DisplayNameDeclaringType = typeof({displayNameType}),");
                         sb.AppendLine($"DisplayNameMethodName = \"{Escape(displayNameMethod)}\",");
-                        sb.AppendLine($"GetDisplayName = static (methodInfo, data) => {displayNameType}.{displayNameMethod}(methodInfo, data!),");
+                        sb.AppendLine($"GetDisplayName = static (methodInfo, data) => {displayNameType}.{EscapeIdentifier(displayNameMethod)}(methodInfo, data!),");
                     }
                 }
 
@@ -440,13 +440,13 @@ internal static class MetadataRegistryEmitter
             case DynamicDataMemberKind.Property:
             case DynamicDataMemberKind.Field:
                 // Ignore the (unused) source arguments; read the static property/field value.
-                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{source.SourceName}";
+                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}";
 
             case DynamicDataMemberKind.Method:
                 EquatableArray<string> parameterTypes = source.MethodParameterTypes;
                 if (parameterTypes.Length == 0)
                 {
-                    return $"(object?){source.DeclaringTypeFullyQualifiedName}.{source.SourceName}()";
+                    return $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}()";
                 }
 
                 string[] castArgs = new string[parameterTypes.Length];
@@ -455,7 +455,7 @@ internal static class MetadataRegistryEmitter
                     castArgs[i] = $"({parameterTypes[i]})args[{i}]!";
                 }
 
-                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{source.SourceName}({string.Join(", ", castArgs)})";
+                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}({string.Join(", ", castArgs)})";
 
             default:
                 return "null";
@@ -604,6 +604,13 @@ internal static class MetadataRegistryEmitter
 
     internal static string Escape(string value)
         => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    // Escapes a member/type identifier so a source name that happens to be a C# reserved keyword (e.g. a
+    // member declared as `@class`) is emitted as a valid identifier rather than breaking the generated code.
+    private static string EscapeIdentifier(string name)
+        => Microsoft.CodeAnalysis.CSharp.SyntaxFacts.GetKeywordKind(name) != Microsoft.CodeAnalysis.CSharp.SyntaxKind.None
+            ? "@" + name
+            : name;
 
     private static void AppendHeader(IndentedStringBuilder sb)
     {

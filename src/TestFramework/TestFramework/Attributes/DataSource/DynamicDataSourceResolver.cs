@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.ComponentModel;
@@ -20,8 +20,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </para>
 /// <para>
 /// When a source is not registered here (reflection mode, or a source the generator could not resolve),
-/// <see cref="DynamicDataAttribute"/> falls back to reflection. That fallback is not trim/AOT-safe; the
-/// generated registrations are what make <c>[DynamicData]</c> work under trimming / Native AOT.
+/// <see cref="DynamicDataAttribute"/> falls back to reflecting over the declaring type. That fallback is
+/// annotated with <see cref="System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute"/>, so it
+/// preserves the required members and remains trim / Native AOT safe on its own. The source-generated
+/// registrations are an optimization that lets <c>[DynamicData]</c> read its data without reflecting at all.
 /// </para>
 /// </remarks>
 [EditorBrowsable(EditorBrowsableState.Never)]
