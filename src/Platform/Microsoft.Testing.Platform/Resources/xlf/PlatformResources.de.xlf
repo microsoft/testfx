@@ -968,7 +968,7 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop.
 {0}</source>
-        <target state="needs-review-translation">Unerwartete Ausnahme in "FileLogger.WriteLogToFileAsync".
+        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop.
 {0}</target>
         <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

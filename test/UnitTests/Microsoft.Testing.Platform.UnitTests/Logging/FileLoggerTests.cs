@@ -461,10 +461,9 @@ public sealed class FileLoggerTests : IDisposable
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
             => _inner.Run(function, cancellationToken);
 
-#pragma warning disable CA1416 // ITask.RunLongRunning is unsupported on 'browser' — this test never targets browser
+        [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
             => _inner.RunLongRunning(action, name, cancellationToken);
-#pragma warning restore CA1416
 
         public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
 
@@ -488,10 +487,9 @@ public sealed class FileLoggerTests : IDisposable
         public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
             => _inner.Run(function, cancellationToken);
 
-#pragma warning disable CA1416 // ITask.RunLongRunning is unsupported on 'browser' — this test never targets browser
+        [UnsupportedOSPlatform("browser")]
         public Task RunLongRunning(Func<Task> action, string name, CancellationToken cancellationToken)
             => _inner.RunLongRunning(action, name, cancellationToken);
-#pragma warning restore CA1416
 
         public Task WhenAll(params Task[] tasks) => _inner.WhenAll(tasks);
 

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationTitle">
         <source>Test failed: {0}</source>
-        <target state="new">Test failed: {0}</target>
+        <target state="translated">Test non riuscito: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="AnnotationsOptionDescription">
@@ -14,67 +14,67 @@
       </trans-unit>
       <trans-unit id="Description">
         <source>GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Generatore di report di GitHub Actions per generare comandi del flusso di lavoro, in modo che le esecuzioni dei test forniscano un'esperienza ottimale in GitHub Actions.</target>
         <note />
       </trans-unit>
       <trans-unit id="DisplayName">
         <source>GitHub Actions report generator</source>
-        <target state="new">GitHub Actions report generator</target>
+        <target state="translated">GitHub Actions report generator</target>
         <note />
       </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
-        <target state="new">Tests: {0} ({1})</target>
+        <target state="translated">Test: {0} ({1})</target>
         <note>{0} is the assembly name, {1} is the target framework moniker.</note>
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable per-assembly log groups. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">Enable o disable per i gruppi di log per assembly. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' (or 'true', 'enable', '1') or 'off' (or 'false', 'disable', '0').</target>
+        <target state="translated">Valore '{0}' non valido. I valori validi sono 'on' (o 'true', 'enable', '1') oppure 'off' (o 'false', 'disable', '0').</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="InvalidSlowTestThreshold">
         <source>Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</source>
-        <target state="new">Invalid value '{0}'. The slow-test threshold must be a positive duration, e.g. '60', '90s', or '2m'.</target>
+        <target state="translated">Valore '{0}' non valido. La soglia di test lento deve essere espressa come durata positiva, ad esempio '60', '90s' o '2m'.</target>
         <note>{Locked="s"}{Locked="m"}</note>
       </trans-unit>
       <trans-unit id="NoFailureMessageFallback">
         <source>The test failed without providing a failure message.</source>
-        <target state="new">The test failed without providing a failure message.</target>
+        <target state="translated">Il test non è riuscito senza fornire un messaggio di errore.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSkipReasonFallback">
         <source>The test was skipped without providing a reason.</source>
-        <target state="new">The test was skipped without providing a reason.</target>
+        <target state="translated">Il test è stato ignorato senza fornire un motivo.</target>
         <note />
       </trans-unit>
       <trans-unit id="OptionDescription">
         <source>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</source>
-        <target state="new">Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</target>
+        <target state="translated">Abilitare il generatore di report di GitHub Actions a generare di comandi del flusso di lavoro, in modo che le esecuzioni dei test forniscano un'esperienza ottimale in GitHub Actions.</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedAnnotationTitle">
         <source>Test skipped: {0}</source>
-        <target state="new">Test skipped: {0}</target>
+        <target state="translated">Test ignorato: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticeTitle">
         <source>Slow test: {0}</source>
-        <target state="new">Slow test: {0}</target>
+        <target state="translated">Test lento: {0}</target>
         <note>{0} is the fully qualified test name.</note>
       </trans-unit>
       <trans-unit id="SlowTestNoticesOptionDescription">
         <source>Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable GitHub Actions slow-test notices. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">Enable o disable per le notifiche dei test lenti di GitHub Actions. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}</note>
       </trans-unit>
       <trans-unit id="SlowTestStillRunning">
         <source>{0} still running after {1}s</source>
-        <target state="new">{0} still running after {1}s</target>
+        <target state="translated">{0} è ancora in esecuzione dopo {1}s</target>
         <note>{0} is the fully qualified test name, {1} is the elapsed seconds.</note>
       </trans-unit>
       <trans-unit id="SlowTestThresholdOptionDescription">
@@ -84,12 +84,12 @@
       </trans-unit>
       <trans-unit id="StepSummaryOptionDescription">
         <source>Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</source>
-        <target state="new">Enable or disable writing a markdown job summary to the GITHUB_STEP_SUMMARY file. Valid values are 'on' (also accepts 'true', 'enable', '1') or 'off' (also accepts 'false', 'disable', '0'). Defaults to 'on' when running on GitHub Actions.</target>
+        <target state="translated">Enable o disable per la scrittura di un riepilogo del processo markdown nel file GITHUB_STEP_SUMMARY. I valori validi sono 'on' (accetta anche 'true', 'enable', '1') o 'off' (accetta anche 'false', 'disable', '0'). Il valore predefinito è 'on' quando si esegue in GitHub Actions.</target>
         <note>{Locked="on"}{Locked="off"}{Locked="true"}{Locked="enable"}{Locked="1"}{Locked="false"}{Locked="disable"}{Locked="0"}{Locked="GITHUB_STEP_SUMMARY"}</note>
       </trans-unit>
       <trans-unit id="StepSummaryWriteFailedWarning">
         <source>Failed to write the GitHub Actions job summary to '{0}': {1}</source>
-        <target state="new">Failed to write the GitHub Actions job summary to '{0}': {1}</target>
+        <target state="translated">Non è possibile scrivere il riepilogo del processo di GitHub Actions in '{0}': {1}</target>
         <note>{0} is the file path, {1} is the error message.</note>
       </trans-unit>
     </body>

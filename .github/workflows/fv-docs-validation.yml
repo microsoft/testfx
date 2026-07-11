@@ -18,10 +18,15 @@ on:
       - "formal-verification/**"
   workflow_dispatch:
 
+concurrency:
+  group: fv-docs-validation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate-fv-docs:
     name: Validate FV Documentation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
