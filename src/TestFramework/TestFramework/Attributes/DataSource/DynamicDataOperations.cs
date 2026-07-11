@@ -8,37 +8,30 @@ internal static class DynamicDataOperations
     private const BindingFlags MemberLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
     /// <summary>
-    /// The set of members that a dynamic data source type may expose, mirroring the member <em>kinds</em> reached by
-    /// <see cref="MemberLookup"/>: public and non-public properties, fields, and methods. Annotating a <see cref="Type"/>
-    /// with this value keeps those members on that type alive under trimming and NativeAOT, so <see cref="DynamicDataAttribute"/>
-    /// can resolve them by name at runtime.
+    /// The members that a dynamic data source type may expose. <see cref="MemberLookup"/> resolves the source member with
+    /// <see cref="BindingFlags.NonPublic"/> and <see cref="BindingFlags.FlattenHierarchy"/>, so the source can be an
+    /// inherited (for example <see langword="protected"/> <see langword="static"/>) member declared on a base type. Only
+    /// <see cref="DynamicallyAccessedMemberTypes.All"/> preserves inherited non-public members across the whole base chain
+    /// (the granular <c>NonPublic*</c> flags preserve only members declared directly on the annotated type, and the
+    /// <c>NonPublic*WithInherited</c> flags are not available on every target framework's base class library). Annotating a
+    /// <see cref="Type"/> with this value keeps the whole member surface alive under trimming and NativeAOT, so
+    /// <see cref="DynamicDataAttribute"/> can resolve the source by name at runtime.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Instance members are preserved as well, even though a data source must be <see langword="static"/>: the granular
-    /// <see cref="DynamicallyAccessedMemberTypes"/> flags have no static-only variant, and <see cref="MemberLookup"/>
-    /// itself includes <see cref="BindingFlags.Instance"/> so the member can be found before it is validated as static.
-    /// This over-preservation is intentional and unavoidable.
-    /// </para>
-    /// <para>
-    /// The granular flags only preserve members declared on the annotated type; they do not propagate to base types.
-    /// A data source that is an inherited (for example <see langword="protected"/> <see langword="static"/>) member
-    /// surfaced through <see cref="BindingFlags.FlattenHierarchy"/> lives on a base type and is not covered here. This is
-    /// a limitation of <see cref="DynamicallyAccessedMembersAttribute"/> (which <see cref="DynamicallyAccessedMemberTypes.All"/>
-    /// would not fix either, as it also does not annotate base types); the supported and documented scenario is a data
-    /// source declared directly on the referenced type.
-    /// </para>
+    /// This mirrors the <c>[DynamicDependency(DynamicallyAccessedMemberTypes.All, ...)]</c> that
+    /// <c>MSTest.SourceGeneration</c> already emits for every discovered test class and its base types. It over-preserves
+    /// (constructors, events, instance members, and so on) because there is no static-only or member-kind-scoped variant
+    /// that also walks the base hierarchy; this is intentional and unavoidable to keep the inherited-source scenario
+    /// trim-safe.
     /// </remarks>
-    internal const DynamicallyAccessedMemberTypes RequiredMemberTypes =
-        DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties
-        | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields
-        | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
+    internal const DynamicallyAccessedMemberTypes RequiredMemberTypes = DynamicallyAccessedMemberTypes.All;
 
     public static IEnumerable<object[]> GetData([DynamicallyAccessedMembers(RequiredMemberTypes)] Type? dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments, MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in. If not, default to test method's class type.
-        // The declaring type of the test method is always rooted by test discovery, so its members are preserved even
-        // though MethodInfo.DeclaringType is not statically annotated with DynamicallyAccessedMembersAttribute.
+        // In the supported trimming/NativeAOT configuration the test class (and its base types) are rooted by the
+        // [DynamicDependency(All)] that MSTest.SourceGeneration emits, so MethodInfo.DeclaringType stays trim-safe even
+        // though it is not statically annotated with DynamicallyAccessedMembersAttribute (see GetTestMethodDeclaringType).
         dynamicDataDeclaringType ??= GetTestMethodDeclaringType(methodInfo);
         DebugEx.Assert(dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
 
@@ -201,7 +194,7 @@ internal static class DynamicDataOperations
     }
 
     [return: DynamicallyAccessedMembers(RequiredMemberTypes)]
-    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "The declaring type of the test method is always rooted by test discovery (the [TestClass] attribute keeps the type and its members alive), so MethodInfo.DeclaringType and its members are preserved by the trimmer.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "In the supported trimming/NativeAOT configuration, test classes are source-generated: MSTest.SourceGeneration emits [DynamicDependency(DynamicallyAccessedMemberTypes.All, ...)] for every discovered test class and its base types, so MethodInfo.DeclaringType and its members are already rooted. This fallback only runs for the test method's own declaring type; it does not claim safety for unsupported reflection-only trimmed callers that discover tests without the source generator.")]
     internal static Type? GetTestMethodDeclaringType(MethodInfo methodInfo)
         => methodInfo.DeclaringType;
 }
