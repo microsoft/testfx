@@ -23,20 +23,21 @@
 |------|-------------|
 | 1    | 2026-07-04  |
 | 2    | 2026-07-08  |
-| 3    | 2026-07-10  |
-| 4    | 2026-07-10  |
+| 3    | 2026-07-11  |
+| 4    | 2026-07-11  |
 | 5    | 2026-07-08  |
 | 6    | 2026-07-07  |
-| 7    | 2026-07-10  |
+| 7    | 2026-07-11  |
 
-Next priority: Tasks 5 and 6 (oldest)
+Next priority: Tasks 5 and 6 (oldest: 2026-07-08, 2026-07-07)
 
 ## Completed Work
 
 | Date       | Item                                  | Notes                                      |
 |------------|---------------------------------------|--------------------------------------------|
+| 2026-07-11 | PR #aw_pr_skip_inprog submitted       | Skip TestMethodIdentifierProperty for in-progress nodes |
 | 2026-07-10 | PR #9800 merged (by Evangelink)       | Cache GetTestId on UnitTestElement         |
-| 2026-07-10 | PR created: lazy testFullName         | MSTestTestNodeConverter alloc elimination  |
+| 2026-07-10 | WIP branch lost (lazy testfullname)   | safe-output bundle was lost; no PR created |
 | 2026-07-08 | PR #9728 merged                       | Scenario2 data-driven + JsonSerializerOptions caching |
 | 2026-07-08 | PR #9706 merged                       | Native MTP integration (RFC 018)           |
 | 2026-07-07 | PR #9617 merged                       | All 4 data-driven hot-path optimisations   |
@@ -44,8 +45,9 @@ Next priority: Tasks 5 and 6 (oldest)
 
 ## Work In Progress
 
-- Branch `perf-assist/lazy-testfullname-allocation`: eliminate eager `testFullName` string
-  allocation in `MSTestTestNodeConverter` — PR submitted 2026-07-10.
+- Branch `perf-assist/skip-method-id-in-progress`: skip AddTestMethodIdentifier
+  (ParseManagedMethodName + TestMethodIdentifierProperty alloc) for in-progress nodes.
+  Saves ~10,000 parses per 10,000-test run. PR submitted 2026-07-11.
 
 ## Monthly Activity Issue
 
@@ -71,6 +73,8 @@ Priority order (highest first):
 - Pre-existing CA1416 build errors in `FileLoggerTests.cs` on Linux prevent full ./build.sh -test.
   Product code builds fine; unit tests for adapter fail due to net48/net462 NU1201 restore issues.
 - The "efficiency-improver" workflow is ALSO active on this repo, generating `efficiency/*` branches.
+- Issue #5348 (in-progress + result batch dedup): Efficiency Improver already commented (June 2026).
+  No new human activity since then. Not a good candidate for Perf Improver comment.
 
 ## Previously Closed/Actioned Items (do not re-suggest)
 
