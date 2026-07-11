@@ -563,8 +563,8 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
-– Nesmí být deklarované pro obecnou class.
+        <target state="translated">Aby byly metody s označením [GlobalTestInitialize] nebo [GlobalTestCleanup] platné, musí se řídit následujícím rozložením:
+– Nesmí být deklarované pro obecnou třídu (class).
 – Musí být „public“.
 – Musí být „static“.
 – Nesmí být „async void“.
@@ -574,11 +574,10 @@ The type declaring these methods should also respect the following rules:
 – Návratový typ musí být „void“, „Task“ nebo „ValueTask“.
 
 Typ deklarující tyto metody by měl také respektovat následující pravidla: 
-– Typ by měl být class.
-– class by měla být „public“.
-– class by neměla být „static“.
-– class by měla být označena atributem [TestClass] (nebo odvozeným atributem).
-– class by neměla být obecná.</target>
+– Typ by měl být třída (class).
+– Třída (class) by měla být „public“.
+– Třída (class) by měla být označena atributem [TestClass] (nebo odvozeným atributem).
+– Třída (class) by neměla být obecná.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
       <trans-unit id="GlobalTestFixtureShouldBeValidMessageFormat">

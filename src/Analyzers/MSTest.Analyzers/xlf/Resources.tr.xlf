@@ -563,7 +563,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">‘[GlobalTestInitialize]’ veya ‘[GlobalTestCleanup]’ ile işaretlenmiş yöntemlerin geçerli olabilmesi için şu düzeni izlemesi gerekir:
+        <target state="translated">'[GlobalTestInitialize]' veya '[GlobalTestCleanup]' ile işaretlenmiş yöntemlerin geçerli olabilmesi için şu düzeni izlemesi gerekir:
 -genel bir class tanımlanamaz
 -'public' olmalıdır
 -'static' olmalıdır
@@ -575,8 +575,7 @@ The type declaring these methods should also respect the following rules:
 
 Bu metotları bildiren türün ayrıca aşağıdaki kurallara uyması gerekir:
 -Tür bir class olmalıdır
--class ‘public’ olmalıdır
--class 'static' olmamalıdır
+-class 'public' olmalıdır
 -class '[TestClass]' (veya türetilmiş bir öznitelik) ile işaretlenmelidir
 -class genel olmamalıdır.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>

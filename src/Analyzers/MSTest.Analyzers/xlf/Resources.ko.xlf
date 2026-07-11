@@ -563,7 +563,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">'[GlobalTestInitialize]' 또는 '[GlobalTestCleanup]'으로 표시된 메서드는 다음 레이아웃을 따라야 유효합니다.
+        <target state="translated">'[GlobalTestInitialize]' 또는 '[GlobalTestCleanup]'으로 표시된 메서드는 다음 레이아웃을 따라야 유효합니다.
 - 제네릭 class에서 선언할 수 없습니다.
 - 'public'이어야 합니다. 
 - 'static'이어야 합니다.
@@ -574,10 +574,9 @@ The type declaring these methods should also respect the following rules:
 - 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
 
 이러한 메서드를 선언하는 형식은 다음 규칙도 준수해야 합니다.
-- 형식은 class여야 합니다.
--class는 'public'이어야 합니다.
-- class는 'static'이 되어서는 안 됩니다.
-- class는 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
+-형식은 class여야 합니다.
+- class는 'public'이어야 합니다.
+-class는 '[TestClass]'(또는 파생 특성)로 표시되어야 합니다.
 - class는 제네릭이 아니어야 합니다.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
