@@ -194,11 +194,15 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
         (string directory, bool isExplicitOverride) = ResolvePipeDirectory();
 
         // Only actively validate the explicit override: it is user-supplied and the most likely to be wrong
-        // (typo, missing directory, wrong permissions), so we create it if needed and fail fast with an
-        // actionable message. Path.GetTempPath()/'/tmp' are OS-managed and effectively always writable, so we
-        // skip the probe there to avoid extra I/O and a behavior change on every pipe creation.
+        // (typo, missing directory, wrong permissions), so we normalize, create it if needed, and fail fast
+        // with an actionable message. Path.GetTempPath()/'/tmp' are OS-managed and effectively always writable,
+        // so we skip the probe there to avoid extra I/O and a behavior change on every pipe creation.
         if (isExplicitOverride)
         {
+            // Normalize a possibly-relative override to an absolute path: on Unix NamedPipeServerStream only
+            // treats rooted names as socket paths (it rejects separators in relative names), and the invariant
+            // requires handing peers a fully-resolved path. This also collapses any '..' segments.
+            directory = Path.GetFullPath(directory);
             EnsureDirectoryIsWritable(directory);
         }
 
@@ -210,25 +214,29 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
 
     private static (string Directory, bool IsExplicitOverride) ResolvePipeDirectory()
         => ResolvePipeDirectory(
-            Environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
+            new SystemEnvironment().GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY),
             Path.GetTempPath());
 
     // Pure resolution logic split out so it can be unit-tested on any OS (the Unix branch of GetPipeName
     // never runs on Windows) without mutating process-wide environment variables.
     internal static (string Directory, bool IsExplicitOverride) ResolvePipeDirectory(string? overrideDirectory, string? tempPath)
     {
-        if (!string.IsNullOrWhiteSpace(overrideDirectory))
+        if (!RoslynString.IsNullOrWhiteSpace(overrideDirectory))
         {
-            return (overrideDirectory!, true);
+            return (overrideDirectory, true);
         }
 
-        // Path.GetTempPath() honors TMPDIR on Unix and already falls back to '/tmp' itself when TMPDIR is unset.
-        return string.IsNullOrWhiteSpace(tempPath)
+        // Path.GetTempPath() honors TMPDIR on Unix and already falls back to '/tmp' itself when TMPDIR is unset,
+        // and it always returns a non-empty string in practice. The explicit '/tmp' below is therefore a
+        // defensive net that is only reachable when a caller passes null/empty tempPath (i.e. the test overload).
+        return RoslynString.IsNullOrWhiteSpace(tempPath)
             ? ("/tmp", false)
-            : (tempPath!, false);
+            : (tempPath, false);
     }
 
-    private static void EnsureDirectoryIsWritable(string directory)
+    // Internal for unit testing: normalize/create the explicit override directory and verify it is writable,
+    // failing fast with an actionable, localized message instead of a cryptic socket bind error later.
+    internal static void EnsureDirectoryIsWritable(string directory)
     {
         try
         {

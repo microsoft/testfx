@@ -44,12 +44,51 @@ public sealed class IPCTests
     [TestMethod]
     [DataRow(null)]
     [DataRow("")]
+    [DataRow("   ")]
     public void ResolvePipeDirectory_WhenNeitherOverrideNorTempPathAvailable_FallsBackToTmp(string? tempPath)
     {
         (string directory, bool isExplicitOverride) = NamedPipeServer.ResolvePipeDirectory(overrideDirectory: null, tempPath);
 
         Assert.AreEqual("/tmp", directory);
         Assert.IsFalse(isExplicitOverride);
+    }
+
+    [TestMethod]
+    public void EnsureDirectoryIsWritable_WhenDirectoryMissingButCreatable_CreatesItAndDoesNotThrow()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"mtp.pipedir.{Guid.NewGuid():N}");
+        try
+        {
+            NamedPipeServer.EnsureDirectoryIsWritable(directory);
+
+            Assert.IsTrue(Directory.Exists(directory));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void EnsureDirectoryIsWritable_WhenDirectoryCannotBeCreated_ThrowsInvalidOperationException()
+    {
+        // Create a regular file, then target a directory *beneath* that file. Directory.CreateDirectory cannot
+        // create a directory under an existing file, so this deterministically fails on Windows and Unix.
+        string filePath = Path.Combine(Path.GetTempPath(), $"mtp.pipefile.{Guid.NewGuid():N}");
+        File.WriteAllText(filePath, string.Empty);
+        try
+        {
+            string invalidDirectory = Path.Combine(filePath, "sub");
+
+            Assert.ThrowsExactly<InvalidOperationException>(() => NamedPipeServer.EnsureDirectoryIsWritable(invalidDirectory));
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
     }
 
     [TestMethod]
