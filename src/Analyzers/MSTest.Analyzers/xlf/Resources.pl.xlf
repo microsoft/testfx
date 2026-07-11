@@ -563,7 +563,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">Metody oznaczone znakiem „[GlobalTestInitialize]” lub „[GlobalTestCleanup]” powinny być zgodne z następującym układem, aby były prawidłowe:
+        <target state="translated">Metody oznaczone znakiem „[GlobalTestInitialize]” lub „[GlobalTestCleanup]” powinny być zgodne z następującym układem, aby były prawidłowe:
 — nie może być zadeklarowana w class ogólnej
 — powinna być typu „public”
 — powinna mieć wartość „static”
@@ -574,10 +574,9 @@ The type declaring these methods should also respect the following rules:
 — zwracany typ powinien mieć wartość „void”, „Task” lub „ValueTask”
 
 Typ deklarujący te metody powinien również przestrzegać następujących reguł:
-— typ powinien być class
+— Typ powinien być class
 — class powinna być „publiczna”
-— class nie powinna mieć wartości „static”
-— class powinna być oznaczona „[TestClass]” (lub atrybutem pochodnym)
+— class powinna być oznaczona znakiem „[TestClass]” (lub atrybutem pochodnym)
 — class nie powinna być ogólna.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>

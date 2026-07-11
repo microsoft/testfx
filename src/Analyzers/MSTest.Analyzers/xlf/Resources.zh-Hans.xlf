@@ -563,7 +563,7 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">标记有 "[GlobalTestInitialize]" 或 "[GlobalTestCleanup]" 的方法应遵循以下布局才会有效:
+        <target state="translated">标记有 "[GlobalTestInitialize]" 或 "[GlobalTestCleanup]" 的方法应遵循以下布局才会有效:
 - 不能在泛型 class 上声明它
 - 它应为 "public"
 - 它应为 "static"
@@ -574,10 +574,9 @@ The type declaring these methods should also respect the following rules:
 - 返回类型应为 "void"、"Task" 或 "ValueTask"
 
 声明这些方法的类型还应遵循以下规则:
-- 类型应为 class
+- 类型应为class 
 - class 应该为 "public"
-- class 不应为 "static"
-- 应使用 "[TestClass]"（或派生属性）标记 class
+- 应使用 "[TestClass]" (或派生属性)标记 class
 - class 不应是泛型的。</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>

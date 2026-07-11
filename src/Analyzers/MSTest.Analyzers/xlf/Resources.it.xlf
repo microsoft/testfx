@@ -563,21 +563,20 @@ The type declaring these methods should also respect the following rules:
 -The class should be 'public'
 -The class should be marked with '[TestClass]' (or a derived attribute)
 -the class should not be generic.</source>
-        <target state="needs-review-translation">I metodi contrassegnati con ‘[GlobalTestInitialize]’ o ‘[GlobalTestCleanup]’ devono seguire il layout seguente per essere validi:
+        <target state="translated">I metodi contrassegnati con "[GlobalTestInitialize]" o "[GlobalTestCleanup]" devono seguire il layout seguente per essere validi:
 - Non può essere dichiarato in una classe generica
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere 'async void'
+- Deve essere "public"
+- Deve essere "static"
+- Non deve essere "async void"
 - Non deve essere un metodo speciale (finalizzatore, operatore...).
 - Non deve essere generico
-- Deve accettare un parametro di tipo 'TestContext'
-- Il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
+- Deve accettare un parametro di tipo "TestContext"
+- Il tipo restituito deve essere "void", "Task" o "ValueTask"
 
 Anche il tipo che dichiara questi metodi deve rispettare le regole seguenti:
 - Il tipo deve essere una classe
-- La classe deve essere 'public'
-- La classe non deve essere 'static'
-- La classe deve essere contrassegnata con '[TestClass]' (o un attributo derivato)
+- La classe deve essere "public"
+-La classe deve essere contrassegnata con "[TestClass]" (o un attributo derivato)
 - La classe non deve essere generica.</target>
         <note>{Locked="[GlobalTestInitialize]"}{Locked="[GlobalTestCleanup]"}{Locked="[TestClass]"}{Locked="TestContext"}{Locked="ValueTask"}{Locked="Task"}{Locked="public"}{Locked="static"}{Locked="void"}{Locked="async void"}{Locked="async"}{Locked="class"}</note>
       </trans-unit>
