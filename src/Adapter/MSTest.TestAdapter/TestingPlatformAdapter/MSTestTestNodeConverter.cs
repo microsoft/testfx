@@ -90,9 +90,9 @@ internal static class MSTestTestNodeConverter
         {
             Uid = new TestNodeUid(element.GetTestId().ToString()),
 
-            // TestMethod.DisplayName is always initialized (the constructor sets it to displayName ?? name), so the
-            // interpolated fallback is only evaluated (and only allocates) in the theoretically-null case.
-            DisplayName = displayNameOverride ?? testMethod.DisplayName ?? $"{testMethod.FullClassName}.{testMethod.Name}",
+            // TestMethod.DisplayName is always initialized (the constructor sets it to displayName ?? name), so
+            // displayNameOverride is the only real fallback needed here.
+            DisplayName = displayNameOverride ?? testMethod.DisplayName,
         };
 
         AddCategoriesAndTraits(testNode, element, isTrxEnabled);
@@ -198,7 +198,7 @@ internal static class MSTestTestNodeConverter
         TestMethod testMethod = element.TestMethod;
 
         // TestMethod.DisplayName is always initialized (constructor sets it to displayName ?? name).
-        testNode.Properties.Add(new TrxTestDefinitionName(testMethod.DisplayName ?? $"{testMethod.FullClassName}.{testMethod.Name}"));
+        testNode.Properties.Add(new TrxTestDefinitionName(testMethod.DisplayName));
 
         TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
         if (testMethodIdentifierProperty is not null)
@@ -216,7 +216,7 @@ internal static class MSTestTestNodeConverter
         }
         else
         {
-            throw new InvalidOperationException("Unable to parse fully qualified type name from test: " + $"{testMethod.FullClassName}.{testMethod.Name}");
+            throw new InvalidOperationException($"Unable to parse fully qualified type name from test: {testMethod.FullClassName}.{testMethod.Name}");
         }
     }
 
