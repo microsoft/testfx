@@ -8,10 +8,27 @@ internal static class DynamicDataOperations
     private const BindingFlags MemberLookup = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
     /// <summary>
-    /// The set of members that a dynamic data source type may expose. It mirrors <see cref="MemberLookup"/> (public and
-    /// non-public properties, fields, and methods) so that the trimmer preserves them on any <see cref="Type"/> annotated
-    /// with this value, keeping <see cref="DynamicDataAttribute"/> safe under trimming and NativeAOT.
+    /// The set of members that a dynamic data source type may expose, mirroring the member <em>kinds</em> reached by
+    /// <see cref="MemberLookup"/>: public and non-public properties, fields, and methods. Annotating a <see cref="Type"/>
+    /// with this value keeps those members on that type alive under trimming and NativeAOT, so <see cref="DynamicDataAttribute"/>
+    /// can resolve them by name at runtime.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Instance members are preserved as well, even though a data source must be <see langword="static"/>: the granular
+    /// <see cref="DynamicallyAccessedMemberTypes"/> flags have no static-only variant, and <see cref="MemberLookup"/>
+    /// itself includes <see cref="BindingFlags.Instance"/> so the member can be found before it is validated as static.
+    /// This over-preservation is intentional and unavoidable.
+    /// </para>
+    /// <para>
+    /// The granular flags only preserve members declared on the annotated type; they do not propagate to base types.
+    /// A data source that is an inherited (for example <see langword="protected"/> <see langword="static"/>) member
+    /// surfaced through <see cref="BindingFlags.FlattenHierarchy"/> lives on a base type and is not covered here. This is
+    /// a limitation of <see cref="DynamicallyAccessedMembersAttribute"/> (which <see cref="DynamicallyAccessedMemberTypes.All"/>
+    /// would not fix either, as it also does not annotate base types); the supported and documented scenario is a data
+    /// source declared directly on the referenced type.
+    /// </para>
+    /// </remarks>
     internal const DynamicallyAccessedMemberTypes RequiredMemberTypes =
         DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties
         | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields
@@ -184,7 +201,7 @@ internal static class DynamicDataOperations
     }
 
     [return: DynamicallyAccessedMembers(RequiredMemberTypes)]
-    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "The declaring type of the test method is always rooted by test discovery, so its members are preserved by the trimmer.")]
+    [UnconditionalSuppressMessage("Trimming", "IL2073:Value returned does not have matching annotations", Justification = "The declaring type of the test method is always rooted by test discovery (the [TestClass] attribute keeps the type and its members alive), so MethodInfo.DeclaringType and its members are preserved by the trimmer.")]
     internal static Type? GetTestMethodDeclaringType(MethodInfo methodInfo)
         => methodInfo.DeclaringType;
 }
