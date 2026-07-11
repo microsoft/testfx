@@ -6,19 +6,17 @@
 # AFTER InitializeDotNetCli has bootstrapped the repo-local .dotnet/ SDK, so
 # $repo_root and the helpers from eng/common/tools.sh are in scope.
 #
-# Currently required by samples/WasiPlayground/WasiPlayground.csproj which
-# targets net10.0 with <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>
-# and would otherwise fail with NETSDK1147 in CI.
+# Required by:
+# - samples/WasiPlayground/WasiPlayground.csproj (net10.0 with
+#   <UsingWasiRuntimeWorkload>true</UsingWasiRuntimeWorkload>) -> wasi-experimental-net10.
+# - the browser-wasm build/publish path exercised by
+#   test/IntegrationTests/.../BrowserWasmExecutionTests.cs and samples/BrowserPlayground
+#   -> wasm-tools-net10. Installing it here means CI actually exercises the browser-wasm
+#   build (and, where 'node' is present, the end-to-end run) instead of the acceptance
+#   test silently going Inconclusive on every leg.
+# Both would otherwise fail with NETSDK1147.
 
-required_workloads=('wasi-experimental-net10')
-
-# Note: `wasm-tools-net10` is documented in samples/WasiPlayground/README.md and
-# samples/BrowserPlayground/README.md as a prerequisite for `dotnet publish`
-# (and, for browser-wasm, even for `dotnet build`). It is not needed by the repo's
-# default `dotnet build` (which does not build the browser-wasm sample), so we keep
-# the CI install minimal and leave `wasm-tools-net10` as a manual/opt-in install.
-# The BrowserWasmExecutionTests acceptance test skips itself (Inconclusive) when the
-# `wasm-tools` workload or `node` is unavailable.
+required_workloads=('wasi-experimental-net10' 'wasm-tools-net10')
 
 if [[ -n "${DOTNET_INSTALL_DIR:-}" ]]; then
   dotnet_root="$DOTNET_INSTALL_DIR"

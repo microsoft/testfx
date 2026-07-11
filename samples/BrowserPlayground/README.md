@@ -13,23 +13,23 @@ only real difference is the **host**: `wasi-wasm` runs headless under `wasmtime`
 
 ## Build & run
 
-> **Not part of `TestFx.slnx`.** Unlike `WasiPlayground` (whose `wasi-experimental`
-> workload the repo bootstrap installs), `browser-wasm` needs the `wasm-tools` workload
-> even to *build*, and the bootstrap does not install it. Adding this project to the
-> solution would break the default `.\build.cmd` on every machine/CI leg without that
-> workload, so `BrowserPlayground` is intentionally excluded from the solution and built
-> on demand with the explicit `dotnet publish` below.
+> **Not part of `TestFx.slnx`.** `browser-wasm` needs the `wasm-tools` workload even to
+> *build*. The repo bootstrap installs that workload (see `eng/restore-toolset`), but
+> adding this project to the solution would still break the default `.\build.cmd` on any
+> environment where the workload is missing, so `BrowserPlayground` is intentionally
+> excluded from the solution and built on demand with the explicit `dotnet publish` below.
 
 Prerequisites:
 
 - The repo-local .NET SDK at `.dotnet\dotnet.exe`. Bootstrap it once by running
-  `.\build.cmd` (Windows) or `./build.sh` (Linux/macOS) from the repo root.
-- The `wasm-tools-net10` workload. Unlike the `wasi-experimental-net10` workload,
-  the repo bootstrap does **not** install it, and browser-wasm needs it even for
-  `dotnet build`, so install it manually:
+  `.\build.cmd` (Windows) or `./build.sh` (Linux/macOS) from the repo root. The bootstrap
+  also installs the `wasm-tools-net10` workload this sample needs (see
+  [`eng/restore-toolset.ps1`](../../eng/restore-toolset.ps1) /
+  [`eng/restore-toolset.sh`](../../eng/restore-toolset.sh)). If you use a machine-installed
+  SDK instead, install the workload manually:
 
   ```cmd
-  .\.dotnet\dotnet.exe workload install wasm-tools-net10
+  dotnet workload install wasm-tools-net10
   ```
 
 - For the headless run: [Node.js](https://nodejs.org/) on `PATH`.

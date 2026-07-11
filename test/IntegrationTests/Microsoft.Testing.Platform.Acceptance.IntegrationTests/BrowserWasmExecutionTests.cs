@@ -22,17 +22,18 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// <list type="number">
 ///   <item>
 ///     <see cref="BrowserWasmBuild_GeneratesTestingPlatformEntryPoint"/> builds for
-///     <c>browser-wasm</c> and asserts the MTP entry point is generated. It is skipped
-///     (inconclusive) when the <c>wasm-tools</c> workload is not installed — unlike the
-///     <c>wasi-experimental</c> workload, the repo bootstrap does not install <c>wasm-tools</c>
-///     (see <c>eng/restore-toolset</c>), so this only runs where the browser wasm toolchain exists.
+///     <c>browser-wasm</c> and asserts the MTP entry point is generated. The repo bootstrap
+///     installs the required <c>wasm-tools</c> workload (see <c>eng/restore-toolset</c>), so this
+///     runs in CI; it is skipped (inconclusive) only when that workload is genuinely absent (e.g.
+///     a local machine that has not run the bootstrap), and otherwise a build failure fails the test.
 ///   </item>
 ///   <item>
 ///     <see cref="BrowserWasmExecution_RunsTestsUnderNode"/> publishes a real MSTest project for
 ///     <c>browser-wasm</c> and boots it end-to-end under <c>node</c> via a small
 ///     <c>dotnet.js</c> runner, asserting the passing tests report success and the failing test is
-///     reported as failed. Skipped (inconclusive) when the <c>wasm-tools</c> workload or
-///     <c>node</c> is unavailable.
+///     reported as failed. Skipped (inconclusive) only when the <c>wasm-tools</c> workload or
+///     <c>node</c> is unavailable; otherwise publish must succeed and the run must exit with
+///     <c>AtLeastOneTestFailed</c>.
 ///   </item>
 /// </list>
 /// </summary>
@@ -124,7 +125,9 @@ public sealed class UnitTest1
 import { dotnet } from './_framework/dotnet.js';
 const { runMain } = await dotnet.withApplicationArguments(...process.argv.slice(2)).create();
 const exitCode = await runMain();
-process.exit(exitCode);
+// Set exitCode rather than calling process.exit(): process.exit() can terminate Node before
+// redirected stdout/stderr has flushed, which would truncate the MTP summary this test asserts on.
+process.exitCode = exitCode;
 """;
 
     public TestContext TestContext { get; set; } = null!;
@@ -132,6 +135,17 @@ process.exit(exitCode);
     [TestMethod]
     public async Task BrowserWasmBuild_GeneratesTestingPlatformEntryPoint()
     {
+        // Detect the toolchain up front and skip only when it is genuinely absent. Once the
+        // 'wasm-tools' workload is installed, a non-zero build must fail this test so real
+        // regressions (compiler errors, a broken generated MTP entry point) are not masked.
+        if (!await IsBrowserWasmWorkloadInstalledAsync())
+        {
+            Assert.Inconclusive(
+                "Skipping browser-wasm build: the 'wasm-tools' workload is not installed. " +
+                "Install it with 'dotnet workload install wasm-tools' to exercise this test.");
+            return;
+        }
+
         using TestAsset generator = await GenerateBrowserWasmAssetAsync();
 
         DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
@@ -139,19 +153,9 @@ process.exit(exitCode);
             // Trimming/wasm builds can emit non-actionable warnings; we only assert on the build
             // succeeding and the entry point being generated, not on a warning-clean build.
             warnAsError: false,
-            // Unlike wasi-experimental, the repo bootstrap does not install the 'wasm-tools' workload
-            // required to build browser-wasm, so a failure here means the toolchain is missing rather
-            // than a product regression — treat it as "not available" and skip below.
-            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        if (buildResult.ExitCode != 0)
-        {
-            Assert.Inconclusive(
-                "Skipping browser-wasm build: 'dotnet build -r browser-wasm' failed (the 'wasm-tools' " +
-                $"workload is likely not installed).{Environment.NewLine}{buildResult}");
-            return;
-        }
+        buildResult.AssertExitCodeIs(0);
 
         // The MTP MSBuild task writes the generated entry point into the intermediate output folder.
         // Its presence proves the browser-wasm build produced the Microsoft.Testing.Platform host
@@ -169,32 +173,35 @@ process.exit(exitCode);
     [TestMethod]
     public async Task BrowserWasmExecution_RunsTestsUnderNode()
     {
+        // Detect the toolchain up front and skip only when it is genuinely absent. With the
+        // workload and node present, publish and execution must succeed/behave as asserted, so
+        // browser-specific publish or run regressions are not silently swallowed.
+        if (!await IsBrowserWasmWorkloadInstalledAsync())
+        {
+            Assert.Inconclusive(
+                "Skipping browser-wasm execution: the 'wasm-tools' workload is not installed. " +
+                "Install it with 'dotnet workload install wasm-tools' to exercise this test.");
+            return;
+        }
+
         string? node = LocateNode();
         if (node is null)
         {
             Assert.Inconclusive(
-                "Skipping browser-wasm execution: 'node' was not found on PATH. " +
-                "Install Node.js and the 'wasm-tools' workload to exercise this test.");
+                "Skipping browser-wasm execution: 'node' was not found on PATH (nor via NODE_EXE). " +
+                "Install Node.js to exercise this test.");
             return;
         }
 
         using TestAsset generator = await GenerateBrowserWasmAssetAsync();
 
+        // The workload is present, so a publish failure is a real browser-wasm regression: require success.
         DotnetMuxerResult publishResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -f {TargetFramework} -r {BrowserRid} -c Release",
             warnAsError: false,
-            // Publishing browser-wasm requires the 'wasm-tools' workload; when it is missing dotnet
-            // fails rather than skipping, so don't blow up the run — treat it as "not available".
-            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        if (publishResult.ExitCode != 0)
-        {
-            Assert.Inconclusive(
-                "Skipping browser-wasm execution: 'dotnet publish -r browser-wasm' failed (the " +
-                $"'wasm-tools' workload is likely not installed).{Environment.NewLine}{publishResult}");
-            return;
-        }
+        publishResult.AssertExitCodeIs(0);
 
         string appBundle = Path.Combine(
             generator.TargetAssetPath, "bin", "Release", TargetFramework, BrowserRid, "AppBundle");
@@ -216,9 +223,8 @@ process.exit(exitCode);
         string error = commandLine.ErrorOutput;
         string combined = $"STDOUT:{Environment.NewLine}{output}{Environment.NewLine}STDERR:{Environment.NewLine}{error}";
 
-        // The asset has one failing test, so a non-zero exit code is expected — but it must be the
-        // clean "tests failed" exit, not a crash. A PlatformNotSupportedException (the single-threaded
-        // blocking-wait failure mode) would indicate a regression in the wasm fallbacks.
+        // A PlatformNotSupportedException (the single-threaded blocking-wait failure mode) would
+        // indicate a regression in the wasm fallbacks.
         Assert.IsFalse(
             error.Contains("PlatformNotSupportedException", StringComparison.Ordinal)
                 || output.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
@@ -233,11 +239,13 @@ process.exit(exitCode);
             output.Contains("failed: 1", StringComparison.Ordinal),
             $"Expected 1 failed test in the browser-wasm run summary.{Environment.NewLine}{combined}");
 
-        // MTP returns a non-zero exit code when any test fails.
-        Assert.AreNotEqual(
-            0,
+        // Assert the exact "at least one test failed" exit code (2). A generic non-zero check would
+        // also pass for a post-run crash or other MTP failure; requiring AtLeastOneTestFailed keeps
+        // those from masquerading as the expected failing-test outcome.
+        Assert.AreEqual(
+            (int)ExitCode.AtLeastOneTestFailed,
             exitCode,
-            $"Expected a non-zero exit code because one test fails.{Environment.NewLine}{combined}");
+            $"Expected exit code {(int)ExitCode.AtLeastOneTestFailed} (AtLeastOneTestFailed) because one test fails.{Environment.NewLine}{combined}");
     }
 
     private Task<TestAsset> GenerateBrowserWasmAssetAsync()
@@ -247,6 +255,24 @@ process.exit(exitCode);
                 .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
                 .PatchCodeWithReplace("$BrowserRid$", BrowserRid)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+    // Detects whether the 'wasm-tools' workload (which provides the browser-wasm build/publish
+    // toolchain) is installed for the SDK under test, by parsing 'dotnet workload list'. This lets
+    // the tests skip only when the toolchain is genuinely absent instead of swallowing every build
+    // failure as "workload missing".
+    private async Task<bool> IsBrowserWasmWorkloadInstalledAsync()
+    {
+        DotnetMuxerResult result = await DotnetCli.RunAsync(
+            "workload list",
+            warnAsError: false,
+            // 'workload list' returns non-zero in some environments; we only parse its output.
+            failIfReturnValueIsNotZero: false,
+            cancellationToken: TestContext.CancellationToken);
+
+        // The installed workload id is 'wasm-tools' (the SDK may print a versioned manifest such as
+        // 'wasm-tools-net10', so match the stem case-insensitively).
+        return result.StandardOutput.Contains("wasm-tools", StringComparison.OrdinalIgnoreCase);
+    }
 
     private static string? LocateNode()
     {

@@ -19,6 +19,11 @@ const { runMain } = await dotnet
     .withApplicationArguments(...process.argv.slice(2))
     .create();
 
-// runMain() invokes the (MTP-generated) Program.Main and resolves to its exit code.
+// runtests.mjs boots the same bundle under Node and resolves to the (MTP-generated) Program.Main
+// exit code.
 const exitCode = await runMain();
-process.exit(exitCode);
+
+// Set exitCode rather than calling process.exit(): process.exit() can terminate Node before
+// redirected stdout/stderr has flushed (which would truncate the MTP output this runner promises
+// to surface). Setting exitCode lets Node drain its streams and exit with the .NET result.
+process.exitCode = exitCode;
