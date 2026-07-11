@@ -19,8 +19,8 @@ const { runMain } = await dotnet
     .withApplicationArguments(...process.argv.slice(2))
     .create();
 
-// runtests.mjs boots the same bundle under Node and resolves to the (MTP-generated) Program.Main
-// exit code.
+// runMain() boots the same bundle under Node and resolves to the exit code of the sample's
+// Program.Main (defined by the top-level statements in Program.cs).
 const exitCode = await runMain();
 
 // Set exitCode rather than calling process.exit(): process.exit() can terminate Node before

@@ -11,7 +11,8 @@ This is the browser counterpart to the `wasi-wasm` acceptance coverage in
 that possible is shared (see [#2196](https://github.com/microsoft/testfx/issues/2196)). The
 only real difference is the **host**: `wasi-wasm` runs headless under `wasmtime`, whereas
 `browser-wasm` boots through a small JavaScript module (`wwwroot/main.js`) that loads
-`dotnet.js` and invokes the generated `Program.Main`.
+`dotnet.js` and invokes the sample's `Program.Main` (defined by the top-level statements
+in `Program.cs`).
 
 ## Build & run
 

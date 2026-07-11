@@ -3,7 +3,8 @@
 
 // Browser boot module. The WebAssembly runtime loads this file first (it is the
 // project's WasmMainJSPath). It creates the .NET runtime through dotnet.js and runs the
-// (MTP-generated) Program.Main, which boots Microsoft.Testing.Platform.
+// sample's Program.Main (defined by the top-level statements in Program.cs), which boots
+// Microsoft.Testing.Platform.
 import { dotnet } from './_framework/dotnet.js';
 
 const { runMain } = await dotnet

@@ -12,8 +12,8 @@
 
     <!--
       The JS boot module that the WebAssembly runtime loads first. It creates the
-      .NET runtime via dotnet.js and invokes the (MTP-generated) Program.Main.
-      See wwwroot/main.js.
+      .NET runtime via dotnet.js and invokes the sample's Program.Main (defined by the
+      top-level statements in Program.cs). See wwwroot/main.js.
     -->
     <WasmMainJSPath>wwwroot\main.js</WasmMainJSPath>
 
@@ -23,12 +23,12 @@
 
     <Nullable>enable</Nullable>
     <!--
-      IsTestingPlatformApplication is intentionally NOT set when running under
-      'dotnet test' (CI's Debug Test step on TestFx.slnx passes -p:UsingDotNetTest=true).
-      The browser-wasm output can only be launched through a JS host (a browser or
-      node importing dotnet.js), which is not wired into 'dotnet test'. Keeping the
-      property true during a normal build ensures the MTP entry point is still
-      generated and baked into the wasm bundle.
+      Marks this as a Microsoft.Testing.Platform application. It is intentionally NOT set
+      when running under 'dotnet test' (CI's Debug Test step on TestFx.slnx passes
+      -p:UsingDotNetTest=true): the browser-wasm output can only be launched through a JS
+      host (a browser or node importing dotnet.js), which is not wired into 'dotnet test'.
+      The entry point is this sample's own Program.cs (top-level statements), not an
+      MTP-generated one.
     -->
     <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
   </PropertyGroup>
