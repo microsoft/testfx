@@ -7,6 +7,8 @@ namespace Microsoft.Testing.Platform.MSBuild;
 
 internal static class StackTraceHelper
 {
+    private static readonly string[] NewLineSeparator = [Environment.NewLine];
+
     private static Regex? s_regex;
 
     internal static bool TryFindLocationFromStackFrame(string? errorStackTrace, [NotNullWhen(true)] out string? file, out int lineNumber, out string? place)
@@ -20,7 +22,7 @@ internal static class StackTraceHelper
             return false;
         }
 
-        string[] stackFrames = errorStackTrace.Split([Environment.NewLine], StringSplitOptions.None);
+        string[] stackFrames = errorStackTrace.Split(NewLineSeparator, StringSplitOptions.None);
         if (stackFrames.Length == 0)
         {
             return false;
