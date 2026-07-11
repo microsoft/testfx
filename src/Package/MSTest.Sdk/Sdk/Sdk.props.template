@@ -51,7 +51,12 @@
     <MicrosoftTestingExtensionsJUnitReportVersion Condition=" '$(MicrosoftTestingExtensionsJUnitReportVersion)' == '' " >${MicrosoftTestingExtensionsJUnitReportVersion}</MicrosoftTestingExtensionsJUnitReportVersion>
     <MicrosoftTestingExtensionsOpenTelemetryVersion Condition=" '$(MicrosoftTestingExtensionsOpenTelemetryVersion)' == '' " >${MicrosoftTestingExtensionsOpenTelemetryVersion}</MicrosoftTestingExtensionsOpenTelemetryVersion>
     <MicrosoftTestingPlatformVersion Condition=" '$(MicrosoftTestingPlatformVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingPlatformVersion>
-    <MSTestSourceGenerationVersion Condition=" '$(MSTestSourceGenerationVersion)' == '' ">${MSTestSourceGenerationVersion}</MSTestSourceGenerationVersion>
+    <!--
+      MSTest.Engine and MSTest.SourceGeneration are no longer built from this repo. Pin to the last
+      co-published preview so NativeAOT/source-gen projects resolve a real package on all build kinds
+      (a computed version would produce an unpublished -dev/-ci suffix). Overridable by the consumer.
+    -->
+    <MSTestEngineVersion Condition=" '$(MSTestEngineVersion)' == '' ">2.0.0-alpha.26264.3</MSTestEngineVersion>
     <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
   </PropertyGroup>
 
