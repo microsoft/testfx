@@ -1,1 +1,3 @@
 #nullable enable
+const Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.RequiredMemberTypes = (System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes)-1 -> System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes
+static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.GetTestMethodDeclaringType(System.Reflection.MethodInfo! methodInfo) -> System.Type?
