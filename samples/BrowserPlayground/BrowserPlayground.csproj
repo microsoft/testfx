@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFramework>net10.0</TargetFramework>
     <RuntimeIdentifier>browser-wasm</RuntimeIdentifier>
     <!--
       Publishing browser-wasm must be self-contained so the mono browser-wasm runtime

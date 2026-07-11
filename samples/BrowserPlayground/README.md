@@ -21,40 +21,44 @@ only real difference is the **host**: `wasi-wasm` runs headless under `wasmtime`
 
 Prerequisites:
 
-- The repo-local .NET SDK at `.dotnet\dotnet.exe`. Bootstrap it once by running
-  `.\build.cmd` (Windows) or `./build.sh` (Linux/macOS) from the repo root. The bootstrap
-  also installs the `wasm-tools-net10` workload this sample needs (see
+- The repo-local .NET SDK (`.dotnet\dotnet.exe` on Windows, `.dotnet/dotnet` on
+  Linux/macOS). Bootstrap it once by running `.\build.cmd` (Windows) or `./build.sh`
+  (Linux/macOS) from the repo root. The bootstrap also installs the `wasm-tools-net10`
+  workload this sample needs (see
   [`eng/restore-toolset.ps1`](../../eng/restore-toolset.ps1) /
   [`eng/restore-toolset.sh`](../../eng/restore-toolset.sh)). If you use a machine-installed
   SDK instead, install the workload manually:
 
-  ```cmd
+  ```
   dotnet workload install wasm-tools-net10
   ```
 
 - For the headless run: [Node.js](https://nodejs.org/) on `PATH`.
-  For the browser run: any static web server (e.g. `dotnet serve`) and a browser.
+  For the browser run: any static web server (see step 2b).
 
-> The commands below use `.\.dotnet\dotnet.exe` so the `.dotnet\packs` lookup resolves.
-> Swap in a machine-installed `dotnet` if you prefer.
+> The commands below use the repo-local SDK so the `.dotnet/packs` lookup resolves — that
+> is `.\.dotnet\dotnet.exe` on Windows and `./.dotnet/dotnet` on Linux/macOS (shown as
+> `dotnet` below for brevity). Swap in a machine-installed `dotnet` if you prefer. Windows
+> examples use `\` path separators; on Linux/macOS use `/` (e.g.
+> `artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle`).
 
 ### 1. Publish
 
-```cmd
-.\.dotnet\dotnet.exe publish samples\BrowserPlayground\BrowserPlayground.csproj -c Debug -f net10.0
+```
+dotnet publish samples/BrowserPlayground/BrowserPlayground.csproj -c Debug -f net10.0
 ```
 
 The published app bundle lands under
-`artifacts\bin\BrowserPlayground\Debug\net10.0\browser-wasm\AppBundle` and contains
-`_framework\dotnet.js`, the managed assemblies, `index.html`, `main.js`, and
+`artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle` and contains
+`_framework/dotnet.js`, the managed assemblies, `index.html`, `main.js`, and
 `runtests.mjs`.
 
 ### 2a. Run headlessly under Node
 
 From the bundle directory:
 
-```cmd
-cd artifacts\bin\BrowserPlayground\Debug\net10.0\browser-wasm\AppBundle
+```
+cd artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle
 node runtests.mjs
 ```
 
@@ -64,15 +68,22 @@ process exit code. This is the mode the `BrowserWasmExecutionTests` acceptance t
 
 ### 2b. Run in a browser
 
-Serve the bundle over HTTP (WebAssembly cannot be loaded from `file://`) and open it:
+Serve the bundle over HTTP (WebAssembly cannot be loaded from `file://`) and open it. Any
+static file server works; two options that need no extra provisioning:
 
-```cmd
-cd artifacts\bin\BrowserPlayground\Debug\net10.0\browser-wasm\AppBundle
-dotnet serve -o
+```
+cd artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle
+
+# Using Node (installed for step 2a):
+npx --yes http-server -o
+
+# ...or using Python 3:
+python3 -m http.server 8080
 ```
 
-The test run output appears in the browser's developer-tools **Console**. Pass
-Microsoft.Testing.Platform options through the page query string, e.g.
+Then browse to the served URL (`http-server` opens it automatically; for the Python server
+open <http://localhost:8080/>). The test run output appears in the browser's developer-tools
+**Console**. Pass Microsoft.Testing.Platform options through the page query string, e.g.
 `index.html?arg=--minimum-expected-tests&arg=1`.
 
 ## Status
