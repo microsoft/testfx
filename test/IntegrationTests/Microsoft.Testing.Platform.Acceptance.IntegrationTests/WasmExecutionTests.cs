@@ -150,6 +150,18 @@ internal sealed class DummyFramework : ITestFramework, IDataProducer
         // A clean build proves the Microsoft.Testing.Platform package restores and compiles against
         // wasi-wasm — the plumbing that browser-wasm/wasi-wasm execution ultimately relies on.
         buildResult.AssertExitCodeIs(0);
+
+        // Also assert the compiled output assembly exists to guard against a silent no-op build (the
+        // wasm bundle / dotnet.wasm itself is only produced on publish, exercised by
+        // RawPlatform_RunsUnderWasmtime). This mirrors the artifact check the MSTest counterpart
+        // performs on its generated entry point.
+        string[] outputAssemblies = Directory.GetFiles(
+            Path.Combine(generator.TargetAssetPath, "bin"),
+            "WasmPlatformProject.dll",
+            SearchOption.AllDirectories);
+        Assert.IsNotEmpty(
+            outputAssemblies,
+            $"Expected a compiled 'WasmPlatformProject.dll' under '{Path.Combine(generator.TargetAssetPath, "bin")}'.");
     }
 
     [TestMethod]
