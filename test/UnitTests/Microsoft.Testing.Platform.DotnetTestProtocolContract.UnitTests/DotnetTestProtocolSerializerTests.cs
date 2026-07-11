@@ -117,7 +117,7 @@ public sealed class DotnetTestProtocolSerializerTests
     public void TestResultMessages_RoundTrips()
     {
         var success = new SuccessfulTestResultMessage("uid", "displayName", TestStates.Passed, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
-        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
+        var fail = new FailedTestResultMessage("uid2", "displayName2", TestStates.Failed, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid", "expectedValue", "actualValue");
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         TestResultMessages actual = RoundTrip(new TestResultMessagesSerializer(), message);
@@ -126,6 +126,23 @@ public sealed class DotnetTestProtocolSerializerTests
         Assert.AreEqual(message.InstanceId, actual.InstanceId);
         Assert.AreEqual("uid", actual.SuccessfulTestMessages[0].Uid);
         Assert.AreEqual("errorMessage", actual.FailedTestMessages[0].Exceptions?[0].ErrorMessage);
+        Assert.AreEqual("expectedValue", actual.FailedTestMessages[0].Expected);
+        Assert.AreEqual("actualValue", actual.FailedTestMessages[0].Actual);
+    }
+
+    [TestMethod]
+    public void FailedTestResultMessageFieldIds_Expected_And_Actual_AreStable()
+    {
+        // These are externally shared wire ids: the SDK decodes them with its own vendored copy of the same
+        // numbers, so renumbering either one would silently break cross-process decoding without failing the
+        // round-trip tests (which use the same constant on both writer and reader). Pin the literals here.
+        // The declared values are read via reflection (a runtime read, not a compile-time constant) so that
+        // renumbering the constant is actually caught rather than folded away by the compiler.
+        Assert.AreEqual((ushort)10, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Expected)));
+        Assert.AreEqual((ushort)11, GetConstantValue(nameof(FailedTestResultMessageFieldsId.Actual)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(FailedTestResultMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
     }
 
     [TestMethod]

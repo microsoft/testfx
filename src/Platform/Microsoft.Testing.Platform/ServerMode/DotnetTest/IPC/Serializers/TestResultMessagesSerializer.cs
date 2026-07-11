@@ -101,6 +101,14 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
       |---FailedTestMessageList[0].SessionUid Id---| (2 bytes)
       |---FailedTestMessageList[0].SessionUid Size---| (4 bytes)
       |---FailedTestMessageList[0].SessionUid Value---| (n bytes)
+
+      |---FailedTestMessageList[0].Expected Id---| (2 bytes)
+      |---FailedTestMessageList[0].Expected Size---| (4 bytes)
+      |---FailedTestMessageList[0].Expected Value---| (n bytes)
+
+      |---FailedTestMessageList[0].Actual Id---| (2 bytes)
+      |---FailedTestMessageList[0].Actual Size---| (4 bytes)
+      |---FailedTestMessageList[0].Actual Value---| (n bytes)
   */
 
 internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestResultMessages>, INamedPipeSerializer
@@ -175,12 +183,25 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             CommonTestResultFields fields = default;
             ExceptionMessage[] exceptionMessages = [];
 
+            // Expected/Actual are specific to failed results (they carry the assertion diff) and are not part
+            // of the shared CommonTestResultFields, so they are read alongside the exception list.
+            string? expected = null, actual = null;
+
             ReadFields(stream, (fieldId, fieldSize) =>
             {
-                if (fieldId == FailedTestResultMessageFieldsId.ExceptionMessageList)
+                switch (fieldId)
                 {
-                    exceptionMessages = ReadExceptionMessagesPayload(stream);
-                    return true;
+                    case FailedTestResultMessageFieldsId.ExceptionMessageList:
+                        exceptionMessages = ReadExceptionMessagesPayload(stream);
+                        return true;
+
+                    case FailedTestResultMessageFieldsId.Expected:
+                        expected = ReadStringValue(stream, fieldSize);
+                        return true;
+
+                    case FailedTestResultMessageFieldsId.Actual:
+                        actual = ReadStringValue(stream, fieldSize);
+                        return true;
                 }
 
                 return TryReadCommonTestResultField(
@@ -193,7 +214,7 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
                     FailedTestResultMessageFieldsId.SessionUid);
             });
 
-            failedTestResultMessages[i] = new FailedTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, exceptionMessages, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid);
+            failedTestResultMessages[i] = new FailedTestResultMessage(fields.Uid, fields.DisplayName, fields.State, fields.Duration, fields.Reason, exceptionMessages, fields.StandardOutput, fields.ErrorOutput, fields.SessionUid, expected, actual);
         }
 
         return failedTestResultMessages;
@@ -321,6 +342,8 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
             WriteField(s, FailedTestResultMessageFieldsId.StandardOutput, failedTestResultMessage.StandardOutput);
             WriteField(s, FailedTestResultMessageFieldsId.ErrorOutput, failedTestResultMessage.ErrorOutput);
             WriteField(s, FailedTestResultMessageFieldsId.SessionUid, failedTestResultMessage.SessionUid);
+            WriteField(s, FailedTestResultMessageFieldsId.Expected, failedTestResultMessage.Expected);
+            WriteField(s, FailedTestResultMessageFieldsId.Actual, failedTestResultMessage.Actual);
         });
 
     // The Uid, DisplayName, State, Duration and Reason field ids are identical for successful and failed test
@@ -363,7 +386,9 @@ internal sealed class TestResultMessagesSerializer : NamedPipeSerializer<TestRes
         (IsNullOrEmpty(failedTestResultMessage.Exceptions) ? 0 : 1) +
         (failedTestResultMessage.StandardOutput is null ? 0 : 1) +
         (failedTestResultMessage.ErrorOutput is null ? 0 : 1) +
-        (failedTestResultMessage.SessionUid is null ? 0 : 1));
+        (failedTestResultMessage.SessionUid is null ? 0 : 1) +
+        (failedTestResultMessage.Expected is null ? 0 : 1) +
+        (failedTestResultMessage.Actual is null ? 0 : 1));
 
     private static ushort GetFieldCount(ExceptionMessage exceptionMessage) =>
         (ushort)((exceptionMessage.ErrorMessage is null ? 0 : 1) +
