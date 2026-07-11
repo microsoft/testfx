@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.TestInfrastructure;
@@ -62,7 +62,9 @@ public static class WasmRuntime
     /// <summary>
     /// Publishes the asset at <paramref name="targetAssetPath"/> for <c>wasi-wasm</c>. Failures are
     /// not treated as errors (a missing <c>wasm-tools</c> workload makes <c>dotnet publish</c> fail
-    /// rather than skip), so the caller can inspect the exit code and mark the test inconclusive.
+    /// rather than skip), so the caller can inspect the exit code — and
+    /// <see cref="IsMissingWasmToolsWorkload"/> — to decide between an inconclusive skip and a real
+    /// failure.
     /// </summary>
     public static Task<DotnetMuxerResult> PublishForWasiAsync(string targetAssetPath, string targetFramework, CancellationToken cancellationToken)
         => DotnetCli.RunAsync(
@@ -70,6 +72,28 @@ public static class WasmRuntime
             warnAsError: false,
             failIfReturnValueIsNotZero: false,
             cancellationToken: cancellationToken);
+
+    /// <summary>
+    /// Determines whether a failed <c>dotnet publish -r wasi-wasm</c> result is the expected
+    /// "the 'wasm-tools' workload is not installed" diagnostic (NETSDK1147, which names the missing
+    /// <c>wasm-tools</c> workload) rather than a genuine build regression. Callers should treat only
+    /// this signature as an inconclusive skip and fail the test on any other publish error, so real
+    /// regressions are not silently hidden as skips.
+    /// </summary>
+    public static bool IsMissingWasmToolsWorkload(DotnetMuxerResult publishResult)
+    {
+        if (publishResult.ExitCode == 0)
+        {
+            return false;
+        }
+
+        string combined = publishResult.StandardOutput + Environment.NewLine + publishResult.StandardError;
+
+        // NETSDK1147 is the "following workloads must be installed" error; 'wasm-tools' is the workload
+        // it names when the publish toolchain is missing.
+        return combined.Contains("NETSDK1147", StringComparison.Ordinal)
+            && combined.Contains("wasm-tools", StringComparison.OrdinalIgnoreCase);
+    }
 
     /// <summary>
     /// Gets the path to the <c>AppBundle</c> directory produced by a <c>wasi-wasm</c> Release publish.

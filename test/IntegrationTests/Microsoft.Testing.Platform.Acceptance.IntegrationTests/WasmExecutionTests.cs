@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -155,22 +155,20 @@ internal sealed class DummyFramework : ITestFramework, IDataProducer
     [TestMethod]
     public async Task RawPlatform_RunsUnderWasmtime()
     {
-        string? wasmtime = WasmRuntime.LocateWasmtime();
-        if (wasmtime is null)
-        {
-            Assert.Inconclusive(WasmRuntime.WasmtimeUnavailableMessage);
-            return;
-        }
-
         using TestAsset generator = await GenerateAssetAsync();
 
+        // Publish first so the publish path is exercised in CI (where the 'wasm-tools' workload is
+        // installed but 'wasmtime' is not). Only a missing 'wasm-tools' workload is an acceptable
+        // skip; any other publish failure is a real regression and must fail the test.
         DotnetMuxerResult publishResult = await WasmRuntime.PublishForWasiAsync(
             generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
         if (publishResult.ExitCode != 0)
         {
+            Assert.IsTrue(
+                WasmRuntime.IsMissingWasmToolsWorkload(publishResult),
+                $"'dotnet publish -r wasi-wasm' failed for an unexpected reason (not a missing 'wasm-tools' workload).{Environment.NewLine}{publishResult}");
             Assert.Inconclusive(
-                "Skipping wasm execution: 'dotnet publish -r wasi-wasm' failed (the 'wasm-tools' " +
-                $"workload is likely not installed).{Environment.NewLine}{publishResult}");
+                $"Skipping wasm execution: the 'wasm-tools' workload is not installed.{Environment.NewLine}{publishResult}");
             return;
         }
 
@@ -180,14 +178,23 @@ internal sealed class DummyFramework : ITestFramework, IDataProducer
             $"Expected the wasi AppBundle directory at '{appBundle}'.");
         WasmRuntime.StageIcuData(appBundle);
 
-        (int exitCode, _, string error, string combined) =
+        // Publishing is covered above; only the runtime invocation is gated on 'wasmtime'.
+        string? wasmtime = WasmRuntime.LocateWasmtime();
+        if (wasmtime is null)
+        {
+            Assert.Inconclusive(WasmRuntime.WasmtimeUnavailableMessage);
+            return;
+        }
+
+        (int exitCode, _, _, string combined) =
             await WasmRuntime.RunUnderWasmtimeAsync(wasmtime, appBundle, "WasmPlatformProject", TestContext.CancellationToken);
 
         // No test fails, so the platform must exit cleanly. A PlatformNotSupportedException (the
         // single-threaded blocking-wait failure mode) would indicate a regression in the wasm
-        // fallbacks.
+        // fallbacks. Check the combined STDOUT+STDERR so we catch it regardless of the stream it
+        // surfaces on.
         Assert.IsFalse(
-            error.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
+            combined.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
             $"Microsoft.Testing.Platform hit an unexpected PlatformNotSupportedException under wasi-wasm.{Environment.NewLine}{combined}");
 
         // The DummyFramework publishes a single passing test.

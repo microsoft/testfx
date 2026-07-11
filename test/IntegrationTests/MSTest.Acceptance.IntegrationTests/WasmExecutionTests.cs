@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -47,7 +47,7 @@ public sealed class WasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
     private static readonly string TargetFramework = TargetFrameworks.NetCurrent;
 
     // Minimal MSTest project targeting wasi-wasm, running on Microsoft.Testing.Platform via the
-    // generated entry point (no user-authored Main). One passing and one failing test so the run
+    // generated entry point (no user-authored Main). Two passing and one failing test so the run
     // exercises both the success summary and the non-zero exit code on failure.
     private const string SourceCode = """
 #file WasmTestProject.csproj
@@ -149,22 +149,20 @@ public sealed class UnitTest1
     [TestMethod]
     public async Task WasmExecution_RunsTestsUnderWasmtime()
     {
-        string? wasmtime = WasmRuntime.LocateWasmtime();
-        if (wasmtime is null)
-        {
-            Assert.Inconclusive(WasmRuntime.WasmtimeUnavailableMessage);
-            return;
-        }
-
         using TestAsset generator = await GenerateAssetAsync();
 
+        // Publish first so the publish path is exercised in CI (where the 'wasm-tools' workload is
+        // installed but 'wasmtime' is not). Only a missing 'wasm-tools' workload is an acceptable
+        // skip; any other publish failure is a real regression and must fail the test.
         DotnetMuxerResult publishResult = await WasmRuntime.PublishForWasiAsync(
             generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
         if (publishResult.ExitCode != 0)
         {
+            Assert.IsTrue(
+                WasmRuntime.IsMissingWasmToolsWorkload(publishResult),
+                $"'dotnet publish -r wasi-wasm' failed for an unexpected reason (not a missing 'wasm-tools' workload).{Environment.NewLine}{publishResult}");
             Assert.Inconclusive(
-                "Skipping wasm execution: 'dotnet publish -r wasi-wasm' failed (the 'wasm-tools' " +
-                $"workload is likely not installed).{Environment.NewLine}{publishResult}");
+                $"Skipping wasm execution: the 'wasm-tools' workload is not installed.{Environment.NewLine}{publishResult}");
             return;
         }
 
@@ -174,23 +172,32 @@ public sealed class UnitTest1
             $"Expected the wasi AppBundle directory at '{appBundle}'.");
         WasmRuntime.StageIcuData(appBundle);
 
-        (int exitCode, string output, string error, string combined) =
+        // Publishing is covered above; only the runtime invocation is gated on 'wasmtime'.
+        string? wasmtime = WasmRuntime.LocateWasmtime();
+        if (wasmtime is null)
+        {
+            Assert.Inconclusive(WasmRuntime.WasmtimeUnavailableMessage);
+            return;
+        }
+
+        (int exitCode, _, _, string combined) =
             await WasmRuntime.RunUnderWasmtimeAsync(wasmtime, appBundle, "WasmTestProject", TestContext.CancellationToken);
 
         // The asset has one failing test, so a non-zero exit code is expected — but it must be the
         // clean "tests failed" exit, not a crash. A PlatformNotSupportedException (the single-threaded
-        // blocking-wait failure mode) would indicate a regression in the wasm fallbacks.
+        // blocking-wait failure mode) would indicate a regression in the wasm fallbacks. Check the
+        // combined STDOUT+STDERR so we catch it regardless of the stream it surfaces on.
         Assert.IsFalse(
-            error.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
+            combined.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
             $"Microsoft.Testing.Platform hit an unexpected PlatformNotSupportedException under wasi-wasm.{Environment.NewLine}{combined}");
 
         // The run summary proves tests actually executed: the two passing tests succeeded and the
         // intentional failure was reported.
         Assert.IsTrue(
-            output.Contains("succeeded: 2", StringComparison.Ordinal),
+            combined.Contains("succeeded: 2", StringComparison.Ordinal),
             $"Expected 2 succeeded tests in the wasm run summary.{Environment.NewLine}{combined}");
         Assert.IsTrue(
-            output.Contains("failed: 1", StringComparison.Ordinal),
+            combined.Contains("failed: 1", StringComparison.Ordinal),
             $"Expected 1 failed test in the wasm run summary.{Environment.NewLine}{combined}");
 
         // MTP returns a non-zero exit code when any test fails.
