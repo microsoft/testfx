@@ -4,9 +4,11 @@ Demonstrates hosting [Microsoft.Testing.Platform](https://aka.ms/testingplatform
 `browser-wasm` — the WebAssembly runtime that runs inside a browser (and, headlessly,
 under [Node.js](https://nodejs.org/) via the same `dotnet.js` loader).
 
-This is the browser counterpart to [`samples/WasiPlayground`](../WasiPlayground/README.md).
-Both run on a single-threaded WebAssembly runtime; the platform work that makes that
-possible is shared (see [#2196](https://github.com/microsoft/testfx/issues/2196)). The
+This is the browser counterpart to the `wasi-wasm` acceptance coverage in
+[`WasmExecutionTests.cs`](../../test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/WasmExecutionTests.cs)
+(and its MSTest sibling under `MSTest.Acceptance.IntegrationTests`). Both `wasi-wasm` and
+`browser-wasm` run on a single-threaded WebAssembly runtime; the platform work that makes
+that possible is shared (see [#2196](https://github.com/microsoft/testfx/issues/2196)). The
 only real difference is the **host**: `wasi-wasm` runs headless under `wasmtime`, whereas
 `browser-wasm` boots through a small JavaScript module (`wwwroot/main.js`) that loads
 `dotnet.js` and invokes the generated `Program.Main`.
@@ -14,10 +16,12 @@ only real difference is the **host**: `wasi-wasm` runs headless under `wasmtime`
 ## Build & run
 
 > **Not part of `TestFx.slnx`.** `browser-wasm` needs the `wasm-tools` workload even to
-> *build*. The repo bootstrap installs that workload (see `eng/restore-toolset`), but
-> adding this project to the solution would still break the default `.\build.cmd` on any
-> environment where the workload is missing, so `BrowserPlayground` is intentionally
-> excluded from the solution and built on demand with the explicit `dotnet publish` below.
+> *build*. The repo bootstrap (`.\build.cmd` / `./build.sh`) installs that workload via
+> `eng/restore-toolset`, so a bootstrapped build already has it. It is kept out of the
+> solution to protect **builds that bypass the bootstrap** — most notably opening
+> `TestFx.slnx` in an IDE on a fresh clone, or any environment where the workload has not
+> been installed — from failing the whole solution build. So `BrowserPlayground` is built
+> on demand with the explicit `dotnet publish` below rather than as part of the solution.
 
 Prerequisites:
 
@@ -144,6 +148,6 @@ That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsT
 | --- | --- |
 | `SelfContained=true` | Publishing browser-wasm must be self-contained so the `Microsoft.NETCore.App.Runtime.Mono.browser-wasm` runtime pack is resolved. Targeting `net10.0` under an `11.0` SDK does not infer this on its own, so publish fails with an empty `MicrosoftNetCoreAppRuntimePackDir` without it. |
 | `WasmBuildNative=false` | Use the pre-built `dotnet.native.wasm`. A native relink needs the emscripten toolchain (pulled in by the `wasm-tools` workload) and is slower; the pre-built runtime is enough to boot MTP. |
-| (no `InvariantGlobalization`) | On browser-wasm, `InvariantGlobalization=true` forces `WasmBuildNative=true` (an emscripten relink), so it is intentionally left unset — the browser bundle ships ICU (`icudt*.dat`) by default. This differs from `WasiPlayground`, which keeps `InvariantGlobalization=true` and stages `icudt.dat` manually. |
+| (no `InvariantGlobalization`) | On browser-wasm, `InvariantGlobalization=true` forces `WasmBuildNative=true` (an emscripten relink), so it is intentionally left unset — the browser bundle ships ICU (`icudt*.dat`) by default. This differs from the `wasi-wasm` acceptance asset (`WasmExecutionTests.cs`), which keeps `InvariantGlobalization=true` and stages `icudt.dat` manually via `WasmRuntime.StageIcuData`. |
 | `WasmExtraFilesToDeploy` | Copies the node runner (`runtests.mjs`) and `index.html` into the published `AppBundle` next to `main.js` (the `WasmMainJSPath` module). Plain `CopyToOutputDirectory` would only reach the build output folder, not the `AppBundle`. |
 
