@@ -216,7 +216,7 @@ internal static class MSTestTestNodeConverter
         }
         else
         {
-            throw new InvalidOperationException($"Unable to parse fully qualified type name from test: {testMethod.FullClassName}.{testMethod.Name}");
+            throw new InvalidOperationException($"The test method '{testMethod.Name}' does not have a fully qualified class name.");
         }
     }
 
