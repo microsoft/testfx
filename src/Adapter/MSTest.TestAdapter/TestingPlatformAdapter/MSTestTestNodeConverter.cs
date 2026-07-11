@@ -47,11 +47,7 @@ internal static class MSTestTestNodeConverter
     /// </summary>
     public static TestNode ToInProgressTestNode(UnitTestElement element, bool isTrxEnabled)
     {
-        // Skip AddTestMethodIdentifier: in-progress nodes are "test started" signals and no consumer reads
-        // TestMethodIdentifierProperty from them (IDEs and reporters already hold the full identity from the
-        // discovery node). Skipping the parse avoids a ManagedNameParser.ParseManagedMethodName call and the
-        // associated TestMethodIdentifierProperty / string[] allocation for every started test.
-        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null, addMethodIdentifier: false);
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         return testNode;
     }
@@ -86,7 +82,7 @@ internal static class MSTestTestNodeConverter
         return testNode;
     }
 
-    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride, bool addMethodIdentifier = true)
+    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride)
     {
         TestMethod testMethod = element.TestMethod;
 
@@ -107,10 +103,7 @@ internal static class MSTestTestNodeConverter
             testNode.Properties.Add(new TestFileLocationProperty(element.DeclaringFilePath, new(position, position)));
         }
 
-        if (addMethodIdentifier)
-        {
-            AddTestMethodIdentifier(testNode, testMethod);
-        }
+        AddTestMethodIdentifier(testNode, testMethod);
 
         return testNode;
     }
