@@ -141,6 +141,36 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
+        // Scenario3: lifecycle overhead — same test count as Scenario1 (100 × 100 = 10 000) but
+        // each test class has [TestInitialize] and [TestCleanup] methods.  Running Scenario1 and
+        // Scenario3 back-to-back on the same machine quantifies the per-test cost of the MSTest
+        // lifecycle machinery (instance construction, initialize/cleanup invocation, disposal).
+        pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new PlainProcess("Scenario3_Lifecycle_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        // Class-level parallelism variant of the lifecycle scenario.
+        pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new PlainProcess("Scenario3_Lifecycle_ClassLevel_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        // dotnet-test path for the lifecycle scenario.
+        pipelineRunner.AddPipeline("Default", "Scenario3_Lifecycle_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario3(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetTestProcess("Scenario3_Lifecycle_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
         return pipelineRunner.Run(pipelineNameFilter);
     }
 }
