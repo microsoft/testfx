@@ -111,6 +111,69 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
+    public void Merge_DeduplicatesTestDefinitionsById()
+    {
+        // The same test discovered in two inputs yields the same deterministic UnitTest id; the
+        // merged report must not emit duplicate <UnitTest id="...">.
+        XElement sharedDef = new(Ns + "UnitTest", new XAttribute("id", "t1"), new XAttribute("name", "SharedTest"));
+        XDocument a = BuildReport(testDefinitions: [new XElement(sharedDef)]);
+        XDocument b = BuildReport(
+            testDefinitions:
+            [
+                new XElement(sharedDef),
+                new XElement(Ns + "UnitTest", new XAttribute("id", "t2"), new XAttribute("name", "OtherTest")),
+            ]);
+
+        XElement definitions = Child(TrxReportEngine.Merge([a, b], Guid.NewGuid(), "run").Root!, "TestDefinitions");
+
+        List<string> ids = [.. definitions.Elements().Select(e => e.Attribute("id")!.Value)];
+        Assert.HasCount(2, ids);
+        Assert.HasCount(2, ids.Distinct());
+    }
+
+    [TestMethod]
+    public void Merge_PreservesRunInfosFromInputs()
+    {
+        XElement runInfos = new(
+            Ns + "RunInfos",
+            new XElement(Ns + "RunInfo", new XAttribute("outcome", "Error"), new XElement(Ns + "Text", "host crashed")));
+        XDocument a = BuildReport(resultSummaryChildren: [runInfos]);
+        XDocument b = BuildReport();
+
+        XElement summary = ResultSummary(TrxReportEngine.Merge([a, b], Guid.NewGuid(), "run"));
+
+        XElement? mergedRunInfos = summary.Elements().FirstOrDefault(e => e.Name.LocalName == "RunInfos");
+        Assert.IsNotNull(mergedRunInfos);
+        Assert.Contains("host crashed", mergedRunInfos.Value);
+    }
+
+    [TestMethod]
+    public void Merge_PreservesCollectorDataEntriesFromInputs()
+    {
+        XElement entries = new(
+            Ns + "CollectorDataEntries",
+            new XElement(Ns + "Collector", new XAttribute("collectorDisplayName", "Code Coverage")));
+        XDocument a = BuildReport(resultSummaryChildren: [entries]);
+        XDocument b = BuildReport();
+
+        XElement summary = ResultSummary(TrxReportEngine.Merge([a, b], Guid.NewGuid(), "run"));
+
+        XElement? mergedEntries = summary.Elements().FirstOrDefault(e => e.Name.LocalName == "CollectorDataEntries");
+        Assert.IsNotNull(mergedEntries);
+        Assert.HasCount(1, mergedEntries.Elements().Where(e => e.Name.LocalName == "Collector"));
+    }
+
+    [TestMethod]
+    public void Merge_WhenNoDiagnostics_OmitsEmptyRunInfosAndCollectorDataEntries()
+    {
+        XElement summary = ResultSummary(TrxReportEngine.Merge([BuildReport(), BuildReport()], Guid.NewGuid(), "run"));
+
+        List<string> childNames = [.. summary.Elements().Select(e => e.Name.LocalName)];
+        Assert.DoesNotContain("RunInfos", childNames);
+        Assert.DoesNotContain("CollectorDataEntries", childNames);
+    }
+
+    [TestMethod]
     public void Merge_DeduplicatesTestListsById()
     {
         // Both reports carry the two well-known shared test lists; the merged output keeps each id once.
@@ -228,10 +291,28 @@ public sealed class TrxReportEngineMergeTests
         IEnumerable<XElement>? results = null,
         IEnumerable<XElement>? testDefinitions = null,
         IEnumerable<XElement>? testEntries = null,
-        IEnumerable<XElement>? testLists = null)
+        IEnumerable<XElement>? testLists = null,
+        IEnumerable<XElement>? resultSummaryChildren = null)
     {
         DateTimeOffset startTime = start ?? new DateTimeOffset(2020, 1, 1, 10, 0, 0, TimeSpan.Zero);
         DateTimeOffset finishTime = finish ?? new DateTimeOffset(2020, 1, 1, 11, 0, 0, TimeSpan.Zero);
+
+        var resultSummary = new XElement(
+            Ns + "ResultSummary",
+            new XAttribute("outcome", outcome),
+            new XElement(
+                Ns + "Counters",
+                new XAttribute("total", total),
+                new XAttribute("executed", passed + failed),
+                new XAttribute("passed", passed),
+                new XAttribute("failed", failed),
+                new XAttribute("timeout", timeout),
+                new XAttribute("notExecuted", notExecuted)));
+
+        if (resultSummaryChildren is not null)
+        {
+            resultSummary.Add(resultSummaryChildren);
+        }
 
         var testRun = new XElement(
             Ns + "TestRun",
@@ -247,17 +328,7 @@ public sealed class TrxReportEngineMergeTests
             new XElement(Ns + "TestDefinitions", testDefinitions ?? []),
             new XElement(Ns + "TestEntries", testEntries ?? []),
             new XElement(Ns + "TestLists", testLists ?? DefaultTestLists()),
-            new XElement(
-                Ns + "ResultSummary",
-                new XAttribute("outcome", outcome),
-                new XElement(
-                    Ns + "Counters",
-                    new XAttribute("total", total),
-                    new XAttribute("executed", passed + failed),
-                    new XAttribute("passed", passed),
-                    new XAttribute("failed", failed),
-                    new XAttribute("timeout", timeout),
-                    new XAttribute("notExecuted", notExecuted))));
+            resultSummary);
 
         return new XDocument(testRun);
     }

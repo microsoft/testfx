@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Serializers;
@@ -224,7 +224,8 @@ internal sealed class TrxProcessLifetimeHandler :
                 new FileArtifact(
                     new FileInfo(fileName),
                     ExtensionResources.TrxReportArtifactDisplayName,
-                    ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+                    ExtensionResources.TrxReportArtifactDescription,
+                    TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
 
             TryDeleteStreamingSidecar();
             return;
@@ -260,7 +261,7 @@ internal sealed class TrxProcessLifetimeHandler :
             await trxReportGeneratorEngine.AddArtifactsAsync(trxFile, artifacts).ConfigureAwait(false);
         }
 
-        await _messageBus.PublishAsync(this, new FileArtifact(trxFile, ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription)).ConfigureAwait(false);
+        await _messageBus.PublishAsync(this, new FileArtifact(trxFile, ExtensionResources.TrxReportArtifactDisplayName, ExtensionResources.TrxReportArtifactDescription, TrxReportEngine.TrxArtifactKind)).ConfigureAwait(false);
 
         // Best-effort orphan cleanup. On the happy path the test host normally deletes its own
         // sidecar in TrxReportGenerator.GenerateReportAndCleanupAsync, but if its CompleteAsync timed

@@ -18,11 +18,12 @@ internal sealed partial class TrxReportEngine
     /// <para>
     /// Merge rules:
     /// <list type="bullet">
-    ///   <item><description><c>Results</c>, <c>TestDefinitions</c> and <c>TestEntries</c> are unioned as-is.</description></item>
+    ///   <item><description><c>Results</c> and <c>TestEntries</c> are unioned as-is; <c>TestDefinitions</c> are deduplicated by <c>id</c> (ids are derived deterministically from each test's UID and the schema forbids duplicates).</description></item>
     ///   <item><description><c>TestLists</c> are deduplicated by <c>id</c> (the well-known lists are shared across files).</description></item>
     ///   <item><description><c>Counters</c> attributes are summed; <c>Times</c> use the earliest start and latest finish.</description></item>
+    ///   <item><description><c>RunInfos</c> (crash/exit diagnostics) and <c>CollectorDataEntries</c> (attachment references) are carried across from every input's <c>ResultSummary</c>.</description></item>
     ///   <item><description>The result summary outcome is <c>Failed</c> if any input failed, otherwise <c>Completed</c>.</description></item>
-    ///   <item><description>Attachment/result-file paths are preserved verbatim (they are absolute today).</description></item>
+    ///   <item><description>Attachment hrefs inside <c>CollectorDataEntries</c> are carried as-is; because they are relative to each input's deployment root, the physical attachment files are only relocated to the merged deployment root by <see cref="MergeToFileAsync"/> (which has the source paths). Callers of the in-memory <see cref="Merge"/> that need resolvable attachments should relocate them separately.</description></item>
     /// </list>
     /// </para>
     /// </remarks>
@@ -49,6 +50,18 @@ internal sealed partial class TrxReportEngine
         var mergedTestLists = new XElement(NamespaceUri + "TestLists");
         var seenTestListIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // TestDefinition ids are derived deterministically from each test's UID, so the same test
+        // discovered in more than one input yields the same id. The TRX schema (and the producer,
+        // see TrxReportEngine.Results.cs) does not allow duplicate <UnitTest id="...">, so we keep
+        // only the first definition seen per id.
+        var seenTestDefinitionIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // Run-level diagnostics (<RunInfos>) and collector attachments (<CollectorDataEntries>) live
+        // under <ResultSummary>; carry them across so merged reports don't silently lose crash/exit
+        // messages and attachment references.
+        var mergedRunInfos = new XElement(NamespaceUri + "RunInfos");
+        var mergedCollectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
+
         // Preserve the order in which counter attributes are first seen so the merged
         // <Counters> element keeps the well-known TRX attribute ordering.
         var counterAttributeOrder = new List<string>();
@@ -67,7 +80,7 @@ internal sealed partial class TrxReportEngine
             }
 
             CloneChildrenInto(FindChild(testRun, "Results"), mergedResults);
-            CloneChildrenInto(FindChild(testRun, "TestDefinitions"), mergedTestDefinitions);
+            CloneChildrenIntoDeduplicatedById(FindChild(testRun, "TestDefinitions"), mergedTestDefinitions, seenTestDefinitionIds);
             CloneChildrenInto(FindChild(testRun, "TestEntries"), mergedTestEntries);
 
             XElement? testLists = FindChild(testRun, "TestLists");
@@ -92,6 +105,8 @@ internal sealed partial class TrxReportEngine
                 }
 
                 AccumulateCounters(FindChild(resultSummary, "Counters"), counterAttributeOrder, counterSums);
+                CloneChildrenInto(FindChild(resultSummary, "RunInfos"), mergedRunInfos);
+                CloneChildrenInto(FindChild(resultSummary, "CollectorDataEntries"), mergedCollectorDataEntries);
             }
 
             XElement? times = FindChild(testRun, "Times");
@@ -132,7 +147,7 @@ internal sealed partial class TrxReportEngine
         mergedTestRun.Add(mergedTestDefinitions);
         mergedTestRun.Add(mergedTestEntries);
         mergedTestRun.Add(mergedTestLists);
-        mergedTestRun.Add(BuildResultSummary(anyFailure ? "Failed" : "Completed", counterAttributeOrder, counterSums));
+        mergedTestRun.Add(BuildResultSummary(anyFailure ? "Failed" : "Completed", counterAttributeOrder, counterSums, mergedRunInfos, mergedCollectorDataEntries));
 
         return new XDocument(new XDeclaration("1.0", "UTF-8", null), mergedTestRun);
     }
@@ -172,6 +187,13 @@ internal sealed partial class TrxReportEngine
             Directory.CreateDirectory(outputDirectory);
         }
 
+        // Attachment hrefs inside CollectorDataEntries are relative to each input's deployment root
+        // (they look like "<machine>/<file>" and physically live under
+        // "<inputDir>/<inputDeploymentRoot>/In/..."). Copy those trees into the merged report's
+        // deployment root so the carried-over hrefs resolve. Best-effort: failures to copy an
+        // attachment must not fail the merge.
+        RelocateAttachments(inputPaths, reports, outputDirectory ?? Directory.GetCurrentDirectory(), runName);
+
         using FileStream stream = File.Create(outputPath);
 #if NETCOREAPP
         await merged.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
@@ -184,6 +206,65 @@ internal sealed partial class TrxReportEngine
     private static XElement? FindChild(XElement parent, string localName)
         => parent.Elements().FirstOrDefault(e => string.Equals(e.Name.LocalName, localName, StringComparison.Ordinal));
 
+    /// <summary>
+    /// Copies each input report's attachment deployment tree (<c>&lt;deploymentRoot&gt;/In</c>) into the
+    /// merged report's deployment root, so the attachment hrefs carried over from
+    /// <c>CollectorDataEntries</c> keep resolving. Best-effort: any copy failure is swallowed so it
+    /// never fails the merge (matching the never-fail-the-run post-processing invariant).
+    /// </summary>
+    private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, string runName)
+    {
+        string mergedDeploymentRoot = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(runName);
+        string mergedInRoot = Path.Combine(outputDirectory, mergedDeploymentRoot, "In");
+
+        for (int i = 0; i < inputPaths.Count && i < reports.Count; i++)
+        {
+            try
+            {
+                string? inputDirectory = Path.GetDirectoryName(Path.GetFullPath(inputPaths[i]));
+                string? inputDeploymentRoot = reports[i].Root is { } root
+                    ? FindChild(root, "TestSettings")?.Elements().FirstOrDefault(e => string.Equals(e.Name.LocalName, "Deployment", StringComparison.Ordinal))?.Attribute("runDeploymentRoot")?.Value
+                    : null;
+
+                if (RoslynString.IsNullOrEmpty(inputDirectory) || RoslynString.IsNullOrEmpty(inputDeploymentRoot))
+                {
+                    continue;
+                }
+
+                string sourceInRoot = Path.Combine(inputDirectory, inputDeploymentRoot, "In");
+                if (Directory.Exists(sourceInRoot))
+                {
+                    CopyDirectoryRecursive(sourceInRoot, mergedInRoot);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // Best-effort: a failed attachment copy must not fail the merge.
+            }
+        }
+    }
+
+    private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory)
+    {
+        Directory.CreateDirectory(destinationDirectory);
+
+        foreach (string file in Directory.GetFiles(sourceDirectory))
+        {
+            // Do not overwrite: if two inputs contributed the same relative attachment path, keep the
+            // first one rather than silently clobbering it.
+            string destination = Path.Combine(destinationDirectory, Path.GetFileName(file));
+            if (!File.Exists(destination))
+            {
+                File.Copy(file, destination);
+            }
+        }
+
+        foreach (string directory in Directory.GetDirectories(sourceDirectory))
+        {
+            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)));
+        }
+    }
+
     private static void CloneChildrenInto(XElement? source, XElement destination)
     {
         if (source is null)
@@ -194,6 +275,25 @@ internal sealed partial class TrxReportEngine
         foreach (XElement child in source.Elements())
         {
             destination.Add(new XElement(child));
+        }
+    }
+
+    private static void CloneChildrenIntoDeduplicatedById(XElement? source, XElement destination, HashSet<string> seenIds)
+    {
+        if (source is null)
+        {
+            return;
+        }
+
+        foreach (XElement child in source.Elements())
+        {
+            string? id = child.Attribute("id")?.Value;
+
+            // Keep the first definition seen for a given id; a null/absent id is always kept.
+            if (id is null || seenIds.Add(id))
+            {
+                destination.Add(new XElement(child));
+            }
         }
     }
 
@@ -249,7 +349,7 @@ internal sealed partial class TrxReportEngine
         return testSettings;
     }
 
-    private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums)
+    private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums, XElement runInfos, XElement collectorDataEntries)
     {
         var counters = new XElement(NamespaceUri + "Counters");
         foreach (string name in counterAttributeOrder)
@@ -257,10 +357,24 @@ internal sealed partial class TrxReportEngine
             counters.SetAttributeValue(name, counterSums[name].ToString(CultureInfo.InvariantCulture));
         }
 
-        return new XElement(
+        var resultSummary = new XElement(
             NamespaceUri + "ResultSummary",
             new XAttribute("outcome", outcome),
             counters);
+
+        // Emit the diagnostics/attachment children only when they carry content, matching the shape
+        // the single-run producer writes (which omits empty <RunInfos>/<CollectorDataEntries>).
+        if (runInfos.HasElements)
+        {
+            resultSummary.Add(runInfos);
+        }
+
+        if (collectorDataEntries.HasElements)
+        {
+            resultSummary.Add(collectorDataEntries);
+        }
+
+        return resultSummary;
     }
 
     private static bool TryParseDateTimeOffset(string? value, out DateTimeOffset result)

@@ -204,7 +204,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                             string.Empty,
                             string.Empty,
                             string.Empty,
-                            null)
+                            fileArtifact.Kind)
                     ]);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);

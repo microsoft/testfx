@@ -1,4 +1,5 @@
 #nullable enable
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.TrxArtifactKind = "microsoft.testing.trx" -> string!
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, System.Guid runId, string! runName) -> System.Xml.Linq.XDocument!
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Guid runId, string! runName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
