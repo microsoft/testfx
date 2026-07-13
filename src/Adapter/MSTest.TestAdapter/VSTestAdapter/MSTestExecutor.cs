@@ -108,7 +108,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             throw new ArgumentNullException(nameof(frameworkHandle));
         }
 
-        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        // VSTest annotates the IEnumerable as nullable; the exact reason is unclear.
         if (tests is null)
         {
             throw new ArgumentNullException(nameof(tests));
@@ -168,7 +168,7 @@ internal sealed class MSTestExecutor : ITestExecutor
             throw new ArgumentNullException(nameof(frameworkHandle));
         }
 
-        // TODO: Verify why VSTest annotates the IEnumerable as nullable.
+        // VSTest annotates the IEnumerable as nullable; the exact reason is unclear.
         if (sources is null)
         {
             throw new ArgumentNullException(nameof(sources));

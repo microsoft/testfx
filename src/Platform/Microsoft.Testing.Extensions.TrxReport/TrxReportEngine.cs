@@ -80,8 +80,7 @@ internal sealed partial class TrxReportEngine
                 testRunId = Guid.NewGuid();
             }
 
-            // TODO: VSTest implementation seems to also add "runUser" attribute.
-            // Revise that.
+            // Unlike the VSTest implementation, this reporter does not currently add a "runUser" attribute.
             testRun.SetAttributeValue("id", testRunId);
             string testRunName = $"{_environment.GetEnvironmentVariable("UserName")}@{_environment.MachineName} {FormatDateTimeForRunName(_clock.UtcNow)}";
             testRun.SetAttributeValue("name", testRunName);
