@@ -78,7 +78,7 @@ internal static class TestClassModelBuilder
                         string key = BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
-                            TestMethodModel model = BuildMethod(method, typeSymbol, consumingAssembly);
+                            TestMethodModel model = BuildMethod(method, consumingAssembly);
                             methodsByKey[key] = model;
                             methods.Add(model);
                         }
@@ -238,7 +238,7 @@ internal static class TestClassModelBuilder
         return sb.ToString();
     }
 
-    private static TestMethodModel BuildMethod(IMethodSymbol method, INamedTypeSymbol testClassSymbol, IAssemblySymbol consumingAssembly)
+    private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
     {
         ITypeSymbol returnType = method.ReturnType;
         string returnTypeFqn = returnType.ToDisplayString(FullyQualifiedFormat);
@@ -333,6 +333,14 @@ internal static class TestClassModelBuilder
                 && arg.Type?.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.DynamicDataSourceType
                 && arg.Value is int sourceTypeValue)
             {
+                // An attribute can carry an undefined cast enum value, e.g. (DynamicDataSourceType)99, or a
+                // value from a newer framework than this generator understands. Emitting
+                // DynamicDataSourceType.99 would not compile, so bail out and let the runtime fallback handle it.
+                if (!Enum.IsDefined(typeof(DynamicDataSourceType), sourceTypeValue))
+                {
+                    return null;
+                }
+
                 sourceType = (DynamicDataSourceType)sourceTypeValue;
             }
         }
@@ -458,9 +466,15 @@ internal static class TestClassModelBuilder
         // Runtime reads the getter via GetGetMethod(true) (non-public allowed) and requires it to be static.
         // The generated code reads it directly, so the getter itself must be static and accessible from the
         // consuming assembly (a public property with a private getter, or an internal member from another
-        // assembly, would not compile).
+        // assembly, would not compile). Abstract/virtual (static abstract interface) accessors can only be
+        // reached through a constrained type parameter (CS8926), and a value that cannot be boxed to object?
+        // (pointer / function-pointer / ref-like) cannot be returned by the delegate, so those keep the
+        // reflection fallback.
         IMethodSymbol? getter = property.GetMethod;
-        return getter is { IsStatic: true } && IsMemberAccessibleFrom(getter.DeclaredAccessibility, getter.ContainingType, consumingAssembly)
+        return getter is { IsStatic: true, IsAbstract: false, IsVirtual: false }
+            && !property.IsAbstract && !property.IsVirtual
+            && IsObjectConvertible(property.Type)
+            && IsMemberAccessibleFrom(getter.DeclaredAccessibility, getter.ContainingType, consumingAssembly)
             ? DynamicDataMemberKind.Property
             : null;
     }
@@ -471,20 +485,29 @@ internal static class TestClassModelBuilder
         // parameters, the reflection fallback invokes it via MethodInfo.Invoke, whose default binder applies
         // primitive widening and other conversions (e.g. passing a boxed int 3 to a long parameter). A
         // generated direct call would instead unbox with an exact cast ((long)args[0]) and throw
-        // InvalidCastException. A void method cannot be cast to object either. Those shapes keep the
-        // (DAM-safe) reflection path to preserve behavior.
-        => method is { IsStatic: true, IsGenericMethod: false, ReturnsVoid: false, ReturnsByRef: false, Parameters.IsEmpty: true }
-            && method.ReturnType.TypeKind != TypeKind.Pointer
+        // InvalidCastException. Abstract/virtual (static abstract interface) methods can only be called
+        // through a constrained type parameter (CS8926), and a result that cannot be boxed to object?
+        // (void / by-ref / pointer / function-pointer / ref-like) cannot be returned by the delegate. Those
+        // shapes keep the (DAM-safe) reflection path to preserve behavior.
+        => method is { IsStatic: true, IsAbstract: false, IsVirtual: false, IsGenericMethod: false, ReturnsVoid: false, ReturnsByRef: false, Parameters.IsEmpty: true }
+            && IsObjectConvertible(method.ReturnType)
             && IsMemberAccessibleFrom(method.DeclaredAccessibility, method.ContainingType, consumingAssembly)
             ? DynamicDataMemberKind.Method
             : null;
 
     private static DynamicDataMemberKind? ResolveField(IFieldSymbol field, IAssemblySymbol consumingAssembly)
         => field.IsStatic
-            && field.Type.TypeKind != TypeKind.Pointer
+            && IsObjectConvertible(field.Type)
             && IsMemberAccessibleFrom(field.DeclaredAccessibility, field.ContainingType, consumingAssembly)
             ? DynamicDataMemberKind.Field
             : null;
+
+    // A value is safe to read into the generated `(object?)` delegate only when it can be boxed / implicitly
+    // converted to object. Pointers, function pointers, and ref-like (ref struct) values cannot, so members of
+    // those shapes must stay on the reflection fallback rather than break the generated build.
+    private static bool IsObjectConvertible(ITypeSymbol type)
+        => type.TypeKind is not (TypeKind.Pointer or TypeKind.FunctionPointer)
+            && !type.IsRefLikeType;
 
     // Validates a custom display-name method exactly as DynamicDataAttribute.GetDisplayNameByReflection does:
     // GetDeclaredMethod resolves a single method declared *on the given type* (no base-type chain), which must
@@ -506,7 +529,9 @@ internal static class TestClassModelBuilder
             }
         }
 
-        return candidate is { IsStatic: true, DeclaredAccessibility: Accessibility.Public, IsGenericMethod: false, Parameters.Length: 2 }
+        // Abstract/virtual (static abstract interface) methods can only be called through a constrained type
+        // parameter (CS8926), so the generated direct call would not compile; leave those to reflection.
+        return candidate is { IsStatic: true, IsAbstract: false, IsVirtual: false, DeclaredAccessibility: Accessibility.Public, IsGenericMethod: false, Parameters.Length: 2 }
             && candidate.ReturnType.SpecialType == SpecialType.System_String
             && candidate.Parameters[0] is { RefKind: RefKind.None } firstParameter
             && firstParameter.Type.ToDisplayString(FullyQualifiedFormat) == "global::System.Reflection.MethodInfo"

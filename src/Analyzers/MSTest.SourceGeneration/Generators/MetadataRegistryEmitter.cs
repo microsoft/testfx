@@ -414,13 +414,13 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine($"DeclaringType = typeof({source.DeclaringTypeFullyQualifiedName}),");
                     sb.AppendLine($"SourceName = \"{Escape(source.SourceName)}\",");
                     sb.AppendLine($"SourceType = {UnitTestingNamespaceGlobal}.DynamicDataSourceType.{source.RequestedSourceType},");
-                    sb.AppendLine($"GetData = static args => {BuildDynamicDataAccessor(source)},");
+                    EmitDataProvider(sb, source);
 
                     if (source.DisplayNameMethodName is { } displayNameMethod && source.DisplayNameDeclaringTypeFullyQualifiedName is { } displayNameType)
                     {
                         sb.AppendLine($"DisplayNameDeclaringType = typeof({displayNameType}),");
                         sb.AppendLine($"DisplayNameMethodName = \"{Escape(displayNameMethod)}\",");
-                        sb.AppendLine($"GetDisplayName = static (methodInfo, data) => {displayNameType}.{EscapeIdentifier(displayNameMethod)}(methodInfo, data!),");
+                        EmitDisplayNameProvider(sb, displayNameType, EscapeIdentifier(displayNameMethod));
                     }
                 }
 
@@ -436,21 +436,54 @@ internal static class MetadataRegistryEmitter
         }
     }
 
-    private static string BuildDynamicDataAccessor(DynamicDataSourceModel source)
+    private static void EmitDataProvider(IndentedStringBuilder sb, DynamicDataSourceModel source)
     {
         string member = $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}";
-        return source.MemberKind switch
+        switch (source.MemberKind)
         {
-            // Ignore the (unused) source arguments; read the static property/field value.
-            DynamicDataMemberKind.Property or DynamicDataMemberKind.Field => member,
+            // A field read cannot run user code, so it needs no exception translation (and reflection reads
+            // fields via FieldInfo.GetValue without TargetInvocationException wrapping anyway).
+            case DynamicDataMemberKind.Field:
+                sb.AppendLine($"GetData = static args => {member},");
+                break;
 
-            // Only parameterless source methods are registered (see ResolveMethod): a parameterized method's
-            // arguments would need the reflection binder's conversion semantics, so those keep the reflection
-            // fallback.
-            DynamicDataMemberKind.Method => $"{member}()",
+            // Property getters and (parameterless) methods can run user code. The reflection fallback invokes
+            // them via PropertyInfo.GetValue / MethodInfo.Invoke, which wrap a thrown user exception in a
+            // TargetInvocationException. Mirror that so a throwing source surfaces the same exception type in
+            // source-generated mode as in reflection mode.
+            case DynamicDataMemberKind.Property:
+                EmitInvocationWrappedLambda(sb, "GetData = static args =>", $"return {member};");
+                break;
 
-            _ => "null",
-        };
+            case DynamicDataMemberKind.Method:
+                EmitInvocationWrappedLambda(sb, "GetData = static args =>", $"return {member}();");
+                break;
+        }
+    }
+
+    private static void EmitDisplayNameProvider(IndentedStringBuilder sb, string declaringType, string methodName)
+
+        // The custom display-name method is user code; reflection calls it via MethodInfo.Invoke, which wraps
+        // a thrown exception in TargetInvocationException. Preserve that wrapping here too.
+        => EmitInvocationWrappedLambda(sb, "GetDisplayName = static (methodInfo, data) =>", $"return {declaringType}.{methodName}(methodInfo, data!);");
+
+    private static void EmitInvocationWrappedLambda(IndentedStringBuilder sb, string header, string bodyStatement)
+    {
+        sb.AppendLine(header);
+        using (sb.Block(null))
+        {
+            using (sb.Block("try"))
+            {
+                sb.AppendLine(bodyStatement);
+            }
+
+            using (sb.Block("catch (global::System.Exception ex)"))
+            {
+                sb.AppendLine("throw new global::System.Reflection.TargetInvocationException(ex);");
+            }
+        }
+
+        sb.AppendLine(",");
     }
 
     private static void EmitParameterTypes(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)

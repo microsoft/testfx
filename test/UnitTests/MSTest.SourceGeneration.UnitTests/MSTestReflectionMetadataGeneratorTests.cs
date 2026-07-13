@@ -2451,7 +2451,11 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         registry.Should().Contain("DynamicDataSources = new DynamicDataSourceReflectionInfo[]");
         registry.Should().Contain("SourceName = \"Data\"");
         registry.Should().Contain("DeclaringType = typeof(global::Sample.MyTests)");
-        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.Data");
+        registry.Should().Contain("return (object?)global::Sample.MyTests.Data;");
+
+        // Property reads run user code, so the reflection fallback (PropertyInfo.GetValue) wraps a thrown
+        // exception in TargetInvocationException; the generated accessor must preserve that.
+        registry.Should().Contain("throw new global::System.Reflection.TargetInvocationException(ex);");
     }
 
     [TestMethod]
@@ -2478,7 +2482,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         registry.Should().Contain("SourceName = \"GetData\"");
-        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.GetData()");
+        registry.Should().Contain("return (object?)global::Sample.MyTests.GetData();");
     }
 
     [TestMethod]
@@ -2593,7 +2597,40 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
+        // A field read cannot run user code, so it stays a plain expression-bodied accessor with no
+        // TargetInvocationException wrapping (reflection reads fields via FieldInfo.GetValue without wrapping).
         registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.DataField");
+        registry.Should().NotContain("TargetInvocationException");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_ForUndefinedSourceType()
+    {
+        // (DynamicDataSourceType)99 is a legal cast in an attribute but not a defined enum member. Emitting
+        // DynamicDataSourceType.99 would not compile, so the generator must skip it and keep the reflection
+        // fallback.
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), (DynamicDataSourceType)99)]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
     }
 
     [TestMethod]
@@ -2623,7 +2660,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         registry.Should().Contain("DeclaringType = typeof(global::Sample.DataHolder)");
-        registry.Should().Contain("GetData = static args => (object?)global::Sample.DataHolder.Data");
+        registry.Should().Contain("return (object?)global::Sample.DataHolder.Data;");
     }
 
     [TestMethod]
@@ -2653,7 +2690,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
         registry.Should().Contain("DisplayNameMethodName = \"GetName\"");
-        registry.Should().Contain("GetDisplayName = static (methodInfo, data) => global::Sample.MyTests.GetName(methodInfo, data!)");
+        registry.Should().Contain("return global::Sample.MyTests.GetName(methodInfo, data!);");
     }
 
     [TestMethod]
