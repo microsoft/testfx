@@ -123,4 +123,10 @@
   <data name="PackagedAppExtensionDisplayName" xml:space="preserve">
     <value>Packaged app test host launcher</value>
   </data>
+  <data name="InvalidAppxManifestMissingIdentity" xml:space="preserve">
+    <value>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</value>
+  </data>
+  <data name="PackagedAppLaunchNotSupported" xml:space="preserve">
+    <value>Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/2784). Only non-packaged (loose-layout) test hosts can be launched today.</value>
+  </data>
 </root>
