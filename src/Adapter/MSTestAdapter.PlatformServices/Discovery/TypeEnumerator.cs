@@ -148,7 +148,7 @@ internal class TypeEnumerator
             MethodInfo = method,
         };
 
-        // TODO: For every test method in a class, we are asking reflect helper multiple times for the same
+        // For every test method in a class, we are asking reflect helper multiple times for the same
         // information (like test categories, traits, deployment items) which is not optimal.
         IReflectionOperations reflectionOperations = PlatformServiceProvider.Instance.ReflectionOperations;
         var testElement = new UnitTestElement(testMethod)
@@ -195,7 +195,7 @@ internal class TypeEnumerator
 
         // In production, we always have a TestMethod attribute because GetTestFromMethod is called under IsValidTestMethod
         // In unit tests, we may not have the test to have TestMethodAttribute.
-        // TODO: Adjust all unit tests to properly have the attribute and uncomment the assert.
+        // Unit tests could be adjusted to properly have the attribute so the assert can be uncommented.
         // DebugEx.Assert(testMethodAttribute is not null, "Expected to find a 'TestMethod' attribute.");
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
