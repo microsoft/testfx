@@ -34,7 +34,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         ("AreNotEqual", 2),
         ("AreEquivalent", 2),
         ("AreNotEquivalent", 2),
-        // It is unclear whether Assert.Contains(myCollection, expression_with_conditional_access) is genuinely problematic; a codefix may not always yield the correct result for this case.
+        // It is unclear whether CollectionAssert.Contains(myCollection, expression_with_conditional_access) is genuinely problematic; a codefix may not always yield the correct result for this case.
         // We might only need to check one argument (the collection itself).
         // Same applies to DoesNotContain
         ("Contains", 2),

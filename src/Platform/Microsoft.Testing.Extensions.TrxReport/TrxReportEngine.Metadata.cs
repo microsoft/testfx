@@ -60,7 +60,7 @@ internal sealed partial class TrxReportEngine
         if (_artifactsByExtension.Count != 0)
         {
             // VSTest seems to also add a ResultFiles element, and not only CollectorDataEntries.
-            // The VSTest implementation for Converter.ToCollectionEntries and Converter.ToResultFiles could be revised.
+            // Whether this reporter should also emit ResultFiles here could be revisited by referencing VSTest's Converter.ToCollectionEntries and Converter.ToResultFiles.
             var collectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
             resultSummary.Add(collectorDataEntries);
 

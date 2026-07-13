@@ -68,9 +68,11 @@ internal static class AppDomainUtilities
     /// The path of the dll.
     /// </param>
     /// <returns>
-    /// Framework string
-    /// Components/E2E tests could be added to cover these scenarios.
+    /// Framework string.
     /// </returns>
+    /// <remarks>
+    /// Components/E2E tests could be added to cover these scenarios.
+    /// </remarks>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     internal static string GetTargetFrameworkVersionString(string testSourcePath)
     {
