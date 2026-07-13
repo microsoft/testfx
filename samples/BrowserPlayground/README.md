@@ -43,9 +43,8 @@ Prerequisites:
 
 > The commands below use the repo-local SDK so the `.dotnet/packs` lookup resolves — that
 > is `.\.dotnet\dotnet.exe` on Windows and `./.dotnet/dotnet` on Linux/macOS (shown as
-> `dotnet` below for brevity). Swap in a machine-installed `dotnet` if you prefer. Windows
-> examples use `\` path separators; on Linux/macOS use `/` (e.g.
-> `artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle`).
+> `dotnet` below for brevity). Swap in a machine-installed `dotnet` if you prefer. The paths
+> below use forward slashes, which work on all platforms; on Windows you can also use `\`.
 
 ### 1. Publish
 
