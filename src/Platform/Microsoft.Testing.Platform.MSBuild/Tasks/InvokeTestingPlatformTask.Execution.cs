@@ -29,12 +29,34 @@ public partial class InvokeTestingPlatformTask
     {
         if (!_captureOutput)
         {
-            Log.LogMessage(MessageImportance.High, singleLine);
+            // Azure DevOps logging commands (##[group], ##[endgroup], ##vso[...]) emitted by the
+            // Microsoft.Testing.Extensions.AzureDevOpsReport extension are only honored by the Azure Pipelines
+            // agent when they start at column 0. Routing them through Log.LogMessage lets the MSBuild console
+            // logger indent them (by at least two spaces), so the agent stops recognizing them: the log group no
+            // longer collapses and the raw '##[group]...' marker is rendered as garbled text. Write those command
+            // lines straight to stdout to preserve column 0; everything else keeps flowing through MSBuild logging.
+            if (IsAzureDevOpsLoggingCommand(singleLine))
+            {
+                Console.Out.WriteLine(singleLine);
+            }
+            else
+            {
+                Log.LogMessage(MessageImportance.High, singleLine);
+            }
         }
 
         // Collect the output to be written to the file.
         _output.AppendLine(singleLine);
     }
+
+    /// <summary>
+    /// Returns whether <paramref name="singleLine"/> is an Azure DevOps logging command that must reach the
+    /// pipeline log at column 0 to be processed by the agent (a format command such as <c>##[group]</c> /
+    /// <c>##[endgroup]</c>, or a <c>##vso[...]</c> command).
+    /// </summary>
+    internal static bool IsAzureDevOpsLoggingCommand(string singleLine)
+        => singleLine.StartsWith("##[", StringComparison.Ordinal)
+        || singleLine.StartsWith("##vso[", StringComparison.Ordinal);
 
     /// <inheritdoc />
     protected override void ProcessStarted()
