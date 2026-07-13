@@ -183,7 +183,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
         if (exitCodeToIgnore is not null)
         {
-            if (exitCodeToIgnore.Split(';').Any(code => int.TryParse(code, out int parsedExitCode) && parsedExitCode == (int)exitCode))
+            if (ContainsExitCode(exitCodeToIgnore, (int)exitCode))
             {
                 exitCode = ExitCode.Success;
             }
@@ -197,6 +197,32 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         TestAdapterTestSessionFailureErrorMessage = errorMessage;
         _testAdapterTestSessionFailure = true;
         await _outputService.DisplayAsync(this, new ErrorMessageOutputDeviceData(errorMessage), cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Returns true when <paramref name="exitCodeToIgnore"/> contains <paramref name="exitCode"/>
+    /// in its ';'-delimited list, without allocating a <c>string[]</c> or a LINQ closure.
+    /// </summary>
+    private static bool ContainsExitCode(string exitCodeToIgnore, int exitCode)
+    {
+        int start = 0;
+        while (start <= exitCodeToIgnore.Length)
+        {
+            int end = exitCodeToIgnore.IndexOf(';', start);
+            if (end < 0)
+            {
+                end = exitCodeToIgnore.Length;
+            }
+
+            if (int.TryParse(exitCodeToIgnore.Substring(start, end - start), out int parsed) && parsed == exitCode)
+            {
+                return true;
+            }
+
+            start = end + 1;
+        }
+
+        return false;
     }
 
     public Statistics GetStatistics()
