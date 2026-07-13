@@ -50,8 +50,8 @@ internal sealed class ToolsHost(
 
         string toolNameToRun = _commandLineHandler.ParseResult.ToolName;
 
-        // TODO: Apply the override or do not support it for Tools?
-        // TODO: Verify reserved tool names?
+        // It is unclear whether the override should be applied or simply not supported for Tools.
+        // Reserved tool names may also need to be verified.
         _toolsInformation.GroupBy(x => x.Name).Where(x => x.Count() > 1).ToList()
             .ForEach(x => throw new InvalidOperationException($"Tool '{x.Key}' is registered more than once."));
 

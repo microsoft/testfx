@@ -35,12 +35,13 @@ permissions:
 jobs:
   scan-and-analyze:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -74,13 +75,13 @@ jobs:
         run: python .github/scripts/analyze-duplicates.py
 
       - name: Upload jscpd report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jscpd-report
           path: artifacts/jscpd/
 
       - name: Upload analysis report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: duplication-analysis
           path: artifacts/jscpd/analysis-report.md

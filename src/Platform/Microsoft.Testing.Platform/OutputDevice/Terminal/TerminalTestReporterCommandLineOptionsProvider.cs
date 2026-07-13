@@ -24,6 +24,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
     public const string ShowOutputAllArgument = "all";
     public const string ShowOutputFailedArgument = "failed";
     public const string ShowOutputNoneArgument = "none";
+    public const string ShowSlowestTestsOption = "show-slowest-tests";
 
     public TerminalTestReporterCommandLineOptionsProvider()
         : base(
@@ -40,6 +41,7 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
                 new(OutputOption, TerminalResources.TerminalOutputOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStdoutOption, TerminalResources.TerminalShowStdoutOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
                 new(ShowStderrOption, TerminalResources.TerminalShowStderrOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
+                new(ShowSlowestTestsOption, TerminalResources.TerminalShowSlowestTestsOptionDescription, ArgumentArity.ExactlyOne, isHidden: false, isBuiltIn: true),
             ])
     {
     }
@@ -61,6 +63,10 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             ShowStdoutOption or ShowStderrOption => arguments.Length == 1 && IsValidShowOutputArgument(arguments[0])
                 ? ValidationResult.ValidTask
                 : ValidationResult.InvalidTask(TerminalResources.TerminalShowOutputOptionInvalidArgument),
+            ShowSlowestTestsOption => arguments.Length == 1
+                && int.TryParse(arguments[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int count) && count >= 1
+                ? ValidationResult.ValidTask
+                : ValidationResult.InvalidTask(TerminalResources.TerminalShowSlowestTestsOptionInvalidArgument),
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 

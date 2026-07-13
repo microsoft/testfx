@@ -225,7 +225,7 @@ public sealed class AsynchronousMessageBusTests
 
         await proxy.PublishAsync(consumer, new BlockingData());
 
-        Assert.HasCount(0, consumer.ConsumedData);
+        Assert.IsEmpty(consumer.ConsumedData);
 
         await asynchronousMessageBus.DisableAsync();
     }

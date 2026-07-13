@@ -967,11 +967,11 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occurred in 'FileLogger.WriteLogToFileAsync'.
+        <source>An unexpected exception occurred in the 'FileLogger' write loop.
 {0}</source>
-        <target state="translated">'FileLogger.WriteLogToFileAsync' で予期しない例外が発生しました。
+        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop.
 {0}</target>
-        <note>{0} is the exception ToString output. {Locked="FileLogger.WriteLogToFileAsync"}</note>
+        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>

@@ -273,6 +273,56 @@ internal abstract class BaseSerializer
         WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
     }
 
+    // ExecutionId and InstanceId are the two leading fields shared verbatim by the four 'dotnet test' collection
+    // message envelopes that carry a list payload (DiscoveredTestMessages, TestResultMessages, TestInProgressMessages,
+    // FileArtifactMessages). Their wire ids are pinned to 1 and 2 for those serializers and MUST NOT change. Note that
+    // AzureDevOpsLogMessage/DisplayMessage also place ExecutionId/InstanceId at ids 1/2, but they carry scalar payloads
+    // rather than a message list, so they do not use these helpers.
+    private const ushort ExecutionScopedExecutionIdFieldId = 1;
+    private const ushort ExecutionScopedInstanceIdFieldId = 2;
+
+    /// <summary>
+    /// Matches the two leading collection-envelope fields (<c>ExecutionId</c> id 1 / <c>InstanceId</c> id 2) shared by
+    /// the four 'dotnet test' list-carrying messages payloads, assigning the value into <paramref name="executionId"/>
+    /// or <paramref name="instanceId"/> and returning <see langword="true"/> when the field is one of them. The caller
+    /// invokes this from its own single <see cref="ReadFields"/> callback and handles its type-specific message-list
+    /// field ids when this returns <see langword="false"/>. Kept as a <see langword="ref"/>-based matcher (rather than a
+    /// wrapping callback) so it adds no closure/delegate allocation on the hot per-test IPC read path.
+    /// </summary>
+    protected static bool TryReadExecutionScopedField(Stream stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId)
+    {
+        switch (fieldId)
+        {
+            case ExecutionScopedExecutionIdFieldId:
+                executionId = ReadStringValue(stream, fieldSize);
+                return true;
+
+            case ExecutionScopedInstanceIdFieldId:
+                instanceId = ReadStringValue(stream, fieldSize);
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// Writes the shared collection-envelope header: a field-count prefix (the <c>ExecutionId</c> and <c>InstanceId</c>
+    /// fields when non-<see langword="null"/> plus <paramref name="payloadFieldCount"/>), followed by the
+    /// <c>ExecutionId</c> (id 1) and <c>InstanceId</c> (id 2) fields. The caller writes its type-specific message
+    /// list(s) directly afterwards. Kept callback-free so it adds no closure/delegate allocation on the hot per-test
+    /// IPC write path.
+    /// </summary>
+    protected static void WriteExecutionScopedHeader(Stream stream, string? executionId, string? instanceId, ushort payloadFieldCount)
+    {
+        DebugAssert(stream.CanSeek, "We expect a seekable stream.");
+
+        WriteUShort(stream, (ushort)((executionId is null ? 0 : 1) + (instanceId is null ? 0 : 1) + payloadFieldCount));
+
+        WriteField(stream, ExecutionScopedExecutionIdFieldId, executionId);
+        WriteField(stream, ExecutionScopedInstanceIdFieldId, instanceId);
+    }
+
     private static int GetSize<T>() => typeof(T) switch
     {
         Type type when type == typeof(int) => sizeof(int),

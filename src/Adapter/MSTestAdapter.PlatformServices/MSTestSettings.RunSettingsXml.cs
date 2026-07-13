@@ -97,57 +97,20 @@ internal sealed partial class MSTestSettings
             reader.Read();
             while (reader.NodeType == XmlNodeType.Element)
             {
-                bool result;
                 string elementName = reader.Name.ToUpperInvariant();
                 switch (elementName)
                 {
                     case "CAPTURETRACEOUTPUT":
-                        string captureTraceOutput = reader.ReadInnerXml();
-                        if (bool.TryParse(captureTraceOutput, out result))
-                        {
-                            settings.CaptureDebugTraces = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, captureTraceOutput, "CaptureTraceOutput"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "CaptureTraceOutput", logger, v => settings.CaptureDebugTraces = v);
                         break;
                     case "MAPINCONCLUSIVETOFAILED":
-                        string mapInconclusiveToFailed = reader.ReadInnerXml();
-                        if (bool.TryParse(mapInconclusiveToFailed, out result))
-                        {
-                            settings.MapInconclusiveToFailed = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapInconclusiveToFailed, "MapInconclusiveToFailed"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "MapInconclusiveToFailed", logger, v => settings.MapInconclusiveToFailed = v);
                         break;
                     case "MAPNOTRUNNABLETOFAILED":
-                        string mapNotRunnableToFailed = reader.ReadInnerXml();
-                        if (bool.TryParse(mapNotRunnableToFailed, out result))
-                        {
-                            settings.MapNotRunnableToFailed = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, mapNotRunnableToFailed, "MapNotRunnableToFailed"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "MapNotRunnableToFailed", logger, v => settings.MapNotRunnableToFailed = v);
                         break;
                     case "TREATDISCOVERYWARNINGSASERRORS":
-                        string treatDiscoveryWarningsAsErrors = reader.ReadInnerXml();
-                        if (bool.TryParse(treatDiscoveryWarningsAsErrors, out result))
-                        {
-                            settings.TreatDiscoveryWarningsAsErrors = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, treatDiscoveryWarningsAsErrors, "TreatDiscoveryWarningsAsErrors"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "TreatDiscoveryWarningsAsErrors", logger, v => settings.TreatDiscoveryWarningsAsErrors = v);
                         break;
                     case "PARALLELIZE":
                         SetParallelSettings(reader.ReadSubtree(), settings);
@@ -160,16 +123,7 @@ internal sealed partial class MSTestSettings
                         ParseTimeoutSetting(reader.ReadInnerXml(), "AssemblyCleanupTimeout", logger, v => settings.AssemblyCleanupTimeout = v);
                         break;
                     case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
-                        string considerEmptyDataSourceAsInconclusive = reader.ReadInnerXml();
-                        if (bool.TryParse(considerEmptyDataSourceAsInconclusive, out bool parsedConsiderEmptyDataSourceAsInconclusive))
-                        {
-                            settings.ConsiderEmptyDataSourceAsInconclusive = parsedConsiderEmptyDataSourceAsInconclusive;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, considerEmptyDataSourceAsInconclusive, "ConsiderEmptyDataSourceAsInconclusive"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "ConsiderEmptyDataSourceAsInconclusive", logger, v => settings.ConsiderEmptyDataSourceAsInconclusive = v);
                         break;
                     case "ASSEMBLYINITIALIZETIMEOUT":
                         ParseTimeoutSetting(reader.ReadInnerXml(), "AssemblyInitializeTimeout", logger, v => settings.AssemblyInitializeTimeout = v);
@@ -187,40 +141,13 @@ internal sealed partial class MSTestSettings
                         ParseTimeoutSetting(reader.ReadInnerXml(), "TestCleanupTimeout", logger, v => settings.TestCleanupTimeout = v);
                         break;
                     case "COOPERATIVECANCELLATIONTIMEOUT":
-                        string cooperativeCancellationTimeout = reader.ReadInnerXml();
-                        if (bool.TryParse(cooperativeCancellationTimeout, out result))
-                        {
-                            settings.CooperativeCancellationTimeout = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, cooperativeCancellationTimeout, "CooperativeCancellationTimeout"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "CooperativeCancellationTimeout", logger, v => settings.CooperativeCancellationTimeout = v);
                         break;
                     case "ORDERTESTSBYNAMEINCLASS":
-                        string orderTestsByNameInClass = reader.ReadInnerXml();
-                        if (bool.TryParse(orderTestsByNameInClass, out result))
-                        {
-                            settings.OrderTestsByNameInClass = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, orderTestsByNameInClass, "OrderTestsByNameInClass"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "OrderTestsByNameInClass", logger, v => settings.OrderTestsByNameInClass = v);
                         break;
                     case "RANDOMIZETESTORDER":
-                        string randomizeTestOrder = reader.ReadInnerXml();
-                        if (bool.TryParse(randomizeTestOrder, out result))
-                        {
-                            settings.RandomizeTestOrder = result;
-                        }
-                        else
-                        {
-                            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, randomizeTestOrder, "RandomizeTestOrder"));
-                        }
-
+                        ParseBoolSetting(reader.ReadInnerXml(), "RandomizeTestOrder", logger, v => settings.RandomizeTestOrder = v);
                         break;
                     case "RANDOMTESTORDERSEED":
                         string randomTestOrderSeed = reader.ReadInnerXml();
@@ -255,6 +182,18 @@ internal sealed partial class MSTestSettings
         }
 
         return settings;
+    }
+
+    private static void ParseBoolSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<bool> setSetting)
+    {
+        if (bool.TryParse(rawValue, out bool result))
+        {
+            setSetting(result);
+        }
+        else
+        {
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, rawValue, settingName));
+        }
     }
 
     private static void ParseTimeoutSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<int> setSetting)

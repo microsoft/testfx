@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AnnotationsOptionDescription">
         <source>Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="new">Enable or disable Azure DevOps failure annotations ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <target state="translated">Abilita o disabilita le annotazioni degli errori di Azure DevOps ('on' o 'off'). L'impostazione predefinita è 'on'. Richiede "--report-azdo".</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="ArtifactUploadOptionsRequireUploadArtifacts">
@@ -19,7 +19,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsAnnotationsRequiresAzureDevOps">
         <source>'--report-azdo-annotations' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-annotations' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-annotations' richiede l'abilitazione di '--report-azdo'</target>
         <note>{Locked="--report-azdo-annotations"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsDemoteKnownFlakyRequiresAzureDevOps">
@@ -39,7 +39,7 @@
       </trans-unit>
       <trans-unit id="AzureDevOpsGroupsRequiresAzureDevOps">
         <source>'--report-azdo-groups' requires '--report-azdo' to be enabled</source>
-        <target state="new">'--report-azdo-groups' requires '--report-azdo' to be enabled</target>
+        <target state="translated">'--report-azdo-groups' richiede l'abilitazione di '--report-azdo'</target>
         <note>{Locked="--report-azdo-groups"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="AzureDevOpsLivePublishingCompleteRunFailed">
@@ -214,7 +214,7 @@
       </trans-unit>
       <trans-unit id="GroupsOptionDescription">
         <source>Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</source>
-        <target state="new">Enable or disable per-assembly Azure DevOps log groups ('on' or 'off'). Defaults to 'on'. Requires '--report-azdo'.</target>
+        <target state="translated">Abilita o disabilita i gruppi di log di Azure DevOps per assembly ('on' o 'off'). L'impostazione predefinita è 'on'. Richiede "--report-azdo".</target>
         <note>{Locked="on"}{Locked="off"}{Locked="--report-azdo"}</note>
       </trans-unit>
       <trans-unit id="InvalidArtifactUploadGlob">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="InvalidOnOffValue">
         <source>Invalid value '{0}'. Valid values are 'on' and 'off'.</source>
-        <target state="new">Invalid value '{0}'. Valid values are 'on' and 'off'.</target>
+        <target state="translated">Valore '{0}' non valido. I valori validi sono 'on' e 'off'.</target>
         <note>{Locked="on"}{Locked="off"}</note>
       </trans-unit>
       <trans-unit id="InvalidSeverity">

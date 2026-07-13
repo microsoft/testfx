@@ -17,7 +17,7 @@ public sealed class ProtocolTests
     {
         object serializer = new TestResultMessagesSerializer();
         var success = new SuccessfulTestResultMessage("uid", "displayName", 1, 100, "reason", "standardOutput", "errorOutput", "sessionUid");
-        var fail = new FailedTestResultMessage("uid", "displayName", 2, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid");
+        var fail = new FailedTestResultMessage("uid", "displayName", 2, 200, "reason", [new ExceptionMessage("errorMessage", "errorType", "stackTrace")], "standardOutput", "errorOutput", "sessionUid", "expected", "actual");
         var message = new TestResultMessages("executionId", "instanceId", [success], [fail]);
 
         var stream = new MemoryStream();
@@ -340,7 +340,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(message.ExecutionId, actual.ExecutionId);
         Assert.AreEqual(message.InstanceId, actual.InstanceId);
         Assert.IsNotNull(actual.InProgressMessages);
-        Assert.HasCount(0, actual.InProgressMessages);
+        Assert.IsEmpty(actual.InProgressMessages);
     }
 
     [TestMethod]

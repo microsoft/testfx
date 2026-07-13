@@ -61,6 +61,17 @@ public class UnitTest1
     public void TestMethod2(int a, int b)
     {
     }
+
+    // Exercises the source-generated DynamicData accessor (property source) at runtime: if the generated
+    // DynamicDataSourceResolver registration produced the wrong data, this test would fail or not run.
+    public static IEnumerable<object[]> Data => new[] { new object[] { 1, 2 }, new object[] { 3, 4 } };
+
+    [TestMethod]
+    [DynamicData(nameof(Data))]
+    public void TestMethod3(int a, int b)
+    {
+        Assert.AreEqual(a + 1, b);
+    }
 }
 """;
 
@@ -88,13 +99,17 @@ public class UnitTest1
         // Static evidence the source generator actually ran in the build (not just that
         // the package was restored). EmitCompilerGeneratedFiles writes the generator
         // output under obj/<config>/<tfm>/generated/<generator-assembly>/<full-type-name>/<hintname>.
-        // The hint name uses the assembly name (from the csproj filename), not the asset
-        // directory name (which we suffix with tfm to keep parallel TFM runs isolated).
+        // The emitted hint name depends on which generator ran, and that is selected by the
+        // MSTestSourceGenMode default (ReflectionFree) supplied by MSTest.TestAdapter.targets:
+        //   - Rooting        -> '<AssemblyName>.MSTestReflectionMetadata.g.cs'
+        //   - ReflectionFree -> 'MSTestReflectionMetadata.Registry.g.cs' (plus SupportTypes/Registration)
+        // Both contain 'MSTestReflectionMetadata' and end with '.g.cs', so match either with a glob
+        // to keep this smoke test independent of the default mode.
         string objGenerated = Path.Combine(generator.TargetAssetPath, "obj", "Release", tfm, "generated");
         string[] generatedFiles = Directory.Exists(objGenerated)
-            ? Directory.GetFiles(objGenerated, $"{AssetName}.MSTestReflectionMetadata.g.cs", SearchOption.AllDirectories)
+            ? Directory.GetFiles(objGenerated, "*MSTestReflectionMetadata*.g.cs", SearchOption.AllDirectories)
             : [];
-        Assert.IsNotEmpty(generatedFiles, $"the source generator should have emitted '{AssetName}.MSTestReflectionMetadata.g.cs' under '{objGenerated}'");
+        Assert.IsNotEmpty(generatedFiles, $"the source generator should have emitted a '*MSTestReflectionMetadata*.g.cs' file under '{objGenerated}'");
 
         // Behavioral evidence: tests still discover and run when the source-generated
         // ReflectionMetadataHook is the only metadata provider wired in at module init.
@@ -103,7 +118,7 @@ public class UnitTest1
         // catch silent discovery regressions where tests are not picked up.)
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
     }
 

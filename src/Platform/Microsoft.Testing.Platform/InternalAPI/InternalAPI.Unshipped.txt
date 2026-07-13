@@ -6,11 +6,21 @@ Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Kind.get -> string?
 Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Kind.init -> void
 *REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid) -> void
 *REMOVED*Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid) -> void
+static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
+Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
+Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void
+Microsoft.Testing.Platform.Logging.FileLogger.IsFileHandleReleased.get -> bool
+Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 const Microsoft.Testing.Platform.ServerMode.JsonRpcStrings.IsStateful = "isStateful" -> string!
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider, bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider, out bool IsStateful) -> void
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.get -> bool
 Microsoft.Testing.Platform.ServerMode.ClientCapabilities.IsStateful.init -> void
+Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer
+Microsoft.Testing.Platform.Services.ArtifactNamingService
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ArtifactNamingService(Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Helpers.IClock! clock) -> void
+Microsoft.Testing.Platform.Services.ArtifactNamingService.ResolveFileName(string! template) -> string!
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.<Clone>$() -> Microsoft.Testing.Platform.Services.ClientCapabilitiesService!
 Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ClientCapabilitiesService(bool IsStateful) -> void
@@ -25,11 +35,39 @@ Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.GetHashCode() -> int
 override Microsoft.Testing.Platform.Services.ClientCapabilitiesService.ToString() -> string!
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.TryReadExecutionScopedField(System.IO.Stream! stream, ushort fieldId, int fieldSize, ref string? executionId, ref string? instanceId) -> bool
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteExecutionScopedHeader(System.IO.Stream! stream, string? executionId, string? instanceId, ushort payloadFieldCount) -> void
+static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
+static Microsoft.Testing.Platform.Services.ArtifactFileNameSanitizer.ReplaceInvalidFileNameChars(string! fileName) -> string!
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator !=(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 static Microsoft.Testing.Platform.Services.ClientCapabilitiesService.operator ==(Microsoft.Testing.Platform.Services.ClientCapabilitiesService? left, Microsoft.Testing.Platform.Services.ClientCapabilitiesService? right) -> bool
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.ClientCapabilities(bool DebuggerProvider) -> void
+*REMOVED*Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory) -> void
 *REMOVED*Microsoft.Testing.Platform.ServerMode.ClientCapabilities.Deconstruct(out bool DebuggerProvider) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.ClientInfoService(string! Id, string! Version) -> void
 *REMOVED*Microsoft.Testing.Platform.Services.ClientInfoService.Deconstruct(out string! Id, out string! Version) -> void
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.ReadFields(System.IO.Stream! stream, System.Func<ushort, int, bool>! tryReadField) -> void
-static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayload<T>(System.IO.Stream! stream, ushort fieldId, T[]? list, System.Action<System.IO.Stream!, T>! writeItem) -> void
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Expected = 10 -> ushort
+const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Actual = 11 -> ushort
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Expected.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Expected.init -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Actual.get -> string?
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Actual.init -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.FailedTestResultMessage(string? Uid, string? DisplayName, byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? ErrorOutput, string? SessionUid, string? Expected, string? Actual) -> void
+Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Deconstruct(out string? Uid, out string? DisplayName, out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? ErrorOutput, out string? SessionUid, out string? Expected, out string? Actual) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Expected.get -> string?
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Expected.init -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Actual.get -> string?
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Actual.init -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.TestNodeDetails(byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? StandardError, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits, string? Expected, string? Actual) -> void
+Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Deconstruct(out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? StandardError, out Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, out Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits, out string? Expected, out string? Actual) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.FailedTestResultMessage(string? Uid, string? DisplayName, byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? ErrorOutput, string? SessionUid) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.Models.FailedTestResultMessage.Deconstruct(out string? Uid, out string? DisplayName, out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? ErrorOutput, out string? SessionUid) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.TestNodeDetails(byte? State, long? Duration, string? Reason, Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, string? StandardOutput, string? StandardError, Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits) -> void
+*REMOVED*Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.TestNodeDetails.Deconstruct(out byte? State, out long? Duration, out string? Reason, out Microsoft.Testing.Platform.IPC.Models.ExceptionMessage![]? Exceptions, out string? StandardOutput, out string? StandardError, out Microsoft.Testing.Platform.Extensions.Messages.FileArtifactProperty![]! Artifacts, out Microsoft.Testing.Platform.Extensions.Messages.TestMetadataProperty![]! Traits) -> void
+const Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption = "show-slowest-tests" -> string!
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.SlowestTestsCount.get -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.SlowestTestsCount.init -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RecordTestDuration(string! testNodeUid, string! displayName, System.TimeSpan? duration) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetSlowestTests(int count) -> System.Collections.Generic.IReadOnlyList<(string! DisplayName, System.TimeSpan Duration)>!
+static Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.GetSlowestTestsCount(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> int

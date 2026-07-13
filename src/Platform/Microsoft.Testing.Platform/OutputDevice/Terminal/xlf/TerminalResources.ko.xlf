@@ -59,7 +59,7 @@
       </trans-unit>
       <trans-unit id="ErroredAssembliesHeader">
         <source>Errored assemblies:</source>
-        <target state="new">Errored assemblies:</target>
+        <target state="translated">오류가 발생한 어셈블리:</target>
         <note />
       </trans-unit>
       <trans-unit id="ExitCode">
@@ -150,6 +150,11 @@
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
         <target state="translated">건너뜀</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SlowestTests">
+        <source>Slowest tests:</source>
+        <target state="new">Slowest tests:</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
@@ -250,6 +255,16 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
         <target state="translated">--show-stdout 및 --show-stderr에는 값이 'All', 'Failed' 또는 'None'인 단일 매개 변수가 필요합니다.</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionDescription">
+        <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
+        <target state="new">Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
+        <source>--show-slowest-tests expects a single positive integer parameter.</source>
+        <target state="new">--show-slowest-tests expects a single positive integer parameter.</target>
+        <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.

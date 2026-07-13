@@ -39,6 +39,8 @@ public partial class InvokeTestingPlatformTask : Build.Utilities.ToolTask, IDisp
     private string? _outputFileName;
     private StreamWriter? _outputFileStream;
     private string? _toolCommand;
+    private bool _captureOutput;
+    private bool _showTestsFailure;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="InvokeTestingPlatformTask"/> class.

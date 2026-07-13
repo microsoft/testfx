@@ -27,6 +27,13 @@ internal sealed class TestProgressState
     // This lookup is O(1) because GetAttemptNumberFromInstanceId is called for every reported test result.
     private readonly Dictionary<string, int> _instanceIdToAttemptNumber = [];
 
+    // Records the last-seen (display name, duration) for every test node, keyed by test node uid, so the
+    // "slowest tests" summary section can rank them. Keyed by uid (not appended to a list) so a retried test
+    // replaces its earlier attempt's timing instead of appearing twice, mirroring the pass/fail tally above.
+    // Only populated when the slowest-tests feature is enabled (the reporter gates the RecordTestDuration call),
+    // so a run without the feature pays no memory cost here.
+    private readonly Dictionary<string, (string DisplayName, TimeSpan Duration)> _testUidToDuration = [];
+
     public TestProgressState(long id, string assembly, string? targetFramework, string? architecture, IStopwatch stopwatch, bool isDiscovery)
     {
         Id = id;
@@ -89,6 +96,37 @@ internal sealed class TestProgressState
 
     public void ReportFailedTest(string testNodeUid, string instanceId)
         => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Failed = entry.Failed + 1 }, static @this => @this.FailedTests++);
+
+    /// <summary>
+    /// Records (or clears) the last-seen duration reported for a test node so it can be ranked in the "slowest
+    /// tests" summary section. Keyed by <paramref name="testNodeUid"/> so a retry (which re-reports the same uid)
+    /// replaces the earlier attempt's timing rather than adding a duplicate entry. A <see langword="null"/>
+    /// <paramref name="duration"/> means the latest attempt reported no timing, so the earlier attempt's stale
+    /// duration is removed rather than kept. Only invoked when the slowest-tests feature is enabled.
+    /// </summary>
+    public void RecordTestDuration(string testNodeUid, string displayName, TimeSpan? duration)
+    {
+        if (duration.HasValue)
+        {
+            _testUidToDuration[testNodeUid] = (displayName, duration.Value);
+        }
+        else
+        {
+            _testUidToDuration.Remove(testNodeUid);
+        }
+    }
+
+    /// <summary>
+    /// Returns up to <paramref name="count"/> recorded tests ordered from slowest to fastest. Ties are broken by
+    /// display name (ordinal) so the ranking is deterministic for snapshot-based tests.
+    /// </summary>
+    public IReadOnlyList<(string DisplayName, TimeSpan Duration)> GetSlowestTests(int count)
+        => count <= 0 || _testUidToDuration.Count == 0
+            ? []
+            : [.. _testUidToDuration.Values
+                .OrderByDescending(static entry => entry.Duration)
+                .ThenBy(static entry => entry.DisplayName, StringComparer.Ordinal)
+                .Take(count)];
 
     /// <summary>
     /// Registers a handshake for the given <paramref name="instanceId"/>. A previously unseen instance id is a new

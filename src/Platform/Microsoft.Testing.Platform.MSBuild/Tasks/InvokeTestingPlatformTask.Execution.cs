@@ -27,14 +27,36 @@ public partial class InvokeTestingPlatformTask
     /// <inheritdoc />
     protected override void LogEventsFromTextOutput(string singleLine, MessageImportance messageImportance)
     {
-        if (!bool.Parse(TestingPlatformCaptureOutput.ItemSpec))
+        if (!_captureOutput)
         {
-            Log.LogMessage(MessageImportance.High, singleLine);
+            // Azure DevOps logging commands (##[group], ##[endgroup], ##vso[...]) emitted by the
+            // Microsoft.Testing.Extensions.AzureDevOpsReport extension are only honored by the Azure Pipelines
+            // agent when they start at column 0. Routing them through Log.LogMessage lets the MSBuild console
+            // logger indent them (by at least two spaces), so the agent stops recognizing them: the log group no
+            // longer collapses and the raw '##[group]...' marker is rendered as garbled text. Write those command
+            // lines straight to stdout to preserve column 0; everything else keeps flowing through MSBuild logging.
+            if (IsAzureDevOpsLoggingCommand(singleLine))
+            {
+                Console.Out.WriteLine(singleLine);
+            }
+            else
+            {
+                Log.LogMessage(MessageImportance.High, singleLine);
+            }
         }
 
         // Collect the output to be written to the file.
         _output.AppendLine(singleLine);
     }
+
+    /// <summary>
+    /// Returns whether <paramref name="singleLine"/> is an Azure DevOps logging command that must reach the
+    /// pipeline log at column 0 to be processed by the agent (a format command such as <c>##[group]</c> /
+    /// <c>##[endgroup]</c>, or a <c>##vso[...]</c> command).
+    /// </summary>
+    internal static bool IsAzureDevOpsLoggingCommand(string singleLine)
+        => singleLine.StartsWith("##[", StringComparison.Ordinal)
+        || singleLine.StartsWith("##vso[", StringComparison.Ordinal);
 
     /// <inheritdoc />
     protected override void ProcessStarted()
@@ -67,6 +89,12 @@ public partial class InvokeTestingPlatformTask
     /// <inheritdoc />
     public override bool Execute()
     {
+        // These [Required] task items are set once by MSBuild before Execute() is called and never
+        // change during the run. Parse them once here (before base.Execute() starts the process and
+        // begins streaming output) instead of re-parsing on every output line / failed-test request.
+        _captureOutput = bool.Parse(TestingPlatformCaptureOutput.ItemSpec);
+        _showTestsFailure = bool.Parse(TestingPlatformShowTestsFailure.ItemSpec);
+
         bool returnValue = base.Execute();
         if (_toolCommand is not null)
         {
@@ -170,7 +198,7 @@ public partial class InvokeTestingPlatformTask
         if (request is FailedTestInfoRequest failedTestInfoRequest)
         {
             // TestingPlatformShowTestsFailure is not enabled, don't write errors to output.
-            if (!bool.Parse(TestingPlatformShowTestsFailure.ItemSpec))
+            if (!_showTestsFailure)
             {
                 return Task.FromResult<IResponse>(VoidResponse.CachedInstance);
             }

@@ -128,6 +128,60 @@ public sealed partial class Assert
         {
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, ReadOnlySpan<TItem> collection, out bool shouldAppend)
+        {
+            _actualCount = collection.Length;
+            _expectedCount = 0;
+            shouldAppend = _actualCount != _expectedCount;
+            if (shouldAppend)
+            {
+                _builder = new StringBuilder(literalLength + formattedCount);
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, Span<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, (ReadOnlySpan<TItem>)collection, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, ReadOnlyMemory<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, collection.Span, out shouldAppend)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssertCountInterpolatedStringHandler{TItem}"/> struct.
+        /// </summary>
+        /// <param name="literalLength">The number of constant characters in the interpolated string.</param>
+        /// <param name="formattedCount">The number of interpolation expressions in the interpolated string.</param>
+        /// <param name="collection">The collection being asserted; the message is only computed when the assertion fails.</param>
+        /// <param name="shouldAppend">When this method returns, indicates whether the interpolated string should be evaluated.</param>
+        public AssertCountInterpolatedStringHandler(int literalLength, int formattedCount, Memory<TItem> collection, out bool shouldAppend)
+            : this(literalLength, formattedCount, (ReadOnlyMemory<TItem>)collection, out shouldAppend)
+        {
+        }
+
 #endif
 
         internal void ComputeAssertion(string assertionName, string collectionExpression)

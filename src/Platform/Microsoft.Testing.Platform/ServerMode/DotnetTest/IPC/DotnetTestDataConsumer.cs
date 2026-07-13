@@ -144,7 +144,9 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                    testNodeDetails.Exceptions,
                                    testNodeDetails.StandardOutput ?? string.Empty,
                                    testNodeDetails.StandardError ?? string.Empty,
-                                   testNodeUpdateMessage.SessionUid.Value)
+                                   testNodeUpdateMessage.SessionUid.Value,
+                                   testNodeDetails.Expected,
+                                   testNodeDetails.Actual)
                             ]);
 
                         await _dotnetTestConnection.SendMessageAsync(testResultMessages).ConfigureAwait(false);
@@ -215,6 +217,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         byte? state = null;
         long? duration = null;
         string? reason = string.Empty;
+        string? expected = null;
+        string? actual = null;
         ExceptionMessage[]? exceptions = null;
         TestNodeStateProperty? nodeState = testNodeUpdateMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>();
         if (nodeState is null)
@@ -308,6 +312,12 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 duration = timingProperty?.GlobalTiming.Duration.Ticks;
                 reason = nodeState.Explanation;
                 exceptions = FlattenToExceptionMessages(reason, failedTestNodeStateProperty.Exception);
+
+                // Mirror TerminalOutputDevice's single-assembly rendering: assertion libraries store the
+                // structured expected/actual values on Exception.Data so the reporter can show a diff.
+                // Only failed tests carry these (error/timeout/cancelled pass null, as in single-assembly).
+                expected = failedTestNodeStateProperty.Exception?.Data["assert.expected"] as string;
+                actual = failedTestNodeStateProperty.Exception?.Data["assert.actual"] as string;
                 break;
 
             case ErrorTestNodeStateProperty errorTestNodeStateProperty:
@@ -338,7 +348,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 break;
         }
 
-        return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError, artifacts, traits);
+        return new TestNodeDetails(state, duration, reason, exceptions, standardOutput, standardError, artifacts, traits, expected, actual);
 
         static TProperty GetSingleOrDefaultValue<TProperty>(TProperty? existingProperty, TProperty property)
             where TProperty : IProperty
@@ -365,7 +375,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
         }
     }
 
-    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError, FileArtifactProperty[] Artifacts, TestMetadataProperty[] Traits);
+    public sealed record TestNodeDetails(byte? State, long? Duration, string? Reason, ExceptionMessage[]? Exceptions, string? StandardOutput, string? StandardError, FileArtifactProperty[] Artifacts, TestMetadataProperty[] Traits, string? Expected, string? Actual);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

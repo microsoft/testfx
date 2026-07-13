@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Helpers;
@@ -63,6 +64,14 @@ internal partial class TestExecutionManager
         }
         else
         {
+            // On single-threaded wasm runtimes (browser-wasm / wasi-wasm) there is no thread pool, so
+            // Task.Run would offload to a queue that never runs and the awaiting caller would hang.
+            // Run inline instead; parallelism is irrelevant there since there is only one thread.
+            if (!RuntimeContext.IsMultiThreaded)
+            {
+                return taskGetter();
+            }
+
             // NOTE: If you replace this with `return taskGetter()`, you will break parallel tests.
             return Task.Run(taskGetter);
         }
