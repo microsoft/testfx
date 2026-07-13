@@ -317,6 +317,32 @@ public sealed class TrxReportEngineMergeTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenMergedRootOverlapsInputTree_SkipsRelocationWithoutRecursing()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // Output written beside the input, with runName matching the input's runDeploymentRoot, so
+            // the merged 'In' root equals the source 'In' root. Relocation must skip (not recurse into
+            // its own destination) and leave the already-resolvable href untouched.
+            string input = WriteReportWithAttachment(tempDirectory, "a.trx", deploymentRoot: "run", attachmentContent: "AAA");
+            string output = Path.Combine(tempDirectory, "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            Assert.IsTrue(File.Exists(output));
+            Assert.IsTrue(File.Exists(Path.Combine(tempDirectory, "run", "In", "machine", "log.txt")));
+            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            Assert.Contains("machine/log.txt", hrefs);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static string WriteReportWithAttachment(string inputDirectory, string fileName, string deploymentRoot, string attachmentContent)
     {
         Directory.CreateDirectory(inputDirectory);

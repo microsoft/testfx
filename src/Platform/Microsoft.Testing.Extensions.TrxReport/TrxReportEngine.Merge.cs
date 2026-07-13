@@ -251,6 +251,16 @@ internal sealed partial class TrxReportEngine
                     continue;
                 }
 
+                // If the merged 'In' root and the source 'In' root overlap (e.g. the output is written
+                // beside the input and runName matches the input's runDeploymentRoot), copying the source
+                // into a subfolder of itself would make the recursion re-discover its own destination.
+                // Skip relocation in that case: the files already live under the merged deployment root,
+                // so the original hrefs resolve as-is (leave them un-prefixed).
+                if (IsUnderDirectory(mergedInRoot, sourceInRoot) || IsUnderDirectory(sourceInRoot, mergedInRoot))
+                {
+                    continue;
+                }
+
                 // Isolate each input under its own subfolder so identical relative attachment paths
                 // from different inputs cannot shadow each other.
                 string prefix = i.ToString(CultureInfo.InvariantCulture);
@@ -324,11 +334,17 @@ internal sealed partial class TrxReportEngine
 
         foreach (string file in Directory.GetFiles(sourceDirectory))
         {
-            string destination = Path.Combine(destinationDirectory, Path.GetFileName(file));
-            if (!File.Exists(destination))
+            // A file reparse point (symlink) would make File.Copy follow the link and pull in content
+            // from outside the confined tree; skip it.
+            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
             {
-                File.Copy(file, destination);
+                continue;
             }
+
+            // Overwrite so a reused output directory can't leave stale bytes behind while the merged
+            // XML is rewritten to reference the (per-input isolated) destination, mirroring the
+            // File.Create overwrite used for the merged TRX itself.
+            File.Copy(file, Path.Combine(destinationDirectory, Path.GetFileName(file)), overwrite: true);
         }
 
         foreach (string directory in Directory.GetDirectories(sourceDirectory))
