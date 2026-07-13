@@ -3,9 +3,7 @@
 
 #if !WINDOWS_UWP
 using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources;
 
@@ -19,29 +17,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatform
 /// <c>--help</c> surface is unchanged.
 /// </summary>
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "We can use MTP from this folder")]
-internal sealed class MSTestRunSettingsCommandLineOptionsProvider : CommandLineOptionsProviderBase
+internal sealed class MSTestRunSettingsCommandLineOptionsProvider : RunSettingsCommandLineOptionsProviderBase
 {
-    public const string RunSettingsOptionName = "settings";
-    private readonly IFileSystem _fileSystem;
-
     public MSTestRunSettingsCommandLineOptionsProvider(IExtension extension)
         : this(extension, new SystemFileSystem())
     {
     }
 
     internal MSTestRunSettingsCommandLineOptionsProvider(IExtension extension, IFileSystem fileSystem)
-        : base(extension, [new CommandLineOption(RunSettingsOptionName, PlatformAdapterResources.RunSettingsOptionDescription, ArgumentArity.ExactlyOne, false)])
-        => _fileSystem = fileSystem;
-
-    public override Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+        : base(extension, fileSystem, PlatformAdapterResources.RunSettingsOptionDescription, PlatformAdapterResources.RunsettingsFileDoesNotExist, PlatformAdapterResources.RunsettingsFileCannotBeRead)
     {
-        string filePath = arguments[0];
-
-        return !_fileSystem.ExistFile(filePath)
-            ? ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.RunsettingsFileDoesNotExist, filePath))
-            : !RunSettingsProviderHelper.CanReadFile(_fileSystem, filePath)
-                ? ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformAdapterResources.RunsettingsFileCannotBeRead, filePath))
-                : ValidationResult.ValidTask;
     }
 }
 #endif

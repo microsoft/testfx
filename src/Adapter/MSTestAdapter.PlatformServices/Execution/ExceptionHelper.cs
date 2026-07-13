@@ -31,7 +31,7 @@ internal static class ExceptionHelper
             curException != null;
             curException = curException.InnerException)
         {
-            // TODO:Fix the shadow stack-trace used in Private Object
+            // The shadow stack-trace used in Private Object could be improved.
             // (Look-in Assertion.cs in the UnitTestFramework assembly)
 
             // Sometimes the stack trace can be null, but the inner stack trace

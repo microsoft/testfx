@@ -11,6 +11,9 @@
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
     <!-- Dependency-free logic shared with the MSTest adapter's native MTP providers (see issue #9762). -->
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsProviderHelper.cs" Link="Helpers\RunSettingsProviderHelper.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsCommandLineOptionsProviderBase.cs" Link="Helpers\RunSettingsCommandLineOptionsProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsConfigurationProviderBase.cs" Link="Helpers\RunSettingsConfigurationProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsEnvironmentVariableProviderBase.cs" Link="Helpers\RunSettingsEnvironmentVariableProviderBase.cs" />
   </ItemGroup>
 
   <ItemGroup>
