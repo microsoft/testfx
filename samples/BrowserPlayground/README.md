@@ -34,7 +34,7 @@ Prerequisites:
   [`eng/restore-toolset.sh`](../../eng/restore-toolset.sh)). If you use a machine-installed
   SDK instead, install the workload manually:
 
-  ```
+  ```sh
   dotnet workload install wasm-tools-net10
   ```
 
@@ -48,7 +48,7 @@ Prerequisites:
 
 ### 1. Publish
 
-```
+```sh
 dotnet publish samples/BrowserPlayground/BrowserPlayground.csproj -c Debug -f net10.0
 ```
 
@@ -61,7 +61,7 @@ The published app bundle lands under
 
 From the bundle directory:
 
-```
+```sh
 cd artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle
 node runtests.mjs
 ```
@@ -75,7 +75,7 @@ process exit code. This is the mode the `BrowserWasmExecutionTests` acceptance t
 Serve the bundle over HTTP (WebAssembly cannot be loaded from `file://`) and open it. Any
 static file server works; two options that need no extra provisioning:
 
-```
+```sh
 cd artifacts/bin/BrowserPlayground/Debug/net10.0/browser-wasm/AppBundle
 
 # Using Node (installed for step 2a):
@@ -150,4 +150,3 @@ That is why `Program.cs` registers only the telemetry provider (`AddAppInsightsT
 | `WasmBuildNative=false` | Use the pre-built `dotnet.native.wasm`. A native relink needs the emscripten toolchain (pulled in by the `wasm-tools` workload) and is slower; the pre-built runtime is enough to boot MTP. |
 | (no `InvariantGlobalization`) | On browser-wasm, `InvariantGlobalization=true` forces `WasmBuildNative=true` (an emscripten relink), so it is intentionally left unset — the browser bundle ships ICU (`icudt*.dat`) by default. This differs from the `wasi-wasm` acceptance asset (`WasmExecutionTests.cs`), which keeps `InvariantGlobalization=true` and stages `icudt.dat` manually via `WasmRuntime.StageIcuData`. |
 | `WasmExtraFilesToDeploy` | Copies the node runner (`runtests.mjs`) and `index.html` into the published `AppBundle` next to `main.js` (the `WasmMainJSPath` module). Plain `CopyToOutputDirectory` would only reach the build output folder, not the `AppBundle`. |
-

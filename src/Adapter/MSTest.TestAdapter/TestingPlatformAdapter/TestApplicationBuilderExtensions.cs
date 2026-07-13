@@ -55,8 +55,11 @@ public static class TestApplicationBuilderExtensions
         // The environment-variable provider is a test-host-controller extension: it applies runsettings
         // <EnvironmentVariables> by relaunching the test host with those variables set. That requires a
         // controller process + restart, which browser-wasm does not support (TestHostControllersManager
-        // throws PlatformNotSupportedException there). Skip it on browser — the feature is unavailable,
-        // but the tests themselves still run. See https://github.com/microsoft/testfx/issues/2196.
+        // throws PlatformNotSupportedException there). Skip the registration on browser. Silently dropping
+        // a requested <EnvironmentVariables> section would change test semantics, so the `--settings`
+        // command-line validation (RunSettingsCommandLineOptionsProviderBase) fails with a clear
+        // unsupported-platform diagnostic when the runsettings actually declares that section on browser.
+        // See https://github.com/microsoft/testfx/issues/2196.
         if (!OperatingSystem.IsBrowser())
         {
             testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider

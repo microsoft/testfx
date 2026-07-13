@@ -42,11 +42,37 @@ internal abstract class RunSettingsCommandLineOptionsProviderBase : CommandLineO
     {
         string filePath = arguments[0];
 
-        return !_fileSystem.ExistFile(filePath)
-            ? ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, _fileDoesNotExistErrorFormat, filePath))
-            : !RunSettingsProviderHelper.CanReadFile(_fileSystem, filePath)
-                ? ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, _fileCannotBeReadErrorFormat, filePath))
-                : ValidationResult.ValidTask;
+        if (!_fileSystem.ExistFile(filePath))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, _fileDoesNotExistErrorFormat, filePath));
+        }
+
+        if (!RunSettingsProviderHelper.CanReadFile(_fileSystem, filePath))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, _fileCannotBeReadErrorFormat, filePath));
+        }
+
+        // On browser/WebAssembly, applying a runsettings <EnvironmentVariables> section requires relaunching
+        // the test host with those variables set — a test-host-controller feature that needs a process restart,
+        // which the browser sandbox does not support. Rather than silently ignoring the section (which would
+        // run the tests with different semantics than requested), fail with a clear unsupported-platform
+        // diagnostic. Guarded to NETCOREAPP because browser-wasm only runs there (and OperatingSystem.IsBrowser
+        // is a built-in since .NET 8, so no polyfill is needed). The synchronous load is fine: this runs once at
+        // startup on a small file. See https://github.com/microsoft/testfx/issues/2196.
+#if NETCOREAPP
+        if (OperatingSystem.IsBrowser())
+        {
+            using IFileStream fileStream = _fileSystem.NewFileStream(filePath, FileMode.Open, FileAccess.Read);
+            var runSettings = XDocument.Load(fileStream.Stream);
+            if (RunSettingsProviderHelper.HasEnvironmentVariables(runSettings))
+            {
+                return ValidationResult.InvalidTask(
+                    "The runsettings <EnvironmentVariables> section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.");
+            }
+        }
+#endif
+
+        return ValidationResult.ValidTask;
     }
 }
 #endif
