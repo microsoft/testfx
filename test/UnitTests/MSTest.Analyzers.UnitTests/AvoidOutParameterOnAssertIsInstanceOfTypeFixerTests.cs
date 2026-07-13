@@ -273,6 +273,98 @@ public sealed class AvoidOutParameterOnAssertIsInstanceOfTypeFixerTests
     }
 
     [TestMethod]
+    public async Task FixIsInstanceOfTypeWithExplicitType_ShouldProduceTypedVariableDeclaration()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    object value = "test";
+                    /*trivia1*/Assert.IsInstanceOfType<string>(value, out {|CS1615:string result|})/*trivia2*/;/*trivia3*/
+                }
+
+                [TestMethod]
+                public void TestMethod2()
+                {
+                    object value = "test";
+
+
+                    Assert.IsInstanceOfType<string>(value, out {|CS1615:string result|});
+
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1()
+                {
+                    object value = "test";
+                    /*trivia1*/string result = Assert.IsInstanceOfType<string>(value)/*trivia2*/;/*trivia3*/
+                }
+
+                [TestMethod]
+                public void TestMethod2()
+                {
+                    object value = "test";
+
+
+                    string result = Assert.IsInstanceOfType<string>(value);
+
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task FixIsInstanceOfTypeWithExplicitTypeAndMessage_ShouldProduceTypedVariableDeclaration()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object value = "test";
+                    Assert.IsInstanceOfType<string>(value, out {|CS1615:string result|}, "message");
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object value = "test";
+                    string result = Assert.IsInstanceOfType<string>(value, "message");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
     public async Task FixIsInstanceOfTypeWithMultiLineStatements_PreservesIndentation()
     {
         string code = """
