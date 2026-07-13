@@ -22,18 +22,6 @@ internal sealed class ArtifactNamingService : IArtifactNamingService
     {
         string processName = Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         string processId = _environment.ProcessId.ToString(CultureInfo.InvariantCulture);
-        Dictionary<string, string> replacements = ArtifactNamingHelper.GetStandardReplacements(processName, processId, _clock.UtcNow);
-        string resolved = ArtifactNamingHelper.ResolveTemplate(template, replacements);
-
-        string directoryPart = Path.GetDirectoryName(resolved) ?? string.Empty;
-        string leafName = Path.GetFileName(resolved);
-        if (leafName.Length == 0)
-        {
-            throw new ArgumentException("The resolved template must produce a file name, not just a directory path.", nameof(template));
-        }
-
-        string sanitized = ArtifactFileNameSanitizer.ReplaceInvalidFileNameChars(leafName);
-
-        return directoryPart.Length == 0 ? sanitized : Path.Combine(directoryPart, sanitized);
+        return ArtifactNamingHelper.ResolveAndSanitize(template, processName, processId, _clock.UtcNow, ArtifactFileNameSanitizer.ReplaceInvalidFileNameChars);
     }
 }

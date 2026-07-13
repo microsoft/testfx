@@ -230,6 +230,22 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         typeName!.FullyQualifiedTypeName.Should().Be("MyNamespace.MyClass");
     }
 
+    public void ToResultTestNode_UsesFullClassNameForTrxTypeName_WhenNoManagedMethodName()
+    {
+        // Without a managed method name, no TestMethodIdentifierProperty is added, so the TRX fully-qualified type
+        // name falls back to TestMethod.FullClassName directly (the behavior that replaced TryParseFullyQualifiedType).
+        UnitTestElement element = CreateElement(managedMethodName: null);
+        var result = new FrameworkTestResult { Outcome = UnitTestOutcome.Failed, ExceptionMessage = "boom", ExceptionStackTrace = "at X()" };
+
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(element, result, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: true, new MSTestSettings());
+
+        node.Properties.Any<TestMethodIdentifierProperty>().Should().BeFalse();
+        Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty? typeName =
+            node.Properties.SingleOrDefault<Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty>();
+        typeName.Should().NotBeNull();
+        typeName!.FullyQualifiedTypeName.Should().Be("MyNamespace.MyClass");
+    }
+
     public void ToResultTestNode_DoesNotAddTrxProperties_WhenTrxDisabled()
     {
         TestNode node = ResultNode(UnitTestOutcome.Passed);
