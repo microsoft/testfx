@@ -123,7 +123,7 @@ internal sealed class DeploymentItemUtility
 
             IList<DeploymentItem>? deploymentItemsToBeAdded = FromKeyValuePairs(items);
 
-            // TODO: Check if we can avoid potential NRE here.
+            // A potential NRE here could possibly be avoided.
             foreach (DeploymentItem deploymentItemToBeAdded in deploymentItemsToBeAdded!)
             {
                 AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);

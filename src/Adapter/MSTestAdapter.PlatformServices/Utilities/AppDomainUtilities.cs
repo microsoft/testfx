@@ -69,7 +69,7 @@ internal static class AppDomainUtilities
     /// </param>
     /// <returns>
     /// Framework string
-    /// TODO: Need to add components/E2E tests to cover these scenarios.
+    /// Components/E2E tests could be added to cover these scenarios.
     /// </returns>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
     internal static string GetTargetFrameworkVersionString(string testSourcePath)

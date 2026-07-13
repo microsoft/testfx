@@ -137,7 +137,7 @@ internal static class DiagnosticExtensions
         => syntaxReference.GetSyntax(cancellationToken).CreateDiagnostic(rule, args);
 
     /// <summary>
-    /// TODO: Revert this reflection based workaround once we move to Microsoft.CodeAnalysis version 3.0
+    /// This reflection-based workaround can be reverted once we move to Microsoft.CodeAnalysis version 3.0.
     /// </summary>
     private static readonly PropertyInfo? s_syntaxTreeDiagnosticOptionsProperty =
         typeof(SyntaxTree).GetTypeInfo().GetDeclaredProperty("DiagnosticOptions");

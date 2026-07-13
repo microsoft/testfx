@@ -247,7 +247,7 @@ internal class AssemblyEnumerator
                 isDataDriven = true;
                 if (!TryUnfoldITestDataSource(dataSource, test, new(testMethodInfo.MethodInfo, test.TestMethod.DisplayName), tempListOfTests, ref globalTestCaseIndex, mustSerialize))
                 {
-                    // TODO: Improve multi-source design!
+                    // The multi-source design could be improved.
                     // Ideally we would want to consider each data source separately but when one source cannot be expanded,
                     // we will run all sources from the given method so we need to bail-out "globally".
                     return false;

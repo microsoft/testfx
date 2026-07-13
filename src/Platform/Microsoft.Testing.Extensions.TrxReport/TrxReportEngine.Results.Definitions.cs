@@ -93,7 +93,7 @@ internal sealed partial class TrxReportEngine
             unitTest.Add(properties);
         }
 
-        // TODO: We are not adding Workitems, but VSTest does.
+        // Unlike VSTest, we do not add Workitems.
         return unitTest;
     }
 }
