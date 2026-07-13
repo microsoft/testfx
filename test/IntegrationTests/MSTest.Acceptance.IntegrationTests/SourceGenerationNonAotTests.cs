@@ -61,6 +61,17 @@ public class UnitTest1
     public void TestMethod2(int a, int b)
     {
     }
+
+    // Exercises the source-generated DynamicData accessor (property source) at runtime: if the generated
+    // DynamicDataSourceResolver registration produced the wrong data, this test would fail or not run.
+    public static IEnumerable<object[]> Data => new[] { new object[] { 1, 2 }, new object[] { 3, 4 } };
+
+    [TestMethod]
+    [DynamicData(nameof(Data))]
+    public void TestMethod3(int a, int b)
+    {
+        Assert.AreEqual(a + 1, b);
+    }
 }
 """;
 
@@ -107,7 +118,7 @@ public class UnitTest1
         // catch silent discovery regressions where tests are not picked up.)
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
-        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 2, skipped: 0);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 4, skipped: 0);
         testHostResult.AssertExitCodeIs(0);
     }
 

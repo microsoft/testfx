@@ -35,62 +35,18 @@ internal static class DynamicDataOperations
         dynamicDataDeclaringType ??= GetTestMethodDeclaringType(methodInfo);
         DebugEx.Assert(dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-        object? obj = null;
-
-        switch (dynamicDataSourceType)
-        {
-            case DynamicDataSourceType.AutoDetect:
-#pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
-                if (dynamicDataDeclaringType.GetProperty(dynamicDataSourceName, MemberLookup) is { } dynamicDataPropertyInfo)
-                {
-                    obj = GetDataFromProperty(dynamicDataPropertyInfo);
-                }
-                else if (dynamicDataDeclaringType.GetMethod(dynamicDataSourceName, MemberLookup) is { } dynamicDataMethodInfo)
-                {
-                    obj = GetDataFromMethod(dynamicDataMethodInfo, dynamicDataSourceArguments);
-                }
-                else if (dynamicDataDeclaringType.GetField(dynamicDataSourceName, MemberLookup) is { } dynamicDataFieldInfo)
-                {
-                    obj = GetDataFromField(dynamicDataFieldInfo);
-                }
-                else
-                {
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, dynamicDataSourceName, dynamicDataDeclaringType.FullName));
-                }
-#pragma warning restore IDE0045 // Convert to conditional expression
-
-                break;
-            case DynamicDataSourceType.Property:
-                PropertyInfo property = dynamicDataDeclaringType.GetProperty(dynamicDataSourceName, MemberLookup)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {dynamicDataSourceName}");
-
-                obj = GetDataFromProperty(property);
-                break;
-
-            case DynamicDataSourceType.Method:
-                MethodInfo method = dynamicDataDeclaringType.GetMethod(dynamicDataSourceName, MemberLookup)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {dynamicDataSourceName}");
-
-                obj = GetDataFromMethod(method, dynamicDataSourceArguments);
-                break;
-
-            case DynamicDataSourceType.Field:
-                FieldInfo field = dynamicDataDeclaringType.GetField(dynamicDataSourceName, MemberLookup)
-                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Field} {dynamicDataSourceName}");
-
-                obj = GetDataFromField(field);
-                break;
-        }
-
-        if (obj == null)
-        {
-            throw new ArgumentNullException(
+        // Prefer the source-generated accessor when available: it returns the data object without reflecting
+        // over the declaring type, which is what makes DynamicData trim/Native-AOT safe. When no accessor was
+        // registered (reflection mode) we fall back to reflection below.
+        object? obj = (DynamicDataSourceResolver.TryGetData(dynamicDataDeclaringType, dynamicDataSourceName, dynamicDataSourceType, dynamicDataSourceArguments, out object? resolvedData)
+            ? resolvedData
+            : GetDataFromMemberByReflection(dynamicDataDeclaringType, dynamicDataSourceType, dynamicDataSourceName, dynamicDataSourceArguments))
+            ?? throw new ArgumentNullException(
                 string.Format(
                     CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataValueNull,
                     dynamicDataSourceName,
                     dynamicDataDeclaringType.FullName));
-        }
 
         if (!TryGetData(obj, out IEnumerable<object[]>? data))
         {
@@ -104,6 +60,55 @@ internal static class DynamicDataOperations
 
         // Data is valid, return it.
         return data;
+    }
+
+    private static object? GetDataFromMemberByReflection([DynamicallyAccessedMembers(RequiredMemberTypes)] Type dynamicDataDeclaringType, DynamicDataSourceType dynamicDataSourceType, string dynamicDataSourceName, object?[] dynamicDataSourceArguments)
+    {
+        switch (dynamicDataSourceType)
+        {
+            case DynamicDataSourceType.AutoDetect:
+#pragma warning disable IDE0045 // Convert to conditional expression - it becomes less readable.
+#pragma warning disable IDE0046 // Convert to conditional expression - it becomes less readable.
+                if (dynamicDataDeclaringType.GetProperty(dynamicDataSourceName, MemberLookup) is { } dynamicDataPropertyInfo)
+                {
+                    return GetDataFromProperty(dynamicDataPropertyInfo);
+                }
+                else if (dynamicDataDeclaringType.GetMethod(dynamicDataSourceName, MemberLookup) is { } dynamicDataMethodInfo)
+                {
+                    return GetDataFromMethod(dynamicDataMethodInfo, dynamicDataSourceArguments);
+                }
+                else if (dynamicDataDeclaringType.GetField(dynamicDataSourceName, MemberLookup) is { } dynamicDataFieldInfo)
+                {
+                    return GetDataFromField(dynamicDataFieldInfo);
+                }
+                else
+                {
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, FrameworkMessages.DynamicDataSourceShouldExistAndBeValid, dynamicDataSourceName, dynamicDataDeclaringType.FullName));
+                }
+#pragma warning restore IDE0046 // Convert to conditional expression
+#pragma warning restore IDE0045 // Convert to conditional expression
+
+            case DynamicDataSourceType.Property:
+                PropertyInfo property = dynamicDataDeclaringType.GetProperty(dynamicDataSourceName, MemberLookup)
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {dynamicDataSourceName}");
+
+                return GetDataFromProperty(property);
+
+            case DynamicDataSourceType.Method:
+                MethodInfo method = dynamicDataDeclaringType.GetMethod(dynamicDataSourceName, MemberLookup)
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {dynamicDataSourceName}");
+
+                return GetDataFromMethod(method, dynamicDataSourceArguments);
+
+            case DynamicDataSourceType.Field:
+                FieldInfo field = dynamicDataDeclaringType.GetField(dynamicDataSourceName, MemberLookup)
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Field} {dynamicDataSourceName}");
+
+                return GetDataFromField(field);
+
+            default:
+                return null;
+        }
     }
 
     private static object? GetDataFromMethod(MethodInfo method, object?[] arguments)

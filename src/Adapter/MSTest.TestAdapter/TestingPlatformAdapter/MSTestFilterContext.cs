@@ -52,7 +52,7 @@ internal abstract class MSTestFilterContextBase
 
     private FilterExpressionWrapper? FilterExpressionWrapper { get; set; }
 
-    private sealed class MSTestFilterExpression : ITestCaseFilterExpression
+    private sealed class MSTestFilterExpression : ITestCaseFilterExpression, IUnitTestElementFilterExpression
     {
         private readonly TestCaseFilterExpression _testCaseFilterExpression;
 
@@ -63,6 +63,14 @@ internal abstract class MSTestFilterContextBase
             => _testCaseFilterExpression.TestCaseFilterValue;
 
         public bool MatchTestCase(TestCase testCase, Func<string, object?> propertyValueProvider)
+            => _testCaseFilterExpression.MatchTestCase(propertyValueProvider);
+
+        // Native MTP path: the underlying vstest expression already matches purely from the property-value
+        // provider, so we evaluate against a UnitTestElement-sourced provider without ever materializing (or
+        // reading properties off) a vstest TestCase. This keeps the trim/AOT-unsafe TestObject property
+        // converters (TypeDescriptor.GetConverter — IL2026/IL2072) unreachable on the MTP filter path.
+        // See https://github.com/microsoft/testfx/issues/9769.
+        public bool MatchTestElement(Func<string, object?> propertyValueProvider)
             => _testCaseFilterExpression.MatchTestCase(propertyValueProvider);
     }
 
