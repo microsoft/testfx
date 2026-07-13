@@ -39,9 +39,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!--
+      Only the diagnostic capability is advertised. TestingPlatformServer / TestContainer are
+      intentionally omitted: browser-wasm cannot use server mode or the 'dotnet test' pipe (both
+      need TCP/named-pipe IPC — see the IsTestingPlatformApplication comment above and the README
+      feature matrix), and advertising them would let Test Explorer pick an unsupported launch path
+      when the project is opened directly.
+    -->
     <ProjectCapability Include="DiagnoseCapabilities" />
-    <ProjectCapability Include="TestingPlatformServer" />
-    <ProjectCapability Include="TestContainer" />
   </ItemGroup>
 
   <!--
