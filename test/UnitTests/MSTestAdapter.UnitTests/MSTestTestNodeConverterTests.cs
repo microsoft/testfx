@@ -59,13 +59,14 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         node.Properties.Any<InProgressTestNodeStateProperty>().Should().BeTrue();
     }
 
-    public void ToInProgressTestNode_DoesNotAddTestMethodIdentifier_EvenWithValidManagedNames()
+    public void ToInProgressTestNode_AddsTestMethodIdentifier_FromManagedNames()
     {
-        // In-progress nodes are "test started" signals; no consumer reads TestMethodIdentifierProperty
-        // from them, so the parse/allocation is skipped even when valid managed names are available.
+        // In-progress nodes must carry TestMethodIdentifierProperty: it is consumed by
+        // OpenTelemetryResultHandler.NotifyInProgress (test.method/class/namespace/assembly tags) and by the
+        // slow-test reporters via TestNodeIdentity, which otherwise fall back to the display name.
         TestNode node = MSTestTestNodeConverter.ToInProgressTestNode(CreateElement(), isTrxEnabled: false);
 
-        node.Properties.Any<TestMethodIdentifierProperty>().Should().BeFalse();
+        node.Properties.Any<TestMethodIdentifierProperty>().Should().BeTrue();
     }
 
     public void ToDiscoveredTestNode_AddsTestMethodIdentifier_FromManagedNames()
