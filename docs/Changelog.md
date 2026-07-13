@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 ## <a name="4.4.0" />[4.4.0] - UNRELEASED
 
-See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.0...v4.4.0)
+See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.2...v4.4.0)
 
 ### Changed
 
@@ -15,6 +15,20 @@ See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 ### Fixed
 
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
+
+## <a name="4.3.2" />[4.3.2] - 2026-07-13
+
+See full log [of v4.3.0...v4.3.2](https://github.com/microsoft/testfx/compare/v4.3.0...v4.3.2)
+
+### Changed
+
+* Make `ReflectionFree` the default `MSTestSourceGenMode` for Native AOT / trimmed consumers by @Evangelink in [#9777](https://github.com/microsoft/testfx/pull/9777)
+* Point MSTest.Sdk back to the classic source generation + engine wiring (as shipped in 4.2.3) by @Evangelink in [#9825](https://github.com/microsoft/testfx/pull/9825)
+* Update localized MSTest analyzer diagnostic messages by @Evangelink in [#9860](https://github.com/microsoft/testfx/pull/9860)
+
+### Fixed
+
+* Fix localization placeholder in MSTest analyzer resources by @Evangelink in [#9891](https://github.com/microsoft/testfx/pull/9891)
 
 ## <a name="4.3.0" />[4.3.0] - 2026-07-08
 
