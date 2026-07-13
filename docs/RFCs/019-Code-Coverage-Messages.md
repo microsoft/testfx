@@ -230,6 +230,19 @@ public readonly struct CoverageScope : IEquatable<CoverageScope>
 {
     public CoverageScope(CoverageScopeLevel level, string? name = null, string? containerHint = null)
     {
+        // Invariant: only Overall is unnamed; every other level requires a stable identifier.
+        if (level == CoverageScopeLevel.Overall)
+        {
+            if (name is not null)
+            {
+                throw new ArgumentException("The Overall scope must not have a name.", nameof(name));
+            }
+        }
+        else if (string.IsNullOrEmpty(name))
+        {
+            throw new ArgumentException($"A name is required for scope level '{level}'.", nameof(name));
+        }
+
         Level = level;
         Name = name;
         ContainerHint = containerHint;
@@ -238,7 +251,7 @@ public readonly struct CoverageScope : IEquatable<CoverageScope>
     /// <summary>Granularity of this scope.</summary>
     public CoverageScopeLevel Level { get; }
 
-    /// <summary>Scope identifier (module path, type name, file path…); null for Overall.</summary>
+    /// <summary>Scope identifier (module path, type name, file path…); null only for Overall.</summary>
     public string? Name { get; }
 
     /// <summary>
@@ -253,14 +266,16 @@ public readonly struct CoverageScope : IEquatable<CoverageScope>
 
     public static CoverageScope Overall => new(CoverageScopeLevel.Overall);
 
+    // Identity is (Level, Name) only. ContainerHint is a non-authoritative display hint and is
+    // intentionally excluded so two collectors reporting the same scope with different hints are
+    // not split into separate entries by the correlator.
     public bool Equals(CoverageScope other)
         => Level == other.Level
-        && string.Equals(Name, other.Name, StringComparison.Ordinal)
-        && string.Equals(ContainerHint, other.ContainerHint, StringComparison.Ordinal);
+        && string.Equals(Name, other.Name, StringComparison.Ordinal);
 
     public override bool Equals(object? obj) => obj is CoverageScope s && Equals(s);
 
-    public override int GetHashCode() => HashCode.Combine(Level, Name, ContainerHint);
+    public override int GetHashCode() => HashCode.Combine(Level, Name);
 }
 ```
 
@@ -280,13 +295,23 @@ public sealed class TestCoverageMessage : PropertyBagData
         CoverageMetric metric,
         long coveredCount,
         long coverableCount,
-        string? producerId = null,
+        string producerId,
         string? customMetricName = null)
         : base("Test coverage", "Reports a code coverage measurement for a scope.")
     {
-        if (coverableCount < 0 || coveredCount < 0 || coveredCount > coverableCount)
+        if (coverableCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(coverableCount));
+        }
+
+        if (coveredCount < 0 || coveredCount > coverableCount)
         {
             throw new ArgumentOutOfRangeException(nameof(coveredCount));
+        }
+
+        if (string.IsNullOrEmpty(producerId))
+        {
+            throw new ArgumentException("A stable, non-empty producer id is required.", nameof(producerId));
         }
 
         if (metric == CoverageMetric.Custom && string.IsNullOrWhiteSpace(customMetricName))
@@ -308,10 +333,12 @@ public sealed class TestCoverageMessage : PropertyBagData
 
     /// <summary>
     /// Identifies the collector that produced this measurement (e.g. "microsoft-code-coverage").
-    /// Part of the correlation key so results from multiple collectors are not silently merged,
-    /// and so a measurement can be tied back to its <see cref="TestCoverageReportMessage"/>.
+    /// <b>Required and non-empty</b>: it is part of the correlation key, so results from multiple
+    /// collectors are never silently merged, and it ties a measurement back to its
+    /// <see cref="TestCoverageReportMessage"/>. A collector that does not care about
+    /// multi-collector scenarios should still pass a stable constant (e.g. its extension Uid).
     /// </summary>
-    public string? ProducerId { get; }
+    public string ProducerId { get; }
 
     /// <summary>Set only when <see cref="Metric"/> is <see cref="CoverageMetric.Custom"/>.</summary>
     public string? CustomMetricName { get; }
@@ -342,13 +369,25 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
         CoverageAggregation aggregation,
         double actualPercentage,
         double requiredPercentage,
+        bool hasCoverableData,
+        string producerId,
         CoverageScopeLevel? aggregatedOver = null,
-        string? producerId = null,
+        bool treatNoDataAsFailure = true,
         string? customMetricName = null)
         : base("Test coverage threshold", "Reports the result of a coverage threshold evaluation.")
     {
-        ValidatePercentage(actualPercentage, nameof(actualPercentage));
         ValidatePercentage(requiredPercentage, nameof(requiredPercentage));
+
+        // ActualPercentage is only meaningful when there is coverable data.
+        if (hasCoverableData)
+        {
+            ValidatePercentage(actualPercentage, nameof(actualPercentage));
+        }
+
+        if (string.IsNullOrEmpty(producerId))
+        {
+            throw new ArgumentException("A stable, non-empty producer id is required.", nameof(producerId));
+        }
 
         if (metric == CoverageMetric.Custom && string.IsNullOrWhiteSpace(customMetricName))
         {
@@ -372,6 +411,8 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
         AggregatedOver = aggregatedOver;
         ActualPercentage = actualPercentage;
         RequiredPercentage = requiredPercentage;
+        HasCoverableData = hasCoverableData;
+        TreatNoDataAsFailure = treatNoDataAsFailure;
         ProducerId = producerId;
         CustomMetricName = customMetricName;
 
@@ -390,8 +431,8 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
 
     public string? CustomMetricName { get; }
 
-    /// <summary>Identifies the collector that produced this evaluation (correlation key).</summary>
-    public string? ProducerId { get; }
+    /// <summary>Identifies the collector that produced this evaluation (required, correlation key).</summary>
+    public string ProducerId { get; }
 
     public CoverageAggregation Aggregation { get; }
 
@@ -403,12 +444,28 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
     /// </summary>
     public CoverageScopeLevel? AggregatedOver { get; }
 
-    public double ActualPercentage { get; }     // 0–100, validated
+    /// <summary>Actual coverage, 0–100. Only meaningful when <see cref="HasCoverableData"/> is true.</summary>
+    public double ActualPercentage { get; }
 
     public double RequiredPercentage { get; }   // 0–100, validated
 
-    /// <summary><see langword="true"/> when the threshold is satisfied.</summary>
-    public bool Passed => ActualPercentage >= RequiredPercentage;
+    /// <summary>
+    /// <see langword="false"/> when the evaluated scope had nothing coverable (an empty module,
+    /// generated-only code, …). This is kept distinct from a genuine 0% so a no-data policy can
+    /// be applied explicitly rather than being conflated with real 0% coverage.
+    /// </summary>
+    public bool HasCoverableData { get; }
+
+    /// <summary>The no-data policy: whether an evaluation with no coverable data counts as failed.</summary>
+    public bool TreatNoDataAsFailure { get; }
+
+    /// <summary>
+    /// <see langword="true"/> when the threshold is satisfied. With no coverable data the outcome
+    /// follows <see cref="TreatNoDataAsFailure"/>; otherwise it is a plain numeric comparison.
+    /// </summary>
+    public bool Passed => HasCoverableData
+        ? ActualPercentage >= RequiredPercentage
+        : !TreatNoDataAsFailure;
 }
 ```
 
@@ -437,11 +494,30 @@ public sealed class TestCoverageReportMessage : PropertyBagData
     public TestCoverageReportMessage(
         string reportPath,
         CoverageReportFormat format,
-        string? producerId = null,
+        string producerId,
         string? customFormatName = null)
         : base("Test coverage report", "References a coverage report artifact.")
     {
-        ReportPath = reportPath ?? throw new ArgumentNullException(nameof(reportPath));
+        ReportPath = string.IsNullOrEmpty(reportPath)
+            ? throw new ArgumentException("A report path is required.", nameof(reportPath))
+            : reportPath;
+
+        if (string.IsNullOrEmpty(producerId))
+        {
+            throw new ArgumentException("A stable, non-empty producer id is required.", nameof(producerId));
+        }
+
+        // Discriminated pair: a custom format requires a name; a standard format forbids one.
+        if (format == CoverageReportFormat.Custom && string.IsNullOrWhiteSpace(customFormatName))
+        {
+            throw new ArgumentException("A custom format name is required when format is Custom.", nameof(customFormatName));
+        }
+
+        if (format != CoverageReportFormat.Custom && customFormatName is not null)
+        {
+            throw new ArgumentException("A custom format name is only valid when format is Custom.", nameof(customFormatName));
+        }
+
         Format = format;
         ProducerId = producerId;
         CustomFormatName = customFormatName;
@@ -451,11 +527,11 @@ public sealed class TestCoverageReportMessage : PropertyBagData
 
     public CoverageReportFormat Format { get; }
 
-    /// <summary>Set only when <see cref="Format"/> is <see cref="CoverageReportFormat.Custom"/>.</summary>
+    /// <summary>Set if and only if <see cref="Format"/> is <see cref="CoverageReportFormat.Custom"/>.</summary>
     public string? CustomFormatName { get; }
 
-    /// <summary>Optional id of the collector that produced the report (e.g. "microsoft-code-coverage").</summary>
-    public string? ProducerId { get; }
+    /// <summary>Id of the collector that produced the report (required, correlation key).</summary>
+    public string ProducerId { get; }
 }
 ```
 
@@ -489,6 +565,13 @@ public interface ITestCoverageResult
 
 public sealed class CoverageScopeSummary
 {
+    // Constructed only by the platform correlator; consumers receive it read-only.
+    internal CoverageScopeSummary(CoverageScope scope, IReadOnlyList<CoverageMetricResult> metrics)
+    {
+        Scope = scope;
+        Metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
+    }
+
     public CoverageScope Scope { get; }
 
     public IReadOnlyList<CoverageMetricResult> Metrics { get; }
@@ -509,12 +592,26 @@ public sealed class CoverageScopeSummary
 
 public sealed class CoverageMetricResult
 {
+    internal CoverageMetricResult(
+        CoverageMetric metric,
+        long coveredCount,
+        long coverableCount,
+        string producerId,
+        string? customMetricName = null)
+    {
+        Metric = metric;
+        CoveredCount = coveredCount;
+        CoverableCount = coverableCount;
+        ProducerId = producerId;
+        CustomMetricName = customMetricName;
+    }
+
     public CoverageMetric Metric { get; }
 
     public string? CustomMetricName { get; }
 
     /// <summary>The collector that produced this measurement; part of the correlation key.</summary>
-    public string? ProducerId { get; }
+    public string ProducerId { get; }
 
     public long CoveredCount { get; }
 
@@ -527,13 +624,25 @@ public sealed class CoverageMetricResult
 
 public sealed class CoverageReportReference
 {
+    internal CoverageReportReference(
+        string path,
+        CoverageReportFormat format,
+        string producerId,
+        string? customFormatName = null)
+    {
+        Path = path;
+        Format = format;
+        ProducerId = producerId;
+        CustomFormatName = customFormatName;
+    }
+
     public string Path { get; }
 
     public CoverageReportFormat Format { get; }
 
     public string? CustomFormatName { get; }
 
-    public string? ProducerId { get; }
+    public string ProducerId { get; }
 }
 ```
 
@@ -548,8 +657,9 @@ The terminal renderer and any third-party report generator are **both** consumer
 internal sealed class HtmlCoverageReportGenerator(ITestCoverageResult coverage)
     : IDataConsumer, ITestSessionLifetimeHandler
 {
-    // IExtension metadata (inherited by both interfaces).
-    public string Uid => nameof(HtmlCoverageReportGenerator);
+    // IExtension metadata (inherited by both interfaces). Uid MUST be a stable string literal,
+    // never nameof(...): a class rename would otherwise silently change the extension identity.
+    public string Uid => "HtmlCoverageReportGenerator";
     public string Version => "1.0.0";
     public string DisplayName => "HTML coverage report";
     public string Description => "Generates an HTML coverage report from platform coverage data.";
