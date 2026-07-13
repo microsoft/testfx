@@ -45,6 +45,11 @@ internal static class EnvironmentVariableConstants
 
     // dotnet test
     public const string TESTINGPLATFORM_DOTNETTEST_EXECUTIONID = nameof(TESTINGPLATFORM_DOTNETTEST_EXECUTIONID);
+
+    // Carries the 1-based retry attempt number from the retry orchestrator to each launched test host, which
+    // then reports it back to dotnet test through the AttemptNumber handshake property. Absent for normal
+    // (non-orchestrated) runs, in which case the test host reports attempt 1. See issues #5361 and #6337.
+    public const string TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = nameof(TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
     public const string DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY = nameof(DOTNET_CLI_TEST_COMMAND_WORKING_DIRECTORY);
 
     // Unhandled Exception
