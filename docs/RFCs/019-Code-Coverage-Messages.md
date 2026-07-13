@@ -88,14 +88,19 @@ Two universal facts emerge:
 ### The layering insight (open vs. closed)
 
 The large metric vocabulary exists only at the **summary/rollup** layer. At the **raw
-per-line/per-branch** layer the model collapses and is genuinely closed and universal —
-method/class/statement/region/block coverage are all different *bucketings/aggregations* of the
-same per-line/per-branch primitives.
+per-line/per-branch** layer, `line` and `branch` hit data form the **reduced cross-language
+common denominator** that every tool can emit — but they are *not* full-fidelity primitives
+from which the others can be reconstructed. Statement, instruction, block, and region coverage
+each subdivide a line differently (multiple such units can share a single line), which is
+exactly why JaCoCo carries dedicated instruction counters and llvm-cov carries regions. So the
+raw layer is "universal" only in the sense of a lowest common denominator; the authoritative,
+tool-specific detail lives in the report artifact.
 
 Therefore the open-vs-closed question is answered by **choosing the layer**:
 
-- **Raw layer** → closed and universal, but it *is* Cobertura/lcov. Don't reinvent it in
-  messages — reference the artifact and let deep consumers parse it.
+- **Raw layer** → the line/branch common denominator, which *is* essentially Cobertura/lcov.
+  Don't reinvent it in messages — reference the artifact and let deep consumers parse the
+  tool's own full-fidelity structure.
 - **Summary layer** (what these messages are for) → a **seeded, closed, append-only** enum
   covers every surveyed tool, with **one** narrow escape hatch for safety-critical /
   proprietary metrics (MC/DC, condition, vendor-specific) that keep appearing at the edge.
@@ -137,12 +142,16 @@ closed over open** — provided we (a) seed the enum with the real union, (b) st
    messages; per-line fidelity stays in the artifact.
 5. **Wire vs. consumer split.** Flat primitive messages for IPC; a correlated read model for
    consumers.
-6. **Scope-aware, but not a strict tree.** Scopes are addressed by `(level, name)` across
+6. **Session-scoped.** All three messages derive from `DataWithSessionUid` (not `PropertyBagData`
+   directly), like `TestNodeUpdateMessage` and the file-artifact messages, so a host that runs
+   multiple sessions can attribute coverage correctly. `SessionUid` is part of the correlation
+   key.
+7. **Scope-aware, but not a strict tree.** Scopes are addressed by `(level, name)` across
    Overall / Module / Assembly / Namespace / Type / File. These levels do **not** form a
    single parent tree — a file can contain multiple types and a partial type can span several
    files — so the contract models scope identity, not a forced hierarchy (see the scope value
    type below).
-7. **Guideline compliance.** No `init` accessors on new public API. User-facing terminal
+8. **Guideline compliance.** No `init` accessors on new public API. User-facing terminal
    strings via `TerminalResources.resx` (+ `.xlf`). Numbers formatted with
    `CultureInfo.InvariantCulture`. New public API declared in `PublicAPI.Unshipped.txt`.
 
@@ -288,16 +297,17 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 /// Reports a single code-coverage measurement (one metric for one scope) as counts.
 /// The percentage is derived, never stored.
 /// </summary>
-public sealed class TestCoverageMessage : PropertyBagData
+public sealed class TestCoverageMessage : DataWithSessionUid
 {
     public TestCoverageMessage(
+        SessionUid sessionUid,
         CoverageScope scope,
         CoverageMetric metric,
         long coveredCount,
         long coverableCount,
         string producerId,
         string? customMetricName = null)
-        : base("Test coverage", "Reports a code coverage measurement for a scope.")
+        : base("Test coverage", "Reports a code coverage measurement for a scope.", sessionUid)
     {
         if (coverableCount < 0)
         {
@@ -366,9 +376,10 @@ public sealed class TestCoverageMessage : PropertyBagData
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 /// <summary>Reports the result of a coverage threshold evaluation.</summary>
-public sealed class TestCoverageThresholdMessage : PropertyBagData
+public sealed class TestCoverageThresholdMessage : DataWithSessionUid
 {
     public TestCoverageThresholdMessage(
+        SessionUid sessionUid,
         CoverageScope scope,
         CoverageMetric metric,
         CoverageAggregation aggregation,
@@ -379,7 +390,7 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
         CoverageScopeLevel? aggregatedOver = null,
         bool treatNoDataAsFailure = true,
         string? customMetricName = null)
-        : base("Test coverage threshold", "Reports the result of a coverage threshold evaluation.")
+        : base("Test coverage threshold", "Reports the result of a coverage threshold evaluation.", sessionUid)
     {
         ValidatePercentage(requiredPercentage, nameof(requiredPercentage));
 
@@ -505,14 +516,15 @@ public enum CoverageReportFormat
 /// References a coverage report artifact so deep consumers (HTML/UI generators) can parse
 /// full-fidelity per-line data that the summary intentionally does not carry.
 /// </summary>
-public sealed class TestCoverageReportMessage : PropertyBagData
+public sealed class TestCoverageReportMessage : DataWithSessionUid
 {
     public TestCoverageReportMessage(
+        SessionUid sessionUid,
         string reportPath,
         CoverageReportFormat format,
         string producerId,
         string? customFormatName = null)
-        : base("Test coverage report", "References a coverage report artifact.")
+        : base("Test coverage report", "References a coverage report artifact.", sessionUid)
     {
         ReportPath = string.IsNullOrEmpty(reportPath)
             ? throw new ArgumentException("A report path is required.", nameof(reportPath))
@@ -581,8 +593,10 @@ public interface ITestCoverageResult
 
 public sealed class CoverageScopeSummary
 {
-    // Constructed only by the platform correlator; consumers receive it read-only.
-    internal CoverageScopeSummary(CoverageScope scope, IReadOnlyList<CoverageMetricResult> metrics)
+    // Public so third-party report generators can construct snapshots in their own unit tests
+    // and build fakes of ITestCoverageResult without reflection. Get-only properties still
+    // prevent mutation after construction.
+    public CoverageScopeSummary(CoverageScope scope, IReadOnlyList<CoverageMetricResult> metrics)
     {
         Scope = scope;
         Metrics = metrics ?? throw new ArgumentNullException(nameof(metrics));
@@ -596,19 +610,50 @@ public sealed class CoverageScopeSummary
     /// Convenience lookup for a well-known metric, e.g. <c>summary[CoverageMetric.Line]</c>;
     /// null if absent. Throws for <see cref="CoverageMetric.Custom"/>, because every custom
     /// metric shares that enum value and is distinguished only by its name — use
-    /// <see cref="GetCustom(string)"/> instead. If a scope somehow carries the same metric from
-    /// multiple producers, this returns the first; use <see cref="Metrics"/> to disambiguate by
+    /// <see cref="GetCustom(string)"/> instead. If a scope carries the same metric from multiple
+    /// producers, this returns the first; use <see cref="Metrics"/> to disambiguate by
     /// <see cref="CoverageMetricResult.ProducerId"/>.
     /// </summary>
-    public CoverageMetricResult? this[CoverageMetric metric] { get; }
+    public CoverageMetricResult? this[CoverageMetric metric]
+    {
+        get
+        {
+            if (metric == CoverageMetric.Custom)
+            {
+                throw new ArgumentException("Use GetCustom(name) to look up a custom metric.", nameof(metric));
+            }
+
+            foreach (CoverageMetricResult result in Metrics)
+            {
+                if (result.Metric == metric)
+                {
+                    return result;
+                }
+            }
+
+            return null;
+        }
+    }
 
     /// <summary>Looks up a custom (proprietary) metric by its name; null if absent.</summary>
-    public CoverageMetricResult? GetCustom(string customMetricName);
+    public CoverageMetricResult? GetCustom(string customMetricName)
+    {
+        foreach (CoverageMetricResult result in Metrics)
+        {
+            if (result.Metric == CoverageMetric.Custom
+                && string.Equals(result.CustomMetricName, customMetricName, StringComparison.Ordinal))
+            {
+                return result;
+            }
+        }
+
+        return null;
+    }
 }
 
 public sealed class CoverageMetricResult
 {
-    internal CoverageMetricResult(
+    public CoverageMetricResult(
         CoverageMetric metric,
         long coveredCount,
         long coverableCount,
@@ -640,7 +685,7 @@ public sealed class CoverageMetricResult
 
 public sealed class CoverageReportReference
 {
-    internal CoverageReportReference(
+    public CoverageReportReference(
         string path,
         CoverageReportFormat format,
         string producerId,
@@ -711,6 +756,24 @@ internal sealed class HtmlCoverageReportGenerator(ITestCoverageResult coverage)
 }
 ```
 
+## Correlation key
+
+The read model correlates messages into `CoverageScopeSummary` / threshold / report entries
+using the **full** key, not just `(scope, metric)`:
+
+```text
+(SessionUid, ProducerId, Scope, Metric, CustomMetricName when Metric == Custom)
+```
+
+- **`SessionUid`** and **`ProducerId`** are included so a multi-session host and multiple
+  concurrent collectors never collapse into each other.
+- **`CustomMetricName`** is part of the key whenever `Metric == Custom`. Without it, two
+  producers each reporting a different proprietary metric (e.g. MC/DC vs. a vendor metric) would
+  both key as `Custom` and overwrite one another.
+- **Duplicate full keys:** if the same full key is published more than once in a session, the
+  **last write wins** and the correlator logs a diagnostic. Collectors are expected to emit one
+  final measurement per key; re-emission is treated as a correction, not an aggregation.
+
 ## Platform wiring
 
 - Register a single `TestCoverageResult : ITestCoverageResult, IDataConsumer` as a common
@@ -744,8 +807,10 @@ internal sealed class HtmlCoverageReportGenerator(ITestCoverageResult coverage)
 1. **One metric per message vs. a bundle per scope.** This RFC proposes one `(scope, metric)`
    measurement per message (composable, stream-friendly; correlation happens in the read
    model). Bundling all metrics per scope is an alternative — a conscious call is needed.
-2. **`PropertyBagData` base.** If kept, should the messages actually populate the property bag
-   (so generic bag consumers see the data), or move to a lighter base?
+2. **Property bag population.** The messages now derive from `DataWithSessionUid` (which itself
+   extends `PropertyBagData`). Should they also populate the property bag with their typed values
+   so generic bag consumers see the data, or leave the bag empty and rely on the strongly-typed
+   properties?
 3. **Escape-hatch surface.** `Custom` enum member + `CustomMetricName` string (chosen here for
    being closed-by-default) vs. an open readonly-struct metric type — confirm.
 4. **Value range convention.** This RFC standardizes on **0–100**; some tools use 0–1. Lock it
