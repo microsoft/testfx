@@ -116,8 +116,8 @@ public sealed class IPCTests
         // which exceeds it. This proves the guard measures UTF-8 bytes (matching sun_path) and not characters.
         string path = "/tmp/" + new string('好', 40);
 
-        Assert.IsTrue(path.Length < NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes, "Test setup: character count must stay under the limit so only a byte-based check can fail.");
-        Assert.IsTrue(System.Text.Encoding.UTF8.GetByteCount(path) > NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes, "Test setup: UTF-8 byte count must exceed the limit.");
+        Assert.IsLessThan(NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes, path.Length, "Test setup: character count must stay under the limit so only a byte-based check can fail.");
+        Assert.IsGreaterThan(NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes, System.Text.Encoding.UTF8.GetByteCount(path), "Test setup: UTF-8 byte count must exceed the limit.");
 
         Assert.ThrowsExactly<InvalidOperationException>(() => NamedPipeServer.EnsurePathLengthWithinLimit(path));
     }
