@@ -28,5 +28,7 @@ internal sealed class MSTestRunSettingsCommandLineOptionsProvider : RunSettingsC
         : base(extension, fileSystem, PlatformAdapterResources.RunSettingsOptionDescription, PlatformAdapterResources.RunsettingsFileDoesNotExist, PlatformAdapterResources.RunsettingsFileCannotBeRead)
     {
     }
+
+    protected override string EnvironmentVariablesNotSupportedOnBrowserError => PlatformAdapterResources.RunSettingsEnvironmentVariablesNotSupportedOnBrowser;
 }
 #endif
