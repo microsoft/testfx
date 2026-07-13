@@ -468,34 +468,16 @@ internal static class TestClassModelBuilder
     }
 
     private static (DynamicDataMemberKind Kind, EquatableArray<string> MethodParameterTypes)? ResolveMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
-    {
-        if (!method.IsStatic
-            || method.IsGenericMethod
-            || !IsMemberAccessibleFrom(method.DeclaredAccessibility, method.ContainingType, consumingAssembly))
-        {
-            return null;
-        }
 
-        ImmutableArray<string>.Builder parameterTypes = ImmutableArray.CreateBuilder<string>(method.Parameters.Length);
-        for (int i = 0; i < method.Parameters.Length; i++)
-        {
-            IParameterSymbol parameter = method.Parameters[i];
-
-            // ref/out/in parameters cannot be supplied by the generated ordinary-argument call, and
-            // DynamicDataOperations.GetDataFromMethod explicitly rejects params/param-collection source
-            // methods, so let those fall back to reflection.
-            if (parameter.RefKind != RefKind.None
-                || (i == method.Parameters.Length - 1 && parameter.IsParams)
-                || !IsReferenceableParameterType(parameter.Type, consumingAssembly))
-            {
-                return null;
-            }
-
-            parameterTypes.Add(parameter.Type.ToDisplayString(FullyQualifiedFormat));
-        }
-
-        return (DynamicDataMemberKind.Method, new EquatableArray<string>(parameterTypes.ToImmutable()));
-    }
+        // Only parameterless static methods are registered. When a source method declares parameters, the
+        // reflection fallback invokes it via MethodInfo.Invoke, whose default binder applies primitive
+        // widening and other conversions (e.g. passing a boxed int 3 to a long parameter). A generated
+        // direct call would instead unbox with an exact cast ((long)args[0]) and throw InvalidCastException,
+        // so those sources are left to the (DAM-safe) reflection path to preserve behavior.
+        => method is { IsStatic: true, IsGenericMethod: false, Parameters.IsEmpty: true }
+            && IsMemberAccessibleFrom(method.DeclaredAccessibility, method.ContainingType, consumingAssembly)
+            ? (DynamicDataMemberKind.Method, EquatableArray<string>.Empty)
+            : null;
 
     private static (DynamicDataMemberKind Kind, EquatableArray<string> MethodParameterTypes)? ResolveField(IFieldSymbol field, IAssemblySymbol consumingAssembly)
         => field.IsStatic && IsMemberAccessibleFrom(field.DeclaredAccessibility, field.ContainingType, consumingAssembly)
@@ -551,17 +533,6 @@ internal static class TestClassModelBuilder
         }
 
         return false;
-    }
-
-    private static bool IsReferenceableParameterType(ITypeSymbol type, IAssemblySymbol consumingAssembly)
-    {
-        ITypeSymbol elementType = type;
-        while (elementType is IArrayTypeSymbol array)
-        {
-            elementType = array.ElementType;
-        }
-
-        return elementType is INamedTypeSymbol named && IsClosedReferenceableType(named, consumingAssembly);
     }
 
     // Walks the attribute list and reifies each [DataRow(...)] application into a flat

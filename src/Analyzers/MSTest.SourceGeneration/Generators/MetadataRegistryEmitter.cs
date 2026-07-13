@@ -435,31 +435,19 @@ internal static class MetadataRegistryEmitter
 
     private static string BuildDynamicDataAccessor(DynamicDataSourceModel source)
     {
-        switch (source.MemberKind)
+        string member = $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}";
+        return source.MemberKind switch
         {
-            case DynamicDataMemberKind.Property:
-            case DynamicDataMemberKind.Field:
-                // Ignore the (unused) source arguments; read the static property/field value.
-                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}";
+            // Ignore the (unused) source arguments; read the static property/field value.
+            DynamicDataMemberKind.Property or DynamicDataMemberKind.Field => member,
 
-            case DynamicDataMemberKind.Method:
-                EquatableArray<string> parameterTypes = source.MethodParameterTypes;
-                if (parameterTypes.Length == 0)
-                {
-                    return $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}()";
-                }
+            // Only parameterless source methods are registered (see ResolveMethod): a parameterized method's
+            // arguments would need the reflection binder's conversion semantics, so those keep the reflection
+            // fallback.
+            DynamicDataMemberKind.Method => $"{member}()",
 
-                string[] castArgs = new string[parameterTypes.Length];
-                for (int i = 0; i < parameterTypes.Length; i++)
-                {
-                    castArgs[i] = $"({parameterTypes[i]})args[{i}]!";
-                }
-
-                return $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}({string.Join(", ", castArgs)})";
-
-            default:
-                return "null";
-        }
+            _ => "null",
+        };
     }
 
     private static void EmitParameterTypes(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)

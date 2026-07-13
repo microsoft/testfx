@@ -2455,8 +2455,39 @@ public sealed class MSTestReflectionMetadataGeneratorTests
     }
 
     [TestMethod]
-    public void Generator_EmitsDynamicDataAccessor_ForMethodSourceWithArguments()
+    public void Generator_EmitsDynamicDataAccessor_ForParameterlessMethodSource()
     {
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> GetData() => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(GetData))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().Contain("SourceName = \"GetData\"");
+        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.GetData()");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_ForMethodSourceWithArguments()
+    {
+        // A source method that takes arguments is invoked via MethodInfo.Invoke at runtime, whose binder
+        // applies primitive widening / conversions (e.g. int 3 -> long) that a direct unbox cast cannot
+        // replicate. Such sources must keep the (DAM-safe) reflection fallback instead of a generated
+        // accessor.
         const string userCode = """
             using System.Collections.Generic;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -2477,7 +2508,8 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
         string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
 
-        registry.Should().Contain("GetData = static args => (object?)global::Sample.MyTests.GetData((int)args[0]!, (string)args[1]!)");
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
     }
 
     [TestMethod]
