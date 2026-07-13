@@ -128,6 +128,56 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         Assert.IsTrue(option.IsBuiltIn);
     }
 
+    [TestMethod]
+    [DataRow("1")]
+    [DataRow("5")]
+    [DataRow("100")]
+    public async Task ValidateOptionArguments_ShowSlowestTestsOption_AcceptsPositiveIntegers(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsTrue(result.IsValid, $"Expected '{value}' to be a valid --show-slowest-tests value, but got: {result.ErrorMessage}");
+    }
+
+    [TestMethod]
+    [DataRow("0")]
+    [DataRow("-1")]
+    [DataRow("abc")]
+    [DataRow("1.5")]
+    [DataRow("")]
+    public async Task ValidateOptionArguments_ShowSlowestTestsOption_RejectsInvalidValues(string value)
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, [value]);
+
+        Assert.IsFalse(result.IsValid, $"Expected '{value}' to be rejected as a --show-slowest-tests value but it was accepted.");
+        Assert.IsNotNull(result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ValidateOptionArguments_ShowSlowestTestsOption_RejectsMultipleArguments()
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        ValidationResult result = await _provider.ValidateOptionArgumentsAsync(option, ["1", "2"]);
+
+        Assert.IsFalse(result.IsValid, "Expected --show-slowest-tests to reject more than one argument.");
+        Assert.IsNotNull(result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void GetCommandLineOptions_IncludesShowSlowestTestsOption()
+    {
+        CommandLineOption option = GetOption(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption);
+
+        Assert.AreEqual(ArgumentArity.ExactlyOne, option.Arity);
+        Assert.IsFalse(option.IsHidden);
+        Assert.IsTrue(option.IsBuiltIn);
+    }
+
     private CommandLineOption GetOption(string name)
         => _provider.GetCommandLineOptions().Single(o => o.Name == name);
 }
