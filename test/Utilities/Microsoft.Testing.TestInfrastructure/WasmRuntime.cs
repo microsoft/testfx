@@ -4,10 +4,22 @@
 namespace Microsoft.Testing.TestInfrastructure;
 
 /// <summary>
-/// Shared helpers for the <c>wasi-wasm</c> acceptance tests (both the raw Microsoft.Testing.Platform
-/// tests and the MSTest ones). Centralizes locating <c>wasmtime</c>, publishing an asset for
-/// <c>wasi-wasm</c>, staging the ICU data file, and invoking the produced bundle under
-/// <c>wasmtime</c> so the two acceptance projects don't duplicate the plumbing.
+/// Shared helpers for the WebAssembly acceptance tests. Centralizes the plumbing so the acceptance
+/// projects don't duplicate it, covering both wasm runtimes:
+/// <list type="bullet">
+///   <item>
+///     <b><c>wasi-wasm</c></b> (raw Microsoft.Testing.Platform and MSTest tests): locating
+///     <c>wasmtime</c>, publishing for <c>wasi-wasm</c>, staging the ICU data file, and invoking the
+///     produced bundle under <c>wasmtime</c>.
+///   </item>
+///   <item>
+///     <b><c>browser-wasm</c></b> (<c>BrowserWasmExecutionTests</c>): locating <c>node</c>, publishing
+///     for <c>browser-wasm</c>, and booting the produced bundle headlessly under <c>node</c> via the
+///     <c>dotnet.js</c> loader.
+///   </item>
+/// </list>
+/// Shared across both: <see cref="IsMissingWasmToolsWorkload"/> distinguishes a genuine build/publish
+/// regression from the expected "the <c>wasm-tools</c> workload is not installed" skip.
 /// </summary>
 public static class WasmRuntime
 {
@@ -168,9 +180,12 @@ public static class WasmRuntime
     /// </summary>
     public static string? LocateNode()
     {
+        // Return absolute paths: RunUnderNodeAsync starts node with the AppBundle as its working
+        // directory, so a relative NODE_EXE / PATH entry validated against the current directory here
+        // would no longer resolve to the same file once launched from elsewhere.
         if (Environment.GetEnvironmentVariable("NODE_EXE") is { Length: > 0 } fromEnv && File.Exists(fromEnv))
         {
-            return fromEnv;
+            return Path.GetFullPath(fromEnv);
         }
 
         string exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "node.exe" : "node";
@@ -190,7 +205,7 @@ public static class WasmRuntime
             string candidate = Path.Combine(directory, exeName);
             if (File.Exists(candidate))
             {
-                return candidate;
+                return Path.GetFullPath(candidate);
             }
         }
 
