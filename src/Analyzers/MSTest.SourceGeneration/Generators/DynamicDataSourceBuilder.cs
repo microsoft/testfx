@@ -263,18 +263,15 @@ internal static class DynamicDataSourceBuilder
     private static bool IsValidDisplayNameMethod(INamedTypeSymbol declaringType, string methodName)
     {
         IMethodSymbol? candidate = null;
-        foreach (ISymbol member in declaringType.GetMembers(methodName))
+        foreach (IMethodSymbol method in declaringType.GetMembers(methodName).OfType<IMethodSymbol>().Where(static m => m.MethodKind == MethodKind.Ordinary))
         {
-            if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } method)
+            if (candidate is not null)
             {
-                if (candidate is not null)
-                {
-                    // Multiple declared overloads make GetDeclaredMethod throw AmbiguousMatchException.
-                    return false;
-                }
-
-                candidate = method;
+                // Multiple declared overloads make GetDeclaredMethod throw AmbiguousMatchException.
+                return false;
             }
+
+            candidate = method;
         }
 
         // Abstract/virtual (static abstract interface) methods can only be called through a constrained type

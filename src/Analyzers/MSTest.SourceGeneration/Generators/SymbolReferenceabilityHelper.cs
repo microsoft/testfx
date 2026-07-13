@@ -18,23 +18,10 @@ internal static class SymbolReferenceabilityHelper
         => !ContainsTypeParameter(type) && IsTypeReferenceableFrom(type, consumingAssembly);
 
     internal static bool ContainsTypeParameter(INamedTypeSymbol type)
-    {
-        if (type.IsUnboundGenericType)
-        {
-            return true;
-        }
-
-        foreach (ITypeSymbol argument in type.TypeArguments)
-        {
-            if (argument is ITypeParameterSymbol
-                || (argument is INamedTypeSymbol named && ContainsTypeParameter(named)))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => type.IsUnboundGenericType
+            || type.TypeArguments.Any(static argument =>
+                argument is ITypeParameterSymbol
+                || (argument is INamedTypeSymbol named && ContainsTypeParameter(named)));
 
     internal static bool IsTypeReferenceableFrom(INamedTypeSymbol type, IAssemblySymbol consumingAssembly)
     {

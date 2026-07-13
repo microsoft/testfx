@@ -63,18 +63,15 @@ internal static class TestMemberValidationHelper
             unsupported = true;
         }
 
-        foreach (IParameterSymbol parameter in method.Parameters)
+        foreach (IParameterSymbol parameter in method.Parameters.Where(static p => p.RefKind != RefKind.None))
         {
-            if (parameter.RefKind != RefKind.None)
-            {
-                diagnostics.Add(DiagnosticInfo.Create(
-                    DiagnosticDescriptors.ByRefParameter,
-                    LocationInfo.CreateFrom(parameter),
-                    owningClassFqn,
-                    method.MethodKind == MethodKind.Constructor ? "ctor" : method.Name,
-                    parameter.Name));
-                unsupported = true;
-            }
+            diagnostics.Add(DiagnosticInfo.Create(
+                DiagnosticDescriptors.ByRefParameter,
+                LocationInfo.CreateFrom(parameter),
+                owningClassFqn,
+                method.MethodKind == MethodKind.Constructor ? "ctor" : method.Name,
+                parameter.Name));
+            unsupported = true;
         }
 
         return unsupported;
