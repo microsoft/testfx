@@ -1834,6 +1834,203 @@ public sealed class TerminalTestReporterTests
         Assert.Contains(ExpectedCounts(1, 0, 0), assemblyLine);
     }
 
+    [TestMethod]
+    public void TestExecutionCompleted_WhenShowSlowestTestsSet_PrintsFlatSlowestSectionRankedByDuration()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            SlowestTestsCount = 2,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "0", "0");
+
+        // A failed slowest test and a passed medium test should surface (all outcomes are eligible); the fast skipped
+        // test falls outside the requested top-2.
+        terminalReporter.TestCompleted("0", testNodeUid: "SlowFailedTest", "SlowFailedTest", TestOutcome.Fail, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: "boom", exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "MediumPassedTest", "MediumPassedTest", TestOutcome.Passed, TimeSpan.FromSeconds(5),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.TestCompleted("0", testNodeUid: "FastSkippedTest", "FastSkippedTest", TestOutcome.Skipped, TimeSpan.FromSeconds(1),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        int slowIndex = slowestSection.IndexOf("SlowFailedTest", StringComparison.Ordinal);
+        int mediumIndex = slowestSection.IndexOf("MediumPassedTest", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, slowIndex, "Slowest test should be listed.");
+        Assert.IsGreaterThanOrEqualTo(0, mediumIndex, "Second-slowest test should be listed.");
+        Assert.IsLessThan(mediumIndex, slowIndex, "Tests should be listed from slowest to fastest.");
+        Assert.IsFalse(slowestSection.Contains("FastSkippedTest", StringComparison.Ordinal), "The fastest test should not appear in the top-2 slowest section.");
+    }
+
+    [TestMethod]
+    public void TestExecutionCompleted_WhenShowSlowestTestsNotSet_DoesNotPrintSlowestSection()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, static () => false, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, 1, isDiscovery: false, isHelp: false, isRetry: false);
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\work\assembly.dll" : "/mnt/work/assembly.dll";
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", "0", "0");
+        terminalReporter.TestCompleted("0", testNodeUid: "SomeTest", "SomeTest", TestOutcome.Passed, TimeSpan.FromSeconds(10),
+            informativeMessage: null, errorMessage: null, exception: null, expected: null, actual: null, standardOutput: null, errorOutput: null);
+        terminalReporter.AssemblyRunCompleted("0");
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: null);
+
+        Assert.IsFalse(stringBuilderConsole.Output.Contains(TerminalResources.SlowestTests, StringComparison.Ordinal));
+    }
+
+    // Verifies the reporter's multi-assembly rendering path: when SlowestTestsCount is set and more than one
+    // assembly is registered (as the dotnet test orchestrator does), each assembly gets its own slowest-tests
+    // sub-list. This exercises the shared reporter directly; note that wiring `dotnet test --show-slowest-tests`
+    // to set SlowestTestsCount is owned by the dotnet/sdk CLI (TerminalReporterContract.props excludes the MTP
+    // options provider) and is out of scope for this repo.
+    [TestMethod]
+    public void TestExecutionCompleted_WithMultipleAssemblies_WhenShowSlowestTestsSet_PrintsPerAssemblySlowest()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+            SlowestTestsCount = 1,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 2, isDiscovery: false, isHelp: false, isRetry: false);
+
+        string assemblyA = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\A.Tests.dll" : "/repo/A.Tests.dll";
+        string assemblyB = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\B.Tests.dll" : "/repo/B.Tests.dll";
+        terminalReporter.AssemblyRunStarted(assemblyA, "net9.0", "x64", executionId: "exec-A", instanceId: "inst-A");
+        terminalReporter.AssemblyRunStarted(assemblyB, "net9.0", "x64", executionId: "exec-B", instanceId: "inst-B");
+
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyA, "exec-A", "inst-A", "a-slow", TestOutcome.Passed, TimeSpan.FromSeconds(9));
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyA, "exec-A", "inst-A", "a-fast", TestOutcome.Passed, TimeSpan.FromSeconds(7));
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyB, "exec-B", "inst-B", "b-slow", TestOutcome.Passed, TimeSpan.FromSeconds(6));
+        ReportOrchestratorTestWithDuration(terminalReporter, assemblyB, "exec-B", "inst-B", "b-fast", TestOutcome.Passed, TimeSpan.FromSeconds(2));
+
+        terminalReporter.AssemblyRunCompleted(executionId: "exec-A", exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.AssemblyRunCompleted(executionId: "exec-B", exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        // Durations are chosen so a-fast (7s) is globally slower than b-slow (6s): a merged global ranking would
+        // surface both A tests and drop b-slow, so asserting b-slow is present and a-fast is absent proves the
+        // ranking is scoped per assembly (each assembly contributes only its own top-1).
+        Assert.Contains("a-slow", slowestSection);
+        Assert.Contains("b-slow", slowestSection);
+        Assert.IsFalse(slowestSection.Contains("a-fast", StringComparison.Ordinal), "Faster test of assembly A should not appear in its top-1 slowest.");
+        Assert.IsFalse(slowestSection.Contains("b-fast", StringComparison.Ordinal), "Faster test of assembly B should not appear in its top-1 slowest.");
+    }
+
+    // Regression test for the retry case: a timed first attempt followed by a retry that reports no timing must
+    // drop the stale first-attempt duration instead of keeping it ranked in the slowest section.
+    [TestMethod]
+    public void TestExecutionCompleted_WhenTimedTestRetriedWithoutTiming_DropsStaleDurationFromSlowest()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+            SlowestTestsCount = 5,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky";
+
+        // Attempt 1: the flaky test fails with a large (10s) reported duration, and a stable test passes quickly.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "flaky", TestOutcome.Fail, TimeSpan.FromSeconds(10));
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "stable", TestOutcome.Passed, TimeSpan.FromSeconds(1));
+
+        // Attempt 2 (new instance id): the retry passes but reports no timing.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-2", "flaky", TestOutcome.Passed, duration: null);
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        Assert.Contains("stable", slowestSection);
+        Assert.IsFalse(slowestSection.Contains("flaky", StringComparison.Ordinal), "The retried test's stale first-attempt duration should have been dropped once the retry reported no timing.");
+    }
+
+    // Regression test for the retry-replacement behavior: when the same uid is reported across two attempts with
+    // different durations, only the latest attempt's duration must be ranked (not the earlier attempt's).
+    [TestMethod]
+    public void TestExecutionCompleted_WhenTestRetriedWithDifferentDuration_RanksOnlyLatestAttempt()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        var terminalReporter = new TerminalTestReporter(stringBuilderConsole, new TerminalTestReporterOptions
+        {
+            AnsiMode = AnsiMode.NoAnsi,
+            ShowProgress = () => false,
+            ShowAssembly = true,
+            ShowAssemblyStartAndComplete = false,
+            SlowestTestsCount = 5,
+        });
+
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\Flaky.Tests.dll" : "/repo/Flaky.Tests.dll";
+        const string executionId = "exec-flaky";
+
+        // Attempt 1: the flaky test fails taking 10s; another test passes taking 5s.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "flaky", TestOutcome.Fail, TimeSpan.FromSeconds(10));
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-1", "other", TestOutcome.Passed, TimeSpan.FromSeconds(5));
+
+        // Attempt 2 (new instance id): the retry passes quickly (2s).
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        ReportOrchestratorTestWithDuration(terminalReporter, assembly, executionId, "inst-2", "flaky", TestOutcome.Passed, TimeSpan.FromSeconds(2));
+
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+        terminalReporter.TestExecutionCompleted(DateTimeOffset.MaxValue, exitCode: 0);
+
+        string output = stringBuilderConsole.Output;
+        int headerIndex = output.IndexOf(TerminalResources.SlowestTests, StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, headerIndex, $"Expected a slowest-tests section. Output:{Environment.NewLine}{output}");
+
+        string slowestSection = output.Substring(headerIndex);
+        // The stale 10s first attempt must not be ranked; the latest attempt's 2s wins, so 'other' (5s) ranks above
+        // 'flaky' (2s). If the first attempt leaked, 'flaky' would rank first and the 10s duration would appear.
+        Assert.IsFalse(slowestSection.Contains("10s", StringComparison.Ordinal), "The first attempt's 10s duration must not be ranked after the retry replaced it.");
+        int otherIndex = slowestSection.IndexOf("other", StringComparison.Ordinal);
+        int flakyIndex = slowestSection.IndexOf("flaky", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, otherIndex, "Expected 'other' to be listed.");
+        Assert.IsGreaterThanOrEqualTo(0, flakyIndex, "Expected 'flaky' to be listed.");
+        Assert.IsLessThan(flakyIndex, otherIndex, "'other' (5s) should rank above the retried 'flaky' (2s), proving only the latest attempt's duration is used.");
+    }
+
     private static TerminalTestReporter CreateOrchestratorReporter(StringBuilderConsole console, bool showAssemblyStartAndComplete = true)
         => new(console, new TerminalTestReporterOptions
         {
@@ -1855,6 +2052,24 @@ public sealed class TerminalTestReporterTests
             informativeMessage: null,
             outcome,
             duration: TimeSpan.FromMilliseconds(1),
+            exceptions: null,
+            expected: null,
+            actual: null,
+            standardOutput: null,
+            errorOutput: null);
+
+    private static void ReportOrchestratorTestWithDuration(TerminalTestReporter reporter, string assembly, string executionId, string instanceId, string testUid, TestOutcome outcome, TimeSpan? duration)
+        => reporter.TestCompleted(
+            assembly,
+            targetFramework: "net9.0",
+            architecture: "x64",
+            executionId,
+            instanceId,
+            testNodeUid: testUid,
+            displayName: testUid,
+            informativeMessage: null,
+            outcome,
+            duration,
             exceptions: null,
             expected: null,
             actual: null,
