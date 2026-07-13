@@ -23,18 +23,19 @@
 |------|-------------|
 | 1    | 2026-07-04  |
 | 2    | 2026-07-08  |
-| 3    | 2026-07-11  |
+| 3    | 2026-07-13  |
 | 4    | 2026-07-11  |
 | 5    | 2026-07-08  |
-| 6    | 2026-07-07  |
-| 7    | 2026-07-11  |
+| 6    | 2026-07-13  |
+| 7    | 2026-07-13  |
 
-Next priority: Tasks 5 and 6 (oldest: 2026-07-08, 2026-07-07)
+Next priority: Tasks 1, 4, 5 (oldest: 2026-07-04, 2026-07-11, 2026-07-08)
 
 ## Completed Work
 
 | Date       | Item                                  | Notes                                      |
 |------------|---------------------------------------|--------------------------------------------|
+| 2026-07-13 | PR #aw_pr_scenario4 submitted         | Scenario4 class-init overhead benchmark    |
 | 2026-07-11 | PR #aw_pr_skip_inprog submitted       | Skip TestMethodIdentifierProperty for in-progress nodes |
 | 2026-07-10 | PR #9800 merged (by Evangelink)       | Cache GetTestId on UnitTestElement         |
 | 2026-07-10 | WIP branch lost (lazy testfullname)   | safe-output bundle was lost; no PR created |
@@ -47,7 +48,9 @@ Next priority: Tasks 5 and 6 (oldest: 2026-07-08, 2026-07-07)
 
 - Branch `perf-assist/skip-method-id-in-progress`: skip AddTestMethodIdentifier
   (ParseManagedMethodName + TestMethodIdentifierProperty alloc) for in-progress nodes.
-  Saves ~10,000 parses per 10,000-test run. PR submitted 2026-07-11.
+  Saves ~10,000 parses per 10,000-test run. PR submitted 2026-07-11. Status: unknown (verify next run).
+- Branch `perf-assist/scenario4-class-init-overhead-1783953091`: Scenario4 class-init benchmark.
+  PR submitted 2026-07-13 (#aw_pr_scenario4). Purely additive to performance runner.
 
 ## Monthly Activity Issue
 
