@@ -23,10 +23,14 @@
     <MicrosoftCodeAnalysisVersionForTests>4.10.0</MicrosoftCodeAnalysisVersionForTests>
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
     <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers.
-         Kept on a 5.x release for the RS0017/RS0026/RS0036 fixes that testfx's public-API
-         surface tracking depends on (the old 3.3.4 stable from 2022 lacks them).
+         On a 5.10.0-1.* (roslyn main) preview from the dnceng dotnet-tools feed to pick up the
+         RS0017/RS0026/RS0036 fixes AND the [Embedded]-API exclusion added in dotnet/roslyn#84437
+         (merged 2026-07-10 23:11 UTC), which lets internal [Embedded] types opt out of API tracking.
+         NOTE: 5.10.0-1.26360.111 was built 2026-07-10 22:25 UTC, ~46 min BEFORE that merge, so it does
+         NOT yet contain #84437. Re-pin to the first post-merge main build (5.10.0-1.26361.* or later)
+         once it ships to the dotnet-tools feed.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.6.0</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26360.111</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
