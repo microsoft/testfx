@@ -3,11 +3,13 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestClass]
+[UnsupportedOSPlatform("browser")]
 public sealed class TerminalTestReporterCommandLineOptionsProviderTests
 {
     private readonly TerminalTestReporterCommandLineOptionsProvider _provider = new();
@@ -176,6 +178,31 @@ public sealed class TerminalTestReporterCommandLineOptionsProviderTests
         Assert.AreEqual(ArgumentArity.ExactlyOne, option.Arity);
         Assert.IsFalse(option.IsHidden);
         Assert.IsTrue(option.IsBuiltIn);
+    }
+
+    // Wiring test: the parsed --show-slowest-tests value must reach the reporter via
+    // TerminalOutputDevice.GetSlowestTestsCount (which feeds TerminalTestReporterOptions.SlowestTestsCount), so a
+    // validation/parse regression can't leave a help-only option.
+    [TestMethod]
+    [DataRow("1", 1)]
+    [DataRow("5", 5)]
+    [DataRow("100", 100)]
+    public void GetSlowestTestsCount_WhenOptionSetToPositiveInteger_ReturnsThatCount(string argument, int expected)
+    {
+        var options = new Helpers.TestCommandLineOptions(new Dictionary<string, string[]>
+        {
+            [TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption] = [argument],
+        });
+
+        Assert.AreEqual(expected, TerminalOutputDevice.GetSlowestTestsCount(options));
+    }
+
+    [TestMethod]
+    public void GetSlowestTestsCount_WhenOptionAbsent_ReturnsZero()
+    {
+        var options = new Helpers.TestCommandLineOptions([]);
+
+        Assert.AreEqual(0, TerminalOutputDevice.GetSlowestTestsCount(options));
     }
 
     private CommandLineOption GetOption(string name)

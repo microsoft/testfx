@@ -63,3 +63,4 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.Slo
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporterOptions.SlowestTestsCount.init -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.RecordTestDuration(string! testNodeUid, string! displayName, System.TimeSpan? duration) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetSlowestTests(int count) -> System.Collections.Generic.IReadOnlyList<(string! DisplayName, System.TimeSpan Duration)>!
+static Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.GetSlowestTestsCount(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> int

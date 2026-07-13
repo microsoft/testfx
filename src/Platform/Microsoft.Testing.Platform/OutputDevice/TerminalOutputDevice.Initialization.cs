@@ -177,8 +177,9 @@ internal sealed partial class TerminalOutputDevice
 
     // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the
     // summary. Returns 0 (feature off) when the option is absent. The value has already been validated to be a
-    // positive integer by TerminalTestReporterCommandLineOptionsProvider.
-    private static int GetSlowestTestsCount(ICommandLineOptions commandLineOptions)
+    // positive integer by TerminalTestReporterCommandLineOptionsProvider. Internal for unit testing the parse seam
+    // that feeds TerminalTestReporterOptions.SlowestTestsCount.
+    internal static int GetSlowestTestsCount(ICommandLineOptions commandLineOptions)
         => commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption, out string[]? arguments)
             && arguments is [string value]
             && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int count)
