@@ -76,6 +76,8 @@ Options:
         The directory where the test results are going to be placed.
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
+    --show-slowest-tests
+        Show the specified number of slowest tests (by execution duration, excluding fixture time) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
@@ -303,6 +305,10 @@ Built-in command line providers:
         Valid values are 'auto' \(default\), 'on' \(also accepts 'true', 'enable', '1'\) or 'off' \(also accepts 'false', 'disable', '0'\).
         'auto' shows progress unless the terminal cannot update in place \(for example with --no-ansi or in CI\).
         This option takes precedence over the deprecated --no-progress flag.
+      --show-slowest-tests
+        Arity: 1
+        Hidden: False
+        Description: Show the specified number of slowest tests \(by execution duration, excluding fixture time\) in the run summary. Expects a positive integer.
       --show-stderr
         Arity: 1
         Hidden: False

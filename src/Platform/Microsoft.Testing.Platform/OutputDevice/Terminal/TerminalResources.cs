@@ -87,6 +87,8 @@ internal static partial class TerminalResources
 
     internal static string @SkippedLowercase => GetResourceString("SkippedLowercase");
 
+    internal static string @SlowestTests => GetResourceString("SlowestTests");
+
     internal static string @StackFrameAt => GetResourceString("StackFrameAt");
 
     internal static string @StackFrameIn => GetResourceString("StackFrameIn");
@@ -120,6 +122,10 @@ internal static partial class TerminalResources
     internal static string @TerminalProgressSlowTest => GetResourceString("TerminalProgressSlowTest");
 
     internal static string @TerminalShowOutputOptionInvalidArgument => GetResourceString("TerminalShowOutputOptionInvalidArgument");
+
+    internal static string @TerminalShowSlowestTestsOptionDescription => GetResourceString("TerminalShowSlowestTestsOptionDescription");
+
+    internal static string @TerminalShowSlowestTestsOptionInvalidArgument => GetResourceString("TerminalShowSlowestTestsOptionInvalidArgument");
 
     internal static string @TerminalShowStderrOptionDescription => GetResourceString("TerminalShowStderrOptionDescription");
 

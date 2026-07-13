@@ -142,6 +142,7 @@ internal sealed partial class TerminalOutputDevice
 
         OutputShowMode showStdout = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStdoutOption, isLLMEnvironment);
         OutputShowMode showStderr = GetShowOutputMode(_commandLineOptions, TerminalTestReporterCommandLineOptionsProvider.ShowStderrOption, isLLMEnvironment);
+        int slowestTestsCount = GetSlowestTestsCount(_commandLineOptions);
 
         Func<bool?> shouldShowProgress = noProgress
             // User preference is to not show progress.
@@ -170,8 +171,20 @@ internal sealed partial class TerminalOutputDevice
             ShowStderr = showStderr,
             HeartbeatSilenceThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
             SlowTestThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
+            SlowestTestsCount = slowestTestsCount,
         });
     }
+
+    // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the
+    // summary. Returns 0 (feature off) when the option is absent. The value has already been validated to be a
+    // positive integer by TerminalTestReporterCommandLineOptionsProvider.
+    private static int GetSlowestTestsCount(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(TerminalTestReporterCommandLineOptionsProvider.ShowSlowestTestsOption, out string[]? arguments)
+            && arguments is [string value]
+            && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int count)
+            && count >= 1
+                ? count
+                : 0;
 
     // Reads an integer number of seconds from the given environment variable, falling back to
     // <paramref name="defaultSeconds"/> when unset or invalid. A value of 0 disables the related

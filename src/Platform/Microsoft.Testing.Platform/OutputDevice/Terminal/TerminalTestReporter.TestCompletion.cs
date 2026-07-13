@@ -101,6 +101,14 @@ internal sealed partial class TerminalTestReporter
             asm.TestNodeResultsState?.RemoveRunningTestNode(testNodeUid);
         }
 
+        // Record the reported duration for the "slowest tests" summary section. All outcomes are included (a slow
+        // test that then fails is still slow). Fixture time is naturally excluded because it is not attributed to a
+        // test node. Gated on the feature so a run without --show-slowest-tests pays no bookkeeping cost.
+        if (_options.SlowestTestsCount > 0 && duration.HasValue)
+        {
+            asm.RecordTestDuration(testNodeUid, displayName, duration.Value);
+        }
+
         switch (outcome)
         {
             case TestOutcome.Error:
