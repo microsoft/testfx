@@ -19,6 +19,12 @@
     <MSTestEngineVersion>$(MSTestAOTVersion)</MSTestEngineVersion>
     <PlaywrightVersion>1.61.0</PlaywrightVersion>
     <TestingPlatformVersion>2.3.2</TestingPlatformVersion>
+    <!--
+      Microsoft.Testing.Extensions.PackagedApp is the experimental extension that deploys and launches
+      a packaged Windows (UWP/WinUI) test host. It versions independently from the 2.x testing platform
+      (it ships as a 1.0.0-alpha.* build), which is why it has its own property here.
+    -->
+    <MicrosoftTestingExtensionsPackagedAppVersion>1.0.0-alpha.26363.8</MicrosoftTestingExtensionsPackagedAppVersion>
     <VSTestVersion>18.7.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>

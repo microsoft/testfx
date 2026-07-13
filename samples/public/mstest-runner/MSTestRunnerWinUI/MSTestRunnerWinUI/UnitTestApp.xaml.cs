@@ -61,6 +61,11 @@ public partial class UnitTestApp : Application
                 .Where(arg => !arg.Contains("EnableMSTestRunner"))
                 .ToArray();
             ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(cliArgs);
+
+            // Registers all MSBuild-contributed extensions, including the Microsoft.Testing.Extensions.PackagedApp
+            // launcher (from the PackageReference in the csproj). That launcher deploys this packaged WinUI test
+            // host into an isolated directory and launches it from there through the platform's ITestHostLauncher
+            // extension point.
             builder.AddSelfRegisteredExtensions(cliArgs);
             using ITestApplication app = await builder.BuildAsync();
             await app.RunAsync();
