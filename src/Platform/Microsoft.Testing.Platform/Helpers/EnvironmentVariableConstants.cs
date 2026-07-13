@@ -14,6 +14,10 @@ internal static class EnvironmentVariableConstants
     public const string TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT = nameof(TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT);
     public const string TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS = nameof(TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS);
 
+    // Overrides the directory where the IPC named pipe (Unix domain socket) files are created.
+    // Only honored on Unix; Windows named pipes live in the kernel namespace, not on disk.
+    public const string TESTINGPLATFORM_PIPE_DIRECTORY = nameof(TESTINGPLATFORM_PIPE_DIRECTORY);
+
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME);
     public const string TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID = nameof(TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID);

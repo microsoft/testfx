@@ -21,6 +21,108 @@ public sealed class IPCTests
         => _testContext = testContext;
 
     [TestMethod]
+    public void ResolvePipeDirectory_WhenOverrideProvided_UsesOverrideAsExplicit()
+    {
+        (string directory, bool isExplicitOverride) = NamedPipeServer.ResolvePipeDirectory("/custom/pipe/dir", "/tmp");
+
+        Assert.AreEqual("/custom/pipe/dir", directory);
+        Assert.IsTrue(isExplicitOverride);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("")]
+    [DataRow("   ")]
+    public void ResolvePipeDirectory_WhenOverrideMissing_FallsBackToTempPath(string? overrideDirectory)
+    {
+        (string directory, bool isExplicitOverride) = NamedPipeServer.ResolvePipeDirectory(overrideDirectory, "/var/folders/tmp");
+
+        Assert.AreEqual("/var/folders/tmp", directory);
+        Assert.IsFalse(isExplicitOverride);
+    }
+
+    [TestMethod]
+    [DataRow(null)]
+    [DataRow("")]
+    [DataRow("   ")]
+    public void ResolvePipeDirectory_WhenNeitherOverrideNorTempPathAvailable_FallsBackToTmp(string? tempPath)
+    {
+        (string directory, bool isExplicitOverride) = NamedPipeServer.ResolvePipeDirectory(overrideDirectory: null, tempPath);
+
+        Assert.AreEqual("/tmp", directory);
+        Assert.IsFalse(isExplicitOverride);
+    }
+
+    [TestMethod]
+    public void EnsureDirectoryIsWritable_WhenDirectoryMissingButCreatable_CreatesItAndDoesNotThrow()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"mtp.pipedir.{Guid.NewGuid():N}");
+        try
+        {
+            NamedPipeServer.EnsureDirectoryIsWritable(directory);
+
+            Assert.IsTrue(Directory.Exists(directory));
+        }
+        finally
+        {
+            if (Directory.Exists(directory))
+            {
+                Directory.Delete(directory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void EnsureDirectoryIsWritable_WhenDirectoryCannotBeCreated_ThrowsInvalidOperationException()
+    {
+        // Create a regular file, then target a directory *beneath* that file. Directory.CreateDirectory cannot
+        // create a directory under an existing file, so this deterministically fails on Windows and Unix.
+        string filePath = Path.Combine(Path.GetTempPath(), $"mtp.pipefile.{Guid.NewGuid():N}");
+        File.WriteAllText(filePath, string.Empty);
+        try
+        {
+            string invalidDirectory = Path.Combine(filePath, "sub");
+
+            Assert.ThrowsExactly<InvalidOperationException>(() => NamedPipeServer.EnsureDirectoryIsWritable(invalidDirectory));
+        }
+        finally
+        {
+            File.Delete(filePath);
+        }
+    }
+
+    [TestMethod]
+    public void EnsurePathLengthWithinLimit_WhenWithinLimit_DoesNotThrow()
+    {
+        string path = "/tmp/" + new string('a', NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes - "/tmp/".Length);
+
+        // Should not throw.
+        NamedPipeServer.EnsurePathLengthWithinLimit(path);
+    }
+
+    [TestMethod]
+    public void EnsurePathLengthWithinLimit_WhenExceedsLimit_Throws()
+    {
+        string path = "/tmp/" + new string('a', NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes);
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => NamedPipeServer.EnsurePathLengthWithinLimit(path));
+    }
+
+    [TestMethod]
+    public void EnsurePathLengthWithinLimit_WhenMultibyteExceedsByteLimitButNotCharLimit_Throws()
+    {
+        // '好' (U+597D) is 3 bytes in UTF-8. 40 of them plus the "/tmp/" prefix is only 45 characters -
+        // comfortably under the 103 limit if it were (incorrectly) measured in characters - but 125 bytes,
+        // which exceeds it. This proves the guard measures UTF-8 bytes (matching sun_path) and not characters.
+        string path = "/tmp/" + new string('好', 40);
+
+        Assert.IsLessThan(NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes, path.Length, "Test setup: character count must stay under the limit so only a byte-based check can fail.");
+        Assert.IsGreaterThan(NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes, System.Text.Encoding.UTF8.GetByteCount(path), "Test setup: UTF-8 byte count must exceed the limit.");
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => NamedPipeServer.EnsurePathLengthWithinLimit(path));
+    }
+
+    [TestMethod]
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));

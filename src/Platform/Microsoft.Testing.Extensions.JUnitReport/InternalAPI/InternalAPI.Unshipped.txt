@@ -3,4 +3,6 @@ virtual Microsoft.Testing.Extensions.ReportGeneratorBase<TGenerator, TCapturedTe
 Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger
 static Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, string! reportName) -> System.Xml.Linq.XDocument!
 static Microsoft.Testing.Extensions.JUnitReport.JUnitReportMerger.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, string! reportName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipeDirectoryNotWritableErrorMessage.get -> string!
+static Microsoft.Testing.Platform.Resources.PlatformResources.NamedPipePathTooLongErrorMessage.get -> string!
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!

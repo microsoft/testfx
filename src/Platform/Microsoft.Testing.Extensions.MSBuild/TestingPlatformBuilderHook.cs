@@ -3,6 +3,10 @@
 
 using Microsoft.Testing.Platform.Builder;
 
+#if !NETCOREAPP
+using Polyfills;
+#endif
+
 namespace Microsoft.Testing.Platform.MSBuild;
 
 /// <summary>
@@ -15,7 +19,19 @@ public static class TestingPlatformBuilderHook
     /// </summary>
     /// <param name="testApplicationBuilder">The test application builder.</param>
     /// <param name="_">The command line arguments.</param>
-    [UnsupportedOSPlatform("browser")]
     public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] _)
-        => testApplicationBuilder.AddMSBuild();
+    {
+        // The MSBuild extension provides the `dotnet test` / MSBuild-node integration, which relies on
+        // named-pipe IPC that is unavailable on browser-wasm. This hook is auto-registered for every
+        // MSTest runner app (via the generated SelfRegisteredExtensions, because MSTest.TestAdapter
+        // references Microsoft.Testing.Platform.MSBuild), so skip it on browser instead of throwing —
+        // otherwise every browser-wasm test app crashes at startup. See
+        // https://github.com/microsoft/testfx/issues/2196.
+        if (OperatingSystem.IsBrowser())
+        {
+            return;
+        }
+
+        testApplicationBuilder.AddMSBuild();
+    }
 }

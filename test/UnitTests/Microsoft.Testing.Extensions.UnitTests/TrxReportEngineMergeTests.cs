@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
@@ -144,7 +144,7 @@ public sealed class TrxReportEngineMergeTests
 
         XElement? mergedRunInfos = summary.Elements().FirstOrDefault(e => e.Name.LocalName == "RunInfos");
         Assert.IsNotNull(mergedRunInfos);
-        Assert.Contains("host crashed", mergedRunInfos.Value);
+        Assert.Contains("host crashed", mergedRunInfos!.Value);
     }
 
     [TestMethod]
@@ -251,6 +251,100 @@ public sealed class TrxReportEngineMergeTests
         {
             Directory.Delete(tempDirectory, recursive: true);
         }
+    }
+
+    [TestMethod]
+    public async Task MergeToFileAsync_IsolatesCollidingAttachmentsPerInputAndRewritesHrefs()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // Two inputs, each with an attachment at the SAME relative href ("machine/log.txt") but
+            // different bytes. Without per-input isolation the second would resolve to the first's bytes.
+            string firstInputDir = Path.Combine(tempDirectory, "inA");
+            string secondInputDir = Path.Combine(tempDirectory, "inB");
+            string first = WriteReportWithAttachment(firstInputDir, "a.trx", deploymentRoot: "depA", attachmentContent: "AAA");
+            string second = WriteReportWithAttachment(secondInputDir, "b.trx", deploymentRoot: "depB", attachmentContent: "BBB");
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([first, second], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            string mergedInRoot = Path.Combine(tempDirectory, "out", "run", "In");
+            string firstCopied = Path.Combine(mergedInRoot, "0", "machine", "log.txt");
+            string secondCopied = Path.Combine(mergedInRoot, "1", "machine", "log.txt");
+            Assert.IsTrue(File.Exists(firstCopied));
+            Assert.IsTrue(File.Exists(secondCopied));
+            Assert.AreEqual("AAA", File.ReadAllText(firstCopied));
+            Assert.AreEqual("BBB", File.ReadAllText(secondCopied));
+
+            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            Assert.Contains("0/machine/log.txt", hrefs);
+            Assert.Contains("1/machine/log.txt", hrefs);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenRunNameEscapesOutputDirectory_SkipsRelocation()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string inputDir = Path.Combine(tempDirectory, "in");
+            string input = WriteReportWithAttachment(inputDir, "a.trx", deploymentRoot: "dep", attachmentContent: "AAA");
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+
+            // A hostile runName of ".." would place the merged deployment root outside the output
+            // directory; relocation must refuse to write there but the merge itself must still succeed.
+            await TrxReportEngine.MergeToFileAsync([input, input], output, Guid.NewGuid(), "..", CancellationToken.None);
+
+            Assert.IsTrue(File.Exists(output));
+
+            // The only physical attachment must remain the single source copy under the input tree —
+            // relocation must not have copied it anywhere (it was refused for escaping the output dir).
+            List<string> attachmentCopies = [.. Directory.GetFiles(tempDirectory, "log.txt", SearchOption.AllDirectories)];
+            Assert.HasCount(1, attachmentCopies);
+            Assert.StartsWith(inputDir, attachmentCopies[0]);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    private static string WriteReportWithAttachment(string inputDirectory, string fileName, string deploymentRoot, string attachmentContent)
+    {
+        Directory.CreateDirectory(inputDirectory);
+
+        // Physical attachment under "<deploymentRoot>/In/machine/log.txt", referenced by a
+        // machine-relative href of "machine/log.txt".
+        string attachmentDirectory = Path.Combine(inputDirectory, deploymentRoot, "In", "machine");
+        Directory.CreateDirectory(attachmentDirectory);
+        File.WriteAllText(Path.Combine(attachmentDirectory, "log.txt"), attachmentContent);
+
+        var collectorDataEntries = new XElement(
+            Ns + "CollectorDataEntries",
+            new XElement(
+                Ns + "Collector",
+                new XAttribute("collectorDisplayName", "Code Coverage"),
+                new XElement(
+                    Ns + "UriAttachments",
+                    new XElement(Ns + "UriAttachment", new XElement(Ns + "A", new XAttribute("href", "machine/log.txt"))))));
+
+        XDocument report = BuildReport(resultSummaryChildren: [collectorDataEntries]);
+        report.Root!.Add(new XElement(
+            Ns + "TestSettings",
+            new XAttribute("name", "default"),
+            new XElement(Ns + "Deployment", new XAttribute("runDeploymentRoot", deploymentRoot))));
+
+        string path = Path.Combine(inputDirectory, fileName);
+        report.Save(path);
+        return path;
     }
 
     private static XElement Child(XElement parent, string localName)

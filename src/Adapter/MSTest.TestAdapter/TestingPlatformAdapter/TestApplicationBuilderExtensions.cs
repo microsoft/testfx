@@ -51,8 +51,21 @@ public static class TestApplicationBuilderExtensions
         testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestCaseFilterCommandLineOptionsProvider(extension));
         testApplicationBuilder.CommandLine.AddProvider(() => new MSTestTestRunParametersCommandLineOptionsProvider(extension));
         testApplicationBuilder.AddMaximumFailedTestsService(extension);
-        testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
-            => new MSTestRunSettingsEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem(), serviceProvider.GetEnvironment()));
+
+        // The environment-variable provider is a test-host-controller extension: it applies runsettings
+        // <EnvironmentVariables> by relaunching the test host with those variables set. That requires a
+        // controller process + restart, which browser-wasm does not support (TestHostControllersManager
+        // throws PlatformNotSupportedException there). Skip the registration on browser. Silently dropping
+        // a requested <EnvironmentVariables> section would change test semantics, so
+        // RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync fails with a clear
+        // unsupported-platform diagnostic when the resolved runsettings (from --settings or either
+        // runsettings environment variable) actually declares that section on browser.
+        // See https://github.com/microsoft/testfx/issues/2196.
+        if (!OperatingSystem.IsBrowser())
+        {
+            testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(serviceProvider
+                => new MSTestRunSettingsEnvironmentVariableProvider(extension, serviceProvider.GetCommandLineOptions(), serviceProvider.GetFileSystem(), serviceProvider.GetEnvironment()));
+        }
 
         // MSTest plugs into Microsoft.Testing.Platform directly (no VSTest bridge object model on the request path).
         testApplicationBuilder.RegisterTestFramework(

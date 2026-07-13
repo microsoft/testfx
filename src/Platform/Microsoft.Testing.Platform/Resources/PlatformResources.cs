@@ -32,6 +32,10 @@ internal static partial class PlatformResources
 
     internal static string @InternalLoopAsyncDidNotExitSuccessfullyErrorMessage => GetResourceString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage");
 
+    internal static string @NamedPipePathTooLongErrorMessage => GetResourceString("NamedPipePathTooLongErrorMessage");
+
+    internal static string @NamedPipeDirectoryNotWritableErrorMessage => GetResourceString("NamedPipeDirectoryNotWritableErrorMessage");
+
 #if IS_MTP_UNIT_TESTS
     internal static string @ActiveTestsRunning_FullTestsCount => GetResourceString("ActiveTestsRunning_FullTestsCount");
 

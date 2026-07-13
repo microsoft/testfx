@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform;
@@ -179,20 +179,20 @@ internal sealed partial class TrxReportEngine
             reports.Add(XDocument.Load(inputPath));
         }
 
+        string outputDirectory = Path.GetDirectoryName(outputPath) is { Length: > 0 } dir
+            ? dir
+            : Directory.GetCurrentDirectory();
+        Directory.CreateDirectory(outputDirectory);
+
+        // Attachment hrefs inside CollectorDataEntries / ResultFiles are relative to each input's
+        // deployment root (they look like "<machine>/<file>" and physically live under
+        // "<inputDir>/<inputDeploymentRoot>/In/..."). Relocate those trees into the merged report's
+        // deployment root — isolated per input so identical file names from different modules do not
+        // collide — and rewrite the input's hrefs to match, before the merge clones them.
+        // Best-effort and path-confined: failures never fail the merge.
+        RelocateAttachments(inputPaths, reports, outputDirectory, runName);
+
         XDocument merged = Merge(reports, runId, runName);
-
-        string? outputDirectory = Path.GetDirectoryName(outputPath);
-        if (!RoslynString.IsNullOrEmpty(outputDirectory))
-        {
-            Directory.CreateDirectory(outputDirectory);
-        }
-
-        // Attachment hrefs inside CollectorDataEntries are relative to each input's deployment root
-        // (they look like "<machine>/<file>" and physically live under
-        // "<inputDir>/<inputDeploymentRoot>/In/..."). Copy those trees into the merged report's
-        // deployment root so the carried-over hrefs resolve. Best-effort: failures to copy an
-        // attachment must not fail the merge.
-        RelocateAttachments(inputPaths, reports, outputDirectory ?? Directory.GetCurrentDirectory(), runName);
 
         using FileStream stream = File.Create(outputPath);
 #if NETCOREAPP
@@ -207,15 +207,27 @@ internal sealed partial class TrxReportEngine
         => parent.Elements().FirstOrDefault(e => string.Equals(e.Name.LocalName, localName, StringComparison.Ordinal));
 
     /// <summary>
-    /// Copies each input report's attachment deployment tree (<c>&lt;deploymentRoot&gt;/In</c>) into the
-    /// merged report's deployment root, so the attachment hrefs carried over from
-    /// <c>CollectorDataEntries</c> keep resolving. Best-effort: any copy failure is swallowed so it
-    /// never fails the merge (matching the never-fail-the-run post-processing invariant).
+    /// Relocates each input report's attachment deployment tree (<c>&lt;deploymentRoot&gt;/In</c>) into a
+    /// per-input isolated folder under the merged report's deployment root and rewrites that input's
+    /// attachment hrefs to match, so references carried into the merged TRX keep resolving without one
+    /// module's files shadowing another's. All destination and source paths are confined
+    /// (<c>runName</c> and each input's <c>runDeploymentRoot</c> are attacker-influenced), and any
+    /// copy failure is swallowed so it never fails the merge (never-fail-the-run invariant).
     /// </summary>
     private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, string runName)
     {
+        string outputFull = Path.GetFullPath(outputDirectory);
         string mergedDeploymentRoot = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(runName);
-        string mergedInRoot = Path.Combine(outputDirectory, mergedDeploymentRoot, "In");
+        string mergedRootFull = Path.GetFullPath(Path.Combine(outputFull, mergedDeploymentRoot));
+
+        // The sanitizer leaves '.' and '..' intact, so a hostile runName ('..') could point the merged
+        // deployment root outside the output directory. Reject anything that escapes.
+        if (!IsUnderDirectory(mergedRootFull, outputFull))
+        {
+            return;
+        }
+
+        string mergedInRoot = Path.Combine(mergedRootFull, "In");
 
         for (int i = 0; i < inputPaths.Count && i < reports.Count; i++)
         {
@@ -231,11 +243,19 @@ internal sealed partial class TrxReportEngine
                     continue;
                 }
 
-                string sourceInRoot = Path.Combine(inputDirectory, inputDeploymentRoot, "In");
-                if (Directory.Exists(sourceInRoot))
+                // runDeploymentRoot comes straight from the input TRX; a rooted value or '..' segments
+                // could make the source tree escape the input report directory. Reject those.
+                string sourceInRoot = Path.GetFullPath(Path.Combine(inputDirectory, inputDeploymentRoot, "In"));
+                if (!IsUnderDirectory(sourceInRoot, inputDirectory) || !Directory.Exists(sourceInRoot))
                 {
-                    CopyDirectoryRecursive(sourceInRoot, mergedInRoot);
+                    continue;
                 }
+
+                // Isolate each input under its own subfolder so identical relative attachment paths
+                // from different inputs cannot shadow each other.
+                string prefix = i.ToString(CultureInfo.InvariantCulture);
+                CopyDirectoryRecursive(sourceInRoot, Path.Combine(mergedInRoot, prefix));
+                RewriteAttachmentHrefs(reports[i], prefix);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
@@ -244,14 +264,66 @@ internal sealed partial class TrxReportEngine
         }
     }
 
+    private static void RewriteAttachmentHrefs(XDocument report, string prefix)
+    {
+        if (report.Root is not { } root)
+        {
+            return;
+        }
+
+        // Attachment references are relative to the deployment root: UriAttachment '<A href="...">'
+        // and per-result '<ResultFile path="...">'. Prefix them so they point at the isolated subfolder.
+        foreach (XElement element in root.Descendants())
+        {
+            switch (element.Name.LocalName)
+            {
+                case "A":
+                    PrefixRelativeAttribute(element, "href", prefix);
+                    break;
+
+                case "ResultFile":
+                    PrefixRelativeAttribute(element, "path", prefix);
+                    break;
+            }
+        }
+    }
+
+    private static void PrefixRelativeAttribute(XElement element, string attributeName, string prefix)
+    {
+        XAttribute? attribute = element.Attribute(attributeName);
+        if (attribute is null || RoslynString.IsNullOrEmpty(attribute.Value) || Path.IsPathRooted(attribute.Value))
+        {
+            return;
+        }
+
+        attribute.Value = prefix + "/" + attribute.Value;
+    }
+
+    private static bool IsUnderDirectory(string candidateFullPath, string rootDirectory)
+    {
+        string rootFull = Path.GetFullPath(rootDirectory);
+        string rootWithSeparator = rootFull.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal)
+            ? rootFull
+            : rootFull + Path.DirectorySeparatorChar;
+
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        return string.Equals(candidateFullPath, rootFull, comparison)
+            || candidateFullPath.StartsWith(rootWithSeparator, comparison);
+    }
+
     private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory)
     {
+        // Do not descend into reparse points (symlinks/junctions): a link inside the (confined) source
+        // tree could otherwise redirect the copy to an arbitrary location.
+        if ((File.GetAttributes(sourceDirectory) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+        {
+            return;
+        }
+
         Directory.CreateDirectory(destinationDirectory);
 
         foreach (string file in Directory.GetFiles(sourceDirectory))
         {
-            // Do not overwrite: if two inputs contributed the same relative attachment path, keep the
-            // first one rather than silently clobbering it.
             string destination = Path.Combine(destinationDirectory, Path.GetFileName(file));
             if (!File.Exists(destination))
             {
