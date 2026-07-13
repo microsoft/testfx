@@ -137,7 +137,8 @@ internal static class DiagnosticExtensions
         => syntaxReference.GetSyntax(cancellationToken).CreateDiagnostic(rule, args);
 
     /// <summary>
-    /// This reflection-based workaround can be reverted once we move to Microsoft.CodeAnalysis version 3.0.
+    /// Reflection is used to read diagnostic severity overrides in a way that works across Microsoft.CodeAnalysis versions:
+    /// 'CompilationOptions.SyntaxTreeOptionsProvider' is preferred (>= 3.7) and the deprecated 'SyntaxTree.DiagnosticOptions' is used as a fallback (3.3 - 3.7).
     /// </summary>
     private static readonly PropertyInfo? s_syntaxTreeDiagnosticOptionsProperty =
         typeof(SyntaxTree).GetTypeInfo().GetDeclaredProperty("DiagnosticOptions");
