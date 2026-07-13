@@ -137,7 +137,11 @@ closed over open** — provided we (a) seed the enum with the real union, (b) st
    messages; per-line fidelity stays in the artifact.
 5. **Wire vs. consumer split.** Flat primitive messages for IPC; a correlated read model for
    consumers.
-6. **Scope-aware.** Overall → Module → Assembly → Namespace → Type → File.
+6. **Scope-aware, but not a strict tree.** Scopes are addressed by `(level, name)` across
+   Overall / Module / Assembly / Namespace / Type / File. These levels do **not** form a
+   single parent tree — a file can contain multiple types and a partial type can span several
+   files — so the contract models scope identity, not a forced hierarchy (see the scope value
+   type below).
 7. **Guideline compliance.** No `init` accessors on new public API. User-facing terminal
    strings via `TerminalResources.resx` (+ `.xlf`). Numbers formatted with
    `CultureInfo.InvariantCulture`. New public API declared in `PublicAPI.Unshipped.txt`.
@@ -185,13 +189,20 @@ public enum CoverageMetric
 ```csharp
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-/// <summary>How per-scope values are combined for a threshold evaluation. Append-only.</summary>
+/// <summary>
+/// How per-scope values are combined for a threshold evaluation. Append-only. The population
+/// being aggregated is identified separately by
+/// <see cref="TestCoverageThresholdMessage.AggregatedOver"/> — e.g. <c>Minimum</c> over
+/// <c>Module</c> vs. over <c>File</c> are distinct evaluations.
+/// </summary>
 public enum CoverageAggregation
 {
-    Total = 0,    // aggregate covered / aggregate coverable
-    Minimum = 1,  // worst scope
-    Average = 2,  // mean of per-scope percentages
-    Maximum = 3,
+    /// <summary>Not an aggregate — a single scope's own value (use with an exact scope).</summary>
+    None = 0,
+    Total = 1,    // aggregate covered / aggregate coverable across the population
+    Minimum = 2,  // worst scope in the population
+    Average = 3,  // mean of per-scope percentages in the population
+    Maximum = 4,
 }
 
 /// <summary>The entity a coverage/threshold entry describes. Append-only.</summary>
@@ -217,11 +228,11 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 public readonly struct CoverageScope : IEquatable<CoverageScope>
 {
-    public CoverageScope(CoverageScopeLevel level, string? name = null, string? parentPath = null)
+    public CoverageScope(CoverageScopeLevel level, string? name = null, string? containerHint = null)
     {
         Level = level;
         Name = name;
-        ParentPath = parentPath;
+        ContainerHint = containerHint;
     }
 
     /// <summary>Granularity of this scope.</summary>
@@ -230,19 +241,26 @@ public readonly struct CoverageScope : IEquatable<CoverageScope>
     /// <summary>Scope identifier (module path, type name, file path…); null for Overall.</summary>
     public string? Name { get; }
 
-    /// <summary>Optional parent identifier, letting a UI rebuild the tree from summaries alone.</summary>
-    public string? ParentPath { get; }
+    /// <summary>
+    /// Optional, non-authoritative grouping hint for UIs (e.g. the assembly of a type, or a
+    /// representative file of a type). It is deliberately <b>not</b> a tree edge: a file can
+    /// contain many types and a partial type can span many files, so scope levels form
+    /// overlapping dimensions rather than a single parent hierarchy. Consumers that need exact
+    /// containment should read the referenced report artifact (see
+    /// <see cref="TestCoverageReportMessage"/>), which carries the authoritative structure.
+    /// </summary>
+    public string? ContainerHint { get; }
 
     public static CoverageScope Overall => new(CoverageScopeLevel.Overall);
 
     public bool Equals(CoverageScope other)
         => Level == other.Level
         && string.Equals(Name, other.Name, StringComparison.Ordinal)
-        && string.Equals(ParentPath, other.ParentPath, StringComparison.Ordinal);
+        && string.Equals(ContainerHint, other.ContainerHint, StringComparison.Ordinal);
 
     public override bool Equals(object? obj) => obj is CoverageScope s && Equals(s);
 
-    public override int GetHashCode() => HashCode.Combine(Level, Name, ParentPath);
+    public override int GetHashCode() => HashCode.Combine(Level, Name, ContainerHint);
 }
 ```
 
@@ -262,6 +280,7 @@ public sealed class TestCoverageMessage : PropertyBagData
         CoverageMetric metric,
         long coveredCount,
         long coverableCount,
+        string? producerId = null,
         string? customMetricName = null)
         : base("Test coverage", "Reports a code coverage measurement for a scope.")
     {
@@ -279,12 +298,20 @@ public sealed class TestCoverageMessage : PropertyBagData
         Metric = metric;
         CoveredCount = coveredCount;
         CoverableCount = coverableCount;
+        ProducerId = producerId;
         CustomMetricName = customMetricName;
     }
 
     public CoverageScope Scope { get; }
 
     public CoverageMetric Metric { get; }
+
+    /// <summary>
+    /// Identifies the collector that produced this measurement (e.g. "microsoft-code-coverage").
+    /// Part of the correlation key so results from multiple collectors are not silently merged,
+    /// and so a measurement can be tied back to its <see cref="TestCoverageReportMessage"/>.
+    /// </summary>
+    public string? ProducerId { get; }
 
     /// <summary>Set only when <see cref="Metric"/> is <see cref="CoverageMetric.Custom"/>.</summary>
     public string? CustomMetricName { get; }
@@ -315,15 +342,46 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
         CoverageAggregation aggregation,
         double actualPercentage,
         double requiredPercentage,
+        CoverageScopeLevel? aggregatedOver = null,
+        string? producerId = null,
         string? customMetricName = null)
         : base("Test coverage threshold", "Reports the result of a coverage threshold evaluation.")
     {
+        ValidatePercentage(actualPercentage, nameof(actualPercentage));
+        ValidatePercentage(requiredPercentage, nameof(requiredPercentage));
+
+        if (metric == CoverageMetric.Custom && string.IsNullOrWhiteSpace(customMetricName))
+        {
+            throw new ArgumentException("A custom metric name is required when metric is Custom.", nameof(customMetricName));
+        }
+
+        // An aggregate must name the population it aggregated over; a non-aggregate must not.
+        if (aggregation is CoverageAggregation.None && aggregatedOver is not null)
+        {
+            throw new ArgumentException("A non-aggregate evaluation must not specify a population.", nameof(aggregatedOver));
+        }
+
+        if (aggregation is not CoverageAggregation.None && aggregatedOver is null)
+        {
+            throw new ArgumentException("An aggregate evaluation must specify the aggregated population.", nameof(aggregatedOver));
+        }
+
         Scope = scope;
         Metric = metric;
         Aggregation = aggregation;
+        AggregatedOver = aggregatedOver;
         ActualPercentage = actualPercentage;
         RequiredPercentage = requiredPercentage;
+        ProducerId = producerId;
         CustomMetricName = customMetricName;
+
+        static void ValidatePercentage(double value, string paramName)
+        {
+            if (double.IsNaN(value) || value < 0d || value > 100d)
+            {
+                throw new ArgumentOutOfRangeException(paramName, value, "Percentage must be a number in the range 0–100.");
+            }
+        }
     }
 
     public CoverageScope Scope { get; }         // enables per-scope thresholds
@@ -332,11 +390,22 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
 
     public string? CustomMetricName { get; }
 
+    /// <summary>Identifies the collector that produced this evaluation (correlation key).</summary>
+    public string? ProducerId { get; }
+
     public CoverageAggregation Aggregation { get; }
 
-    public double ActualPercentage { get; }     // 0–100
+    /// <summary>
+    /// The child scope level that <see cref="Aggregation"/> was computed over (e.g. the minimum
+    /// across <c>Module</c> vs. across <c>File</c>). Non-null iff <see cref="Aggregation"/> is
+    /// not <see cref="CoverageAggregation.None"/>, so a <c>(scope, metric, aggregation)</c>
+    /// triple is unambiguous.
+    /// </summary>
+    public CoverageScopeLevel? AggregatedOver { get; }
 
-    public double RequiredPercentage { get; }   // 0–100
+    public double ActualPercentage { get; }     // 0–100, validated
+
+    public double RequiredPercentage { get; }   // 0–100, validated
 
     /// <summary><see langword="true"/> when the threshold is satisfied.</summary>
     public bool Passed => ActualPercentage >= RequiredPercentage;
@@ -424,8 +493,18 @@ public sealed class CoverageScopeSummary
 
     public IReadOnlyList<CoverageMetricResult> Metrics { get; }
 
-    /// <summary>Convenience lookup, e.g. <c>summary[CoverageMetric.Line]</c>; null if absent.</summary>
+    /// <summary>
+    /// Convenience lookup for a well-known metric, e.g. <c>summary[CoverageMetric.Line]</c>;
+    /// null if absent. Throws for <see cref="CoverageMetric.Custom"/>, because every custom
+    /// metric shares that enum value and is distinguished only by its name — use
+    /// <see cref="GetCustom(string)"/> instead. If a scope somehow carries the same metric from
+    /// multiple producers, this returns the first; use <see cref="Metrics"/> to disambiguate by
+    /// <see cref="CoverageMetricResult.ProducerId"/>.
+    /// </summary>
     public CoverageMetricResult? this[CoverageMetric metric] { get; }
+
+    /// <summary>Looks up a custom (proprietary) metric by its name; null if absent.</summary>
+    public CoverageMetricResult? GetCustom(string customMetricName);
 }
 
 public sealed class CoverageMetricResult
@@ -433,6 +512,9 @@ public sealed class CoverageMetricResult
     public CoverageMetric Metric { get; }
 
     public string? CustomMetricName { get; }
+
+    /// <summary>The collector that produced this measurement; part of the correlation key.</summary>
+    public string? ProducerId { get; }
 
     public long CoveredCount { get; }
 
@@ -466,7 +548,22 @@ The terminal renderer and any third-party report generator are **both** consumer
 internal sealed class HtmlCoverageReportGenerator(ITestCoverageResult coverage)
     : IDataConsumer, ITestSessionLifetimeHandler
 {
-    public async Task OnTestSessionFinishingAsync(SessionUid uid, CancellationToken ct)
+    // IExtension metadata (inherited by both interfaces).
+    public string Uid => nameof(HtmlCoverageReportGenerator);
+    public string Version => "1.0.0";
+    public string DisplayName => "HTML coverage report";
+    public string Description => "Generates an HTML coverage report from platform coverage data.";
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    // This consumer only needs the session-end hook; it reads the correlated read model rather
+    // than the raw messages, so DataTypesConsumed is empty and ConsumeAsync is a no-op.
+    public Type[] DataTypesConsumed => [];
+    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+        => Task.CompletedTask;
+
+    public Task OnTestSessionStartingAsync(ITestSessionContext context) => Task.CompletedTask;
+
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext context)
     {
         // Tier 1 — summary tables / badges straight from the correlated read model:
         foreach (CoverageScopeSummary scope in coverage.Scopes)
@@ -507,7 +604,7 @@ internal sealed class HtmlCoverageReportGenerator(ITestCoverageResult coverage)
 |---|---|---|
 | Metric kind | closed enum Line/Branch/Method (3) | closed, seeded, append-only (~11) + `Custom` escape |
 | Metric value | lone `double` percentage | `covered`/`coverable` counts → derived % |
-| Granularity | `ModuleName` only | `CoverageScope` Overall→File (+ parent for trees) |
+| Granularity | `ModuleName` only | `CoverageScope` across Overall→File (overlapping dimensions, not a forced tree) |
 | Threshold identity | global only | scope-aware (per-scope possible) |
 | Threshold status | redundant enum | computed `bool Passed` |
 | "No data" | silent 100% | explicit `HasCoverableData` |
