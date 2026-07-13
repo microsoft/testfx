@@ -12,6 +12,15 @@ See full log [of v4.3.0...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 * Fix `CloneWithUpdatedSource` mutating `this` instead of the clone by @Evangelink in [#9581](https://github.com/microsoft/testfx/pull/9581)
 
+## <a name="4.3.2" />[4.3.2] - 2026-07-13
+
+See full log [of v4.3.0...v4.3.2](https://github.com/microsoft/testfx/compare/v4.3.0...v4.3.2)
+
+### Changed
+
+* Make `ReflectionFree` the default `MSTestSourceGenMode` for Native AOT / trimmed consumers by @Evangelink in [#9777](https://github.com/microsoft/testfx/pull/9777)
+* Point MSTest.Sdk back to the classic source generation + engine wiring (as shipped in 4.2.3) by @Evangelink in [#9825](https://github.com/microsoft/testfx/pull/9825)
+
 ## <a name="4.3.0" />[4.3.0] - 2026-07-08
 
 See full log [of v4.2.3...v4.3.0](https://github.com/microsoft/testfx/compare/v4.2.3...v4.3.0)
