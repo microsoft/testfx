@@ -14,12 +14,30 @@ public class DynamicDataSourceResolverTests : TestContainer
     public DynamicDataSourceResolverTests()
         => _testMethodInfo = typeof(ResolverDummyClass).GetTypeInfo().GetDeclaredMethod(nameof(ResolverDummyClass.TestMethod))!;
 
+    public void GetDataFallsBackToReflectionWhenProviderRegisteredForDifferentSourceType()
+    {
+        // A provider registered for the AutoDetect source kind must NOT satisfy an attribute that explicitly
+        // requests a Method source with the same declaring type / name. Otherwise a valid registration for one
+        // attribute would hide a genuinely invalid source on another (which should take the reflection path and
+        // report the error). MismatchData is a property, so a Method request must reach reflection and throw
+        // rather than returning the AutoDetect-registered provider's data.
+        object[][] registered = [[9, 9]];
+        DynamicDataSourceResolver.RegisterDataProvider(typeof(ResolverDummyClass), nameof(ResolverDummyClass.MismatchData), DynamicDataSourceType.AutoDetect, _ => registered);
+
+        var attribute = new DynamicDataAttribute(nameof(ResolverDummyClass.MismatchData), typeof(ResolverDummyClass), DynamicDataSourceType.Method);
+
+        // GetData materializes eagerly, so the call itself throws.
+        Action getData = () => attribute.GetData(_testMethodInfo);
+
+        getData.Should().Throw<ArgumentNullException>();
+    }
+
     public void GetDataUsesRegisteredProviderInsteadOfReflection()
     {
         // "NonExistentSource" is not a member on the declaring type, so reflection would throw. The registered
         // provider must be used instead, proving the resolver short-circuits reflection.
         object[][] expected = [[1, 2], [3, 4]];
-        DynamicDataSourceResolver.RegisterDataProvider(typeof(ResolverDummyClass), "NonExistentSource", _ => expected);
+        DynamicDataSourceResolver.RegisterDataProvider(typeof(ResolverDummyClass), "NonExistentSource", DynamicDataSourceType.AutoDetect, _ => expected);
 
         var attribute = new DynamicDataAttribute("NonExistentSource", typeof(ResolverDummyClass));
         IEnumerable<object[]> data = attribute.GetData(_testMethodInfo);
@@ -33,6 +51,7 @@ public class DynamicDataSourceResolverTests : TestContainer
         DynamicDataSourceResolver.RegisterDataProvider(
             typeof(ResolverDummyClass),
             "MethodSourceWithArgs",
+            DynamicDataSourceType.AutoDetect,
             args =>
             {
                 capturedArguments = args;
@@ -91,6 +110,8 @@ public class DynamicDataSourceResolverTests : TestContainer
     private sealed class ResolverDummyClass
     {
         public static IEnumerable<object[]> ReflectionData => [[1, 2, 3], [4, 5, 6]];
+
+        public static IEnumerable<object[]> MismatchData => [[0]];
 
         public void TestMethod()
         {

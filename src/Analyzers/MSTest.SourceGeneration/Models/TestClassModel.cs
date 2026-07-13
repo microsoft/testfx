@@ -59,7 +59,7 @@ internal sealed record DynamicDataSourceModel(
     string DeclaringTypeFullyQualifiedName,
     string SourceName,
     DynamicDataMemberKind MemberKind,
-    EquatableArray<string> MethodParameterTypes,
+    string RequestedSourceType,
     string? DisplayNameDeclaringTypeFullyQualifiedName,
     string? DisplayNameMethodName);
 

@@ -46,13 +46,19 @@ public static class DynamicDataSourceResolver
     /// </summary>
     /// <param name="declaringType">The type declaring the data-source member.</param>
     /// <param name="sourceName">The property, method, or field name that supplies the data.</param>
+    /// <param name="sourceType">
+    /// The <see cref="DynamicDataSourceType"/> requested by the attribute the accessor was generated for. It
+    /// is part of the registration key so an accessor generated for one attribute cannot satisfy a different
+    /// attribute that names the same member with a different (incompatible) source kind.
+    /// </param>
     /// <param name="dataProvider">
     /// A delegate that produces the raw data object from the data-source arguments. The last registration
-    /// for a given (<paramref name="declaringType"/>, <paramref name="sourceName"/>) pair wins.
+    /// for a given (<paramref name="declaringType"/>, <paramref name="sourceName"/>,
+    /// <paramref name="sourceType"/>) tuple wins.
     /// </param>
     /// <remarks>Do not call from hand-written code; invoked only from the generator's module initializer.</remarks>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    public static void RegisterDataProvider(Type declaringType, string sourceName, Func<object?[], object?> dataProvider)
+    public static void RegisterDataProvider(Type declaringType, string sourceName, DynamicDataSourceType sourceType, Func<object?[], object?> dataProvider)
     {
         if (declaringType is null)
         {
@@ -71,7 +77,7 @@ public static class DynamicDataSourceResolver
 
         lock (Lock)
         {
-            DataProviders[new DataSourceKey(declaringType, sourceName)] = dataProvider;
+            DataProviders[new DataSourceKey(declaringType, sourceName, sourceType)] = dataProvider;
         }
     }
 
@@ -116,12 +122,12 @@ public static class DynamicDataSourceResolver
     /// Tries to obtain the raw data object for a source from the source-generated registrations, avoiding
     /// reflection. Returns <see langword="false"/> when no accessor was registered (reflection fallback).
     /// </summary>
-    internal static bool TryGetData(Type declaringType, string sourceName, object?[] arguments, out object? data)
+    internal static bool TryGetData(Type declaringType, string sourceName, DynamicDataSourceType sourceType, object?[] arguments, out object? data)
     {
         Func<object?[], object?>? provider;
         lock (Lock)
         {
-            if (!DataProviders.TryGetValue(new DataSourceKey(declaringType, sourceName), out provider))
+            if (!DataProviders.TryGetValue(new DataSourceKey(declaringType, sourceName, sourceType), out provider))
             {
                 data = null;
                 return false;
@@ -156,21 +162,25 @@ public static class DynamicDataSourceResolver
     {
         private readonly Type _declaringType;
         private readonly string _sourceName;
+        private readonly DynamicDataSourceType _sourceType;
 
-        public DataSourceKey(Type declaringType, string sourceName)
+        public DataSourceKey(Type declaringType, string sourceName, DynamicDataSourceType sourceType)
         {
             _declaringType = declaringType;
             _sourceName = sourceName;
+            _sourceType = sourceType;
         }
 
         public bool Equals(DataSourceKey other)
-            => _declaringType == other._declaringType && string.Equals(_sourceName, other._sourceName, StringComparison.Ordinal);
+            => _declaringType == other._declaringType
+                && _sourceType == other._sourceType
+                && string.Equals(_sourceName, other._sourceName, StringComparison.Ordinal);
 
         public override bool Equals(object? obj)
             => obj is DataSourceKey other && Equals(other);
 
         public override int GetHashCode()
-            => (_declaringType.GetHashCode() * 397) ^ _sourceName.GetHashCode();
+            => ((_declaringType.GetHashCode() * 397) ^ _sourceName.GetHashCode()) * 397 ^ (int)_sourceType;
     }
 
     private readonly struct DisplayNameKey : IEquatable<DisplayNameKey>

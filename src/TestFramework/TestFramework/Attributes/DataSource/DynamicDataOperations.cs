@@ -38,7 +38,7 @@ internal static class DynamicDataOperations
         // Prefer the source-generated accessor when available: it returns the data object without reflecting
         // over the declaring type, which is what makes DynamicData trim/Native-AOT safe. When no accessor was
         // registered (reflection mode) we fall back to reflection below.
-        object? obj = (DynamicDataSourceResolver.TryGetData(dynamicDataDeclaringType, dynamicDataSourceName, dynamicDataSourceArguments, out object? resolvedData)
+        object? obj = (DynamicDataSourceResolver.TryGetData(dynamicDataDeclaringType, dynamicDataSourceName, dynamicDataSourceType, dynamicDataSourceArguments, out object? resolvedData)
             ? resolvedData
             : GetDataFromMemberByReflection(dynamicDataDeclaringType, dynamicDataSourceType, dynamicDataSourceName, dynamicDataSourceArguments))
             ?? throw new ArgumentNullException(

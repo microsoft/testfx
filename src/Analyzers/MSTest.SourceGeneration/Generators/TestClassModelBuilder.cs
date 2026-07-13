@@ -340,12 +340,10 @@ internal static class TestClassModelBuilder
         // The registered type is emitted both as typeof(...) and as the receiver of the generated member
         // access, so it must be a closed, referenceable type.
         if (!IsClosedReferenceableType(declaringType, consumingAssembly)
-            || ResolveDynamicDataMember(declaringType, sourceName, sourceType, consumingAssembly) is not { } resolved)
+            || ResolveDynamicDataMember(declaringType, sourceName, sourceType, consumingAssembly) is not { } memberKind)
         {
             return null;
         }
-
-        (DynamicDataMemberKind memberKind, EquatableArray<string> methodParameterTypes) = resolved;
 
         // Resolve the optional custom display-name method (DynamicDataDisplayName /
         // DynamicDataDisplayNameDeclaringType named arguments).
@@ -384,7 +382,7 @@ internal static class TestClassModelBuilder
             DeclaringTypeFullyQualifiedName: declaringType.ToDisplayString(FullyQualifiedFormat),
             SourceName: sourceName,
             MemberKind: memberKind,
-            MethodParameterTypes: methodParameterTypes,
+            RequestedSourceType: sourceType.ToString(),
             DisplayNameDeclaringTypeFullyQualifiedName: displayNameDeclaringTypeFqn,
             DisplayNameMethodName: displayNameMethodName);
     }
@@ -393,7 +391,7 @@ internal static class TestClassModelBuilder
     // registering an accessor only when the generated direct member access is guaranteed to behave exactly
     // like the runtime reflection lookup in DynamicDataOperations. Anything ambiguous or not provably
     // equivalent returns null so the caller degrades to the (DAM-safe) runtime reflection fallback.
-    private static (DynamicDataMemberKind Kind, EquatableArray<string> MethodParameterTypes)? ResolveDynamicDataMember(
+    private static DynamicDataMemberKind? ResolveDynamicDataMember(
         INamedTypeSymbol declaringType, string sourceName, DynamicDataSourceType sourceType, IAssemblySymbol consumingAssembly)
     {
         // Collect the most-derived member of each kind for the name (runtime GetProperty/GetMethod/GetField
@@ -455,7 +453,7 @@ internal static class TestClassModelBuilder
         };
     }
 
-    private static (DynamicDataMemberKind Kind, EquatableArray<string> MethodParameterTypes)? ResolveProperty(IPropertySymbol property, IAssemblySymbol consumingAssembly)
+    private static DynamicDataMemberKind? ResolveProperty(IPropertySymbol property, IAssemblySymbol consumingAssembly)
     {
         // Runtime reads the getter via GetGetMethod(true) (non-public allowed) and requires it to be static.
         // The generated code reads it directly, so the getter itself must be static and accessible from the
@@ -463,25 +461,29 @@ internal static class TestClassModelBuilder
         // assembly, would not compile).
         IMethodSymbol? getter = property.GetMethod;
         return getter is { IsStatic: true } && IsMemberAccessibleFrom(getter.DeclaredAccessibility, getter.ContainingType, consumingAssembly)
-            ? (DynamicDataMemberKind.Property, EquatableArray<string>.Empty)
+            ? DynamicDataMemberKind.Property
             : null;
     }
 
-    private static (DynamicDataMemberKind Kind, EquatableArray<string> MethodParameterTypes)? ResolveMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
+    private static DynamicDataMemberKind? ResolveMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
 
-        // Only parameterless static methods are registered. When a source method declares parameters, the
-        // reflection fallback invokes it via MethodInfo.Invoke, whose default binder applies primitive
-        // widening and other conversions (e.g. passing a boxed int 3 to a long parameter). A generated
-        // direct call would instead unbox with an exact cast ((long)args[0]) and throw InvalidCastException,
-        // so those sources are left to the (DAM-safe) reflection path to preserve behavior.
-        => method is { IsStatic: true, IsGenericMethod: false, Parameters.IsEmpty: true }
+        // Only parameterless static non-void methods are registered. When a source method declares
+        // parameters, the reflection fallback invokes it via MethodInfo.Invoke, whose default binder applies
+        // primitive widening and other conversions (e.g. passing a boxed int 3 to a long parameter). A
+        // generated direct call would instead unbox with an exact cast ((long)args[0]) and throw
+        // InvalidCastException. A void method cannot be cast to object either. Those shapes keep the
+        // (DAM-safe) reflection path to preserve behavior.
+        => method is { IsStatic: true, IsGenericMethod: false, ReturnsVoid: false, ReturnsByRef: false, Parameters.IsEmpty: true }
+            && method.ReturnType.TypeKind != TypeKind.Pointer
             && IsMemberAccessibleFrom(method.DeclaredAccessibility, method.ContainingType, consumingAssembly)
-            ? (DynamicDataMemberKind.Method, EquatableArray<string>.Empty)
+            ? DynamicDataMemberKind.Method
             : null;
 
-    private static (DynamicDataMemberKind Kind, EquatableArray<string> MethodParameterTypes)? ResolveField(IFieldSymbol field, IAssemblySymbol consumingAssembly)
-        => field.IsStatic && IsMemberAccessibleFrom(field.DeclaredAccessibility, field.ContainingType, consumingAssembly)
-            ? (DynamicDataMemberKind.Field, EquatableArray<string>.Empty)
+    private static DynamicDataMemberKind? ResolveField(IFieldSymbol field, IAssemblySymbol consumingAssembly)
+        => field.IsStatic
+            && field.Type.TypeKind != TypeKind.Pointer
+            && IsMemberAccessibleFrom(field.DeclaredAccessibility, field.ContainingType, consumingAssembly)
+            ? DynamicDataMemberKind.Field
             : null;
 
     // Validates a custom display-name method exactly as DynamicDataAttribute.GetDisplayNameByReflection does:

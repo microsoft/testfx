@@ -22,6 +22,7 @@ internal static class MetadataRegistryEmitter
 {
     private const string GeneratedNamespace = "MSTest.SourceGenerated";
     private const string RegistryClassName = "MSTestReflectionMetadata";
+    private const string UnitTestingNamespaceGlobal = "global::" + MSTestAttributeNames.UnitTestingNamespace;
 
     public static string EmitSupportTypes()
     {
@@ -79,6 +80,7 @@ internal static class MetadataRegistryEmitter
             {
                 sb.AppendLine("public Type DeclaringType { get; set; } = null!;");
                 sb.AppendLine("public string SourceName { get; set; } = string.Empty;");
+                sb.AppendLine($"public {UnitTestingNamespaceGlobal}.DynamicDataSourceType SourceType {{ get; set; }}");
                 sb.AppendLine("public Func<object?[], object?> GetData { get; set; } = static _ => null;");
                 sb.AppendLine("public Type? DisplayNameDeclaringType { get; set; }");
                 sb.AppendLine("public string? DisplayNameMethodName { get; set; }");
@@ -411,6 +413,7 @@ internal static class MetadataRegistryEmitter
                 {
                     sb.AppendLine($"DeclaringType = typeof({source.DeclaringTypeFullyQualifiedName}),");
                     sb.AppendLine($"SourceName = \"{Escape(source.SourceName)}\",");
+                    sb.AppendLine($"SourceType = {UnitTestingNamespaceGlobal}.DynamicDataSourceType.{source.RequestedSourceType},");
                     sb.AppendLine($"GetData = static args => {BuildDynamicDataAccessor(source)},");
 
                     if (source.DisplayNameMethodName is { } displayNameMethod && source.DisplayNameDeclaringTypeFullyQualifiedName is { } displayNameType)

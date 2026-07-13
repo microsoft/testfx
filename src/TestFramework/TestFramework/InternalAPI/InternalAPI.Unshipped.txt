@@ -1,5 +1,5 @@
 #nullable enable
 const Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.RequiredMemberTypes = (System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes)-1 -> System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataOperations.GetTestMethodDeclaringType(System.Reflection.MethodInfo! methodInfo) -> System.Type?
-static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetData(System.Type! declaringType, string! sourceName, object?[]! arguments, out object? data) -> bool
+static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetData(System.Type! declaringType, string! sourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType sourceType, object?[]! arguments, out object? data) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.TryGetDisplayName(System.Type! declaringType, string! methodName, System.Reflection.MethodInfo! testMethodInfo, object?[]? data, out string? displayName) -> bool

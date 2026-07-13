@@ -143,7 +143,7 @@ internal static class RuntimeRegistrationEmitter
                 using (sb.Block("for (int sourceIndex = 0; sourceIndex < method.DynamicDataSources.Count; sourceIndex++)"))
                 {
                     sb.AppendLine($"{RegistryNamespace}.DynamicDataSourceReflectionInfo dynamicDataSource = method.DynamicDataSources[sourceIndex];");
-                    sb.AppendLine($"{Constants.DynamicDataSourceResolverFullName}.RegisterDataProvider(dynamicDataSource.DeclaringType, dynamicDataSource.SourceName, dynamicDataSource.GetData);");
+                    sb.AppendLine($"{Constants.DynamicDataSourceResolverFullName}.RegisterDataProvider(dynamicDataSource.DeclaringType, dynamicDataSource.SourceName, dynamicDataSource.SourceType, dynamicDataSource.GetData);");
                     using (sb.Block("if (dynamicDataSource.DisplayNameDeclaringType is not null && dynamicDataSource.DisplayNameMethodName is not null && dynamicDataSource.GetDisplayName is not null)"))
                     {
                         sb.AppendLine($"{Constants.DynamicDataSourceResolverFullName}.RegisterDisplayNameProvider(dynamicDataSource.DisplayNameDeclaringType, dynamicDataSource.DisplayNameMethodName, dynamicDataSource.GetDisplayName);");

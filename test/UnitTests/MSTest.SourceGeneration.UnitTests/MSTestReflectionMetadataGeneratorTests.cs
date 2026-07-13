@@ -84,7 +84,7 @@ public sealed class MSTestReflectionMetadataGeneratorTests
 
             public static class DynamicDataSourceResolver
             {
-                public static void RegisterDataProvider(System.Type declaringType, string sourceName, System.Func<object?[], object?> dataProvider) { }
+                public static void RegisterDataProvider(System.Type declaringType, string sourceName, DynamicDataSourceType sourceType, System.Func<object?[], object?> dataProvider) { }
                 public static void RegisterDisplayNameProvider(System.Type declaringType, string methodName, System.Func<System.Reflection.MethodInfo, object?[]?, string?> displayNameProvider) { }
             }
         }
@@ -2502,6 +2502,64 @@ public sealed class MSTestReflectionMetadataGeneratorTests
                     [TestMethod]
                     [DynamicData(nameof(GetData), 3, "x")]
                     public void Test1(int a, string b) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_ForVoidMethodSource()
+    {
+        // A void source method cannot be cast to object ((object?)Type.Source() would not compile), so the
+        // generator must skip it and keep the reflection fallback (which fails at runtime, as it did before).
+        const string userCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static void GetData() { }
+
+                    [TestMethod]
+                    [DynamicData(nameof(GetData))]
+                    public void Test1(int a) { }
+                }
+            }
+            """;
+
+        string registry = GetRegistry(RunGenerator(MinimalMSTestStub, userCode));
+
+        registry.Should().NotContain("GetData = static args =>");
+        registry.Should().Contain("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+    }
+
+    [TestMethod]
+    public void Generator_DoesNotEmitDynamicDataAccessor_WhenSourceKindMismatchesExplicitSourceType()
+    {
+        // 'Data' is a property, but the attribute explicitly requests a Method source. Reflection would look
+        // for a method named Data (and throw), so the generator must not register a property accessor that
+        // would silently satisfy the (invalid) method request.
+        const string userCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace Sample
+            {
+                [TestClass]
+                public class MyTests
+                {
+                    public static IEnumerable<object[]> Data => new[] { new object[] { 1 } };
+
+                    [TestMethod]
+                    [DynamicData(nameof(Data), DynamicDataSourceType.Method)]
+                    public void Test1(int a) { }
                 }
             }
             """;

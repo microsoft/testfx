@@ -1,4 +1,4 @@
 #nullable enable
 Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver
-static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.RegisterDataProvider(System.Type! declaringType, string! sourceName, System.Func<object?[]!, object?>! dataProvider) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.RegisterDataProvider(System.Type! declaringType, string! sourceName, Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType sourceType, System.Func<object?[]!, object?>! dataProvider) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceResolver.RegisterDisplayNameProvider(System.Type! declaringType, string! methodName, System.Func<System.Reflection.MethodInfo!, object?[]?, string?>! displayNameProvider) -> void
