@@ -56,9 +56,10 @@ public static class TestApplicationBuilderExtensions
         // <EnvironmentVariables> by relaunching the test host with those variables set. That requires a
         // controller process + restart, which browser-wasm does not support (TestHostControllersManager
         // throws PlatformNotSupportedException there). Skip the registration on browser. Silently dropping
-        // a requested <EnvironmentVariables> section would change test semantics, so the `--settings`
-        // command-line validation (RunSettingsCommandLineOptionsProviderBase) fails with a clear
-        // unsupported-platform diagnostic when the runsettings actually declares that section on browser.
+        // a requested <EnvironmentVariables> section would change test semantics, so
+        // RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync fails with a clear
+        // unsupported-platform diagnostic when the resolved runsettings (from --settings or either
+        // runsettings environment variable) actually declares that section on browser.
         // See https://github.com/microsoft/testfx/issues/2196.
         if (!OperatingSystem.IsBrowser())
         {

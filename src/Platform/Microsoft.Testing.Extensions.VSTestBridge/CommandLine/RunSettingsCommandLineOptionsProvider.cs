@@ -21,4 +21,6 @@ internal sealed class RunSettingsCommandLineOptionsProvider : RunSettingsCommand
         : base(extension, fileSystem, ExtensionResources.RunSettingsOptionDescription, ExtensionResources.RunsettingsFileDoesNotExist, ExtensionResources.RunsettingsFileCannotBeRead)
     {
     }
+
+    protected override string EnvironmentVariablesNotSupportedOnBrowserError => ExtensionResources.RunSettingsEnvironmentVariablesNotSupportedOnBrowser;
 }

@@ -1,4 +1,5 @@
 #nullable enable
+abstract Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.ReadRunSettings(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> string?
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Uid.get -> string!
@@ -27,9 +28,11 @@ Microsoft.Testing.Extensions.RunSettingsProviderHelper
 Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ContextAdapterBase.ContextAdapterBase(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter, bool useFullyQualifiedNameAsUid) -> void
 Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.DiscoveryContextAdapter.DiscoveryContextAdapter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter, bool useFullyQualifiedNameAsUid) -> void
 Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.RunContextAdapter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter, bool useFullyQualifiedNameAsUid) -> void
+override Microsoft.Testing.Extensions.VSTestBridge.CommandLine.RunSettingsCommandLineOptionsProvider.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 override Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.DisplayName.get -> string!
 override Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.Uid.get -> string!
 override Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.Version.get -> string!
+override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.ApplyEnvironmentVariables(System.Xml.Linq.XDocument! runSettings, Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> void
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.CanReadFile(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! filePath) -> bool
