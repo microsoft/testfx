@@ -66,15 +66,13 @@ public sealed class WinUIPackagedAppDeploymentTests : AcceptanceTestBase<WinUIPa
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFramework>$TargetFramework$</TargetFramework>
     <UseWinUI>true</UseWinUI>
-    <!-- The PackagedApp extension consumes the experimental ITestHostLauncher extension point (TPEXP) and
-         ships as an experimental, downgraded (alpha) package version (NETSDK1201). Referencing it is enough:
-         its MSBuild props auto-register the launcher through the generated SelfRegisteredExtensions. -->
-    <NoWarn>$(NoWarn);TPEXP;NETSDK1201</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <!-- Referencing the PackagedApp package is enough: its MSBuild props auto-register the launcher
+         through the generated SelfRegisteredExtensions (no explicit AddPackagedAppDeployment() call). -->
     <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$MicrosoftTestingExtensionsPackagedAppVersion$" />
   </ItemGroup>
 

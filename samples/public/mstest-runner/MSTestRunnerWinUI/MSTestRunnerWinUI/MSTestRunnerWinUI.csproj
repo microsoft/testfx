@@ -12,11 +12,6 @@
     <WinUIDSKReferences>false</WinUIDSKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
-    <!--
-      TPEXP: Microsoft.Testing.Extensions.PackagedApp consumes the experimental ITestHostLauncher extension point.
-      NETSDK1201: the PackagedApp package ships as an experimental, downgraded (alpha) version.
-    -->
-    <NoWarn>$(NoWarn);TPEXP;NETSDK1201</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup>
