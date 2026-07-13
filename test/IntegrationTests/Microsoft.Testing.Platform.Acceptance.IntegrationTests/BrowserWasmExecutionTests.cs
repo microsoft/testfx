@@ -285,12 +285,14 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             $"Microsoft.Testing.Platform hit an unexpected PlatformNotSupportedException under browser-wasm.{Environment.NewLine}{combined}");
 
         // The run summary proves tests actually executed: the two passing tests succeeded and the
-        // intentional failure was reported.
+        // intentional failure was reported. Assert on the combined output: on browser-wasm the
+        // failed-run summary is routed through BrowserOutputDevice.ConsoleError -> console.error
+        // (stderr), unlike wasi where everything lands on stdout.
         Assert.IsTrue(
-            output.Contains("succeeded: 2", StringComparison.Ordinal),
+            combined.Contains("succeeded: 2", StringComparison.Ordinal),
             $"Expected 2 succeeded tests in the browser-wasm run summary.{Environment.NewLine}{combined}");
         Assert.IsTrue(
-            output.Contains("failed: 1", StringComparison.Ordinal),
+            combined.Contains("failed: 1", StringComparison.Ordinal),
             $"Expected 1 failed test in the browser-wasm run summary.{Environment.NewLine}{combined}");
 
         // Assert the exact "at least one test failed" exit code (2). A generic non-zero check would
