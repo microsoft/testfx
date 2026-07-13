@@ -174,12 +174,10 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             Name = "UI Thread for Tests",
 
-            // Application.Start pumps a message loop that only returns when the app exits, which the
-            // WinUITestTarget model never triggers. As a foreground thread it would keep the process
-            // alive after the run - harmless under a test host that force-kills the process, but a
-            // hang when the test app IS the process (e.g. an unpackaged WinUI app under
-            // Microsoft.Testing.Platform). Making it a background thread lets the process exit once
-            // the run completes; the thread stays alive as long as the run awaits results on it.
+            // Application.Start pumps a message loop that never returns in the WinUITestTarget
+            // model, so a foreground thread would keep the process alive after the run and hang when
+            // the test app is itself the process (unpackaged WinUI under Microsoft.Testing.Platform).
+            // A background thread lets the process exit once the run completes. See issue #2784.
             IsBackground = true,
         };
         uiThread.Start();
