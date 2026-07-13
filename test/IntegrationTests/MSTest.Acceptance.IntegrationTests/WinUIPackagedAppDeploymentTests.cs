@@ -66,6 +66,7 @@ public sealed class WinUIPackagedAppDeploymentTests : AcceptanceTestBase<WinUIPa
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <TargetFramework>$TargetFramework$</TargetFramework>
     <UseWinUI>true</UseWinUI>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
