@@ -319,6 +319,11 @@ public sealed class TestCoverageMessage : PropertyBagData
             throw new ArgumentException("A custom metric name is required when metric is Custom.", nameof(customMetricName));
         }
 
+        if (metric != CoverageMetric.Custom && customMetricName is not null)
+        {
+            throw new ArgumentException("A custom metric name is only valid when metric is Custom.", nameof(customMetricName));
+        }
+
         Scope = scope;
         Metric = metric;
         CoveredCount = coveredCount;
@@ -378,10 +383,16 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
     {
         ValidatePercentage(requiredPercentage, nameof(requiredPercentage));
 
-        // ActualPercentage is only meaningful when there is coverable data.
+        // ActualPercentage is only meaningful when there is coverable data; otherwise it is
+        // normalized to a stable 0 so it can never leak NaN/Infinity into renderers/consumers
+        // that display it without checking HasCoverableData.
         if (hasCoverableData)
         {
             ValidatePercentage(actualPercentage, nameof(actualPercentage));
+        }
+        else
+        {
+            actualPercentage = 0d;
         }
 
         if (string.IsNullOrEmpty(producerId))
@@ -392,6 +403,11 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
         if (metric == CoverageMetric.Custom && string.IsNullOrWhiteSpace(customMetricName))
         {
             throw new ArgumentException("A custom metric name is required when metric is Custom.", nameof(customMetricName));
+        }
+
+        if (metric != CoverageMetric.Custom && customMetricName is not null)
+        {
+            throw new ArgumentException("A custom metric name is only valid when metric is Custom.", nameof(customMetricName));
         }
 
         // An aggregate must name the population it aggregated over; a non-aggregate must not.
@@ -444,7 +460,7 @@ public sealed class TestCoverageThresholdMessage : PropertyBagData
     /// </summary>
     public CoverageScopeLevel? AggregatedOver { get; }
 
-    /// <summary>Actual coverage, 0–100. Only meaningful when <see cref="HasCoverableData"/> is true.</summary>
+    /// <summary>Actual coverage, 0–100; normalized to 0 when <see cref="HasCoverableData"/> is false.</summary>
     public double ActualPercentage { get; }
 
     public double RequiredPercentage { get; }   // 0–100, validated
