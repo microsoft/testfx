@@ -98,13 +98,23 @@ internal sealed class TestProgressState
         => ReportGenericTestResult(testNodeUid, instanceId, static entry => entry with { Failed = entry.Failed + 1 }, static @this => @this.FailedTests++);
 
     /// <summary>
-    /// Records the final duration reported for a test node so it can be ranked in the "slowest tests" summary
-    /// section. Keyed by <paramref name="testNodeUid"/> so a retry (which re-reports the same uid) replaces the
-    /// earlier attempt's timing rather than adding a duplicate entry. Only invoked when the slowest-tests feature
-    /// is enabled.
+    /// Records (or clears) the last-seen duration reported for a test node so it can be ranked in the "slowest
+    /// tests" summary section. Keyed by <paramref name="testNodeUid"/> so a retry (which re-reports the same uid)
+    /// replaces the earlier attempt's timing rather than adding a duplicate entry. A <see langword="null"/>
+    /// <paramref name="duration"/> means the latest attempt reported no timing, so the earlier attempt's stale
+    /// duration is removed rather than kept. Only invoked when the slowest-tests feature is enabled.
     /// </summary>
-    public void RecordTestDuration(string testNodeUid, string displayName, TimeSpan duration)
-        => _testUidToDuration[testNodeUid] = (displayName, duration);
+    public void RecordTestDuration(string testNodeUid, string displayName, TimeSpan? duration)
+    {
+        if (duration.HasValue)
+        {
+            _testUidToDuration[testNodeUid] = (displayName, duration.Value);
+        }
+        else
+        {
+            _testUidToDuration.Remove(testNodeUid);
+        }
+    }
 
     /// <summary>
     /// Returns up to <paramref name="count"/> recorded tests ordered from slowest to fastest. Ties are broken by

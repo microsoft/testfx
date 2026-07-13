@@ -79,8 +79,8 @@ internal sealed class TerminalTestReporterOptions
 
     /// <summary>
     /// Gets the number of slowest tests to list in the run summary. When greater than zero, a "Slowest tests"
-    /// section ranking the longest-running tests (by their reported execution duration, which excludes fixture
-    /// time) is appended to the summary. Zero (the default) disables the section.
+    /// section ranking the longest-running tests (by their reported execution duration) is appended to the summary.
+    /// Zero (the default) disables the section.
     /// </summary>
     public int SlowestTestsCount { get; init; }
 }

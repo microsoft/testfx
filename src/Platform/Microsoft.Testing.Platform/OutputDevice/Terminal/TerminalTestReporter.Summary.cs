@@ -341,9 +341,9 @@ internal sealed partial class TerminalTestReporter
 
     /// <summary>
     /// Appends the opt-in "Slowest tests" section, ranking the longest-running tests by their reported execution
-    /// duration (which excludes fixture time). For a single assembly a flat list is rendered; for the multi-assembly
-    /// orchestrator each assembly gets its own sub-list so the ranking stays scoped per assembly. No-op when the
-    /// feature is off or when no timed tests were recorded.
+    /// duration. For a single assembly a flat list is rendered; for the multi-assembly orchestrator each assembly
+    /// gets its own sub-list so the ranking stays scoped per assembly. No-op when the feature is off or when no
+    /// timed tests were recorded.
     /// </summary>
     private void AppendSlowestTests(ITerminal terminal, List<TestProgressState> assemblies)
     {

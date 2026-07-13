@@ -263,7 +263,7 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <comment>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</comment>
   </data>
   <data name="TerminalShowSlowestTestsOptionDescription" xml:space="preserve">
-    <value>Show the specified number of slowest tests (by execution duration, excluding fixture time) in the run summary. Expects a positive integer.</value>
+    <value>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</value>
   </data>
   <data name="TerminalShowSlowestTestsOptionInvalidArgument" xml:space="preserve">
     <value>--show-slowest-tests expects a single positive integer parameter.</value>

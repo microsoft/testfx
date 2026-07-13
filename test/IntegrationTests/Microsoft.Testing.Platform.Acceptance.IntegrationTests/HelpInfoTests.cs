@@ -77,7 +77,7 @@ Options:
         If the specified directory doesn't exist, it's created.
         The default is TestResults in the directory that contains the test application.
     --show-slowest-tests
-        Show the specified number of slowest tests (by execution duration, excluding fixture time) in the run summary. Expects a positive integer.
+        Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.
     --show-stderr
         Determines when to show captured error output of a test.
         Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an LLM/AI agent environment is detected).
@@ -308,7 +308,7 @@ Built-in command line providers:
       --show-slowest-tests
         Arity: 1
         Hidden: False
-        Description: Show the specified number of slowest tests \(by execution duration, excluding fixture time\) in the run summary. Expects a positive integer.
+        Description: Show the specified number of slowest tests \(by reported execution duration\) in the run summary. Expects a positive integer.
       --show-stderr
         Arity: 1
         Hidden: False
