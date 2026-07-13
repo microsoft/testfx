@@ -20,6 +20,11 @@ See full log [of v4.3.0...v4.3.2](https://github.com/microsoft/testfx/compare/v4
 
 * Make `ReflectionFree` the default `MSTestSourceGenMode` for Native AOT / trimmed consumers by @Evangelink in [#9777](https://github.com/microsoft/testfx/pull/9777)
 * Point MSTest.Sdk back to the classic source generation + engine wiring (as shipped in 4.2.3) by @Evangelink in [#9825](https://github.com/microsoft/testfx/pull/9825)
+* Update localized MSTest analyzer diagnostic messages by @Evangelink in [#9860](https://github.com/microsoft/testfx/pull/9860)
+
+### Fixed
+
+* Fix localization placeholder in MSTest analyzer resources by @Evangelink in [#9891](https://github.com/microsoft/testfx/pull/9891)
 
 ## <a name="4.3.0" />[4.3.0] - 2026-07-08
 

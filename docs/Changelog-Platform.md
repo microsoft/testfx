@@ -16,7 +16,15 @@ See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4
 
 ## <a name="2.3.2" />[2.3.2] - 2026-07-13
 
-Servicing release to keep Microsoft.Testing.Platform aligned with the MSTest 4.3.2 release. No functional platform changes.
+Servicing release to keep Microsoft.Testing.Platform aligned with the MSTest 4.3.2 release. No functional platform changes beyond the localization updates below.
+
+### Changed
+
+* Update localized resources for the Azure DevOps, GitHub Actions and Retry extensions and terminal output by @Evangelink in [#9847](https://github.com/microsoft/testfx/pull/9847)
+
+### Fixed
+
+* Fix localization placeholder in the GitHub Actions report resources by @Evangelink in [#9891](https://github.com/microsoft/testfx/pull/9891)
 
 ## <a name="2.3.1" />[2.3.1] - 2026-07-08
 
