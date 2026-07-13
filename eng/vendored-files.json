@@ -123,8 +123,8 @@
           "repo": "dotnet/command-line-api",
           "ref": "main",
           "path": "src/System.CommandLine/Parsing/StringExtensions.cs",
-          "baseline_ref_sha": "fa1991f84bc8c384aa636a251398a40e56ee1702",
-          "baseline_blob_sha": "ab6be26ba8cd23058ee60df184a20ad607899eca",
+          "baseline_ref_sha": "bc16495bebe4b70aa2a0f76167544597ddd8b330",
+          "baseline_blob_sha": "f134a449869929238e44c9ad079dbd1532efbd8a",
           "scope": "ExpandResponseFile/SplitLine helpers (around line 316)"
         }
       ]
@@ -228,8 +228,8 @@
           "repo": "dotnet/msbuild",
           "ref": "main",
           "path": "src/Framework/NativeMethods.cs",
-          "baseline_ref_sha": "8243f3a898b4d160cfca7619ed3f48ca7f9a4b00",
-          "baseline_blob_sha": "de45ea0bc217e2bc11cfb0fe19c876a4b2dba413",
+          "baseline_ref_sha": "5d4dd79d0ffc1b827c1c6baa9dee0a0c475fe79c",
+          "baseline_blob_sha": "a62b415fd2be6de86ee2d23aa35dc591050dfe95",
           "scope": "QueryIsScreenAndTryEnableAnsiColorCodes and supporting console-mode P/Invokes"
         }
       ]
