@@ -134,6 +134,75 @@ const exitCode = await runMain();
 process.exitCode = exitCode;
 """;
 
+    // The runsettings XML (declaring an <EnvironmentVariables> section) that the run-settings validation
+    // test supplies to the browser-wasm host. It is passed as *content* via the
+    // TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS environment variable rather than as a file, so the
+    // test does not depend on the wasm virtual-filesystem resolving a --settings file path.
+    private const string RunSettingsWithEnvironmentVariablesXml =
+        "<RunSettings><RunConfiguration><EnvironmentVariables><MTP_BROWSER_RUNSETTINGS_MARKER>1</MTP_BROWSER_RUNSETTINGS_MARKER></EnvironmentVariables></RunConfiguration></RunSettings>";
+
+    // Node runner that supplies the above runsettings through the content runsettings environment variable
+    // (TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS) via the dotnet.js host builder's
+    // withEnvironmentVariable API. This exercises the environment-variable runsettings resolution path (not
+    // just --settings), which flows through the same RunSettingsProviderHelper.TryLoadRunSettingsAsync used
+    // by RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync.
+    private const string NodeRunnerWithRunSettingsContentEnvVarSource = """
+import { dotnet } from './_framework/dotnet.js';
+const runSettings = '$RunSettingsXml$';
+const { runMain } = await dotnet
+    .withEnvironmentVariable('TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS', runSettings)
+    .withApplicationArguments()
+    .create();
+const exitCode = await runMain();
+process.exitCode = exitCode;
+""";
+
+    // Minimal browser-wasm MSTest project with a single passing test. The <EnvironmentVariables> runsettings
+    // are injected at runtime via the environment variable (see the runner above), so no runsettings file is
+    // bundled.
+    private const string RunSettingsSourceCode = """
+#file BrowserRunSettingsProject.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$TargetFramework$</TargetFramework>
+    <RuntimeIdentifier>$BrowserRid$</RuntimeIdentifier>
+    <OutputType>Exe</OutputType>
+    <SelfContained>true</SelfContained>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+    <WasmMainJSPath>main.js</WasmMainJSPath>
+    <WasmBuildNative>false</WasmBuildNative>
+    <PublishTrimmed>false</PublishTrimmed>
+    <NoWarn>$(NoWarn);NETSDK1201</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file main.js
+import { dotnet } from './_framework/dotnet.js';
+const { runMain } = await dotnet.withApplicationArgumentsFromQuery().create();
+const exitCode = await runMain();
+globalThis.mtpExitCode = exitCode;
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public sealed class UnitTest1
+{
+    [TestMethod]
+    public void PassingTest()
+        => Assert.IsTrue(true);
+}
+""";
+
     // Deterministic strings the warning asset emits and the test asserts reach Node output.
     private const string WarningText = "browser-wasm framework warning marker";
     private const string ErrorText = "browser-wasm framework error marker";
@@ -344,6 +413,65 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
             $"Expected exit code {(int)ExitCode.Success} (Success) for the warning asset.{Environment.NewLine}{combined}");
     }
 
+    [TestMethod]
+    public async Task BrowserWasmExecution_RunSettingsEnvironmentVariables_FailsWithClearDiagnostic()
+    {
+        // Guards RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync: a runsettings
+        // <EnvironmentVariables> section can't be applied on browser (it needs a test-host-controller
+        // process restart), so the run must fail with the localized diagnostic rather than silently
+        // ignoring the variables. The runsettings are supplied through the content environment variable
+        // (TESTINGPLATFORM_EXPERIMENTAL_VSTEST_RUNSETTINGS), which flows through the same
+        // RunSettingsProviderHelper.TryLoadRunSettingsAsync resolution the validation uses — so it also
+        // covers the environment-variable resolution path, not only --settings.
+        string? node = WasmRuntime.LocateNode();
+        if (node is null)
+        {
+            Assert.Inconclusive(WasmRuntime.NodeUnavailableMessage);
+            return;
+        }
+
+        using TestAsset generator = await GenerateBrowserWasmRunSettingsAssetAsync();
+
+        DotnetMuxerResult publishResult = await WasmRuntime.PublishForBrowserAsync(
+            generator.TargetAssetPath, TargetFramework, TestContext.CancellationToken);
+        if (publishResult.ExitCode != 0)
+        {
+            Assert.IsTrue(
+                WasmRuntime.IsMissingWasmToolsWorkload(publishResult),
+                $"'dotnet publish -r browser-wasm' failed for an unexpected reason (not a missing 'wasm-tools' workload).{Environment.NewLine}{publishResult}");
+            Assert.Inconclusive(
+                $"Skipping browser-wasm execution: the 'wasm-tools' workload is not installed.{Environment.NewLine}{publishResult}");
+        }
+
+        string appBundle = WasmRuntime.GetBrowserAppBundlePath(generator.TargetAssetPath, TargetFramework);
+        Assert.IsTrue(
+            Directory.Exists(appBundle),
+            $"Expected the browser-wasm AppBundle directory at '{appBundle}'.");
+
+        string runner = NodeRunnerWithRunSettingsContentEnvVarSource.PatchCodeWithReplace("$RunSettingsXml$", RunSettingsWithEnvironmentVariablesXml);
+        (int exitCode, _, _, string combined) = await WasmRuntime.RunUnderNodeAsync(
+            node, appBundle, runner, TestContext.CancellationToken);
+
+        // A PlatformNotSupportedException would mean the section slipped past validation into the
+        // controller registration path (the regression this diagnostic replaces).
+        Assert.IsFalse(
+            combined.Contains("PlatformNotSupportedException", StringComparison.Ordinal),
+            $"Expected a clean command-line validation failure, not a PlatformNotSupportedException.{Environment.NewLine}{combined}");
+
+        // The localized diagnostic is surfaced (matched on the stable, non-localized substrings).
+        Assert.IsTrue(
+            combined.Contains("EnvironmentVariables", StringComparison.Ordinal)
+                && combined.Contains("browser", StringComparison.OrdinalIgnoreCase),
+            $"Expected the browser <EnvironmentVariables> unsupported diagnostic in the output.{Environment.NewLine}{combined}");
+
+        // Command-line validation failures exit with InvalidCommandLine (5); the run is rejected before any
+        // test executes.
+        Assert.AreEqual(
+            (int)ExitCode.InvalidCommandLine,
+            exitCode,
+            $"Expected exit code {(int)ExitCode.InvalidCommandLine} (InvalidCommandLine).{Environment.NewLine}{combined}");
+    }
+
     // Publishes the generated browser-wasm asset, staging + booting it under Node. Only a missing
     // 'wasm-tools' workload is an acceptable skip (Inconclusive); any other publish failure is a real
     // regression and fails the test. Returns the process exit code plus captured stdout/stderr.
@@ -385,4 +513,12 @@ internal sealed class WarningFramework : ITestFramework, IDataProducer, IOutputD
                 .PatchCodeWithReplace("$WarningText$", WarningText)
                 .PatchCodeWithReplace("$ErrorText$", ErrorText)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
+    private Task<TestAsset> GenerateBrowserWasmRunSettingsAssetAsync()
+        => TestAsset.GenerateAssetAsync(
+            "BrowserRunSettingsProject",
+            RunSettingsSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", TargetFramework)
+                .PatchCodeWithReplace("$BrowserRid$", WasmRuntime.BrowserRid)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
 }
