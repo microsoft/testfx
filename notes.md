@@ -51,6 +51,7 @@
 
 | Date | Tasks |
 |------|-------|
+| 2026-07-13 | Task 3 (MSTEST0035 UseRetryWithTestMethodAnalyzer: 4 tests for custom RetryBaseAttribute subclasses via Inherits() path), Task 7 |
 | 2026-07-15 | Task 3 (AvoidOutParameterOnAssertIsInstanceOfTypeFixer: 2 tests for explicit-type `out string result` path), Task 7 |
 | 2026-07-10 | Task 3 (MSTEST0063 fix: exact-match→Inherits for TestClassAttribute guard; 4 tests for STATestClass/custom derived attrs), Task 7 |
 | 2026-07-09 (2nd run) | Task 3 (MSTEST0061 UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer: OSPlatform.Create known+unknown, IsIOS, IsAndroid), Task 7 |
@@ -71,10 +72,11 @@
 
 ## Last Run
 
-2026-07-15 UTC
+2026-07-13 UTC
 
 ## Completed Work (recent)
 
+- PR for MSTEST0035 UseRetryWithTestMethodAnalyzer (created 2026-07-13) — 4 new tests for custom RetryBaseAttribute subclasses via Inherits() path; 14/14 tests pass. Note: use `protected override` (not `protected internal override`) when overriding RetryBaseAttribute.ExecuteAsync in test code strings (cross-assembly visibility).
 - PR for AvoidOutParameterOnAssertIsInstanceOfTypeFixer (created 2026-07-15) — 2 new tests for explicit type path (`out string result` → `string result = ...`); 8/8 tests pass
 - PR for MSTEST0063 fix (created 2026-07-10) — Fixed exact-match→IsTestClass() guard so [STATestClass] and derived attrs trigger the constructor validity diagnostic. 4 new tests.
 - PR for MSTEST0061 (created 2026-07-09) — MERGED: UseOSConditionAttributeInsteadOfRuntimeCheckAnalyzer: 4 edge cases
