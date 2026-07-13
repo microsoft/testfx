@@ -173,6 +173,12 @@ public class UITestMethodAttribute : TestMethodAttribute
         var uiThread = new Thread(treadStart)
         {
             Name = "UI Thread for Tests",
+
+            // Application.Start pumps a message loop that never returns in the WinUITestTarget
+            // model, so a foreground thread would keep the process alive after the run and hang when
+            // the test app is itself the process (unpackaged WinUI under Microsoft.Testing.Platform).
+            // A background thread lets the process exit once the run completes. See issue #2784.
+            IsBackground = true,
         };
         uiThread.Start();
         tsc.Task.Wait();
