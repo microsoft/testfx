@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </code>
 /// </example>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
-// TODO: This API should not exist in the netstandard2.0 build, because it's not available in UWP/WinUI.
+// This API should not exist in the netstandard2.0 build, because it's not available in UWP/WinUI.
 // This is a binary breaking change, however.
 public sealed class DeploymentItemAttribute : Attribute
 {

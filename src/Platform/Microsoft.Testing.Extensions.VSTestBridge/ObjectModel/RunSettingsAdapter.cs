@@ -51,7 +51,7 @@ internal sealed class RunSettingsAdapter : IRunSettings
     public string? SettingsXml { get; }
 
     /// <inheritdoc />
-    // TODO: Needs to be implemented if used by adapters. It is not used by MSTest.
+    // Needs to be implemented if used by adapters. It is not used by MSTest.
     public ISettingsProvider? GetSettings(string? settingsName) => throw new NotImplementedException();
 
     private static void WarnOnUnsupportedEntries(XDocument document, IMessageLogger messageLogger)
