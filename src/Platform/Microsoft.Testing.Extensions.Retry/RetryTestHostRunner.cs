@@ -63,6 +63,11 @@ internal static class RetryTestHostRunner
             UseShellExecute = false,
         };
 
+        // Tell the launched test host which retry attempt it is, so it can report an explicit AttemptNumber in
+        // its dotnet test handshake instead of the consumer having to infer it from a change in InstanceId.
+        processStartInfo.Environment[EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER] =
+            attemptCount.ToString(CultureInfo.InvariantCulture);
+
         await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
         using IProcess testHostProcess = serviceProvider.GetProcessHandler().Start(processStartInfo)
             ?? throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, ExtensionResources.RetryFailedTestsCannotStartProcessErrorMessage, processStartInfo.FileName));

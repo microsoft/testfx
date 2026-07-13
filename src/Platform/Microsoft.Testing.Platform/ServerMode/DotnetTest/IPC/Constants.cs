@@ -78,6 +78,18 @@ internal static class HandshakeMessagePropertyNames
     //     pipe drop as "host gone => cancel", so closing the control pipe before the data session ends would be
     //     interpreted as a cancellation.
     internal const byte ServerControlPipeName = 12;
+
+    // The 1-based attempt number of the test host in a retry sequence: 1 for the initial run and every
+    // non-retried run, incremented by the retry orchestrator for each subsequent attempt. Sent by the test
+    // host in its handshake so consumers (e.g. dotnet test in the SDK) can attribute results to an attempt
+    // explicitly instead of inferring it from a change in InstanceId. See issues #5361 and #6337.
+    //
+    // The value is carried from the orchestrator to each launched test host through the
+    // TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER environment variable. When the variable is absent (a normal,
+    // non-orchestrated run) the test host reports "1". This is an additive, capability-style property:
+    // consumers that do not understand it simply ignore it, so it is not gated on the negotiated protocol
+    // version.
+    internal const byte AttemptNumber = 13;
 }
 
 [Embedded]

@@ -126,6 +126,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
+            { HandshakeMessagePropertyNames.AttemptNumber, GetAttemptNumber() },
         };
 
         if (additionalHandshakeProperties is not null)
@@ -169,6 +170,18 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             : _commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
                 ? HandshakeMessageExecutionModes.Discover
                 : HandshakeMessageExecutionModes.Run;
+
+    // The 1-based attempt number for this test host. The retry orchestrator sets
+    // TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER on each launched attempt; a normal (non-orchestrated) run has no
+    // such variable and reports attempt 1. A malformed value defensively falls back to 1 rather than failing the
+    // handshake.
+    private string GetAttemptNumber()
+    {
+        string? value = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
+        return !RoslynString.IsNullOrEmpty(value) && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int attempt) && attempt >= 1
+            ? value
+            : "1";
+    }
 
     public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions) => supportedProtocolVersions.Split(';').Contains(protocolVersion);
 
