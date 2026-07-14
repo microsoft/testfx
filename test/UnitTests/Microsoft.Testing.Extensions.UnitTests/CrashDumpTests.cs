@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.Diagnostics;
@@ -545,7 +545,7 @@ public sealed class CrashDumpTests
                 .OfType<FileArtifact>()
                 .Select(static a => a.FileInfo.FullName)
                 .ToArray();
-            Assert.AreSequenceEqual(new[] { testhostDump }, publishedDumps);
+            Assert.AreSequenceEqual([testhostDump], publishedDumps);
 
             // The "expected dump not found" warning must NOT be emitted: the testhost dump was
             // recognized via the regex even though `expectedDumpFile` (literal `%p` substitution)
@@ -596,7 +596,7 @@ public sealed class CrashDumpTests
                 .OfType<FileArtifact>()
                 .Select(static a => a.FileInfo.FullName)
                 .ToArray();
-            Assert.AreSequenceEqual(new[] { testhostDump }, publishedDumps);
+            Assert.AreSequenceEqual([testhostDump], publishedDumps);
             string captured = string.Join(" | ", outputDevice.Displayed);
             Assert.DoesNotContain("dump_555_backup_555.dmp", captured, "CannotFindExpectedCrashDumpFile must not be displayed when the testhost dump was recognized via the regex.");
         }
