@@ -7,6 +7,7 @@ namespace MSTest.Analyzers.Helpers;
 internal static class WellKnownTypeNames
 {
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyFixtureProviderAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyFixtureProviderAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssert = "Microsoft.VisualStudio.TestTools.UnitTesting.Assert";
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssertFailedException = "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException";

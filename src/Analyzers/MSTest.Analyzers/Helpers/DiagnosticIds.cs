@@ -76,4 +76,5 @@ internal static class DiagnosticIds
     // public const string InheritedTestClassAttributeWithSourceGeneratorRuleId = "MSTEST0069"; - // Reserved. Owned by MSTest.SourceGeneration analyzer; don't reuse this ID.
     public const string MemberConditionShouldBeValidRuleId = "MSTEST0070";
     public const string RedundantTestMethodDisplayNameRuleId = "MSTEST0071";
+    public const string AssemblyFixtureProviderNotSupportedWithNativeAotRuleId = "MSTEST0072";
 }

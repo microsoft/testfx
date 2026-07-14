@@ -35,6 +35,9 @@
 
   <ItemGroup>
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
+    <!-- Surfaced so analyzers can warn about features that are unsupported under Native AOT
+         (e.g. MSTEST0072 for [AssemblyFixtureProvider]). -->
+    <CompilerVisibleProperty Include="PublishAot" />
     <!-- Selects which MSTest source-generation strategy emits when a source generator is referenced:
          'ReflectionFree' (default) materializes attributes and emits delegate-based invokers so the
          adapter runs without runtime reflection (best for trimming/Native AOT); 'Rooting' only
