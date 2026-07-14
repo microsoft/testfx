@@ -194,7 +194,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     /// <summary>
     /// Returns <see langword="true"/> when <paramref name="exitCodeToIgnore"/> contains <paramref name="exitCode"/>
-    /// in its ';'-delimited list, without allocating a <see cref="string"/> array or a LINQ closure.
+    /// in its ';'-delimited list, without allocating a <see cref="string"/> array, a substring, or a LINQ closure.
     /// </summary>
     private static bool ContainsExitCode(string exitCodeToIgnore, int exitCode)
     {
@@ -207,7 +207,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 #if NETCOREAPP
             if (int.TryParse(exitCodeToIgnore.AsSpan(start, end - start), out int parsedExitCode) && parsedExitCode == exitCode)
 #else
-            if (int.TryParse(exitCodeToIgnore.Substring(start, end - start), out int parsedExitCode) && parsedExitCode == exitCode)
+            if (TryParseExitCode(exitCodeToIgnore, start, end, out int parsedExitCode) && parsedExitCode == exitCode)
 #endif
             {
                 return true;
@@ -223,6 +223,64 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
         return false;
     }
+
+#if !NETCOREAPP
+    /// <summary>
+    /// Parses the <c>[start, end)</c> slice of <paramref name="value"/> as an <see cref="int"/> without allocating a
+    /// substring, mirroring the default <c>int.TryParse</c> behavior (<see cref="System.Globalization.NumberStyles.Integer"/>:
+    /// leading/trailing whitespace and an optional leading sign).
+    /// </summary>
+    private static bool TryParseExitCode(string value, int start, int end, out int result)
+    {
+        result = 0;
+
+        while (start < end && char.IsWhiteSpace(value[start]))
+        {
+            start++;
+        }
+
+        while (end > start && char.IsWhiteSpace(value[end - 1]))
+        {
+            end--;
+        }
+
+        if (start >= end)
+        {
+            return false;
+        }
+
+        bool isNegative = value[start] == '-';
+        if (value[start] is '+' or '-')
+        {
+            start++;
+        }
+
+        if (start >= end)
+        {
+            return false;
+        }
+
+        long accumulated = 0;
+        long limit = isNegative ? -(long)int.MinValue : int.MaxValue;
+        for (int i = start; i < end; i++)
+        {
+            char c = value[i];
+            if (c is < '0' or > '9')
+            {
+                return false;
+            }
+
+            accumulated = (accumulated * 10) + (c - '0');
+            if (accumulated > limit)
+            {
+                return false;
+            }
+        }
+
+        result = (int)(isNegative ? -accumulated : accumulated);
+        return true;
+    }
+#endif
 
     public async Task SetTestAdapterTestSessionFailureAsync(string errorMessage, CancellationToken cancellationToken)
     {
