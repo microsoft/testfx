@@ -183,13 +183,45 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
         if (exitCodeToIgnore is not null)
         {
-            if (exitCodeToIgnore.Split(';').Any(code => int.TryParse(code, out int parsedExitCode) && parsedExitCode == (int)exitCode))
+            if (ContainsExitCode(exitCodeToIgnore, (int)exitCode))
             {
                 exitCode = ExitCode.Success;
             }
         }
 
         return (int)exitCode;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="exitCodeToIgnore"/> contains <paramref name="exitCode"/>
+    /// in its ';'-delimited list, without allocating a <see cref="string"/> array or a LINQ closure.
+    /// </summary>
+    private static bool ContainsExitCode(string exitCodeToIgnore, int exitCode)
+    {
+        int start = 0;
+        while (start <= exitCodeToIgnore.Length)
+        {
+            int separatorIndex = exitCodeToIgnore.IndexOf(';', start);
+            int end = separatorIndex < 0 ? exitCodeToIgnore.Length : separatorIndex;
+
+#if NETCOREAPP
+            if (int.TryParse(exitCodeToIgnore.AsSpan(start, end - start), out int parsedExitCode) && parsedExitCode == exitCode)
+#else
+            if (int.TryParse(exitCodeToIgnore.Substring(start, end - start), out int parsedExitCode) && parsedExitCode == exitCode)
+#endif
+            {
+                return true;
+            }
+
+            if (separatorIndex < 0)
+            {
+                break;
+            }
+
+            start = separatorIndex + 1;
+        }
+
+        return false;
     }
 
     public async Task SetTestAdapterTestSessionFailureAsync(string errorMessage, CancellationToken cancellationToken)
