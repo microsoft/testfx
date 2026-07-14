@@ -8,3 +8,14 @@ is_global = true
 # By having this option here in .globalconfig, we ensure it's picked up correctly regardless of what the first tree is.
 # See comments in https://github.com/microsoft/testfx/pull/6230 for clarification.
 dotnet_public_api_analyzer.require_api_files = true
+
+# RS0051-RS0058: Skip internal API tracking when all InternalsVisibleTo grants are ignored.
+# When every IVT grant of a compilation matches this wildcard (or is the always-ignored
+# DynamicProxyGenAssembly2), the analyzer disables internal API tracking for that compilation,
+# so InternalAPI.Shipped.txt/InternalAPI.Unshipped.txt are no longer needed.
+# Our internal APIs are only exposed to *.UnitTests assemblies, so we skip those grants.
+# Like require_api_files above, this MUST live in .globalconfig (not [*.cs] in .editorconfig):
+# the analyzer reads its options from the FIRST syntax tree of the compilation, which may be a
+# file outside our repo (e.g. a source-only package like Polyfill), so per-file .editorconfig
+# scoping is unreliable.
+dotnet_public_api_analyzer.internal_api_skip_ivt = *.UnitTests
