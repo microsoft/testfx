@@ -6,9 +6,9 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// An <see cref="ITestHostHandle"/> over a deployed non-packaged (loose-layout) Windows (UWP/WinUI)
-/// test host process that deliberately exposes no identifier, modelling a launch where no local,
-/// queryable PID is available.
+/// An <see cref="ITestHostHandle"/> over a deployed non-packaged (loose-layout) Windows test host
+/// process (for example, unpackaged WinUI) that deliberately exposes no identifier, modelling a
+/// launch where no local, queryable PID is available.
 /// </summary>
 internal sealed class PackagedAppTestHostHandle : ITestHostHandle
 {

@@ -7,9 +7,10 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
-/// An <see cref="ITestHostLauncher"/> for packaged Windows test applications (UWP and packaged
-/// WinUI): it deploys the test host's loose layout into an isolated directory and launches it from
-/// there, instead of starting the test host in place.
+/// An <see cref="ITestHostLauncher"/> for Windows test applications: it deploys a non-packaged
+/// (loose-layout) test host (for example, unpackaged WinUI) into an isolated directory and launches
+/// it from there, instead of starting the test host in place. Genuinely packaged (MSIX) layouts —
+/// UWP or packaged WinUI — are rejected for now (see the remarks).
 /// </summary>
 /// <remarks>
 /// <para>

@@ -7,17 +7,17 @@ using Microsoft.Testing.Platform.Builder;
 namespace Microsoft.Testing.Extensions;
 
 /// <summary>
-/// Provides extension methods for adding Windows (UWP/WinUI) test host deployment support
-/// to the test application builder.
+/// Provides extension methods for adding non-packaged (loose-layout) Windows test host deployment
+/// support (for example, unpackaged WinUI) to the test application builder.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class PackagedAppExtensions
 {
     /// <summary>
-    /// Registers a test host launcher that deploys a non-packaged (loose-layout) Windows (UWP/WinUI)
-    /// test host into an isolated directory and launches it from there. Genuinely packaged (MSIX)
-    /// layouts are not launched yet and are rejected with an actionable error (see
-    /// https://github.com/microsoft/testfx/issues/9933).
+    /// Registers a test host launcher that deploys a non-packaged (loose-layout) Windows test host
+    /// (for example, unpackaged WinUI) into an isolated directory and launches it from there.
+    /// Genuinely packaged (MSIX) layouts — UWP or packaged WinUI — are not launched yet and are
+    /// rejected with an actionable error (see https://github.com/microsoft/testfx/issues/9933).
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddPackagedAppDeployment(this ITestApplicationBuilder builder)
