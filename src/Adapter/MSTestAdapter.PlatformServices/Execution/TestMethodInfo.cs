@@ -69,6 +69,74 @@ internal partial class TestMethodInfo : ITestMethod
     /// </remarks>
     public ParameterInfo[] ParameterTypes => field ??= MethodInfo.GetParameters();
 
+    // Lazy-cached result of scanning ParameterTypes for params/optional structure.
+    // -2 means not yet computed; -1 means no params parameter; >= 0 is the params parameter index.
+    private int _paramsParameterIndex = -2;
+    private int _requiredParameterCount;
+
+    /// <summary>
+    /// Gets the 0-based index of the <c>params</c> parameter in <see cref="ParameterTypes"/>, or -1 if
+    /// the method has no <c>params</c> parameter.  Computed once and cached for data-driven tests where
+    /// <see cref="ResolveArguments"/> is called once per data row, avoiding repeated reflection.
+    /// </summary>
+    internal int ParamsParameterIndex
+    {
+        get
+        {
+            if (_paramsParameterIndex != -2)
+            {
+                return _paramsParameterIndex;
+            }
+
+            ComputeParameterInfo();
+            return _paramsParameterIndex;
+        }
+    }
+
+    /// <summary>
+    /// Gets the number of required (non-optional, non-params) parameters for the test method.
+    /// Computed once and cached alongside <see cref="ParamsParameterIndex"/>.
+    /// </summary>
+    internal int RequiredParameterCount
+    {
+        get
+        {
+            if (_paramsParameterIndex != -2)
+            {
+                return _requiredParameterCount;
+            }
+
+            ComputeParameterInfo();
+            return _requiredParameterCount;
+        }
+    }
+
+    private void ComputeParameterInfo()
+    {
+        ParameterInfo[] parameters = ParameterTypes;
+        int paramsIndex = -1;
+        int requiredCount = 0;
+
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].IsDefined(typeof(ParamArrayAttribute), inherit: false))
+            {
+                paramsIndex = i;
+                break;
+            }
+
+            if (!parameters[i].IsOptional)
+            {
+                requiredCount++;
+            }
+        }
+
+        _requiredParameterCount = requiredCount;
+
+        // Write _paramsParameterIndex last so that once it leaves -2, _requiredParameterCount is visible.
+        _paramsParameterIndex = paramsIndex;
+    }
+
     /// <inheritdoc />
     ParameterInfo[] ITestMethod.ParameterTypes => (ParameterInfo[])ParameterTypes.Clone();
 

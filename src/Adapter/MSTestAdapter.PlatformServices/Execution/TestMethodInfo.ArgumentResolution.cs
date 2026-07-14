@@ -13,27 +13,14 @@ internal partial class TestMethodInfo
         // Use the cached ParameterTypes property rather than calling MethodInfo.GetParameters()
         // (which allocates a fresh ParameterInfo[] on every call). ResolveArguments only reads the
         // array, so sharing the cached instance is safe.
+        //
+        // ParamsParameterIndex and RequiredParameterCount are also cached on first call, avoiding a
+        // per-row GetCustomAttribute<ParamArrayAttribute>() reflection scan for data-driven tests.
         ParameterInfo[] parametersInfo = ParameterTypes;
-        int requiredParameterCount = 0;
-        bool hasParamsValue = false;
+        int requiredParameterCount = RequiredParameterCount;
+        int paramsIndex = ParamsParameterIndex;
+        bool hasParamsValue = paramsIndex >= 0;
         object? paramsValues = null;
-        foreach (ParameterInfo parameter in parametersInfo)
-        {
-            // If this is a params array parameter, create an instance to
-            // populate with any extra values provided. Don't increment
-            // required parameter count - params arguments are not actually required
-            if (parameter.GetCustomAttribute<ParamArrayAttribute>() != null)
-            {
-                hasParamsValue = true;
-                break;
-            }
-
-            // Count required parameters from method
-            if (!parameter.IsOptional)
-            {
-                requiredParameterCount++;
-            }
-        }
 
         // If all the parameters are required, we have fewer arguments
         // supplied than required, or more arguments than the method takes
