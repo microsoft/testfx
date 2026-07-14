@@ -113,6 +113,25 @@ public sealed class GitHubActionsSlowTestReporterTests
         Assert.HasCount(1, outputDevice.Lines);
     }
 
+    [TestMethod]
+    public async Task ScanOnce_ParameterizedTests_EmitDistinctLabelsAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        GitHubActionsSlowTestReporter reporter = CreateReporter(outputDevice, githubActions: true);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        // Two data-driven instances that share one fully-qualified name but differ by display name.
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T.M", new InProgressTestNodeStateProperty(), displayName: "M (net8.0)"), CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u2", "Ns.T.M", new InProgressTestNodeStateProperty(), displayName: "M (net9.0)"), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.HasCount(2, outputDevice.Lines);
+        string joined = string.Join("\n", outputDevice.Lines);
+        Assert.Contains("Ns.T.M (net8.0) still running after", joined);
+        Assert.Contains("Ns.T.M (net9.0) still running after", joined);
+    }
+
     private static GitHubActionsSlowTestReporter CreateReporter(CapturingOutputDevice outputDevice, bool githubActions, Dictionary<string, string[]>? options = null)
     {
         Mock<IEnvironment> environmentMock = new();
@@ -134,7 +153,7 @@ public sealed class GitHubActionsSlowTestReporterTests
             new StubLoggerFactory());
     }
 
-    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, TestNodeStateProperty state)
+    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, TestNodeStateProperty state, string? displayName = null)
     {
         PropertyBag propertyBag = new();
         propertyBag.Add(state);
@@ -143,7 +162,7 @@ public sealed class GitHubActionsSlowTestReporterTests
         return new TestNodeUpdateMessage(new SessionUid("session"), new TestNode
         {
             Uid = uid,
-            DisplayName = fullyQualifiedName,
+            DisplayName = displayName ?? fullyQualifiedName,
             Properties = propertyBag,
         });
     }

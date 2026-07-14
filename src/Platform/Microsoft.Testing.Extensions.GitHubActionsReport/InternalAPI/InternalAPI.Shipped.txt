@@ -1,7 +1,8 @@
 #nullable enable
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.Description.get -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.DisplayName.get -> string!
-abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, string! displayLabel, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetDisplayLabel(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetTestName(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.IsEnabled.get -> bool
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.ResolveThreshold(string! testName) -> System.TimeSpan
@@ -122,7 +123,7 @@ static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFeature.IsM
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsFeature.IsRunningOnGitHubActions(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> bool
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsRepositoryRoot.FindGitRoot() -> string?
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsRepositoryRoot.Resolve(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> string?
-static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.BuildNoticeLine(string! testName, System.TimeSpan elapsed) -> string!
+static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSlowTestReporter.BuildNoticeLine(string! testLabel, System.TimeSpan elapsed) -> string!
 static Microsoft.Testing.Extensions.GitHubActionsReport.GitHubActionsSummaryReporter.BuildMarkdown(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TestRecord>! records, string! assemblyName, string! targetFrameworkMoniker) -> string!
 static Microsoft.Testing.Extensions.ReporterLoggingExtensions.LogUnexpectedException(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! callbackName, System.Exception! ex) -> void
 static Microsoft.Testing.Extensions.StackTraceSourceLocationResolver.SkipAssertionFramesForCurrentRuntime.get -> bool

@@ -115,12 +115,13 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
             if (state is InProgressTestNodeStateProperty)
             {
                 string testName = GetTestName(update.TestNode);
+                string displayLabel = GetDisplayLabel(update.TestNode);
                 TimeSpan threshold = ResolveThreshold(testName);
 
                 // Use the first-seen start time: the platform can emit InProgress more than once for the same
                 // test (progress heartbeats), and resetting the start time on each would keep pushing the slow
                 // threshold out so a genuinely slow test would never surface.
-                _inProgress.TryAdd(uid, new InProgressTest(testName, _clock.UtcNow, threshold));
+                _inProgress.TryAdd(uid, new InProgressTest(testName, displayLabel, _clock.UtcNow, threshold));
             }
             else if (state is not null)
             {
@@ -181,6 +182,13 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
     protected abstract string GetTestName(TestNode testNode);
 
     /// <summary>
+    /// Resolves a human-friendly label for a <see cref="TestNode"/> used when rendering the surfaced line.
+    /// Unlike <see cref="GetTestName"/> (which stays stable for history/threshold lookups), this may carry
+    /// the parameterized-instance suffix so data-driven tests sharing one name are distinguishable.
+    /// </summary>
+    protected abstract string GetDisplayLabel(TestNode testNode);
+
+    /// <summary>
     /// Resolves the elapsed time after which the given test should first surface a slow-test notice.
     /// </summary>
     protected abstract TimeSpan ResolveThreshold(string testName);
@@ -188,7 +196,11 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
     /// <summary>
     /// Renders and emits the host-specific slow-test line for a test that has passed its threshold.
     /// </summary>
-    protected abstract Task EmitSlowTestAsync(string testName, TimeSpan elapsed, CancellationToken cancellationToken);
+    /// <param name="testName">The stable, fully-qualified name used for history/threshold lookups.</param>
+    /// <param name="displayLabel">The human-friendly label to render, distinguishing parameterized instances.</param>
+    /// <param name="elapsed">The elapsed time the test has been running.</param>
+    /// <param name="cancellationToken">A token to observe while emitting.</param>
+    protected abstract Task EmitSlowTestAsync(string testName, string displayLabel, TimeSpan elapsed, CancellationToken cancellationToken);
 
     /// <summary>
     /// Host-specific activation gate invoked once the option-based <see cref="IsEnabled"/> check has passed.
@@ -243,7 +255,7 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
 
             try
             {
-                await EmitSlowTestAsync(test.TestName, elapsed, cancellationToken).ConfigureAwait(false);
+                await EmitSlowTestAsync(test.TestName, test.DisplayLabel, elapsed, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -254,14 +266,17 @@ internal abstract class SlowTestReporterBase : IDataConsumer, ITestSessionLifeti
 
     private sealed class InProgressTest
     {
-        public InProgressTest(string testName, DateTimeOffset startTime, TimeSpan threshold)
+        public InProgressTest(string testName, string displayLabel, DateTimeOffset startTime, TimeSpan threshold)
         {
             TestName = testName;
+            DisplayLabel = displayLabel;
             StartTime = startTime;
             NextEmitThreshold = threshold;
         }
 
         public string TestName { get; }
+
+        public string DisplayLabel { get; }
 
         public DateTimeOffset StartTime { get; }
 
