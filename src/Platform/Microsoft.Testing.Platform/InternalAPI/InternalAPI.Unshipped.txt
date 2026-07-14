@@ -1,5 +1,7 @@
 #nullable enable
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.CreateFileArtifactMessages(string? executionId, Microsoft.Testing.Platform.Extensions.Messages.FileArtifact! fileArtifact) -> Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages!
+static Microsoft.Testing.Platform.IPC.DotnetTestDataConsumer.CreateFileArtifactMessages(string? executionId, Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact! sessionFileArtifact) -> Microsoft.Testing.Platform.IPC.Models.FileArtifactMessages!
 Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Deconstruct(out string? FullPath, out string? DisplayName, out string? Description, out string? TestUid, out string? TestDisplayName, out string? SessionUid, out string? Kind) -> void
 Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.FileArtifactMessage(string? FullPath, string? DisplayName, string? Description, string? TestUid, string? TestDisplayName, string? SessionUid, string? Kind) -> void
 Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Kind.get -> string?

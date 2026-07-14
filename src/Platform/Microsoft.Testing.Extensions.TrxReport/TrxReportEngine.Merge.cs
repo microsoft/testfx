@@ -221,8 +221,11 @@ internal sealed partial class TrxReportEngine
         string mergedRootFull = Path.GetFullPath(Path.Combine(outputFull, mergedDeploymentRoot));
 
         // The sanitizer leaves '.' and '..' intact, so a hostile runName ('..') could point the merged
-        // deployment root outside the output directory. Reject anything that escapes.
-        if (!IsUnderDirectory(mergedRootFull, outputFull))
+        // deployment root outside the output directory. Reject anything that escapes lexically, and also
+        // reject when the deployment root (or any component of it below the output directory) is a
+        // reparse point — a symlink/junction there would resolve writes outside the confined root even
+        // though the lexical check passes.
+        if (!IsUnderDirectory(mergedRootFull, outputFull) || HasReparsePointComponent(mergedRootFull, outputFull))
         {
             return;
         }
@@ -259,9 +262,14 @@ internal sealed partial class TrxReportEngine
                 }
 
                 // runDeploymentRoot comes straight from the input TRX; a rooted value or '..' segments
-                // could make the source tree escape the input report directory. Reject those.
+                // could make the source tree escape the input report directory. Reject those, and also
+                // reject when any component from the input directory down to the source 'In' root is a
+                // reparse point (a symlink/junction there could redirect the read outside the input tree
+                // even though the lexical confinement check passes).
                 string sourceInRoot = Path.GetFullPath(Path.Combine(inputDirectory, inputDeploymentRoot, "In"));
-                if (!IsUnderDirectory(sourceInRoot, inputDirectory) || !Directory.Exists(sourceInRoot))
+                if (!IsUnderDirectory(sourceInRoot, inputDirectory)
+                    || !Directory.Exists(sourceInRoot)
+                    || HasReparsePointComponent(sourceInRoot, inputDirectory))
                 {
                     continue;
                 }
@@ -335,7 +343,7 @@ internal sealed partial class TrxReportEngine
             ? rootFull
             : rootFull + Path.DirectorySeparatorChar;
 
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        StringComparison comparison = PathComparison;
         return string.Equals(candidateFullPath, rootFull, comparison)
             || candidateFullPath.StartsWith(rootWithSeparator, comparison);
     }
@@ -389,6 +397,40 @@ internal sealed partial class TrxReportEngine
 
     private static bool IsReparsePoint(string path)
         => (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+
+    /// <summary>
+    /// Returns <see langword="true"/> if any existing directory component strictly below
+    /// <paramref name="baseDirectory"/> up to and including <paramref name="candidateFullPath"/> is a
+    /// reparse point (symlink/junction). Both paths are expected to be normalized full paths with
+    /// <paramref name="candidateFullPath"/> under <paramref name="baseDirectory"/>. A symlinked ancestor
+    /// can redirect reads/writes outside a lexically-confined path, so callers reject such trees.
+    /// </summary>
+    private static bool HasReparsePointComponent(string candidateFullPath, string baseDirectory)
+    {
+        string baseFull = Path.GetFullPath(baseDirectory);
+        string current = candidateFullPath;
+
+        while (!string.Equals(current, baseFull, PathComparison) && IsUnderDirectory(current, baseFull))
+        {
+            if (Directory.Exists(current) && IsReparsePoint(current))
+            {
+                return true;
+            }
+
+            string? parent = Path.GetDirectoryName(current);
+            if (RoslynString.IsNullOrEmpty(parent) || string.Equals(parent, current, PathComparison))
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        return false;
+    }
+
+    private static StringComparison PathComparison
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
 
     private static void DeleteDirectoryTreeOrLink(string path)
     {
