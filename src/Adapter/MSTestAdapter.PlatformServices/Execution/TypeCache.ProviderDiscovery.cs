@@ -16,6 +16,19 @@ internal sealed partial class TypeCache
 {
     private static void DiscoverFixturesFromProviders(Assembly currentAssembly, TestAssemblyInfo assemblyInfo, TypeCache @this)
     {
+#if NET && !WINDOWS_UWP
+        // [AssemblyFixtureProvider] discovery walks the runtime assembly reference graph
+        // (Assembly.GetReferencedAssemblies + assembly loading by name), which is not supported when
+        // the runtime cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WASM AOT).
+        // Skipping the feature there keeps behavior predictable and lets the trimmer statically remove
+        // the reflection path (so no IL2026/IL3050 is produced). The MSTEST0072 analyzer warns at build
+        // time that [AssemblyFixtureProvider] is unsupported for these consumers.
+        if (!RuntimeFeature.IsDynamicCodeSupported)
+        {
+            return;
+        }
+#endif
+
         // Snapshot which slots were filled by the in-assembly pass. Local declarations are
         // authoritative — never let a provider overwrite or even consider those slots, so the
         // provider pass stays silent when the test assembly already declared a fixture method.
