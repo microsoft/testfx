@@ -3,8 +3,7 @@
 ~override Microsoft.Testing.Extensions.AzureDevOpsReport.LeaseReadResult.ToString() -> string
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.Description.get -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.DisplayName.get -> string!
-abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, string! displayLabel, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetDisplayLabel(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
+abstract Microsoft.Testing.Extensions.SlowTestReporterBase.EmitSlowTestAsync(string! testName, System.TimeSpan elapsed, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.GetTestName(Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode) -> string!
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.IsEnabled.get -> bool
 abstract Microsoft.Testing.Extensions.SlowTestReporterBase.ResolveThreshold(string! testName) -> System.TimeSpan

@@ -88,9 +88,14 @@ internal static class TestNodeIdentity
         if (methodName.Length > 0 && displayName.StartsWith(methodName, StringComparison.Ordinal))
         {
             // Data-driven test with the default 'MethodName (args)' display name: append only the
-            // distinguishing suffix so the method name is not repeated.
+            // distinguishing '(args)' suffix so the method name is not repeated. Guard on the suffix
+            // actually starting with '(' so a custom name that merely shares the method-name prefix
+            // (e.g. 'MyMethodology') is not mangled into 'MyMethod ology'; those fall through below.
             string suffix = displayName.Substring(methodName.Length).TrimStart();
-            return suffix.Length == 0 ? identity : $"{identity} {suffix}";
+            if (suffix.StartsWith("(", StringComparison.Ordinal))
+            {
+                return $"{identity} {suffix}";
+            }
         }
 
         // Custom display name that does not embed the method name: surface it alongside the identity.

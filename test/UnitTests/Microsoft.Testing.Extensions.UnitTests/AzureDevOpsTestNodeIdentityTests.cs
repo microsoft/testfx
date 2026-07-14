@@ -110,6 +110,18 @@ public sealed class AzureDevOpsTestNodeIdentityTests
         Assert.AreEqual("My.Namespace.MyType.MyMethod", TestNodeIdentity.GetDisplayLabel(testNode));
     }
 
+    [TestMethod]
+    public void GetDisplayLabel_WhenCustomNameSharesMethodPrefix_IsNotMangled()
+    {
+        // 'MyMethodology' starts with the method name 'MyMethod' but is not the default '(args)' format,
+        // so it must be preserved as a custom label rather than split into 'MyMethod ology'.
+        TestNode testNode = CreateNode(
+            displayName: "MyMethodology",
+            new TestMethodIdentifierProperty("Assembly", "My.Namespace", "MyType", "MyMethod", 0, [], "System.Void"));
+
+        Assert.AreEqual("My.Namespace.MyType.MyMethod (MyMethodology)", TestNodeIdentity.GetDisplayLabel(testNode));
+    }
+
     private static TestNode CreateNode(string displayName, params IProperty[] properties)
     {
         PropertyBag propertyBag = new();
