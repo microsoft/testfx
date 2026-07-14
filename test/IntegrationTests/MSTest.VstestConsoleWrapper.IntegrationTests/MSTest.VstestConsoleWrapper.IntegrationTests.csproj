@@ -20,4 +20,13 @@
     </ProjectReference>
   </ItemGroup>
 
+  <!-- Microsoft.Testing.Extensions.CodeCoverage (18.10.0-preview) depends on System.Collections.Immutable /
+       System.Reflection.Metadata 10.0.0 while the VSTest translation-layer packages flowed in via
+       Automation.CLI still pin 8.0.0. Reference the 10.0.0 packages explicitly so RAR picks them as the
+       primary reference and unifies the older 8.0.0 reference up instead of failing with MSB3277. -->
+  <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" />
+    <PackageReference Include="System.Reflection.Metadata" />
+  </ItemGroup>
+
 </Project>
