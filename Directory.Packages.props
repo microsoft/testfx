@@ -30,7 +30,7 @@
          NOT yet contain #84437. Re-pin to the first post-merge main build (5.10.0-1.26361.* or later)
          once it ships to the dotnet-tools feed.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26360.111</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26363.117</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
