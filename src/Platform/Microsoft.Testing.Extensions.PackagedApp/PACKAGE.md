@@ -8,7 +8,7 @@
 It is the consumer of the platform's `ITestHostLauncher` extension point for Windows test hosts. UWP and packaged WinUI ship as MSIX and share the same launch mechanism, which is why VSTest exposes a single `UwpTestHostRuntimeProvider` for both:
 
 - **Deploy + launch loose layout** (implemented): a non-packaged (loose-layout) app is deployed to a deployment directory and the produced executable is launched from there.
-- **Packaged AUMID activation** (planned): a genuinely packaged (MSIX) layout is registered with the `PackageManager` and the app is activated by Application User Model ID (AUMID) via `IApplicationActivationManager` — the scenario behind [#2784](https://github.com/microsoft/testfx/issues/2784). Until then, a packaged layout is rejected with an actionable error rather than silently failing at launch.
+- **Packaged AUMID activation** (planned): a genuinely packaged (MSIX) layout is registered with the `PackageManager` and the app is activated by Application User Model ID (AUMID) via `IApplicationActivationManager` — the scenario behind [#9933](https://github.com/microsoft/testfx/issues/9933). Until then, a packaged layout is rejected with an actionable error rather than silently failing at launch.
 
 Microsoft.Testing.Platform is open source. You can find `Microsoft.Testing.Extensions.PackagedApp` code in the [microsoft/testfx](https://github.com/microsoft/testfx) GitHub repository.
 
@@ -22,7 +22,7 @@ dotnet add package Microsoft.Testing.Extensions.PackagedApp
 
 This package extends Microsoft.Testing.Platform with:
 
-- **Deployment + launch**: stages the non-packaged (loose-layout) Windows (UWP/WinUI) test host payload into an isolated directory and launches the deployed copy. Genuinely packaged (MSIX) hosts are not launched yet (see [#2784](https://github.com/microsoft/testfx/issues/2784)).
+- **Deployment + launch**: stages the non-packaged (loose-layout) Windows (UWP/WinUI) test host payload into an isolated directory and launches the deployed copy. Genuinely packaged (MSIX) hosts are not launched yet (see [#9933](https://github.com/microsoft/testfx/issues/9933)).
 - **Mechanism-agnostic monitoring**: returns an `ITestHostHandle` that exposes only the lifecycle the platform needs and no local process id.
 
 ## Documentation

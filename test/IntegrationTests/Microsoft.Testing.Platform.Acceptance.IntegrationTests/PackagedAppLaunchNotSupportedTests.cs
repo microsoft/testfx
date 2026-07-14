@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -12,7 +12,7 @@ public sealed class PackagedAppLaunchNotSupportedTests : AcceptanceTestBase<Pack
     // Application Id="App". The package family name suffix is the deterministic publisher hash of
     // "CN=Contoso", so the AUMID the launcher reports is stable and can be asserted verbatim.
     private const string ExpectedAppUserModelId = "Contoso.MyTestApp_h91ms92gdsmmt!App";
-    private const string TrackingIssueUrl = "https://github.com/microsoft/testfx/issues/2784";
+    private const string TrackingIssueUrl = "https://github.com/microsoft/testfx/issues/9933";
 
     // The sentinel exit code the asset returns after catching the launcher's InvalidOperationException.
     private const int LaunchNotSupportedExitCode = 3;

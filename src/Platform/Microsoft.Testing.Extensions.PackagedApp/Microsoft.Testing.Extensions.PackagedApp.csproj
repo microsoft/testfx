@@ -20,7 +20,7 @@
     <PackageDescription>
       <![CDATA[This package provides extensions to Microsoft Testing Platform intended to extend base functionalities.
 
-This package extends Microsoft Testing Platform to deploy and launch a non-packaged (loose-layout) Windows (UWP/WinUI) test host from an isolated directory instead of starting it in place. Launching a genuinely packaged (MSIX) app by registering its layout with the PackageManager and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/2784).]]>
+This package extends Microsoft Testing Platform to deploy and launch a non-packaged (loose-layout) Windows (UWP/WinUI) test host from an isolated directory instead of starting it in place. Launching a genuinely packaged (MSIX) app by registering its layout with the PackageManager and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).]]>
     </PackageDescription>
   </PropertyGroup>
 

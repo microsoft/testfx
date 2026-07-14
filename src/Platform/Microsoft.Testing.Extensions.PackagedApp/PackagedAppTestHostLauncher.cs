@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
@@ -18,7 +18,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// launch mechanism: the loose layout is registered with the <c>PackageManager</c> and the app is
 /// activated by Application User Model ID (AUMID) via <c>IApplicationActivationManager</c>. That
 /// mechanism is the reason VSTest's <c>UwpTestHostRuntimeProvider</c> exists (it serves both UWP and
-/// WinUI); see https://github.com/microsoft/testfx/issues/2784.
+/// WinUI); see https://github.com/microsoft/testfx/issues/9933.
 /// </para>
 /// <para>
 /// This reference implementation performs the deploy-and-launch step for a <em>non-packaged</em>
@@ -27,7 +27,7 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// <c>AppxManifest.xml</c> — cannot be started with <c>Process.Start</c>; its AUMID-activation branch
 /// (registering the layout with <c>PackageManager.RegisterPackageByUriAsync</c> and calling
 /// <c>IApplicationActivationManager.ActivateApplication</c>) is a clearly-marked follow-up
-/// (https://github.com/microsoft/testfx/issues/2784), so for now such a layout is rejected with an
+/// (https://github.com/microsoft/testfx/issues/9933), so for now such a layout is rejected with an
 /// actionable error rather than silently failing at launch. The AUMID that activation will use is
 /// already computed from the manifest by <see cref="AppxManifestInfo"/>.
 /// </para>
@@ -62,7 +62,7 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 
         // A genuinely packaged (MSIX) app cannot be started with Process.Start: it must be registered
         // with the PackageManager and activated by AUMID. That path is not implemented yet (see issue
-        // #2784), so fail fast with an actionable message — including the AUMID activation would use —
+        // #9933), so fail fast with an actionable message — including the AUMID activation would use —
         // instead of starting an executable that cannot host the run.
         string? manifestPath = AppxManifestInfo.GetManifestPath(sourceDirectory);
         if (manifestPath is not null)
