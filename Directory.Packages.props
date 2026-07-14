@@ -24,13 +24,17 @@
     <MicrosoftCodeAnalysisVersionForSourceGen>4.8.0</MicrosoftCodeAnalysisVersionForSourceGen>
     <!-- Microsoft.CodeAnalysis.PublicApiAnalyzers / .BannedApiAnalyzers.
          On a 5.10.0-1.* (roslyn main) preview from the dnceng dotnet-tools feed to pick up the
-         RS0017/RS0026/RS0036 fixes AND the [Embedded]-API exclusion added in dotnet/roslyn#84437
-         (merged 2026-07-10 23:11 UTC), which lets internal [Embedded] types opt out of API tracking.
-         NOTE: 5.10.0-1.26360.111 was built 2026-07-10 22:25 UTC, ~46 min BEFORE that merge, so it does
-         NOT yet contain #84437. Re-pin to the first post-merge main build (5.10.0-1.26361.* or later)
-         once it ships to the dotnet-tools feed.
+         RS0017/RS0026/RS0036 fixes plus two API-tracking improvements merged into dotnet/roslyn main:
+           - dotnet/roslyn#84437 ([Embedded]-API exclusion, merged 2026-07-10 23:11 UTC): internal
+             [Embedded] types opt out of public/internal API tracking.
+           - dotnet/roslyn#84438 (internal_api_skip_ivt, merged 2026-07-10 22:54 UTC): internal API
+             tracking (RS0051-RS0058) is skipped for a compilation whose only InternalsVisibleTo
+             targets are ignored test/mock assemblies (opt in via
+             dotnet_public_api_analyzer.internal_api_skip_ivt).
+         5.10.0-1.26363.117 was built from roslyn main on 2026-07-13, so it contains both merges. The
+         previous 5.10.0-1.26360.111 pin was built 2026-07-10, before those merges shipped.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26360.111</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26363.117</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
