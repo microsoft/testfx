@@ -1,5 +1,9 @@
 #nullable enable
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
+Microsoft.Testing.Platform.Helpers.ArgumentGuard
+Microsoft.Testing.Platform.Helpers.PasteArguments
+static Microsoft.Testing.Platform.Helpers.ArgumentGuard.Ensure(bool condition, string! paramName, string! errorMessage) -> void
+static Microsoft.Testing.Platform.Helpers.PasteArguments.AppendArgument(System.Text.StringBuilder! stringBuilder, string! argument) -> void
 const Microsoft.Testing.Platform.IPC.NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes = 103 -> int
 static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsureDirectoryIsWritable(string! directory) -> void
 static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsurePathLengthWithinLimit(string! path) -> void

@@ -9,6 +9,7 @@
   <ItemGroup>
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynDebug.cs" Link="Helpers\RoslynDebug.cs" />
     <!-- Dependency-free logic shared with the MSTest adapter's native MTP providers (see issue #9762). -->
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsProviderHelper.cs" Link="Helpers\RunSettingsProviderHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsCommandLineOptionsProviderBase.cs" Link="Helpers\RunSettingsCommandLineOptionsProviderBase.cs" />

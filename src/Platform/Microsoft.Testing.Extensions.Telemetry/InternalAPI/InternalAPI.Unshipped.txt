@@ -1,2 +1,5 @@
 #nullable enable
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
+Microsoft.Testing.Platform.RoslynDebug
+static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b) -> void
+static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b, string! message) -> void
