@@ -76,15 +76,47 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
-    public void Merge_KeepsReportFormatAndToolFromFirstReport()
+    public void Merge_WhenAllInputsShareTool_KeepsThatTool()
     {
         string a = BuildReport(toolName: "MSTest");
-        string b = BuildReport(toolName: "OtherFramework");
+        string b = BuildReport(toolName: "MSTest");
 
         JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!;
 
         Assert.AreEqual("CTRF", (string?)merged["reportFormat"]);
         Assert.AreEqual("MSTest", (string?)merged["results"]!["tool"]!["name"]);
+    }
+
+    [TestMethod]
+    public void Merge_WhenInputsUseDifferentTools_UsesNeutralMergerToolIdentity()
+    {
+        // Merging modules produced by different frameworks must not misattribute one framework's
+        // identity to another's tests, so a neutral merger identity is used instead of the first tool.
+        string a = BuildReport(toolName: "MSTest");
+        string b = BuildReport(toolName: "OtherFramework");
+
+        string? toolName = (string?)JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["results"]!["tool"]!["name"];
+
+        Assert.AreNotEqual("MSTest", toolName);
+        Assert.AreNotEqual("OtherFramework", toolName);
+        Assert.Contains("merged", toolName!);
+    }
+
+    [TestMethod]
+    public void Merge_DropsModuleSpecificEnvironmentExtraFields()
+    {
+        // testApplication/exitCode describe a single module and cannot describe all merged modules, so
+        // they must not be carried over (misattributing the first module's app/exit code to everyone).
+        string a = BuildReport();
+        string b = BuildReport();
+
+        JsonNode? environmentExtra = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["results"]!["environment"]!["extra"];
+
+        Assert.IsNotNull(environmentExtra);
+        Assert.IsNull(environmentExtra["testApplication"]);
+        Assert.IsNull(environmentExtra["exitCode"]);
+        // Shared, non-module-specific fields are retained.
+        Assert.AreEqual("someone", (string?)environmentExtra["user"]);
     }
 
     [TestMethod]
@@ -175,7 +207,17 @@ public sealed class CtrfReportMergerTests
                     ["stop"] = stop,
                     ["duration"] = Math.Max(0, stop - start),
                 },
-                ["environment"] = new JsonObject { ["osPlatform"] = "test" },
+                ["environment"] = new JsonObject
+                {
+                    ["osPlatform"] = "test",
+                    ["extra"] = new JsonObject
+                    {
+                        ["user"] = "someone",
+                        ["machine"] = "box",
+                        ["testApplication"] = "A.dll",
+                        ["exitCode"] = 0,
+                    },
+                },
                 ["tests"] = testArray,
             },
         };

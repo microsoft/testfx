@@ -22,6 +22,10 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// </remarks>
 internal static class CtrfReportMerger
 {
+    // Neutral tool identity used when merged inputs disagree on their producing test framework, so the
+    // merged report does not misattribute one framework's identity to another's tests.
+    private const string MergedToolName = "Microsoft.Testing.Extensions.CtrfReport (merged)";
+
     internal static string Merge(IReadOnlyList<string> inputReports)
     {
         if (inputReports is null)
@@ -40,6 +44,12 @@ internal static class CtrfReportMerger
         long? earliestStart = null;
         long? latestStop = null;
 
+        // A same-kind merge can combine modules produced by different test frameworks. Track the
+        // distinct tool identities so the merged report is only stamped with a single framework when
+        // every input actually used it; otherwise a neutral merger identity is used (see below).
+        var distinctToolNames = new HashSet<string>(StringComparer.Ordinal);
+        JsonNode? firstTool = null;
+
         foreach (string reportJson in inputReports)
         {
             if (JsonNode.Parse(reportJson) is not JsonObject root)
@@ -56,6 +66,12 @@ internal static class CtrfReportMerger
                 {
                     mergedTests.Add(test?.DeepClone());
                 }
+            }
+
+            if (results?["tool"] is JsonNode toolNode)
+            {
+                firstTool ??= toolNode;
+                distinctToolNames.Add((string?)toolNode["name"] ?? string.Empty);
             }
 
             JsonNode? summary = results?["summary"];
@@ -122,16 +138,33 @@ internal static class CtrfReportMerger
         };
 
         var resultsObject = new JsonObject();
-        if (first["results"]?["tool"] is JsonNode tool)
+
+        // Only carry a concrete tool identity when every input reported the same one (the common
+        // single-framework case). When inputs disagree, stamping the first framework onto all tests
+        // would misattribute the others, so use a neutral merger identity instead.
+        if (distinctToolNames.Count == 1 && firstTool is not null)
         {
-            resultsObject["tool"] = tool.DeepClone();
+            resultsObject["tool"] = firstTool.DeepClone();
+        }
+        else
+        {
+            resultsObject["tool"] = new JsonObject { ["name"] = MergedToolName };
         }
 
         resultsObject["summary"] = summaryObject;
 
-        if (first["results"]?["environment"] is JsonNode environment)
+        // The environment is taken from the first report for shared fields (OS, user, machine), but
+        // module-specific values under 'extra' (the producing test application and its exit code) cannot
+        // describe all merged modules, so they are dropped rather than misattributed.
+        if (first["results"]?["environment"] is JsonNode environment && environment.DeepClone() is JsonObject mergedEnvironment)
         {
-            resultsObject["environment"] = environment.DeepClone();
+            if (mergedEnvironment["extra"] is JsonObject environmentExtra)
+            {
+                environmentExtra.Remove("testApplication");
+                environmentExtra.Remove("exitCode");
+            }
+
+            resultsObject["environment"] = mergedEnvironment;
         }
 
         resultsObject["tests"] = mergedTests;

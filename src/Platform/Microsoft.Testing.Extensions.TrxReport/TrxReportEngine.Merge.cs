@@ -190,7 +190,7 @@ internal sealed partial class TrxReportEngine
         // deployment root — isolated per input so identical file names from different modules do not
         // collide — and rewrite the input's hrefs to match, before the merge clones them.
         // Best-effort and path-confined: failures never fail the merge.
-        RelocateAttachments(inputPaths, reports, outputDirectory, runName);
+        RelocateAttachments(inputPaths, reports, outputDirectory, runName, cancellationToken);
 
         XDocument merged = Merge(reports, runId, runName);
 
@@ -214,7 +214,7 @@ internal sealed partial class TrxReportEngine
     /// (<c>runName</c> and each input's <c>runDeploymentRoot</c> are attacker-influenced), and any
     /// copy failure is swallowed so it never fails the merge (never-fail-the-run invariant).
     /// </summary>
-    private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, string runName)
+    private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, string runName, CancellationToken cancellationToken)
     {
         string outputFull = Path.GetFullPath(outputDirectory);
         string mergedDeploymentRoot = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(runName);
@@ -249,6 +249,11 @@ internal sealed partial class TrxReportEngine
 
         for (int i = 0; i < inputPaths.Count && i < reports.Count; i++)
         {
+            // Cancellation must interrupt an otherwise unbounded copy of a large deployment tree; check
+            // before each input (and inside CopyDirectoryRecursive) and let OperationCanceledException
+            // propagate rather than being swallowed as a best-effort failure below.
+            cancellationToken.ThrowIfCancellationRequested();
+
             try
             {
                 string? inputDirectory = Path.GetDirectoryName(Path.GetFullPath(inputPaths[i]));
@@ -291,12 +296,14 @@ internal sealed partial class TrxReportEngine
                 string prefix = i.ToString(CultureInfo.InvariantCulture);
                 string destForInput = Path.Combine(mergedInRoot, prefix);
                 DeleteDirectoryTreeOrLink(destForInput);
-                CopyDirectoryRecursive(sourceInRoot, destForInput);
+                CopyDirectoryRecursive(sourceInRoot, destForInput, cancellationToken);
                 RewriteAttachmentHrefs(reports[i], prefix);
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
-                // Best-effort: a failed attachment copy must not fail the merge.
+                // Best-effort: a failed attachment copy (including a malformed path from a hostile
+                // runDeploymentRoot, which Path.GetFullPath surfaces as ArgumentException/
+                // NotSupportedException) must not fail the merge. Cancellation is not caught here.
             }
         }
     }
@@ -348,8 +355,10 @@ internal sealed partial class TrxReportEngine
             || candidateFullPath.StartsWith(rootWithSeparator, comparison);
     }
 
-    private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory)
+    private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         // Do not descend into reparse points (symlinks/junctions): a link inside the (confined) source
         // tree could otherwise redirect the copy to an arbitrary location.
         if (IsReparsePoint(sourceDirectory))
@@ -368,6 +377,8 @@ internal sealed partial class TrxReportEngine
 
         foreach (string file in Directory.GetFiles(sourceDirectory))
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             // A source file reparse point (symlink) would make File.Copy follow the link and pull in
             // content from outside the confined tree; skip it.
             if (IsReparsePoint(file))
@@ -391,7 +402,7 @@ internal sealed partial class TrxReportEngine
 
         foreach (string directory in Directory.GetDirectories(sourceDirectory))
         {
-            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)));
+            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), cancellationToken);
         }
     }
 
