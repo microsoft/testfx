@@ -428,6 +428,15 @@ Microsoft.Testing.Platform.CommandLine.CommandLineManager.AddProvider(System.Fun
 Microsoft.Testing.Platform.CommandLine.CommandLineManager.BuildAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! parseResult, System.IServiceProvider! serviceProvider, Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.CommandLine.CommandLineHandler!>!
 Microsoft.Testing.Platform.CommandLine.CommandLineManager.CommandLineManager(Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo) -> void
 Microsoft.Testing.Platform.CommandLine.CommandLineOptionArgumentValidator
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(string! uid, string! version, string! displayName, string! description, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Description.get -> string!
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.DisplayName.get -> string!
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Uid.get -> string!
+Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Version.get -> string!
 Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderCache
 Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderCache.CommandLineOptionsProviderCache() -> void
 Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderCache.CommandLineOptionsProviderCache(Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider! commandLineOptionsProvider) -> void
@@ -646,6 +655,8 @@ Microsoft.Testing.Platform.Helpers.IAsyncMonitor.LockAsync(System.Threading.Canc
 Microsoft.Testing.Platform.Helpers.IAsyncMonitor.LockAsync(System.TimeSpan timeout) -> System.Threading.Tasks.Task<System.IDisposable!>!
 Microsoft.Testing.Platform.Helpers.IAsyncMonitorFactory
 Microsoft.Testing.Platform.Helpers.IAsyncMonitorFactory.Create() -> Microsoft.Testing.Platform.Helpers.IAsyncMonitor!
+Microsoft.Testing.Platform.Helpers.IClock
+Microsoft.Testing.Platform.Helpers.IClock.UtcNow.get -> System.DateTimeOffset
 Microsoft.Testing.Platform.Helpers.IConsole
 Microsoft.Testing.Platform.Helpers.IConsole.BufferHeight.get -> int
 Microsoft.Testing.Platform.Helpers.IConsole.BufferWidth.get -> int
@@ -2914,6 +2925,9 @@ static Microsoft.Testing.Platform.CommandLine.CommandLineOptionArgumentValidator
 static Microsoft.Testing.Platform.CommandLine.CommandLineOptionArgumentValidator.IsOnValue(string! argument) -> bool
 static Microsoft.Testing.Platform.CommandLine.CommandLineOptionArgumentValidator.IsValidBooleanArgument(string! argument) -> bool
 static Microsoft.Testing.Platform.CommandLine.CommandLineOptionArgumentValidator.IsValidBooleanAutoArgument(string! argument) -> bool
+static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string! mainOptionName, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
+static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string![]! mainOptionNames, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
+static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateAllowedValuesAsync(string! value, string![]! allowedValues, string! formatString) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsValidator.ValidateAsync(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult, System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!>! systemCommandLineOptionsProviders, System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!>! extensionCommandLineOptionsProviders, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Configurations.JsonCommandLineOptionEntry!>? jsonCommandLineOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 static Microsoft.Testing.Platform.CommandLine.CommandLineParser.Parse(string![]! args, Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> Microsoft.Testing.Platform.CommandLine.CommandLineParseResult!
 static Microsoft.Testing.Platform.CommandLine.PlatformCommandLineProvider.GetMinimumExpectedTests(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> int
@@ -3182,6 +3196,7 @@ static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetRequired
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetRuntimeFeature(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.IRuntimeFeature!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetServiceInternal<TService>(this System.IServiceProvider! provider) -> TService?
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetServicesInternal<TService>(this System.IServiceProvider! provider) -> System.Collections.Generic.IEnumerable<TService>!
+static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetSystemClock(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.IClock!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetTask(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.ITask!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetTelemetryCollector(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Telemetry.ITelemetryCollector!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetTelemetryInformation(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Telemetry.ITelemetryInformation!
@@ -3246,6 +3261,8 @@ System.Numerics.Hashing.HashHelpers
 System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute
 System.Runtime.CompilerServices.CompilerLoweringPreserveAttribute.CompilerLoweringPreserveAttribute() -> void
 System.Text.StringBuilderExtensions
+virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 virtual Microsoft.Testing.Platform.Configurations.ConfigurationSourceBase.Description.get -> string!
 virtual Microsoft.Testing.Platform.Configurations.ConfigurationSourceBase.DisplayName.get -> string!
 virtual Microsoft.Testing.Platform.Configurations.ConfigurationSourceBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
