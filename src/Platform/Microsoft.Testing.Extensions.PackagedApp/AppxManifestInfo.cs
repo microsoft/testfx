@@ -31,13 +31,12 @@ internal sealed class AppxManifestInfo
     // and lowercase letters with i, l, o and u removed). Must not be reordered.
     private const string PublisherHashAlphabet = "0123456789abcdefghjkmnpqrstvwxyz";
 
-    private AppxManifestInfo(string packageName, string publisher, string? applicationId)
+    private AppxManifestInfo(string packageName, string publisher, IReadOnlyList<AppxApplicationInfo> applications)
     {
         PackageName = packageName;
         Publisher = publisher;
-        ApplicationId = applicationId;
         PackageFamilyName = $"{packageName}_{ComputePublisherId(publisher)}";
-        AppUserModelId = applicationId is null ? null : $"{PackageFamilyName}!{applicationId}";
+        Applications = applications;
     }
 
     /// <summary>Gets the package name (the manifest's <c>Identity/@Name</c>).</summary>
@@ -46,20 +45,16 @@ internal sealed class AppxManifestInfo
     /// <summary>Gets the publisher (the manifest's <c>Identity/@Publisher</c>).</summary>
     public string Publisher { get; }
 
-    /// <summary>
-    /// Gets the id of the first application declared in the manifest (<c>Applications/Application/@Id</c>),
-    /// or <see langword="null"/> when the manifest declares no application.
-    /// </summary>
-    public string? ApplicationId { get; }
-
     /// <summary>Gets the package family name (<c>{PackageName}_{publisherId}</c>).</summary>
     public string PackageFamilyName { get; }
 
     /// <summary>
-    /// Gets the Application User Model ID (<c>{PackageFamilyName}!{ApplicationId}</c>) used to activate
-    /// the app, or <see langword="null"/> when the manifest declares no application.
+    /// Gets the applications declared by the manifest (<c>Applications/Application</c>), in manifest
+    /// order. A package can declare several applications, so callers must select the one they want
+    /// (see <see cref="ResolveApplication(string?)"/>) rather than assuming a single entry. The list
+    /// is empty when the manifest declares no application.
     /// </summary>
-    public string? AppUserModelId { get; }
+    public IReadOnlyList<AppxApplicationInfo> Applications { get; }
 
     /// <summary>
     /// Returns the path to the <c>AppxManifest.xml</c> at the root of <paramref name="layoutDirectory"/>
@@ -106,11 +101,69 @@ internal sealed class AppxManifestInfo
             throw new InvalidOperationException(ExtensionResources.InvalidAppxManifestMissingIdentity);
         }
 
-        string? applicationId = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
-            .Elements().FirstOrDefault(static e => e.Name.LocalName == "Application")?
-            .Attribute("Id")?.Value;
+        string packageFamilyName = $"{name}_{ComputePublisherId(publisher)}";
 
-        return new AppxManifestInfo(name, publisher, applicationId);
+        // A package may declare several applications, each with its own id (and AUMID). Capture them
+        // all so the launcher can resolve the one matching the executable it was asked to launch,
+        // instead of guessing with the first entry.
+        List<AppxApplicationInfo> applications = root?.Elements().FirstOrDefault(static e => e.Name.LocalName == "Applications")?
+            .Elements().Where(static e => e.Name.LocalName == "Application")
+            .Select(application =>
+            {
+                string? applicationId = application.Attribute("Id")?.Value;
+                string? executable = application.Attribute("Executable")?.Value;
+                return applicationId is null || applicationId.Length == 0
+                    ? null
+                    : new AppxApplicationInfo(applicationId, executable, $"{packageFamilyName}!{applicationId}");
+            })
+            .Where(static application => application is not null)
+            .Select(static application => application!)
+            .ToList()
+            ?? [];
+
+        return new AppxManifestInfo(name, publisher, applications);
+    }
+
+    /// <summary>
+    /// Resolves the application whose test host the platform asked to launch. Most packages declare a
+    /// single application, which is returned directly. When a package declares several, the entry is
+    /// disambiguated by matching <paramref name="executableFileName"/> against each
+    /// <c>Application/@Executable</c>; an ambiguous request (no match, or several matches) is rejected
+    /// rather than silently defaulting to the first application, which would identify the wrong app.
+    /// </summary>
+    /// <param name="executableFileName">
+    /// The file name (not full path) of the executable the platform asked to launch, used to pick the
+    /// matching application when the manifest declares more than one.
+    /// </param>
+    /// <returns>
+    /// The matching application, or <see langword="null"/> when the manifest declares no application.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">
+    /// The manifest declares multiple applications and <paramref name="executableFileName"/> does not
+    /// match exactly one of them.
+    /// </exception>
+    public AppxApplicationInfo? ResolveApplication(string? executableFileName)
+    {
+        switch (Applications.Count)
+        {
+            case 0:
+                return null;
+            case 1:
+                return Applications[0];
+        }
+
+        AppxApplicationInfo[] matches = [.. Applications.Where(application =>
+            application.Executable is not null
+            && string.Equals(application.Executable, executableFileName, StringComparison.OrdinalIgnoreCase))];
+
+        return matches.Length == 1
+            ? matches[0]
+            : throw new InvalidOperationException(
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    ExtensionResources.AmbiguousAppxManifestApplication,
+                    executableFileName,
+                    string.Join(", ", Applications.Select(static application => application.AppUserModelId))));
     }
 
     /// <summary>

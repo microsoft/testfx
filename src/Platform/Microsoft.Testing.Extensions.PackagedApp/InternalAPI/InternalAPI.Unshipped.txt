@@ -1,10 +1,15 @@
 #nullable enable
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppUserModelId.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppxApplicationInfo(string! id, string? executable, string! appUserModelId) -> void
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.Executable.get -> string?
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.Id.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo
-Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.AppUserModelId.get -> string?
-Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ApplicationId.get -> string?
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Applications.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo!>!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageFamilyName.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageName.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Publisher.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ResolveApplication(string? executableFileName) -> Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo?
 const Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.AppxManifestFileName = "AppxManifest.xml" -> string!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ComputePublisherId(string! publisher) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.GetManifestPath(string! layoutDirectory) -> string?

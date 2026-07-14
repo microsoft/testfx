@@ -45,21 +45,23 @@ public sealed class AppxManifestInfoTests
 
         Assert.AreEqual("Contoso.MyTestApp", info.PackageName);
         Assert.AreEqual(MicrosoftStorePublisher, info.Publisher);
-        Assert.AreEqual("App", info.ApplicationId);
         Assert.AreEqual($"Contoso.MyTestApp_{MicrosoftStorePublisherId}", info.PackageFamilyName);
-        Assert.AreEqual($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", info.AppUserModelId);
+
+        AppxApplicationInfo application = Assert.ContainsSingle(info.Applications);
+        Assert.AreEqual("App", application.Id);
+        Assert.AreEqual($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", application.AppUserModelId);
     }
 
     [TestMethod]
-    public void ReadFromManifest_WithoutApplication_LeavesAppUserModelIdNull()
+    public void ReadFromManifest_WithoutApplication_LeavesApplicationsEmpty()
     {
         AppxManifestInfo info = ReadManifest(
             name: "Contoso.MyTestApp",
             publisher: MicrosoftStorePublisher,
             applicationId: null);
 
-        Assert.IsNull(info.ApplicationId);
-        Assert.IsNull(info.AppUserModelId);
+        Assert.IsEmpty(info.Applications);
+        Assert.IsNull(info.ResolveApplication("MyTestApp.exe"));
         Assert.AreEqual($"Contoso.MyTestApp_{MicrosoftStorePublisherId}", info.PackageFamilyName);
     }
 
@@ -80,24 +82,82 @@ public sealed class AppxManifestInfoTests
         AppxManifestInfo info = ReadManifest(ManifestXml);
 
         Assert.AreEqual("Contoso.MyTestApp", info.PackageName);
-        Assert.AreEqual("App", info.ApplicationId);
+        Assert.AreEqual("App", Assert.ContainsSingle(info.Applications).Id);
     }
 
     [TestMethod]
-    public void ReadFromManifest_UsesFirstApplicationId()
+    public void ReadFromManifest_ParsesAllApplicationsInManifestOrder()
     {
         const string ManifestXml = """
             <?xml version="1.0" encoding="utf-8"?>
             <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
               <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
               <Applications>
-                <Application Id="First" />
-                <Application Id="Second" />
+                <Application Id="First" Executable="First.exe" />
+                <Application Id="Second" Executable="Second.exe" />
               </Applications>
             </Package>
             """;
 
-        Assert.AreEqual("First", ReadManifest(ManifestXml).ApplicationId);
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+
+        Assert.HasCount(2, info.Applications);
+        Assert.AreEqual("First", info.Applications[0].Id);
+        Assert.AreEqual("First.exe", info.Applications[0].Executable);
+        Assert.AreEqual("Second", info.Applications[1].Id);
+        Assert.AreEqual("Second.exe", info.Applications[1].Executable);
+    }
+
+    [TestMethod]
+    public void ResolveApplication_WithSingleApplication_ReturnsItRegardlessOfExecutable()
+    {
+        AppxManifestInfo info = ReadManifest(
+            name: "Contoso.MyTestApp",
+            publisher: MicrosoftStorePublisher,
+            applicationId: "App");
+
+        // A single application is unambiguous, so it is returned even when the executable does not match.
+        Assert.AreEqual("App", info.ResolveApplication("does-not-matter.exe")?.Id);
+    }
+
+    [TestMethod]
+    public void ResolveApplication_WithMultipleApplications_SelectsTheOneMatchingTheExecutable()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="First.exe" />
+                <Application Id="Second" Executable="Second.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+
+        // The executable disambiguates: the second application is selected rather than defaulting to the first.
+        Assert.AreEqual("Second", info.ResolveApplication("Second.exe")?.Id);
+    }
+
+    [TestMethod]
+    public void ResolveApplication_WithMultipleApplicationsAndNoMatch_Throws()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="First.exe" />
+                <Application Id="Second" Executable="Second.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+
+        // An ambiguous request must be rejected instead of silently defaulting to the first application.
+        Assert.ThrowsExactly<InvalidOperationException>(() => info.ResolveApplication("Unknown.exe"));
     }
 
     [TestMethod]

@@ -46,7 +46,33 @@ public sealed class PackagedAppTestHostLauncherTests
         Assert.Contains($"Contoso.MyTestApp_{MicrosoftStorePublisherId}", exception.Message);
     }
 
-    private static async Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string? applicationId)
+    [TestMethod]
+    public async Task LaunchTestHostAsync_WithMultipleApplications_ReportsTheOneMatchingTheExecutable()
+    {
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="First.exe" />
+                <Application Id="Second" Executable="MyTestApp.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        InvalidOperationException exception = await LaunchInLayoutContainingManifestAsync(ManifestXml, testHostFileName: "MyTestApp.exe");
+
+        // The reported identity must be the app whose Executable matches the requested test host, not
+        // simply the first application declared in the manifest.
+        Assert.Contains($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!Second", exception.Message);
+    }
+
+    private static Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string? applicationId)
+        => LaunchInLayoutContainingManifestAsync(
+            BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, applicationId),
+            testHostFileName: "MyTestApp.exe");
+
+    private static async Task<InvalidOperationException> LaunchInLayoutContainingManifestAsync(string manifestXml, string testHostFileName)
     {
         string directory = Path.Combine(Path.GetTempPath(), "PackagedAppTestHostLauncherTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
@@ -54,12 +80,12 @@ public sealed class PackagedAppTestHostLauncherTests
         {
             File.WriteAllText(
                 Path.Combine(directory, AppxManifestInfo.AppxManifestFileName),
-                BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, applicationId));
+                manifestXml);
 
             var launcher = new PackagedAppTestHostLauncher();
 
             // The executable does not need to exist: the packaged-layout check happens before any launch.
-            string fakeTestHost = Path.Combine(directory, "MyTestApp.exe");
+            string fakeTestHost = Path.Combine(directory, testHostFileName);
 #pragma warning disable TPEXP // TestHostLaunchContext is experimental.
             var context = new TestHostLaunchContext(fakeTestHost, [], new Dictionary<string, string?>(), workingDirectory: null);
             return await Assert.ThrowsExactlyAsync<InvalidOperationException>(

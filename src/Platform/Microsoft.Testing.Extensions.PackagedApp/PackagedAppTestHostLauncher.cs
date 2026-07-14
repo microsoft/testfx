@@ -68,11 +68,16 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         if (manifestPath is not null)
         {
             var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
+
+            // Resolve the application matching the executable the platform asked to launch so the
+            // reported identity is the one activation would actually use (a package can declare several
+            // applications). Fall back to the package family name when the manifest declares none.
+            AppxApplicationInfo? application = manifestInfo.ResolveApplication(Path.GetFileName(context.FileName));
             throw new InvalidOperationException(
                 string.Format(
                     CultureInfo.InvariantCulture,
                     ExtensionResources.PackagedAppLaunchNotSupported,
-                    manifestInfo.AppUserModelId ?? manifestInfo.PackageFamilyName,
+                    application?.AppUserModelId ?? manifestInfo.PackageFamilyName,
                     manifestPath));
         }
 

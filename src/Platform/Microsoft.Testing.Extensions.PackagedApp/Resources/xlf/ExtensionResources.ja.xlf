@@ -2,14 +2,19 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ja" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="AmbiguousAppxManifestApplication">
+        <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
+        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
         <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</source>
-        <target state="translated">パッケージ化された Windows (UWP/WinUI) テスト ホストを分離されたディレクトリに展開し、そこから起動します。</target>
+        <source>Deploys a non-packaged (loose-layout) Windows (UWP/WinUI) test host to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/2784).</source>
+        <target state="needs-review-translation">パッケージ化された Windows (UWP/WinUI) テスト ホストを分離されたディレクトリに展開し、そこから起動します。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
