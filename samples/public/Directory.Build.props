@@ -25,7 +25,7 @@
       (it ships as a 1.0.0-alpha.* build), which is why it has its own property here.
     -->
     <MicrosoftTestingExtensionsPackagedAppVersion>1.0.0-alpha.26363.8</MicrosoftTestingExtensionsPackagedAppVersion>
-    <VSTestVersion>18.7.0</VSTestVersion>
+    <VSTestVersion>18.8.0</VSTestVersion>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);SA0001;EnableGenerateDocumentationFile</NoWarn>
   </PropertyGroup>
