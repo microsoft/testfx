@@ -8,12 +8,8 @@
 ./build.sh -pack              # produce NuGet packages
 ./build.sh -pack -test -integrationTest  # full suite (slow)
 
-# Perf runner (requires -pack first)
-.dotnet/dotnet run --project test/Performance/MSTest.Performance.Runner \
-  -- execute --pipelineNameFilter "*PlainProcess*"
-
 # Single test project
-.dotnet/dotnet run --project <proj> -f net9.0 --no-build \
+dotnet run --project <proj> -f net9.0 --no-build \
   -- --treenode-filter "*/*/MyTestClass/MyTestMethod"
 ```
 
@@ -21,36 +17,35 @@
 
 | Task | Last Run     |
 |------|-------------|
-| 1    | 2026-07-04  |
+| 1    | 2026-07-14  |
 | 2    | 2026-07-08  |
-| 3    | 2026-07-13  |
-| 4    | 2026-07-11  |
+| 3    | 2026-07-14  |
+| 4    | 2026-07-14  |
 | 5    | 2026-07-08  |
 | 6    | 2026-07-13  |
-| 7    | 2026-07-13  |
+| 7    | 2026-07-14  |
 
-Next priority: Tasks 1, 4, 5 (oldest: 2026-07-04, 2026-07-11, 2026-07-08)
+Next priority: Tasks 2, 5, 6 (oldest: 2026-07-08, 2026-07-08, 2026-07-13)
 
 ## Completed Work
 
-| Date       | Item                                  | Notes                                      |
-|------------|---------------------------------------|--------------------------------------------|
-| 2026-07-13 | PR #aw_pr_scenario4 submitted         | Scenario4 class-init overhead benchmark    |
-| 2026-07-11 | PR #aw_pr_skip_inprog submitted       | Skip TestMethodIdentifierProperty for in-progress nodes |
-| 2026-07-10 | PR #9800 merged (by Evangelink)       | Cache GetTestId on UnitTestElement         |
-| 2026-07-10 | WIP branch lost (lazy testfullname)   | safe-output bundle was lost; no PR created |
-| 2026-07-08 | PR #9728 merged                       | Scenario2 data-driven + JsonSerializerOptions caching |
-| 2026-07-08 | PR #9706 merged                       | Native MTP integration (RFC 018)           |
-| 2026-07-07 | PR #9617 merged                       | All 4 data-driven hot-path optimisations   |
-| 2026-07-07 | PR #9636 merged                       | TCS fast-path skip                         |
+| Date       | Item                                      | Notes                                                    |
+|------------|-------------------------------------------|----------------------------------------------------------|
+| 2026-07-14 | PR submitted: skip-method-id-in-progress-2 | Skip TestMethodIdentifier for in-progress nodes          |
+| 2026-07-13 | PR #aw_pr_scenario4 submitted             | Scenario4 class-init overhead benchmark                  |
+| 2026-07-11 | PR skip-method-id-in-progress submitted   | Old branch lost; re-submitted 2026-07-14                 |
+| 2026-07-10 | PR #9800 merged (by Evangelink)           | Cache GetTestId on UnitTestElement                       |
+| 2026-07-08 | PR #9728 merged                           | Scenario2 data-driven + JsonSerializerOptions caching    |
+| 2026-07-08 | PR #9706 merged                           | Native MTP integration (RFC 018)                         |
+| 2026-07-07 | PR #9617 merged                           | All 4 data-driven hot-path optimisations                 |
+| 2026-07-07 | PR #9636 merged                           | TCS fast-path skip                                       |
 
 ## Work In Progress
 
-- Branch `perf-assist/skip-method-id-in-progress`: skip AddTestMethodIdentifier
-  (ParseManagedMethodName + TestMethodIdentifierProperty alloc) for in-progress nodes.
-  Saves ~10,000 parses per 10,000-test run. PR submitted 2026-07-11. Status: unknown (verify next run).
-- Branch `perf-assist/scenario4-class-init-overhead-1783953091`: Scenario4 class-init benchmark.
-  PR submitted 2026-07-13 (#aw_pr_scenario4). Purely additive to performance runner.
+- Branch `perf-assist/skip-method-id-in-progress-2`: skip AddTestMethodIdentifier for
+  in-progress nodes. All consumers (TrxDataConsumer, TestResultCaptureHelper,
+  AzureDevOpsTestResultsPublisher) early-exit for InProgressTestNodeStateProperty.
+  Saves ~10,000 parses + allocs per 10,000-test run. PR submitted 2026-07-14.
 
 ## Monthly Activity Issue
 
@@ -69,15 +64,12 @@ Priority order (highest first):
 
 ## Key Notes
 
-- PR #9726 (open): removes VSTest support, makes MTP the default. MSTestTestNodeConverter
-  is now the primary execution path for all MTP runs.
+- PR #9726 (open): removes VSTest support, makes MTP the default.
 - GetTestId() caching is in place (PR #9800 merged). `CachedTestNodeUid` on UnitTestElement.
 - `testMethod.DisplayName` is always non-null (constructor: `displayName ?? name`). Safe to use directly.
 - Pre-existing CA1416 build errors in `FileLoggerTests.cs` on Linux prevent full ./build.sh -test.
-  Product code builds fine; unit tests for adapter fail due to net48/net462 NU1201 restore issues.
+  Product code builds fine.
 - The "efficiency-improver" workflow is ALSO active on this repo, generating `efficiency/*` branches.
-- Issue #5348 (in-progress + result batch dedup): Efficiency Improver already commented (June 2026).
-  No new human activity since then. Not a good candidate for Perf Improver comment.
 
 ## Previously Closed/Actioned Items (do not re-suggest)
 
