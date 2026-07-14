@@ -64,14 +64,16 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         // with the PackageManager and activated by AUMID. That path is not implemented yet (see issue
         // #2784), so fail fast with an actionable message — including the AUMID activation would use —
         // instead of starting an executable that cannot host the run.
-        if (AppxManifestInfo.TryReadFromLayout(sourceDirectory, out AppxManifestInfo? manifestInfo))
+        string? manifestPath = AppxManifestInfo.GetManifestPath(sourceDirectory);
+        if (manifestPath is not null)
         {
+            var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
             throw new InvalidOperationException(
                 string.Format(
                     CultureInfo.InvariantCulture,
                     ExtensionResources.PackagedAppLaunchNotSupported,
                     manifestInfo.AppUserModelId ?? manifestInfo.PackageFamilyName,
-                    Path.Combine(sourceDirectory, AppxManifestInfo.AppxManifestFileName)));
+                    manifestPath));
         }
 
         // The layout is not packaged (no AppxManifest.xml). Deploy the loose layout into an isolated

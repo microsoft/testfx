@@ -129,14 +129,13 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
-    public void TryReadFromLayout_WithoutManifest_ReturnsFalse()
+    public void GetManifestPath_WithoutManifest_ReturnsNull()
     {
         string directory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         try
         {
-            Assert.IsFalse(AppxManifestInfo.TryReadFromLayout(directory, out AppxManifestInfo? info));
-            Assert.IsNull(info);
+            Assert.IsNull(AppxManifestInfo.GetManifestPath(directory));
         }
         finally
         {
@@ -145,19 +144,19 @@ public sealed class AppxManifestInfoTests
     }
 
     [TestMethod]
-    public void TryReadFromLayout_WithManifest_ReturnsParsedInfo()
+    public void GetManifestPath_WithManifest_ReturnsPathWithoutParsing()
     {
         string directory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(directory);
         try
         {
-            File.WriteAllText(
-                Path.Combine(directory, AppxManifestInfo.AppxManifestFileName),
-                BuildManifestXml("Contoso.MyTestApp", MicrosoftStorePublisher, "App"));
+            string manifestPath = Path.Combine(directory, AppxManifestInfo.AppxManifestFileName);
 
-            Assert.IsTrue(AppxManifestInfo.TryReadFromLayout(directory, out AppxManifestInfo? info));
-            Assert.IsNotNull(info);
-            Assert.AreEqual($"Contoso.MyTestApp_{MicrosoftStorePublisherId}!App", info.AppUserModelId);
+            // Intentionally not a valid manifest: GetManifestPath must be a pure existence probe that
+            // never parses, so an unparsable file must still be reported.
+            File.WriteAllText(manifestPath, "not xml");
+
+            Assert.AreEqual(manifestPath, AppxManifestInfo.GetManifestPath(directory));
         }
         finally
         {

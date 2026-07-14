@@ -7,6 +7,6 @@ Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageName.get -> str
 Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Publisher.get -> string!
 const Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.AppxManifestFileName = "AppxManifest.xml" -> string!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ComputePublisherId(string! publisher) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.GetManifestPath(string! layoutDirectory) -> string?
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifest(System.IO.Stream! manifestStream) -> Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifest(string! manifestPath) -> Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!
-static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.TryReadFromLayout(string! layoutDirectory, out Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo? info) -> bool

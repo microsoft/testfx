@@ -62,26 +62,20 @@ internal sealed class AppxManifestInfo
     public string? AppUserModelId { get; }
 
     /// <summary>
-    /// Reads the manifest at the root of <paramref name="layoutDirectory"/> if the directory is a
-    /// packaged-app layout.
+    /// Returns the path to the <c>AppxManifest.xml</c> at the root of <paramref name="layoutDirectory"/>
+    /// when the directory is a packaged-app layout. This is a cheap, non-throwing probe: it only tests
+    /// for the file's existence and never parses it. Callers that need the parsed identity pass the
+    /// returned path to <see cref="ReadFromManifest(string)"/>.
     /// </summary>
     /// <param name="layoutDirectory">The directory to probe for an <c>AppxManifest.xml</c>.</param>
-    /// <param name="info">The parsed manifest info when the directory is a packaged-app layout.</param>
     /// <returns>
-    /// <see langword="true"/> when an <c>AppxManifest.xml</c> was found and parsed; otherwise
-    /// <see langword="false"/>.
+    /// The full path to the manifest when the directory is a packaged-app layout; otherwise
+    /// <see langword="null"/>.
     /// </returns>
-    public static bool TryReadFromLayout(string layoutDirectory, [NotNullWhen(true)] out AppxManifestInfo? info)
+    public static string? GetManifestPath(string layoutDirectory)
     {
         string manifestPath = Path.Combine(layoutDirectory, AppxManifestFileName);
-        if (!File.Exists(manifestPath))
-        {
-            info = null;
-            return false;
-        }
-
-        info = ReadFromManifest(manifestPath);
-        return true;
+        return File.Exists(manifestPath) ? manifestPath : null;
     }
 
     /// <summary>Reads and parses the manifest at <paramref name="manifestPath"/>.</summary>
