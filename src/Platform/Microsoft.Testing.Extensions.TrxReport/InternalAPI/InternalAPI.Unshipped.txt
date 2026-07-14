@@ -1,5 +1,7 @@
 #nullable enable
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
+Microsoft.Testing.Platform.Helpers.DisposeHelper
+static Microsoft.Testing.Platform.Helpers.DisposeHelper.DisposeAsync(object? obj) -> System.Threading.Tasks.Task!
 const Microsoft.Testing.Platform.IPC.NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes = 103 -> int
 static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsureDirectoryIsWritable(string! directory) -> void
 static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsurePathLengthWithinLimit(string! path) -> void

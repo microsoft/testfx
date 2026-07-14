@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Extensions;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
+[Embedded]
 internal static class DisposeHelper
 {
     public static async Task DisposeAsync(object? obj)

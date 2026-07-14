@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Helpers;
 
 /// <summary>
 /// Runtime feature detection that the platform uses to adapt its behavior to the host.
 /// </summary>
+[Embedded]
 internal static class RuntimeFeatureHelper
 {
     /// <summary>
