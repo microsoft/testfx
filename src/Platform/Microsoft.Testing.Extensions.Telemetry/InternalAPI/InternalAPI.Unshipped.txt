@@ -1,5 +1,7 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
 Microsoft.Testing.Platform.RoslynDebug
+static Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper.IsMultiThreaded.get -> bool
 static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b) -> void
 static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b, string! message) -> void
