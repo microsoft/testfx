@@ -27,8 +27,6 @@ This package provides Open Telemetry for the platform.]]>
     <AdditionalFiles Include="BannedSymbols.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
-    <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
-    <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
   </ItemGroup>
 
   <ItemGroup>

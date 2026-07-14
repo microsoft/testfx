@@ -1,2 +1,0 @@
-#nullable enable
-Microsoft.Testing.Platform.Messages.SingleConsumerUnboundedChannel<T>.WaitToRead() -> bool
