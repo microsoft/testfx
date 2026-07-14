@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Diagnostics;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.SourceGeneration.Models;
 
 using MSTest.Analyzers.Shared;
@@ -16,12 +15,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Sou
 /// Translates a <see cref="INamedTypeSymbol"/> decorated with <c>[TestClass]</c> into an
 /// immutable, equatable <see cref="TestClassModel"/> the emitter can consume.
 /// </summary>
+/// <remarks>
+/// This type owns the top-level orchestration — walking the inheritance chain and assembling the model —
+/// and delegates the specialized subsystems to focused helpers:
+/// <list type="bullet">
+/// <item><see cref="DynamicDataSourceBuilder"/> resolves <c>[DynamicData]</c> sources.</item>
+/// <item><see cref="DataRowBuilder"/> parses <c>[DataRow]</c> applications.</item>
+/// <item><see cref="AttributeMaterializationHelper"/> decides which attributes survive trimming and converts them to models.</item>
+/// <item><see cref="SymbolReferenceabilityHelper"/> provides the reusable accessibility / referenceability predicates.</item>
+/// </list>
+/// </remarks>
 internal static class TestClassModelBuilder
 {
-    private static readonly SymbolDisplayFormat FullyQualifiedFormat =
-        SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
-            SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
-
     public static TestClassModel Build(INamedTypeSymbol typeSymbol, List<DiagnosticInfo> diagnostics)
     {
         // Methods / properties are walked across the full inheritance chain (excluding
@@ -40,7 +45,7 @@ internal static class TestClassModelBuilder
         ImmutableArray<TestConstructorModel>.Builder ctors = ImmutableArray.CreateBuilder<TestConstructorModel>();
         ImmutableArray<string>.Builder baseTypes = ImmutableArray.CreateBuilder<string>();
 
-        string leafFqn = typeSymbol.ToDisplayString(FullyQualifiedFormat);
+        string leafFqn = typeSymbol.ToDisplayString(SymbolDisplayFormats.FullyQualified);
 
         // Generated registration lives in the leaf type's (the compilation's) assembly, so attribute
         // materializability is judged from there — even for members inherited from a base type in
@@ -59,7 +64,7 @@ internal static class TestClassModelBuilder
             // only keeps members of the concrete type unless the base is rooted explicitly too.
             if (!isLeaf && !current.IsGenericType && SymbolAccessibilityHelper.IsAccessibleFromGeneratedCode(current))
             {
-                baseTypes.Add(current.ToDisplayString(FullyQualifiedFormat));
+                baseTypes.Add(current.ToDisplayString(SymbolDisplayFormats.FullyQualified));
             }
 
             foreach (ISymbol member in current.GetMembers())
@@ -67,15 +72,15 @@ internal static class TestClassModelBuilder
                 switch (member)
                 {
                     case IMethodSymbol { MethodKind: MethodKind.Ordinary } method
-                        when IsAccessibleFromConsumer(method):
-                        if (TryReportUnsupportedMethod(method, leafFqn, diagnostics))
+                        when TestMemberValidationHelper.IsAccessibleFromConsumer(method):
+                        if (TestMemberValidationHelper.TryReportUnsupportedMethod(method, leafFqn, diagnostics))
                         {
                             // Skip generic / by-ref methods entirely so the emitter does not produce
                             // code that references unbound type parameters or ref/in/out arguments.
                             break;
                         }
 
-                        string key = BuildMethodSignatureKey(method);
+                        string key = TestMemberValidationHelper.BuildMethodSignatureKey(method);
                         if (!methodsByKey.ContainsKey(key))
                         {
                             TestMethodModel model = BuildMethod(method, consumingAssembly);
@@ -85,7 +90,7 @@ internal static class TestClassModelBuilder
 
                         break;
                     case IPropertySymbol property
-                        when !property.IsIndexer && IsAccessibleFromConsumer(property):
+                        when !property.IsIndexer && TestMemberValidationHelper.IsAccessibleFromConsumer(property):
                         if (!propertiesByName.ContainsKey(property.Name))
                         {
                             TestPropertyModel model = BuildProperty(property, consumingAssembly);
@@ -96,7 +101,7 @@ internal static class TestClassModelBuilder
                         break;
                     case IMethodSymbol { MethodKind: MethodKind.Constructor, IsStatic: false } ctor
                         when isLeaf && ctor.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal:
-                        if (TryReportUnsupportedMethod(ctor, leafFqn, diagnostics))
+                        if (TestMemberValidationHelper.TryReportUnsupportedMethod(ctor, leafFqn, diagnostics))
                         {
                             break;
                         }
@@ -107,7 +112,7 @@ internal static class TestClassModelBuilder
                         // — and, because the runtime matches invokers by argument type, an extra compatible
                         // overload (e.g. ctor(object)) could be picked over the intended one. Only emit the
                         // two supported shapes so the type-level lookup stays unambiguous.
-                        if (!IsSupportedTestClassConstructor(ctor))
+                        if (!TestMemberValidationHelper.IsSupportedTestClassConstructor(ctor))
                         {
                             break;
                         }
@@ -129,119 +134,14 @@ internal static class TestClassModelBuilder
             Constructors: new EquatableArray<TestConstructorModel>(ctors.ToImmutable()),
             Methods: new EquatableArray<TestMethodModel>(methods.ToImmutable()),
             Properties: new EquatableArray<TestPropertyModel>(properties.ToImmutable()),
-            Attributes: BuildAttributes(typeSymbol.GetAttributes(), consumingAssembly),
+            Attributes: AttributeMaterializationHelper.BuildAttributes(typeSymbol.GetAttributes(), consumingAssembly),
             BaseTypeFullyQualifiedNames: new EquatableArray<string>(baseTypes.ToImmutable()));
-    }
-
-    private static bool IsTestMethodAttributePresent(IMethodSymbol method)
-    {
-        foreach (AttributeData attribute in method.GetAttributes())
-        {
-            for (INamedTypeSymbol? attributeClass = attribute.AttributeClass;
-                 attributeClass is not null;
-                 attributeClass = attributeClass.BaseType)
-            {
-                if (attributeClass.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.TestMethod)
-                {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // Reports AOTSG0004 (generic method) and AOTSG0005 (by-ref parameter) when applicable.
-    // Returns true if the member must be excluded from the emitted model.
-    private static bool TryReportUnsupportedMethod(IMethodSymbol method, string owningClassFqn, List<DiagnosticInfo> diagnostics)
-    {
-        bool unsupported = false;
-
-        // AOTSG0004 only applies to ordinary methods. Constructors cannot be generic so
-        // method.IsGenericMethod is false for them.
-        if (method.IsGenericMethod)
-        {
-            diagnostics.Add(DiagnosticInfo.Create(
-                DiagnosticDescriptors.GenericTestMethod,
-                LocationInfo.CreateFrom(method),
-                owningClassFqn,
-                method.Name));
-            unsupported = true;
-        }
-
-        foreach (IParameterSymbol parameter in method.Parameters)
-        {
-            if (parameter.RefKind != RefKind.None)
-            {
-                diagnostics.Add(DiagnosticInfo.Create(
-                    DiagnosticDescriptors.ByRefParameter,
-                    LocationInfo.CreateFrom(parameter),
-                    owningClassFqn,
-                    method.MethodKind == MethodKind.Constructor ? "ctor" : method.Name,
-                    parameter.Name));
-                unsupported = true;
-            }
-        }
-
-        return unsupported;
-    }
-
-    // Restricted to accessibilities the emitted helper class (a separate static type
-    // declared in MSTest.SourceGenerated, not a derived type) can legally call.
-    // 'protected' and 'private protected' members require the caller to be a derived
-    // type, so they are excluded; 'protected internal' is included because the internal
-    // half is satisfied (the generated helper lives in the same assembly).
-    private static bool IsAccessibleFromConsumer(ISymbol symbol)
-        => symbol.DeclaredAccessibility is
-            Accessibility.Public
-            or Accessibility.Internal
-            or Accessibility.ProtectedOrInternal;
-
-    private static string BuildMethodSignatureKey(IMethodSymbol method)
-    {
-        var sb = new StringBuilder();
-        sb.Append(method.IsStatic ? "S:" : "I:");
-        sb.Append(method.Name);
-        if (method.Arity > 0)
-        {
-            sb.Append('`');
-            sb.Append(method.Arity);
-        }
-
-        sb.Append('(');
-        bool first = true;
-        foreach (IParameterSymbol p in method.Parameters)
-        {
-            if (!first)
-            {
-                sb.Append(',');
-            }
-
-            first = false;
-            switch (p.RefKind)
-            {
-                case RefKind.Ref:
-                    sb.Append("ref ");
-                    break;
-                case RefKind.Out:
-                    sb.Append("out ");
-                    break;
-                case RefKind.In:
-                    sb.Append("in ");
-                    break;
-            }
-
-            sb.Append(p.Type.ToDisplayString(FullyQualifiedFormat));
-        }
-
-        sb.Append(')');
-        return sb.ToString();
     }
 
     private static TestMethodModel BuildMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
     {
         ITypeSymbol returnType = method.ReturnType;
-        string returnTypeFqn = returnType.ToDisplayString(FullyQualifiedFormat);
+        string returnTypeFqn = returnType.ToDisplayString(SymbolDisplayFormats.FullyQualified);
 
         bool returnsTask =
             returnTypeFqn is "global::System.Threading.Tasks.Task"
@@ -251,7 +151,7 @@ internal static class TestClassModelBuilder
             || returnTypeFqn.StartsWith("global::System.Threading.Tasks.ValueTask<", System.StringComparison.Ordinal);
         bool returnsVoid = returnType.SpecialType == SpecialType.System_Void;
 
-        ImmutableArray<AttributeData> inheritedAttributes = CollectInheritedAttributes(method);
+        ImmutableArray<AttributeData> inheritedAttributes = AttributeMaterializationHelper.CollectInheritedAttributes(method);
 
         return new TestMethodModel(
             Name: method.Name,
@@ -260,367 +160,17 @@ internal static class TestClassModelBuilder
             ReturnsTask: returnsTask,
             ReturnsValueTask: returnsValueTask,
             ReturnsVoid: returnsVoid,
-            IsTestMethod: IsTestMethodAttributePresent(method),
+            IsTestMethod: TestMemberValidationHelper.IsTestMethodAttributePresent(method),
             Parameters: BuildParameters(method),
-            Attributes: BuildAttributes(inheritedAttributes, consumingAssembly),
-            DataRows: BuildDataRows(inheritedAttributes),
-            DynamicDataSources: BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
-    }
-
-    // Resolves each [DynamicData(...)] on a test method to a concrete source member (and optional custom
-    // display-name method) at compile time so the generator can register a reflection-free accessor with
-    // DynamicDataSourceResolver. Sources the generator cannot resolve (missing member, inaccessible, wrong
-    // shape) are skipped: at runtime DynamicDataOperations falls back to reflection for those.
-    // Mirrors Microsoft.VisualStudio.TestTools.UnitTesting.DynamicDataSourceType (which lives in the test
-    // framework and is not referenceable from this analyzer). Values must match the runtime enum.
-    private enum DynamicDataSourceType
-    {
-        Property = 0,
-        Method = 1,
-        AutoDetect = 2,
-        Field = 3,
-    }
-
-    private static EquatableArray<DynamicDataSourceModel> BuildDynamicDataSources(ImmutableArray<AttributeData> attributes, IMethodSymbol testMethod, IAssemblySymbol consumingAssembly)
-    {
-        if (attributes.IsDefaultOrEmpty)
-        {
-            return EquatableArray<DynamicDataSourceModel>.Empty;
-        }
-
-        ImmutableArray<DynamicDataSourceModel>.Builder? builder = null;
-        foreach (AttributeData attribute in attributes)
-        {
-            if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::" + MSTestAttributeNames.DynamicData)
-            {
-                continue;
-            }
-
-            if (TryBuildDynamicDataSource(attribute, testMethod, consumingAssembly) is { } model)
-            {
-                (builder ??= ImmutableArray.CreateBuilder<DynamicDataSourceModel>()).Add(model);
-            }
-        }
-
-        return builder is null
-            ? EquatableArray<DynamicDataSourceModel>.Empty
-            : new EquatableArray<DynamicDataSourceModel>(builder.ToImmutable());
-    }
-
-    private static DynamicDataSourceModel? TryBuildDynamicDataSource(AttributeData attribute, IMethodSymbol testMethod, IAssemblySymbol consumingAssembly)
-    {
-        ImmutableArray<TypedConstant> ctorArgs = attribute.ConstructorArguments;
-        if (ctorArgs.IsDefaultOrEmpty || ctorArgs[0].Value is not string sourceName)
-        {
-            return null;
-        }
-
-        // The declaring type defaults to the type that declares the test method, matching
-        // methodInfo.DeclaringType at runtime (so inherited [DynamicData] resolves under the base type, not
-        // the leaf). An explicit typeof(...) constructor argument overrides it, and an explicit
-        // DynamicDataSourceType argument constrains member resolution. The params object[] arguments do not
-        // affect resolution.
-        INamedTypeSymbol declaringType = testMethod.ContainingType;
-        DynamicDataSourceType sourceType = DynamicDataSourceType.AutoDetect;
-        for (int i = 1; i < ctorArgs.Length; i++)
-        {
-            TypedConstant arg = ctorArgs[i];
-            if (arg.Kind == TypedConstantKind.Type && arg.Value is INamedTypeSymbol explicitType)
-            {
-                declaringType = explicitType;
-            }
-            else if (arg.Kind == TypedConstantKind.Enum
-                && arg.Type?.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.DynamicDataSourceType
-                && arg.Value is int sourceTypeValue)
-            {
-                // An attribute can carry an undefined cast enum value, e.g. (DynamicDataSourceType)99, or a
-                // value from a newer framework than this generator understands. Emitting
-                // DynamicDataSourceType.99 would not compile, so bail out and let the runtime fallback handle it.
-                if (!Enum.IsDefined(typeof(DynamicDataSourceType), sourceTypeValue))
-                {
-                    return null;
-                }
-
-                sourceType = (DynamicDataSourceType)sourceTypeValue;
-            }
-        }
-
-        // The registered type is emitted both as typeof(...) and as the receiver of the generated member
-        // access, so it must be a closed, referenceable type.
-        if (!IsClosedReferenceableType(declaringType, consumingAssembly)
-            || ResolveDynamicDataMember(declaringType, sourceName, sourceType, consumingAssembly) is not { } memberKind)
-        {
-            return null;
-        }
-
-        // Resolve the optional custom display-name method (DynamicDataDisplayName /
-        // DynamicDataDisplayNameDeclaringType named arguments).
-        string? displayNameMethodName = null;
-        string? displayNameDeclaringTypeFqn = null;
-        INamedTypeSymbol displayNameDeclaringType = testMethod.ContainingType;
-        foreach (KeyValuePair<string, TypedConstant> named in attribute.NamedArguments)
-        {
-            switch (named.Key)
-            {
-                case "DynamicDataDisplayName" when named.Value.Value is string name:
-                    displayNameMethodName = name;
-                    break;
-                case "DynamicDataDisplayNameDeclaringType" when named.Value.Value is INamedTypeSymbol type:
-                    displayNameDeclaringType = type;
-                    break;
-            }
-        }
-
-        if (displayNameMethodName is not null)
-        {
-            if (IsClosedReferenceableType(displayNameDeclaringType, consumingAssembly)
-                && IsValidDisplayNameMethod(displayNameDeclaringType, displayNameMethodName))
-            {
-                displayNameDeclaringTypeFqn = displayNameDeclaringType.ToDisplayString(FullyQualifiedFormat);
-            }
-            else
-            {
-                // Unresolvable / wrong-shape display-name method: leave both null so the runtime reflection
-                // fallback handles it (and reports the proper diagnostic there).
-                displayNameMethodName = null;
-            }
-        }
-
-        return new DynamicDataSourceModel(
-            DeclaringTypeFullyQualifiedName: declaringType.ToDisplayString(FullyQualifiedFormat),
-            SourceName: sourceName,
-            MemberKind: memberKind,
-            RequestedSourceType: sourceType.ToString(),
-            DisplayNameDeclaringTypeFullyQualifiedName: displayNameDeclaringTypeFqn,
-            DisplayNameMethodName: displayNameMethodName);
-    }
-
-    // Resolves a DynamicData source member by name to a supported, accessible, static property/method/field,
-    // registering an accessor only when the generated direct member access is guaranteed to behave exactly
-    // like the runtime reflection lookup in DynamicDataOperations. Anything ambiguous or not provably
-    // equivalent returns null so the caller degrades to the (DAM-safe) runtime reflection fallback.
-    private static DynamicDataMemberKind? ResolveDynamicDataMember(
-        INamedTypeSymbol declaringType, string sourceName, DynamicDataSourceType sourceType, IAssemblySymbol consumingAssembly)
-    {
-        // Collect the most-derived member of each kind for the name (runtime GetProperty/GetMethod/GetField
-        // use FlattenHierarchy, and C# member binding for `declaringType.Name` also selects the most-derived
-        // member, so the first hit walking derived -> base is what both would pick).
-        IPropertySymbol? property = null;
-        IMethodSymbol? method = null;
-        bool methodAmbiguous = false;
-        IFieldSymbol? field = null;
-
-        for (INamedTypeSymbol? current = declaringType;
-             current is not null && current.SpecialType != SpecialType.System_Object;
-             current = current.BaseType)
-        {
-            foreach (ISymbol member in current.GetMembers(sourceName))
-            {
-                switch (member)
-                {
-                    case IPropertySymbol { IsIndexer: false } propertyMember:
-                        property ??= propertyMember;
-                        break;
-                    case IMethodSymbol { MethodKind: MethodKind.Ordinary } methodMember:
-                        if (method is null)
-                        {
-                            method = methodMember;
-                        }
-                        else
-                        {
-                            // Overloads / hidden methods make GetMethod(name) throw AmbiguousMatchException.
-                            methodAmbiguous = true;
-                        }
-
-                        break;
-                    case IFieldSymbol fieldMember:
-                        field ??= fieldMember;
-                        break;
-                }
-            }
-        }
-
-        // The name must map to exactly one member kind. Otherwise runtime reflection (property, then method,
-        // then field) and C# member binding (most-derived, regardless of kind) can diverge, so we cannot
-        // safely emit a direct access. When a kind is present, register it only if the explicit
-        // DynamicDataSourceType (if any) matches the kind reflection would bind.
-        return (property, method, field) switch
-        {
-            ({ } propertyMember, null, null) => sourceType is DynamicDataSourceType.Method or DynamicDataSourceType.Field
-                ? null
-                : ResolveProperty(propertyMember, consumingAssembly),
-            (null, { } methodMember, null) => methodAmbiguous || sourceType is DynamicDataSourceType.Property or DynamicDataSourceType.Field
-                ? null
-                : ResolveMethod(methodMember, consumingAssembly),
-            (null, null, { } fieldMember) => sourceType is DynamicDataSourceType.Property or DynamicDataSourceType.Method
-                ? null
-                : ResolveField(fieldMember, consumingAssembly),
-
-            // Zero or multiple kinds share the name: not safe to emit a direct access.
-            _ => null,
-        };
-    }
-
-    private static DynamicDataMemberKind? ResolveProperty(IPropertySymbol property, IAssemblySymbol consumingAssembly)
-    {
-        // Runtime reads the getter via GetGetMethod(true) (non-public allowed) and requires it to be static.
-        // The generated code reads it directly, so the getter itself must be static and accessible from the
-        // consuming assembly (a public property with a private getter, or an internal member from another
-        // assembly, would not compile). Abstract/virtual (static abstract interface) accessors can only be
-        // reached through a constrained type parameter (CS8926), and a value that cannot be boxed to object?
-        // (pointer / function-pointer / ref-like) cannot be returned by the delegate, so those keep the
-        // reflection fallback.
-        IMethodSymbol? getter = property.GetMethod;
-        return getter is { IsStatic: true, IsAbstract: false, IsVirtual: false }
-            && !property.IsAbstract && !property.IsVirtual
-            && IsObjectConvertible(property.Type)
-            && IsMemberAccessibleFrom(getter.DeclaredAccessibility, getter.ContainingType, consumingAssembly)
-            ? DynamicDataMemberKind.Property
-            : null;
-    }
-
-    private static DynamicDataMemberKind? ResolveMethod(IMethodSymbol method, IAssemblySymbol consumingAssembly)
-
-        // Only parameterless static non-void methods are registered. When a source method declares
-        // parameters, the reflection fallback invokes it via MethodInfo.Invoke, whose default binder applies
-        // primitive widening and other conversions (e.g. passing a boxed int 3 to a long parameter). A
-        // generated direct call would instead unbox with an exact cast ((long)args[0]) and throw
-        // InvalidCastException. Abstract/virtual (static abstract interface) methods can only be called
-        // through a constrained type parameter (CS8926), and a result that cannot be boxed to object?
-        // (void / by-ref / pointer / function-pointer / ref-like) cannot be returned by the delegate. Those
-        // shapes keep the (DAM-safe) reflection path to preserve behavior.
-        => method is { IsStatic: true, IsAbstract: false, IsVirtual: false, IsGenericMethod: false, ReturnsVoid: false, ReturnsByRef: false, Parameters.IsEmpty: true }
-            && IsObjectConvertible(method.ReturnType)
-            && IsMemberAccessibleFrom(method.DeclaredAccessibility, method.ContainingType, consumingAssembly)
-            ? DynamicDataMemberKind.Method
-            : null;
-
-    private static DynamicDataMemberKind? ResolveField(IFieldSymbol field, IAssemblySymbol consumingAssembly)
-        => field.IsStatic
-            && IsObjectConvertible(field.Type)
-            && IsMemberAccessibleFrom(field.DeclaredAccessibility, field.ContainingType, consumingAssembly)
-            ? DynamicDataMemberKind.Field
-            : null;
-
-    // A value is safe to read into the generated `(object?)` delegate only when it can be boxed / implicitly
-    // converted to object. Pointers, function pointers, and ref-like (ref struct) values cannot, so members of
-    // those shapes must stay on the reflection fallback rather than break the generated build.
-    private static bool IsObjectConvertible(ITypeSymbol type)
-        => type.TypeKind is not (TypeKind.Pointer or TypeKind.FunctionPointer)
-            && !type.IsRefLikeType;
-
-    // Validates a custom display-name method exactly as DynamicDataAttribute.GetDisplayNameByReflection does:
-    // GetDeclaredMethod resolves a single method declared *on the given type* (no base-type chain), which must
-    // be a public static string method taking (MethodInfo, object[]) by value.
-    private static bool IsValidDisplayNameMethod(INamedTypeSymbol declaringType, string methodName)
-    {
-        IMethodSymbol? candidate = null;
-        foreach (ISymbol member in declaringType.GetMembers(methodName))
-        {
-            if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } method)
-            {
-                if (candidate is not null)
-                {
-                    // Multiple declared overloads make GetDeclaredMethod throw AmbiguousMatchException.
-                    return false;
-                }
-
-                candidate = method;
-            }
-        }
-
-        // Abstract/virtual (static abstract interface) methods can only be called through a constrained type
-        // parameter (CS8926), so the generated direct call would not compile; leave those to reflection.
-        return candidate is { IsStatic: true, IsAbstract: false, IsVirtual: false, DeclaredAccessibility: Accessibility.Public, IsGenericMethod: false, Parameters.Length: 2 }
-            && candidate.ReturnType.SpecialType == SpecialType.System_String
-            && candidate.Parameters[0] is { RefKind: RefKind.None } firstParameter
-            && firstParameter.Type.ToDisplayString(FullyQualifiedFormat) == "global::System.Reflection.MethodInfo"
-            && candidate.Parameters[1] is { RefKind: RefKind.None, Type: IArrayTypeSymbol { ElementType.SpecialType: SpecialType.System_Object } };
-    }
-
-    // A type is safe to emit (as typeof(...) and as a member-access receiver) only when it is referenceable
-    // from the consuming assembly and fully closed (no open type parameters).
-    private static bool IsClosedReferenceableType(INamedTypeSymbol type, IAssemblySymbol consumingAssembly)
-        => !ContainsTypeParameter(type) && IsTypeReferenceableFrom(type, consumingAssembly);
-
-    private static bool ContainsTypeParameter(INamedTypeSymbol type)
-    {
-        if (type.IsUnboundGenericType)
-        {
-            return true;
-        }
-
-        foreach (ITypeSymbol argument in type.TypeArguments)
-        {
-            if (argument is ITypeParameterSymbol
-                || (argument is INamedTypeSymbol named && ContainsTypeParameter(named)))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // Walks the attribute list and reifies each [DataRow(...)] application into a flat
-    // object?[] row. Mirrors DataRowAttribute's runtime behavior: when the constructor uses
-    // the variadic overload (object? data1, params object?[] moreData), Roslyn surfaces the
-    // tail as a single Array TypedConstant, which we flatten back so the consumer sees the
-    // same shape as DataRowAttribute.Data.
-    private static EquatableArray<DataRowModel> BuildDataRows(ImmutableArray<AttributeData> attributes)
-    {
-        if (attributes.IsDefaultOrEmpty)
-        {
-            return EquatableArray<DataRowModel>.Empty;
-        }
-
-        ImmutableArray<DataRowModel>.Builder builder = ImmutableArray.CreateBuilder<DataRowModel>();
-        foreach (AttributeData attribute in attributes)
-        {
-            if (attribute.AttributeClass is not { } attributeClass)
-            {
-                continue;
-            }
-
-            if (attributeClass.ToDisplayString(FullyQualifiedFormat) != "global::" + MSTestAttributeNames.DataRow)
-            {
-                continue;
-            }
-
-            ImmutableArray<TypedConstant> ctorArgs = attribute.ConstructorArguments;
-            ImmutableArray<TypedConstantModel>.Builder rowBuilder = ImmutableArray.CreateBuilder<TypedConstantModel>();
-
-            bool lastIsParamsArray =
-                attribute.AttributeConstructor is { Parameters: { IsDefaultOrEmpty: false } parameters }
-                && parameters[parameters.Length - 1].IsParams
-                && !ctorArgs.IsDefaultOrEmpty
-                && ctorArgs[ctorArgs.Length - 1].Kind == TypedConstantKind.Array;
-
-            for (int i = 0; i < ctorArgs.Length; i++)
-            {
-                if (i == ctorArgs.Length - 1 && lastIsParamsArray)
-                {
-                    foreach (TypedConstant element in ctorArgs[i].Values)
-                    {
-                        rowBuilder.Add(ToModel(element));
-                    }
-                }
-                else
-                {
-                    rowBuilder.Add(ToModel(ctorArgs[i]));
-                }
-            }
-
-            builder.Add(new DataRowModel(new EquatableArray<TypedConstantModel>(rowBuilder.ToImmutable())));
-        }
-
-        return new EquatableArray<DataRowModel>(builder.ToImmutable());
+            Attributes: AttributeMaterializationHelper.BuildAttributes(inheritedAttributes, consumingAssembly),
+            DataRows: DataRowBuilder.BuildDataRows(inheritedAttributes),
+            DynamicDataSources: DynamicDataSourceBuilder.BuildDynamicDataSources(inheritedAttributes, method, consumingAssembly));
     }
 
     private static TestPropertyModel BuildProperty(IPropertySymbol property, IAssemblySymbol consumingAssembly)
         => new(
             Name: property.Name,
-            FullyQualifiedType: property.Type.ToDisplayString(FullyQualifiedFormat),
+            FullyQualifiedType: property.Type.ToDisplayString(SymbolDisplayFormats.FullyQualified),
             IsStatic: property.IsStatic,
 
             // The generated registry lives in the consuming assembly, so a getter is reachable
@@ -636,146 +186,7 @@ internal static class TestClassModelBuilder
             // object initializer, so emitting `instance.Prop = value` would not compile (CS8852);
             // treat it as non-settable so the adapter falls back to reflection (PropertyInfo.SetValue).
             HasPublicSetter: property.SetMethod is { DeclaredAccessibility: Accessibility.Public, IsInitOnly: false },
-            Attributes: BuildAttributes(CollectInheritedAttributes(property), consumingAssembly));
-
-    // Mirror the runtime behavior of MemberInfo.GetCustomAttributes(inherit: true): walk the
-    // overridden-member chain, honor AttributeUsageAttribute.Inherited, and keep only the
-    // most-derived application for attributes that do not allow multiple instances.
-    private static ImmutableArray<AttributeData> CollectInheritedAttributes(IMethodSymbol method)
-    {
-        ImmutableArray<AttributeData> own = method.GetAttributes();
-        if (method.OverriddenMethod is null)
-        {
-            return own;
-        }
-
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendAttributes(builder, seen, own, inheritedOnly: false);
-        for (IMethodSymbol? baseMethod = method.OverriddenMethod; baseMethod is not null; baseMethod = baseMethod.OverriddenMethod)
-        {
-            AppendAttributes(builder, seen, baseMethod.GetAttributes(), inheritedOnly: true);
-        }
-
-        return builder.ToImmutable();
-    }
-
-    private static ImmutableArray<AttributeData> CollectInheritedAttributes(IPropertySymbol property)
-    {
-        ImmutableArray<AttributeData> own = property.GetAttributes();
-        if (property.OverriddenProperty is null)
-        {
-            return own;
-        }
-
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        ImmutableArray<AttributeData>.Builder builder = ImmutableArray.CreateBuilder<AttributeData>();
-        AppendAttributes(builder, seen, own, inheritedOnly: false);
-        for (IPropertySymbol? baseProperty = property.OverriddenProperty; baseProperty is not null; baseProperty = baseProperty.OverriddenProperty)
-        {
-            AppendAttributes(builder, seen, baseProperty.GetAttributes(), inheritedOnly: true);
-        }
-
-        return builder.ToImmutable();
-    }
-
-    private static void AppendAttributes(
-        ImmutableArray<AttributeData>.Builder builder,
-        HashSet<string> seen,
-        ImmutableArray<AttributeData> attributes,
-        bool inheritedOnly)
-    {
-        foreach (AttributeData attribute in attributes)
-        {
-            if (attribute.AttributeClass is not { } attributeClass)
-            {
-                continue;
-            }
-
-            AttributeUsageMetadata usage = GetAttributeUsage(attributeClass);
-            if (inheritedOnly && !usage.Inherited)
-            {
-                continue;
-            }
-
-            string key = attributeClass.ToDisplayString(FullyQualifiedFormat);
-            if (usage.AllowMultiple || seen.Add(key))
-            {
-                builder.Add(attribute);
-            }
-        }
-    }
-
-    private static AttributeUsageMetadata GetAttributeUsage(INamedTypeSymbol attributeClass)
-    {
-        bool inherited = true;
-        bool allowMultiple = false;
-
-        // [AttributeUsage] is itself inherited (its own AttributeUsage declares Inherited=true).
-        // Roslyn's GetAttributes() does NOT walk the base-type chain, so we have to walk it
-        // ourselves to honor an [AttributeUsage] declared on a base attribute type (e.g. when
-        // a user-defined attribute derives from one of MSTest's attributes without re-declaring
-        // its own [AttributeUsage]).
-        for (INamedTypeSymbol? current = attributeClass;
-             current is not null && current.SpecialType != SpecialType.System_Object;
-             current = current.BaseType)
-        {
-            if (TryReadAttributeUsage(current, out bool currentInherited, out bool currentAllowMultiple))
-            {
-                inherited = currentInherited;
-                allowMultiple = currentAllowMultiple;
-                break;
-            }
-        }
-
-        return new AttributeUsageMetadata(inherited, allowMultiple);
-    }
-
-    private static bool TryReadAttributeUsage(INamedTypeSymbol attributeClass, out bool inherited, out bool allowMultiple)
-    {
-        inherited = true;
-        allowMultiple = false;
-
-        foreach (AttributeData attribute in attributeClass.GetAttributes())
-        {
-            if (attribute.AttributeClass?.ToDisplayString(FullyQualifiedFormat) != "global::System.AttributeUsageAttribute")
-            {
-                continue;
-            }
-
-            foreach (KeyValuePair<string, TypedConstant> namedArgument in attribute.NamedArguments)
-            {
-                if (namedArgument.Value.Value is not bool value)
-                {
-                    continue;
-                }
-
-                switch (namedArgument.Key)
-                {
-                    case nameof(AttributeUsageAttribute.Inherited):
-                        inherited = value;
-                        break;
-                    case nameof(AttributeUsageAttribute.AllowMultiple):
-                        allowMultiple = value;
-                        break;
-                }
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private readonly record struct AttributeUsageMetadata(bool Inherited, bool AllowMultiple);
-
-    private static bool IsSupportedTestClassConstructor(IMethodSymbol constructor)
-    {
-        ImmutableArray<IParameterSymbol> parameters = constructor.Parameters;
-        return parameters.Length == 0
-            || (parameters.Length == 1
-                && parameters[0].Type.ToDisplayString(FullyQualifiedFormat) == "global::" + MSTestAttributeNames.UnitTestingNamespace + ".TestContext");
-    }
+            Attributes: AttributeMaterializationHelper.BuildAttributes(AttributeMaterializationHelper.CollectInheritedAttributes(property), consumingAssembly));
 
     private static EquatableArray<TestParameterModel> BuildParameters(IMethodSymbol method)
     {
@@ -788,146 +199,9 @@ internal static class TestClassModelBuilder
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             IParameterSymbol p = method.Parameters[i];
-            parameters[i] = new TestParameterModel(p.Type.ToDisplayString(FullyQualifiedFormat), p.Name);
+            parameters[i] = new TestParameterModel(p.Type.ToDisplayString(SymbolDisplayFormats.FullyQualified), p.Name);
         }
 
         return new EquatableArray<TestParameterModel>(parameters.ToImmutableArray());
     }
-
-    public static EquatableArray<AttributeApplicationModel> BuildAttributes(
-        ImmutableArray<AttributeData> attributes,
-        IAssemblySymbol consumingAssembly)
-        => attributes.IsDefaultOrEmpty
-            ? EquatableArray<AttributeApplicationModel>.Empty
-            : attributes
-                .Select(attribute => BuildAttribute(attribute, consumingAssembly))
-                .WhereNotNull()
-                .ToEquatableArray();
-
-    private static AttributeApplicationModel? BuildAttribute(AttributeData attribute, IAssemblySymbol consumingAssembly)
-    {
-        if (attribute.AttributeClass is not { } attributeClass)
-        {
-            return null;
-        }
-
-        // Safener: only materialize attributes the generated code can actually reconstruct with
-        // `new T(...)`. Anything that would not compile from the consuming assembly (inaccessible
-        // attribute type or constructor, or an argument referencing an inaccessible type) is omitted
-        // so the adapter falls back to runtime reflection for it. Omission is always safe; emitting
-        // an un-compilable expression would break the build.
-        if (!IsAttributeMaterializable(attribute, attributeClass, consumingAssembly))
-        {
-            return null;
-        }
-
-        IEnumerable<TypedConstantModel> ctorArgs = attribute.ConstructorArguments.Select(ToModel);
-        IEnumerable<NamedArgumentModel> namedArgs = attribute.NamedArguments.Select(static kv => new NamedArgumentModel(kv.Key, ToModel(kv.Value)));
-
-        return new AttributeApplicationModel(
-            FullyQualifiedAttributeType: attributeClass.ToDisplayString(FullyQualifiedFormat),
-            ConstructorArguments: ctorArgs.ToEquatableArray(),
-            NamedArguments: namedArgs.ToEquatableArray());
-    }
-
-    private static bool IsAttributeMaterializable(AttributeData attribute, INamedTypeSymbol attributeClass, IAssemblySymbol consumingAssembly)
-        // The attribute type (and every enclosing type) must be referenceable; the constructor the
-        // generated `new T(...)` binds to must be callable (a null AttributeConstructor — Roslyn could
-        // not resolve it — is treated as not materializable); and every argument type the emitter
-        // writes out (enum casts, typeof targets, typed nulls, nested array elements) must also be
-        // referenceable.
-        => IsTypeReferenceableFrom(attributeClass, consumingAssembly)
-            && attribute.AttributeConstructor is { } constructor
-            && IsMemberAccessibleFrom(constructor.DeclaredAccessibility, constructor.ContainingType, consumingAssembly)
-            && attribute.ConstructorArguments.All(argument => AreArgumentTypesReferenceable(argument, consumingAssembly))
-            && attribute.NamedArguments.All(named => AreArgumentTypesReferenceable(named.Value, consumingAssembly));
-
-    private static bool AreArgumentTypesReferenceable(TypedConstant constant, IAssemblySymbol consumingAssembly)
-        => constant.Kind switch
-        {
-            TypedConstantKind.Array => constant.Values.All(element => AreArgumentTypesReferenceable(element, consumingAssembly)),
-
-            // typeof(X): the target type must be referenceable. Non-named targets (arrays, type
-            // parameters) are conservatively rejected.
-            TypedConstantKind.Type => constant.Value is null
-                || (constant.Value is INamedTypeSymbol typeofTarget && IsTypeReferenceableFrom(typeofTarget, consumingAssembly)),
-
-            // Enum casts and typed nulls emit a `(Type)` cast, so the constant's declared type must be
-            // referenceable. Untyped values (Type is null) are plain literals.
-            _ => constant.Type is not INamedTypeSymbol namedType
-                || IsTypeReferenceableFrom(namedType, consumingAssembly),
-        };
-
-    private static bool IsTypeReferenceableFrom(INamedTypeSymbol type, IAssemblySymbol consumingAssembly)
-    {
-        for (INamedTypeSymbol? current = type; current is not null; current = current.ContainingType)
-        {
-            if (current.IsFileLocal)
-            {
-                return false;
-            }
-
-            if (!IsMemberAccessibleFrom(current.DeclaredAccessibility, current.ContainingAssembly, consumingAssembly))
-            {
-                return false;
-            }
-        }
-
-        // Also require every generic type argument to be referenceable (e.g. a closed generic
-        // attribute type argument that is itself inaccessible).
-        return type.TypeArguments
-            .OfType<INamedTypeSymbol>()
-            .All(namedArgument => IsTypeReferenceableFrom(namedArgument, consumingAssembly));
-    }
-
-    private static bool IsMemberAccessibleFrom(Accessibility accessibility, INamedTypeSymbol containingType, IAssemblySymbol consumingAssembly)
-        => IsMemberAccessibleFrom(accessibility, containingType.ContainingAssembly, consumingAssembly);
-
-    private static bool IsMemberAccessibleFrom(Accessibility accessibility, IAssemblySymbol? declaringAssembly, IAssemblySymbol consumingAssembly)
-        => accessibility switch
-        {
-            Accessibility.Public => true,
-
-            // Generated code lives in the consuming assembly, so internal / protected-internal members
-            // are reachable only when declared in that same assembly (we do not rely on InternalsVisibleTo).
-            Accessibility.Internal or Accessibility.ProtectedOrInternal =>
-                declaringAssembly is not null && SymbolEqualityComparer.Default.Equals(declaringAssembly, consumingAssembly),
-
-            // NotApplicable shows up for compiler-synthesized symbols in well-formed source; treat as reachable.
-            Accessibility.NotApplicable => true,
-
-            // Private, Protected, and ProtectedAndInternal ("private protected") are never reachable
-            // from the generated (non-derived) call site.
-            _ => false,
-        };
-
-    private static TypedConstantModel ToModel(TypedConstant constant)
-        => constant switch
-        {
-            { IsNull: true } => new TypedConstantModel(
-                ConstantValueKind.Null,
-                constant.Type?.ToDisplayString(FullyQualifiedFormat),
-                null,
-                EquatableArray<TypedConstantModel>.Empty),
-            { Kind: TypedConstantKind.Array } => new TypedConstantModel(
-                ConstantValueKind.Array,
-                constant.Type?.ToDisplayString(FullyQualifiedFormat),
-                null,
-                constant.Values.Select(ToModel).ToEquatableArray()),
-            { Kind: TypedConstantKind.Enum } => new TypedConstantModel(
-                ConstantValueKind.Enum,
-                constant.Type?.ToDisplayString(FullyQualifiedFormat),
-                constant.Value,
-                EquatableArray<TypedConstantModel>.Empty),
-            { Kind: TypedConstantKind.Type } => new TypedConstantModel(
-                ConstantValueKind.Type,
-                (constant.Value as ITypeSymbol)?.ToDisplayString(FullyQualifiedFormat),
-                null,
-                EquatableArray<TypedConstantModel>.Empty),
-            _ => new TypedConstantModel(
-                ConstantValueKind.Primitive,
-                constant.Type?.ToDisplayString(FullyQualifiedFormat),
-                constant.Value,
-                EquatableArray<TypedConstantModel>.Empty),
-        };
 }
