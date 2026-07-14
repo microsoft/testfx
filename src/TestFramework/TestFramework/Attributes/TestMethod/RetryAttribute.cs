@@ -11,6 +11,19 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// A <see cref="RetryAttribute"/> placed directly on a test method takes precedence over a class-level one
 /// (the method-level value fully replaces the class-level value, regardless of whether it is larger or smaller).
 /// The attribute is not inherited: applying it to a base test class does not apply it to derived test classes.
+/// <para>
+/// A retry is only performed when the test result outcome is <see cref="UnitTestOutcome.Failed"/> or
+/// <see cref="UnitTestOutcome.Timeout"/>. Any other outcome (including <see cref="UnitTestOutcome.Inconclusive"/>,
+/// for example when the test calls <c>Assert.Inconclusive()</c>) stops retrying and becomes the final
+/// result of the test.
+/// </para>
+/// <para>
+/// This attribute retries within a single test-host run. It is independent from the
+/// <c>Microsoft.Testing.Extensions.Retry</c> <c>--retry-failed-tests</c> orchestrator, which re-invokes the whole
+/// test host. When both are enabled at the same time the attempt counts multiply (a test can run up to
+/// <c>(MaxRetryAttempts + 1) x (--retry-failed-tests + 1)</c> times), so avoid combining them unless that is
+/// intended.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class RetryAttribute : RetryBaseAttribute
@@ -26,7 +39,7 @@ public sealed class RetryAttribute : RetryBaseAttribute
         {
             throw new ArgumentOutOfRangeException(nameof(maxRetryAttempts));
         }
-#pragma warning disable CA1512 // Use ArgumentOutOfRangeException throw helper
+#pragma warning restore CA1512 // Use ArgumentOutOfRangeException throw helper
 
         MaxRetryAttempts = maxRetryAttempts;
     }

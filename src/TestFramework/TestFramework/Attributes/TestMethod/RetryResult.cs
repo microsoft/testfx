@@ -12,6 +12,12 @@ public sealed class RetryResult
     private readonly List<TestResult[]> _testResults = [];
 
     /// <summary>
+    /// Gets the test results of all retry attempts, in the order they were added.
+    /// Each element corresponds to a single attempt and holds the test results produced by that attempt.
+    /// </summary>
+    public IReadOnlyList<TestResult[]> AllResults => _testResults;
+
+    /// <summary>
     /// Adds a set of test results to the retry result.
     /// </summary>
     /// <param name="testResults">The test results for the current attempt.</param>

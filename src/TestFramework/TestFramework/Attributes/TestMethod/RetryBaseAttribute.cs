@@ -11,6 +11,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// When applied to a test class, the attribute is used as a default for every test method declared on the class.
 /// A retry attribute placed directly on a test method takes precedence over a class-level one.
 /// The attribute is not inherited: applying it to a base test class does not apply it to derived test classes.
+/// <para>
+/// Retry is only triggered when a test result has an outcome of <see cref="UnitTestOutcome.Failed"/> or
+/// <see cref="UnitTestOutcome.Timeout"/>. Any other outcome (including <see cref="UnitTestOutcome.Inconclusive"/>,
+/// for example when the test calls <c>Assert.Inconclusive()</c>) is considered an acceptable result and
+/// stops retrying, so that outcome becomes the final result of the test.
+/// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public abstract class RetryBaseAttribute : Attribute
@@ -34,6 +40,9 @@ public abstract class RetryBaseAttribute : Attribute
         foreach (TestResult result in results)
         {
             UnitTestOutcome outcome = result.Outcome;
+
+            // Only Failed and Timeout outcomes are considered retriable. Every other outcome
+            // (including Inconclusive) is treated as an acceptable result that stops the retry loop.
             if (outcome is UnitTestOutcome.Failed or UnitTestOutcome.Timeout)
             {
                 return false;
