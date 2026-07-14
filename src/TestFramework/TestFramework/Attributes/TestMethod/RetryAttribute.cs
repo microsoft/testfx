@@ -12,10 +12,13 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// (the method-level value fully replaces the class-level value, regardless of whether it is larger or smaller).
 /// The attribute is not inherited: applying it to a base test class does not apply it to derived test classes.
 /// <para>
-/// A retry is only performed when the test result outcome is <see cref="UnitTestOutcome.Failed"/> or
-/// <see cref="UnitTestOutcome.Timeout"/>. Any other outcome (including <see cref="UnitTestOutcome.Inconclusive"/>,
-/// for example when the test calls <c>Assert.Inconclusive()</c>) stops retrying and becomes the final
-/// result of the test.
+/// A retry is performed while at least one <see cref="TestResult"/> of the attempt has a
+/// <see cref="UnitTestOutcome.Failed"/> or <see cref="UnitTestOutcome.Timeout"/> outcome. Retrying stops as
+/// soon as an attempt produces no failed and no timed-out result. For a data-driven test (multiple results per
+/// attempt) this is an aggregate rule: an <see cref="UnitTestOutcome.Inconclusive"/> result (for example when
+/// the test calls <c>Assert.Inconclusive()</c>) only ends retrying when none of its sibling results in the same
+/// attempt failed or timed out; otherwise the attempt is still retried. The last attempt's results become the
+/// final outcome of the test.
 /// </para>
 /// <para>
 /// This attribute retries within a single test-host run. It is independent from the

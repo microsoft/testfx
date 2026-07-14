@@ -12,10 +12,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// A retry attribute placed directly on a test method takes precedence over a class-level one.
 /// The attribute is not inherited: applying it to a base test class does not apply it to derived test classes.
 /// <para>
-/// Retry is only triggered when a test result has an outcome of <see cref="UnitTestOutcome.Failed"/> or
-/// <see cref="UnitTestOutcome.Timeout"/>. Any other outcome (including <see cref="UnitTestOutcome.Inconclusive"/>,
-/// for example when the test calls <c>Assert.Inconclusive()</c>) is considered an acceptable result and
-/// stops retrying, so that outcome becomes the final result of the test.
+/// The runner only invokes <see cref="ExecuteAsync"/> after the initial (non-retry) run produced an
+/// unacceptable result, i.e. at least one of the produced <see cref="TestResult"/> entries had a
+/// <see cref="UnitTestOutcome.Failed"/> or <see cref="UnitTestOutcome.Timeout"/> outcome. It does not itself
+/// re-run the test on subsequent attempts: once <see cref="ExecuteAsync"/> is entered, the derived
+/// implementation owns the retry loop and decides when to stop. Derived types may use
+/// <c>IsAcceptableResultForRetry</c> (as <see cref="RetryAttribute"/> does) or implement any other policy.
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
@@ -41,8 +43,9 @@ public abstract class RetryBaseAttribute : Attribute
         {
             UnitTestOutcome outcome = result.Outcome;
 
-            // Only Failed and Timeout outcomes are considered retriable. Every other outcome
-            // (including Inconclusive) is treated as an acceptable result that stops the retry loop.
+            // The attempt is retried when any single result is Failed or Timeout. Any other outcome (including
+            // Inconclusive) is acceptable on its own, so an attempt is treated as acceptable (retry stops) only
+            // when none of its results is Failed or Timeout.
             if (outcome is UnitTestOutcome.Failed or UnitTestOutcome.Timeout)
             {
                 return false;
