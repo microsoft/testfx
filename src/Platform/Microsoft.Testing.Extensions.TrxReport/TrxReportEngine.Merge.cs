@@ -229,6 +229,21 @@ internal sealed partial class TrxReportEngine
 
         string mergedInRoot = Path.Combine(mergedRootFull, "In");
 
+        // On a reused output directory the merged 'In' root could pre-exist as a junction/symlink that
+        // would redirect every copy below it outside the confined merged root. Remove such a link so a
+        // fresh, real directory is created instead.
+        if (Directory.Exists(mergedInRoot) && IsReparsePoint(mergedInRoot))
+        {
+            try
+            {
+                Directory.Delete(mergedInRoot);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return;
+            }
+        }
+
         for (int i = 0; i < inputPaths.Count && i < reports.Count; i++)
         {
             try
@@ -262,9 +277,13 @@ internal sealed partial class TrxReportEngine
                 }
 
                 // Isolate each input under its own subfolder so identical relative attachment paths
-                // from different inputs cannot shadow each other.
+                // from different inputs cannot shadow each other. Recreate that destination as a fresh,
+                // non-link tree first so a pre-existing junction/symlink (or stale bytes) from a reused
+                // output directory can't redirect the copy or linger.
                 string prefix = i.ToString(CultureInfo.InvariantCulture);
-                CopyDirectoryRecursive(sourceInRoot, Path.Combine(mergedInRoot, prefix));
+                string destForInput = Path.Combine(mergedInRoot, prefix);
+                DeleteDirectoryTreeOrLink(destForInput);
+                CopyDirectoryRecursive(sourceInRoot, destForInput);
                 RewriteAttachmentHrefs(reports[i], prefix);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -325,31 +344,68 @@ internal sealed partial class TrxReportEngine
     {
         // Do not descend into reparse points (symlinks/junctions): a link inside the (confined) source
         // tree could otherwise redirect the copy to an arbitrary location.
-        if ((File.GetAttributes(sourceDirectory) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+        if (IsReparsePoint(sourceDirectory))
         {
             return;
+        }
+
+        // The destination is recreated fresh by the caller, but guard defensively for nested levels:
+        // never write through a destination directory that is itself a link.
+        if (Directory.Exists(destinationDirectory) && IsReparsePoint(destinationDirectory))
+        {
+            Directory.Delete(destinationDirectory);
         }
 
         Directory.CreateDirectory(destinationDirectory);
 
         foreach (string file in Directory.GetFiles(sourceDirectory))
         {
-            // A file reparse point (symlink) would make File.Copy follow the link and pull in content
-            // from outside the confined tree; skip it.
-            if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+            // A source file reparse point (symlink) would make File.Copy follow the link and pull in
+            // content from outside the confined tree; skip it.
+            if (IsReparsePoint(file))
             {
                 continue;
+            }
+
+            // Guard the destination too: a pre-existing destination symlink would make the overwrite
+            // follow the link and write outside the merged root. Remove it so a real file is written.
+            string destination = Path.Combine(destinationDirectory, Path.GetFileName(file));
+            if (File.Exists(destination) && IsReparsePoint(destination))
+            {
+                File.Delete(destination);
             }
 
             // Overwrite so a reused output directory can't leave stale bytes behind while the merged
             // XML is rewritten to reference the (per-input isolated) destination, mirroring the
             // File.Create overwrite used for the merged TRX itself.
-            File.Copy(file, Path.Combine(destinationDirectory, Path.GetFileName(file)), overwrite: true);
+            File.Copy(file, destination, overwrite: true);
         }
 
         foreach (string directory in Directory.GetDirectories(sourceDirectory))
         {
             CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)));
+        }
+    }
+
+    private static bool IsReparsePoint(string path)
+        => (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
+
+    private static void DeleteDirectoryTreeOrLink(string path)
+    {
+        if (!Directory.Exists(path))
+        {
+            return;
+        }
+
+        // Deleting a directory reparse point non-recursively removes only the link, never its target's
+        // contents; a real directory is deleted recursively (the runtime does not follow nested links).
+        if (IsReparsePoint(path))
+        {
+            Directory.Delete(path);
+        }
+        else
+        {
+            Directory.Delete(path, recursive: true);
         }
     }
 

@@ -405,6 +405,7 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.TestUid, actualArtifact.TestUid);
             Assert.AreEqual(expected.TestDisplayName, actualArtifact.TestDisplayName);
             Assert.AreEqual(expected.SessionUid, actualArtifact.SessionUid);
+            Assert.AreEqual(expected.Kind, actualArtifact.Kind);
         }
     }
 
