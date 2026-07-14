@@ -224,6 +224,66 @@ public sealed class AppxManifestInfoTests
         }
     }
 
+    [TestMethod]
+    public void FindManifestPath_WhenManifestIsInAnAncestorDirectory_ReturnsTheNearestManifest()
+    {
+        // Model a valid MSIX layout where the manifest sits at the package root but the executable
+        // lives in a subdirectory (Application/@Executable = "bin\host.exe").
+        string root = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"));
+        string executableDirectory = Path.Combine(root, "bin");
+        Directory.CreateDirectory(executableDirectory);
+        try
+        {
+            string manifestPath = Path.Combine(root, AppxManifestInfo.AppxManifestFileName);
+            File.WriteAllText(manifestPath, "not xml");
+
+            // GetManifestPath only probes the executable's own directory and must miss the ancestor
+            // manifest, whereas FindManifestPath walks up and locates it.
+            Assert.IsNull(AppxManifestInfo.GetManifestPath(executableDirectory));
+            Assert.AreEqual(manifestPath, AppxManifestInfo.FindManifestPath(executableDirectory));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void FindManifestPath_WithoutAnyManifest_ReturnsNull()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "AppxManifestInfoTests", Guid.NewGuid().ToString("N"), "bin");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            Assert.IsNull(AppxManifestInfo.FindManifestPath(directory));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void ResolveApplication_MatchesExecutableDeclaredWithASubdirectoryPath()
+    {
+        // A valid MSIX manifest can declare Executable with a package-relative subdirectory path; the
+        // platform still asks to launch the bare executable file name, so resolution must match on it.
+        const string ManifestXml = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+              <Identity Name="Contoso.MyTestApp" Publisher="CN=Contoso" Version="1.0.0.0" />
+              <Applications>
+                <Application Id="First" Executable="bin\First.exe" />
+                <Application Id="Second" Executable="bin\Second.exe" />
+              </Applications>
+            </Package>
+            """;
+
+        AppxManifestInfo info = ReadManifest(ManifestXml);
+
+        Assert.AreEqual("Second", info.ResolveApplication("Second.exe")?.Id);
+    }
+
     private static AppxManifestInfo ReadManifest(string name, string publisher, string? applicationId)
         => ReadManifest(BuildManifestXml(name, publisher, applicationId));
 

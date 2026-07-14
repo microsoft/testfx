@@ -73,6 +73,34 @@ internal sealed class AppxManifestInfo
         return File.Exists(manifestPath) ? manifestPath : null;
     }
 
+    /// <summary>
+    /// Searches <paramref name="startDirectory"/> and each of its ancestors for an
+    /// <c>AppxManifest.xml</c> and returns the path to the nearest one. A packaged app's manifest
+    /// lives at the package layout root, but an <c>Application/@Executable</c> can point into a
+    /// subdirectory (for example <c>bin\host.exe</c>), so the executable's own directory is not
+    /// necessarily the root. Walking up locates the manifest in that valid layout too, so the launcher
+    /// does not miss a packaged layout and fall through to <c>Process.Start</c>. Like
+    /// <see cref="GetManifestPath(string)"/> this is a cheap existence probe that never parses.
+    /// </summary>
+    /// <param name="startDirectory">The directory to start searching from (typically the executable's directory).</param>
+    /// <returns>
+    /// The full path to the nearest <c>AppxManifest.xml</c> at or above <paramref name="startDirectory"/>;
+    /// otherwise <see langword="null"/>.
+    /// </returns>
+    public static string? FindManifestPath(string startDirectory)
+    {
+        for (DirectoryInfo? directory = new(startDirectory); directory is not null; directory = directory.Parent)
+        {
+            string? manifestPath = GetManifestPath(directory.FullName);
+            if (manifestPath is not null)
+            {
+                return manifestPath;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>Reads and parses the manifest at <paramref name="manifestPath"/>.</summary>
     /// <param name="manifestPath">The path to an <c>AppxManifest.xml</c>.</param>
     /// <returns>The parsed manifest info.</returns>
@@ -154,7 +182,7 @@ internal sealed class AppxManifestInfo
 
         AppxApplicationInfo[] matches = [.. Applications.Where(application =>
             application.Executable is not null
-            && string.Equals(application.Executable, executableFileName, StringComparison.OrdinalIgnoreCase))];
+            && string.Equals(GetExecutableFileName(application.Executable), executableFileName, StringComparison.OrdinalIgnoreCase))];
 
         return matches.Length == 1
             ? matches[0]
@@ -164,6 +192,16 @@ internal sealed class AppxManifestInfo
                     ExtensionResources.AmbiguousAppxManifestApplication,
                     executableFileName,
                     string.Join(", ", Applications.Select(static application => application.AppUserModelId))));
+    }
+
+    // The manifest's Application/@Executable is package-root-relative and may include a subdirectory
+    // (for example "bin\host.exe"), always with Windows separators. Reduce it to the bare file name so
+    // it can be matched against the executable file name the platform asked to launch, independently of
+    // the OS running the parser.
+    private static string GetExecutableFileName(string executable)
+    {
+        int lastSeparator = executable.LastIndexOfAny(['\\', '/']);
+        return lastSeparator < 0 ? executable : executable[(lastSeparator + 1)..];
     }
 
     /// <summary>

@@ -63,8 +63,10 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         // A genuinely packaged (MSIX) app cannot be started with Process.Start: it must be registered
         // with the PackageManager and activated by AUMID. That path is not implemented yet (see issue
         // #9933), so fail fast with an actionable message — including the AUMID activation would use —
-        // instead of starting an executable that cannot host the run.
-        string? manifestPath = AppxManifestInfo.GetManifestPath(sourceDirectory);
+        // instead of starting an executable that cannot host the run. The manifest lives at the package
+        // layout root, which may be an ancestor of the executable's directory (Application/@Executable
+        // can point into a subdirectory), so search upward rather than only the executable's directory.
+        string? manifestPath = AppxManifestInfo.FindManifestPath(sourceDirectory);
         if (manifestPath is not null)
         {
             var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
