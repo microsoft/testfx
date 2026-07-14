@@ -53,6 +53,10 @@
 
     <!-- Experimental test API usages are allowed inside this solution -->
     <NoWarn>$(NoWarn);TPEXP</NoWarn>
+    <!-- Infrastructure APIs (marked [Experimental("TPINTERNAL")]) are public only so first-party
+         extensions can consume them across the assembly boundary. External consumers still hit the
+         diagnostic; inside this solution the usage is expected, so suppress it centrally. -->
+    <NoWarn>$(NoWarn);TPINTERNAL</NoWarn>
     <!-- netfx and netstandard don't have nullability info so the IDE0370 warning should be suppressed -->
     <NoWarn Condition="'$(TargetFramework)' == 'netstandard2.0' OR $(TargetFramework.StartsWith('net4')) OR '$(TargetFramework)' == '$(UwpMinimum)'">$(NoWarn);IDE0370</NoWarn>
   </PropertyGroup>
