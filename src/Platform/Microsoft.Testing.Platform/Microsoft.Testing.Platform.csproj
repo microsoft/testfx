@@ -63,10 +63,22 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VideoRecorder" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
+    <!--
+      Microsoft.Testing.Framework / MSTest.Engine are the (now deprecated) source-generation engine assemblies.
+      They were renamed to Microsoft.Testing.Internal.Framework in https://github.com/microsoft/testfx/pull/2615,
+      which dropped these grants. But the previously shipped MSTest.Engine package (assembly name still
+      Microsoft.Testing.Framework, e.g. the 2.0.0-alpha builds referenced by MSTest.SourceGeneration) was compiled
+      against a platform where the grant existed, so its IL calls internals such as
+      Microsoft.Testing.Platform.Helpers.ArgumentGuard.Ensure. Loading that old engine against a newer platform
+      that no longer grants the friend relationship fails with System.MethodAccessException (see issue #9769).
+      Restoring the grant keeps that binary compatibility, mirroring the TestRequestExecutionTimeInfo workaround.
+    -->
+    <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.AI" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.TestInfrastructure" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Engine" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.TestAdapter" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="TestFramework.ForTestingMSTest" Key="$(VsPublicKey)" />
   </ItemGroup>
