@@ -45,10 +45,13 @@ internal static class CtrfReportMerger
         long? latestStop = null;
 
         // A same-kind merge can combine modules produced by different test frameworks. Track the
-        // distinct tool identities so the merged report is only stamped with a single framework when
-        // every input actually used it; otherwise a neutral merger identity is used (see below).
-        var distinctToolNames = new HashSet<string>(StringComparer.Ordinal);
+        // distinct *complete* tool identities (full serialized tool object, not just its name) so the
+        // merged report is only stamped with a concrete framework when every input reported the exact
+        // same tool; otherwise a neutral merger identity is used (see below). An input that omits 'tool'
+        // counts as a distinct (missing) identity, so a mix of tagged/untagged inputs also degrades.
+        var distinctToolIdentities = new HashSet<string>(StringComparer.Ordinal);
         JsonNode? firstTool = null;
+        int reportCount = 0;
 
         foreach (string reportJson in inputReports)
         {
@@ -58,6 +61,7 @@ internal static class CtrfReportMerger
             }
 
             first ??= root;
+            reportCount++;
 
             JsonNode? results = root["results"];
             if (results?["tests"] is JsonArray testArray)
@@ -71,7 +75,11 @@ internal static class CtrfReportMerger
             if (results?["tool"] is JsonNode toolNode)
             {
                 firstTool ??= toolNode;
-                distinctToolNames.Add((string?)toolNode["name"] ?? string.Empty);
+                distinctToolIdentities.Add(toolNode.ToJsonString());
+            }
+            else
+            {
+                distinctToolIdentities.Add(string.Empty);
             }
 
             JsonNode? summary = results?["summary"];
@@ -139,17 +147,14 @@ internal static class CtrfReportMerger
 
         var resultsObject = new JsonObject();
 
-        // Only carry a concrete tool identity when every input reported the same one (the common
-        // single-framework case). When inputs disagree, stamping the first framework onto all tests
-        // would misattribute the others, so use a neutral merger identity instead.
-        if (distinctToolNames.Count == 1 && firstTool is not null)
-        {
-            resultsObject["tool"] = firstTool.DeepClone();
-        }
-        else
-        {
-            resultsObject["tool"] = new JsonObject { ["name"] = MergedToolName };
-        }
+        // Only carry a concrete tool identity when every input reported the exact same one (the common
+        // single-framework case). When inputs disagree — different tool objects, or a mix of tagged and
+        // untagged inputs — stamping the first framework onto all tests would misattribute the others,
+        // so use a neutral merger identity instead.
+        bool allInputsShareTool = distinctToolIdentities.Count == 1 && firstTool is not null && reportCount > 0;
+        resultsObject["tool"] = allInputsShareTool
+            ? firstTool!.DeepClone()
+            : new JsonObject { ["name"] = MergedToolName };
 
         resultsObject["summary"] = summaryObject;
 

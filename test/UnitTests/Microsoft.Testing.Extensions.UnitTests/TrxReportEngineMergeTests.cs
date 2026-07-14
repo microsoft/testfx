@@ -343,6 +343,36 @@ public sealed class TrxReportEngineMergeTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenSourceNestedUnderMergedRoot_RelocatesAndKeepsHrefsValid()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // Output written into a subfolder whose deployment root ('run') sits ABOVE the input's own
+            // deployment tree, so the source 'In' root is strictly nested under the merged 'In' root.
+            // Relocation must stage the copy so the merged TRX's rewritten href points at real bytes.
+            string inputDir = Path.Combine(tempDirectory, "run", "In", "child");
+            string input = WriteReportWithAttachment(inputDir, "a.trx", deploymentRoot: "dep", attachmentContent: "AAA");
+            string output = Path.Combine(tempDirectory, "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            Assert.IsTrue(File.Exists(output));
+            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            Assert.HasCount(1, hrefs);
+            // The rewritten href must resolve to a real file under the merged deployment root.
+            string resolved = Path.Combine(tempDirectory, "run", "In", hrefs[0].Replace('/', Path.DirectorySeparatorChar));
+            Assert.IsTrue(File.Exists(resolved));
+            Assert.AreEqual("AAA", File.ReadAllText(resolved));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static string WriteReportWithAttachment(string inputDirectory, string fileName, string deploymentRoot, string attachmentContent)
     {
         Directory.CreateDirectory(inputDirectory);

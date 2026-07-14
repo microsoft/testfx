@@ -279,24 +279,41 @@ internal sealed partial class TrxReportEngine
                     continue;
                 }
 
-                // If the merged 'In' root and the source 'In' root overlap (e.g. the output is written
-                // beside the input and runName matches the input's runDeploymentRoot), copying the source
-                // into a subfolder of itself would make the recursion re-discover its own destination.
-                // Skip relocation in that case: the files already live under the merged deployment root,
-                // so the original hrefs resolve as-is (leave them un-prefixed).
-                if (IsUnderDirectory(mergedInRoot, sourceInRoot) || IsUnderDirectory(sourceInRoot, mergedInRoot))
+                // Equal roots: the source files already live at the merged deployment root under their
+                // original relative paths, so the original hrefs resolve as-is. Skip relocation and
+                // leave the references un-prefixed.
+                if (string.Equals(sourceInRoot, mergedInRoot, PathComparison))
                 {
                     continue;
                 }
 
-                // Isolate each input under its own subfolder so identical relative attachment paths
-                // from different inputs cannot shadow each other. Recreate that destination as a fresh,
-                // non-link tree first so a pre-existing junction/symlink (or stale bytes) from a reused
-                // output directory can't redirect the copy or linger.
                 string prefix = i.ToString(CultureInfo.InvariantCulture);
                 string destForInput = Path.Combine(mergedInRoot, prefix);
-                DeleteDirectoryTreeOrLink(destForInput);
-                CopyDirectoryRecursive(sourceInRoot, destForInput, cancellationToken);
+
+                // Strict overlap (one 'In' root is nested inside the other): copying source directly
+                // into a subfolder of the merged root would either recurse into its own destination
+                // (merged nested under source) or, if we simply skipped, leave the prefixed hrefs
+                // dangling. Stage the copy through a temporary directory outside both trees, then move
+                // it into place, so the per-input prefix rewrite below is always correct.
+                bool strictOverlap = IsUnderDirectory(mergedInRoot, sourceInRoot) || IsUnderDirectory(sourceInRoot, mergedInRoot);
+
+                // Isolate each input under its own subfolder so identical relative attachment paths
+                // from different inputs cannot shadow each other.
+                if (strictOverlap)
+                {
+                    // The destination is nested with the source, so stage the source out first (before
+                    // clearing the destination, which could otherwise be inside the source tree).
+                    CopyViaStaging(sourceInRoot, destForInput, cancellationToken);
+                }
+                else
+                {
+                    // Recreate the destination as a fresh, non-link tree first so a pre-existing
+                    // junction/symlink (or stale bytes) from a reused output directory can't redirect the
+                    // copy or linger.
+                    DeleteDirectoryTreeOrLink(destForInput);
+                    CopyDirectoryRecursive(sourceInRoot, destForInput, cancellationToken);
+                }
+
                 RewriteAttachmentHrefs(reports[i], prefix);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
@@ -353,6 +370,33 @@ internal sealed partial class TrxReportEngine
         StringComparison comparison = PathComparison;
         return string.Equals(candidateFullPath, rootFull, comparison)
             || candidateFullPath.StartsWith(rootWithSeparator, comparison);
+    }
+
+    /// <summary>
+    /// Copies <paramref name="sourceDirectory"/> to <paramref name="destinationDirectory"/> via a
+    /// temporary staging directory outside both trees. Used when the source and the merged destination
+    /// strictly overlap, so the copy never recurses into its own destination while still landing the
+    /// files at the prefixed destination (keeping the rewritten hrefs valid).
+    /// </summary>
+    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
+    {
+        string staging = Path.Combine(Path.GetTempPath(), "mtp-trx-merge-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            // Copy the source out to a temp location OUTSIDE both trees first, so clearing the
+            // destination (which may be nested inside the source) cannot corrupt the source, and the
+            // final copy never recurses into its own destination.
+            CopyDirectoryRecursive(sourceDirectory, staging, cancellationToken);
+            DeleteDirectoryTreeOrLink(destinationDirectory);
+            CopyDirectoryRecursive(staging, destinationDirectory, cancellationToken);
+        }
+        finally
+        {
+            if (Directory.Exists(staging))
+            {
+                Directory.Delete(staging, recursive: true);
+            }
+        }
     }
 
     private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)

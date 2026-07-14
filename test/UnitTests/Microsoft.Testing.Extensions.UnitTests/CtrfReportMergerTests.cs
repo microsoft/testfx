@@ -76,6 +76,30 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    public void Merge_WhenInputsShareToolNameButDifferentVersion_UsesNeutralMergerToolIdentity()
+    {
+        // Same tool name but different version/metadata is still a distinct identity and must not be
+        // stamped onto every merged test.
+        string a = BuildReport(toolName: "MSTest", toolVersion: "1.0.0");
+        string b = BuildReport(toolName: "MSTest", toolVersion: "2.0.0");
+
+        string? toolName = (string?)JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["results"]!["tool"]!["name"];
+
+        Assert.Contains("merged", toolName!);
+    }
+
+    [TestMethod]
+    public void Merge_WhenOneInputMissingTool_UsesNeutralMergerToolIdentity()
+    {
+        string a = BuildReport(toolName: "MSTest");
+        string b = BuildReportWithoutTool();
+
+        string? toolName = (string?)JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["results"]!["tool"]!["name"];
+
+        Assert.Contains("merged", toolName!);
+    }
+
+    [TestMethod]
     public void Merge_WhenAllInputsShareTool_KeepsThatTool()
     {
         string a = BuildReport(toolName: "MSTest");
@@ -176,12 +200,19 @@ public sealed class CtrfReportMergerTests
         long start = 1000,
         long stop = 2000,
         string toolName = "MSTest",
+        string? toolVersion = null,
         IEnumerable<JsonObject>? testEntries = null)
     {
         var testArray = new JsonArray();
         foreach (JsonObject test in testEntries ?? [Test("DefaultTest", "passed")])
         {
             testArray.Add(test);
+        }
+
+        var toolObject = new JsonObject { ["name"] = toolName };
+        if (toolVersion is not null)
+        {
+            toolObject["version"] = toolVersion;
         }
 
         var report = new JsonObject
@@ -193,7 +224,7 @@ public sealed class CtrfReportMergerTests
             ["generatedBy"] = "Microsoft.Testing.Extensions.CtrfReport",
             ["results"] = new JsonObject
             {
-                ["tool"] = new JsonObject { ["name"] = toolName },
+                ["tool"] = toolObject,
                 ["summary"] = new JsonObject
                 {
                     ["tests"] = tests,
@@ -242,6 +273,23 @@ public sealed class CtrfReportMergerTests
             {
                 ["tool"] = new JsonObject { ["name"] = "MSTest" },
                 ["tests"] = testArray,
+            },
+        };
+
+        return report.ToJsonString();
+    }
+
+    private static string BuildReportWithoutTool()
+    {
+        var report = new JsonObject
+        {
+            ["reportFormat"] = "CTRF",
+            ["specVersion"] = "0.0.0",
+            ["reportId"] = Guid.NewGuid().ToString("D"),
+            ["results"] = new JsonObject
+            {
+                ["summary"] = new JsonObject { ["tests"] = 1, ["passed"] = 1, ["start"] = 1000, ["stop"] = 2000 },
+                ["tests"] = new JsonArray(Test("t", "passed")),
             },
         };
 
