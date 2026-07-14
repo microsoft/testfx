@@ -617,7 +617,7 @@ public class CtrfReportEngineTests
 
         // `osPlatform` is one of the short identifiers, not the descriptive name.
         string osPlatform = env.GetProperty("osPlatform").GetString()!;
-        Assert.Contains(osPlatform, new[] { "win32", "linux", "darwin", "freebsd", "unknown" });
+        Assert.Contains(osPlatform, ["win32", "linux", "darwin", "freebsd", "unknown"]);
 
         // Descriptive OS string goes into `osVersion`.
         Assert.IsGreaterThan(0, env.GetProperty("osVersion").GetString()!.Length);
