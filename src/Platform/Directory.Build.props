@@ -16,8 +16,10 @@
 
   <!-- Pack config -->
   <PropertyGroup>
-    <!-- Platform and extensions have their own changelog, distinct from MSTest's. -->
-    <PackageReleaseNotes>See the release notes at https://github.com/microsoft/testfx/blob/main/docs/Changelog-Platform.md.</PackageReleaseNotes>
+    <!-- Platform and extensions have their own changelog, distinct from MSTest's. The anchor uses the
+         platform version so extension packages (which have their own VersionPrefix) still land on the
+         right changelog entry. -->
+    <PackageReleaseNotes>See the release notes at https://github.com/microsoft/testfx/blob/main/docs/Changelog-Platform.md#$(TestingPlatformVersionPrefix).</PackageReleaseNotes>
   </PropertyGroup>
 
   <!-- Build config -->
