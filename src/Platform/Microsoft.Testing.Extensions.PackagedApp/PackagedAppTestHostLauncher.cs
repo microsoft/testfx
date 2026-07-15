@@ -90,10 +90,11 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
 
 #if PACKAGEDAPP_WINRT
     // The prefix of the environment variables the platform uses for the controller-to-host connect-back
-    // (pipe name, correlation id, parent PID, start time, …). Only these are handed off to the activated
-    // packaged host: they are exactly what the host needs to reach its controller, they contain no
-    // user-provided secrets, and they are read after this extension's builder hook runs.
-    private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_";
+    // (pipe name, correlation id, parent PID, start time, skip-extension flag). Only these are handed off
+    // to the activated packaged host: they are exactly what the host needs to reach its controller, they
+    // contain no user-provided data (unlike broader TESTINGPLATFORM_* variables such as inline
+    // runsettings, which can carry secrets), and they are read after this extension's builder hook runs.
+    private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_TESTHOSTCONTROLLER_";
 
     private static async Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
     {

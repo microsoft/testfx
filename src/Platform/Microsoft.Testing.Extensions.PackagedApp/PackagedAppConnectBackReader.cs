@@ -50,7 +50,16 @@ internal static class PackagedAppConnectBackReader
             return;
         }
 
-        string handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(packageFamilyName, testHostControllerPid);
+        // Resolve the handshake path from the package's own LocalState. In a packaged process the
+        // package-aware ApplicationData.Current.LocalFolder is the correct, unredirected
+        // %LOCALAPPDATA%\Packages\{PFN}\LocalState the (unpackaged) launcher wrote to;
+        // Environment.SpecialFolder.LocalApplicationData is redirected here and would not find the file.
+        string fileName = PackagedAppConnectBackHandshake.GetHandshakeFileName(testHostControllerPid);
+        string? localStateDirectory = TryGetPackageLocalStateDirectory();
+        string handshakePath = localStateDirectory is not null
+            ? Path.Combine(localStateDirectory, fileName)
+            : PackagedAppConnectBackHandshake.GetHandshakeFilePath(packageFamilyName, testHostControllerPid);
+
         IReadOnlyDictionary<string, string?>? environment = PackagedAppConnectBackHandshake.ReadAndDelete(handshakePath);
         if (environment is null)
         {
@@ -66,4 +75,24 @@ internal static class PackagedAppConnectBackReader
             Environment.SetEnvironmentVariable(entry.Key, entry.Value);
         }
     }
+
+    // Returns the current package's LocalState directory (the package-aware, unredirected path), or null
+    // when the process has no package identity. Only the Windows build can resolve this through the WinRT
+    // ApplicationData projection; other builds fall back to the family-name-derived path.
+#if PACKAGEDAPP_WINRT
+    private static string? TryGetPackageLocalStateDirectory()
+    {
+        try
+        {
+            return Windows.Storage.ApplicationData.Current.LocalFolder.Path;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Runtime.InteropServices.COMException)
+        {
+            // No package identity (not expected for an activated packaged host).
+            return null;
+        }
+    }
+#else
+    private static string? TryGetPackageLocalStateDirectory() => null;
+#endif
 }

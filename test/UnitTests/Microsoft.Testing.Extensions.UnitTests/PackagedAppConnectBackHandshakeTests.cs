@@ -85,6 +85,12 @@ public sealed class PackagedAppConnectBackHandshakeTests
     }
 
     [TestMethod]
+    public void GetHandshakeFileName_IncludesControllerPidAndExtension()
+    {
+        Assert.AreEqual("mtp-testhostcontroller-777.handshake", PackagedAppConnectBackHandshake.GetHandshakeFileName("777"));
+    }
+
+    [TestMethod]
     public void GetHandshakeFilePath_IsUnderPackageLocalStateAndIncludesControllerPid()
     {
         string path = PackagedAppConnectBackHandshake.GetHandshakeFilePath("Contoso.MyTestApp_8wekyb3d8bbwe", "4321");

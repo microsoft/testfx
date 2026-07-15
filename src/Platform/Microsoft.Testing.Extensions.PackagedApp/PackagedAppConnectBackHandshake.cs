@@ -41,7 +41,11 @@ internal static class PackagedAppConnectBackHandshake
 
     /// <summary>
     /// Returns the directory inside the package's writable local application data where the handshake
-    /// file is exchanged (<c>%LOCALAPPDATA%\Packages\{packageFamilyName}\LocalState</c>).
+    /// file is exchanged (<c>%LOCALAPPDATA%\Packages\{packageFamilyName}\LocalState</c>). This is used by
+    /// the launcher, which runs in the (unpackaged) controller where <see cref="Environment.SpecialFolder.LocalApplicationData"/>
+    /// is the real, unredirected local app data. The activated packaged host must instead resolve its own
+    /// package LocalState through the package-aware <c>ApplicationData.Current.LocalFolder</c>, because in
+    /// a packaged process local app data is redirected away from this path.
     /// </summary>
     public static string GetHandshakeDirectory(string packageFamilyName)
         => Path.Combine(
@@ -51,13 +55,21 @@ internal static class PackagedAppConnectBackHandshake
             "LocalState");
 
     /// <summary>
+    /// Returns the file name (without directory) of the handshake file for a given test host controller
+    /// PID. The directory differs between the two sides (see <see cref="GetHandshakeFilePath"/> and the
+    /// activated host, which resolves its own package LocalState), but the file name is shared.
+    /// </summary>
+    public static string GetHandshakeFileName(string testHostControllerPid)
+        => $"mtp-testhostcontroller-{testHostControllerPid}.handshake";
+
+    /// <summary>
     /// Returns the full path of the handshake file for a given package family name and test host
     /// controller PID.
     /// </summary>
     public static string GetHandshakeFilePath(string packageFamilyName, string testHostControllerPid)
         => Path.Combine(
             GetHandshakeDirectory(packageFamilyName),
-            $"mtp-testhostcontroller-{testHostControllerPid}.handshake");
+            GetHandshakeFileName(testHostControllerPid));
 
     /// <summary>
     /// Extracts the value of the <c>--internal-testhostcontroller-pid</c> option from a command line,

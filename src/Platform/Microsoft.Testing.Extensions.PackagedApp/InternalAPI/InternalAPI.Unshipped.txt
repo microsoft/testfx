@@ -21,6 +21,7 @@ static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifes
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake
 Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeDirectory(string! packageFamilyName) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! testHostControllerPid) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! testHostControllerPid) -> string!
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.ReadAndDelete(string! filePath) -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>?
 static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryDelete(string! filePath) -> void
