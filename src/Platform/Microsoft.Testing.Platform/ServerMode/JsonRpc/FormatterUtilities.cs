@@ -11,7 +11,11 @@ namespace Microsoft.Testing.Platform.ServerMode;
 
 internal sealed class FormatterUtilities
 {
-#if NETSTANDARD2_0
+    // Note: the guard is '!NETCOREAPP' (not 'NETSTANDARD2_0') so that when these files are compiled
+    // as source into a .NET Framework consumer (e.g. net462, which defines neither NETSTANDARD2_0 nor
+    // NETCOREAPP) the dependency-free Jsonite path is selected. This is behavior-preserving for the
+    // platform build: netstandard2.0 still takes this branch, .NETCoreApp still takes the else branch.
+#if !NETCOREAPP
     internal static IMessageFormatter CreateFormatter()
         => new MessageFormatter();
 

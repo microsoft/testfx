@@ -58,6 +58,7 @@
     <Project Path="src/Platform/Microsoft.Testing.Extensions.VideoRecorder/Microsoft.Testing.Extensions.VideoRecorder.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.AI/Microsoft.Testing.Platform.AI.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform.MSBuild/Microsoft.Testing.Platform.MSBuild.csproj" />
+    <Project Path="src/Platform/Microsoft.Testing.Platform.ServerClient/Microsoft.Testing.Platform.ServerClient.csproj" />
     <Project Path="src/Platform/Microsoft.Testing.Platform/Microsoft.Testing.Platform.csproj" />
   </Folder>
   <Folder Name="/src/2 - Adapter/">
@@ -139,6 +140,7 @@
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests/Microsoft.Testing.Platform.TerminalReporterContract.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests/Microsoft.Testing.Platform.MSBuild.UnitTests.csproj" />
+    <Project Path="test/UnitTests/Microsoft.Testing.Platform.ServerClient.UnitTests/Microsoft.Testing.Platform.ServerClient.UnitTests.csproj" />
     <Project Path="test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
     <Project Path="test/UnitTests/MSTest.SelfRealExamples.UnitTests/MSTest.SelfRealExamples.UnitTests.csproj" />

@@ -54,6 +54,48 @@ internal sealed partial class Json
             return items;
         });
 
+        // A generic JSON array becomes an object?[] whose elements are decoded with the same rules as the
+        // IDictionary deserializer above. The server's own IDictionary deserializer already depends on this
+        // (see the JsonValueKind.Array branch) but never exercised it, because the server only ever
+        // deserializes client-to-server REQUESTS whose params are strongly typed. A client reusing this engine
+        // to read server-to-client responses/notifications (which DO carry arrays, e.g. run attachments or
+        // test-node changes) needs it, so register it here.
+        deserializers[typeof(object[])] = new JsonElementDeserializer<object[]>((json, jsonDocument) =>
+        {
+            var items = new List<object?>();
+            foreach (JsonElement element in jsonDocument.EnumerateArray())
+            {
+                switch (element.ValueKind)
+                {
+                    case JsonValueKind.String:
+                        items.Add(element.GetString());
+                        break;
+                    case JsonValueKind.Number:
+                        items.Add(element.GetInt32());
+                        break;
+                    case JsonValueKind.True:
+                        items.Add(true);
+                        break;
+                    case JsonValueKind.False:
+                        items.Add(false);
+                        break;
+                    case JsonValueKind.Object:
+                        items.Add(json.Bind<IDictionary<string, object?>>(element));
+                        break;
+                    case JsonValueKind.Array:
+                        items.Add(json.Bind<object[]>(element));
+                        break;
+                    case JsonValueKind.Null:
+                        items.Add(null);
+                        break;
+                    default:
+                        throw new InvalidOperationException($"value: {element}, type: {element.ValueKind}");
+                }
+            }
+
+            return items.ToArray()!;
+        });
+
         deserializers[typeof(RpcMessage)] = new JsonElementDeserializer<RpcMessage>((json, jsonElement) =>
         {
             ValidateJsonRpcHeader(json, jsonElement);
@@ -76,8 +118,16 @@ internal sealed partial class Json
                             JsonRpcMethods.CancelRequest => json.Bind<CancelRequestArgs>(value),
                             JsonRpcMethods.Exit => json.Bind<ExitRequestArgs>(value),
 
-                            // Note: Let the server report unknown RPC request back to the client.
-                            _ => null,
+                            // Note: the server only strongly-types the request methods above. Any other
+                            // method reaching this decoder is a server-to-client notification (for example
+                            // testing/testUpdates/tests, client/log, telemetry/update,
+                            // testing/testUpdates/attachments) being read by a CLIENT reusing this engine.
+                            // Keep its params as a raw property bag so the client can decode them itself,
+                            // instead of dropping them. For the server this only affects unknown methods,
+                            // which it ignores anyway.
+                            _ => value.ValueKind == JsonValueKind.Object
+                                ? json.Bind<IDictionary<string, object?>>(value)
+                                : null,
                         };
                     }
                     catch (Exception ex) when (ex is MessageFormatException or InvalidOperationException or JsonException)

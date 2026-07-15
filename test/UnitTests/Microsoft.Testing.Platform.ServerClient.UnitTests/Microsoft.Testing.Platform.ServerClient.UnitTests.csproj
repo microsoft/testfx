@@ -1,0 +1,54 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!--
+      net8.0 exercises the in-box System.Text.Json formatter; net462 exercises the Jsonite formatter (via
+      the netstandard2.0 leg of the ServerClient reference). Both are the shipping formatter paths, so the
+      TFM split doubles as formatter coverage.
+    -->
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net462</TargetFrameworks>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+  </ItemGroup>
+
+  <!--
+    The client under test is shipped as source: this project consumes it via a project reference, compiling
+    the same source the source-only package will deliver. The netstandard2.0 leg is selected for net462 so the
+    Jsonite formatter path is exercised there.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform.ServerClient\Microsoft.Testing.Platform.ServerClient.csproj">
+      <!--
+        ServerClient re-compiles public platform data-model types (TestNode, LogLevel, SessionUid, PropertyBag,
+        ...) that also live in the real Microsoft.Testing.Platform assembly (pulled in transitively by the MTP
+        test runner). Import ServerClient under both the global namespace AND a 'serverclient' alias: unique
+        client/serializer types resolve globally, while the handful of duplicated data-model types are qualified
+        with serverclient:: to point at ServerClient's copy (the one the ServerClient serializer is keyed on).
+      -->
+      <Aliases>global,serverclient</Aliases>
+      <SetTargetFramework Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+  </ItemGroup>
+
+  <!--
+    The ServerClient reference already compiles its own copy of the platform data model (TestNode, LogLevel,
+    SessionUid, ...) which are public in Microsoft.Testing.Platform. Drop the shared TestInfrastructure global
+    using so the real platform assembly isn't dragged into the compile and duplicate those public types.
+  -->
+  <ItemGroup>
+    <Using Remove="Microsoft.Testing.TestInfrastructure" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Polyfills" />
+  </ItemGroup>
+
+</Project>
