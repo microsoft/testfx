@@ -339,6 +339,49 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
+    public async Task MergeToFileAsync_WhenAttachmentHrefIsRooted_DropsTheReference()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // A rooted (absolute) href points outside the confined deployment tree; the path-confined
+            // merge must drop it rather than preserve an absolute path to some file on disk.
+            string inputDir = Path.Combine(tempDirectory, "in");
+            Directory.CreateDirectory(Path.Combine(inputDir, "dep", "In", "machine"));
+
+            string rootedHref = Path.Combine(tempDirectory, "outside", "secret.txt");
+            var collectorDataEntries = new XElement(
+                Ns + "CollectorDataEntries",
+                new XElement(
+                    Ns + "Collector",
+                    new XAttribute("collectorDisplayName", "Code Coverage"),
+                    new XElement(
+                        Ns + "UriAttachments",
+                        new XElement(Ns + "UriAttachment", new XElement(Ns + "A", new XAttribute("href", rootedHref))))));
+
+            XDocument report = BuildReport(resultSummaryChildren: [collectorDataEntries]);
+            report.Root!.Add(new XElement(
+                Ns + "TestSettings",
+                new XAttribute("name", "default"),
+                new XElement(Ns + "Deployment", new XAttribute("runDeploymentRoot", "dep"))));
+
+            string input = Path.Combine(inputDir, "a.trx");
+            report.Save(input);
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            Assert.IsEmpty(hrefs);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WhenAttachmentHrefEscapesRoot_DropsTheReference()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
@@ -615,17 +658,16 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
-    public async Task MergeToFileAsync_RepeatedIntoSameNestedLayout_NeverDeletesOriginalSource()
+    public async Task MergeToFileAsync_RepeatedIntoSameNestedLayout_IsBoundedAndNonDestructive()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
         try
         {
             // Layout where the merged deployment root is nested strictly INSIDE the input's source 'In'
-            // tree. Relocation is deliberately non-destructive: it never infers ownership from path
-            // overlap and never deletes or omits any source bytes (RFC 018 keeps inputs read-only). It
-            // may leave benign stale copies from earlier retries, which is preferred over ever removing
-            // an original — so we assert preservation and resolvability, not a bounded copy count.
+            // tree. Because only referenced attachment files are copied (never the whole tree), repeated
+            // merges into the same output neither recurse into their own destination nor accumulate
+            // deeper copies: the original stays untouched and there is exactly one relocated copy.
             string input = WriteReportWithAttachment(tempDirectory, "a.trx", deploymentRoot: "dep", attachmentContent: "AAA");
             string output = Path.Combine(tempDirectory, "dep", "In", "out", "merged.trx");
 
@@ -642,7 +684,11 @@ public sealed class TrxReportEngineMergeTests
             Assert.IsTrue(File.Exists(originalAttachment));
             Assert.AreEqual("AAA", File.ReadAllText(originalAttachment));
 
-            // The merged report's rewritten href must resolve to a real relocated copy under the merged
+            // Original attachment + exactly one relocated copy — bounded, not one-per-run.
+            List<string> copies = [.. Directory.GetFiles(tempDirectory, "log.txt", SearchOption.AllDirectories)];
+            Assert.HasCount(2, copies);
+
+            // The merged report's rewritten href must resolve to the relocated copy under the merged
             // deployment root ('<outputDir>/run/In').
             List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
             Assert.HasCount(1, hrefs);

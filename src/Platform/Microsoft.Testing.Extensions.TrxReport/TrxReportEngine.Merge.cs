@@ -268,12 +268,15 @@ internal sealed partial class TrxReportEngine
         => parent.Elements().FirstOrDefault(e => string.Equals(e.Name.LocalName, localName, StringComparison.Ordinal));
 
     /// <summary>
-    /// Relocates each input report's attachment deployment tree (<c>&lt;deploymentRoot&gt;/In</c>) into a
-    /// per-input isolated folder under the merged report's deployment root and rewrites that input's
-    /// attachment hrefs to match, so references carried into the merged TRX keep resolving without one
-    /// module's files shadowing another's. All destination and source paths are confined
-    /// (<c>runName</c> and each input's <c>runDeploymentRoot</c> are attacker-influenced), and any
-    /// copy failure is swallowed so it never fails the merge (never-fail-the-run invariant).
+    /// Copies each input report's <em>referenced</em> attachment files into a per-input isolated folder
+    /// under the merged report's deployment root and rewrites that input's references to match, so
+    /// attachments carried into the merged TRX keep resolving without one module's files shadowing
+    /// another's. Only the files actually referenced by the report are copied (never a whole directory
+    /// tree), which keeps the operation non-destructive (inputs stay read-only, RFC 018), bounded (no
+    /// recursion or unbounded accumulation when the output is nested inside a source), and confined
+    /// (<c>runName</c> and each input's <c>runDeploymentRoot</c> are attacker-influenced). Any copy
+    /// failure is swallowed so it never fails the merge (never-fail-the-run invariant); a reference that
+    /// cannot be relocated is dropped rather than left dangling or pointing outside the deployment root.
     /// </summary>
     private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, string runName, CancellationToken cancellationToken)
     {
@@ -290,41 +293,6 @@ internal sealed partial class TrxReportEngine
         }
 
         string mergedInRoot = Path.Combine(mergedRootFull, "In");
-
-        // Absolute directories that must never be wholesale-deleted by relocation: each input report's
-        // parent directory AND each input's resolved source 'In' root. Deleting a destination that
-        // contains one of these would remove the originals (which RFC 018 requires to stay on disk) or a
-        // sibling/later input's report and attachments.
-        var protectedDirectories = new List<string>(inputPaths.Count * 2);
-        for (int i = 0; i < inputPaths.Count && i < reports.Count; i++)
-        {
-            try
-            {
-                if (Path.GetDirectoryName(Path.GetFullPath(inputPaths[i])) is not { Length: > 0 } inputDir)
-                {
-                    continue;
-                }
-
-                protectedDirectories.Add(inputDir);
-
-                string? deploymentRoot = reports[i].Root is { } r
-                    ? FindChild(r, "TestSettings")?.Elements().FirstOrDefault(e => string.Equals(e.Name.LocalName, "Deployment", StringComparison.Ordinal))?.Attribute("runDeploymentRoot")?.Value
-                    : null;
-
-                if (!RoslynString.IsNullOrEmpty(deploymentRoot))
-                {
-                    string source = Path.GetFullPath(Path.Combine(inputDir, deploymentRoot, "In"));
-                    if (IsUnderDirectory(source, inputDir))
-                    {
-                        protectedDirectories.Add(source);
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
-            {
-                // Ignore malformed input paths here; the per-input loop handles them.
-            }
-        }
 
         // On a reused output directory the merged 'In' root could pre-exist as a junction/symlink that
         // would redirect every copy below it outside the confined merged root. Remove such a link so a
@@ -343,9 +311,9 @@ internal sealed partial class TrxReportEngine
 
         for (int i = 0; i < inputPaths.Count && i < reports.Count; i++)
         {
-            // Cancellation must interrupt an otherwise unbounded copy of a large deployment tree; check
-            // before each input (and inside CopyDirectoryRecursive) and let OperationCanceledException
-            // propagate rather than being swallowed as a best-effort failure below.
+            // Cancellation must interrupt an otherwise long sequence of file copies; check before each
+            // input (and inside TryCopyReferencedFile) and let OperationCanceledException propagate rather
+            // than being swallowed as a best-effort failure below.
             cancellationToken.ThrowIfCancellationRequested();
 
             try
@@ -374,49 +342,16 @@ internal sealed partial class TrxReportEngine
                 }
 
                 // Equal roots: the source files already live at the merged deployment root under their
-                // original relative paths, so the original hrefs resolve as-is. Skip relocation and
-                // leave the references un-prefixed.
+                // original relative paths, so the original references resolve as-is. Skip relocation and
+                // leave them un-prefixed.
                 if (string.Equals(sourceInRoot, mergedInRoot, PathComparison))
                 {
                     continue;
                 }
 
-                string prefix = i.ToString(CultureInfo.InvariantCulture);
-                string destForInput = Path.Combine(mergedInRoot, prefix);
-
-                // Strict overlap (one 'In' root is nested inside the other, e.g. the output directory was
-                // placed inside an input's deployment tree): copying source directly into a subfolder of
-                // the merged root would recurse into its own destination. Stage the copy through a
-                // temporary directory outside both trees, then overlay it into place, so the per-input
-                // prefix rewrite below is always correct without recursing.
-                bool strictOverlap = IsUnderDirectory(mergedInRoot, sourceInRoot) || IsUnderDirectory(sourceInRoot, mergedInRoot);
-
-                if (strictOverlap)
-                {
-                    // Non-destructive: never delete or omit any part of the source tree (RFC 018 treats
-                    // inputs as read-only and requires them to stay on disk). We deliberately do NOT try
-                    // to infer which files under an overlapping path are the merger's own prior output —
-                    // that inference could drop legitimate source attachments — so we copy everything and
-                    // overlay (per-file overwrite). In the pathological nested-output configuration this
-                    // may leave benign stale bytes from an earlier retry, which is preferred over ever
-                    // removing an original.
-                    CopyViaStaging(sourceInRoot, destForInput, cancellationToken);
-                }
-                else
-                {
-                    // Disjoint trees: the destination lives under the merged 'In' root, outside every
-                    // source tree, so recreating it as a fresh, non-link tree is safe and clears stale
-                    // bytes / redirecting junctions from a reused output directory. Guard only against a
-                    // destination that happens to hold an input report or its resolved source root.
-                    if (!ContainsAnyDirectory(destForInput, protectedDirectories))
-                    {
-                        DeleteDirectoryTreeOrLink(destForInput);
-                    }
-
-                    CopyDirectoryRecursive(sourceInRoot, destForInput, cancellationToken);
-                }
-
-                RewriteAttachmentHrefs(reports[i], prefix, mergedInRoot);
+                // Copy only the files the report references (never the whole tree), so an output nested
+                // inside a source neither recurses into its own destination nor accumulates across retries.
+                RelocateReferencedAttachments(reports[i], i.ToString(CultureInfo.InvariantCulture), sourceInRoot, mergedInRoot, cancellationToken);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
@@ -427,7 +362,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private static void RewriteAttachmentHrefs(XDocument report, string prefix, string mergedInRoot)
+    private static void RelocateReferencedAttachments(XDocument report, string prefix, string sourceInRoot, string mergedInRoot, CancellationToken cancellationToken)
     {
         if (report.Root is not { } root)
         {
@@ -435,47 +370,42 @@ internal sealed partial class TrxReportEngine
         }
 
         // Attachment references come in two shapes with different resolution rules:
-        //   * Collector attachments '<A href="...">' are relative to the deployment 'In' root, so the
-        //     copy under In/<prefix>/... is reached by prefixing the href.
-        //   * Per-test '<ResultFile path="...">' are resolved by consumers under
-        //     In/<owning UnitTestResult @relativeResultsDirectory>/<path>, so the copy under
-        //     In/<prefix>/<relativeResultsDirectory>/<path> is reached by prefixing the *directory*, not
-        //     the path. A ResultFile without an owning relativeResultsDirectory behaves like a collector
-        //     href (In/<path>).
-        // Every rewritten reference is also verified against the freshly relocated tree (mergedInRoot) and
-        // dropped if the target was not materialized (e.g. a skipped source symlink or a partial copy),
-        // so the merged TRX never carries a dangling reference.
-        // Materialize each pass first: an escaping/missing reference is removed, and removing while
-        // enumerating the lazy Descendants() sequence would be unsafe.
+        //   * Collector attachments '<A href="...">' (and a standalone '<ResultFile path="...">' from a
+        //     foreign producer) are relative to the deployment 'In' root, so the file is copied to
+        //     In/<prefix>/<value> and the value is prefixed.
+        //   * Per-test '<ResultFile path="...">' under a UnitTestResult are resolved by consumers under
+        //     In/<owning @relativeResultsDirectory>/<path>, so the file is copied to
+        //     In/<prefix>/<relativeResultsDirectory>/<path> and the *directory* is prefixed once.
+        // Only referenced files are copied (never a whole tree), and a reference that is rooted, escapes
+        // the deployment root, or whose source file was not materialized is dropped.
+        // Materialize each pass first: a dropped reference is removed, and removing while enumerating the
+        // lazy Descendants() sequence would be unsafe.
         foreach (XElement collectorAttachment in root.Descendants().Where(e => e.Name.LocalName == "A").ToList())
         {
-            PrefixRelativeAttribute(collectorAttachment, "href", prefix, mergedInRoot);
+            RelocateReference(collectorAttachment, "href", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, cancellationToken);
         }
 
         foreach (XElement unitTestResult in root.Descendants().Where(e => e.Name.LocalName == "UnitTestResult").ToList())
         {
-            PrefixResultFilesForUnitTestResult(unitTestResult, prefix, mergedInRoot);
+            RelocateResultFilesForUnitTestResult(unitTestResult, prefix, sourceInRoot, mergedInRoot, cancellationToken);
         }
 
-        // Any standalone ResultFile (no owning UnitTestResult, e.g. from a foreign producer) resolves at
-        // In/<path>, like a collector href. Materialized after the pass above so ResultFiles already
-        // dropped there do not reappear here.
         foreach (XElement standaloneResultFile in root.Descendants()
             .Where(e => e.Name.LocalName == "ResultFile" && e.Ancestors().All(a => a.Name.LocalName != "UnitTestResult"))
             .ToList())
         {
-            PrefixRelativeAttribute(standaloneResultFile, "path", prefix, mergedInRoot);
+            RelocateReference(standaloneResultFile, "path", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, cancellationToken);
         }
     }
 
     /// <summary>
-    /// Prefixes the per-test <c>ResultFile</c> references of a single <c>UnitTestResult</c>. Consumers
-    /// resolve them under <c>In/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>, so the relocated copy
-    /// (under <c>In/&lt;prefix&gt;/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>) is reached by
-    /// prefixing the directory once; a reference whose combined directory/path escapes the root (is
-    /// rooted, or whose relocated file does not exist) is dropped instead of emitted.
+    /// Relocates the per-test <c>ResultFile</c> references of a single <c>UnitTestResult</c>. Consumers
+    /// resolve them under <c>In/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>, so each referenced file
+    /// is copied to <c>In/&lt;prefix&gt;/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c> and the
+    /// directory is prefixed once; a reference that is rooted, escapes the root, or whose source file was
+    /// not materialized is dropped.
     /// </summary>
-    private static void PrefixResultFilesForUnitTestResult(XElement unitTestResult, string prefix, string mergedInRoot)
+    private static void RelocateResultFilesForUnitTestResult(XElement unitTestResult, string prefix, string sourceInRoot, string mergedInRoot, CancellationToken cancellationToken)
     {
         List<XElement> resultFiles = [.. unitTestResult.Descendants().Where(e => e.Name.LocalName == "ResultFile")];
         if (resultFiles.Count == 0)
@@ -491,22 +421,31 @@ internal sealed partial class TrxReportEngine
             // No owning directory: each path resolves at In/<path>, like a collector href.
             foreach (XElement resultFile in resultFiles)
             {
-                PrefixRelativeAttribute(resultFile, "path", prefix, mergedInRoot);
+                RelocateReference(resultFile, "path", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, cancellationToken);
             }
 
             return;
         }
 
-        // Validate the combined directory/path (that is what a consumer resolves): drop any escaping,
-        // rooted, or non-materialized reference, so a hostile relativeResultsDirectory such as '../../..'
-        // cannot make the merged TRX point outside its deployment root and a skipped file never dangles.
+        // A rooted owning directory cannot be safely relocated; drop all its references.
+        if (Path.IsPathRooted(relativeDirectoryValue))
+        {
+            foreach (XElement resultFile in resultFiles)
+            {
+                resultFile.Remove();
+            }
+
+            return;
+        }
+
+        // Copy each referenced file to In/<prefix>/<relativeResultsDirectory>/<path>, dropping any rooted,
+        // escaping, or non-materialized reference, then prefix the directory once if anything survived.
         bool anyKept = false;
         foreach (XElement resultFile in resultFiles)
         {
             string path = resultFile.Attribute("path")?.Value ?? string.Empty;
-            if (Path.IsPathRooted(relativeDirectoryValue) || Path.IsPathRooted(path)
-                || EscapesRoot(relativeDirectoryValue + "/" + path)
-                || !ResolvedFileExists(mergedInRoot, prefix + "/" + relativeDirectoryValue + "/" + path))
+            string combined = relativeDirectoryValue + "/" + path;
+            if (Path.IsPathRooted(path) || EscapesRoot(combined) || !TryCopyReferencedFile(sourceInRoot, mergedInRoot, prefix, combined, cancellationToken))
             {
                 resultFile.Remove();
             }
@@ -516,46 +455,81 @@ internal sealed partial class TrxReportEngine
             }
         }
 
-        // Prefix the directory once (only if at least one reference survived) so every kept path resolves
-        // to the relocated copy.
         if (anyKept)
         {
             relativeDirectory.Value = prefix + "/" + relativeDirectoryValue;
         }
     }
 
-    private static void PrefixRelativeAttribute(XElement element, string attributeName, string prefix, string mergedInRoot)
+    /// <summary>
+    /// Copies the file referenced by <paramref name="attributeName"/> into the per-input folder and
+    /// prefixes the reference. A rooted value (an absolute path outside the confined deployment tree), a
+    /// value that escapes the deployment root, or a source file that was not materialized (missing, or a
+    /// skipped symlink) causes the reference to be dropped instead of emitted.
+    /// </summary>
+    private static void RelocateReference(XElement element, string attributeName, string? relativeDirectory, string prefix, string sourceInRoot, string mergedInRoot, CancellationToken cancellationToken)
     {
         XAttribute? attribute = element.Attribute(attributeName);
-        if (attribute is null || RoslynString.IsNullOrEmpty(attribute.Value) || Path.IsPathRooted(attribute.Value))
+        if (attribute is null || RoslynString.IsNullOrEmpty(attribute.Value))
         {
             return;
         }
 
-        // A relative value such as '../../../secret' passes the rooted check yet, once resolved from the
-        // merged deployment root, escapes the confined output tree. Drop the reference entirely rather
-        // than emit a traversal href a downstream TRX consumer could resolve outside the output.
-        if (EscapesRoot(attribute.Value))
+        if (Path.IsPathRooted(attribute.Value))
         {
             element.Remove();
             return;
         }
 
-        string prefixedValue = prefix + "/" + attribute.Value;
-
-        // Drop the reference if the relocation did not materialize the target (a skipped source symlink
-        // or a partial copy), so the merged TRX never carries a dangling reference.
-        if (!ResolvedFileExists(mergedInRoot, prefixedValue))
+        string relative = relativeDirectory is null ? attribute.Value : relativeDirectory + "/" + attribute.Value;
+        if (EscapesRoot(relative) || !TryCopyReferencedFile(sourceInRoot, mergedInRoot, prefix, relative, cancellationToken))
         {
             element.Remove();
             return;
         }
 
-        attribute.Value = prefixedValue;
+        attribute.Value = prefix + "/" + attribute.Value;
     }
 
-    private static bool ResolvedFileExists(string mergedInRoot, string relativePath)
-        => File.Exists(Path.Combine(mergedInRoot, relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar)));
+    /// <summary>
+    /// Copies a single referenced attachment file from <paramref name="sourceInRoot"/> to the per-input
+    /// folder under <paramref name="mergedInRoot"/>, both confined. Returns <see langword="false"/> (so the
+    /// caller drops the reference) when the source file is missing, is a symlink, sits behind a symlinked
+    /// component, or when either resolved path escapes its root. <paramref name="relative"/> is already
+    /// known to be non-rooted and non-escaping.
+    /// </summary>
+    private static bool TryCopyReferencedFile(string sourceInRoot, string mergedInRoot, string prefix, string relative, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        string normalized = relative.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
+        string sourceFile = Path.GetFullPath(Path.Combine(sourceInRoot, normalized));
+        string destinationFile = Path.GetFullPath(Path.Combine(mergedInRoot, prefix, normalized));
+
+        // Confine both ends and refuse anything behind a symlinked component or a symlinked file, so a
+        // link cannot redirect the read or write outside the confined trees.
+        if (!IsUnderDirectory(sourceFile, sourceInRoot)
+            || !IsUnderDirectory(destinationFile, mergedInRoot)
+            || !File.Exists(sourceFile)
+            || IsReparsePoint(sourceFile)
+            || HasReparsePointComponent(Path.GetDirectoryName(sourceFile)!, sourceInRoot)
+            || HasReparsePointComponent(Path.GetDirectoryName(destinationFile)!, mergedInRoot))
+        {
+            return false;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
+
+        // A pre-existing destination symlink (from a reused output directory) would make the overwrite
+        // follow the link and write outside the merged root. Remove it so a real file is written.
+        if (File.Exists(destinationFile) && IsReparsePoint(destinationFile))
+        {
+            File.Delete(destinationFile);
+        }
+
+        File.Copy(sourceFile, destinationFile, overwrite: true);
+        return true;
+    }
 
     /// <summary>
     /// Returns <see langword="true"/> if the relative <paramref name="relativePath"/> resolves above its
@@ -601,108 +575,6 @@ internal sealed partial class TrxReportEngine
             || candidateFullPath.StartsWith(rootWithSeparator, comparison);
     }
 
-    /// <summary>
-    /// Copies <paramref name="sourceDirectory"/> to <paramref name="destinationDirectory"/> via a
-    /// temporary staging directory outside both trees. Used when the source and the merged destination
-    /// strictly overlap, so the copy never recurses into its own destination while still landing the
-    /// files at the prefixed destination (keeping the rewritten hrefs valid). The copy is non-destructive:
-    /// nothing under the source is deleted or omitted (RFC 018 keeps inputs on disk, read-only); the
-    /// destination is overlaid per file.
-    /// </summary>
-    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
-    {
-        string staging = Path.Combine(Path.GetTempPath(), "mtp-trx-merge-" + Guid.NewGuid().ToString("N"));
-        try
-        {
-            // Snapshot the source to a temp location OUTSIDE both trees first, so the final copy into a
-            // destination that may be nested inside the source never recurses into itself.
-            CopyDirectoryRecursive(sourceDirectory, staging, cancellationToken);
-            CopyDirectoryRecursive(staging, destinationDirectory, cancellationToken);
-        }
-        finally
-        {
-            // Best-effort cleanup: a failure here must not replace an in-flight OperationCanceledException
-            // (or the real merge exception) with an I/O/authorization error.
-            try
-            {
-                if (Directory.Exists(staging))
-                {
-                    Directory.Delete(staging, recursive: true);
-                }
-            }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-            {
-                // Swallowed on purpose: the staging directory lives under the temp path and leaking it is
-                // preferable to masking the primary exception that is already unwinding.
-            }
-        }
-    }
-
-    private static bool ContainsAnyDirectory(string candidateDirectory, IReadOnlyList<string> directories)
-    {
-        string candidateFull = Path.GetFullPath(candidateDirectory);
-        foreach (string directory in directories)
-        {
-            if (IsUnderDirectory(Path.GetFullPath(directory), candidateFull))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        // Do not descend into reparse points (symlinks/junctions): a link inside the (confined) source
-        // tree could otherwise redirect the copy to an arbitrary location.
-        if (IsReparsePoint(sourceDirectory))
-        {
-            return;
-        }
-
-        // The destination is recreated fresh by the caller, but guard defensively for nested levels:
-        // never write through a destination directory that is itself a link.
-        if (Directory.Exists(destinationDirectory) && IsReparsePoint(destinationDirectory))
-        {
-            Directory.Delete(destinationDirectory);
-        }
-
-        Directory.CreateDirectory(destinationDirectory);
-
-        foreach (string file in Directory.GetFiles(sourceDirectory))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // A source file reparse point (symlink) would make File.Copy follow the link and pull in
-            // content from outside the confined tree; skip it.
-            if (IsReparsePoint(file))
-            {
-                continue;
-            }
-
-            // Guard the destination too: a pre-existing destination symlink would make the overwrite
-            // follow the link and write outside the merged root. Remove it so a real file is written.
-            string destination = Path.Combine(destinationDirectory, Path.GetFileName(file));
-            if (File.Exists(destination) && IsReparsePoint(destination))
-            {
-                File.Delete(destination);
-            }
-
-            // Overwrite so a reused output directory can't leave stale bytes behind while the merged
-            // XML is rewritten to reference the (per-input isolated) destination, mirroring the
-            // File.Create overwrite used for the merged TRX itself.
-            File.Copy(file, destination, overwrite: true);
-        }
-
-        foreach (string directory in Directory.GetDirectories(sourceDirectory))
-        {
-            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), cancellationToken);
-        }
-    }
-
     private static bool IsReparsePoint(string path)
         => (File.GetAttributes(path) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint;
 
@@ -743,25 +615,6 @@ internal sealed partial class TrxReportEngine
     // MORE conservative (skip relocation / reject an output) — never less safe. So compare
     // case-insensitively on every platform rather than guessing case sensitivity from the OS name.
     private static StringComparison PathComparison => StringComparison.OrdinalIgnoreCase;
-
-    private static void DeleteDirectoryTreeOrLink(string path)
-    {
-        if (!Directory.Exists(path))
-        {
-            return;
-        }
-
-        // Deleting a directory reparse point non-recursively removes only the link, never its target's
-        // contents; a real directory is deleted recursively (the runtime does not follow nested links).
-        if (IsReparsePoint(path))
-        {
-            Directory.Delete(path);
-        }
-        else
-        {
-            Directory.Delete(path, recursive: true);
-        }
-    }
 
     private static void CloneChildrenInto(XElement? source, XElement destination)
     {
