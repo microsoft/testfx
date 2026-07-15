@@ -164,6 +164,10 @@ stages:
           demands: ImageOverride -equals windows.vs2026preview.scout.amd64.open
         variables:
           - template: /eng/pipelines/variables/test-env-vars.yml
+          # Grants $(System.AccessToken) the scope required by Azure Pipeline Caching, which the
+          # MSBuildCache (BuildXL) plugin uses as its shared cache backend. See docs/build-caching.md.
+          - name: EnablePipelineCache
+            value: true
         strategy:
           matrix:
             Release:
@@ -183,14 +187,47 @@ stages:
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
+        # BuildXL (MSBuildCache) is enabled for the Windows build. The plugin only engages when the actual
+        # project graph is the MSBuild entry point -- it does NOT engage through Arcade's Build.proj (which
+        # builds projects via a nested MSBuild task) -- and it requires the x64 desktop MSBuild.exe with
+        # -reportFileAccesses. So the build is split into three steps: Arcade restores the toolset + all
+        # packages, the compile runs under the cache via x64 desktop MSBuild on TestFx.slnx, then Arcade
+        # packs the produced outputs. See docs/build-caching.md.
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
-            /p:Publish=false
+            /p:Build=false
             /p:Test=false
-            /p:FastAcceptanceTest=true
+            /p:Sign=false
+            /p:Pack=false
+            /p:Publish=false
+          name: Restore
+          displayName: Restore (Arcade)
+
+        - pwsh: >-
+            eng\build-with-cache.ps1
+            -Configuration $(_BuildConfig)
+            -NoRestore
+            -Targets Build
+            -BinaryLog $(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\BuildCache.binlog
+            -ExtraProperties FastAcceptanceTest=true
           name: Build
-          displayName: Build
+          displayName: Build (BuildXL cache)
+          env:
+            # Required by the Azure Pipelines cache backend to read/write Pipeline Caching content.
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+        - script: eng\common\CIBuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:Restore=false
+            /p:Build=false
+            /p:Test=false
+            /p:Sign=false
+            /p:Publish=false
+            /p:FastAcceptanceTest=true
+          name: Pack
+          displayName: Pack (Arcade)
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 

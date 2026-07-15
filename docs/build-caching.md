@@ -21,10 +21,17 @@ Caching is **off by default**. Nothing is restored or imported unless you pass
 | `Directory.Packages.props` | Selects the backend package (`Microsoft.MSBuildCache.AzurePipelines` in Azure Pipelines, `Microsoft.MSBuildCache.Local` elsewhere), pins `MSBuildCachePackageVersion`, and adds the `GlobalPackageReference`s — all guarded by `MSBuildCacheEnabled`. |
 | `eng/projectcaching.props` | Repo-specific plugin settings (cache universe, allowed post-project file accesses). Imported from `Directory.Build.props` only when caching is enabled. |
 | `Directory.Build.props` | Conditionally imports `eng/projectcaching.props`. |
-| `eng/build-with-cache.ps1` | Convenience wrapper that runs a cached local build with the correct MSBuild engine and switches. |
+| `eng/build-with-cache.ps1` | Convenience wrapper that runs a cached build with the correct MSBuild engine and switches. Used both locally and by the Windows CI job. |
+| `azure-pipelines.yml` | The Windows job builds under the cache (Restore → Build-with-cache → Pack). |
 
 The plugin's own `build/*.props` and `build/*.targets` are imported automatically by the
 `GlobalPackageReference` when the package is restored.
+
+> [!NOTE]
+> The plugin is registered from the evaluation of the graph **entry** project(s), so it only caches when
+> the real project/solution graph is the MSBuild entry point. Building through Arcade's `Build.proj` (which
+> builds projects via a nested MSBuild task) does **not** engage the plugin — hence the direct
+> `MSBuild.exe TestFx.slnx` build used by the helper and CI.
 
 ## Requirements — read this before running
 
@@ -76,35 +83,33 @@ If you prefer to invoke MSBuild yourself:
 
 ## Running a cached build in Azure Pipelines
 
-In CI the `Microsoft.MSBuildCache.AzurePipelines` backend is selected automatically (it keys off the
-`TF_BUILD` variable) and uses [Azure Pipeline Caching](https://learn.microsoft.com/azure/devops/pipelines/release/caching)
-as the shared cache store. Three things are required:
+Caching is **enabled by default on the Windows CI job**. Because the plugin only engages when the real
+project graph is the MSBuild entry point (not through Arcade's `Build.proj`, which builds projects via a
+nested MSBuild task), the Windows job is split into three steps:
 
-1. Build with the **x64 desktop MSBuild** engine (Arcade: `-msbuildEngine vs`; ensure the x64 flavor is
-   used) so `-reportFileAccesses` is available.
-2. Pass `-graph -m -reportFileAccesses -p:MSBuildCacheEnabled=true` to the build step.
-3. Expose the OAuth token and grant it the Pipeline Caching scope, because the plugin stores/reads cache
-   content through Azure Pipeline Caching:
-
-   ```yaml
-   variables:
-     # Grants $(System.AccessToken) the scope required by Pipeline Caching.
-     EnablePipelineCache: true
-
-   steps:
-   - script: eng\common\CIBuild.cmd -configuration Release -msbuildEngine vs
-       -graph -m -reportFileAccesses /p:MSBuildCacheEnabled=true
-     env:
-       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-   ```
+1. **Restore (Arcade)** — `eng\common\CIBuild.cmd ... /p:Build=false /p:Pack=false /p:Sign=false` restores
+   the toolset and all packages.
+2. **Build (BuildXL cache)** — `eng\build-with-cache.ps1` runs the x64 desktop MSBuild on `TestFx.slnx`
+   with `-graph -m -reportFileAccesses -p:MSBuildCacheEnabled=true`. The `Microsoft.MSBuildCache.AzurePipelines`
+   backend is selected automatically (via `TF_BUILD`) and uses
+   [Azure Pipeline Caching](https://learn.microsoft.com/azure/devops/pipelines/release/caching) as the
+   shared cache store. This step maps `SYSTEM_ACCESSTOKEN`, and the job sets the `EnablePipelineCache`
+   variable to grant that token the Pipeline Caching scope.
+3. **Pack (Arcade)** — `eng\common\CIBuild.cmd ... /p:Build=false /p:Pack=true` packs the already-built
+   outputs.
 
 See [Pipeline caching – cache isolation and security](https://learn.microsoft.com/azure/devops/pipelines/release/caching#cache-isolation-and-security)
 for how cache entries are scoped between branches/PRs.
 
-> [!NOTE]
-> Turning caching on in the repo's CI by default is intentionally left as a follow-up: it requires the
-> Windows jobs to build with the x64 desktop MSBuild engine through Arcade. The wiring in this repo is
-> validated and ready; flipping CI on is a separate, reviewed change.
+> [!IMPORTANT]
+> This is a **first-cut, gating** integration. A full-repo cached build under the file-access sandbox
+> surfaces per-project issues (files written after a project finishes, non-deterministic outputs, duplicate
+> writes across projects, cache-busting global properties) that can only be shaken out by real CI runs.
+> Expect to add exclusions to `eng/projectcaching.props` (e.g.
+> `MSBuildCacheIgnoredOutputPatterns`, `MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns`,
+> `MSBuildCacheIdenticalDuplicateOutputPatterns`, `MSBuildCacheGlobalPropertiesToIgnore`) over a few
+> iterations before the Windows job is reliably green. The `BuildCache.binlog` published under
+> `artifacts/log/<Configuration>` and the `MSBuildCache` log directory are the primary debugging inputs.
 
 ## Troubleshooting
 
