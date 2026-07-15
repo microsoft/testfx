@@ -72,46 +72,54 @@ internal partial class TestMethodInfo : ITestMethod
     /// <inheritdoc />
     ParameterInfo[] ITestMethod.ParameterTypes => (ParameterInfo[])ParameterTypes.Clone();
 
-    // Cached parameter metadata used by ResolveArguments so it does not re-run a reflective attribute
-    // scan on every invocation. For a data-driven test with N rows this collapses N redundant scans into one.
-    // _paramsParameterIndex is the 0-based index of the params parameter (-1 if none); -2 is the
-    // "not computed yet" sentinel. _requiredParameterCount is the number of required (non-optional,
-    // non-params) parameters. Both are populated together by EnsureParameterInfoComputed().
-    private int _paramsParameterIndex = -2;
-    private int _requiredParameterCount;
+    // Immutable parameter metadata (params-parameter index and required-parameter count) is a pure function
+    // of the MethodInfo. It is cached at process scope keyed by MethodInfo so that ResolveArguments does not
+    // re-run a reflective attribute scan for it. This is shared across TestMethodInfo instances, so even the
+    // default execution path — where discovery unfolds data sources and each row constructs a fresh
+    // TestMethodInfo — performs the scan only once per test method rather than once per row.
+    private static readonly ConcurrentDictionary<MethodInfo, ParameterMetadata> ParameterMetadataCache = new();
 
-    private void EnsureParameterInfoComputed()
+    private ParameterMetadata GetParameterMetadata()
     {
-        if (_paramsParameterIndex != -2)
+        if (!ParameterMetadataCache.TryGetValue(MethodInfo, out ParameterMetadata metadata))
         {
-            return;
+            // Racing threads may compute this concurrently, but the result is a pure function of the method,
+            // so every writer stores the same value and last-write-wins is safe.
+            metadata = ParameterMetadata.Compute(ParameterTypes);
+            ParameterMetadataCache[MethodInfo] = metadata;
         }
 
-        ParameterInfo[] parametersInfo = ParameterTypes;
-        int requiredParameterCount = 0;
-        int paramsParameterIndex = -1;
-        for (int i = 0; i < parametersInfo.Length; i++)
+        return metadata;
+    }
+
+    private readonly record struct ParameterMetadata(int ParamsParameterIndex, int RequiredParameterCount)
+    {
+        internal bool HasParams => ParamsParameterIndex >= 0;
+
+        internal static ParameterMetadata Compute(ParameterInfo[] parametersInfo)
         {
-            ParameterInfo parameter = parametersInfo[i];
-
-            // A params array parameter is not required and, when present, is always the last parameter.
-            // Use IsDefined rather than GetCustomAttribute to avoid materializing (and boxing) the attribute.
-            if (parameter.IsDefined(typeof(ParamArrayAttribute), inherit: false))
+            int requiredParameterCount = 0;
+            int paramsParameterIndex = -1;
+            for (int i = 0; i < parametersInfo.Length; i++)
             {
-                paramsParameterIndex = i;
-                break;
+                ParameterInfo parameter = parametersInfo[i];
+
+                // A params array parameter is not required and, when present, is always the last parameter.
+                // Use IsDefined rather than GetCustomAttribute to avoid materializing (and boxing) the attribute.
+                if (parameter.IsDefined(typeof(ParamArrayAttribute), inherit: false))
+                {
+                    paramsParameterIndex = i;
+                    break;
+                }
+
+                if (!parameter.IsOptional)
+                {
+                    requiredParameterCount++;
+                }
             }
 
-            if (!parameter.IsOptional)
-            {
-                requiredParameterCount++;
-            }
+            return new ParameterMetadata(paramsParameterIndex, requiredParameterCount);
         }
-
-        // Write the required count before flipping the sentinel so that any reader observing a
-        // non-sentinel _paramsParameterIndex is guaranteed to also see the correct _requiredParameterCount.
-        _requiredParameterCount = requiredParameterCount;
-        _paramsParameterIndex = paramsParameterIndex;
     }
 
     /// <summary>

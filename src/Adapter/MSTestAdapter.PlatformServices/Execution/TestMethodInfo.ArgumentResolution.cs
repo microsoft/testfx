@@ -15,11 +15,12 @@ internal partial class TestMethodInfo
         // array, so sharing the cached instance is safe.
         ParameterInfo[] parametersInfo = ParameterTypes;
 
-        // Use the lazily-computed, cached parameter metadata instead of re-scanning attributes on every
-        // call. For a data-driven test with N rows this avoids N redundant reflective attribute lookups.
-        EnsureParameterInfoComputed();
-        int requiredParameterCount = _requiredParameterCount;
-        bool hasParamsValue = _paramsParameterIndex >= 0;
+        // Use the shared, per-method cached parameter metadata instead of re-scanning attributes on every
+        // call. The metadata is a pure function of the method, so it is computed once per test method and
+        // reused across all data rows regardless of whether they share a TestMethodInfo instance.
+        ParameterMetadata metadata = GetParameterMetadata();
+        int requiredParameterCount = metadata.RequiredParameterCount;
+        bool hasParamsValue = metadata.HasParams;
         object? paramsValues = null;
 
         // If all the parameters are required, we have fewer arguments
