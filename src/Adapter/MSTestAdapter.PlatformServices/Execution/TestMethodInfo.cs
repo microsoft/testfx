@@ -77,19 +77,21 @@ internal partial class TestMethodInfo : ITestMethod
     // re-run a reflective attribute scan for it. This is shared across TestMethodInfo instances, so even the
     // default execution path — where discovery unfolds data sources and each row constructs a fresh
     // TestMethodInfo — performs the scan only once per test method rather than once per row.
-    private static readonly ConcurrentDictionary<MethodInfo, ParameterMetadata> ParameterMetadataCache = new();
+    // The Lazy ensures the scan runs exactly once per method even when method-level parallelization lets
+    // several unfolded rows reach the miss path concurrently.
+    private static readonly ConcurrentDictionary<MethodInfo, Lazy<ParameterMetadata>> ParameterMetadataCache = new();
 
     private ParameterMetadata GetParameterMetadata()
     {
-        if (!ParameterMetadataCache.TryGetValue(MethodInfo, out ParameterMetadata metadata))
+        if (!ParameterMetadataCache.TryGetValue(MethodInfo, out Lazy<ParameterMetadata>? metadata))
         {
-            // Racing threads may compute this concurrently, but the result is a pure function of the method,
-            // so every writer stores the same value and last-write-wins is safe.
-            metadata = ParameterMetadata.Compute(ParameterTypes);
-            ParameterMetadataCache[MethodInfo] = metadata;
+            ParameterInfo[] parametersInfo = ParameterTypes;
+            metadata = ParameterMetadataCache.GetOrAdd(
+                MethodInfo,
+                _ => new Lazy<ParameterMetadata>(() => ParameterMetadata.Compute(parametersInfo), isThreadSafe: true));
         }
 
-        return metadata;
+        return metadata.Value;
     }
 
     private readonly record struct ParameterMetadata(int ParamsParameterIndex, int RequiredParameterCount)
@@ -105,7 +107,7 @@ internal partial class TestMethodInfo : ITestMethod
                 ParameterInfo parameter = parametersInfo[i];
 
                 // A params array parameter is not required and, when present, is always the last parameter.
-                // Use IsDefined rather than GetCustomAttribute to avoid materializing (and boxing) the attribute.
+                // Use IsDefined rather than GetCustomAttribute to avoid materializing the attribute instance.
                 if (parameter.IsDefined(typeof(ParamArrayAttribute), inherit: false))
                 {
                     paramsParameterIndex = i;
