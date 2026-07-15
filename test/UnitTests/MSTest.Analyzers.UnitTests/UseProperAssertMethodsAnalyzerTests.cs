@@ -1395,6 +1395,38 @@ public sealed class UseProperAssertMethodsAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
 
+    [TestMethod]
+    public async Task WhenAssertIsTrueOrIsFalseWithNonGenericIDictionaryContains_NoDiagnostic()
+    {
+        // 'System.Collections.IDictionary.Contains(object)' checks for a matching *key*, whereas
+        // 'Assert.Contains' enumerates the dictionary (yielding 'DictionaryEntry' items). These have
+        // different semantics, so the analyzer must not suggest 'Assert.Contains' here.
+        // See https://github.com/microsoft/testfx/issues/9966.
+        string code = """
+            using System.Collections;
+            using System.Collections.Generic;
+
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTests
+            {
+                [TestMethod]
+                public void Contains()
+                {
+                    IDictionary dict = new Dictionary<string, string>() { { "a", "b" } };
+                    Assert.IsTrue(dict.Contains("a"));
+                    Assert.IsFalse(dict.Contains("a"));
+
+                    Hashtable hashtable = new Hashtable();
+                    Assert.IsTrue(hashtable.Contains("a"));
+                    Assert.IsFalse(hashtable.Contains("a"));
+                }
+            }
+            """;
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
     #region New test cases for string methods
 
     [TestMethod]
