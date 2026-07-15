@@ -16,3 +16,12 @@ static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.FindManifestPat
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.GetManifestPath(string! layoutDirectory) -> string?
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifest(System.IO.Stream! manifestStream) -> Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!
 static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifest(string! manifestPath) -> Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeDirectory(string! packageFamilyName) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! testHostControllerPid) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.ReadAndDelete(string! filePath) -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>?
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryDelete(string! filePath) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> string?
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.Write(string! filePath, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>! entries) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(System.Collections.Generic.IReadOnlyList<string!>! commandLineArguments) -> void

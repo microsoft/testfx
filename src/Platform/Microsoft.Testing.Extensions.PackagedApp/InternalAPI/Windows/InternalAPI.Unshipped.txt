@@ -1,0 +1,13 @@
+#nullable enable
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId) -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Dispose() -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ExitCode.get -> int
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.HasExited.get -> bool
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Identifier.get -> string?
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Terminate() -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.WaitForExitAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager
+static Microsoft.Testing.Extensions.PackagedApp.Interop.ApplicationActivationManager.ActivateApplication(string! appUserModelId, string? arguments) -> uint
+Microsoft.Testing.Extensions.PackagedApp.PackageDeployer
+static Microsoft.Testing.Extensions.PackagedApp.PackageDeployer.RegisterAndActivateAsync(string! manifestPath, string! appUserModelId, string? activationArguments, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<uint>!
