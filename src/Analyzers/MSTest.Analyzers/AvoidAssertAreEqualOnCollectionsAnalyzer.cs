@@ -160,14 +160,18 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             case INamedTypeSymbol namedType:
                 return ImplementsSelfEquatable(namedType, namedType, equatableSymbol) || OverridesObjectEquals(namedType);
 
-            // EqualityComparer&lt;T&gt;.Default honors an `IEquatable<T>` constraint, and a class constraint that itself
-            // declares its own equality is likewise usable. A bare `where T : IEnumerable<...>` constraint has neither,
-            // so it stays the reference-equality footgun we still want to flag.
+            // EqualityComparer&lt;T&gt;.Default honors a `where T : IEquatable<T>` constraint, and a class constraint that
+            // overrides object.Equals is inherited by every T. A bare `where T : IEnumerable<...>` constraint has
+            // neither, so it stays the reference-equality footgun we still want to flag.
+            //
+            // The equality target stays `typeParameter` (T) while we traverse constraints. We must NOT recurse with the
+            // constraint as the new target: for `where T : ISelf` with `ISelf : IEquatable<ISelf>`, a concrete T need
+            // not implement IEquatable&lt;T&gt;, so EqualityComparer&lt;T&gt;.Default would still use reference equality.
             case ITypeParameterSymbol typeParameter:
                 foreach (ITypeSymbol constraintType in typeParameter.ConstraintTypes)
                 {
-                    if ((constraintType is INamedTypeSymbol namedConstraint && ImplementsSelfEquatable(namedConstraint, typeParameter, equatableSymbol))
-                        || DeclaresOwnEquality(constraintType, equatableSymbol))
+                    if (constraintType is INamedTypeSymbol namedConstraint &&
+                        (ImplementsSelfEquatable(namedConstraint, typeParameter, equatableSymbol) || OverridesObjectEquals(namedConstraint)))
                     {
                         return true;
                     }
@@ -215,7 +219,13 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
 
     private static bool OverridesObjectEquals(INamedTypeSymbol type)
     {
-        for (INamedTypeSymbol? current = type; current is not null && current.SpecialType != SpecialType.System_Object; current = current.BaseType)
+        // Stop before object AND ValueType: System.ValueType overrides object.Equals, so walking into it would treat
+        // every struct that implements IEnumerable<T> as declaring its own equality even when it has no Equals of its
+        // own (its backing array/list field would then be compared by reference). An explicit struct override is found
+        // on the concrete type before we reach ValueType.
+        for (INamedTypeSymbol? current = type;
+            current is not null && current.SpecialType is not (SpecialType.System_Object or SpecialType.System_ValueType or SpecialType.System_Enum);
+            current = current.BaseType)
         {
             foreach (ISymbol member in current.GetMembers(nameof(Equals)))
             {

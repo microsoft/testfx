@@ -1113,6 +1113,144 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
         await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "MyCollection"));
     }
 
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnStructCollectionWithoutOwnEquality_ReportDiagnostic()
+    {
+        // A struct implementing IEnumerable<T> inherits ValueType.Equals but declares no equality of its own,
+        // so EqualityComparer<T>.Default falls back to field-wise (here reference) comparison of the backing list.
+        // The walk must stop before System.ValueType so this is still reported.
+        string code = """
+            #nullable enable
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = default;
+                    MyCollection c2 = default;
+                    {|#0:Assert.AreEqual(c1, c2)|};
+                }
+
+                private struct MyCollection : IEnumerable<int>
+                {
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "MyCollection"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnStructCollectionOverridingObjectEquals_DoNotReportDiagnostic()
+    {
+        // A struct that explicitly overrides object.Equals is found on the concrete type before ValueType, so its
+        // intentional equality is honored and MSTEST0065 is suppressed.
+        string code = """
+            #nullable enable
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = default;
+                    MyCollection c2 = default;
+                    Assert.AreEqual(c1, c2);
+                }
+
+                private struct MyCollection : IEnumerable<int>
+                {
+                    public override bool Equals(object? obj) => true;
+
+                    public override int GetHashCode() => 0;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnTypeParameterConstrainedToSelfEquatingType_ReportDiagnostic()
+    {
+        // `where T : ISelf` with `ISelf : IEquatable<ISelf>` does NOT guarantee T implements IEquatable<T>:
+        // a concrete T is only required to be assignable to ISelf. EqualityComparer<T>.Default therefore may still
+        // use reference equality, so the diagnostic must be preserved (the constraint's own IEquatable<ISelf> is not T's).
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod<T>(T a, T b) where T : ISelf
+                {
+                    {|#0:Assert.AreEqual(a, b)|};
+                }
+
+                public interface ISelf : IEnumerable<int>, IEquatable<ISelf>
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "T"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnTypeParameterConstrainedToClassOverridingObjectEquals_DoNotReportDiagnostic()
+    {
+        // A class constraint that overrides object.Equals is inherited by every T, so EqualityComparer<T>.Default
+        // uses that intentional equality.
+        string code = """
+            #nullable enable
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod<T>(T a, T b) where T : BaseCollection
+                {
+                    Assert.AreEqual(a, b);
+                }
+
+                public class BaseCollection : IEnumerable<int>
+                {
+                    public override bool Equals(object? obj) => true;
+
+                    public override int GetHashCode() => 0;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     private static DiagnosticResult ExpectedDiagnostic(string methodName, string typeName)
         => VerifyCS.Diagnostic().WithLocation(0).WithArguments(methodName, typeName);
 
