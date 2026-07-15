@@ -304,7 +304,7 @@ internal static class CtrfReportMerger
             hashHigh = (hashHigh ^ ((ulong)report.Length + 1UL)) * fnvPrime;
         }
 
-        var bytes = new byte[16];
+        byte[] bytes = new byte[16];
         BitConverter.GetBytes(hashLow).CopyTo(bytes, 0);
         BitConverter.GetBytes(hashHigh).CopyTo(bytes, 8);
         return new Guid(bytes).ToString("D");

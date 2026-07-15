@@ -380,22 +380,88 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
-        // Attachment references are relative to the deployment root: UriAttachment '<A href="...">'
-        // and per-result '<ResultFile path="...">'. Prefix them so they point at the isolated subfolder.
-        // Materialize first: an escaping reference is removed below, and removing while enumerating the
-        // lazy Descendants() sequence would be unsafe.
-        foreach (XElement element in root.Descendants().ToList())
+        // Attachment references come in two shapes with different resolution rules:
+        //   * Collector attachments '<A href="...">' are relative to the deployment 'In' root, so the
+        //     copy under In/<prefix>/... is reached by prefixing the href.
+        //   * Per-test '<ResultFile path="...">' are resolved by consumers under
+        //     In/<owning UnitTestResult @relativeResultsDirectory>/<path>, so the copy under
+        //     In/<prefix>/<relativeResultsDirectory>/<path> is reached by prefixing the *directory*, not
+        //     the path. A ResultFile without an owning relativeResultsDirectory behaves like a collector
+        //     href (In/<path>).
+        // Materialize each pass first: an escaping reference is removed, and removing while enumerating
+        // the lazy Descendants() sequence would be unsafe.
+        foreach (XElement collectorAttachment in root.Descendants().Where(e => e.Name.LocalName == "A").ToList())
         {
-            switch (element.Name.LocalName)
-            {
-                case "A":
-                    PrefixRelativeAttribute(element, "href", prefix);
-                    break;
+            PrefixRelativeAttribute(collectorAttachment, "href", prefix);
+        }
 
-                case "ResultFile":
-                    PrefixRelativeAttribute(element, "path", prefix);
-                    break;
+        foreach (XElement unitTestResult in root.Descendants().Where(e => e.Name.LocalName == "UnitTestResult").ToList())
+        {
+            PrefixResultFilesForUnitTestResult(unitTestResult, prefix);
+        }
+
+        // Any standalone ResultFile (no owning UnitTestResult, e.g. from a foreign producer) resolves at
+        // In/<path>, like a collector href. Materialized after the pass above so ResultFiles already
+        // dropped there do not reappear here.
+        foreach (XElement standaloneResultFile in root.Descendants()
+            .Where(e => e.Name.LocalName == "ResultFile" && e.Ancestors().All(a => a.Name.LocalName != "UnitTestResult"))
+            .ToList())
+        {
+            PrefixRelativeAttribute(standaloneResultFile, "path", prefix);
+        }
+    }
+
+    /// <summary>
+    /// Prefixes the per-test <c>ResultFile</c> references of a single <c>UnitTestResult</c>. Consumers
+    /// resolve them under <c>In/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>, so the relocated copy
+    /// (under <c>In/&lt;prefix&gt;/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>) is reached by
+    /// prefixing the directory once; a reference whose combined directory/path escapes the root (or is
+    /// rooted) is dropped instead of emitted.
+    /// </summary>
+    private static void PrefixResultFilesForUnitTestResult(XElement unitTestResult, string prefix)
+    {
+        List<XElement> resultFiles = [.. unitTestResult.Descendants().Where(e => e.Name.LocalName == "ResultFile")];
+        if (resultFiles.Count == 0)
+        {
+            return;
+        }
+
+        XAttribute? relativeDirectory = unitTestResult.Attribute("relativeResultsDirectory");
+        string relativeDirectoryValue = relativeDirectory?.Value ?? string.Empty;
+
+        if (relativeDirectory is null || RoslynString.IsNullOrEmpty(relativeDirectoryValue))
+        {
+            // No owning directory: each path resolves at In/<path>, like a collector href.
+            foreach (XElement resultFile in resultFiles)
+            {
+                PrefixRelativeAttribute(resultFile, "path", prefix);
             }
+
+            return;
+        }
+
+        // Validate the combined directory/path (that is what a consumer resolves) and drop any escaping
+        // or rooted reference, so a hostile relativeResultsDirectory such as '../../..' cannot make the
+        // merged TRX point outside its deployment root.
+        bool anyKept = false;
+        foreach (XElement resultFile in resultFiles)
+        {
+            string path = resultFile.Attribute("path")?.Value ?? string.Empty;
+            if (Path.IsPathRooted(relativeDirectoryValue) || Path.IsPathRooted(path) || EscapesRoot(relativeDirectoryValue + "/" + path))
+            {
+                resultFile.Remove();
+            }
+            else
+            {
+                anyKept = true;
+            }
+        }
+
+        // Prefix the directory once (only if at least one reference survived) so every kept path resolves
+        // to the relocated copy.
+        if (anyKept)
+        {
+            relativeDirectory.Value = prefix + "/" + relativeDirectoryValue;
         }
     }
 
@@ -706,7 +772,7 @@ internal sealed partial class TrxReportEngine
 
     // Fixed namespace used to derive the (deterministic) TestSettings id from the run id, so the settings
     // id is stable across retries yet distinct from the run id itself.
-    private static readonly Guid s_testSettingsIdNamespace = new("b3f8f9d1-2e4a-4c6b-9f0d-7a1c2e5b8d40");
+    private static readonly Guid TestSettingsIdNamespace = new("b3f8f9d1-2e4a-4c6b-9f0d-7a1c2e5b8d40");
 
     /// <summary>
     /// Derives a stable <c>TestSettings</c> id from <paramref name="runId"/> by XoR-ing it with a fixed
@@ -716,8 +782,8 @@ internal sealed partial class TrxReportEngine
     private static Guid CreateDeterministicSettingsId(Guid runId)
     {
         byte[] runBytes = runId.ToByteArray();
-        byte[] namespaceBytes = s_testSettingsIdNamespace.ToByteArray();
-        var result = new byte[16];
+        byte[] namespaceBytes = TestSettingsIdNamespace.ToByteArray();
+        byte[] result = new byte[16];
         for (int i = 0; i < result.Length; i++)
         {
             result[i] = (byte)(runBytes[i] ^ namespaceBytes[i]);

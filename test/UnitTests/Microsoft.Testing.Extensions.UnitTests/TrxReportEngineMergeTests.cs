@@ -386,6 +386,102 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
+    public async Task MergeToFileAsync_RelocatesPerTestResultFilesByPrefixingResultDirectory()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // Per-test ResultFiles resolve under In/<relativeResultsDirectory>/<path>. The physical file
+            // lives at <deploymentRoot>/In/<relativeResultsDirectory>/<machine>/<file>, and the ResultFile
+            // path is '<machine>/<file>'. Relocation must prefix the directory (not the path) so the
+            // merged href resolves to the copied bytes.
+            string inputDir = Path.Combine(tempDirectory, "in");
+            const string executionId = "exec-1111";
+            string physical = Path.Combine(inputDir, "dep", "In", executionId, "machine");
+            Directory.CreateDirectory(physical);
+            File.WriteAllText(Path.Combine(physical, "log.txt"), "AAA");
+
+            var unitTestResult = new XElement(
+                Ns + "UnitTestResult",
+                new XAttribute("executionId", executionId),
+                new XAttribute("relativeResultsDirectory", executionId),
+                new XElement(Ns + "ResultFiles", new XElement(Ns + "ResultFile", new XAttribute("path", "machine/log.txt"))));
+
+            XDocument report = BuildReport(results: [unitTestResult]);
+            report.Root!.Add(new XElement(
+                Ns + "TestSettings",
+                new XAttribute("name", "default"),
+                new XElement(Ns + "Deployment", new XAttribute("runDeploymentRoot", "dep"))));
+
+            string input = Path.Combine(inputDir, "a.trx");
+            report.Save(input);
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            XDocument mergedDoc = XDocument.Load(output);
+            XElement mergedResult = mergedDoc.Descendants().First(e => e.Name.LocalName == "UnitTestResult");
+            string relativeDirectory = mergedResult.Attribute("relativeResultsDirectory")!.Value;
+            string resultFilePath = mergedResult.Descendants().First(e => e.Name.LocalName == "ResultFile").Attribute("path")!.Value;
+
+            // The directory is prefixed with the per-input isolation folder; the path is left intact.
+            Assert.AreEqual($"0/{executionId}", relativeDirectory);
+            Assert.AreEqual("machine/log.txt", resultFilePath);
+
+            // The consumer-resolved path (In/<relativeResultsDirectory>/<path>) must point at real bytes.
+            string resolved = Path.Combine(tempDirectory, "out", "run", "In", relativeDirectory.Replace('/', Path.DirectorySeparatorChar), resultFilePath.Replace('/', Path.DirectorySeparatorChar));
+            Assert.IsTrue(File.Exists(resolved));
+            Assert.AreEqual("AAA", File.ReadAllText(resolved));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenResultDirectoryEscapesRoot_DropsResultFile()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // A hostile relativeResultsDirectory with a benign path: consumers resolve
+            // In/<relativeResultsDirectory>/<path>, which escapes. The reference must be dropped.
+            string inputDir = Path.Combine(tempDirectory, "in");
+            string physical = Path.Combine(inputDir, "dep", "In", "machine");
+            Directory.CreateDirectory(physical);
+            File.WriteAllText(Path.Combine(physical, "log.txt"), "AAA");
+
+            var unitTestResult = new XElement(
+                Ns + "UnitTestResult",
+                new XAttribute("executionId", "exec-1"),
+                new XAttribute("relativeResultsDirectory", "../../.."),
+                new XElement(Ns + "ResultFiles", new XElement(Ns + "ResultFile", new XAttribute("path", "machine/log.txt"))));
+
+            XDocument report = BuildReport(results: [unitTestResult]);
+            report.Root!.Add(new XElement(
+                Ns + "TestSettings",
+                new XAttribute("name", "default"),
+                new XElement(Ns + "Deployment", new XAttribute("runDeploymentRoot", "dep"))));
+
+            string input = Path.Combine(inputDir, "a.trx");
+            report.Save(input);
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            List<string> resultFilePaths = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "ResultFile").Select(e => e.Attribute("path")!.Value)];
+            Assert.IsEmpty(resultFilePaths);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WhenRunNameEscapesOutputDirectory_UsesConfinedDeploymentRoot()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
