@@ -997,15 +997,15 @@ The type declaring these methods should also respect the following rules:
     <comment>{Locked="DisplayName"}</comment>
   </data>
   <data name="AssemblyFixtureProviderNotSupportedWithNativeAotTitle" xml:space="preserve">
-    <value>'[AssemblyFixtureProvider]' is not supported with Native AOT</value>
-    <comment>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}</comment>
+    <value>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</value>
+    <comment>{Locked="[AssemblyFixtureProvider]"}</comment>
   </data>
   <data name="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat" xml:space="preserve">
-    <value>'[AssemblyFixtureProvider]' is not supported when publishing with Native AOT and will be ignored at run time</value>
-    <comment>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}</comment>
+    <value>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</value>
+    <comment>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</comment>
   </data>
   <data name="AssemblyFixtureProviderNotSupportedWithNativeAotDescription" xml:space="preserve">
-    <value>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</value>
-    <comment>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}</comment>
+    <value>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</value>
+    <comment>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</comment>
   </data>
 </root>
