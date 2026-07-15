@@ -17,7 +17,7 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// <list type="bullet">
 ///   <item><description><c>results.tests[]</c> arrays are concatenated as-is.</description></item>
 ///   <item><description><c>results.summary</c> counters are re-derived by counting the merged <c>tests[]</c> (so <c>summary.tests</c> always matches the array length); <c>start</c>/<c>stop</c> use the earliest/latest across inputs, <c>duration</c> is the resulting span.</description></item>
-///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is freshly generated.</description></item>
+///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is derived deterministically from the inputs, so identical inputs reproduce the same id (RFC 018 idempotency).</description></item>
 ///   <item><description><c>tool</c> keeps a concrete identity only when every input reported the exact same tool object; otherwise (inputs disagree or any input omits it) a neutral merger identity is used, so one framework is not attributed to another's tests.</description></item>
 ///   <item><description><c>environment</c> keeps the first report's shared fields, but module-specific values under <c>extra</c> (<c>testApplication</c>, <c>exitCode</c>) are dropped rather than presented as describing all merged modules.</description></item>
 /// </list>
@@ -196,7 +196,7 @@ internal static class CtrfReportMerger
         {
             ["reportFormat"] = first["reportFormat"]?.DeepClone() ?? "CTRF",
             ["specVersion"] = first["specVersion"]?.DeepClone() ?? "0.0.0",
-            ["reportId"] = Guid.NewGuid().ToString("D"),
+            ["reportId"] = CreateDeterministicReportId(inputReports),
             ["timestamp"] = DateTimeOffset.FromUnixTimeMilliseconds(stopMs).ToString("O", CultureInfo.InvariantCulture),
             ["results"] = resultsObject,
         };
@@ -223,6 +223,10 @@ internal static class CtrfReportMerger
         {
             throw new ArgumentNullException(nameof(outputPath));
         }
+
+        // RFC 018 treats per-module inputs as read-only and requires them to remain on disk; reject an
+        // output that aliases an input so a merge can never overwrite one of its own sources.
+        EnsureOutputDoesNotAliasInput(inputPaths, outputPath);
 
         var reports = new List<string>(inputPaths.Count);
         foreach (string inputPath in inputPaths)
@@ -272,6 +276,57 @@ internal static class CtrfReportMerger
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Derives a stable <c>reportId</c> from the raw input reports so identical inputs reproduce the same
+    /// id on every retry (RFC 018 idempotency) without a random source or reusing an input report's id.
+    /// A non-cryptographic 128-bit FNV-1a fill is sufficient here — the id only needs to be deterministic
+    /// and collision-resistant enough to identify a merged report, not secret.
+    /// </summary>
+    private static string CreateDeterministicReportId(IReadOnlyList<string> inputReports)
+    {
+        const ulong fnvPrime = 1099511628211UL;
+        ulong hashLow = 14695981039346656037UL;
+        ulong hashHigh = 0x9E3779B97F4A7C15UL;
+
+        foreach (string report in inputReports)
+        {
+            foreach (char c in report)
+            {
+                hashLow = (hashLow ^ c) * fnvPrime;
+                hashHigh = (hashHigh ^ c) * fnvPrime;
+            }
+
+            // Fold in each input's length so different chunk boundaries (e.g. ["ab","c"] vs ["a","bc"])
+            // never collide.
+            hashLow = (hashLow ^ (ulong)report.Length) * fnvPrime;
+            hashHigh = (hashHigh ^ ((ulong)report.Length + 1UL)) * fnvPrime;
+        }
+
+        var bytes = new byte[16];
+        BitConverter.GetBytes(hashLow).CopyTo(bytes, 0);
+        BitConverter.GetBytes(hashHigh).CopyTo(bytes, 8);
+        return new Guid(bytes).ToString("D");
+    }
+
+    /// <summary>
+    /// Rejects an output path that resolves to one of the input report paths, so a merge never overwrites
+    /// a source report (RFC 018 keeps inputs on disk, read-only).
+    /// </summary>
+    private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
+    {
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        string outputFull = Path.GetFullPath(outputPath);
+        foreach (string inputPath in inputPaths)
+        {
+            if (string.Equals(Path.GetFullPath(inputPath), outputFull, comparison))
+            {
+                throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
+            }
+        }
     }
 
     private static long Min(long? current, long candidate)

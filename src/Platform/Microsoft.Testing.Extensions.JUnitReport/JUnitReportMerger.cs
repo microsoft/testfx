@@ -121,6 +121,11 @@ internal static class JUnitReportMerger
             throw new ArgumentNullException(nameof(outputPath));
         }
 
+        // RFC 018 treats per-module inputs as read-only and requires them to remain on disk; reject an
+        // output that aliases an input so a merge (which writes with a truncating File.Create) can never
+        // overwrite one of its own sources.
+        EnsureOutputDoesNotAliasInput(inputPaths, outputPath);
+
         var reports = new List<XDocument>(inputPaths.Count);
         foreach (string inputPath in inputPaths)
         {
@@ -165,5 +170,24 @@ internal static class JUnitReportMerger
         }
 
         return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out result);
+    }
+
+    /// <summary>
+    /// Rejects an output path that resolves to one of the input report paths, so a merge never overwrites
+    /// a source report (RFC 018 keeps inputs on disk, read-only).
+    /// </summary>
+    private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
+    {
+        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        string outputFull = Path.GetFullPath(outputPath);
+        foreach (string inputPath in inputPaths)
+        {
+            if (string.Equals(Path.GetFullPath(inputPath), outputFull, comparison))
+            {
+                throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
+            }
+        }
     }
 }

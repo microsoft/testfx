@@ -14,7 +14,9 @@ internal sealed partial class TrxReportEngine
     /// This is a pure, invocation-agnostic XML-level merge: it does no I/O and reads no clock, so a
     /// user-facing merge tool and an SDK-orchestrated post-processor can share it and, given the same
     /// <paramref name="runId"/>/<paramref name="runName"/> and inputs, produce equivalent output. The
-    /// only non-deterministic element is the freshly generated <c>TestSettings</c> id.
+    /// emitted <c>TestSettings</c> id is derived deterministically from <paramref name="runId"/>, so
+    /// identical inputs reproduce byte-for-byte identical XML (RFC 018 idempotency; the orchestrator may
+    /// retry).
     /// <para>
     /// Merge rules:
     /// <list type="bullet">
@@ -142,7 +144,7 @@ internal sealed partial class TrxReportEngine
             new XAttribute("name", runName));
 
         mergedTestRun.Add(BuildTimes(earliestStart, latestFinish));
-        mergedTestRun.Add(BuildTestSettings(runName));
+        mergedTestRun.Add(BuildTestSettings(runId, runName));
         mergedTestRun.Add(mergedResults);
         mergedTestRun.Add(mergedTestDefinitions);
         mergedTestRun.Add(mergedTestEntries);
@@ -171,6 +173,11 @@ internal sealed partial class TrxReportEngine
         {
             throw new ArgumentNullException(nameof(outputPath));
         }
+
+        // RFC 018 treats per-module inputs as read-only and requires them to remain on disk. The merged
+        // TRX is written with File.Create (truncating); reject an output that aliases an input so a merge
+        // can never overwrite one of its own sources.
+        EnsureOutputDoesNotAliasInput(inputPaths, outputPath);
 
         var reports = new List<XDocument>(inputPaths.Count);
         foreach (string inputPath in inputPaths)
@@ -323,39 +330,31 @@ internal sealed partial class TrxReportEngine
                 string prefix = i.ToString(CultureInfo.InvariantCulture);
                 string destForInput = Path.Combine(mergedInRoot, prefix);
 
-                // Strict overlap (one 'In' root is nested inside the other): copying source directly
-                // into a subfolder of the merged root would either recurse into its own destination
-                // (merged nested under source) or, if we simply skipped, leave the prefixed hrefs
-                // dangling. Stage the copy through a temporary directory outside both trees, then move
-                // it into place, so the per-input prefix rewrite below is always correct.
+                // Strict overlap (one 'In' root is nested inside the other, e.g. the output directory was
+                // placed inside an input's deployment tree): copying source directly into a subfolder of
+                // the merged root would recurse into its own destination. Stage the copy through a
+                // temporary directory outside both trees, then overlay it into place, so the per-input
+                // prefix rewrite below is always correct without recursing.
                 bool strictOverlap = IsUnderDirectory(mergedInRoot, sourceInRoot) || IsUnderDirectory(sourceInRoot, mergedInRoot);
-
-                // Isolate each input under its own subfolder so identical relative attachment paths
-                // from different inputs cannot shadow each other.
-                //
-                // Only clear the destination wholesale when it does not contain an input report tree.
-                // If it does (e.g. an input lives under the merged 'In' root), a blanket delete would
-                // remove originals or sibling/later inputs, so we overlay the copy instead (per-file
-                // overwrite; CopyDirectoryRecursive still removes stale destination reparse points).
-                bool destinationContainsInput = ContainsAnyDirectory(destForInput, protectedDirectories);
 
                 if (strictOverlap)
                 {
-                    // Stage the source out first (before clearing the destination, which could otherwise
-                    // be inside the source tree). Only when the merged root is nested INSIDE the source
-                    // does the source snapshot also contain the previous merged 'In' tree; exclude it in
-                    // that direction so repeated merges don't accumulate recursively-nested stale trees.
-                    string? excludeSubtree = IsUnderDirectory(mergedInRoot, sourceInRoot) && !string.Equals(mergedInRoot, sourceInRoot, PathComparison)
-                        ? mergedInRoot
-                        : null;
-                    CopyViaStaging(sourceInRoot, destForInput, excludeSubtree, clearDestination: !destinationContainsInput, cancellationToken);
+                    // Non-destructive: never delete or omit any part of the source tree (RFC 018 treats
+                    // inputs as read-only and requires them to stay on disk). We deliberately do NOT try
+                    // to infer which files under an overlapping path are the merger's own prior output —
+                    // that inference could drop legitimate source attachments — so we copy everything and
+                    // overlay (per-file overwrite). In the pathological nested-output configuration this
+                    // may leave benign stale bytes from an earlier retry, which is preferred over ever
+                    // removing an original.
+                    CopyViaStaging(sourceInRoot, destForInput, cancellationToken);
                 }
                 else
                 {
-                    // Recreate the destination as a fresh, non-link tree first (unless it holds an input)
-                    // so a pre-existing junction/symlink (or stale bytes) from a reused output directory
-                    // can't redirect the copy or linger.
-                    if (!destinationContainsInput)
+                    // Disjoint trees: the destination lives under the merged 'In' root, outside every
+                    // source tree, so recreating it as a fresh, non-link tree is safe and clears stale
+                    // bytes / redirecting junctions from a reused output directory. Guard only against a
+                    // destination that happens to hold an input report or its resolved source root.
+                    if (!ContainsAnyDirectory(destForInput, protectedDirectories))
                     {
                         DeleteDirectoryTreeOrLink(destForInput);
                     }
@@ -383,7 +382,9 @@ internal sealed partial class TrxReportEngine
 
         // Attachment references are relative to the deployment root: UriAttachment '<A href="...">'
         // and per-result '<ResultFile path="...">'. Prefix them so they point at the isolated subfolder.
-        foreach (XElement element in root.Descendants())
+        // Materialize first: an escaping reference is removed below, and removing while enumerating the
+        // lazy Descendants() sequence would be unsafe.
+        foreach (XElement element in root.Descendants().ToList())
         {
             switch (element.Name.LocalName)
             {
@@ -406,7 +407,48 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
+        // A relative value such as '../../../secret' passes the rooted check yet, once resolved from the
+        // merged deployment root, escapes the confined output tree. Drop the reference entirely rather
+        // than emit a traversal href a downstream TRX consumer could resolve outside the output.
+        if (EscapesRoot(attribute.Value))
+        {
+            element.Remove();
+            return;
+        }
+
         attribute.Value = prefix + "/" + attribute.Value;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if the relative <paramref name="relativePath"/> resolves above its
+    /// own root (i.e. a <c>..</c> segment pops past the start), meaning it would escape the confined
+    /// deployment directory once resolved.
+    /// </summary>
+    private static bool EscapesRoot(string relativePath)
+    {
+        int depth = 0;
+        foreach (string segment in relativePath.Split('/', '\\'))
+        {
+            if (segment is "" or ".")
+            {
+                continue;
+            }
+
+            if (segment == "..")
+            {
+                depth--;
+                if (depth < 0)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                depth++;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsUnderDirectory(string candidateFullPath, string rootDirectory)
@@ -425,28 +467,19 @@ internal sealed partial class TrxReportEngine
     /// Copies <paramref name="sourceDirectory"/> to <paramref name="destinationDirectory"/> via a
     /// temporary staging directory outside both trees. Used when the source and the merged destination
     /// strictly overlap, so the copy never recurses into its own destination while still landing the
-    /// files at the prefixed destination (keeping the rewritten hrefs valid).
-    /// <paramref name="excludeSubtree"/> (the merged 'In' root) is skipped while staging so a source that
-    /// contains the previous merged output does not snapshot it into the new destination.
+    /// files at the prefixed destination (keeping the rewritten hrefs valid). The copy is non-destructive:
+    /// nothing under the source is deleted or omitted (RFC 018 keeps inputs on disk, read-only); the
+    /// destination is overlaid per file.
     /// </summary>
-    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, string? excludeSubtree, bool clearDestination, CancellationToken cancellationToken)
+    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
     {
         string staging = Path.Combine(Path.GetTempPath(), "mtp-trx-merge-" + Guid.NewGuid().ToString("N"));
         try
         {
-            // Copy the source out to a temp location OUTSIDE both trees first, so clearing the
-            // destination (which may be nested inside the source) cannot corrupt the source, and the
-            // final copy never recurses into its own destination.
-            CopyDirectoryRecursive(sourceDirectory, staging, excludeSubtree, cancellationToken);
-
-            // Only clear the destination when it does not contain an input tree; otherwise overlay so
-            // originals are never removed (RFC 018 requires them to remain on disk).
-            if (clearDestination)
-            {
-                DeleteDirectoryTreeOrLink(destinationDirectory);
-            }
-
-            CopyDirectoryRecursive(staging, destinationDirectory, excludeSubtree: null, cancellationToken);
+            // Snapshot the source to a temp location OUTSIDE both trees first, so the final copy into a
+            // destination that may be nested inside the source never recurses into itself.
+            CopyDirectoryRecursive(sourceDirectory, staging, cancellationToken);
+            CopyDirectoryRecursive(staging, destinationDirectory, cancellationToken);
         }
         finally
         {
@@ -461,6 +494,8 @@ internal sealed partial class TrxReportEngine
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                // Swallowed on purpose: the staging directory lives under the temp path and leaking it is
+                // preferable to masking the primary exception that is already unwinding.
             }
         }
     }
@@ -480,18 +515,8 @@ internal sealed partial class TrxReportEngine
     }
 
     private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
-        => CopyDirectoryRecursive(sourceDirectory, destinationDirectory, excludeSubtree: null, cancellationToken);
-
-    private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, string? excludeSubtree, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        // Skip the excluded subtree (e.g. a previous merged 'In' root nested under the source) so we
-        // don't snapshot the merger's own prior output into the new destination.
-        if (excludeSubtree is not null && IsUnderDirectory(Path.GetFullPath(sourceDirectory), excludeSubtree))
-        {
-            return;
-        }
 
         // Do not descend into reparse points (symlinks/junctions): a link inside the (confined) source
         // tree could otherwise redirect the copy to an arbitrary location.
@@ -536,7 +561,7 @@ internal sealed partial class TrxReportEngine
 
         foreach (string directory in Directory.GetDirectories(sourceDirectory))
         {
-            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), excludeSubtree, cancellationToken);
+            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), cancellationToken);
         }
     }
 
@@ -669,14 +694,52 @@ internal sealed partial class TrxReportEngine
         return times;
     }
 
-    private static XElement BuildTestSettings(string runName)
+    private static XElement BuildTestSettings(Guid runId, string runName)
     {
         var testSettings = new XElement(
             NamespaceUri + "TestSettings",
             new XAttribute("name", "default"),
-            new XAttribute("id", Guid.NewGuid()));
+            new XAttribute("id", CreateDeterministicSettingsId(runId)));
         testSettings.Add(new XElement(NamespaceUri + "Deployment", new XAttribute("runDeploymentRoot", GetConfinedDeploymentRootLeaf(runName))));
         return testSettings;
+    }
+
+    // Fixed namespace used to derive the (deterministic) TestSettings id from the run id, so the settings
+    // id is stable across retries yet distinct from the run id itself.
+    private static readonly Guid s_testSettingsIdNamespace = new("b3f8f9d1-2e4a-4c6b-9f0d-7a1c2e5b8d40");
+
+    /// <summary>
+    /// Derives a stable <c>TestSettings</c> id from <paramref name="runId"/> by XoR-ing it with a fixed
+    /// namespace, so identical inputs produce identical merged XML (RFC 018 idempotency) without emitting
+    /// the run id verbatim as the settings id.
+    /// </summary>
+    private static Guid CreateDeterministicSettingsId(Guid runId)
+    {
+        byte[] runBytes = runId.ToByteArray();
+        byte[] namespaceBytes = s_testSettingsIdNamespace.ToByteArray();
+        var result = new byte[16];
+        for (int i = 0; i < result.Length; i++)
+        {
+            result[i] = (byte)(runBytes[i] ^ namespaceBytes[i]);
+        }
+
+        return new Guid(result);
+    }
+
+    /// <summary>
+    /// Rejects an output path that resolves to one of the input report paths. RFC 018 treats per-module
+    /// inputs as read-only and requires them to remain on disk, so a merge must never overwrite a source.
+    /// </summary>
+    private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
+    {
+        string outputFull = Path.GetFullPath(outputPath);
+        foreach (string inputPath in inputPaths)
+        {
+            if (string.Equals(Path.GetFullPath(inputPath), outputFull, PathComparison))
+            {
+                throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
+            }
+        }
     }
 
     /// <summary>

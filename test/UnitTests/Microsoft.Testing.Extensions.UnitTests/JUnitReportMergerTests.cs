@@ -121,6 +121,28 @@ public sealed class JUnitReportMergerTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenOutputAliasesAnInput_ThrowsArgumentException()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"junit-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string input = Path.Combine(tempDirectory, "a.xml");
+            BuildReport(tests: 2).Save(input);
+
+            // Overwriting an input would destroy a read-only source; it must be rejected.
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => JUnitReportMerger.MergeToFileAsync([input], input, "run", CancellationToken.None));
+
+            Assert.IsTrue(File.Exists(input));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static XElement Suite(
         string name,
         long tests = 1,

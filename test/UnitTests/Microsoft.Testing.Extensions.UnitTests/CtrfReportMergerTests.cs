@@ -144,16 +144,42 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
-    public void Merge_GeneratesFreshReportId()
+    public void Merge_DerivesDeterministicReportIdNotReusingInput()
     {
         string a = BuildReport();
         string b = BuildReport();
 
         string? idA = (string?)JsonNode.Parse(a)!["reportId"];
         string? mergedId = (string?)JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["reportId"];
+        string? mergedIdAgain = (string?)JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["reportId"];
 
         Assert.IsNotNull(mergedId);
+        // Not one of the inputs' ids...
         Assert.AreNotEqual(idA, mergedId);
+        // ...and deterministic: identical inputs reproduce the same id on every merge (RFC 018 idempotency).
+        Assert.AreEqual(mergedId, mergedIdAgain);
+    }
+
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenOutputAliasesAnInput_ThrowsArgumentException()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string input = Path.Combine(tempDirectory, "a.json");
+            File.WriteAllText(input, BuildReport());
+
+            // Overwriting an input would destroy a read-only source; it must be rejected.
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => CtrfReportMerger.MergeToFileAsync([input], input, CancellationToken.None));
+
+            Assert.IsTrue(File.Exists(input));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
     }
 
     [TestMethod]
