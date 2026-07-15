@@ -57,7 +57,15 @@ public abstract partial class CLITestBase
     {
         configuration ??= Configuration;
         targetFramework ??= DefaultTargetFramework;
-        string assetPath = Path.GetFullPath(Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework, assetName + ".dll"));
+        string assetDirectory = Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework);
+
+        // In v5, MSTest test assets are built as Microsoft.Testing.Platform executables so vstest.console
+        // (18.10+) can host them through the translation layer. Prefer the '.exe' and fall back to '.dll'
+        // for assets that are still plain libraries.
+        string exePath = Path.GetFullPath(Path.Combine(assetDirectory, assetName + ".exe"));
+        string assetPath = File.Exists(exePath)
+            ? exePath
+            : Path.GetFullPath(Path.Combine(assetDirectory, assetName + ".dll"));
         Assert.IsTrue(File.Exists(assetPath), $"asset '{assetPath}' should exist");
 
         return assetPath;

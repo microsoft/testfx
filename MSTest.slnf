@@ -20,6 +20,7 @@
       "src\\TestFramework\\TestFramework\\TestFramework.csproj",
       "test\\IntegrationTests\\MSTest.Acceptance.IntegrationTests\\MSTest.Acceptance.IntegrationTests.csproj",
       "test\\IntegrationTests\\MSTest.IntegrationTests\\MSTest.IntegrationTests.csproj",
+      "test\\IntegrationTests\\MSTest.VstestConsoleWrapper.IntegrationTests\\MSTest.VstestConsoleWrapper.IntegrationTests.csproj",
       "test\\IntegrationTests\\PlatformServices.Desktop.IntegrationTests\\PlatformServices.Desktop.IntegrationTests.csproj",
       "test\\IntegrationTests\\TestAssets\\ClsTestProject\\ClsTestProject.csproj",
       "test\\IntegrationTests\\TestAssets\\DataRowTestProject\\DataRowTestProject.csproj",

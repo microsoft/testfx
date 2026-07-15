@@ -2,6 +2,9 @@
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <IsPackable>false</IsPackable>
+    <!-- Built as a Microsoft.Testing.Platform executable so vstest.console (18.10+) can host it through
+         the translation layer (see MSTest.VstestConsoleWrapper.IntegrationTests). -->
+    <OutputType>Exe</OutputType>
     <GenerateProgramFile>false</GenerateProgramFile>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
@@ -16,6 +19,7 @@
 
   <ItemGroup>
     <Compile Include="Tests.fs" />
+    <Compile Include="Program.fs" />
   </ItemGroup>
 
 </Project>

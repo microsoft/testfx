@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <LangVersion>preview</LangVersion>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)_MtpEntryPoint.cs" Link="_MtpEntryPoint.cs" />
+    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application" Value="true" />
+  </ItemGroup>
+</Project>

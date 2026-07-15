@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\MtpExeAsset.props" />
+
   <PropertyGroup>
     <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
   </PropertyGroup>

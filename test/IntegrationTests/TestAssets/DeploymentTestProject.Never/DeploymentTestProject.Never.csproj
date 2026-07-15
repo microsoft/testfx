@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="..\MtpExeAsset.props" />
+
   <PropertyGroup>
     <TargetFrameworks>$(NetFrameworkMinimum);net8.0</TargetFrameworks>
     <DependencyCopyBehavior>Never</DependencyCopyBehavior>
