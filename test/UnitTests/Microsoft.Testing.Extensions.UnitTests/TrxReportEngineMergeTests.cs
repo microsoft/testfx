@@ -567,6 +567,100 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
+    public async Task MergeToFileAsync_WhenInputHasNoMaterializedSource_DropsAllReferences()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // The report references an attachment but its deployment 'In' root does not exist at all, so
+            // the source cannot be relocated. Its references are relative to the input's own deployment
+            // root and would dangle against the (different) merged deployment root, so they must all be
+            // dropped rather than carried through unchanged.
+            string inputDir = Path.Combine(tempDirectory, "in");
+            Directory.CreateDirectory(inputDir);
+
+            var collectorDataEntries = new XElement(
+                Ns + "CollectorDataEntries",
+                new XElement(
+                    Ns + "Collector",
+                    new XAttribute("collectorDisplayName", "Code Coverage"),
+                    new XElement(
+                        Ns + "UriAttachments",
+                        new XElement(Ns + "UriAttachment", new XElement(Ns + "A", new XAttribute("href", "machine/log.txt"))))));
+
+            XDocument report = BuildReport(resultSummaryChildren: [collectorDataEntries]);
+            report.Root!.Add(new XElement(
+                Ns + "TestSettings",
+                new XAttribute("name", "default"),
+                new XElement(Ns + "Deployment", new XAttribute("runDeploymentRoot", "dep"))));
+
+            string input = Path.Combine(inputDir, "a.trx");
+            report.Save(input);
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            Assert.IsEmpty(hrefs);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+#if NETCOREAPP
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenOutputAliasesInputViaSymlinkedParent_ThrowsAndPreservesInput()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string realDir = Path.Combine(tempDirectory, "real");
+            Directory.CreateDirectory(realDir);
+            string input = Path.Combine(realDir, "a.trx");
+            BuildReport().Save(input);
+
+            string linkDir = Path.Combine(tempDirectory, "link");
+            if (!TryCreateDirectorySymlink(linkDir, realDir))
+            {
+                // Directory symlinks require privileges on some platforms (e.g. non-elevated Windows);
+                // skip when unavailable rather than fail.
+                return;
+            }
+
+            // Output goes through the symlinked parent, so it is the SAME physical file as the input even
+            // though the textual paths differ. Canonicalization must detect this and reject it, leaving
+            // the input untouched.
+            string aliasedOutput = Path.Combine(linkDir, "a.trx");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => TrxReportEngine.MergeToFileAsync([input], aliasedOutput, Guid.NewGuid(), "run", CancellationToken.None));
+
+            Assert.IsTrue(File.Exists(input));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    private static bool TryCreateDirectorySymlink(string linkPath, string targetPath)
+    {
+        try
+        {
+            Directory.CreateSymbolicLink(linkPath, targetPath);
+            return Directory.Exists(linkPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+        {
+            return false;
+        }
+    }
+#endif
+
+    [TestMethod]
     public async Task MergeToFileAsync_WhenRunNameEscapesOutputDirectory_UsesConfinedDeploymentRoot()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");

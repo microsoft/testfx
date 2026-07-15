@@ -228,19 +228,59 @@ internal static class JUnitReportMerger
 
     /// <summary>
     /// Rejects an output path that resolves to one of the input report paths, so a merge never overwrites
-    /// a source report (RFC 018 keeps inputs on disk, read-only). Compares case-insensitively on every
-    /// platform: Windows and the default macOS volume are case-insensitive, and treating a case-differing
-    /// path as an alias only makes this guard more conservative on a case-sensitive volume.
+    /// a source report (RFC 018 keeps inputs on disk, read-only). Paths are canonicalized (symlinks
+    /// resolved where the runtime supports it) and compared case-insensitively, so a differently-cased
+    /// path or a symlinked parent directory that aliases an input directory is still detected.
     /// </summary>
     private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
     {
-        string outputFull = Path.GetFullPath(outputPath);
+        string outputCanonical = GetCanonicalPath(outputPath);
         foreach (string inputPath in inputPaths)
         {
-            if (string.Equals(Path.GetFullPath(inputPath), outputFull, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
             }
         }
+    }
+
+    /// <summary>
+    /// Canonicalizes <paramref name="path"/> to a full path with symlinks/junctions resolved in every
+    /// existing component (so a symlinked parent directory that aliases another location is detected). On
+    /// runtimes without link resolution (netstandard/.NET Framework) it falls back to the lexical full
+    /// path.
+    /// </summary>
+    private static string GetCanonicalPath(string path)
+    {
+        string full = Path.GetFullPath(path);
+#if NETCOREAPP
+        try
+        {
+            string? root = Path.GetPathRoot(full);
+            if (RoslynString.IsNullOrEmpty(root))
+            {
+                return full;
+            }
+
+            string resolved = root;
+            foreach (string part in full.Substring(root.Length).Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
+            {
+                string next = Path.Combine(resolved, part);
+                resolved = Directory.Exists(next)
+                    ? new DirectoryInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
+                    : File.Exists(next)
+                        ? new FileInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
+                        : next;
+            }
+
+            return resolved;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return full;
+        }
+#else
+        return full;
+#endif
     }
 }

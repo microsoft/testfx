@@ -207,6 +207,52 @@ public sealed class CtrfReportMergerTests
         }
     }
 
+#if NETCOREAPP
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenOutputAliasesInputViaSymlinkedParent_ThrowsAndPreservesInput()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string realDir = Path.Combine(tempDirectory, "real");
+            Directory.CreateDirectory(realDir);
+            string input = Path.Combine(realDir, "a.json");
+            File.WriteAllText(input, BuildReport());
+
+            string linkDir = Path.Combine(tempDirectory, "link");
+            if (!TryCreateDirectorySymlink(linkDir, realDir))
+            {
+                return;
+            }
+
+            // Output goes through the symlinked parent, so it is the SAME physical file as the input.
+            string aliasedOutput = Path.Combine(linkDir, "a.json");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => CtrfReportMerger.MergeToFileAsync([input], aliasedOutput, CancellationToken.None));
+
+            Assert.IsTrue(File.Exists(input));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    private static bool TryCreateDirectorySymlink(string linkPath, string targetPath)
+    {
+        try
+        {
+            Directory.CreateSymbolicLink(linkPath, targetPath);
+            return Directory.Exists(linkPath);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+        {
+            return false;
+        }
+    }
+#endif
+
     private static JsonObject Test(string name, string status)
         => new()
         {

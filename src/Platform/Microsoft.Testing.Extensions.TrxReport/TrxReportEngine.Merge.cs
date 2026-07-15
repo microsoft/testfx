@@ -325,6 +325,10 @@ internal sealed partial class TrxReportEngine
 
                 if (RoslynString.IsNullOrEmpty(inputDirectory) || RoslynString.IsNullOrEmpty(inputDeploymentRoot))
                 {
+                    // No resolvable source for this input's attachments. Its references are relative to the
+                    // input's own deployment root, so carrying them unchanged into the merged report (which
+                    // has a different deployment root) would dangle — drop them.
+                    DropAllAttachmentReferences(reports[i]);
                     continue;
                 }
 
@@ -338,6 +342,9 @@ internal sealed partial class TrxReportEngine
                     || !Directory.Exists(sourceInRoot)
                     || HasReparsePointComponent(sourceInRoot, inputDirectory))
                 {
+                    // The source cannot be safely relocated; drop this input's references so none dangle
+                    // against the merged deployment root.
+                    DropAllAttachmentReferences(reports[i]);
                     continue;
                 }
 
@@ -358,7 +365,29 @@ internal sealed partial class TrxReportEngine
                 // Best-effort: a failed attachment copy (including a malformed path from a hostile
                 // runDeploymentRoot, which Path.GetFullPath surfaces as ArgumentException/
                 // NotSupportedException) must not fail the merge. Cancellation is not caught here.
+                // Relocation may have stopped part-way, leaving some references un-rewritten; drop all of
+                // this input's references so none dangle against the merged deployment root.
+                DropAllAttachmentReferences(reports[i]);
             }
+        }
+    }
+
+    /// <summary>
+    /// Removes every attachment reference (<c>&lt;A&gt;</c> and <c>&lt;ResultFile&gt;</c>) from a report.
+    /// Used when an input's attachments cannot be relocated (missing/invalid source, or a failed copy), so
+    /// the merged report never carries a reference that would resolve against the merged deployment root
+    /// to a file that was never placed there.
+    /// </summary>
+    private static void DropAllAttachmentReferences(XDocument report)
+    {
+        if (report.Root is not { } root)
+        {
+            return;
+        }
+
+        foreach (XElement element in root.Descendants().Where(e => e.Name.LocalName is "A" or "ResultFile").ToList())
+        {
+            element.Remove();
         }
     }
 
@@ -724,17 +753,60 @@ internal sealed partial class TrxReportEngine
     /// <summary>
     /// Rejects an output path that resolves to one of the input report paths. RFC 018 treats per-module
     /// inputs as read-only and requires them to remain on disk, so a merge must never overwrite a source.
+    /// Paths are canonicalized (symlinks resolved where the runtime supports it) and compared
+    /// case-insensitively, so a differently-cased path or a symlinked parent directory that aliases an
+    /// input directory is still detected.
     /// </summary>
     private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
     {
-        string outputFull = Path.GetFullPath(outputPath);
+        string outputCanonical = GetCanonicalPath(outputPath);
         foreach (string inputPath in inputPaths)
         {
-            if (string.Equals(Path.GetFullPath(inputPath), outputFull, PathComparison))
+            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
             }
         }
+    }
+
+    /// <summary>
+    /// Canonicalizes <paramref name="path"/> to a full path with symlinks/junctions resolved in every
+    /// existing component (so a symlinked parent directory that aliases another location is detected). On
+    /// runtimes without link resolution (netstandard/.NET Framework) it falls back to the lexical full
+    /// path.
+    /// </summary>
+    private static string GetCanonicalPath(string path)
+    {
+        string full = Path.GetFullPath(path);
+#if NETCOREAPP
+        try
+        {
+            string? root = Path.GetPathRoot(full);
+            if (RoslynString.IsNullOrEmpty(root))
+            {
+                return full;
+            }
+
+            string resolved = root;
+            foreach (string part in full.Substring(root.Length).Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
+            {
+                string next = Path.Combine(resolved, part);
+                resolved = Directory.Exists(next)
+                    ? new DirectoryInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
+                    : File.Exists(next)
+                        ? new FileInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
+                        : next;
+            }
+
+            return resolved;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            return full;
+        }
+#else
+        return full;
+#endif
     }
 
     /// <summary>
