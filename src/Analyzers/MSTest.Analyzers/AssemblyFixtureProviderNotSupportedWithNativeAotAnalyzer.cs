@@ -64,12 +64,30 @@ public sealed class AssemblyFixtureProviderNotSupportedWithNativeAotAnalyzer : D
             return;
         }
 
-        foreach (AttributeData attribute in context.Compilation.Assembly.GetAttributes())
+        // Attributes applied in the compilation being built have a source location we can point at.
+        foreach (AttributeData attribute in context.Compilation.Assembly.GetAttributes()
+            .Where(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyFixtureProviderAttributeSymbol)))
         {
-            if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyFixtureProviderAttributeSymbol)
-                && attribute.ApplicationSyntaxReference is not null)
+            if (attribute.ApplicationSyntaxReference is null)
+            {
+                context.ReportNoLocationDiagnostic(Rule);
+            }
+            else
             {
                 context.ReportDiagnostic(attribute.ApplicationSyntaxReference.CreateDiagnostic(Rule, context.CancellationToken));
+            }
+        }
+
+        // The documented/default usage places [AssemblyFixtureProvider] on a referenced fixture library.
+        // Those attributes are declared outside this compilation (no source location), but the referencing
+        // Native AOT test project is exactly where the runtime guard silently skips discovery, so report a
+        // no-location diagnostic for each referenced assembly that carries the marker.
+        foreach (IAssemblySymbol referencedAssembly in context.Compilation.SourceModule.ReferencedAssemblySymbols)
+        {
+            if (referencedAssembly.GetAttributes()
+                .Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyFixtureProviderAttributeSymbol)))
+            {
+                context.ReportNoLocationDiagnostic(Rule);
             }
         }
     }

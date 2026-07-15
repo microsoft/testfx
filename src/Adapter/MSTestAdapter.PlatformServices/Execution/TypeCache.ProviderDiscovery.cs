@@ -21,10 +21,23 @@ internal sealed partial class TypeCache
         // (Assembly.GetReferencedAssemblies + assembly loading by name), which is not supported when
         // the runtime cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WASM AOT).
         // Skipping the feature there keeps behavior predictable and lets the trimmer statically remove
-        // the reflection path (so no IL2026/IL3050 is produced). The MSTEST0072 analyzer warns at build
-        // time that [AssemblyFixtureProvider] is unsupported for these consumers.
+        // the reflection path (so no IL2026/IL3050 is produced).
         if (!RuntimeFeature.IsDynamicCodeSupported)
         {
+            // The compile-time MSTEST0072 analyzer only covers Native AOT (build_property.PublishAot),
+            // but this guard also affects Mono iOS AOT and Blazor WebAssembly AOT. Emit a runtime warning
+            // so those consumers are not silently deprived of their fixtures. The check is metadata-only
+            // (no assembly loading), so it stays AOT-safe; providers on referenced libraries cannot be
+            // detected here without the very reference-graph walk we are avoiding, so those rely on the
+            // analyzer.
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled &&
+                HasAssemblyFixtureProviderMarker(currentAssembly))
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                    "TypeCache: [AssemblyFixtureProvider] is not supported when the runtime cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WebAssembly AOT). The AssemblyInitialize/AssemblyCleanup methods it exposes from assembly {0} will not run.",
+                    SafeGetAssemblyName(currentAssembly));
+            }
+
             return;
         }
 #endif
