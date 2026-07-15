@@ -71,7 +71,9 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="expectedPrefix"/>.
     /// </exception>
     public static void StartsWith([NotNull] string? expectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedPrefix))] string expectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-        => StartsOrEndsWithCore(
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.StartsWith");
+        StartsOrEndsWithCore(
             expectedPrefix,
             value,
             comparisonType,
@@ -83,6 +85,7 @@ public sealed partial class Assert
             shouldMatch: true,
             static (candidate, affix, comparison) => candidate.StartsWith(affix, comparison),
             ReportAssertStartsWithFailed);
+    }
 
     [DoesNotReturn]
     private static void ReportAssertStartsWithFailed(string expectedPrefix, string value, StringComparison comparisonType, string? userMessage, string expectedPrefixExpression, string valueExpression)
@@ -164,7 +167,9 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="notExpectedPrefix"/>.
     /// </exception>
     public static void DoesNotStartWith([NotNull] string? notExpectedPrefix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedPrefix))] string notExpectedPrefixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-        => StartsOrEndsWithCore(
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotStartWith");
+        StartsOrEndsWithCore(
             notExpectedPrefix,
             value,
             comparisonType,
@@ -176,6 +181,7 @@ public sealed partial class Assert
             shouldMatch: false,
             static (candidate, affix, comparison) => candidate.StartsWith(affix, comparison),
             ReportAssertDoesNotStartWithFailed);
+    }
 
     [DoesNotReturn]
     private static void ReportAssertDoesNotStartWithFailed(string notExpectedPrefix, string value, StringComparison comparisonType, string? userMessage, string notExpectedPrefixExpression, string valueExpression)

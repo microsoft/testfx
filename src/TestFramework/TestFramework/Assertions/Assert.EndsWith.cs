@@ -71,7 +71,9 @@ public sealed partial class Assert
     /// or <paramref name="value"/> does not start with <paramref name="expectedSuffix"/>.
     /// </exception>
     public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-        => StartsOrEndsWithCore(
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.EndsWith");
+        StartsOrEndsWithCore(
             expectedSuffix,
             value,
             comparisonType,
@@ -83,6 +85,7 @@ public sealed partial class Assert
             shouldMatch: true,
             static (candidate, affix, comparison) => candidate.EndsWith(affix, comparison),
             ReportAssertEndsWithFailed);
+    }
 
     [DoesNotReturn]
     private static void ReportAssertEndsWithFailed(string expectedSuffix, string value, StringComparison comparisonType, string? userMessage, string expectedSuffixExpression, string valueExpression)
@@ -166,7 +169,9 @@ public sealed partial class Assert
     /// or <paramref name="value"/> ends with <paramref name="notExpectedSuffix"/>.
     /// </exception>
     public static void DoesNotEndWith([NotNull] string? notExpectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(notExpectedSuffix))] string notExpectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
-        => StartsOrEndsWithCore(
+    {
+        TelemetryCollector.TrackAssertionCall("Assert.DoesNotEndWith");
+        StartsOrEndsWithCore(
             notExpectedSuffix,
             value,
             comparisonType,
@@ -178,6 +183,7 @@ public sealed partial class Assert
             shouldMatch: false,
             static (candidate, affix, comparison) => candidate.EndsWith(affix, comparison),
             ReportAssertDoesNotEndWithFailed);
+    }
 
     [DoesNotReturn]
     private static void ReportAssertDoesNotEndWithFailed(string notExpectedSuffix, string value, StringComparison comparisonType, string? userMessage, string notExpectedSuffixExpression, string valueExpression)
