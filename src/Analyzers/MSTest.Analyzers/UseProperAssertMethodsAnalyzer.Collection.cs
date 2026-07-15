@@ -66,10 +66,9 @@ public sealed partial class UseProperAssertMethodsAnalyzer
             return false;
         }
 
-        foreach (ISymbol member in iDictionaryTypeSymbol.GetMembers("Contains"))
+        foreach (IMethodSymbol dictionaryContains in iDictionaryTypeSymbol.GetMembers("Contains").OfType<IMethodSymbol>())
         {
-            if (member is IMethodSymbol dictionaryContains &&
-                containingType.FindImplementationForInterfaceMember(dictionaryContains) is IMethodSymbol implementation &&
+            if (containingType.FindImplementationForInterfaceMember(dictionaryContains) is IMethodSymbol implementation &&
                 SymbolEqualityComparer.Default.Equals(implementation.OriginalDefinition, containsMethod.OriginalDefinition))
             {
                 return true;
