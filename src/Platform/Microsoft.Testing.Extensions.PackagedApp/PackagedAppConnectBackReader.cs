@@ -43,7 +43,7 @@ internal static class PackagedAppConnectBackReader
         {
             packageFamilyName = AppxManifestInfo.ReadFromManifest(manifestPath).PackageFamilyName;
         }
-        catch (Exception ex) when (ex is IOException or InvalidOperationException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Xml.XmlException)
         {
             // A malformed or unreadable manifest is not fatal here: without the package family name we
             // cannot locate the handshake, so leave the platform to surface the missing connect-back.

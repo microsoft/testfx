@@ -176,12 +176,22 @@ internal static class PackagedAppConnectBackHandshake
             string key = line[..separator];
             char marker = line[separator + 1];
             string encoded = line[(separator + 2)..];
-            result[key] = marker switch
+
+            if (marker == NullValueMarker)
             {
-                NullValueMarker => null,
-                StringValueMarker => Encoding.UTF8.GetString(Convert.FromBase64String(encoded)),
-                _ => null,
-            };
+                result[key] = null;
+            }
+            else if (marker == StringValueMarker)
+            {
+                try
+                {
+                    result[key] = Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
+                }
+                catch (FormatException)
+                {
+                    // Ignore malformed entries.
+                }
+            }
         }
 
         return result;
