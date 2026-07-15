@@ -4,6 +4,8 @@ const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ush
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, System.Guid runId, string! runName) -> System.Xml.Linq.XDocument!
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Guid runId, string! runName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
+Microsoft.Testing.Platform.Helpers.DisposeHelper
+static Microsoft.Testing.Platform.Helpers.DisposeHelper.DisposeAsync(object? obj) -> System.Threading.Tasks.Task!
 const Microsoft.Testing.Platform.IPC.NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes = 103 -> int
 static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsureDirectoryIsWritable(string! directory) -> void
 static Microsoft.Testing.Platform.IPC.NamedPipeServer.EnsurePathLengthWithinLimit(string! path) -> void

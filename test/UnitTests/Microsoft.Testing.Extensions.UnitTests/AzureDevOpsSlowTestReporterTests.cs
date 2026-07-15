@@ -130,6 +130,48 @@ public sealed class AzureDevOpsSlowTestReporterTests
         Assert.IsEmpty(outputDevice.Lines);
     }
 
+    [TestMethod]
+    public async Task ScanOnce_ParameterizedTests_EmitDistinctLabelsAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        AzureDevOpsSlowTestReporter reporter = CreateReporter(outputDevice, tfBuild: true);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        // Two data-driven instances that share one fully-qualified name but differ by display name.
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.T.M", new InProgressTestNodeStateProperty(), displayName: "M (net8.0)"), CancellationToken.None).ConfigureAwait(false);
+        await reporter.ConsumeAsync(null!, CreateMessage("u2", "Ns.T.M", new InProgressTestNodeStateProperty(), displayName: "M (net9.0)"), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(90), CancellationToken.None).ConfigureAwait(false);
+
+        // Both instances surface, each with its distinguishing parameterized suffix rather than the shared name only.
+        Assert.HasCount(2, outputDevice.Lines);
+        string joined = string.Join("\n", outputDevice.Lines);
+        Assert.Contains("Ns.T.M (net8.0)", joined);
+        Assert.Contains("Ns.T.M (net9.0)", joined);
+    }
+
+    [TestMethod]
+    public async Task ScanOnce_ParameterizedTest_DecoratesUsingFullyQualifiedNameAsync()
+    {
+        CapturingOutputDevice outputDevice = new();
+        FakeHistoryService history = new();
+
+        // History is keyed by the fully-qualified name, not the per-instance display label.
+        history.Add("Ns.Fast", new DurationHistoryStats(2000, 3000, sampleCount: 120));
+        AzureDevOpsSlowTestReporter reporter = CreateReporter(outputDevice, tfBuild: true, history: history);
+        await reporter.OnTestSessionStartingAsync(new TestSessionContextStub()).ConfigureAwait(false);
+
+        await reporter.ConsumeAsync(null!, CreateMessage("u1", "Ns.Fast", new InProgressTestNodeStateProperty(), displayName: "Fast (net8.0)"), CancellationToken.None).ConfigureAwait(false);
+
+        await reporter.ScanOnceAsync(Start + TimeSpan.FromSeconds(10), CancellationToken.None).ConfigureAwait(false);
+
+        Assert.HasCount(1, outputDevice.Lines);
+
+        // The line shows the distinguishing label yet still resolves the historical decoration by fully-qualified name.
+        Assert.Contains("Ns.Fast (net8.0)", outputDevice.Lines[0]);
+        Assert.Contains("(historical p95 = 2s, p99 = 3s, samples = 120)", outputDevice.Lines[0]);
+    }
+
     private static AzureDevOpsSlowTestReporter CreateReporter(CapturingOutputDevice outputDevice, bool tfBuild, FakeHistoryService? history = null)
     {
         Dictionary<string, string[]> options = new(StringComparer.OrdinalIgnoreCase)
@@ -151,7 +193,7 @@ public sealed class AzureDevOpsSlowTestReporterTests
             history ?? new FakeHistoryService());
     }
 
-    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, TestNodeStateProperty state)
+    private static TestNodeUpdateMessage CreateMessage(string uid, string fullyQualifiedName, TestNodeStateProperty state, string? displayName = null)
     {
         PropertyBag propertyBag = new();
         propertyBag.Add(state);
@@ -160,7 +202,7 @@ public sealed class AzureDevOpsSlowTestReporterTests
         return new TestNodeUpdateMessage(new SessionUid("session"), new TestNode
         {
             Uid = uid,
-            DisplayName = fullyQualifiedName,
+            DisplayName = displayName ?? fullyQualifiedName,
             Properties = propertyBag,
         });
     }

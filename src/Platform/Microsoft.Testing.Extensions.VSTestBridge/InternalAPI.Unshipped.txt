@@ -28,6 +28,7 @@ Microsoft.Testing.Extensions.RunSettingsProviderHelper
 Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.ContextAdapterBase.ContextAdapterBase(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter, bool useFullyQualifiedNameAsUid) -> void
 Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.DiscoveryContextAdapter.DiscoveryContextAdapter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter, bool useFullyQualifiedNameAsUid) -> void
 Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.RunContextAdapter.RunContextAdapter(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings! runSettings, Microsoft.Testing.Platform.Requests.ITestExecutionFilter! filter, bool useFullyQualifiedNameAsUid) -> void
+Microsoft.Testing.Platform.RoslynDebug
 override Microsoft.Testing.Extensions.VSTestBridge.CommandLine.RunSettingsCommandLineOptionsProvider.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 override Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.DisplayName.get -> string!
 override Microsoft.Testing.Extensions.VSTestBridge.Configurations.RunSettingsConfigurationProvider.Uid.get -> string!
@@ -39,3 +40,5 @@ static Microsoft.Testing.Extensions.RunSettingsProviderHelper.CanReadFile(Micros
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.FindInvalidTestParameter(string![]! arguments) -> string?
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.HasEnvironmentVariables(System.Xml.Linq.XDocument! runSettings) -> bool
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.TryLoadRunSettingsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, string! runSettingsOptionName) -> System.Threading.Tasks.Task<System.Xml.Linq.XDocument?>!
+static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b) -> void
+static Microsoft.Testing.Platform.RoslynDebug.Assert(bool b, string! message) -> void

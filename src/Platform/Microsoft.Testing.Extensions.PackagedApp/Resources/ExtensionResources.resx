@@ -118,9 +118,18 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="PackagedAppExtensionDescription" xml:space="preserve">
-    <value>Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</value>
+    <value>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</value>
   </data>
   <data name="PackagedAppExtensionDisplayName" xml:space="preserve">
     <value>Packaged app test host launcher</value>
+  </data>
+  <data name="AmbiguousAppxManifestApplication" xml:space="preserve">
+    <value>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</value>
+  </data>
+  <data name="InvalidAppxManifestMissingIdentity" xml:space="preserve">
+    <value>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</value>
+  </data>
+  <data name="PackagedAppLaunchNotSupported" xml:space="preserve">
+    <value>Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</value>
   </data>
 </root>
