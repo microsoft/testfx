@@ -28,7 +28,7 @@ public sealed partial class CollectionAssert
     /// True if <paramref name="subset"/> is a subset of
     /// <paramref name="superset"/>, false otherwise.
     /// </returns>
-    internal static Tuple<bool, ICollection<object?>> IsSubsetOfHelper(ICollection subset, ICollection superset)
+    internal static (bool IsSubset, ICollection<object?> NonSubsetValues) IsSubsetOfHelper(ICollection subset, ICollection superset)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
         // $ CONSIDER: element in each collection and then compares the count, resulting
@@ -73,7 +73,7 @@ public sealed partial class CollectionAssert
             }
         }
 
-        return new Tuple<bool, ICollection<object?>>(isSubset, nonSubsetValues);
+        return (isSubset, nonSubsetValues);
     }
 
 #pragma warning disable CS8714
@@ -212,15 +212,12 @@ public sealed partial class CollectionAssert
             return false;
         }
 
-        var stack = new Stack<Tuple<IEnumerator, IEnumerator, int>>();
-        stack.Push(new(expected.GetEnumerator(), actual.GetEnumerator(), 0));
+        var stack = new Stack<(IEnumerator Expected, IEnumerator Actual, int Position)>();
+        stack.Push((expected.GetEnumerator(), actual.GetEnumerator(), 0));
 
         while (stack.Count > 0)
         {
-            Tuple<IEnumerator, IEnumerator, int> cur = stack.Pop();
-            IEnumerator expectedEnum = cur.Item1;
-            IEnumerator actualEnum = cur.Item2;
-            int position = cur.Item3;
+            (IEnumerator expectedEnum, IEnumerator actualEnum, int position) = stack.Pop();
 
             while (expectedEnum.MoveNext())
             {
@@ -238,8 +235,8 @@ public sealed partial class CollectionAssert
                 }
                 else if (curExpected is IEnumerable curExpectedEnum && curActual is IEnumerable curActualEnum)
                 {
-                    stack.Push(new(expectedEnum, actualEnum, position + 1));
-                    stack.Push(new(curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
+                    stack.Push((expectedEnum, actualEnum, position + 1));
+                    stack.Push((curExpectedEnum.GetEnumerator(), curActualEnum.GetEnumerator(), 0));
                 }
                 else
                 {

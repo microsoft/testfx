@@ -58,10 +58,10 @@ public sealed partial class CollectionAssert
 
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset");
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset");
-        Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
-        if (!isSubsetValue.Item1)
+        (bool isSubset, ICollection<object?> nonSubsetValues) = IsSubsetOfHelper(subset, superset);
+        if (!isSubset)
         {
-            string returnedSubsetValueMessage = string.Join(", ", isSubsetValue.Item2.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
+            string returnedSubsetValueMessage = string.Join(", ", nonSubsetValues.Select(item => Convert.ToString(item, CultureInfo.InvariantCulture)));
 
             returnedSubsetValueMessage = string.Format(CultureInfo.InvariantCulture, FrameworkMessages.ReturnedSubsetValueMessage, returnedSubsetValueMessage);
             string userMessage = Assert.BuildUserMessage(message);
@@ -120,8 +120,8 @@ public sealed partial class CollectionAssert
 
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset");
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset");
-        Tuple<bool, ICollection<object?>> isSubsetValue = IsSubsetOfHelper(subset, superset);
-        if (isSubsetValue.Item1)
+        (bool isSubset, _) = IsSubsetOfHelper(subset, superset);
+        if (isSubset)
         {
             Assert.ReportAssertFailed("CollectionAssert.IsNotSubsetOf", Assert.BuildUserMessage(message));
         }
