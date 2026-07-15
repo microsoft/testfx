@@ -8,9 +8,11 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
 /// <summary>
 /// Helpers for turning a Microsoft.Testing.Platform process exit code into a GitHub-friendly verdict.
-/// Used by the step-summary and annotation reporters so that non-test-result failures — e.g. a
-/// <c>--minimum-expected-tests</c> violation, a run that discovered zero tests, an aborted session or a
-/// <c>--maximum-failed-tests</c> stop — are surfaced instead of silently looking like a passing run.
+/// Used by the step-summary and annotation reporters so that non-test-result failures observable once the
+/// test session has finished — e.g. a <c>--minimum-expected-tests</c> violation, a run that discovered zero
+/// tests, a <c>--maximum-failed-tests</c> stop or a test-adapter session failure — are surfaced instead of
+/// silently looking like a passing run. Outcomes that occur outside the end-of-session path (a hard
+/// abort/cancellation, or host failures raised before/after the session) are not reachable here.
 /// See <see href="https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-troubleshooting#exit-codes"/>.
 /// </summary>
 internal static class GitHubActionsExitCode

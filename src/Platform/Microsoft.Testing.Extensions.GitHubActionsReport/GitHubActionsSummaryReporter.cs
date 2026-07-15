@@ -249,9 +249,10 @@ internal sealed class GitHubActionsSummaryReporter :
             .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
 
-        // Surface a non-test-result failure (aborted, zero tests, --minimum-expected-tests, --maximum-failed-tests,
-        // adapter/host failures, …) as a GitHub alert callout. Plain pass / at-least-one-failed outcomes are already
-        // conveyed by the totals table and the failures section, so no callout is added for them.
+        // Surface a non-test-result failure that this reporter can observe once the session has finished
+        // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
+        // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
+        // table and the failures section, so no callout is added for them.
         if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
         {
             string calloutText = string.Format(
