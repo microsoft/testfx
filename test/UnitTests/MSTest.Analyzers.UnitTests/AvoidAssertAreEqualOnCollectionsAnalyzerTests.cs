@@ -1129,6 +1129,43 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableWithDefaultComparerExpression_DoNotReportDiagnostic()
+    {
+        // `default(IEqualityComparer<MyCollection>)` constant-folds to null, which Assert replaces with
+        // EqualityComparer<MyCollection>.Default, so it keeps the opt-out just like a null literal.
+        string code = """
+            #nullable enable
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = new();
+                    MyCollection c2 = new();
+                    Assert.AreEqual(c1, c2, default(IEqualityComparer<MyCollection>)!);
+                }
+
+                private sealed class MyCollection : IEnumerable<int>, IEquatable<MyCollection>
+                {
+                    public bool Equals(MyCollection? other) => true;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
     public async Task WhenUsingAssertAreEqualOnTypeParameterConstrainedToIEquatable_DoNotReportDiagnostic()
     {
         // `where T : IEnumerable<int>, IEquatable<T>` guarantees EqualityComparer<T>.Default honors IEquatable<T>,
