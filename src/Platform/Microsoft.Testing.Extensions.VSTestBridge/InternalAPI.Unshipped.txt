@@ -25,9 +25,6 @@ Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.UpdateAs
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.Version.get -> string!
 Microsoft.Testing.Extensions.RunSettingsProviderHelper
-const Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterOptionName = "filter" -> string!
-Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase
-Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, string! optionDescription) -> void
 const Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.TestRunParameterOptionName = "test-parameter" -> string!
 Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase
 Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.TestRunParametersCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, string! optionDescription, string! argumentIsNotParameterErrorFormat) -> void

@@ -116,7 +116,6 @@
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsCommandLineOptionsProviderBase.cs" Link="Shared\RunSettingsCommandLineOptionsProviderBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsConfigurationProviderBase.cs" Link="Shared\RunSettingsConfigurationProviderBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsEnvironmentVariableProviderBase.cs" Link="Shared\RunSettingsEnvironmentVariableProviderBase.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestCaseFilterCommandLineOptionsProviderBase.cs" Link="Shared\TestCaseFilterCommandLineOptionsProviderBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestRunParametersCommandLineOptionsProviderBase.cs" Link="Shared\TestRunParametersCommandLineOptionsProviderBase.cs" />
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
