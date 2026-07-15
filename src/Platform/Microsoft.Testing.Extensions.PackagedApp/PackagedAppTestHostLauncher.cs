@@ -1,17 +1,20 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.PackagedApp.Resources;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+#if PACKAGEDAPP_WINRT
+using Microsoft.Testing.Platform.Helpers;
+#endif
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
 
 /// <summary>
 /// An <see cref="ITestHostLauncher"/> for Windows test applications. It handles two layouts:
 /// a non-packaged (loose-layout) host — for example unpackaged WinUI — which is deployed into an
-/// isolated directory and launched from there; and a genuinely packaged (MSIX) host — UWP or packaged
-/// WinUI — which cannot be started with <c>Process.Start</c> and is instead registered with the OS and
-/// activated by Application User Model ID (AUMID).
+/// isolated directory and launched from there; and a packaged, full-trust MSIX desktop host, which
+/// cannot be started with <c>Process.Start</c> and is instead registered with the OS and activated by
+/// Application User Model ID (AUMID).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -31,12 +34,15 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 /// receives as <c>argv</c>.
 /// </para>
 /// <para>
-/// The full register-and-activate path ships only in the Windows build of this extension
-/// (<c>net*-windows10.0.19041.0</c>), where the <c>PackageManager</c> WinRT projection is available.
-/// The plain <c>net8.0</c>/<c>net9.0</c> build still deploys and launches non-packaged loose layouts,
-/// but rejects a packaged layout with an actionable error so a consumer that resolves that build is
-/// told to target a Windows TFM. Registering an unsigned build-output layout additionally requires
-/// Developer Mode (or sideloading) to be enabled on the machine.
+/// This connect-back transport therefore targets <em>full-trust</em> packaged (MSIX) desktop hosts. A
+/// true UWP/AppContainer host is not supported: activation arguments are not delivered as <c>argv</c>
+/// there, and the controller pipe is not granted the package SID. The full register-and-activate path
+/// ships only in the Windows build of this extension (<c>net*-windows10.0.19041.0</c>), where the
+/// <c>PackageManager</c> WinRT projection is available. The plain <c>net8.0</c>/<c>net9.0</c> build
+/// still deploys and launches non-packaged loose layouts, but rejects a packaged layout with an
+/// actionable error so a consumer that resolves that build is told to target a Windows TFM. Registering
+/// an unsigned build-output layout additionally requires Developer Mode (or sideloading) to be enabled
+/// on the machine.
 /// </para>
 /// <para>
 /// In all cases the platform owns argument/environment preparation, the controller-to-host IPC pipe,
@@ -83,6 +89,12 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
     }
 
 #if PACKAGEDAPP_WINRT
+    // The prefix of the environment variables the platform uses for the controller-to-host connect-back
+    // (pipe name, correlation id, parent PID, start time, …). Only these are handed off to the activated
+    // packaged host: they are exactly what the host needs to reach its controller, they contain no
+    // user-provided secrets, and they are read after this extension's builder hook runs.
+    private const string ConnectBackEnvironmentVariablePrefix = "TESTINGPLATFORM_";
+
     private static async Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)
     {
         var manifestInfo = AppxManifestInfo.ReadFromManifest(manifestPath);
@@ -98,38 +110,48 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
                     manifestInfo.PackageFamilyName,
                     manifestPath));
 
-        // Hand off the environment the platform prepared for the test host through the package's
-        // LocalState, keyed by the test host controller PID so concurrent runs of the same package do
-        // not collide. An AUMID-activated process is created by the Windows activation infrastructure and
-        // does not inherit the controller's process environment (which a plain Process.Start child would),
-        // so the full prepared environment — not just the connect-back additions — must be reproduced.
-        // The activated host applies it in-process before the platform's environment-variable-based
-        // connect-back runs (see PackagedAppConnectBackReader).
+        // Hand off the controller-to-host connect-back environment variables through the package's
+        // LocalState, keyed by the test host controller PID so concurrent runs of the same package do not
+        // collide. An AUMID-activated process is created by the Windows activation infrastructure and does
+        // not inherit the controller's environment, so these variables must be reproduced out-of-band. The
+        // hand-off is deliberately limited to the platform connect-back variables (not the full prepared
+        // environment): they carry no user secrets, and environment consumed before this extension's
+        // builder hook runs cannot be reproduced from here anyway. The activated host applies them
+        // in-process before the platform's environment-variable-based connect-back runs (see
+        // PackagedAppConnectBackReader).
         string? testHostControllerPid = PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(context.Arguments);
         string? handshakePath = null;
         if (testHostControllerPid is not null)
         {
             handshakePath = PackagedAppConnectBackHandshake.GetHandshakeFilePath(manifestInfo.PackageFamilyName, testHostControllerPid);
-            PackagedAppConnectBackHandshake.Write(handshakePath, context.EnvironmentVariables);
+            PackagedAppConnectBackHandshake.Write(handshakePath, GetConnectBackEnvironment(context));
         }
 
         // Register the loose layout in place and activate it, forwarding the platform-prepared command
         // line (which a packaged full-trust desktop app receives as argv). Activation returns the real
         // process id, so the handle can monitor and terminate the actual activated process.
-        string activationArguments = BuildCommandLine(context.Arguments);
+        var commandLineBuilder = new StringBuilder();
+        foreach (string argument in context.Arguments)
+        {
+            PasteArguments.AppendArgument(commandLineBuilder, argument);
+        }
+
         try
         {
             uint processId = await PackageDeployer
-                .RegisterAndActivateAsync(manifestPath, application.AppUserModelId, activationArguments, cancellationToken)
+                .RegisterAndActivateAsync(manifestPath, application.AppUserModelId, commandLineBuilder.ToString(), cancellationToken)
                 .ConfigureAwait(false);
 
-            return new ActivatedAppTestHostHandle(processId);
+            // The handle owns deleting the hand-off from now on: the activated host normally consumes and
+            // deletes it, but if that host exits before reading it the handle still removes it on dispose,
+            // so connect-back data is never left behind.
+            return new ActivatedAppTestHostHandle(processId, handshakePath);
         }
         catch
         {
             // No host was activated to consume the hand-off, so remove it now; leaving it behind would
             // let a later run — or a process that reuses this controller PID — pick up stale connect-back
-            // data. On success the activated host owns deleting the file once it has read it.
+            // data.
             if (handshakePath is not null)
             {
                 PackagedAppConnectBackHandshake.TryDelete(handshakePath);
@@ -139,92 +161,18 @@ internal sealed class PackagedAppTestHostLauncher : ITestHostLauncher
         }
     }
 
-    // Reconstructs a single command line from the platform-prepared arguments using the Windows
-    // CommandLineToArgvW quoting rules, so the activated app parses back exactly the same argv.
-    private static string BuildCommandLine(IReadOnlyList<string> arguments)
+    // Selects the controller-to-host connect-back variables (see ConnectBackEnvironmentVariablePrefix)
+    // from the platform-prepared environment. These are the variables an AUMID-activated host needs to
+    // reach its controller and that it would not otherwise inherit.
+    private static IEnumerable<KeyValuePair<string, string?>> GetConnectBackEnvironment(TestHostLaunchContext context)
     {
-        var builder = new StringBuilder();
-        foreach (string argument in arguments)
+        foreach (KeyValuePair<string, string?> environmentVariable in context.EnvironmentVariables)
         {
-            AppendArgument(builder, argument);
-        }
-
-        return builder.ToString();
-    }
-
-    // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/PasteArguments.cs
-    private static void AppendArgument(StringBuilder builder, string argument)
-    {
-        const char Quote = '"';
-        const char Backslash = '\\';
-
-        if (builder.Length != 0)
-        {
-            builder.Append(' ');
-        }
-
-        if (argument.Length != 0 && !ContainsWhitespaceOrQuote(argument))
-        {
-            builder.Append(argument);
-            return;
-        }
-
-        builder.Append(Quote);
-        int index = 0;
-        while (index < argument.Length)
-        {
-            char c = argument[index++];
-            if (c == Backslash)
+            if (environmentVariable.Key.StartsWith(ConnectBackEnvironmentVariablePrefix, StringComparison.Ordinal))
             {
-                int backslashCount = 1;
-                while (index < argument.Length && argument[index] == Backslash)
-                {
-                    index++;
-                    backslashCount++;
-                }
-
-                if (index == argument.Length)
-                {
-                    builder.Append(Backslash, backslashCount * 2);
-                }
-                else if (argument[index] == Quote)
-                {
-                    builder.Append(Backslash, (backslashCount * 2) + 1);
-                    builder.Append(Quote);
-                    index++;
-                }
-                else
-                {
-                    builder.Append(Backslash, backslashCount);
-                }
-
-                continue;
-            }
-
-            if (c == Quote)
-            {
-                builder.Append(Backslash);
-                builder.Append(Quote);
-                continue;
-            }
-
-            builder.Append(c);
-        }
-
-        builder.Append(Quote);
-    }
-
-    private static bool ContainsWhitespaceOrQuote(string value)
-    {
-        foreach (char c in value)
-        {
-            if (char.IsWhiteSpace(c) || c == '"')
-            {
-                return true;
+                yield return environmentVariable;
             }
         }
-
-        return false;
     }
 #else
     private static Task<ITestHostHandle> LaunchPackagedAsync(TestHostLaunchContext context, string manifestPath, CancellationToken cancellationToken)

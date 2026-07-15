@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if PACKAGEDAPP_WINRT
@@ -16,9 +16,13 @@ namespace Microsoft.Testing.Extensions.PackagedApp;
 internal sealed class ActivatedAppTestHostHandle : ITestHostHandle
 {
     private readonly Process _process;
+    private readonly string? _handshakePath;
 
-    public ActivatedAppTestHostHandle(uint processId)
-        => _process = Process.GetProcessById((int)processId);
+    public ActivatedAppTestHostHandle(uint processId, string? handshakePath)
+    {
+        _process = Process.GetProcessById((int)processId);
+        _handshakePath = handshakePath;
+    }
 
     public string? Identifier => _process.Id.ToString(CultureInfo.InvariantCulture);
 
@@ -40,7 +44,18 @@ internal sealed class ActivatedAppTestHostHandle : ITestHostHandle
         }
     }
 
-    public void Dispose() => _process.Dispose();
+    public void Dispose()
+    {
+        _process.Dispose();
+
+        // The activated host normally consumes and deletes the connect-back hand-off itself, but if it
+        // exited before reading it (for example a crash on startup) the file would otherwise be left
+        // behind with the pipe name/correlation data. Remove it here as a best-effort backstop.
+        if (_handshakePath is not null)
+        {
+            PackagedAppConnectBackHandshake.TryDelete(_handshakePath);
+        }
+    }
 }
 
 #endif

@@ -1,4 +1,6 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.PasteArguments
+static Microsoft.Testing.Platform.Helpers.PasteArguments.AppendArgument(System.Text.StringBuilder! stringBuilder, string! argument) -> void
 Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo
 Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppUserModelId.get -> string!
 Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppxApplicationInfo(string! id, string? executable, string! appUserModelId) -> void

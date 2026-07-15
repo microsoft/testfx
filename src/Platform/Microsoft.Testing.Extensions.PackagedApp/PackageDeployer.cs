@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if PACKAGEDAPP_WINRT
@@ -46,12 +46,32 @@ internal static class PackageDeployer
             DeveloperMode = true,
         };
 
-        DeploymentResult result = await packageManager
-            .RegisterPackageByUriAsync(new Uri(manifestPath), options)
-            .AsTask(cancellationToken)
-            .ConfigureAwait(false);
+        DeploymentResult result;
+        try
+        {
+            result = await packageManager
+                .RegisterPackageByUriAsync(new Uri(manifestPath), options)
+                .AsTask(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancellation is expected; let it propagate unwrapped.
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // The WinRT operation can fault (rather than completing with a DeploymentResult), for example
+            // when Developer Mode is disabled or the layout is invalid. Surface it with the actionable
+            // registration message instead of a raw COM/WinRT exception.
+            throw new InvalidOperationException(
+                string.Format(CultureInfo.CurrentCulture, ExtensionResources.PackagedAppRegistrationFailed, manifestPath, ex.Message),
+                ex);
+        }
 
-        if (result.ExtendedErrorCode is not null)
+        // Registration reports success through IsRegistered; ExtendedErrorCode can also carry a non-fatal
+        // (informational) HRESULT, so IsRegistered is the authoritative signal.
+        if (!result.IsRegistered)
         {
             throw new InvalidOperationException(
                 string.Format(CultureInfo.CurrentCulture, ExtensionResources.PackagedAppRegistrationFailed, manifestPath, result.ErrorText),

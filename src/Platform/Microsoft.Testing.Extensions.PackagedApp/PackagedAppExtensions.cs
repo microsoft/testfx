@@ -8,7 +8,8 @@ namespace Microsoft.Testing.Extensions;
 
 /// <summary>
 /// Provides extension methods for adding Windows test host deployment support (non-packaged
-/// loose layouts such as unpackaged WinUI, and packaged MSIX apps) to the test application builder.
+/// loose layouts such as unpackaged WinUI, and packaged, full-trust MSIX desktop apps) to the test
+/// application builder.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public static class PackagedAppExtensions
@@ -16,10 +17,10 @@ public static class PackagedAppExtensions
     /// <summary>
     /// Registers a test host launcher for Windows test applications. Non-packaged (loose-layout) hosts
     /// (for example, unpackaged WinUI) are deployed into an isolated directory and launched from there.
-    /// Packaged (MSIX) hosts — UWP or packaged WinUI — are registered with the OS and activated by
-    /// Application User Model ID in the Windows build of this extension (see
+    /// Packaged, full-trust MSIX desktop hosts are registered with the OS and activated by Application
+    /// User Model ID in the Windows build of this extension (see
     /// https://github.com/microsoft/testfx/issues/9933); the plain build rejects a packaged layout with
-    /// an actionable error.
+    /// an actionable error. True UWP/AppContainer hosts are not supported by this connect-back transport.
     /// </summary>
     /// <param name="builder">The test application builder.</param>
     public static void AddPackagedAppDeployment(this ITestApplicationBuilder builder)
@@ -28,9 +29,11 @@ public static class PackagedAppExtensions
 
         // When this process is a packaged (MSIX) test host activated by AUMID it did not inherit the
         // controller-to-host connect-back environment variables; restore them from the launcher's
-        // hand-off before the platform builds the test application and reads that environment. This runs
-        // for both the MSBuild-registered hook and direct callers of this method. It is a no-op for the
-        // controller, for non-packaged layouts, and when there is no handshake to consume.
+        // hand-off before the platform reads that environment when it builds the test application. This
+        // runs for both the MSBuild-registered hook and direct callers of this method. It is a no-op for
+        // the controller, for non-packaged layouts, and when there is no handshake to consume. Note that
+        // environment consumed strictly earlier during CreateBuilderAsync (culture, config discovery) is
+        // not reproduced for the packaged path; only the platform connect-back variables are.
         PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(Environment.GetCommandLineArgs());
 
         builder.TestHostControllers.AddTestHostLauncher(_ => new PackagedAppTestHostLauncher());

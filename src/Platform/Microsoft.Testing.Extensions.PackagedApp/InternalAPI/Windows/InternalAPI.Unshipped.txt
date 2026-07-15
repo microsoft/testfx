@@ -1,6 +1,6 @@
 #nullable enable
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle
-Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId) -> void
+Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ActivatedAppTestHostHandle(uint processId, string? handshakePath) -> void
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.Dispose() -> void
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.ExitCode.get -> int
 Microsoft.Testing.Extensions.PackagedApp.ActivatedAppTestHostHandle.HasExited.get -> bool

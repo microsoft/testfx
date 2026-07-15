@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.Testing.Extensions.PackagedApp;
@@ -59,10 +59,10 @@ internal static class PackagedAppConnectBackReader
 
         foreach (KeyValuePair<string, string?> entry in environment)
         {
-            // Apply authoritatively: this is the exact environment the platform prepared for the host,
-            // reproducing what a normal Process.Start child would have inherited from the controller. That
-            // includes variables an ITestHostEnvironmentVariableProvider modified or removed (a null value
-            // deletes the variable), which a "set only when missing" strategy would silently drop.
+            // Apply authoritatively the controller-to-host connect-back variables the launcher handed
+            // off (a null value deletes the variable). These are the variables an AUMID-activated host
+            // needs to reach its controller and would not otherwise inherit across the activation
+            // boundary.
             Environment.SetEnvironmentVariable(entry.Key, entry.Value);
         }
     }

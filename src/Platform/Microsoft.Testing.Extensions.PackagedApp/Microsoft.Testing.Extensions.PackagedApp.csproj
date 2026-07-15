@@ -30,7 +30,7 @@
     <PackageDescription>
       <![CDATA[This package provides extensions to Microsoft Testing Platform intended to extend base functionalities.
 
-This package extends Microsoft Testing Platform to deploy and launch Windows test hosts. It deploys and launches a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) from an isolated directory instead of starting it in place, and — in its Windows build (net*-windows) — registers a packaged (MSIX) app layout with the PackageManager and activates it by Application User Model ID (see https://github.com/microsoft/testfx/issues/9933).]]>
+This package extends Microsoft Testing Platform to deploy and launch Windows test hosts. It deploys and launches a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) from an isolated directory instead of starting it in place, and — in its Windows build (net*-windows) — registers a packaged, full-trust MSIX desktop app layout with the PackageManager and activates it by Application User Model ID (see https://github.com/microsoft/testfx/issues/9933). True UWP/AppContainer hosts are not supported.]]>
     </PackageDescription>
   </PropertyGroup>
 
@@ -46,6 +46,9 @@ This package extends Microsoft Testing Platform to deploy and launch Windows tes
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Reuse the platform's Windows command-line quoting so the activation-argument round-trip cannot
+         diverge from the rest of the product (same helper the Retry extension source-links). -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs" Link="Helpers\PasteArguments.cs" />
   </ItemGroup>
 
   <!-- NuGet package layout -->
