@@ -6,9 +6,11 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 
@@ -18,13 +20,21 @@ namespace Microsoft.Testing.Extensions.GitHubActionsReport;
 /// pull request's "Files changed" diff gutter. Skipped tests are surfaced as title-only <c>::warning</c>
 /// workflow commands so they are visible in the Annotations tab too.
 /// </summary>
+/// <remarks>
+/// It also implements <see cref="ITestSessionLifetimeHandler"/> so that, at session end, it can emit one
+/// extra <c>::error</c> for a non-test-result failure exit code (e.g. a <c>--minimum-expected-tests</c>
+/// violation or a run that discovered zero tests). Those outcomes carry no failing <see cref="TestNode"/>,
+/// so without this they would leave the Annotations tab empty despite the run failing.
+/// </remarks>
 internal sealed class GitHubActionsAnnotationReporter :
     IDataConsumer,
+    ITestSessionLifetimeHandler,
     IOutputDeviceDataProducer
 {
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
     private readonly IOutputDevice _outputDisplay;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger _logger;
     private readonly bool _isEnabled;
 
@@ -33,11 +43,13 @@ internal sealed class GitHubActionsAnnotationReporter :
         IEnvironment environment,
         IFileSystem fileSystem,
         IOutputDevice outputDisplay,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
         ILoggerFactory loggerFactory)
     {
         _environment = environment;
         _fileSystem = fileSystem;
         _outputDisplay = outputDisplay;
+        _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = loggerFactory.CreateLogger<GitHubActionsAnnotationReporter>();
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLine, environment, GitHubActionsCommandLineOptions.GitHubActionsAnnotations);
     }
@@ -115,6 +127,64 @@ internal sealed class GitHubActionsAnnotationReporter :
             // propagating into the platform's consumer dispatch.
             _logger.LogUnexpectedException(nameof(ConsumeAsync), ex);
         }
+    }
+
+    public Task OnTestSessionStartingAsync(ITestSessionContext sessionUid) => Task.CompletedTask;
+
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    {
+        try
+        {
+            testSessionContext.CancellationToken.ThrowIfCancellationRequested();
+
+            if (!_isEnabled)
+            {
+                return;
+            }
+
+            int exitCode = _testApplicationProcessExitCode.GetProcessExitCode();
+
+            // Only emit the run-level annotation for a non-test-result failure. Plain "at least one test failed"
+            // (and success) are already conveyed by the per-test annotations above, so we would otherwise add a
+            // redundant, location-less error on top of the real ones.
+            if (GitHubActionsExitCode.IsTestResultOutcome(exitCode))
+            {
+                return;
+            }
+
+            string line = GetExitCodeAnnotation(exitCode);
+
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                _logger.LogTrace($"Showing exit-code annotation '{line}'.");
+            }
+
+            await DisplayAnnotationLineAsync(line, testSessionContext.CancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+        }
+    }
+
+    internal static /* for testing */ string GetExitCodeAnnotation(int exitCode)
+    {
+        string title = string.Format(
+            CultureInfo.InvariantCulture,
+            GitHubActionsResources.ExitCodeAnnotationTitle,
+            exitCode.ToString(CultureInfo.InvariantCulture),
+            GitHubActionsExitCode.GetName(exitCode));
+        string message = GitHubActionsExitCode.GetReason(exitCode);
+
+        return string.Format(
+            CultureInfo.InvariantCulture,
+            "::error title={0}::{1}",
+            GitHubActionsEscaper.EscapeProperty(title),
+            GitHubActionsEscaper.EscapeData(message));
     }
 
     private Task WriteAnnotationAsync(string testName, string? explanation, Exception? exception, CancellationToken cancellationToken)

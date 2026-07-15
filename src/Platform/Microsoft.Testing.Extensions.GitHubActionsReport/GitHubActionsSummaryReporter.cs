@@ -34,6 +34,7 @@ internal sealed class GitHubActionsSummaryReporter :
     private readonly IFileSystem _fileSystem;
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
@@ -53,12 +54,14 @@ internal sealed class GitHubActionsSummaryReporter :
         IFileSystem fileSystem,
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
         ILoggerFactory loggerFactory)
     {
         _environment = environment;
         _fileSystem = fileSystem;
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
+        _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
@@ -171,7 +174,7 @@ internal sealed class GitHubActionsSummaryReporter :
                 snapshot = [.. _records.Values];
             }
 
-            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name", _targetFrameworkMoniker.Value);
+            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name", _targetFrameworkMoniker.Value, _testApplicationProcessExitCode.GetProcessExitCode());
 
             try
             {
@@ -200,7 +203,7 @@ internal sealed class GitHubActionsSummaryReporter :
         }
     }
 
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker)
+    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode)
     {
         int total = records.Count;
         int passed = 0;
@@ -231,7 +234,10 @@ internal sealed class GitHubActionsSummaryReporter :
             }
         }
 
-        string statusIcon = failed > 0 ? "❌" : "✅";
+        // Reflect the process verdict, not just the failed-test count: a run can end in failure with zero failed
+        // tests (e.g. zero tests discovered or a --minimum-expected-tests violation), which must not show ✅.
+        bool runFailed = failed > 0 || GitHubActionsExitCode.IndicatesFailure(exitCode);
+        string statusIcon = runFailed ? "❌" : "✅";
 
         var builder = new StringBuilder();
         builder.Append("## ").Append(statusIcon).Append(" Test Run Summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
@@ -242,6 +248,20 @@ internal sealed class GitHubActionsSummaryReporter :
             .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
+
+        // Surface a non-test-result failure (aborted, zero tests, --minimum-expected-tests, --maximum-failed-tests,
+        // adapter/host failures, …) as a GitHub alert callout. Plain pass / at-least-one-failed outcomes are already
+        // conveyed by the totals table and the failures section, so no callout is added for them.
+        if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
+        {
+            string calloutText = string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.ExitCodeCallout,
+                exitCode.ToString(CultureInfo.InvariantCulture),
+                GitHubActionsExitCode.GetName(exitCode),
+                GitHubActionsExitCode.GetReason(exitCode));
+            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+        }
 
         if (failures.Count > 0)
         {

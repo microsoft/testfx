@@ -125,4 +125,56 @@
   <data name="OptionDescription" xml:space="preserve">
     <value>Enable GitHub Actions report generator to emit workflow commands so test runs produce a first-class experience on GitHub Actions.</value>
   </data>
+  <data name="ExitCodeCallout" xml:space="preserve">
+    <value>Exit code {0} — {1}: {2}</value>
+    <comment>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</comment>
+  </data>
+  <data name="ExitCodeAnnotationTitle" xml:space="preserve">
+    <value>Test run failed (exit code {0}: {1})</value>
+    <comment>{0} is the numeric exit code, {1} is the exit code name (not localized).</comment>
+  </data>
+  <data name="ExitCodeReasonSuccess" xml:space="preserve">
+    <value>The test run succeeded.</value>
+  </data>
+  <data name="ExitCodeReasonGenericFailure" xml:space="preserve">
+    <value>The test run failed.</value>
+  </data>
+  <data name="ExitCodeReasonAtLeastOneTestFailed" xml:space="preserve">
+    <value>At least one test failed.</value>
+  </data>
+  <data name="ExitCodeReasonTestSessionAborted" xml:space="preserve">
+    <value>The test session was aborted.</value>
+  </data>
+  <data name="ExitCodeReasonInvalidPlatformSetup" xml:space="preserve">
+    <value>The test platform setup is invalid.</value>
+  </data>
+  <data name="ExitCodeReasonInvalidCommandLine" xml:space="preserve">
+    <value>The command line arguments are invalid.</value>
+  </data>
+  <data name="ExitCodeReasonTestHostProcessExitedNonGracefully" xml:space="preserve">
+    <value>The test host process exited non-gracefully.</value>
+  </data>
+  <data name="ExitCodeReasonZeroTests" xml:space="preserve">
+    <value>No tests were found to run. This often means a test filter matched nothing.</value>
+  </data>
+  <data name="ExitCodeReasonMinimumExpectedTestsPolicyViolation" xml:space="preserve">
+    <value>Fewer tests ran than required by --minimum-expected-tests.</value>
+    <comment>{Locked="--minimum-expected-tests"}</comment>
+  </data>
+  <data name="ExitCodeReasonTestAdapterTestSessionFailure" xml:space="preserve">
+    <value>The test adapter reported a test session failure.</value>
+  </data>
+  <data name="ExitCodeReasonDependentProcessExited" xml:space="preserve">
+    <value>A dependent process exited unexpectedly.</value>
+  </data>
+  <data name="ExitCodeReasonIncompatibleProtocolVersion" xml:space="preserve">
+    <value>An incompatible protocol version was negotiated.</value>
+  </data>
+  <data name="ExitCodeReasonTestExecutionStoppedForMaxFailedTests" xml:space="preserve">
+    <value>Test execution stopped after reaching the limit set by --maximum-failed-tests.</value>
+    <comment>{Locked="--maximum-failed-tests"}</comment>
+  </data>
+  <data name="ExitCodeReasonUnknown" xml:space="preserve">
+    <value>The test run reported a non-success exit code.</value>
+  </data>
 </root>
