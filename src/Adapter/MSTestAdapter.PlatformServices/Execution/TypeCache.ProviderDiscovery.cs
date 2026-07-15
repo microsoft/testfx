@@ -24,27 +24,42 @@ internal sealed partial class TypeCache
         // the reflection path (so no IL2026/IL3050 is produced).
         if (!RuntimeFeature.IsDynamicCodeSupported)
         {
-            // The compile-time MSTEST0072 analyzer only covers Native AOT (build_property.PublishAot),
-            // but this guard also affects Mono iOS AOT and Blazor WebAssembly AOT. Emit a runtime warning
-            // so those consumers are not silently deprived of their fixtures.
-            //
-            // Scan the already-loaded assemblies (AppDomain.GetAssemblies) rather than walking the
-            // reference graph: reading each assembly's CustomAttributeData is metadata-only and stays
-            // AOT-safe, whereas Assembly.GetReferencedAssemblies + load-by-name is exactly the
-            // dynamic-code path this guard exists to avoid. This covers both the test assembly and any
-            // already-loaded provider library, so referenced providers are no longer silent here.
+            // The compile-time MSTEST0072 analyzer covers the referenced-provider case at build time
+            // (it can read referenced assemblies' metadata). At run time under AOT we cannot walk the
+            // reference graph (Assembly.GetReferencedAssemblies + load-by-name is the very dynamic-code
+            // path this guard avoids), so a referenced provider that has not been loaded yet is not
+            // detectable here. What we can reliably and AOT-safely surface is a marker on an
+            // already-loaded assembly — in particular the test assembly itself when it self-applies the
+            // attribute (a documented usage). Emit a best-effort warning for every loaded assembly that
+            // carries the marker so those cases are not silent.
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
             {
                 foreach (Assembly loaded in AppDomain.CurrentDomain.GetAssemblies())
                 {
-                    if (loaded.IsDynamic || !HasAssemblyFixtureProviderMarker(loaded))
+                    if (loaded.IsDynamic)
                     {
                         continue;
                     }
 
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                        "TypeCache: [AssemblyFixtureProvider] is not supported when the runtime cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WebAssembly AOT). The AssemblyInitialize/AssemblyCleanup methods it exposes from assembly {0} will not run.",
-                        SafeGetAssemblyName(loaded));
+                    bool hasMarker;
+                    try
+                    {
+                        // Metadata-only probe. Isolate per-assembly failures (unresolvable custom-attribute
+                        // metadata on an unrelated assembly must not abort discovery), matching the normal
+                        // discovery path's handling.
+                        hasMarker = HasAssemblyFixtureProviderMarker(loaded);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
+
+                    if (hasMarker)
+                    {
+                        PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                            "TypeCache: [AssemblyFixtureProvider] is not supported when the runtime cannot generate dynamic code (Native AOT, Mono iOS AOT, Blazor WebAssembly AOT). The AssemblyInitialize/AssemblyCleanup methods it exposes from assembly {0} will not run.",
+                            SafeGetAssemblyName(loaded));
+                    }
                 }
             }
 

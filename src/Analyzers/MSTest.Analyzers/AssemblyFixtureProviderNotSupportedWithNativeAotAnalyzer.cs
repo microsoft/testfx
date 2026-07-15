@@ -48,12 +48,12 @@ public sealed class AssemblyFixtureProviderNotSupportedWithNativeAotAnalyzer : D
     private static void AnalyzeCompilation(CompilationAnalysisContext context)
     {
         // [AssemblyFixtureProvider] discovery walks the runtime assembly reference graph, which is only
-        // supported when the runtime can generate dynamic code. Under Native AOT the feature is skipped
-        // at runtime, so warn the user that the attribute has no effect there. Only report when the
-        // project opts into Native AOT.
-        if (!(context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.PublishAot", out string? publishAot)
-            && bool.TryParse(publishAot, out bool publishAotValue)
-            && publishAotValue))
+        // supported when the runtime can generate dynamic code. Under ahead-of-time compilation the
+        // feature is skipped at run time, so warn the user that the attribute has no effect there.
+        // Report when the project opts into an AOT flavor detectable at build time: Native AOT
+        // (PublishAot) or Blazor WebAssembly AOT (RunAOTCompilation).
+        if (!(IsBuildPropertyTrue(context, "build_property.PublishAot")
+            || IsBuildPropertyTrue(context, "build_property.RunAOTCompilation")))
         {
             return;
         }
@@ -81,12 +81,17 @@ public sealed class AssemblyFixtureProviderNotSupportedWithNativeAotAnalyzer : D
         // The documented/default usage places [AssemblyFixtureProvider] on a referenced fixture library.
         // Those attributes are declared outside this compilation (no source location), but the referencing
         // Native AOT test project is exactly where the runtime guard silently skips discovery, so report a
-        // no-location diagnostic for each referenced assembly that carries the marker.
-        foreach (IAssemblySymbol referencedAssembly in context.Compilation.SourceModule.ReferencedAssemblySymbols
-            .Where(referencedAssembly => referencedAssembly.GetAttributes()
+        // no-location diagnostic when any referenced assembly carries the marker.
+        if (context.Compilation.SourceModule.ReferencedAssemblySymbols
+            .Any(referencedAssembly => referencedAssembly.GetAttributes()
                 .Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyFixtureProviderAttributeSymbol))))
         {
             context.ReportNoLocationDiagnostic(Rule);
         }
     }
+
+    private static bool IsBuildPropertyTrue(CompilationAnalysisContext context, string propertyName)
+        => context.Options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue(propertyName, out string? value)
+            && bool.TryParse(value, out bool parsed)
+            && parsed;
 }

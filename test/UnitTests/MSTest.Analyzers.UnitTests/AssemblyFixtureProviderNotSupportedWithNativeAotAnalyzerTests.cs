@@ -14,22 +14,46 @@ namespace MSTest.Analyzers.Test;
 public class AssemblyFixtureProviderNotSupportedWithNativeAotAnalyzerTests
 {
     private static async Task VerifyAsync(string code, bool publishAot, params DiagnosticResult[] expected)
+        => await VerifyWithPropertiesAsync(code, expected, ("build_property.PublishAot", publishAot ? "true" : "false"));
+
+    private static async Task VerifyWithPropertiesAsync(string code, DiagnosticResult[] expected, params (string Key, string Value)[] properties)
     {
         var test = new VerifyCS.Test
         {
             TestCode = code,
         };
 
+        string propertyLines = string.Join(Environment.NewLine, properties.Select(p => $"{p.Key} = {p.Value}"));
         test.TestState.AnalyzerConfigFiles.Add((
             "/.globalconfig",
             $"""
             is_global = true
 
-            build_property.PublishAot = {(publishAot ? "true" : "false")}
+            {propertyLines}
             """));
 
         test.ExpectedDiagnostics.AddRange(expected);
         await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task WhenRunAOTCompilationAndAttributeIsUsed_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: [|AssemblyFixtureProvider(typeof(GlobalFixtures))|]]
+
+            public static class GlobalFixtures
+            {
+                [AssemblyInitialize]
+                public static void Init(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyWithPropertiesAsync(code, [], ("build_property.RunAOTCompilation", "true"));
     }
 
     [TestMethod]
