@@ -60,11 +60,12 @@ internal sealed partial class TrxReportEngine
         // id and rewrite that input's testId references, so module-specific definitions are not lost.
         var definitionsById = new Dictionary<string, XElement>(StringComparer.OrdinalIgnoreCase);
 
-        // Run-level diagnostics (<RunInfos>) and collector attachments (<CollectorDataEntries>) live
-        // under <ResultSummary>; carry them across so merged reports don't silently lose crash/exit
-        // messages and attachment references.
+        // Run-level diagnostics (<RunInfos>), collector attachments (<CollectorDataEntries>) and run-level
+        // result files (<ResultFiles>, produced by VSTest) live under <ResultSummary>; carry them across so
+        // merged reports don't silently lose crash/exit messages or attachment references.
         var mergedRunInfos = new XElement(NamespaceUri + "RunInfos");
         var mergedCollectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
+        var mergedResultFiles = new XElement(NamespaceUri + "ResultFiles");
 
         // Preserve the order in which counter attributes are first seen so the merged
         // <Counters> element keeps the well-known TRX attribute ordering.
@@ -121,6 +122,7 @@ internal sealed partial class TrxReportEngine
                 AccumulateCounters(FindChild(resultSummary, "Counters"), counterAttributeOrder, counterSums);
                 CloneChildrenInto(FindChild(resultSummary, "RunInfos"), mergedRunInfos);
                 CloneChildrenInto(FindChild(resultSummary, "CollectorDataEntries"), mergedCollectorDataEntries);
+                CloneChildrenInto(FindChild(resultSummary, "ResultFiles"), mergedResultFiles);
             }
 
             XElement? times = FindChild(testRun, "Times");
@@ -173,7 +175,7 @@ internal sealed partial class TrxReportEngine
         mergedTestRun.Add(mergedTestDefinitions);
         mergedTestRun.Add(mergedTestEntries);
         mergedTestRun.Add(mergedTestLists);
-        mergedTestRun.Add(BuildResultSummary(anyFailure ? "Failed" : "Completed", counterAttributeOrder, counterSums, mergedRunInfos, mergedCollectorDataEntries));
+        mergedTestRun.Add(BuildResultSummary(anyFailure ? "Failed" : "Completed", counterAttributeOrder, counterSums, mergedRunInfos, mergedCollectorDataEntries, mergedResultFiles));
 
         return new XDocument(new XDeclaration("1.0", "UTF-8", null), mergedTestRun);
     }
@@ -415,10 +417,11 @@ internal sealed partial class TrxReportEngine
     }
 
     /// <summary>
-    /// Removes every attachment reference (<c>&lt;A&gt;</c> and <c>&lt;ResultFile&gt;</c>) from a report.
-    /// Used when an input's attachments cannot be relocated (missing/invalid source, or a failed copy), so
-    /// the merged report never carries a reference that would resolve against the merged deployment root
-    /// to a file that was never placed there.
+    /// Removes the relative attachment references (<c>&lt;A&gt;</c> and <c>&lt;ResultFile&gt;</c>) from a
+    /// report. Used when an input's attachments cannot be relocated (missing/invalid source, or a failed
+    /// copy), so the merged report never carries a reference that would resolve against the merged
+    /// deployment root to a file that was never placed there. Rooted (absolute) references are preserved —
+    /// they resolve independently of the deployment root (RFC 018 keeps absolute paths resolvable).
     /// </summary>
     private static void DropAllAttachmentReferences(XDocument report)
     {
@@ -429,8 +432,34 @@ internal sealed partial class TrxReportEngine
 
         foreach (XElement element in root.Descendants().Where(e => e.Name.LocalName is "A" or "ResultFile").ToList())
         {
-            RemoveReferenceElement(element);
+            if (!IsRootedReference(element))
+            {
+                RemoveReferenceElement(element);
+            }
         }
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> if an attachment reference resolves to an absolute path (and so is
+    /// preserved even when relocation is abandoned): a rooted <c>href</c>/<c>path</c>, or a
+    /// <c>&lt;ResultFile&gt;</c> whose owning <c>UnitTestResult</c> has a rooted
+    /// <c>relativeResultsDirectory</c>.
+    /// </summary>
+    private static bool IsRootedReference(XElement element)
+    {
+        if (element.Name.LocalName == "A")
+        {
+            return element.Attribute("href")?.Value is { } href && Path.IsPathRooted(href);
+        }
+
+        // ResultFile: rooted if its own path is rooted, or its owning UnitTestResult's directory is rooted.
+        if (element.Attribute("path")?.Value is { } path && Path.IsPathRooted(path))
+        {
+            return true;
+        }
+
+        XElement? owningResult = element.Ancestors().FirstOrDefault(a => a.Name.LocalName == "UnitTestResult");
+        return owningResult?.Attribute("relativeResultsDirectory")?.Value is { } directory && Path.IsPathRooted(directory);
     }
 
     /// <summary>
@@ -1060,7 +1089,7 @@ internal sealed partial class TrxReportEngine
         return leaf is "." or ".." ? "_" + leaf : leaf;
     }
 
-    private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums, XElement runInfos, XElement collectorDataEntries)
+    private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums, XElement runInfos, XElement collectorDataEntries, XElement resultFiles)
     {
         var counters = new XElement(NamespaceUri + "Counters");
         foreach (string name in counterAttributeOrder)
@@ -1074,7 +1103,7 @@ internal sealed partial class TrxReportEngine
             counters);
 
         // Emit the diagnostics/attachment children only when they carry content, matching the shape
-        // the single-run producer writes (which omits empty <RunInfos>/<CollectorDataEntries>).
+        // the single-run producer writes (which omits empty <RunInfos>/<CollectorDataEntries>/<ResultFiles>).
         if (runInfos.HasElements)
         {
             resultSummary.Add(runInfos);
@@ -1083,6 +1112,11 @@ internal sealed partial class TrxReportEngine
         if (collectorDataEntries.HasElements)
         {
             resultSummary.Add(collectorDataEntries);
+        }
+
+        if (resultFiles.HasElements)
+        {
+            resultSummary.Add(resultFiles);
         }
 
         return resultSummary;

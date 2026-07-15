@@ -309,15 +309,20 @@ public sealed class CtrfReportMergerTests
     public void Merge_IgnoresNonCtrfInputs()
     {
         // A JSON object that is not a CTRF document must not be accepted (become 'first') and have
-        // CTRF-shaped data emitted under its label; its tests are excluded from the merge.
+        // CTRF-shaped data emitted under its label; its tests are excluded from the merge. This covers both
+        // a non-CTRF reportFormat and a missing reportFormat (the required format discriminator).
         string ctrf = BuildReport(testEntries: [Test("a", "passed")]);
-        var notCtrf = new JsonObject
+        var wrongFormat = new JsonObject
         {
             ["reportFormat"] = "JUnit",
             ["results"] = new JsonObject { ["tests"] = new JsonArray { Test("x", "passed") } },
         };
+        var noFormat = new JsonObject
+        {
+            ["results"] = new JsonObject { ["tests"] = new JsonArray { Test("y", "passed") } },
+        };
 
-        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([ctrf, notCtrf.ToJsonString()]))!;
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([ctrf, wrongFormat.ToJsonString(), noFormat.ToJsonString()]))!;
 
         Assert.AreEqual("CTRF", (string?)merged["reportFormat"]);
         Assert.AreEqual(1, (long)merged["results"]!["summary"]!["tests"]!);

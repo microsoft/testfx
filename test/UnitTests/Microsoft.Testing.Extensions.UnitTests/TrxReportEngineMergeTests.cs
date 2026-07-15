@@ -157,6 +157,68 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
+    public void Merge_CarriesRunLevelResultFiles()
+    {
+        // VSTest-produced TRX stores run-level attachments under ResultSummary/ResultFiles; the merge must
+        // carry them across rather than silently losing them (only RunInfos/CollectorDataEntries were kept).
+        var resultFiles = new XElement(Ns + "ResultFiles", new XElement(Ns + "ResultFile", new XAttribute("path", "run/summary.txt")));
+        XDocument a = BuildReport(resultSummaryChildren: [resultFiles]);
+
+        XElement summary = ResultSummary(TrxReportEngine.Merge([a, BuildReport()], Guid.NewGuid(), "run"));
+
+        XElement? mergedResultFiles = summary.Elements().FirstOrDefault(e => e.Name.LocalName == "ResultFiles");
+        Assert.IsNotNull(mergedResultFiles);
+        Assert.HasCount(1, mergedResultFiles.Elements());
+        Assert.AreEqual("run/summary.txt", mergedResultFiles.Elements().First().Attribute("path")!.Value);
+    }
+
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenSourceMissing_DropsRelativeButPreservesRootedReferences()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // The deployment 'In' root does not exist, so relocation is abandoned for this input. Its
+            // RELATIVE references must be dropped (they would dangle against the merged root), but a ROOTED
+            // reference resolves independently of the deployment root and must be preserved (RFC 018).
+            string inputDir = Path.Combine(tempDirectory, "in");
+            Directory.CreateDirectory(inputDir);
+            string rootedHref = Path.Combine(tempDirectory, "abs", "kept.txt");
+
+            var collectorDataEntries = new XElement(
+                Ns + "CollectorDataEntries",
+                new XElement(
+                    Ns + "Collector",
+                    new XAttribute("collectorDisplayName", "Code Coverage"),
+                    new XElement(
+                        Ns + "UriAttachments",
+                        new XElement(Ns + "UriAttachment", new XElement(Ns + "A", new XAttribute("href", rootedHref))),
+                        new XElement(Ns + "UriAttachment", new XElement(Ns + "A", new XAttribute("href", "machine/log.txt"))))));
+
+            XDocument report = BuildReport(resultSummaryChildren: [collectorDataEntries]);
+            report.Root!.Add(new XElement(
+                Ns + "TestSettings",
+                new XAttribute("name", "default"),
+                new XElement(Ns + "Deployment", new XAttribute("runDeploymentRoot", "dep"))));
+
+            string input = Path.Combine(inputDir, "a.trx");
+            report.Save(input);
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            Assert.HasCount(1, hrefs);
+            Assert.AreEqual(rootedHref, hrefs[0]);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
     public void Merge_WhenAnInputHasUnsuccessfulOutcome_MergedOutcomeIsFailed()
     {
         // A TRX summary outcome of "Error" (not just "Failed") is an unsuccessful run and must not be

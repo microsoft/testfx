@@ -71,20 +71,18 @@ internal static class CtrfReportMerger
                 continue;
             }
 
-            // Only accept genuine CTRF documents: a non-CTRF JSON object (different reportFormat, or no
-            // results object) must not become 'first' and have CTRF-shaped data emitted under its label.
+            // Only accept genuine CTRF documents: reportFormat is the required format discriminator, so an
+            // object without it (or with a non-CTRF value), or with no results object, must not become
+            // 'first' and have CTRF-shaped data emitted under its label.
             if (root["results"] is not JsonObject)
             {
                 continue;
             }
 
-            if (root["reportFormat"] is JsonNode reportFormat)
+            string? format = root["reportFormat"] is JsonValue formatValue && formatValue.TryGetValue(out string? formatText) ? formatText : null;
+            if (!string.Equals(format, "CTRF", StringComparison.OrdinalIgnoreCase))
             {
-                string? format = reportFormat is JsonValue formatValue && formatValue.TryGetValue(out string? formatText) ? formatText : null;
-                if (!string.Equals(format, "CTRF", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
+                continue;
             }
 
             first ??= root;
