@@ -69,6 +69,22 @@ internal static class CtrfReportMerger
                 foreach (JsonNode? test in testArray)
                 {
                     mergedTests.Add(test?.DeepClone());
+
+                    // Fall back to per-test timing so a summary-less input (which the merger explicitly
+                    // supports) still contributes to the merged min/max instead of being dropped or
+                    // forcing the merged timestamp back to the Unix epoch.
+                    if (test is not null)
+                    {
+                        if (TryReadLong(test, "start", out long testStart))
+                        {
+                            earliestStart = Min(earliestStart, testStart);
+                        }
+
+                        if (TryReadLong(test, "stop", out long testStop))
+                        {
+                            latestStop = Max(latestStop, testStop);
+                        }
+                    }
                 }
             }
 
@@ -85,14 +101,14 @@ internal static class CtrfReportMerger
             JsonNode? summary = results?["summary"];
             if (summary is not null)
             {
-                if (TryReadLong(summary, "start", out long start) && (earliestStart is null || start < earliestStart))
+                if (TryReadLong(summary, "start", out long start))
                 {
-                    earliestStart = start;
+                    earliestStart = Min(earliestStart, start);
                 }
 
-                if (TryReadLong(summary, "stop", out long stop) && (latestStop is null || stop > latestStop))
+                if (TryReadLong(summary, "stop", out long stop))
                 {
-                    latestStop = stop;
+                    latestStop = Max(latestStop, stop);
                 }
             }
         }
@@ -255,4 +271,10 @@ internal static class CtrfReportMerger
 
         return false;
     }
+
+    private static long Min(long? current, long candidate)
+        => current is null || candidate < current ? candidate : current.Value;
+
+    private static long Max(long? current, long candidate)
+        => current is null || candidate > current ? candidate : current.Value;
 }

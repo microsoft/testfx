@@ -373,6 +373,37 @@ public sealed class TrxReportEngineMergeTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeToFileAsync_RepeatedIntoSameNestedLayout_DoesNotAccumulateNestedTrees()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // Layout where the merged deployment root is nested strictly INSIDE the input's source 'In'
+            // tree, so staging the whole source would capture the previous merged output. Merging
+            // repeatedly into the same output must not snapshot the prior merged tree into the new one
+            // (which would grow "0/0/0/..." without bound).
+            string input = WriteReportWithAttachment(tempDirectory, "a.trx", deploymentRoot: "dep", attachmentContent: "AAA");
+            string output = Path.Combine(tempDirectory, "dep", "In", "out", "merged.trx");
+
+            for (int run = 0; run < 4; run++)
+            {
+                await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+            }
+
+            Assert.IsTrue(File.Exists(output));
+
+            // Original source attachment + a single relocated copy — bounded, not one-per-run.
+            List<string> copies = [.. Directory.GetFiles(tempDirectory, "log.txt", SearchOption.AllDirectories)];
+            Assert.HasCount(2, copies);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static string WriteReportWithAttachment(string inputDirectory, string fileName, string deploymentRoot, string attachmentContent)
     {
         Directory.CreateDirectory(inputDirectory);

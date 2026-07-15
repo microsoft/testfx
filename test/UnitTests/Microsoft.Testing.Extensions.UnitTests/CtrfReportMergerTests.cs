@@ -279,6 +279,30 @@ public sealed class CtrfReportMergerTests
         return report.ToJsonString();
     }
 
+    [TestMethod]
+    public void Merge_UsesTestLevelTimingWhenSummaryMissing()
+    {
+        // A summary-less input still carries per-test start/stop; those must feed the merged min/max
+        // rather than being dropped (which would make the merged window fall back to the epoch).
+        string withSummary = BuildReport(start: 5000, stop: 6000);
+        string withoutSummary = BuildReportWithoutSummary(TimedTest("t", 1000, 9000));
+
+        JsonNode summary = JsonNode.Parse(CtrfReportMerger.Merge([withSummary, withoutSummary]))!["results"]!["summary"]!;
+
+        Assert.AreEqual(1000, (long)summary["start"]!);
+        Assert.AreEqual(9000, (long)summary["stop"]!);
+    }
+
+    private static JsonObject TimedTest(string name, long start, long stop)
+        => new()
+        {
+            ["name"] = name,
+            ["status"] = "passed",
+            ["duration"] = stop - start,
+            ["start"] = start,
+            ["stop"] = stop,
+        };
+
     private static string BuildReportWithoutTool()
     {
         var report = new JsonObject

@@ -301,9 +301,14 @@ internal sealed partial class TrxReportEngine
                 // from different inputs cannot shadow each other.
                 if (strictOverlap)
                 {
-                    // The destination is nested with the source, so stage the source out first (before
-                    // clearing the destination, which could otherwise be inside the source tree).
-                    CopyViaStaging(sourceInRoot, destForInput, cancellationToken);
+                    // Stage the source out first (before clearing the destination, which could otherwise
+                    // be inside the source tree). Only when the merged root is nested INSIDE the source
+                    // does the source snapshot also contain the previous merged 'In' tree; exclude it in
+                    // that direction so repeated merges don't accumulate recursively-nested stale trees.
+                    string? excludeSubtree = IsUnderDirectory(mergedInRoot, sourceInRoot) && !string.Equals(mergedInRoot, sourceInRoot, PathComparison)
+                        ? mergedInRoot
+                        : null;
+                    CopyViaStaging(sourceInRoot, destForInput, excludeSubtree, cancellationToken);
                 }
                 else
                 {
@@ -377,8 +382,10 @@ internal sealed partial class TrxReportEngine
     /// temporary staging directory outside both trees. Used when the source and the merged destination
     /// strictly overlap, so the copy never recurses into its own destination while still landing the
     /// files at the prefixed destination (keeping the rewritten hrefs valid).
+    /// <paramref name="excludeSubtree"/> (the merged 'In' root) is skipped while staging so a source that
+    /// contains the previous merged output does not snapshot it into the new destination.
     /// </summary>
-    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
+    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, string? excludeSubtree, CancellationToken cancellationToken)
     {
         string staging = Path.Combine(Path.GetTempPath(), "mtp-trx-merge-" + Guid.NewGuid().ToString("N"));
         try
@@ -386,9 +393,9 @@ internal sealed partial class TrxReportEngine
             // Copy the source out to a temp location OUTSIDE both trees first, so clearing the
             // destination (which may be nested inside the source) cannot corrupt the source, and the
             // final copy never recurses into its own destination.
-            CopyDirectoryRecursive(sourceDirectory, staging, cancellationToken);
+            CopyDirectoryRecursive(sourceDirectory, staging, excludeSubtree, cancellationToken);
             DeleteDirectoryTreeOrLink(destinationDirectory);
-            CopyDirectoryRecursive(staging, destinationDirectory, cancellationToken);
+            CopyDirectoryRecursive(staging, destinationDirectory, excludeSubtree: null, cancellationToken);
         }
         finally
         {
@@ -400,8 +407,18 @@ internal sealed partial class TrxReportEngine
     }
 
     private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
+        => CopyDirectoryRecursive(sourceDirectory, destinationDirectory, excludeSubtree: null, cancellationToken);
+
+    private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, string? excludeSubtree, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        // Skip the excluded subtree (e.g. a previous merged 'In' root nested under the source) so we
+        // don't snapshot the merger's own prior output into the new destination.
+        if (excludeSubtree is not null && IsUnderDirectory(Path.GetFullPath(sourceDirectory), excludeSubtree))
+        {
+            return;
+        }
 
         // Do not descend into reparse points (symlinks/junctions): a link inside the (confined) source
         // tree could otherwise redirect the copy to an arbitrary location.
@@ -446,7 +463,7 @@ internal sealed partial class TrxReportEngine
 
         foreach (string directory in Directory.GetDirectories(sourceDirectory))
         {
-            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), cancellationToken);
+            CopyDirectoryRecursive(directory, Path.Combine(destinationDirectory, Path.GetFileName(directory)), excludeSubtree, cancellationToken);
         }
     }
 
