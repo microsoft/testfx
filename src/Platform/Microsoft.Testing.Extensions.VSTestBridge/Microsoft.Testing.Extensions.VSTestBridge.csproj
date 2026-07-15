@@ -15,6 +15,7 @@
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsCommandLineOptionsProviderBase.cs" Link="Helpers\RunSettingsCommandLineOptionsProviderBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsConfigurationProviderBase.cs" Link="Helpers\RunSettingsConfigurationProviderBase.cs" />
     <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\RunSettingsEnvironmentVariableProviderBase.cs" Link="Helpers\RunSettingsEnvironmentVariableProviderBase.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\SharedExtensionHelpers\TestRunParametersCommandLineOptionsProviderBase.cs" Link="Helpers\TestRunParametersCommandLineOptionsProviderBase.cs" />
   </ItemGroup>
 
   <ItemGroup>
