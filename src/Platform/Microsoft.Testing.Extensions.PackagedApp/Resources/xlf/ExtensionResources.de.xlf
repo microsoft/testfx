@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</source>
-        <target state="needs-review-translation">Stellt einen verpackten Windows-Testhost (UWP/WinUI) in einem isolierten Verzeichnis bereit und startet ihn von dort aus.</target>
+        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
