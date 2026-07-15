@@ -11,6 +11,30 @@
     <!-- It also needs to be added to nuspec manually (for projects that use nuspec) so that the new version flows to consumers -->
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
+  <!--
+    BuildXL-backed MSBuild project cache (https://github.com/microsoft/MSBuildCache). It caches per-project
+    build (and optionally test) outputs keyed on the files each project actually reads/writes, backed by
+    BuildXL's cache. It is OPT-IN and OFF by default: unless the build is invoked with
+    /p:MSBuildCacheEnabled=true, no MSBuildCache package is restored and no plugin is imported, so normal
+    builds are completely unaffected. See docs/build-caching.md for how to run cached builds.
+
+    MSBuildCache only produces correct results on a clean repo (PR/CI builds, or a fresh local checkout);
+    it does not support incremental local dev builds.
+  -->
+  <PropertyGroup Label="MSBuildCache (BuildXL project cache)">
+    <MSBuildCacheEnabled Condition="'$(MSBuildCacheEnabled)' == ''">false</MSBuildCacheEnabled>
+    <!-- In Azure Pipelines, use Pipeline Caching as the cache backend. Elsewhere (local dev), use the
+         BuildXL LocalCache so caching can be exercised without a remote store. -->
+    <MSBuildCachePackageName Condition="'$(MSBuildCachePackageName)' == '' and '$(TF_BUILD)' != ''">Microsoft.MSBuildCache.AzurePipelines</MSBuildCachePackageName>
+    <MSBuildCachePackageName Condition="'$(MSBuildCachePackageName)' == ''">Microsoft.MSBuildCache.Local</MSBuildCachePackageName>
+    <MSBuildCachePackageVersion>0.1.328-preview</MSBuildCachePackageVersion>
+  </PropertyGroup>
+  <!-- Only bring in the plugin (and auto-import its build props/targets) when caching is enabled. -->
+  <ItemGroup Condition="'$(MSBuildCacheEnabled)' == 'true'">
+    <GlobalPackageReference Include="$(MSBuildCachePackageName)" Version="$(MSBuildCachePackageVersion)" />
+    <!-- Reports the Roslyn compiler-server (vbcscompiler) file accesses to the plugin for C# projects. -->
+    <GlobalPackageReference Include="Microsoft.MSBuildCache.SharedCompilation" Version="$(MSBuildCachePackageVersion)" />
+  </ItemGroup>
   <PropertyGroup Label="Product dependencies">
     <!-- AspireHostingTestingVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Aspire.Hosting.Testing PackageVersion

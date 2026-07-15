@@ -1,0 +1,33 @@
+<Project>
+
+  <!--
+    Repo-specific tuning for the BuildXL-backed MSBuild project cache (Microsoft.MSBuildCache).
+
+    This file is only imported (from Directory.Build.props) when the build is invoked with
+    /p:MSBuildCacheEnabled=true, so it has no effect on normal builds. The package name/version and the
+    GlobalPackageReference that pulls in the plugin (and auto-imports its build props/targets) live in
+    Directory.Packages.props. Here we only override the plugin's default settings for this repo.
+
+    When adding to a list-typed setting, always append to the existing value ($(Setting);newvalue) so the
+    plugin's own defaults are preserved. See https://github.com/microsoft/MSBuildCache for the full list of
+    settings and their meanings.
+  -->
+  <PropertyGroup>
+    <!-- Bump this to invalidate every existing cache entry (e.g. after a toolchain change that the
+         fingerprint does not otherwise capture). -->
+    <MSBuildCacheCacheUniverse Condition="'$(MSBuildCacheCacheUniverse)' == ''">testfx-1</MSBuildCacheCacheUniverse>
+
+    <!--
+      Visual Studio / Application Insights telemetry (Microsoft.ApplicationInsights is referenced by product
+      code) reads config and cache files from a detached process after the owning project has finished
+      building. These accesses do not affect build correctness, so allow them rather than failing the cache.
+    -->
+    <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
+      $(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);
+      \**\ApplicationInsights.config;
+      $(LocalAppData)\Microsoft\VSApplicationInsights\**;
+      $(LocalAppData)\Microsoft\Windows\INetCache\**
+    </MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
+  </PropertyGroup>
+
+</Project>
