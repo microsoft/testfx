@@ -586,7 +586,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests
             public static class MyStaticClass
             {
                 [GlobalTestInitialize]
-                public static void GlobalInit()
+                public static void GlobalInit(TestContext testContext)
                 {
                 }
             }
