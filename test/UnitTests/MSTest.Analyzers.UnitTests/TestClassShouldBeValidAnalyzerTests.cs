@@ -545,4 +545,53 @@ public sealed class TestClassShouldBeValidAnalyzerTests
                 .WithArguments("MyTestClass"),
             fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenStaticTestClassContainsDerivedTestMethodAttribute_Diagnostic()
+    {
+        // The static-class guard uses Inherits() for TestMethodAttribute subclasses,
+        // so [DataTestMethod] (which inherits from [TestMethod]) triggers the diagnostic
+        // because static classes cannot be test classes.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class {|#0:MyStaticClass|}
+            {
+                [DataTestMethod]
+                [DataRow(1)]
+                public static void MyTestMethod(int value)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.TestClassShouldBeValidRule)
+                .WithLocation(0)
+                .WithArguments("MyStaticClass"));
+    }
+
+    [TestMethod]
+    public async Task WhenStaticTestClassContainsGlobalTestInitialize_NoDiagnostic()
+    {
+        // The static-class guard only checks TestInitialize, TestCleanup, ClassInitialize,
+        // ClassCleanup, and TestMethod-derived attributes. GlobalTestInitialize is NOT in
+        // that list, so a static [TestClass] containing only [GlobalTestInitialize] is valid.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class MyStaticClass
+            {
+                [GlobalTestInitialize]
+                public static void GlobalInit()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
