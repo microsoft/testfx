@@ -48,7 +48,7 @@ internal sealed class HotReloadTestHostTestFrameworkInvoker : TestHostTestFramew
 
             // Reset the shared coverage accumulator at the start of every hot-reload cycle so each cycle reports
             // only its own coverage and a prior cycle's threshold-failure verdict cannot carry over.
-            ServiceProvider.GetRequiredService<ITestCoverageResult>().Reset();
+            ServiceProvider.GetRequiredService<TestCoverageResult>().Reset();
 
             var hotReloadOutputDevice = ServiceProvider.GetPlatformOutputDevice() as IHotReloadPlatformOutputDevice;
             if (hotReloadOutputDevice is not null)

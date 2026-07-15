@@ -211,7 +211,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
         // common host/request lifecycle, so it happens for all output modes (terminal, pipe, server, custom)
         // rather than only when the terminal device renders. Without this a prior session's coverage rows and
         // thresholds would be reprinted and its threshold-failure verdict could poison a later session.
-        serviceProvider.GetRequiredService<ITestCoverageResult>().Reset();
+        serviceProvider.GetRequiredService<TestCoverageResult>().Reset();
 
         await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;

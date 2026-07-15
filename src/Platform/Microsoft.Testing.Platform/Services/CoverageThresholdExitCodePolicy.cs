@@ -26,7 +26,7 @@ internal static class CoverageThresholdExitCodePolicy
         }
 
         ITestCoverageResult? coverageResult = serviceProvider.GetService<ITestCoverageResult>();
-        return coverageResult?.HasCoverageThresholdFailure == true
+        return coverageResult?.HasThresholdFailure == true
             ? ExitCodeIgnorePolicy.Apply((int)ExitCode.CoverageThresholdFailed, serviceProvider.GetCommandLineOptions(), serviceProvider.GetEnvironment())
             : exitCode;
     }

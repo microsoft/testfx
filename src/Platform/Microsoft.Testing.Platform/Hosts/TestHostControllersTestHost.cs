@@ -146,7 +146,7 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
             // Register the coverage result consumer so that coverage messages published by
             // ITestHostProcessLifetimeHandler extensions in this (controller) process are tracked.
             // This is the same instance later read by the coverage threshold exit code check.
-            if (ServiceProvider.GetService<ITestCoverageResult>() is { } testCoverageResult)
+            if (ServiceProvider.GetService<TestCoverageResult>() is { } testCoverageResult)
             {
                 dataConsumersBuilder.Add(testCoverageResult);
             }

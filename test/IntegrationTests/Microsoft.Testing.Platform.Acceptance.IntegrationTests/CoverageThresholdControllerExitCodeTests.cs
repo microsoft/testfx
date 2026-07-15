@@ -96,6 +96,7 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHost;
 
 public class Startup
 {
@@ -141,13 +142,20 @@ public class CoverageThresholdLifetimeHandler : ITestHostProcessLifetimeHandler,
     public async Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellationToken)
     {
         string? thresholdStatus = Environment.GetEnvironmentVariable("COVERAGE_THRESHOLD_STATUS");
+        var sessionUid = new SessionUid("controller");
         if (thresholdStatus == "Failed")
         {
-            await _messageBus.PublishAsync(this, new TestCoverageThresholdMessage(70.0, 80.0, CoverageMetric.Line, CoverageThresholdStatistic.Minimum));
+            await _messageBus.PublishAsync(this, new TestCoverageThresholdMessage(
+                sessionUid, CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Minimum,
+                actualPercentage: 70.0, requiredPercentage: 80.0, hasCoverableData: true, producerId: nameof(CoverageThresholdLifetimeHandler),
+                aggregatedOver: CoverageScopeLevel.Module));
         }
         else if (thresholdStatus == "Passed")
         {
-            await _messageBus.PublishAsync(this, new TestCoverageThresholdMessage(90.0, 80.0, CoverageMetric.Line, CoverageThresholdStatistic.Minimum));
+            await _messageBus.PublishAsync(this, new TestCoverageThresholdMessage(
+                sessionUid, CoverageScope.Overall, CoverageMetric.Line, CoverageAggregation.Minimum,
+                actualPercentage: 90.0, requiredPercentage: 80.0, hasCoverableData: true, producerId: nameof(CoverageThresholdLifetimeHandler),
+                aggregatedOver: CoverageScopeLevel.Module));
         }
     }
 }

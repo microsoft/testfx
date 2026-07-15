@@ -49,17 +49,39 @@ internal static partial class TerminalResources
 
     internal static string @CoverageThresholdResults => GetResourceString("CoverageThresholdResults");
 
-    internal static string @CoverageThresholdStatisticAverage => GetResourceString("CoverageThresholdStatisticAverage");
+    internal static string @CoverageScopeOverall => GetResourceString("CoverageScopeOverall");
 
-    internal static string @CoverageThresholdStatisticMinimum => GetResourceString("CoverageThresholdStatisticMinimum");
+    internal static string @CoverageNoData => GetResourceString("CoverageNoData");
 
-    internal static string @CoverageThresholdStatisticTotal => GetResourceString("CoverageThresholdStatisticTotal");
+    internal static string @CoverageMetricLine => GetResourceString("CoverageMetricLine");
 
-    internal static string @CoverageTypeBranch => GetResourceString("CoverageTypeBranch");
+    internal static string @CoverageMetricStatement => GetResourceString("CoverageMetricStatement");
 
-    internal static string @CoverageTypeLine => GetResourceString("CoverageTypeLine");
+    internal static string @CoverageMetricBranch => GetResourceString("CoverageMetricBranch");
 
-    internal static string @CoverageTypeMethod => GetResourceString("CoverageTypeMethod");
+    internal static string @CoverageMetricMethod => GetResourceString("CoverageMetricMethod");
+
+    internal static string @CoverageMetricFunction => GetResourceString("CoverageMetricFunction");
+
+    internal static string @CoverageMetricBlock => GetResourceString("CoverageMetricBlock");
+
+    internal static string @CoverageMetricInstruction => GetResourceString("CoverageMetricInstruction");
+
+    internal static string @CoverageMetricRegion => GetResourceString("CoverageMetricRegion");
+
+    internal static string @CoverageMetricClass => GetResourceString("CoverageMetricClass");
+
+    internal static string @CoverageMetricCondition => GetResourceString("CoverageMetricCondition");
+
+    internal static string @CoverageMetricComplexity => GetResourceString("CoverageMetricComplexity");
+
+    internal static string @CoverageAggregationTotal => GetResourceString("CoverageAggregationTotal");
+
+    internal static string @CoverageAggregationMinimum => GetResourceString("CoverageAggregationMinimum");
+
+    internal static string @CoverageAggregationAverage => GetResourceString("CoverageAggregationAverage");
+
+    internal static string @CoverageAggregationMaximum => GetResourceString("CoverageAggregationMaximum");
 
     internal static string @DiscoveredTestsInAssembly => GetResourceString("DiscoveredTestsInAssembly");
 

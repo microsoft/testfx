@@ -1,92 +1,108 @@
 #nullable enable
-Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData
-Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.Key.get -> string!
-Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.Message.get -> string?
-Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.ProgressMessageOutputDeviceData(string! key, string? message) -> void
-Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData
-Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.Message.get -> string!
-Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.SessionMessageOutputDeviceData(string! message) -> void
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(string! uid, string! version, string! displayName, string! description, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Description.get -> string!
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.DisplayName.get -> string!
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Uid.get -> string!
-[TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.Version.get -> string!
-[TPINTERNAL]Microsoft.Testing.Platform.Helpers.IClock
-[TPINTERNAL]Microsoft.Testing.Platform.Helpers.IClock.UtcNow.get -> System.DateTimeOffset
-[TPINTERNAL]static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string! mainOptionName, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
-[TPINTERNAL]static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.RequiresMainOption(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! options, string![]! subOptionNames, string![]! mainOptionNames, System.Func<string!>! errorMessageFactory) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>?
-[TPINTERNAL]static Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateAllowedValuesAsync(string! value, string![]! allowedValues, string! formatString) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
-[TPINTERNAL]static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetSystemClock(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.IClock!
-[TPINTERNAL]virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
-[TPINTERNAL]virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.FileArtifact(System.IO.FileInfo! fileInfo, string! displayName, string? description, string? kind) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.Kind.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.Kind.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.SessionFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.IO.FileInfo! fileInfo, string! displayName, string? description, string? kind) -> void
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities.IsStateful.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!
 Microsoft.Testing.Platform.Services.IArtifactNamingService
 Microsoft.Testing.Platform.Services.IArtifactNamingService.ResolveFileName(string! template) -> string!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetArtifactNamingService(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Services.IArtifactNamingService!
-[TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder
-[TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
-[TPEXP]Microsoft.Testing.Platform.Builder.IArtifactPostProcessingApplicationBuilder.Tools.get -> Microsoft.Testing.Platform.Tools.IToolsManager!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager.AddArtifactPostProcessor(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! factory) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Architecture.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.ExecutionId.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.InputArtifact(string! path, string? kind, string? producingTestModule, string? targetFramework, string? architecture, string? executionId) -> void
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Kind.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Path.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.ProducingTestModule.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.TargetFramework.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Description.get -> string?
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.DisplayName.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Kind.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Path.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.ProcessedArtifact(string! path, string! kind, string! displayName, string? description) -> void
-[TPEXP]Microsoft.Testing.Platform.Tools.ITool
-[TPEXP]Microsoft.Testing.Platform.Tools.ITool.Name.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Tools.ITool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
-[TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider
-[TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider.ToolName.get -> string!
-[TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager
-[TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager.AddTool(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Tools.ITool!>! toolFactory) -> void
 Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
-Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Branch = 1 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
 Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Line = 0 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
-Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Method = 2 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
-Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic
-Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic.Average = 2 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic
-Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic.Minimum = 0 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic
-Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic.Total = 1 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageData
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageData.Description.get -> string?
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageData.DisplayName.get -> string!
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageData.TestCoverageData(string! displayName, string? description) -> void
-override Microsoft.Testing.Platform.Extensions.Messages.TestCoverageData.ToString() -> string!
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Statement = 1 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Branch = 2 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Method = 3 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Function = 4 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Block = 5 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Instruction = 6 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Region = 7 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Class = 8 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Condition = 9 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Complexity = 10 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric.Custom = 255 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation
+Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation.None = 0 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation
+Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation.Total = 1 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation
+Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation.Minimum = 2 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation
+Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation.Average = 3 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation
+Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation.Maximum = 4 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel.Overall = 0 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel.Module = 1 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel.Assembly = 2 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel.Namespace = 3 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel.Type = 4 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel.File = 5 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat.Unknown = 0 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat.Cobertura = 1 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat.OpenCover = 2 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat.Lcov = 3 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat.CoverageXml = 4 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat.Custom = 255 -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScope
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.CoverageScope() -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.CoverageScope(Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel level, string? name = null, string? containerHint = null) -> void
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.ContainerHint.get -> string?
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.Equals(Microsoft.Testing.Platform.Extensions.Messages.CoverageScope other) -> bool
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.Level.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel
+Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.Name.get -> string?
+override Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.Equals(object? obj) -> bool
+override Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.GetHashCode() -> int
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.Overall.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScope
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.operator !=(Microsoft.Testing.Platform.Extensions.Messages.CoverageScope left, Microsoft.Testing.Platform.Extensions.Messages.CoverageScope right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageScope.operator ==(Microsoft.Testing.Platform.Extensions.Messages.CoverageScope left, Microsoft.Testing.Platform.Extensions.Messages.CoverageScope right) -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.CoveragePercentage.get -> double
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.CoverableCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.CoveredCount.get -> long
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.CustomMetricName.get -> string?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.HasCoverableData.get -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.Metric.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.ModuleName.get -> string!
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.TestCoverageMessage(string! moduleName, double coveragePercentage, Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric) -> void
-override Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.ToString() -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.Percentage.get -> double
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.ProducerId.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.Scope.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScope
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage.TestCoverageMessage(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.CoverageScope scope, Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, long coveredCount, long coverableCount, string! producerId, string? customMetricName = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.CoveragePercentage.get -> double
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ActualPercentage.get -> double
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.AggregatedOver.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.Aggregation.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.CustomMetricName.get -> string?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.HasCoverableData.get -> bool
 Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.Metric.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
 Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.Passed.get -> bool
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.Statistic.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.TestCoverageThresholdMessage(double coveragePercentage, double thresholdPercentage, Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, Microsoft.Testing.Platform.Extensions.Messages.CoverageThresholdStatistic statistic) -> void
-Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ThresholdPercentage.get -> double
-override Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ToString() -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.ProducerId.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.RequiredPercentage.get -> double
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.Scope.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScope
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.TreatNoDataAsFailure.get -> bool
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage.TestCoverageThresholdMessage(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.CoverageScope scope, Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, Microsoft.Testing.Platform.Extensions.Messages.CoverageAggregation aggregation, double actualPercentage, double requiredPercentage, bool hasCoverableData, string! producerId, Microsoft.Testing.Platform.Extensions.Messages.CoverageScopeLevel? aggregatedOver = null, bool treatNoDataAsFailure = true, string? customMetricName = null) -> void
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.CustomFormatName.get -> string?
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.Format.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.ProducerId.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.ReportPath.get -> string!
+Microsoft.Testing.Platform.Extensions.Messages.TestCoverageReportMessage.TestCoverageReportMessage(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, string! reportPath, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName = null) -> void
+Microsoft.Testing.Platform.Services.ITestCoverageResult
+Microsoft.Testing.Platform.Services.ITestCoverageResult.HasThresholdFailure.get -> bool
+Microsoft.Testing.Platform.Services.ITestCoverageResult.Overall.get -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
+Microsoft.Testing.Platform.Services.ITestCoverageResult.Reports.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageReportReference!>!
+Microsoft.Testing.Platform.Services.ITestCoverageResult.Scopes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>!
+Microsoft.Testing.Platform.Services.ITestCoverageResult.Thresholds.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>!
+Microsoft.Testing.Platform.Services.CoverageMetricResult
+Microsoft.Testing.Platform.Services.CoverageMetricResult.CoverableCount.get -> long
+Microsoft.Testing.Platform.Services.CoverageMetricResult.CoverageMetricResult(Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, long coveredCount, long coverableCount, string! producerId, string? customMetricName = null) -> void
+Microsoft.Testing.Platform.Services.CoverageMetricResult.CoveredCount.get -> long
+Microsoft.Testing.Platform.Services.CoverageMetricResult.CustomMetricName.get -> string?
+Microsoft.Testing.Platform.Services.CoverageMetricResult.HasCoverableData.get -> bool
+Microsoft.Testing.Platform.Services.CoverageMetricResult.Metric.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric
+Microsoft.Testing.Platform.Services.CoverageMetricResult.Percentage.get -> double
+Microsoft.Testing.Platform.Services.CoverageMetricResult.ProducerId.get -> string!
+Microsoft.Testing.Platform.Services.CoverageScopeSummary
+Microsoft.Testing.Platform.Services.CoverageScopeSummary.CoverageScopeSummary(Microsoft.Testing.Platform.Extensions.Messages.CoverageScope scope, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>! metrics) -> void
+Microsoft.Testing.Platform.Services.CoverageScopeSummary.GetCustom(string! customMetricName) -> Microsoft.Testing.Platform.Services.CoverageMetricResult?
+Microsoft.Testing.Platform.Services.CoverageScopeSummary.Metrics.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageMetricResult!>!
+Microsoft.Testing.Platform.Services.CoverageScopeSummary.Scope.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageScope
+Microsoft.Testing.Platform.Services.CoverageScopeSummary.this[Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric].get -> Microsoft.Testing.Platform.Services.CoverageMetricResult?
+Microsoft.Testing.Platform.Services.CoverageReportReference
+Microsoft.Testing.Platform.Services.CoverageReportReference.CoverageReportReference(string! path, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName = null) -> void
+Microsoft.Testing.Platform.Services.CoverageReportReference.CustomFormatName.get -> string?
+Microsoft.Testing.Platform.Services.CoverageReportReference.Format.get -> Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat
+Microsoft.Testing.Platform.Services.CoverageReportReference.Path.get -> string!
+Microsoft.Testing.Platform.Services.CoverageReportReference.ProducerId.get -> string!

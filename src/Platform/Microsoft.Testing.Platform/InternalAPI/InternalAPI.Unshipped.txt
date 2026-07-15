@@ -106,27 +106,26 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetOrCreateTe
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.NotifyHandshake(string! instanceId, int attemptNumber) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.ReportDiscoveredTest(string? displayName) -> void
 Microsoft.Testing.Platform.Helpers.ExitCode.CoverageThresholdFailed = 14 -> Microsoft.Testing.Platform.Helpers.ExitCode
-Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AppendCoverageSummary(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage!>! coverageEntries, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>! thresholdEntries) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AppendCoverageSummary(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>! scopes, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>! thresholds) -> void
 Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerInfo! testHostControllerInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Logging.IFileLoggerInformation? fileLoggerInformation, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource, Microsoft.Testing.Platform.Services.ITestCoverageResult! testCoverageResult) -> void
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevice(Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Services.ITestApplicationModuleInfo! testApplicationModuleInfo, Microsoft.Testing.Platform.TestHostControllers.ITestHostControllerInfo! testHostControllerInfo, Microsoft.Testing.Platform.Helpers.IAsyncMonitor! asyncMonitor, Microsoft.Testing.Platform.Helpers.IRuntimeFeature! runtimeFeature, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.Services.IPlatformInformation! platformInformation, Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Logging.IFileLoggerInformation? fileLoggerInformation, Microsoft.Testing.Platform.Logging.ILoggerFactory! loggerFactory, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Services.IStopPoliciesService! policiesService, Microsoft.Testing.Platform.Services.ITestApplicationCancellationTokenSource! testApplicationCancellationTokenSource) -> void
 Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy
 Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy
-Microsoft.Testing.Platform.Services.ITestCoverageResult
-Microsoft.Testing.Platform.Services.ITestCoverageResult.CoverageEntries.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage!>!
-Microsoft.Testing.Platform.Services.ITestCoverageResult.HasCoverageThresholdFailure.get -> bool
-Microsoft.Testing.Platform.Services.ITestCoverageResult.Reset() -> void
-Microsoft.Testing.Platform.Services.ITestCoverageResult.ThresholdEntries.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>!
+Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateCustomMetricName(Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, string? customMetricName) -> void
 Microsoft.Testing.Platform.Services.TestCoverageResult
 Microsoft.Testing.Platform.Services.TestCoverageResult.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-Microsoft.Testing.Platform.Services.TestCoverageResult.CoverageEntries.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageMessage!>!
 Microsoft.Testing.Platform.Services.TestCoverageResult.DataTypesConsumed.get -> System.Type![]!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Description.get -> string!
 Microsoft.Testing.Platform.Services.TestCoverageResult.DisplayName.get -> string!
-Microsoft.Testing.Platform.Services.TestCoverageResult.HasCoverageThresholdFailure.get -> bool
+Microsoft.Testing.Platform.Services.TestCoverageResult.HasThresholdFailure.get -> bool
 Microsoft.Testing.Platform.Services.TestCoverageResult.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Services.TestCoverageResult.Overall.get -> Microsoft.Testing.Platform.Services.CoverageScopeSummary?
+Microsoft.Testing.Platform.Services.TestCoverageResult.Reports.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageReportReference!>!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Reset() -> void
+Microsoft.Testing.Platform.Services.TestCoverageResult.Scopes.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Services.CoverageScopeSummary!>!
 Microsoft.Testing.Platform.Services.TestCoverageResult.TestCoverageResult() -> void
-Microsoft.Testing.Platform.Services.TestCoverageResult.ThresholdEntries.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>!
+Microsoft.Testing.Platform.Services.TestCoverageResult.Thresholds.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.Messages.TestCoverageThresholdMessage!>!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Uid.get -> string!
 Microsoft.Testing.Platform.Services.TestCoverageResult.Version.get -> string!
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
