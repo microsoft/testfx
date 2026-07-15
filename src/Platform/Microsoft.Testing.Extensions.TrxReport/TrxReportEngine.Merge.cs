@@ -52,11 +52,13 @@ internal sealed partial class TrxReportEngine
         var mergedTestLists = new XElement(NamespaceUri + "TestLists");
         var seenTestListIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        // TestDefinition ids are derived deterministically from each test's UID, so the same test
-        // discovered in more than one input yields the same id. The TRX schema (and the producer,
-        // see TrxReportEngine.Results.cs) does not allow duplicate <UnitTest id="...">, so we keep
-        // only the first definition seen per id.
-        var seenTestDefinitionIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // TestDefinition ids are derived deterministically from each test's UID (assembly file name plus
+        // test identity), so the same test discovered in more than one input yields the same id — but a
+        // multi-TFM merge can produce definitions that share an id yet differ (e.g. different storage /
+        // codeBase). We keep identical definitions deduplicated (the TRX schema forbids duplicate
+        // <UnitTest id="...">), but remap a materially-different same-id definition to a fresh deterministic
+        // id and rewrite that input's testId references, so module-specific definitions are not lost.
+        var definitionsById = new Dictionary<string, XElement>(StringComparer.OrdinalIgnoreCase);
 
         // Run-level diagnostics (<RunInfos>) and collector attachments (<CollectorDataEntries>) live
         // under <ResultSummary>; carry them across so merged reports don't silently lose crash/exit
@@ -72,18 +74,22 @@ internal sealed partial class TrxReportEngine
         bool anyFailure = false;
         DateTimeOffset? earliestStart = null;
         DateTimeOffset? latestFinish = null;
+        int inputIndex = 0;
 
         foreach (XDocument report in inputReports)
         {
             XElement? testRun = report.Root;
             if (testRun is null)
             {
+                inputIndex++;
                 continue;
             }
 
-            CloneChildrenInto(FindChild(testRun, "Results"), mergedResults);
-            CloneChildrenIntoDeduplicatedById(FindChild(testRun, "TestDefinitions"), mergedTestDefinitions, seenTestDefinitionIds);
-            CloneChildrenInto(FindChild(testRun, "TestEntries"), mergedTestEntries);
+            // Merge TestDefinitions first to build this input's id remap, then clone Results/TestEntries
+            // with that remap applied so their testId references resolve to the right definition.
+            Dictionary<string, string> idRemap = MergeTestDefinitions(FindChild(testRun, "TestDefinitions"), mergedTestDefinitions, definitionsById, inputIndex);
+            CloneWithRemappedTestIds(FindChild(testRun, "Results"), mergedResults, idRemap);
+            CloneWithRemappedTestIds(FindChild(testRun, "TestEntries"), mergedTestEntries, idRemap);
 
             XElement? testLists = FindChild(testRun, "TestLists");
             if (testLists is not null)
@@ -101,7 +107,13 @@ internal sealed partial class TrxReportEngine
             XElement? resultSummary = FindChild(testRun, "ResultSummary");
             if (resultSummary is not null)
             {
-                if (string.Equals(resultSummary.Attribute("outcome")?.Value, "Failed", StringComparison.OrdinalIgnoreCase))
+                // A successful run's summary outcome is "Completed" (or "Passed"); anything else
+                // (Failed, Error, Aborted, Timeout, Inconclusive, …) is an unsuccessful run and must not
+                // be flattened to "Completed" in the merged report.
+                string? outcome = resultSummary.Attribute("outcome")?.Value;
+                if (!RoslynString.IsNullOrEmpty(outcome)
+                    && !string.Equals(outcome, "Completed", StringComparison.OrdinalIgnoreCase)
+                    && !string.Equals(outcome, "Passed", StringComparison.OrdinalIgnoreCase))
                 {
                     anyFailure = true;
                 }
@@ -126,6 +138,8 @@ internal sealed partial class TrxReportEngine
                     latestFinish = finish;
                 }
             }
+
+            inputIndex++;
         }
 
         if (counterSums.TryGetValue("failed", out long failedCount) && failedCount > 0)
@@ -133,7 +147,17 @@ internal sealed partial class TrxReportEngine
             anyFailure = true;
         }
 
+        if (counterSums.TryGetValue("error", out long errorCount) && errorCount > 0)
+        {
+            anyFailure = true;
+        }
+
         if (counterSums.TryGetValue("timeout", out long timeoutCount) && timeoutCount > 0)
+        {
+            anyFailure = true;
+        }
+
+        if (counterSums.TryGetValue("aborted", out long abortedCount) && abortedCount > 0)
         {
             anyFailure = true;
         }
@@ -349,16 +373,18 @@ internal sealed partial class TrxReportEngine
                 }
 
                 // Equal roots: the source files already live at the merged deployment root under their
-                // original relative paths, so the original references resolve as-is. Skip relocation and
-                // leave them un-prefixed.
+                // original relative paths, so references are kept un-prefixed. Still validate them
+                // (dropping rooted/traversal references, and any pointing at a missing or symlinked file)
+                // so the path-confined contract holds even when nothing is copied.
                 if (string.Equals(sourceInRoot, mergedInRoot, PathComparison))
                 {
+                    RelocateReferencedAttachments(reports[i], prefix: string.Empty, sourceInRoot, mergedInRoot, relocate: false, cancellationToken);
                     continue;
                 }
 
                 // Copy only the files the report references (never the whole tree), so an output nested
                 // inside a source neither recurses into its own destination nor accumulates across retries.
-                RelocateReferencedAttachments(reports[i], i.ToString(CultureInfo.InvariantCulture), sourceInRoot, mergedInRoot, cancellationToken);
+                RelocateReferencedAttachments(reports[i], i.ToString(CultureInfo.InvariantCulture), sourceInRoot, mergedInRoot, relocate: true, cancellationToken);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
@@ -391,7 +417,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private static void RelocateReferencedAttachments(XDocument report, string prefix, string sourceInRoot, string mergedInRoot, CancellationToken cancellationToken)
+    private static void RelocateReferencedAttachments(XDocument report, string prefix, string sourceInRoot, string mergedInRoot, bool relocate, CancellationToken cancellationToken)
     {
         if (report.Root is not { } root)
         {
@@ -406,35 +432,39 @@ internal sealed partial class TrxReportEngine
         //     In/<owning @relativeResultsDirectory>/<path>, so the file is copied to
         //     In/<prefix>/<relativeResultsDirectory>/<path> and the *directory* is prefixed once.
         // Only referenced files are copied (never a whole tree), and a reference that is rooted, escapes
-        // the deployment root, or whose source file was not materialized is dropped.
+        // the deployment root, or whose source file was not materialized is dropped. When
+        // <paramref name="relocate"/> is false (equal-roots case: the source already lives at the merged
+        // deployment root) references are validated and dropped the same way, but kept un-prefixed and
+        // nothing is copied.
         // Materialize each pass first: a dropped reference is removed, and removing while enumerating the
         // lazy Descendants() sequence would be unsafe.
         foreach (XElement collectorAttachment in root.Descendants().Where(e => e.Name.LocalName == "A").ToList())
         {
-            RelocateReference(collectorAttachment, "href", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, cancellationToken);
+            RelocateReference(collectorAttachment, "href", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, relocate, cancellationToken);
         }
 
         foreach (XElement unitTestResult in root.Descendants().Where(e => e.Name.LocalName == "UnitTestResult").ToList())
         {
-            RelocateResultFilesForUnitTestResult(unitTestResult, prefix, sourceInRoot, mergedInRoot, cancellationToken);
+            RelocateResultFilesForUnitTestResult(unitTestResult, prefix, sourceInRoot, mergedInRoot, relocate, cancellationToken);
         }
 
         foreach (XElement standaloneResultFile in root.Descendants()
             .Where(e => e.Name.LocalName == "ResultFile" && e.Ancestors().All(a => a.Name.LocalName != "UnitTestResult"))
             .ToList())
         {
-            RelocateReference(standaloneResultFile, "path", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, cancellationToken);
+            RelocateReference(standaloneResultFile, "path", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, relocate, cancellationToken);
         }
     }
 
     /// <summary>
-    /// Relocates the per-test <c>ResultFile</c> references of a single <c>UnitTestResult</c>. Consumers
-    /// resolve them under <c>In/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>, so each referenced file
-    /// is copied to <c>In/&lt;prefix&gt;/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c> and the
-    /// directory is prefixed once; a reference that is rooted, escapes the root, or whose source file was
-    /// not materialized is dropped.
+    /// Relocates (or, when <paramref name="relocate"/> is false, validates in place) the per-test
+    /// <c>ResultFile</c> references of a single <c>UnitTestResult</c>. Consumers resolve them under
+    /// <c>In/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>; when relocating, each referenced file is
+    /// copied to <c>In/&lt;prefix&gt;/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c> and the directory
+    /// is prefixed once. A reference that is rooted, escapes the root, or whose source file was not
+    /// materialized (missing or symlinked) is dropped in either mode.
     /// </summary>
-    private static void RelocateResultFilesForUnitTestResult(XElement unitTestResult, string prefix, string sourceInRoot, string mergedInRoot, CancellationToken cancellationToken)
+    private static void RelocateResultFilesForUnitTestResult(XElement unitTestResult, string prefix, string sourceInRoot, string mergedInRoot, bool relocate, CancellationToken cancellationToken)
     {
         List<XElement> resultFiles = [.. unitTestResult.Descendants().Where(e => e.Name.LocalName == "ResultFile")];
         if (resultFiles.Count == 0)
@@ -450,7 +480,7 @@ internal sealed partial class TrxReportEngine
             // No owning directory: each path resolves at In/<path>, like a collector href.
             foreach (XElement resultFile in resultFiles)
             {
-                RelocateReference(resultFile, "path", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, cancellationToken);
+                RelocateReference(resultFile, "path", relativeDirectory: null, prefix, sourceInRoot, mergedInRoot, relocate, cancellationToken);
             }
 
             return;
@@ -467,14 +497,14 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
-        // Copy each referenced file to In/<prefix>/<relativeResultsDirectory>/<path>, dropping any rooted,
-        // escaping, or non-materialized reference, then prefix the directory once if anything survived.
+        // Copy (or validate) each referenced file, dropping any rooted, escaping, or non-materialized
+        // reference, then prefix the directory once if anything survived (only when relocating).
         bool anyKept = false;
         foreach (XElement resultFile in resultFiles)
         {
             string path = resultFile.Attribute("path")?.Value ?? string.Empty;
             string combined = relativeDirectoryValue + "/" + path;
-            if (Path.IsPathRooted(path) || EscapesRoot(combined) || !TryCopyReferencedFile(sourceInRoot, mergedInRoot, prefix, combined, cancellationToken))
+            if (Path.IsPathRooted(path) || EscapesRoot(combined) || !TryMaterializeOrValidateReference(sourceInRoot, mergedInRoot, prefix, combined, relocate, cancellationToken))
             {
                 resultFile.Remove();
             }
@@ -484,19 +514,20 @@ internal sealed partial class TrxReportEngine
             }
         }
 
-        if (anyKept)
+        if (anyKept && relocate)
         {
             relativeDirectory.Value = prefix + "/" + relativeDirectoryValue;
         }
     }
 
     /// <summary>
-    /// Copies the file referenced by <paramref name="attributeName"/> into the per-input folder and
-    /// prefixes the reference. A rooted value (an absolute path outside the confined deployment tree), a
-    /// value that escapes the deployment root, or a source file that was not materialized (missing, or a
-    /// skipped symlink) causes the reference to be dropped instead of emitted.
+    /// Relocates (or validates in place) the file referenced by <paramref name="attributeName"/>. A rooted
+    /// value (an absolute path outside the confined deployment tree), a value that escapes the deployment
+    /// root, or a source file that was not materialized (missing, or a skipped symlink) causes the
+    /// reference to be dropped. When <paramref name="relocate"/> is true the file is copied into the
+    /// per-input folder and the reference is prefixed; otherwise it is left unchanged.
     /// </summary>
-    private static void RelocateReference(XElement element, string attributeName, string? relativeDirectory, string prefix, string sourceInRoot, string mergedInRoot, CancellationToken cancellationToken)
+    private static void RelocateReference(XElement element, string attributeName, string? relativeDirectory, string prefix, string sourceInRoot, string mergedInRoot, bool relocate, CancellationToken cancellationToken)
     {
         XAttribute? attribute = element.Attribute(attributeName);
         if (attribute is null || RoslynString.IsNullOrEmpty(attribute.Value))
@@ -511,37 +542,51 @@ internal sealed partial class TrxReportEngine
         }
 
         string relative = relativeDirectory is null ? attribute.Value : relativeDirectory + "/" + attribute.Value;
-        if (EscapesRoot(relative) || !TryCopyReferencedFile(sourceInRoot, mergedInRoot, prefix, relative, cancellationToken))
+        if (EscapesRoot(relative) || !TryMaterializeOrValidateReference(sourceInRoot, mergedInRoot, prefix, relative, relocate, cancellationToken))
         {
             element.Remove();
             return;
         }
 
-        attribute.Value = prefix + "/" + attribute.Value;
+        if (relocate)
+        {
+            attribute.Value = prefix + "/" + attribute.Value;
+        }
     }
 
     /// <summary>
-    /// Copies a single referenced attachment file from <paramref name="sourceInRoot"/> to the per-input
-    /// folder under <paramref name="mergedInRoot"/>, both confined. Returns <see langword="false"/> (so the
-    /// caller drops the reference) when the source file is missing, is a symlink, sits behind a symlinked
-    /// component, or when either resolved path escapes its root. <paramref name="relative"/> is already
-    /// known to be non-rooted and non-escaping.
+    /// Validates a single referenced attachment file under <paramref name="sourceInRoot"/> and, when
+    /// <paramref name="relocate"/> is true, copies it to the per-input folder under
+    /// <paramref name="mergedInRoot"/>. Returns <see langword="false"/> (so the caller drops the reference)
+    /// when the source file is missing, is a symlink, sits behind a symlinked component, or when either
+    /// resolved path escapes its root. <paramref name="relative"/> is already known to be non-rooted and
+    /// non-escaping.
     /// </summary>
-    private static bool TryCopyReferencedFile(string sourceInRoot, string mergedInRoot, string prefix, string relative, CancellationToken cancellationToken)
+    private static bool TryMaterializeOrValidateReference(string sourceInRoot, string mergedInRoot, string prefix, string relative, bool relocate, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         string normalized = relative.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar);
         string sourceFile = Path.GetFullPath(Path.Combine(sourceInRoot, normalized));
-        string destinationFile = Path.GetFullPath(Path.Combine(mergedInRoot, prefix, normalized));
 
-        // Confine both ends and refuse anything behind a symlinked component or a symlinked file, so a
-        // link cannot redirect the read or write outside the confined trees.
+        // Refuse a source that escapes its root, is missing, is a symlink, or sits behind a symlinked
+        // component, so a link cannot redirect the read outside the confined tree.
         if (!IsUnderDirectory(sourceFile, sourceInRoot)
-            || !IsUnderDirectory(destinationFile, mergedInRoot)
             || !File.Exists(sourceFile)
             || IsReparsePoint(sourceFile)
-            || HasReparsePointComponent(Path.GetDirectoryName(sourceFile)!, sourceInRoot)
+            || HasReparsePointComponent(Path.GetDirectoryName(sourceFile)!, sourceInRoot))
+        {
+            return false;
+        }
+
+        if (!relocate)
+        {
+            // Equal-roots: the file already lives at the merged deployment root; validated, nothing to copy.
+            return true;
+        }
+
+        string destinationFile = Path.GetFullPath(Path.Combine(mergedInRoot, prefix, normalized));
+        if (!IsUnderDirectory(destinationFile, mergedInRoot)
             || HasReparsePointComponent(Path.GetDirectoryName(destinationFile)!, mergedInRoot))
         {
             return false;
@@ -658,7 +703,64 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private static void CloneChildrenIntoDeduplicatedById(XElement? source, XElement destination, HashSet<string> seenIds)
+    /// <summary>
+    /// Merges one input's <c>TestDefinitions</c> into the accumulator and returns the id remap to apply to
+    /// that input's <c>testId</c> references. An id not seen before is kept; an id whose definition is
+    /// identical to the one already kept is deduplicated (the schema forbids duplicate ids); an id whose
+    /// definition differs (e.g. the same test from another TFM with different storage) is remapped to a
+    /// fresh deterministic id and kept, so module-specific definitions are preserved.
+    /// </summary>
+    private static Dictionary<string, string> MergeTestDefinitions(XElement? testDefinitions, XElement mergedTestDefinitions, Dictionary<string, XElement> definitionsById, int inputIndex)
+    {
+        var remap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (testDefinitions is null)
+        {
+            return remap;
+        }
+
+        foreach (XElement definition in testDefinitions.Elements())
+        {
+            string? id = definition.Attribute("id")?.Value;
+            if (id is null)
+            {
+                mergedTestDefinitions.Add(new XElement(definition));
+                continue;
+            }
+
+            if (!definitionsById.TryGetValue(id, out XElement? existing))
+            {
+                definitionsById[id] = definition;
+                mergedTestDefinitions.Add(new XElement(definition));
+            }
+            else if (XNode.DeepEquals(existing, definition))
+            {
+                // Identical definition already kept — deduplicate.
+            }
+            else
+            {
+                string newId = RemapDefinitionId(id, inputIndex);
+                while (definitionsById.ContainsKey(newId))
+                {
+                    newId = RemapDefinitionId(newId, inputIndex);
+                }
+
+                var clone = new XElement(definition);
+                clone.SetAttributeValue("id", newId);
+                definitionsById[newId] = clone;
+                mergedTestDefinitions.Add(clone);
+                remap[id] = newId;
+            }
+        }
+
+        return remap;
+    }
+
+    /// <summary>
+    /// Clones the children of <paramref name="source"/> into <paramref name="destination"/>, rewriting any
+    /// <c>testId</c> attribute (on the child or its descendants) through <paramref name="remap"/> so a
+    /// remapped TestDefinition's results/entries reference the right definition.
+    /// </summary>
+    private static void CloneWithRemappedTestIds(XElement? source, XElement destination, Dictionary<string, string> remap)
     {
         if (source is null)
         {
@@ -667,14 +769,41 @@ internal sealed partial class TrxReportEngine
 
         foreach (XElement child in source.Elements())
         {
-            string? id = child.Attribute("id")?.Value;
-
-            // Keep the first definition seen for a given id; a null/absent id is always kept.
-            if (id is null || seenIds.Add(id))
+            var clone = new XElement(child);
+            if (remap.Count > 0)
             {
-                destination.Add(new XElement(child));
+                foreach (XElement element in clone.DescendantsAndSelf())
+                {
+                    if (element.Attribute("testId") is { } testId && remap.TryGetValue(testId.Value, out string? newId))
+                    {
+                        testId.Value = newId;
+                    }
+                }
             }
+
+            destination.Add(clone);
         }
+    }
+
+    /// <summary>
+    /// Derives a stable, distinct id for a TestDefinition that collides with a materially-different one,
+    /// from the original id and the input index, so the remap is deterministic (RFC 018 idempotency).
+    /// </summary>
+    private static string RemapDefinitionId(string originalId, int inputIndex)
+    {
+        const ulong fnvPrime = 1099511628211UL;
+        ulong low = 14695981039346656037UL;
+        ulong high = 0x9E3779B97F4A7C15UL;
+        foreach (char c in originalId + "|" + inputIndex.ToString(CultureInfo.InvariantCulture))
+        {
+            low = (low ^ c) * fnvPrime;
+            high = (high ^ c) * fnvPrime;
+        }
+
+        byte[] bytes = new byte[16];
+        BitConverter.GetBytes(low).CopyTo(bytes, 0);
+        BitConverter.GetBytes(high).CopyTo(bytes, 8);
+        return new Guid(bytes).ToString();
     }
 
     private static void AccumulateCounters(XElement? counters, List<string> attributeOrder, Dictionary<string, long> sums)

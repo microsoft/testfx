@@ -111,6 +111,60 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
+    public void Merge_WhenSameIdDefinitionsDiffer_RemapsAndRewritesReferences()
+    {
+        // A multi-TFM merge can produce two TestDefinitions that share an id but differ (e.g. different
+        // storage). The merge must keep both — remapping the later one to a fresh id and rewriting its
+        // results/entries — rather than dropping the module-specific definition.
+        XElement defA = new(Ns + "UnitTest", new XAttribute("id", "t1"), new XAttribute("storage", "a.dll"), new XAttribute("name", "SharedTest"));
+        XElement defB = new(Ns + "UnitTest", new XAttribute("id", "t1"), new XAttribute("storage", "b.dll"), new XAttribute("name", "SharedTest"));
+        XDocument a = BuildReport(
+            testDefinitions: [defA],
+            results: [new XElement(Ns + "UnitTestResult", new XAttribute("testId", "t1"), new XAttribute("executionId", "e1"))],
+            testEntries: [new XElement(Ns + "TestEntry", new XAttribute("testId", "t1"), new XAttribute("executionId", "e1"))]);
+        XDocument b = BuildReport(
+            testDefinitions: [defB],
+            results: [new XElement(Ns + "UnitTestResult", new XAttribute("testId", "t1"), new XAttribute("executionId", "e2"))],
+            testEntries: [new XElement(Ns + "TestEntry", new XAttribute("testId", "t1"), new XAttribute("executionId", "e2"))]);
+
+        XElement root = TrxReportEngine.Merge([a, b], Guid.NewGuid(), "run").Root!;
+
+        // Both definitions survive with distinct ids and both storages are present.
+        List<XElement> definitions = [.. Child(root, "TestDefinitions").Elements()];
+        Assert.HasCount(2, definitions);
+        List<string> ids = [.. definitions.Select(e => e.Attribute("id")!.Value)];
+        Assert.HasCount(2, ids.Distinct());
+        List<string> storages = [.. definitions.Select(e => e.Attribute("storage")!.Value)];
+        Assert.Contains("a.dll", storages);
+        Assert.Contains("b.dll", storages);
+
+        // Every result/entry testId must reference a real definition id (the second input's was remapped).
+        var definitionIds = new HashSet<string>(ids);
+        foreach (XElement result in Child(root, "Results").Elements())
+        {
+            Assert.Contains(result.Attribute("testId")!.Value, definitionIds);
+        }
+
+        foreach (XElement entry in Child(root, "TestEntries").Elements())
+        {
+            Assert.Contains(entry.Attribute("testId")!.Value, definitionIds);
+        }
+    }
+
+    [TestMethod]
+    public void Merge_WhenAnInputHasUnsuccessfulOutcome_MergedOutcomeIsFailed()
+    {
+        // A TRX summary outcome of "Error" (not just "Failed") is an unsuccessful run and must not be
+        // flattened to "Completed" in the merged report.
+        XDocument a = BuildReport(outcome: "Completed");
+        XDocument b = BuildReport(outcome: "Error");
+
+        XElement summary = ResultSummary(TrxReportEngine.Merge([a, b], Guid.NewGuid(), "run"));
+
+        Assert.AreEqual("Failed", summary.Attribute("outcome")!.Value);
+    }
+
+    [TestMethod]
     public void Merge_DeduplicatesTestDefinitionsById()
     {
         // The same test discovered in two inputs yields the same deterministic UnitTest id; the

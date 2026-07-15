@@ -253,6 +253,36 @@ public sealed class CtrfReportMergerTests
     }
 #endif
 
+    [TestMethod]
+    public void Merge_WhenEnvironmentsDiffer_RetainsCommonFieldsAndDropsDiffering()
+    {
+        // Two inputs from different CI agents disagree on osPlatform but share user/machine. The merged
+        // environment must drop the differing osPlatform, keep the common extra fields, and always drop
+        // the module-specific testApplication/exitCode.
+        string a = BuildReport(osPlatform: "linux");
+        string b = BuildReport(osPlatform: "windows");
+
+        JsonNode environment = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["results"]!["environment"]!;
+
+        Assert.IsNull(environment["osPlatform"]);
+        var extra = (JsonObject)environment["extra"]!;
+        Assert.AreEqual("someone", (string?)extra["user"]);
+        Assert.AreEqual("box", (string?)extra["machine"]);
+        Assert.IsFalse(extra.ContainsKey("testApplication"));
+        Assert.IsFalse(extra.ContainsKey("exitCode"));
+    }
+
+    [TestMethod]
+    public void Merge_WhenEnvironmentsMatch_RetainsSharedFields()
+    {
+        string a = BuildReport(osPlatform: "linux");
+        string b = BuildReport(osPlatform: "linux");
+
+        JsonNode environment = JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["results"]!["environment"]!;
+
+        Assert.AreEqual("linux", (string?)environment["osPlatform"]);
+    }
+
     private static JsonObject Test(string name, string status)
         => new()
         {
@@ -273,6 +303,7 @@ public sealed class CtrfReportMergerTests
         long stop = 2000,
         string toolName = "MSTest",
         string? toolVersion = null,
+        string osPlatform = "test",
         IEnumerable<JsonObject>? testEntries = null)
     {
         var testArray = new JsonArray();
@@ -312,7 +343,7 @@ public sealed class CtrfReportMergerTests
                 },
                 ["environment"] = new JsonObject
                 {
-                    ["osPlatform"] = "test",
+                    ["osPlatform"] = osPlatform,
                     ["extra"] = new JsonObject
                     {
                         ["user"] = "someone",

@@ -55,6 +55,11 @@ internal static class CtrfReportMerger
         JsonNode? firstTool = null;
         int reportCount = 0;
 
+        // Collect each input's environment so shared fields can be retained and module- or agent-specific
+        // ones (values that differ across inputs) dropped, rather than attributing the first report's
+        // environment to every merged test.
+        var environments = new List<JsonObject>();
+
         foreach (string reportJson in inputReports)
         {
             if (JsonNode.Parse(reportJson) is not JsonObject root)
@@ -64,6 +69,11 @@ internal static class CtrfReportMerger
 
             first ??= root;
             reportCount++;
+
+            if (root["results"]?["environment"] is JsonObject environment)
+            {
+                environments.Add(environment);
+            }
 
             JsonNode? results = root["results"];
             if (results?["tests"] is JsonArray testArray)
@@ -176,18 +186,13 @@ internal static class CtrfReportMerger
 
         resultsObject["summary"] = summaryObject;
 
-        // The environment is taken from the first report for shared fields (OS, user, machine), but
-        // module-specific values under 'extra' (the producing test application and its exit code) cannot
-        // describe all merged modules, so they are dropped rather than misattributed.
-        if (first["results"]?["environment"] is JsonNode environment && environment.DeepClone() is JsonObject mergedEnvironment)
+        // Retain only environment fields that every input agrees on: OS/user/machine are shared when the
+        // merge is same-machine, but invocation-agnostic inputs can come from different CI agents, so a
+        // differing value would misstate the environment for most tests. Module-specific 'extra' values
+        // (the producing test application and its exit code) are always dropped.
+        if (BuildCommonEnvironment(environments) is JsonObject commonEnvironment)
         {
-            if (mergedEnvironment["extra"] is JsonObject environmentExtra)
-            {
-                environmentExtra.Remove("testApplication");
-                environmentExtra.Remove("exitCode");
-            }
-
-            resultsObject["environment"] = mergedEnvironment;
+            resultsObject["environment"] = commonEnvironment;
         }
 
         resultsObject["tests"] = mergedTests;
@@ -327,6 +332,60 @@ internal static class CtrfReportMerger
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Builds a merged environment containing only the fields that every input's environment agrees on
+    /// (so a value that differs across CI agents is dropped rather than attributed to all tests). The
+    /// module-specific <c>extra.testApplication</c> and <c>extra.exitCode</c> fields are always dropped.
+    /// Returns <see langword="null"/> when no environment survives.
+    /// </summary>
+    private static JsonObject? BuildCommonEnvironment(IReadOnlyList<JsonObject> environments)
+    {
+        if (environments.Count == 0)
+        {
+            return null;
+        }
+
+        var merged = new JsonObject();
+        foreach (KeyValuePair<string, JsonNode?> field in environments[0])
+        {
+            if (field.Key == "extra")
+            {
+                continue;
+            }
+
+            string firstValue = field.Value?.ToJsonString() ?? "null";
+            if (environments.All(e => (e[field.Key]?.ToJsonString() ?? "null") == firstValue))
+            {
+                merged[field.Key] = field.Value?.DeepClone();
+            }
+        }
+
+        if (environments[0]["extra"] is JsonObject firstExtra)
+        {
+            var extra = new JsonObject();
+            foreach (KeyValuePair<string, JsonNode?> field in firstExtra)
+            {
+                if (field.Key is "testApplication" or "exitCode")
+                {
+                    continue;
+                }
+
+                string firstValue = field.Value?.ToJsonString() ?? "null";
+                if (environments.All(e => e["extra"] is JsonObject extraObject && (extraObject[field.Key]?.ToJsonString() ?? "null") == firstValue))
+                {
+                    extra[field.Key] = field.Value?.DeepClone();
+                }
+            }
+
+            if (extra.Count > 0)
+            {
+                merged["extra"] = extra;
+            }
+        }
+
+        return merged.Count > 0 ? merged : null;
     }
 
     /// <summary>
