@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -82,13 +82,11 @@ public sealed class AssemblyFixtureProviderNotSupportedWithNativeAotAnalyzer : D
         // Those attributes are declared outside this compilation (no source location), but the referencing
         // Native AOT test project is exactly where the runtime guard silently skips discovery, so report a
         // no-location diagnostic for each referenced assembly that carries the marker.
-        foreach (IAssemblySymbol referencedAssembly in context.Compilation.SourceModule.ReferencedAssemblySymbols)
+        foreach (IAssemblySymbol referencedAssembly in context.Compilation.SourceModule.ReferencedAssemblySymbols
+            .Where(referencedAssembly => referencedAssembly.GetAttributes()
+                .Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyFixtureProviderAttributeSymbol))))
         {
-            if (referencedAssembly.GetAttributes()
-                .Any(attribute => SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyFixtureProviderAttributeSymbol)))
-            {
-                context.ReportNoLocationDiagnostic(Rule);
-            }
+            context.ReportNoLocationDiagnostic(Rule);
         }
     }
 }
