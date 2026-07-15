@@ -18,20 +18,21 @@ dotnet run --project <proj> -f net9.0 --no-build \
 | Task | Last Run     |
 |------|-------------|
 | 1    | 2026-07-14  |
-| 2    | 2026-07-08  |
-| 3    | 2026-07-14  |
-| 4    | 2026-07-14  |
+| 2    | 2026-07-15  |
+| 3    | 2026-07-15  |
+| 4    | 2026-07-15  |
 | 5    | 2026-07-08  |
 | 6    | 2026-07-13  |
-| 7    | 2026-07-14  |
+| 7    | 2026-07-15  |
 
-Next priority: Tasks 2, 5, 6 (oldest: 2026-07-08, 2026-07-08, 2026-07-13)
+Next priority: Tasks 5, 6 (oldest: 2026-07-08, 2026-07-13)
 
 ## Completed Work
 
 | Date       | Item                                      | Notes                                                    |
 |------------|-------------------------------------------|----------------------------------------------------------|
-| 2026-07-14 | PR submitted: skip-method-id-in-progress-2 | Skip TestMethodIdentifier for in-progress nodes          |
+| 2026-07-15 | PR submitted: cache-test-method-identifier | Avoid PropertyBag scan in AddTrxResultProperties          |
+| 2026-07-14 | PR submitted: skip-method-id-in-progress-2 | Skip TestMethodIdentifier for in-progress nodes (status unknown) |
 | 2026-07-13 | PR #aw_pr_scenario4 submitted             | Scenario4 class-init overhead benchmark                  |
 | 2026-07-11 | PR skip-method-id-in-progress submitted   | Old branch lost; re-submitted 2026-07-14                 |
 | 2026-07-10 | PR #9800 merged (by Evangelink)           | Cache GetTestId on UnitTestElement                       |
@@ -42,10 +43,9 @@ Next priority: Tasks 2, 5, 6 (oldest: 2026-07-08, 2026-07-08, 2026-07-13)
 
 ## Work In Progress
 
-- Branch `perf-assist/skip-method-id-in-progress-2`: skip AddTestMethodIdentifier for
-  in-progress nodes. All consumers (TrxDataConsumer, TestResultCaptureHelper,
-  AzureDevOpsTestResultsPublisher) early-exit for InProgressTestNodeStateProperty.
-  Saves ~10,000 parses + allocs per 10,000-test run. PR submitted 2026-07-14.
+- Branch `perf-assist/cache-test-method-identifier`: avoid `SingleOrDefault<TestMethodIdentifierProperty>()`
+  bag scan in `AddTrxResultProperties` by threading the property from `CreateBaseTestNode`.
+  PR submitted 2026-07-15.
 
 ## Monthly Activity Issue
 
