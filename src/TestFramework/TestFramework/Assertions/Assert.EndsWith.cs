@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,7 +34,7 @@ public sealed partial class Assert
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="expectedSuffix"/> is null,
-    /// or <paramref name="value"/> does not start with <paramref name="expectedSuffix"/>.
+    /// or <paramref name="value"/> does not end with <paramref name="expectedSuffix"/>.
     /// </exception>
     public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
         => EndsWith(expectedSuffix, value, StringComparison.Ordinal, message, expectedSuffixExpression, valueExpression);
@@ -68,7 +68,7 @@ public sealed partial class Assert
     /// </param>
     /// <exception cref="AssertFailedException">
     /// <paramref name="value"/> is null, or <paramref name="expectedSuffix"/> is null,
-    /// or <paramref name="value"/> does not start with <paramref name="expectedSuffix"/>.
+    /// or <paramref name="value"/> does not end with <paramref name="expectedSuffix"/>.
     /// </exception>
     public static void EndsWith([NotNull] string? expectedSuffix, [NotNull] string? value, StringComparison comparisonType, string? message = "", [CallerArgumentExpression(nameof(expectedSuffix))] string expectedSuffixExpression = "", [CallerArgumentExpression(nameof(value))] string valueExpression = "")
     {
