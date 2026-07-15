@@ -853,10 +853,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
                 {
                     public bool Equals(MyCollection? other) => true;
 
-                    public override bool Equals(object? obj) => obj is MyCollection other && Equals(other);
-
-                    public override int GetHashCode() => 0;
-
                     public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
 
                     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -891,10 +887,6 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
                 private sealed class MyCollection : IEnumerable<int>, IEquatable<MyCollection>
                 {
                     public bool Equals(MyCollection? other) => true;
-
-                    public override bool Equals(object? obj) => obj is MyCollection other && Equals(other);
-
-                    public override int GetHashCode() => 0;
 
                     public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
 
@@ -969,6 +961,147 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
                 private sealed class MyCollection : IEnumerable<int>, IEquatable<string>
                 {
                     public bool Equals(string? other) => false;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "MyCollection"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableButWidenedToObject_ReportDiagnostic()
+    {
+        // The collection declares its own equality via IEquatable<self>, but the call is widened to object.
+        // EqualityComparer<object>.Default ignores IEquatable<MyCollection> and uses reference equality, so this
+        // is still the footgun the rule targets. The opt-out must key off the selected generic type argument.
+        string code = """
+            #nullable enable
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = new();
+                    MyCollection c2 = new();
+                    {|#0:Assert.AreEqual<object>(c1, c2)|};
+                }
+
+                private sealed class MyCollection : IEnumerable<int>, IEquatable<MyCollection>
+                {
+                    public bool Equals(MyCollection? other) => true;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "MyCollection"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableWithExplicitComparer_ReportDiagnostic()
+    {
+        // When an explicit comparer is supplied, EqualityComparer<MyCollection>.Default (and thus the type's own
+        // IEquatable<self>) is not used, so the opt-out must not apply and MSTEST0065 should still fire.
+        string code = """
+            #nullable enable
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = new();
+                    MyCollection c2 = new();
+                    {|#0:Assert.AreEqual(c1, c2, EqualityComparer<MyCollection>.Default)|};
+                }
+
+                private sealed class MyCollection : IEnumerable<int>, IEquatable<MyCollection>
+                {
+                    public bool Equals(MyCollection? other) => true;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "MyCollection"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnTypeParameterConstrainedToIEquatable_DoNotReportDiagnostic()
+    {
+        // `where T : IEnumerable<int>, IEquatable<T>` guarantees EqualityComparer<T>.Default honors IEquatable<T>,
+        // so the comparison uses the constrained equality, not reference equality.
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod<T>(T a, T b) where T : IEnumerable<int>, IEquatable<T>
+                {
+                    Assert.AreEqual(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionOverridingNewVirtualEquals_ReportDiagnostic()
+    {
+        // The base declares `new virtual bool Equals(object)` (a different slot from object.Equals), and the
+        // collection overrides that. EqualityComparer<MyCollection>.Default still dispatches the unchanged
+        // object.Equals slot (reference equality), so this must NOT be treated as declaring its own equality.
+        string code = """
+            #nullable enable
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = new();
+                    MyCollection c2 = new();
+                    {|#0:Assert.AreEqual(c1, c2)|};
+                }
+
+                private class Base
+                {
+                    public new virtual bool Equals(object? obj) => true;
+                }
+
+                private sealed class MyCollection : Base, IEnumerable<int>
+                {
+                    public override bool Equals(object? obj) => true;
 
                     public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
 
