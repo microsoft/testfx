@@ -14,26 +14,13 @@ internal partial class TestMethodInfo
         // (which allocates a fresh ParameterInfo[] on every call). ResolveArguments only reads the
         // array, so sharing the cached instance is safe.
         ParameterInfo[] parametersInfo = ParameterTypes;
-        int requiredParameterCount = 0;
-        bool hasParamsValue = false;
-        object? paramsValues = null;
-        foreach (ParameterInfo parameter in parametersInfo)
-        {
-            // If this is a params array parameter, create an instance to
-            // populate with any extra values provided. Don't increment
-            // required parameter count - params arguments are not actually required
-            if (parameter.GetCustomAttribute<ParamArrayAttribute>() != null)
-            {
-                hasParamsValue = true;
-                break;
-            }
 
-            // Count required parameters from method
-            if (!parameter.IsOptional)
-            {
-                requiredParameterCount++;
-            }
-        }
+        // Use the lazily-computed, cached parameter metadata instead of re-scanning attributes on every
+        // call. For a data-driven test with N rows this avoids N redundant reflective attribute lookups.
+        EnsureParameterInfoComputed();
+        int requiredParameterCount = _requiredParameterCount;
+        bool hasParamsValue = _paramsParameterIndex >= 0;
+        object? paramsValues = null;
 
         // If all the parameters are required, we have fewer arguments
         // supplied than required, or more arguments than the method takes

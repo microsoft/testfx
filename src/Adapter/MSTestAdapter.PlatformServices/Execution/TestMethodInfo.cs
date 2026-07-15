@@ -72,6 +72,48 @@ internal partial class TestMethodInfo : ITestMethod
     /// <inheritdoc />
     ParameterInfo[] ITestMethod.ParameterTypes => (ParameterInfo[])ParameterTypes.Clone();
 
+    // Cached parameter metadata used by ResolveArguments so it does not re-run a reflective attribute
+    // scan on every invocation. For a data-driven test with N rows this collapses N redundant scans into one.
+    // _paramsParameterIndex is the 0-based index of the params parameter (-1 if none); -2 is the
+    // "not computed yet" sentinel. _requiredParameterCount is the number of required (non-optional,
+    // non-params) parameters. Both are populated together by EnsureParameterInfoComputed().
+    private int _paramsParameterIndex = -2;
+    private int _requiredParameterCount;
+
+    private void EnsureParameterInfoComputed()
+    {
+        if (_paramsParameterIndex != -2)
+        {
+            return;
+        }
+
+        ParameterInfo[] parametersInfo = ParameterTypes;
+        int requiredParameterCount = 0;
+        int paramsParameterIndex = -1;
+        for (int i = 0; i < parametersInfo.Length; i++)
+        {
+            ParameterInfo parameter = parametersInfo[i];
+
+            // A params array parameter is not required and, when present, is always the last parameter.
+            // Use IsDefined rather than GetCustomAttribute to avoid materializing (and boxing) the attribute.
+            if (parameter.IsDefined(typeof(ParamArrayAttribute), inherit: false))
+            {
+                paramsParameterIndex = i;
+                break;
+            }
+
+            if (!parameter.IsOptional)
+            {
+                requiredParameterCount++;
+            }
+        }
+
+        // Write the required count before flipping the sentinel so that any reader observing a
+        // non-sentinel _paramsParameterIndex is guaranteed to also see the correct _requiredParameterCount.
+        _requiredParameterCount = requiredParameterCount;
+        _paramsParameterIndex = paramsParameterIndex;
+    }
+
     /// <summary>
     /// Gets the return type of the test method.
     /// </summary>
