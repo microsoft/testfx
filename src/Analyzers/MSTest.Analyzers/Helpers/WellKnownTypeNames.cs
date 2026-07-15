@@ -46,8 +46,8 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
 
     public const string System = "System";
-    public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
+    public const string SystemCollectionsIDictionary = "System.Collections.IDictionary";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
     public const string SystemFunc1 = "System.Func`1";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
@@ -58,6 +58,7 @@ internal static class WellKnownTypeNames
     public const string SystemReflectionMethodInfo = "System.Reflection.MethodInfo";
     public const string SystemRuntimeCompilerServicesCallerFilePathAttribute = "System.Runtime.CompilerServices.CallerFilePathAttribute";
     public const string SystemRuntimeCompilerServicesCallerLineNumberAttribute = "System.Runtime.CompilerServices.CallerLineNumberAttribute";
+    public const string SystemRuntimeInteropServicesRuntimeInformation = "System.Runtime.InteropServices.RuntimeInformation";
     public const string SystemThreadingCancellationToken = "System.Threading.CancellationToken";
     public const string SystemThreadingCancellationTokenSource = "System.Threading.CancellationTokenSource";
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";
