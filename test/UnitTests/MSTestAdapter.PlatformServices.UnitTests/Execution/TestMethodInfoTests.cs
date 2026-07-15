@@ -1805,38 +1805,69 @@ public class TestMethodInfoTests : TestContainer
     // Regression test for https://github.com/microsoft/testfx/issues/9949
     // Under method-level parallelization several rows for the same MethodInfo can reach the cache-miss path
     // concurrently. The Lazy execution-and-publication cache must still collapse them to a single scan.
+    // The test is made deterministic by (1) confirming every worker is parked before releasing them together
+    // and (2) holding the first scan open (via a callback) so competing workers provably reach the still-empty
+    // cache while it runs — a direct compute-then-store cache would record more than one scan here.
     public async Task ResolveArguments_ComputesParameterMetadataOnceUnderConcurrentFirstAccess()
     {
         TestMethodInfo.ResetParameterMetadataCacheForTesting();
         MethodInfo paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod")!;
 
-        const int concurrency = 32;
+        const int concurrency = 8;
         using var startGate = new ManualResetEventSlim(false);
-        var tasks = new Task<object?[]>[concurrency];
-        for (int i = 0; i < concurrency; i++)
+        using var scanStarted = new ManualResetEventSlim(false);
+        using var releaseScan = new ManualResetEventSlim(false);
+        int parkedWorkers = 0;
+
+        // Hold the first scan open until the test releases it, so any competing misses accumulate meanwhile.
+        TestMethodInfo.SetParameterMetadataScanCallbackForTesting(() =>
         {
-            tasks[i] = Task.Run(() =>
+            scanStarted.Set();
+            releaseScan.Wait();
+        });
+
+        try
+        {
+            var tasks = new Task<object?[]>[concurrency];
+            for (int i = 0; i < concurrency; i++)
             {
-                var method = new TestMethodInfo(paramsArgumentMethod, _testClassInfo)
+                tasks[i] = Task.Run(() =>
                 {
-                    TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
-                    Executor = _testMethodAttribute,
-                };
+                    var method = new TestMethodInfo(paramsArgumentMethod, _testClassInfo)
+                    {
+                        TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+                        Executor = _testMethodAttribute,
+                    };
 
-                // Release all threads at once to maximize the chance of a concurrent first access.
-                startGate.Wait();
-                return method.ResolveArguments([1, "str1", "str2"]);
-            });
+                    Interlocked.Increment(ref parkedWorkers);
+                    startGate.Wait();
+                    return method.ResolveArguments([1, "str1", "str2"]);
+                });
+            }
+
+            // Release the workers only once all of them are provably waiting at the gate.
+            SpinWait.SpinUntil(() => Volatile.Read(ref parkedWorkers) == concurrency);
+            startGate.Set();
+
+            // Wait until one scan is in progress, then give the other workers time to hit the cache-miss
+            // path before letting the scan finish and publish its result.
+            scanStarted.Wait();
+            Thread.Sleep(100);
+            releaseScan.Set();
+
+            object?[][] results = await Task.WhenAll(tasks);
+
+            TestMethodInfo.ParameterMetadataScanCount.Should().Be(1);
+            foreach (object?[] resolvedArguments in results)
+            {
+                resolvedArguments.Length.Should().Be(2);
+                resolvedArguments[1].Should().BeOfType<string[]>();
+            }
         }
-
-        startGate.Set();
-        object?[][] results = await Task.WhenAll(tasks);
-
-        TestMethodInfo.ParameterMetadataScanCount.Should().Be(1);
-        foreach (object?[] resolvedArguments in results)
+        finally
         {
-            resolvedArguments.Length.Should().Be(2);
-            resolvedArguments[1].Should().BeOfType<string[]>();
+            releaseScan.Set();
+            TestMethodInfo.SetParameterMetadataScanCallbackForTesting(null);
         }
     }
 

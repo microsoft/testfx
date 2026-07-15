@@ -85,12 +85,20 @@ internal partial class TestMethodInfo : ITestMethod
     // can assert that repeated and concurrent access for one MethodInfo collapses to a single computation.
     private static int s_parameterMetadataScanCount;
 
+    // Test-only callback invoked at the start of each parameter scan. Tests use it to hold a scan open long
+    // enough to make competing cache misses race deterministically. Never set outside tests.
+    private static Action? s_onParameterMetadataScanForTesting;
+
     internal static int ParameterMetadataScanCount => s_parameterMetadataScanCount;
+
+    internal static void SetParameterMetadataScanCallbackForTesting(Action? callback)
+        => s_onParameterMetadataScanForTesting = callback;
 
     internal static void ResetParameterMetadataCacheForTesting()
     {
         ParameterMetadataCache.Clear();
         Interlocked.Exchange(ref s_parameterMetadataScanCount, 0);
+        s_onParameterMetadataScanForTesting = null;
     }
 
     private ParameterMetadata GetParameterMetadata()
@@ -113,6 +121,7 @@ internal partial class TestMethodInfo : ITestMethod
         internal static ParameterMetadata Compute(ParameterInfo[] parametersInfo)
         {
             Interlocked.Increment(ref s_parameterMetadataScanCount);
+            s_onParameterMetadataScanForTesting?.Invoke();
             int requiredParameterCount = 0;
             int paramsParameterIndex = -1;
             for (int i = 0; i < parametersInfo.Length; i++)
