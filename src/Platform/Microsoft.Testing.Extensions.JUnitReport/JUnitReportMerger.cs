@@ -234,6 +234,15 @@ internal static class JUnitReportMerger
     /// </summary>
     private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
     {
+#if !NETCOREAPP
+        // This runtime cannot resolve symlinks/junctions, so a symlinked output parent directory that
+        // aliases an input directory would slip past the textual comparison below and let the write
+        // replace the input. Fail closed when any existing ancestor of the output is a reparse point.
+        if (HasReparsePointAncestor(outputPath))
+        {
+            throw new ArgumentException($"The output path '{outputPath}' has a symbolic-link parent directory that cannot be safely resolved on this runtime; refusing to write to avoid overwriting a read-only input.", nameof(outputPath));
+        }
+#endif
         string outputCanonical = GetCanonicalPath(outputPath);
         foreach (string inputPath in inputPaths)
         {
@@ -243,6 +252,30 @@ internal static class JUnitReportMerger
             }
         }
     }
+
+#if !NETCOREAPP
+    private static bool HasReparsePointAncestor(string path)
+    {
+        string? current = Path.GetDirectoryName(Path.GetFullPath(path));
+        while (!RoslynString.IsNullOrEmpty(current))
+        {
+            if (Directory.Exists(current) && (File.GetAttributes(current) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+            {
+                return true;
+            }
+
+            string? parent = Path.GetDirectoryName(current);
+            if (parent is null || string.Equals(parent, current, StringComparison.Ordinal))
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        return false;
+    }
+#endif
 
     /// <summary>
     /// Canonicalizes <paramref name="path"/> to a full path with symlinks/junctions resolved in every

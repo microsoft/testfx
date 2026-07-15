@@ -426,8 +426,12 @@ public sealed class TrxReportEngineMergeTests
 
             await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
 
-            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            var mergedDoc = XDocument.Load(output);
+            List<string> hrefs = [.. mergedDoc.Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
             Assert.IsEmpty(hrefs);
+            // Dropping the <A> must also remove its owning <UriAttachment> so no schema-invalid empty
+            // element is left behind.
+            Assert.IsEmpty(mergedDoc.Descendants().Where(e => e.Name.LocalName == "UriAttachment"));
         }
         finally
         {

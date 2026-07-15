@@ -413,6 +413,24 @@ internal sealed partial class TrxReportEngine
 
         foreach (XElement element in root.Descendants().Where(e => e.Name.LocalName is "A" or "ResultFile").ToList())
         {
+            RemoveReferenceElement(element);
+        }
+    }
+
+    /// <summary>
+    /// Removes a dropped attachment reference. A collector <c>&lt;A&gt;</c> takes its owning
+    /// <c>&lt;UriAttachment&gt;</c> with it (the TRX schema requires exactly one <c>&lt;A&gt;</c> child, so
+    /// leaving an empty <c>&lt;UriAttachment&gt;</c> would be invalid); a <c>&lt;ResultFile&gt;</c> is
+    /// removed alone (an empty <c>&lt;ResultFiles&gt;</c> is schema-valid).
+    /// </summary>
+    private static void RemoveReferenceElement(XElement element)
+    {
+        if (element.Name.LocalName == "A" && element.Parent is { } parent && string.Equals(parent.Name.LocalName, "UriAttachment", StringComparison.Ordinal))
+        {
+            parent.Remove();
+        }
+        else
+        {
             element.Remove();
         }
     }
@@ -537,14 +555,14 @@ internal sealed partial class TrxReportEngine
 
         if (Path.IsPathRooted(attribute.Value))
         {
-            element.Remove();
+            RemoveReferenceElement(element);
             return;
         }
 
         string relative = relativeDirectory is null ? attribute.Value : relativeDirectory + "/" + attribute.Value;
         if (EscapesRoot(relative) || !TryMaterializeOrValidateReference(sourceInRoot, mergedInRoot, prefix, relative, relocate, cancellationToken))
         {
-            element.Remove();
+            RemoveReferenceElement(element);
             return;
         }
 
@@ -595,14 +613,37 @@ internal sealed partial class TrxReportEngine
         Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
 
         // A pre-existing destination symlink (from a reused output directory) would make the overwrite
-        // follow the link and write outside the merged root. Remove it so a real file is written.
-        if (File.Exists(destinationFile) && IsReparsePoint(destinationFile))
-        {
-            File.Delete(destinationFile);
-        }
+        // follow the link and write outside the merged root. Remove the link entry — including a DANGLING
+        // one, which File.Exists reports as missing (it follows the link) — so File.Copy writes a real file.
+        RemoveSymlinkEntry(destinationFile);
 
         File.Copy(sourceFile, destinationFile, overwrite: true);
         return true;
+    }
+
+    /// <summary>
+    /// Removes a symbolic-link/junction directory entry at <paramref name="path"/>, whether or not its
+    /// target still exists (a dangling link). Unlike <see cref="File.Exists(string)"/> (which follows the
+    /// link and reports a dangling one as missing), this detects the link entry itself, so a later
+    /// <see cref="File.Copy(string, string, bool)"/> writes a real file instead of following the link out
+    /// of the confined root. A real file or a missing entry is left untouched.
+    /// </summary>
+    private static void RemoveSymlinkEntry(string path)
+    {
+#if NETCOREAPP
+        // FileInfo.LinkTarget is non-null for a link entry even when the target is missing; Exists is
+        // target-based, so a dangling link has Exists == false but LinkTarget != null.
+        var info = new FileInfo(path);
+        if (info.LinkTarget is not null)
+        {
+            info.Delete();
+        }
+#else
+        if (File.Exists(path) && IsReparsePoint(path))
+        {
+            File.Delete(path);
+        }
+#endif
     }
 
     /// <summary>
@@ -888,6 +929,15 @@ internal sealed partial class TrxReportEngine
     /// </summary>
     private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
     {
+#if !NETCOREAPP
+        // This runtime cannot resolve symlinks/junctions, so a symlinked output parent directory that
+        // aliases an input directory would slip past the textual comparison below and let the write
+        // replace the input. Fail closed when any existing ancestor of the output is a reparse point.
+        if (HasReparsePointAncestor(outputPath))
+        {
+            throw new ArgumentException($"The output path '{outputPath}' has a symbolic-link parent directory that cannot be safely resolved on this runtime; refusing to write to avoid overwriting a read-only input.", nameof(outputPath));
+        }
+#endif
         string outputCanonical = GetCanonicalPath(outputPath);
         foreach (string inputPath in inputPaths)
         {
@@ -897,6 +947,30 @@ internal sealed partial class TrxReportEngine
             }
         }
     }
+
+#if !NETCOREAPP
+    private static bool HasReparsePointAncestor(string path)
+    {
+        string? current = Path.GetDirectoryName(Path.GetFullPath(path));
+        while (!RoslynString.IsNullOrEmpty(current))
+        {
+            if (Directory.Exists(current) && IsReparsePoint(current))
+            {
+                return true;
+            }
+
+            string? parent = Path.GetDirectoryName(current);
+            if (parent is null || string.Equals(parent, current, StringComparison.Ordinal))
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        return false;
+    }
+#endif
 
     /// <summary>
     /// Canonicalizes <paramref name="path"/> to a full path with symlinks/junctions resolved in every
