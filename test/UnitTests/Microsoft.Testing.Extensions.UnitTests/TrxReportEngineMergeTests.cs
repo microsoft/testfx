@@ -404,6 +404,32 @@ public sealed class TrxReportEngineMergeTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenInputLivesUnderMergedRoot_PreservesOriginalReportAndAttachment()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            // The input report and its attachment live under the merged 'In' root (output beside them,
+            // runName 'run'). Relocation must never delete the originals (RFC 018 requires they remain).
+            string inputDir = Path.Combine(tempDirectory, "run", "In", "0");
+            string input = WriteReportWithAttachment(inputDir, "a.trx", deploymentRoot: "dep", attachmentContent: "AAA");
+            string output = Path.Combine(tempDirectory, "merged.trx");
+
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
+
+            Assert.IsTrue(File.Exists(output));
+            // Original report and original attachment must still exist.
+            Assert.IsTrue(File.Exists(input));
+            Assert.IsTrue(File.Exists(Path.Combine(inputDir, "dep", "In", "machine", "log.txt")));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
     private static string WriteReportWithAttachment(string inputDirectory, string fileName, string deploymentRoot, string attachmentContent)
     {
         Directory.CreateDirectory(inputDirectory);

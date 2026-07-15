@@ -232,6 +232,25 @@ internal sealed partial class TrxReportEngine
 
         string mergedInRoot = Path.Combine(mergedRootFull, "In");
 
+        // Absolute directories of every input report. A destination folder must never be wholesale-
+        // deleted when it contains one of these, otherwise relocation would remove the originals (which
+        // RFC 018 requires to stay on disk) or a sibling/later input's report and attachments.
+        var protectedInputDirectories = new List<string>(inputPaths.Count);
+        foreach (string inputPath in inputPaths)
+        {
+            try
+            {
+                if (Path.GetDirectoryName(Path.GetFullPath(inputPath)) is { Length: > 0 } dir)
+                {
+                    protectedInputDirectories.Add(dir);
+                }
+            }
+            catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
+            {
+                // Ignore malformed input paths here; the per-input loop handles them.
+            }
+        }
+
         // On a reused output directory the merged 'In' root could pre-exist as a junction/symlink that
         // would redirect every copy below it outside the confined merged root. Remove such a link so a
         // fresh, real directory is created instead.
@@ -299,6 +318,13 @@ internal sealed partial class TrxReportEngine
 
                 // Isolate each input under its own subfolder so identical relative attachment paths
                 // from different inputs cannot shadow each other.
+                //
+                // Only clear the destination wholesale when it does not contain an input report tree.
+                // If it does (e.g. an input lives under the merged 'In' root), a blanket delete would
+                // remove originals or sibling/later inputs, so we overlay the copy instead (per-file
+                // overwrite; CopyDirectoryRecursive still removes stale destination reparse points).
+                bool destinationContainsInput = ContainsAnyDirectory(destForInput, protectedInputDirectories);
+
                 if (strictOverlap)
                 {
                     // Stage the source out first (before clearing the destination, which could otherwise
@@ -308,14 +334,18 @@ internal sealed partial class TrxReportEngine
                     string? excludeSubtree = IsUnderDirectory(mergedInRoot, sourceInRoot) && !string.Equals(mergedInRoot, sourceInRoot, PathComparison)
                         ? mergedInRoot
                         : null;
-                    CopyViaStaging(sourceInRoot, destForInput, excludeSubtree, cancellationToken);
+                    CopyViaStaging(sourceInRoot, destForInput, excludeSubtree, clearDestination: !destinationContainsInput, cancellationToken);
                 }
                 else
                 {
-                    // Recreate the destination as a fresh, non-link tree first so a pre-existing
-                    // junction/symlink (or stale bytes) from a reused output directory can't redirect the
-                    // copy or linger.
-                    DeleteDirectoryTreeOrLink(destForInput);
+                    // Recreate the destination as a fresh, non-link tree first (unless it holds an input)
+                    // so a pre-existing junction/symlink (or stale bytes) from a reused output directory
+                    // can't redirect the copy or linger.
+                    if (!destinationContainsInput)
+                    {
+                        DeleteDirectoryTreeOrLink(destForInput);
+                    }
+
                     CopyDirectoryRecursive(sourceInRoot, destForInput, cancellationToken);
                 }
 
@@ -385,7 +415,7 @@ internal sealed partial class TrxReportEngine
     /// <paramref name="excludeSubtree"/> (the merged 'In' root) is skipped while staging so a source that
     /// contains the previous merged output does not snapshot it into the new destination.
     /// </summary>
-    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, string? excludeSubtree, CancellationToken cancellationToken)
+    private static void CopyViaStaging(string sourceDirectory, string destinationDirectory, string? excludeSubtree, bool clearDestination, CancellationToken cancellationToken)
     {
         string staging = Path.Combine(Path.GetTempPath(), "mtp-trx-merge-" + Guid.NewGuid().ToString("N"));
         try
@@ -394,7 +424,14 @@ internal sealed partial class TrxReportEngine
             // destination (which may be nested inside the source) cannot corrupt the source, and the
             // final copy never recurses into its own destination.
             CopyDirectoryRecursive(sourceDirectory, staging, excludeSubtree, cancellationToken);
-            DeleteDirectoryTreeOrLink(destinationDirectory);
+
+            // Only clear the destination when it does not contain an input tree; otherwise overlay so
+            // originals are never removed (RFC 018 requires them to remain on disk).
+            if (clearDestination)
+            {
+                DeleteDirectoryTreeOrLink(destinationDirectory);
+            }
+
             CopyDirectoryRecursive(staging, destinationDirectory, excludeSubtree: null, cancellationToken);
         }
         finally
@@ -404,6 +441,20 @@ internal sealed partial class TrxReportEngine
                 Directory.Delete(staging, recursive: true);
             }
         }
+    }
+
+    private static bool ContainsAnyDirectory(string candidateDirectory, IReadOnlyList<string> directories)
+    {
+        string candidateFull = Path.GetFullPath(candidateDirectory);
+        foreach (string directory in directories)
+        {
+            if (IsUnderDirectory(Path.GetFullPath(directory), candidateFull))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static void CopyDirectoryRecursive(string sourceDirectory, string destinationDirectory, CancellationToken cancellationToken)
