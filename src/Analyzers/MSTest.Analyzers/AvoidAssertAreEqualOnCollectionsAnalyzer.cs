@@ -56,12 +56,13 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             // May be null on very old target frameworks; when it is, only the IEquatable&lt;self&gt; check becomes a
             // no-op — the object.Equals override detection still runs.
             INamedTypeSymbol? equatableSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIEquatable1);
+            INamedTypeSymbol? equalityComparerSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemCollectionsGenericEqualityComparer1);
 
-            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, genericEnumerableSymbol, equatableSymbol), OperationKind.Invocation);
+            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, genericEnumerableSymbol, equatableSymbol, equalityComparerSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol genericEnumerableSymbol, INamedTypeSymbol? equatableSymbol)
+    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol genericEnumerableSymbol, INamedTypeSymbol? equatableSymbol, INamedTypeSymbol? equalityComparerSymbol)
     {
         var invocation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = invocation.TargetMethod;
@@ -101,9 +102,11 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         //   * The check must be based on the *selected generic type argument* T, not the argument's runtime collection
         //     type. Widening to a base type (e.g. Assert.AreEqual&lt;object&gt;(collection, collection)) discards the
         //     collection's IEquatable&lt;self&gt; and falls back to reference equality — exactly the footgun the rule targets.
-        //   * It must not apply when the caller supplies an explicit comparer, because then EqualityComparer&lt;T&gt;.Default
-        //     (and therefore the type's own equality) is not used at all.
-        if (!HasComparerArgument(invocation) && DeclaresOwnEquality(comparedType, equatableSymbol))
+        //   * It must not apply when the caller supplies a *custom* comparer, because then EqualityComparer&lt;T&gt;.Default
+        //     (and therefore the type's own equality) is not used at all. A `null` comparer or an explicit
+        //     `EqualityComparer&lt;T&gt;.Default` argument is equivalent to the parameterless overload (Assert falls back to
+        //     the default comparer — see Assert.AreEqual.cs), so those keep the opt-out.
+        if (!HasCustomComparerArgument(invocation, equalityComparerSymbol) && DeclaresOwnEquality(comparedType, equatableSymbol))
         {
             return;
         }
@@ -123,14 +126,29 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, methodName, comparedTypeDisplay));
     }
 
-    private static bool HasComparerArgument(IInvocationOperation invocation)
+    // Returns true only when a `comparer` argument is supplied that is not provably the default comparer.
+    // `null` and `EqualityComparer<T>.Default` both dispatch to EqualityComparer<T>.Default at runtime, so they must
+    // keep the equality opt-out; any other comparer bypasses the type's own equality and should re-enable the diagnostic.
+    private static bool HasCustomComparerArgument(IInvocationOperation invocation, INamedTypeSymbol? equalityComparerSymbol)
     {
         foreach (IArgumentOperation argument in invocation.Arguments)
         {
-            if (argument.Parameter?.Name == "comparer")
+            if (argument.Parameter?.Name != "comparer")
             {
-                return true;
+                continue;
             }
+
+            IOperation value = argument.Value.WalkDownConversion();
+
+            // A null literal falls back to EqualityComparer<T>.Default in Assert, and a reference to
+            // `EqualityComparer<T>.Default` is that same default comparer — neither bypasses the type's own equality.
+            bool isDefaultComparer =
+                value is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } }
+                || (value is IPropertyReferenceOperation { Property: { Name: "Default", IsStatic: true } property }
+                    && equalityComparerSymbol is not null
+                    && SymbolEqualityComparer.Default.Equals(property.ContainingType.OriginalDefinition, equalityComparerSymbol));
+
+            return !isDefaultComparer;
         }
 
         return false;
@@ -155,38 +173,40 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             && ImplementsGenericEnumerable(comparedType, genericEnumerableSymbol);
 
     private static bool DeclaresOwnEquality(ITypeSymbol type, INamedTypeSymbol? equatableSymbol)
-    {
-        switch (type)
+        => type switch
         {
-            case INamedTypeSymbol namedType:
-                return ImplementsSelfEquatable(namedType, namedType, equatableSymbol) || OverridesObjectEquals(namedType);
+            INamedTypeSymbol namedType => ImplementsSelfEquatable(namedType, namedType, equatableSymbol) || OverridesObjectEquals(namedType),
 
-            // EqualityComparer&lt;T&gt;.Default honors a `where T : IEquatable<T>` constraint, and a class constraint that
-            // overrides object.Equals is inherited by every T. A bare `where T : IEnumerable<...>` constraint has
-            // neither, so it stays the reference-equality footgun we still want to flag.
-            //
-            // The equality target stays `typeParameter` (T) while we traverse constraints. We must NOT recurse with the
-            // constraint as the new target: for `where T : ISelf` with `ISelf : IEquatable<ISelf>`, a concrete T need
-            // not implement IEquatable&lt;T&gt;, so EqualityComparer&lt;T&gt;.Default would still use reference equality.
-            case ITypeParameterSymbol typeParameter:
-                foreach (ITypeSymbol constraintType in typeParameter.ConstraintTypes)
-                {
-                    // Only named constraints are inspected. A transitive type-parameter constraint
-                    // (`where T : U where U : SomeSelfEquatingType`) is intentionally not followed: doing so risks
-                    // over-suppressing, and over-reporting a warning is the safer error for this rule than silently
-                    // missing the reference-equality footgun.
-                    if (constraintType is INamedTypeSymbol namedConstraint &&
-                        (ImplementsSelfEquatable(namedConstraint, typeParameter, equatableSymbol) || OverridesObjectEquals(namedConstraint)))
-                    {
-                        return true;
-                    }
-                }
+            // The equality target is the type parameter T itself (the type whose EqualityComparer<T>.Default is used).
+            ITypeParameterSymbol typeParameter => TypeParameterDeclaresOwnEquality(typeParameter, typeParameter, equatableSymbol),
 
-                return false;
+            _ => false,
+        };
 
-            default:
-                return false;
+    // EqualityComparer&lt;T&gt;.Default honors a `where T : IEquatable<T>` constraint, and a class constraint that overrides
+    // object.Equals is inherited by every T. A bare `where T : IEnumerable<...>` constraint has neither, so it stays the
+    // reference-equality footgun we still want to flag.
+    //
+    // `equalityTarget` stays the original type parameter T while we traverse constraints, including transitive
+    // type-parameter constraints (`where T : U where U : ...`). The IEquatable check must be against T: for
+    // `where T : ISelf` with `ISelf : IEquatable<ISelf>`, a concrete T need not implement IEquatable&lt;T&gt;, so it would
+    // still use reference equality. An object.Equals override on any reachable class constraint is inherited by T and so
+    // is honored regardless of the equality target.
+    private static bool TypeParameterDeclaresOwnEquality(ITypeParameterSymbol typeParameter, ITypeSymbol equalityTarget, INamedTypeSymbol? equatableSymbol)
+    {
+        foreach (ITypeSymbol constraintType in typeParameter.ConstraintTypes)
+        {
+            switch (constraintType)
+            {
+                case INamedTypeSymbol namedConstraint when ImplementsSelfEquatable(namedConstraint, equalityTarget, equatableSymbol) || OverridesObjectEquals(namedConstraint):
+                    return true;
+
+                case ITypeParameterSymbol nestedTypeParameter when TypeParameterDeclaresOwnEquality(nestedTypeParameter, equalityTarget, equatableSymbol):
+                    return true;
+            }
         }
+
+        return false;
     }
 
     // Returns true when `candidate` is or implements IEquatable&lt;equalityType&gt;, i.e. the equality contract that

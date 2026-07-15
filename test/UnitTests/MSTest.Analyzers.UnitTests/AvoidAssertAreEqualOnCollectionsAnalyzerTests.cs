@@ -1011,10 +1011,10 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     }
 
     [TestMethod]
-    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableWithExplicitComparer_ReportDiagnostic()
+    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableWithCustomComparer_ReportDiagnostic()
     {
-        // When an explicit comparer is supplied, EqualityComparer<MyCollection>.Default (and thus the type's own
-        // IEquatable<self>) is not used, so the opt-out must not apply and MSTEST0065 should still fire.
+        // A genuinely custom comparer bypasses the type's own IEquatable<self>, so the opt-out must not apply and
+        // MSTEST0065 should still fire.
         string code = """
             #nullable enable
             using System;
@@ -1030,7 +1030,14 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
                 {
                     MyCollection c1 = new();
                     MyCollection c2 = new();
-                    {|#0:Assert.AreEqual(c1, c2, EqualityComparer<MyCollection>.Default)|};
+                    {|#0:Assert.AreEqual(c1, c2, new CustomComparer())|};
+                }
+
+                private sealed class CustomComparer : IEqualityComparer<MyCollection>
+                {
+                    public bool Equals(MyCollection? x, MyCollection? y) => true;
+
+                    public int GetHashCode(MyCollection obj) => 0;
                 }
 
                 private sealed class MyCollection : IEnumerable<int>, IEquatable<MyCollection>
@@ -1045,6 +1052,80 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "MyCollection"));
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableWithExplicitDefaultComparer_DoNotReportDiagnostic()
+    {
+        // `EqualityComparer<MyCollection>.Default` dispatches to the type's own IEquatable<self>, so it is equivalent
+        // to the parameterless overload and keeps the opt-out.
+        string code = """
+            #nullable enable
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = new();
+                    MyCollection c2 = new();
+                    Assert.AreEqual(c1, c2, EqualityComparer<MyCollection>.Default);
+                }
+
+                private sealed class MyCollection : IEnumerable<int>, IEquatable<MyCollection>
+                {
+                    public bool Equals(MyCollection? other) => true;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableWithNullComparer_DoNotReportDiagnostic()
+    {
+        // A null comparer is replaced with EqualityComparer<MyCollection>.Default by Assert, so it is equivalent to the
+        // parameterless overload and keeps the opt-out.
+        string code = """
+            #nullable enable
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    MyCollection c1 = new();
+                    MyCollection c2 = new();
+                    Assert.AreEqual(c1, c2, (IEqualityComparer<MyCollection>)null!);
+                }
+
+                private sealed class MyCollection : IEnumerable<int>, IEquatable<MyCollection>
+                {
+                    public bool Equals(MyCollection? other) => true;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     [TestMethod]
@@ -1117,8 +1198,8 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     public async Task WhenUsingAssertAreEqualOnStructCollectionWithoutOwnEquality_ReportDiagnostic()
     {
         // A struct implementing IEnumerable<T> inherits ValueType.Equals but declares no equality of its own,
-        // so EqualityComparer<T>.Default falls back to field-wise (here reference) comparison of the backing list.
-        // The walk must stop before System.ValueType so this is still reported.
+        // so EqualityComparer<T>.Default falls back to ValueType's field-wise (reflection-based) comparison rather
+        // than any intentional equality. The walk must stop before System.ValueType so this is still reported.
         string code = """
             #nullable enable
             using System.Collections;
@@ -1249,6 +1330,85 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnTypeParameterWithTransitiveClassConstraintOverridingObjectEquals_DoNotReportDiagnostic()
+    {
+        // Transitive type-parameter constraint: `where T : U where U : BaseCollection`. Every concrete T derives from
+        // BaseCollection and inherits its object.Equals override, so EqualityComparer<T>.Default uses that equality.
+        // The constraint traversal must follow the nested type parameter U to reach BaseCollection.
+        string code = """
+            #nullable enable
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod<T, U>(T a, T b) where T : U where U : BaseCollection
+                {
+                    Assert.AreEqual(a, b);
+                }
+
+                public class BaseCollection : IEnumerable<int>
+                {
+                    public override bool Equals(object? obj) => true;
+
+                    public override int GetHashCode() => 0;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableOfBaseType_ReportDiagnostic()
+    {
+        // IEquatable<T> is invariant: EqualityComparer<Derived>.Default requires Derived to implement
+        // IEquatable<Derived> exactly. A collection implementing only IEquatable<Base> (and not overriding
+        // object.Equals) still falls back to reference equality, so this must be reported.
+        string code = """
+            #nullable enable
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Derived c1 = new();
+                    Derived c2 = new();
+                    {|#0:Assert.AreEqual(c1, c2)|};
+                }
+
+                private class Base
+                {
+                }
+
+                private sealed class Derived : Base, IEnumerable<int>, IEquatable<Base>
+                {
+                    public bool Equals(Base? other) => true;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "Derived"));
     }
 
     [TestMethod]
