@@ -1777,7 +1777,69 @@ public class TestMethodInfoTests : TestContainer
         ((string[])expectedArguments[1]).SequenceEqual((string[])resolvedArguments[1]!).Should().BeTrue();
     }
 
-    // Regression tests for https://github.com/microsoft/testfx/issues/7846
+    // Regression test for https://github.com/microsoft/testfx/issues/9949
+    // The params/required parameter metadata is a pure function of the MethodInfo and is cached at process
+    // scope keyed by MethodInfo. Discovery unfolds data sources by default, so each row constructs a fresh
+    // TestMethodInfo for the same MethodInfo; the reflective scan must still run only once across them.
+    public void ResolveArguments_ComputesParameterMetadataOncePerMethodAcrossInstances()
+    {
+        TestMethodInfo.ResetParameterMetadataCacheForTesting();
+        MethodInfo paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod")!;
+
+        for (int i = 0; i < 5; i++)
+        {
+            var method = new TestMethodInfo(paramsArgumentMethod, _testClassInfo)
+            {
+                TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+                Executor = _testMethodAttribute,
+            };
+
+            object?[] resolvedArguments = method.ResolveArguments([i, "str1", "str2"]);
+            resolvedArguments.Length.Should().Be(2);
+            resolvedArguments[1].Should().BeOfType<string[]>();
+        }
+
+        TestMethodInfo.ParameterMetadataScanCount.Should().Be(1);
+    }
+
+    // Regression test for https://github.com/microsoft/testfx/issues/9949
+    // Under method-level parallelization several rows for the same MethodInfo can reach the cache-miss path
+    // concurrently. The Lazy execution-and-publication cache must still collapse them to a single scan.
+    public async Task ResolveArguments_ComputesParameterMetadataOnceUnderConcurrentFirstAccess()
+    {
+        TestMethodInfo.ResetParameterMetadataCacheForTesting();
+        MethodInfo paramsArgumentMethod = typeof(DummyTestClass).GetMethod("DummyParamsArgumentMethod")!;
+
+        const int concurrency = 32;
+        using var startGate = new ManualResetEventSlim(false);
+        var tasks = new Task<object?[]>[concurrency];
+        for (int i = 0; i < concurrency; i++)
+        {
+            tasks[i] = Task.Run(() =>
+            {
+                var method = new TestMethodInfo(paramsArgumentMethod, _testClassInfo)
+                {
+                    TimeoutInfo = TimeoutInfo.FromTimeout(3600 * 1000),
+                    Executor = _testMethodAttribute,
+                };
+
+                // Release all threads at once to maximize the chance of a concurrent first access.
+                startGate.Wait();
+                return method.ResolveArguments([1, "str1", "str2"]);
+            });
+        }
+
+        startGate.Set();
+        object?[][] results = await Task.WhenAll(tasks);
+
+        TestMethodInfo.ParameterMetadataScanCount.Should().Be(1);
+        foreach (object?[] resolvedArguments in results)
+        {
+            resolvedArguments.Length.Should().Be(2);
+            resolvedArguments[1].Should().BeOfType<string[]>();
+        }
+    }
+
     // Verify that log output buffers are cleared between invocations to prevent
     // exponential memory growth with DynamicData tests.
     // NOTE: The TestClassInfo (class init/cleanup) and UnitTestRunner (assembly init/cleanup)

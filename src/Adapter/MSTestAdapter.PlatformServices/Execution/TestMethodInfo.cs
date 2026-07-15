@@ -81,6 +81,18 @@ internal partial class TestMethodInfo : ITestMethod
     // several unfolded rows reach the miss path concurrently.
     private static readonly ConcurrentDictionary<MethodInfo, Lazy<ParameterMetadata>> ParameterMetadataCache = new();
 
+    // Test-only instrumentation counting how many times the reflective parameter scan actually ran, so tests
+    // can assert that repeated and concurrent access for one MethodInfo collapses to a single computation.
+    private static int s_parameterMetadataScanCount;
+
+    internal static int ParameterMetadataScanCount => s_parameterMetadataScanCount;
+
+    internal static void ResetParameterMetadataCacheForTesting()
+    {
+        ParameterMetadataCache.Clear();
+        Interlocked.Exchange(ref s_parameterMetadataScanCount, 0);
+    }
+
     private ParameterMetadata GetParameterMetadata()
     {
         if (!ParameterMetadataCache.TryGetValue(MethodInfo, out Lazy<ParameterMetadata>? metadata))
@@ -100,6 +112,7 @@ internal partial class TestMethodInfo : ITestMethod
 
         internal static ParameterMetadata Compute(ParameterInfo[] parametersInfo)
         {
+            Interlocked.Increment(ref s_parameterMetadataScanCount);
             int requiredParameterCount = 0;
             int paramsParameterIndex = -1;
             for (int i = 0; i < parametersInfo.Length; i++)
