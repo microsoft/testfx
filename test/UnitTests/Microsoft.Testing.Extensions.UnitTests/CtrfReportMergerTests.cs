@@ -359,6 +359,19 @@ public sealed class CtrfReportMergerTests
         return report.ToJsonString();
     }
 
+    [TestMethod]
+    public void Merge_WhenAnInputHasNoEnvironment_DropsEnvironment()
+    {
+        // One input supplies no environment at all. Its OS/user/machine are unknown, so no field is shared
+        // by every input and the merged report must not attribute the other input's environment to it.
+        string withEnvironment = BuildReport(osPlatform: "linux");
+        string withoutEnvironment = BuildReportWithoutSummary(Test("t", "passed"));
+
+        JsonNode results = JsonNode.Parse(CtrfReportMerger.Merge([withEnvironment, withoutEnvironment]))!["results"]!;
+
+        Assert.IsNull(results["environment"]);
+    }
+
     private static string BuildReportWithoutSummary(params JsonObject[] testEntries)
     {
         var testArray = new JsonArray();

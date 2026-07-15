@@ -736,16 +736,19 @@ public sealed class TrxReportEngineMergeTests
             Assert.IsTrue(File.Exists(output));
 
             // The merged TRX must declare a confined deployment root (never "..").
-            string? deploymentRoot = XDocument.Load(output).Descendants()
+            var mergedDoc = XDocument.Load(output);
+            string? deploymentRoot = mergedDoc.Descendants()
                 .FirstOrDefault(e => e.Name.LocalName == "Deployment")?.Attribute("runDeploymentRoot")?.Value;
             Assert.AreEqual("_..", deploymentRoot);
+            Assert.HasCount(1, mergedDoc.Descendants().Where(e => e.Name.LocalName == "A"));
 
-            // Every physical attachment must remain under the output directory (never in its parent).
-            List<string> attachmentCopies = [.. Directory.GetFiles(tempDirectory, "log.txt", SearchOption.AllDirectories)];
-            foreach (string copy in attachmentCopies)
-            {
-                Assert.StartsWith(tempDirectory, copy);
-            }
+            // The relocated attachment must live under the OUTPUT directory (confined by the "_.." leaf),
+            // never escaping it — asserting confinement to the output dir, not merely the temp root.
+            string outputDirectory = Path.GetFullPath(Path.Combine(tempDirectory, "out"));
+            List<string> relocatedCopies = [.. Directory.GetFiles(outputDirectory, "log.txt", SearchOption.AllDirectories)];
+            Assert.HasCount(1, relocatedCopies);
+            Assert.StartsWith(outputDirectory + Path.DirectorySeparatorChar, Path.GetFullPath(relocatedCopies[0]));
+            Assert.AreEqual("AAA", File.ReadAllText(relocatedCopies[0]));
         }
         finally
         {

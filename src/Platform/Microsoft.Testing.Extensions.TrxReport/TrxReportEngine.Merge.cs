@@ -310,9 +310,12 @@ internal sealed partial class TrxReportEngine
 
         // The confined leaf can no longer be '.' or '..', but keep the defensive lexical/reparse checks:
         // reject if the deployment root escapes the output directory or any component below it is a
-        // reparse point (a symlink/junction there would resolve writes outside the confined root).
+        // reparse point (a symlink/junction there would resolve writes outside the confined root). We
+        // cannot set up a safe merged root, so drop every input's references before bailing — otherwise
+        // they would be emitted unchanged and resolve through the unsafe root.
         if (!IsUnderDirectory(mergedRootFull, outputFull) || HasReparsePointComponent(mergedRootFull, outputFull))
         {
+            DropAllReferences(reports);
             return;
         }
 
@@ -329,6 +332,8 @@ internal sealed partial class TrxReportEngine
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
+                // The unsafe link remains; drop every input's references so none resolve through it.
+                DropAllReferences(reports);
                 return;
             }
         }
@@ -395,6 +400,19 @@ internal sealed partial class TrxReportEngine
                 // this input's references so none dangle against the merged deployment root.
                 DropAllAttachmentReferences(reports[i]);
             }
+        }
+    }
+
+    /// <summary>
+    /// Removes every attachment reference from all reports. Used when the merged deployment root cannot be
+    /// set up safely and the whole relocation is abandoned, so no report keeps references that would
+    /// resolve through the unsafe root.
+    /// </summary>
+    private static void DropAllReferences(IReadOnlyList<XDocument> reports)
+    {
+        foreach (XDocument report in reports)
+        {
+            DropAllAttachmentReferences(report);
         }
     }
 
@@ -612,34 +630,35 @@ internal sealed partial class TrxReportEngine
 
         Directory.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
 
-        // A pre-existing destination symlink (from a reused output directory) would make the overwrite
-        // follow the link and write outside the merged root. Remove the link entry — including a DANGLING
-        // one, which File.Exists reports as missing (it follows the link) — so File.Copy writes a real file.
-        RemoveSymlinkEntry(destinationFile);
+        // Remove ANY pre-existing destination entry — a regular file, a symlink (including a DANGLING one,
+        // which File.Exists reports as missing because it follows the link), or a hardlink — then copy
+        // WITHOUT overwrite. This guarantees a fresh file is written rather than a link being followed, or a
+        // hardlink's shared target (which lives outside the merged root) being overwritten in place.
+        DeleteDestinationEntry(destinationFile);
 
-        File.Copy(sourceFile, destinationFile, overwrite: true);
+        File.Copy(sourceFile, destinationFile, overwrite: false);
         return true;
     }
 
     /// <summary>
-    /// Removes a symbolic-link/junction directory entry at <paramref name="path"/>, whether or not its
-    /// target still exists (a dangling link). Unlike <see cref="File.Exists(string)"/> (which follows the
-    /// link and reports a dangling one as missing), this detects the link entry itself, so a later
-    /// <see cref="File.Copy(string, string, bool)"/> writes a real file instead of following the link out
-    /// of the confined root. A real file or a missing entry is left untouched.
+    /// Deletes any existing directory entry at <paramref name="path"/> — a regular file, a symlink/junction
+    /// (including a dangling one, which <see cref="File.Exists(string)"/> reports as missing because it
+    /// follows the link), or a hardlink — so a subsequent copy writes a fresh file instead of following a
+    /// link out of, or overwriting a hardlink's shared target outside, the confined root. A missing entry
+    /// is left untouched.
     /// </summary>
-    private static void RemoveSymlinkEntry(string path)
+    private static void DeleteDestinationEntry(string path)
     {
 #if NETCOREAPP
-        // FileInfo.LinkTarget is non-null for a link entry even when the target is missing; Exists is
-        // target-based, so a dangling link has Exists == false but LinkTarget != null.
+        // FileInfo.Exists is target-based (a dangling link reads as not-existing) while LinkTarget is
+        // non-null for any link entry, so together they cover regular files, hardlinks, and (dangling) links.
         var info = new FileInfo(path);
-        if (info.LinkTarget is not null)
+        if (info.Exists || info.LinkTarget is not null)
         {
             info.Delete();
         }
 #else
-        if (File.Exists(path) && IsReparsePoint(path))
+        if (File.Exists(path))
         {
             File.Delete(path);
         }
@@ -724,12 +743,16 @@ internal sealed partial class TrxReportEngine
         return false;
     }
 
-    // Path comparisons here gate destructive/aliasing decisions (equal-roots skips, overlap detection,
-    // output-alias rejection). Windows and the default macOS volume are case-insensitive, and even on a
-    // case-sensitive Linux volume treating two case-differing paths as the same only makes these guards
-    // MORE conservative (skip relocation / reject an output) — never less safe. So compare
-    // case-insensitively on every platform rather than guessing case sensitivity from the OS name.
-    private static StringComparison PathComparison => StringComparison.OrdinalIgnoreCase;
+    // PathComparison gates *containment* decisions (IsUnderDirectory / HasReparsePointComponent confining
+    // a source or destination under a root, and the equal-roots skip). Containment MUST be ordinal
+    // (case-sensitive): on a case-sensitive filesystem a hostile deployment root such as '../foo' resolves
+    // to the case-distinct sibling '/tmp/foo' of an input under '/tmp/Foo', and a case-insensitive check
+    // would wrongly accept it as confined and read the sibling's attachments. Treating case-distinct paths
+    // as different only makes containment MORE restrictive (skip/drop) — never an escape.
+    //
+    // The output-alias EQUALITY check is a different concern (two names for the SAME file) and is compared
+    // case-insensitively on canonicalized paths in EnsureOutputDoesNotAliasInput, independently of this.
+    private static StringComparison PathComparison => StringComparison.Ordinal;
 
     private static void CloneChildrenInto(XElement? source, XElement destination)
     {

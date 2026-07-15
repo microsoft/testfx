@@ -188,9 +188,11 @@ internal static class CtrfReportMerger
 
         // Retain only environment fields that every input agrees on: OS/user/machine are shared when the
         // merge is same-machine, but invocation-agnostic inputs can come from different CI agents, so a
-        // differing value would misstate the environment for most tests. Module-specific 'extra' values
-        // (the producing test application and its exit code) are always dropped.
-        if (BuildCommonEnvironment(environments) is JsonObject commonEnvironment)
+        // differing value would misstate the environment for most tests. A report that supplies no
+        // environment at all counts as disagreement (its fields are absent), so a common field requires
+        // every accepted report to provide it. Module-specific 'extra' values (the producing test
+        // application and its exit code) are always dropped.
+        if (BuildCommonEnvironment(environments, reportCount) is JsonObject commonEnvironment)
         {
             resultsObject["environment"] = commonEnvironment;
         }
@@ -340,9 +342,11 @@ internal static class CtrfReportMerger
     /// module-specific <c>extra.testApplication</c> and <c>extra.exitCode</c> fields are always dropped.
     /// Returns <see langword="null"/> when no environment survives.
     /// </summary>
-    private static JsonObject? BuildCommonEnvironment(IReadOnlyList<JsonObject> environments)
+    private static JsonObject? BuildCommonEnvironment(IReadOnlyList<JsonObject> environments, int reportCount)
     {
-        if (environments.Count == 0)
+        // A field can only be common to all inputs if every accepted report supplied an environment; a
+        // report with no environment is a disagreement (the field is absent there).
+        if (environments.Count == 0 || environments.Count != reportCount)
         {
             return null;
         }
