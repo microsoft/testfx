@@ -140,10 +140,11 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
 
             IOperation value = argument.Value.WalkDownConversion();
 
-            // A null literal falls back to EqualityComparer<T>.Default in Assert, and a reference to
-            // `EqualityComparer<T>.Default` is that same default comparer — neither bypasses the type's own equality.
+            // Any constant-null comparer (null literal, `default`, `default(IEqualityComparer<T>)`, a const null field, …)
+            // falls back to EqualityComparer<T>.Default in Assert, and a reference to `EqualityComparer<T>.Default` is that
+            // same default comparer — neither bypasses the type's own equality.
             bool isDefaultComparer =
-                value is ILiteralOperation { ConstantValue: { HasValue: true, Value: null } }
+                value.ConstantValue is { HasValue: true, Value: null }
                 || (value is IPropertyReferenceOperation { Property: { Name: "Default", IsStatic: true } property }
                     && equalityComparerSymbol is not null
                     && SymbolEqualityComparer.Default.Equals(property.ContainingType.OriginalDefinition, equalityComparerSymbol));
