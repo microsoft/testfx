@@ -146,6 +146,21 @@ public sealed class DotnetTestProtocolSerializerTests
     }
 
     [TestMethod]
+    public void FileArtifactMessageFieldIds_Kind_IsStable()
+    {
+        // Kind is an externally shared wire id (the SDK decodes it with its own vendored copy of the same
+        // number), so renumbering it would silently break cross-process decoding without failing the
+        // round-trip tests (which use the same constant on both writer and reader). Pin the literal here.
+        // The declared value is read via reflection (a runtime read, not a compile-time constant) so that
+        // renumbering the constant is actually caught rather than folded away by the compiler.
+        Assert.AreEqual((ushort)6, GetConstantValue(nameof(FileArtifactMessageFieldsId.SessionUid)));
+        Assert.AreEqual((ushort)7, GetConstantValue(nameof(FileArtifactMessageFieldsId.Kind)));
+
+        static ushort GetConstantValue(string fieldName)
+            => (ushort)typeof(FileArtifactMessageFieldsId).GetField(fieldName)!.GetRawConstantValue()!;
+    }
+
+    [TestMethod]
     public void DiscoveredTestMessages_RoundTripsWithTraitsAndParameters()
     {
         var message = new DiscoveredTestMessages(

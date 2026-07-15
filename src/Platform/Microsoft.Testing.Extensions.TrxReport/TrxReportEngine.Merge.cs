@@ -201,13 +201,67 @@ internal sealed partial class TrxReportEngine
 
         XDocument merged = Merge(reports, runId, runName);
 
-        using FileStream stream = File.Create(outputPath);
+        // Write to a temporary sibling, then replace the destination ENTRY. If the output path is a
+        // symlink/hardlink alias of an input (which the textual alias check above cannot detect because
+        // Path.GetFullPath does not resolve links), replacing the entry removes only the link and leaves
+        // the read-only source intact, rather than truncating it in place via File.Create.
+        string tempPath = GetTempSiblingPath(outputPath);
+        try
+        {
+            using (FileStream stream = File.Create(tempPath))
+            {
 #if NETCOREAPP
-        await merged.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
+                await merged.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
 #else
-        merged.Save(stream, SaveOptions.None);
-        await Task.CompletedTask.ConfigureAwait(false);
+                merged.Save(stream, SaveOptions.None);
+                await Task.CompletedTask.ConfigureAwait(false);
 #endif
+            }
+
+            ReplaceFile(tempPath, outputPath);
+        }
+        finally
+        {
+            TryDeleteFile(tempPath);
+        }
+    }
+
+    private static string GetTempSiblingPath(string outputPath)
+    {
+        string directory = Path.GetDirectoryName(Path.GetFullPath(outputPath)) is { Length: > 0 } dir
+            ? dir
+            : Directory.GetCurrentDirectory();
+        return Path.Combine(directory, Path.GetFileName(outputPath) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+    }
+
+    private static void ReplaceFile(string tempPath, string outputPath)
+    {
+        // Delete the destination entry (a regular file, or a symlink/hardlink alias) before moving the
+        // freshly written temp file into place. Deleting a link removes only the link, never its target's
+        // content, so a source aliased by the output path is never truncated. An exact (case-insensitive)
+        // alias of an input has already been rejected, so this cannot delete an input in place.
+        if (File.Exists(outputPath))
+        {
+            File.Delete(outputPath);
+        }
+
+        File.Move(tempPath, outputPath);
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Best-effort temp cleanup: leaking a .tmp sibling is preferable to masking the primary
+            // exception (or the successful result) with a cleanup failure.
+        }
     }
 
     private static XElement? FindChild(XElement parent, string localName)
@@ -362,7 +416,7 @@ internal sealed partial class TrxReportEngine
                     CopyDirectoryRecursive(sourceInRoot, destForInput, cancellationToken);
                 }
 
-                RewriteAttachmentHrefs(reports[i], prefix);
+                RewriteAttachmentHrefs(reports[i], prefix, mergedInRoot);
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
             {
@@ -373,7 +427,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private static void RewriteAttachmentHrefs(XDocument report, string prefix)
+    private static void RewriteAttachmentHrefs(XDocument report, string prefix, string mergedInRoot)
     {
         if (report.Root is not { } root)
         {
@@ -388,16 +442,19 @@ internal sealed partial class TrxReportEngine
         //     In/<prefix>/<relativeResultsDirectory>/<path> is reached by prefixing the *directory*, not
         //     the path. A ResultFile without an owning relativeResultsDirectory behaves like a collector
         //     href (In/<path>).
-        // Materialize each pass first: an escaping reference is removed, and removing while enumerating
-        // the lazy Descendants() sequence would be unsafe.
+        // Every rewritten reference is also verified against the freshly relocated tree (mergedInRoot) and
+        // dropped if the target was not materialized (e.g. a skipped source symlink or a partial copy),
+        // so the merged TRX never carries a dangling reference.
+        // Materialize each pass first: an escaping/missing reference is removed, and removing while
+        // enumerating the lazy Descendants() sequence would be unsafe.
         foreach (XElement collectorAttachment in root.Descendants().Where(e => e.Name.LocalName == "A").ToList())
         {
-            PrefixRelativeAttribute(collectorAttachment, "href", prefix);
+            PrefixRelativeAttribute(collectorAttachment, "href", prefix, mergedInRoot);
         }
 
         foreach (XElement unitTestResult in root.Descendants().Where(e => e.Name.LocalName == "UnitTestResult").ToList())
         {
-            PrefixResultFilesForUnitTestResult(unitTestResult, prefix);
+            PrefixResultFilesForUnitTestResult(unitTestResult, prefix, mergedInRoot);
         }
 
         // Any standalone ResultFile (no owning UnitTestResult, e.g. from a foreign producer) resolves at
@@ -407,7 +464,7 @@ internal sealed partial class TrxReportEngine
             .Where(e => e.Name.LocalName == "ResultFile" && e.Ancestors().All(a => a.Name.LocalName != "UnitTestResult"))
             .ToList())
         {
-            PrefixRelativeAttribute(standaloneResultFile, "path", prefix);
+            PrefixRelativeAttribute(standaloneResultFile, "path", prefix, mergedInRoot);
         }
     }
 
@@ -415,10 +472,10 @@ internal sealed partial class TrxReportEngine
     /// Prefixes the per-test <c>ResultFile</c> references of a single <c>UnitTestResult</c>. Consumers
     /// resolve them under <c>In/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>, so the relocated copy
     /// (under <c>In/&lt;prefix&gt;/&lt;relativeResultsDirectory&gt;/&lt;path&gt;</c>) is reached by
-    /// prefixing the directory once; a reference whose combined directory/path escapes the root (or is
-    /// rooted) is dropped instead of emitted.
+    /// prefixing the directory once; a reference whose combined directory/path escapes the root (is
+    /// rooted, or whose relocated file does not exist) is dropped instead of emitted.
     /// </summary>
-    private static void PrefixResultFilesForUnitTestResult(XElement unitTestResult, string prefix)
+    private static void PrefixResultFilesForUnitTestResult(XElement unitTestResult, string prefix, string mergedInRoot)
     {
         List<XElement> resultFiles = [.. unitTestResult.Descendants().Where(e => e.Name.LocalName == "ResultFile")];
         if (resultFiles.Count == 0)
@@ -434,20 +491,22 @@ internal sealed partial class TrxReportEngine
             // No owning directory: each path resolves at In/<path>, like a collector href.
             foreach (XElement resultFile in resultFiles)
             {
-                PrefixRelativeAttribute(resultFile, "path", prefix);
+                PrefixRelativeAttribute(resultFile, "path", prefix, mergedInRoot);
             }
 
             return;
         }
 
-        // Validate the combined directory/path (that is what a consumer resolves) and drop any escaping
-        // or rooted reference, so a hostile relativeResultsDirectory such as '../../..' cannot make the
-        // merged TRX point outside its deployment root.
+        // Validate the combined directory/path (that is what a consumer resolves): drop any escaping,
+        // rooted, or non-materialized reference, so a hostile relativeResultsDirectory such as '../../..'
+        // cannot make the merged TRX point outside its deployment root and a skipped file never dangles.
         bool anyKept = false;
         foreach (XElement resultFile in resultFiles)
         {
             string path = resultFile.Attribute("path")?.Value ?? string.Empty;
-            if (Path.IsPathRooted(relativeDirectoryValue) || Path.IsPathRooted(path) || EscapesRoot(relativeDirectoryValue + "/" + path))
+            if (Path.IsPathRooted(relativeDirectoryValue) || Path.IsPathRooted(path)
+                || EscapesRoot(relativeDirectoryValue + "/" + path)
+                || !ResolvedFileExists(mergedInRoot, prefix + "/" + relativeDirectoryValue + "/" + path))
             {
                 resultFile.Remove();
             }
@@ -465,7 +524,7 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private static void PrefixRelativeAttribute(XElement element, string attributeName, string prefix)
+    private static void PrefixRelativeAttribute(XElement element, string attributeName, string prefix, string mergedInRoot)
     {
         XAttribute? attribute = element.Attribute(attributeName);
         if (attribute is null || RoslynString.IsNullOrEmpty(attribute.Value) || Path.IsPathRooted(attribute.Value))
@@ -482,8 +541,21 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
-        attribute.Value = prefix + "/" + attribute.Value;
+        string prefixedValue = prefix + "/" + attribute.Value;
+
+        // Drop the reference if the relocation did not materialize the target (a skipped source symlink
+        // or a partial copy), so the merged TRX never carries a dangling reference.
+        if (!ResolvedFileExists(mergedInRoot, prefixedValue))
+        {
+            element.Remove();
+            return;
+        }
+
+        attribute.Value = prefixedValue;
     }
+
+    private static bool ResolvedFileExists(string mergedInRoot, string relativePath)
+        => File.Exists(Path.Combine(mergedInRoot, relativePath.Replace('/', Path.DirectorySeparatorChar).Replace('\\', Path.DirectorySeparatorChar)));
 
     /// <summary>
     /// Returns <see langword="true"/> if the relative <paramref name="relativePath"/> resolves above its
@@ -665,8 +737,12 @@ internal sealed partial class TrxReportEngine
         return false;
     }
 
-    private static StringComparison PathComparison
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+    // Path comparisons here gate destructive/aliasing decisions (equal-roots skips, overlap detection,
+    // output-alias rejection). Windows and the default macOS volume are case-insensitive, and even on a
+    // case-sensitive Linux volume treating two case-differing paths as the same only makes these guards
+    // MORE conservative (skip relocation / reject an output) — never less safe. So compare
+    // case-insensitively on every platform rather than guessing case sensitivity from the OS name.
+    private static StringComparison PathComparison => StringComparison.OrdinalIgnoreCase;
 
     private static void DeleteDirectoryTreeOrLink(string path)
     {

@@ -247,12 +247,63 @@ internal static class CtrfReportMerger
             Directory.CreateDirectory(outputDirectory);
         }
 
+        // Write to a temporary sibling, then replace the destination ENTRY. If the output path is a
+        // symlink/hardlink alias of an input (which the textual alias check above cannot detect because
+        // Path.GetFullPath does not resolve links), replacing the entry removes only the link and leaves
+        // the read-only source intact, rather than truncating it in place via WriteAllText.
+        string tempPath = GetTempSiblingPath(outputPath);
+        try
+        {
 #if NETCOREAPP
-        await File.WriteAllTextAsync(outputPath, merged, cancellationToken).ConfigureAwait(false);
+            await File.WriteAllTextAsync(tempPath, merged, cancellationToken).ConfigureAwait(false);
 #else
-        File.WriteAllText(outputPath, merged);
-        await Task.CompletedTask.ConfigureAwait(false);
+            File.WriteAllText(tempPath, merged);
+            await Task.CompletedTask.ConfigureAwait(false);
 #endif
+            ReplaceFile(tempPath, outputPath);
+        }
+        finally
+        {
+            TryDeleteFile(tempPath);
+        }
+    }
+
+    private static string GetTempSiblingPath(string outputPath)
+    {
+        string directory = Path.GetDirectoryName(Path.GetFullPath(outputPath)) is { Length: > 0 } dir
+            ? dir
+            : Directory.GetCurrentDirectory();
+        return Path.Combine(directory, Path.GetFileName(outputPath) + "." + Guid.NewGuid().ToString("N") + ".tmp");
+    }
+
+    private static void ReplaceFile(string tempPath, string outputPath)
+    {
+        // Delete the destination entry (a regular file, or a symlink/hardlink alias) before moving the
+        // freshly written temp file into place. Deleting a link removes only the link, never its target's
+        // content, so a source aliased by the output path is never truncated. An exact (case-insensitive)
+        // alias of an input has already been rejected, so this cannot delete an input in place.
+        if (File.Exists(outputPath))
+        {
+            File.Delete(outputPath);
+        }
+
+        File.Move(tempPath, outputPath);
+    }
+
+    private static void TryDeleteFile(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Best-effort temp cleanup: leaking a .tmp sibling is preferable to masking the primary
+            // exception (or the successful result) with a cleanup failure.
+        }
     }
 
     private static bool TryReadLong(JsonNode summary, string propertyName, out long value)
@@ -312,17 +363,16 @@ internal static class CtrfReportMerger
 
     /// <summary>
     /// Rejects an output path that resolves to one of the input report paths, so a merge never overwrites
-    /// a source report (RFC 018 keeps inputs on disk, read-only).
+    /// a source report (RFC 018 keeps inputs on disk, read-only). Compares case-insensitively on every
+    /// platform: Windows and the default macOS volume are case-insensitive, and treating a case-differing
+    /// path as an alias only makes this guard more conservative on a case-sensitive volume.
     /// </summary>
     private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
     {
-        StringComparison comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
         string outputFull = Path.GetFullPath(outputPath);
         foreach (string inputPath in inputPaths)
         {
-            if (string.Equals(Path.GetFullPath(inputPath), outputFull, comparison))
+            if (string.Equals(Path.GetFullPath(inputPath), outputFull, StringComparison.OrdinalIgnoreCase))
             {
                 throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
             }
