@@ -53,7 +53,8 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
                 return;
             }
 
-            // May be null on very old target frameworks; the equality-opt-out check simply becomes a no-op then.
+            // May be null on very old target frameworks; when it is, only the IEquatable&lt;self&gt; check becomes a
+            // no-op — the object.Equals override detection still runs.
             INamedTypeSymbol? equatableSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIEquatable1);
 
             context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, genericEnumerableSymbol, equatableSymbol), OperationKind.Invocation);
@@ -170,6 +171,10 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             case ITypeParameterSymbol typeParameter:
                 foreach (ITypeSymbol constraintType in typeParameter.ConstraintTypes)
                 {
+                    // Only named constraints are inspected. A transitive type-parameter constraint
+                    // (`where T : U where U : SomeSelfEquatingType`) is intentionally not followed: doing so risks
+                    // over-suppressing, and over-reporting a warning is the safer error for this rule than silently
+                    // missing the reference-equality footgun.
                     if (constraintType is INamedTypeSymbol namedConstraint &&
                         (ImplementsSelfEquatable(namedConstraint, typeParameter, equatableSymbol) || OverridesObjectEquals(namedConstraint)))
                     {
