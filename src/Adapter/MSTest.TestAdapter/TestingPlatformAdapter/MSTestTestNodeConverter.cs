@@ -47,7 +47,9 @@ internal static class MSTestTestNodeConverter
     /// </summary>
     public static TestNode ToInProgressTestNode(UnitTestElement element, bool isTrxEnabled)
     {
-        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null);
+        // Skip AddTestMethodIdentifier: all TRX/AzDO/result consumers early-exit for InProgressTestNodeStateProperty,
+        // so the ParseManagedMethodName work and the TestMethodIdentifierProperty allocation are wasted for in-progress nodes.
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null, addTestMethodIdentifier: false);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         return testNode;
     }
@@ -82,7 +84,7 @@ internal static class MSTestTestNodeConverter
         return testNode;
     }
 
-    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride)
+    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride, bool addTestMethodIdentifier = true)
     {
         TestMethod testMethod = element.TestMethod;
 
@@ -103,7 +105,10 @@ internal static class MSTestTestNodeConverter
             testNode.Properties.Add(new TestFileLocationProperty(element.DeclaringFilePath, new(position, position)));
         }
 
-        AddTestMethodIdentifier(testNode, testMethod);
+        if (addTestMethodIdentifier)
+        {
+            AddTestMethodIdentifier(testNode, testMethod);
+        }
 
         return testNode;
     }
