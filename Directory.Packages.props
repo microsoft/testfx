@@ -31,10 +31,14 @@
              tracking (RS0051-RS0058) is skipped for a compilation whose only InternalsVisibleTo
              targets are ignored test/mock assemblies (opt in via
              dotnet_public_api_analyzer.internal_api_skip_ivt).
-         5.10.0-1.26363.117 was built from roslyn main on 2026-07-13, so it contains both merges. The
-         previous 5.10.0-1.26360.111 pin was built 2026-07-10, before those merges shipped.
+         5.10.0-1.26364.116 (VMR dotnet/dotnet build 2026-07-14) is the first dnceng dotnet-tools
+         preview whose ingested roslyn main actually contains #84438: verified by inspecting the
+         analyzer and by an empirical build (a project whose only IVT targets *.UnitTests no longer
+         emits RS0051, while a project with a real IVT consumer still does). The earlier
+         5.10.0-1.26363.117 pin (VMR build 2026-07-13) predated the roslyn->VMR forward-flow of
+         #84438, so it silently ignored dotnet_public_api_analyzer.internal_api_skip_ivt.
          Tracking context: https://github.com/microsoft/testfx/issues/9091 (Task 5). -->
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26363.117</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>5.10.0-1.26364.116</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
