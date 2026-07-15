@@ -420,7 +420,7 @@ public sealed class TrxReportEngineMergeTests
 
             await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
 
-            XDocument mergedDoc = XDocument.Load(output);
+            var mergedDoc = XDocument.Load(output);
             XElement mergedResult = mergedDoc.Descendants().First(e => e.Name.LocalName == "UnitTestResult");
             string relativeDirectory = mergedResult.Attribute("relativeResultsDirectory")!.Value;
             string resultFilePath = mergedResult.Descendants().First(e => e.Name.LocalName == "ResultFile").Attribute("path")!.Value;
