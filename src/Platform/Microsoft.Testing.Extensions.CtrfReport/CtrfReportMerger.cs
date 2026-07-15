@@ -28,6 +28,10 @@ internal static class CtrfReportMerger
     // merged report does not misattribute one framework's identity to another's tests.
     private const string MergedToolName = "Microsoft.Testing.Extensions.CtrfReport (merged)";
 
+    // Identity stamped into the merged document's 'generatedBy' — the merge is produced by this extension,
+    // not by any input report.
+    private const string GeneratedByName = "Microsoft.Testing.Extensions.CtrfReport";
+
     internal static string Merge(IReadOnlyList<string> inputReports)
     {
         if (inputReports is null)
@@ -65,6 +69,22 @@ internal static class CtrfReportMerger
             if (JsonNode.Parse(reportJson) is not JsonObject root)
             {
                 continue;
+            }
+
+            // Only accept genuine CTRF documents: a non-CTRF JSON object (different reportFormat, or no
+            // results object) must not become 'first' and have CTRF-shaped data emitted under its label.
+            if (root["results"] is not JsonObject)
+            {
+                continue;
+            }
+
+            if (root["reportFormat"] is JsonNode reportFormat)
+            {
+                string? format = reportFormat is JsonValue formatValue && formatValue.TryGetValue(out string? formatText) ? formatText : null;
+                if (!string.Equals(format, "CTRF", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
             }
 
             first ??= root;
@@ -205,13 +225,12 @@ internal static class CtrfReportMerger
             ["specVersion"] = first["specVersion"]?.DeepClone() ?? "0.0.0",
             ["reportId"] = CreateDeterministicReportId(inputReports),
             ["timestamp"] = DateTimeOffset.FromUnixTimeMilliseconds(stopMs).ToString("O", CultureInfo.InvariantCulture),
+            // The merged document is produced by this merger, not by any input, so stamp its own identity
+            // rather than carrying the first input's 'generatedBy' (which could report a different producer
+            // or version when merging reports from different tool versions).
+            ["generatedBy"] = GeneratedByName,
             ["results"] = resultsObject,
         };
-
-        if (first["generatedBy"] is JsonNode generatedBy)
-        {
-            merged["generatedBy"] = generatedBy.DeepClone();
-        }
 
         return merged.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
@@ -285,14 +304,12 @@ internal static class CtrfReportMerger
 
     private static void ReplaceFile(string tempPath, string outputPath)
     {
-        // Delete the destination entry (a regular file, or a symlink/hardlink alias) before moving the
-        // freshly written temp file into place. Deleting a link removes only the link, never its target's
-        // content, so a source aliased by the output path is never truncated. An exact (case-insensitive)
-        // alias of an input has already been rejected, so this cannot delete an input in place.
-        if (File.Exists(outputPath))
-        {
-            File.Delete(outputPath);
-        }
+        // Delete any destination entry unconditionally — a regular file, or a symlink/hardlink alias
+        // (including a DANGLING symlink, for which File.Exists is false yet the entry still exists and
+        // would make File.Move fail). File.Delete is a no-op when nothing exists, and deleting a link
+        // removes only the link (never its target's content); an exact (case-insensitive) alias of an
+        // input has already been rejected, so this cannot delete an input in place.
+        File.Delete(outputPath);
 
         File.Move(tempPath, outputPath);
     }

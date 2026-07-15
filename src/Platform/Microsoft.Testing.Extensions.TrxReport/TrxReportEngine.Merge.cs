@@ -260,14 +260,12 @@ internal sealed partial class TrxReportEngine
 
     private static void ReplaceFile(string tempPath, string outputPath)
     {
-        // Delete the destination entry (a regular file, or a symlink/hardlink alias) before moving the
-        // freshly written temp file into place. Deleting a link removes only the link, never its target's
-        // content, so a source aliased by the output path is never truncated. An exact (case-insensitive)
-        // alias of an input has already been rejected, so this cannot delete an input in place.
-        if (File.Exists(outputPath))
-        {
-            File.Delete(outputPath);
-        }
+        // Delete any destination entry unconditionally — a regular file, or a symlink/hardlink alias
+        // (including a DANGLING symlink, for which File.Exists is false yet the entry still exists and
+        // would make File.Move fail). File.Delete is a no-op when nothing exists, and deleting a link
+        // removes only the link (never its target's content); an exact (case-insensitive) alias of an
+        // input has already been rejected, so this cannot delete an input in place.
+        File.Delete(outputPath);
 
         File.Move(tempPath, outputPath);
     }
@@ -522,46 +520,57 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
-        // A rooted owning directory cannot be safely relocated; drop all its references.
+        // A rooted owning directory makes every ResultFile resolve to an absolute path; RFC 018 keeps
+        // absolute attachment paths resolvable, so preserve them unchanged (not relocated, not dropped).
         if (Path.IsPathRooted(relativeDirectoryValue))
         {
-            foreach (XElement resultFile in resultFiles)
-            {
-                resultFile.Remove();
-            }
-
             return;
         }
 
-        // Copy (or validate) each referenced file, dropping any rooted, escaping, or non-materialized
-        // reference, then prefix the directory once if anything survived (only when relocating).
+        // Copy (or validate) each referenced file. A rooted per-test path is absolute and preserved
+        // unchanged; a relative one that escapes the root or is not materialized is dropped; the rest are
+        // relocated. Prefix the directory once if any relative reference survived (only when relocating).
         bool anyKept = false;
         foreach (XElement resultFile in resultFiles)
         {
-            string path = resultFile.Attribute("path")?.Value ?? string.Empty;
+            XAttribute? pathAttribute = resultFile.Attribute("path");
+            string path = pathAttribute?.Value ?? string.Empty;
+            if (Path.IsPathRooted(path))
+            {
+                // Absolute path: preserved as-is, independent of the (relative) owning directory.
+                continue;
+            }
+
             string combined = relativeDirectoryValue + "/" + path;
-            if (Path.IsPathRooted(path) || EscapesRoot(combined) || !TryMaterializeOrValidateReference(sourceInRoot, mergedInRoot, prefix, combined, relocate, cancellationToken))
+            if (EscapesRoot(combined) || !TryMaterializeOrValidateReference(sourceInRoot, mergedInRoot, prefix, combined, relocate, cancellationToken))
             {
                 resultFile.Remove();
             }
             else
             {
                 anyKept = true;
+                if (relocate && pathAttribute is not null)
+                {
+                    // Normalize the kept path's separators to '/' so the reference resolves cross-platform,
+                    // matching the separator-normalized copy destination.
+                    pathAttribute.Value = path.Replace('\\', '/');
+                }
             }
         }
 
         if (anyKept && relocate)
         {
-            relativeDirectory.Value = prefix + "/" + relativeDirectoryValue;
+            relativeDirectory.Value = prefix + "/" + relativeDirectoryValue.Replace('\\', '/');
         }
     }
 
     /// <summary>
     /// Relocates (or validates in place) the file referenced by <paramref name="attributeName"/>. A rooted
-    /// value (an absolute path outside the confined deployment tree), a value that escapes the deployment
-    /// root, or a source file that was not materialized (missing, or a skipped symlink) causes the
-    /// reference to be dropped. When <paramref name="relocate"/> is true the file is copied into the
-    /// per-input folder and the reference is prefixed; otherwise it is left unchanged.
+    /// (absolute) value is preserved unchanged — RFC 018 keeps absolute attachment paths resolvable — while
+    /// a value that escapes the deployment root, or a source file that was not materialized (missing, or a
+    /// skipped symlink), causes the reference to be dropped. When <paramref name="relocate"/> is true a
+    /// kept relative file is copied into the per-input folder and the reference is prefixed (separators
+    /// normalized to '/'); otherwise it is left unchanged.
     /// </summary>
     private static void RelocateReference(XElement element, string attributeName, string? relativeDirectory, string prefix, string sourceInRoot, string mergedInRoot, bool relocate, CancellationToken cancellationToken)
     {
@@ -571,9 +580,10 @@ internal sealed partial class TrxReportEngine
             return;
         }
 
+        // RFC 018 requires attachment URIs to survive merging and treats current absolute TRX paths as
+        // already resolvable, so a rooted value is preserved as-is (not relocated, not dropped).
         if (Path.IsPathRooted(attribute.Value))
         {
-            RemoveReferenceElement(element);
             return;
         }
 
@@ -586,7 +596,9 @@ internal sealed partial class TrxReportEngine
 
         if (relocate)
         {
-            attribute.Value = prefix + "/" + attribute.Value;
+            // Emit with forward slashes so a reference relocated from a Windows-produced TRX resolves on
+            // Unix (and vice versa), matching the separator-normalized copy destination.
+            attribute.Value = prefix + "/" + attribute.Value.Replace('\\', '/');
         }
     }
 

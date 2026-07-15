@@ -176,14 +176,12 @@ internal static class JUnitReportMerger
 
     private static void ReplaceFile(string tempPath, string outputPath)
     {
-        // Delete the destination entry (a regular file, or a symlink/hardlink alias) before moving the
-        // freshly written temp file into place. Deleting a link removes only the link, never its target's
-        // content, so a source aliased by the output path is never truncated. An exact (case-insensitive)
-        // alias of an input has already been rejected, so this cannot delete an input in place.
-        if (File.Exists(outputPath))
-        {
-            File.Delete(outputPath);
-        }
+        // Delete any destination entry unconditionally — a regular file, or a symlink/hardlink alias
+        // (including a DANGLING symlink, for which File.Exists is false yet the entry still exists and
+        // would make File.Move fail). File.Delete is a no-op when nothing exists, and deleting a link
+        // removes only the link (never its target's content); an exact (case-insensitive) alias of an
+        // input has already been rejected, so this cannot delete an input in place.
+        File.Delete(outputPath);
 
         File.Move(tempPath, outputPath);
     }

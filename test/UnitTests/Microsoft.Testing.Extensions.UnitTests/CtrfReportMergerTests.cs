@@ -283,6 +283,46 @@ public sealed class CtrfReportMergerTests
         Assert.AreEqual("linux", (string?)environment["osPlatform"]);
     }
 
+    [TestMethod]
+    public void Merge_StampsMergerIdentityInGeneratedBy()
+    {
+        // The merged document is produced by this merger, so 'generatedBy' must be the merger's identity,
+        // not the (possibly different-versioned) first input's value.
+        var report = new JsonObject
+        {
+            ["reportFormat"] = "CTRF",
+            ["specVersion"] = "0.0.0",
+            ["generatedBy"] = "SomeOtherTool v9",
+            ["results"] = new JsonObject
+            {
+                ["tool"] = new JsonObject { ["name"] = "MSTest" },
+                ["tests"] = new JsonArray { Test("t", "passed") },
+            },
+        };
+
+        string generatedBy = (string)JsonNode.Parse(CtrfReportMerger.Merge([report.ToJsonString()]))!["generatedBy"]!;
+
+        Assert.AreEqual("Microsoft.Testing.Extensions.CtrfReport", generatedBy);
+    }
+
+    [TestMethod]
+    public void Merge_IgnoresNonCtrfInputs()
+    {
+        // A JSON object that is not a CTRF document must not be accepted (become 'first') and have
+        // CTRF-shaped data emitted under its label; its tests are excluded from the merge.
+        string ctrf = BuildReport(testEntries: [Test("a", "passed")]);
+        var notCtrf = new JsonObject
+        {
+            ["reportFormat"] = "JUnit",
+            ["results"] = new JsonObject { ["tests"] = new JsonArray { Test("x", "passed") } },
+        };
+
+        JsonNode merged = JsonNode.Parse(CtrfReportMerger.Merge([ctrf, notCtrf.ToJsonString()]))!;
+
+        Assert.AreEqual("CTRF", (string?)merged["reportFormat"]);
+        Assert.AreEqual(1, (long)merged["results"]!["summary"]!["tests"]!);
+    }
+
     private static JsonObject Test(string name, string status)
         => new()
         {

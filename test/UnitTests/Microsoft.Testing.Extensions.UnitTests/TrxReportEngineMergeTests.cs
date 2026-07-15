@@ -138,17 +138,22 @@ public sealed class TrxReportEngineMergeTests
         Assert.Contains("a.dll", storages);
         Assert.Contains("b.dll", storages);
 
-        // Every result/entry testId must reference a real definition id (the second input's was remapped).
-        var definitionIds = new HashSet<string>(ids);
-        foreach (XElement result in Child(root, "Results").Elements())
+        // Every result/entry testId must reference a real definition id, and — critically — each
+        // execution must map to the definition with ITS OWN storage: e1 -> a.dll, e2 -> b.dll. This fails
+        // if the remap did not rewrite the second input's references (both would resolve to a.dll).
+        var storageByDefinitionId = definitions.ToDictionary(e => e.Attribute("id")!.Value, e => e.Attribute("storage")!.Value);
+
+        string StorageForExecution(string containerName, string executionId)
         {
-            Assert.Contains(result.Attribute("testId")!.Value, definitionIds);
+            XElement element = Child(root, containerName).Elements()
+                .First(e => e.Attribute("executionId")!.Value == executionId);
+            return storageByDefinitionId[element.Attribute("testId")!.Value];
         }
 
-        foreach (XElement entry in Child(root, "TestEntries").Elements())
-        {
-            Assert.Contains(entry.Attribute("testId")!.Value, definitionIds);
-        }
+        Assert.AreEqual("a.dll", StorageForExecution("Results", "e1"));
+        Assert.AreEqual("b.dll", StorageForExecution("Results", "e2"));
+        Assert.AreEqual("a.dll", StorageForExecution("TestEntries", "e1"));
+        Assert.AreEqual("b.dll", StorageForExecution("TestEntries", "e2"));
     }
 
     [TestMethod]
@@ -393,14 +398,14 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
-    public async Task MergeToFileAsync_WhenAttachmentHrefIsRooted_DropsTheReference()
+    public async Task MergeToFileAsync_WhenAttachmentHrefIsRooted_PreservesTheReference()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
         try
         {
-            // A rooted (absolute) href points outside the confined deployment tree; the path-confined
-            // merge must drop it rather than preserve an absolute path to some file on disk.
+            // RFC 018 keeps absolute (rooted) attachment paths resolvable, so a rooted href is preserved
+            // unchanged rather than relocated or dropped.
             string inputDir = Path.Combine(tempDirectory, "in");
             Directory.CreateDirectory(Path.Combine(inputDir, "dep", "In", "machine"));
 
@@ -426,12 +431,9 @@ public sealed class TrxReportEngineMergeTests
 
             await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
 
-            var mergedDoc = XDocument.Load(output);
-            List<string> hrefs = [.. mergedDoc.Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
-            Assert.IsEmpty(hrefs);
-            // Dropping the <A> must also remove its owning <UriAttachment> so no schema-invalid empty
-            // element is left behind.
-            Assert.IsEmpty(mergedDoc.Descendants().Where(e => e.Name.LocalName == "UriAttachment"));
+            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            Assert.HasCount(1, hrefs);
+            Assert.AreEqual(rootedHref, hrefs[0]);
         }
         finally
         {
@@ -477,8 +479,12 @@ public sealed class TrxReportEngineMergeTests
 
             await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "run", CancellationToken.None);
 
-            List<string> hrefs = [.. XDocument.Load(output).Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
+            var mergedDoc = XDocument.Load(output);
+            List<string> hrefs = [.. mergedDoc.Descendants().Where(e => e.Name.LocalName == "A").Select(e => e.Attribute("href")!.Value)];
             Assert.IsEmpty(hrefs);
+            // Dropping the escaping <A> must also remove its owning <UriAttachment> so no schema-invalid
+            // empty element is left behind.
+            Assert.IsEmpty(mergedDoc.Descendants().Where(e => e.Name.LocalName == "UriAttachment"));
         }
         finally
         {
