@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="MSBuildCommandLineProviderDisplayName">
         <source>MSBuild integration</source>
-        <target state="new">MSBuild integration</target>
+        <target state="translated">MSBuild 集成</target>
         <note>Do not localize {Locked="MSBuild"}.</note>
       </trans-unit>
       <trans-unit id="MSBuildExtensionsDescription">
