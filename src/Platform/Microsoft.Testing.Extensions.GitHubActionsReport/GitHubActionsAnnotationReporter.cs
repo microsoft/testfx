@@ -147,6 +147,10 @@ internal sealed class GitHubActionsAnnotationReporter :
             // Only emit the run-level annotation for a non-test-result failure. Plain "at least one test failed"
             // (and success) are already conveyed by the per-test annotations above, so we would otherwise add a
             // redundant, location-less error on top of the real ones.
+            // NOTE: a hard abort/cancellation (ExitCode.TestSessionAborted) never reaches this handler — the host
+            // swallows the OperationCanceledException before the end-of-session notification completes — so this
+            // path only surfaces session-derived outcomes such as ZeroTests, MinimumExpectedTestsPolicyViolation,
+            // TestAdapterTestSessionFailure and TestExecutionStoppedForMaxFailedTests.
             if (GitHubActionsExitCode.IsTestResultOutcome(exitCode))
             {
                 return;
