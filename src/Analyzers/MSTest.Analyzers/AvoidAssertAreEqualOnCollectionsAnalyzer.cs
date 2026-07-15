@@ -92,10 +92,25 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         // patterns where the caller widened to a non-collection type (e.g. `Assert.AreEqual<object>(arr1, arr2)`
         // or `Assert.AreEqual((object)arr1, (object)arr2)`) which would otherwise silently use reference equality.
         ITypeSymbol comparedType = targetMethod.TypeArguments[0];
-        ITypeSymbol? reportedType = ShouldReport(comparedType, genericEnumerableSymbol, equatableSymbol)
+
+        // Opt out when the compared type declares its own equality (implements IEquatable&lt;itself&gt; or overrides
+        // object.Equals). The author has then deliberately chosen a custom, non-reference equality that Assert.AreEqual
+        // honors via EqualityComparer&lt;T&gt;.Default, so suggesting a sequence/structural comparison would second-guess
+        // a deliberate decision (see issue #9971). Two things are important here:
+        //   * The check must be based on the *selected generic type argument* T, not the argument's runtime collection
+        //     type. Widening to a base type (e.g. Assert.AreEqual&lt;object&gt;(collection, collection)) discards the
+        //     collection's IEquatable&lt;self&gt; and falls back to reference equality — exactly the footgun the rule targets.
+        //   * It must not apply when the caller supplies an explicit comparer, because then EqualityComparer&lt;T&gt;.Default
+        //     (and therefore the type's own equality) is not used at all.
+        if (!HasComparerArgument(invocation) && DeclaresOwnEquality(comparedType, equatableSymbol))
+        {
+            return;
+        }
+
+        ITypeSymbol? reportedType = ShouldReport(comparedType, genericEnumerableSymbol)
             ? comparedType
-            : GetCollectionArgumentType(invocation, firstParameterName, genericEnumerableSymbol, equatableSymbol)
-                ?? GetCollectionArgumentType(invocation, "actual", genericEnumerableSymbol, equatableSymbol);
+            : GetCollectionArgumentType(invocation, firstParameterName, genericEnumerableSymbol)
+                ?? GetCollectionArgumentType(invocation, "actual", genericEnumerableSymbol);
 
         if (reportedType is null)
         {
@@ -107,7 +122,20 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, methodName, comparedTypeDisplay));
     }
 
-    private static ITypeSymbol? GetCollectionArgumentType(IInvocationOperation invocation, string parameterName, INamedTypeSymbol genericEnumerableSymbol, INamedTypeSymbol? equatableSymbol)
+    private static bool HasComparerArgument(IInvocationOperation invocation)
+    {
+        foreach (IArgumentOperation argument in invocation.Arguments)
+        {
+            if (argument.Parameter?.Name == "comparer")
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static ITypeSymbol? GetCollectionArgumentType(IInvocationOperation invocation, string parameterName, INamedTypeSymbol genericEnumerableSymbol)
     {
         IArgumentOperation? argument = invocation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == parameterName);
 
@@ -116,31 +144,74 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         // operand to a non-collection type (or vice versa), so the call-site static type — the result
         // of the user-defined conversion — is what the user wrote and what we should reason about.
         ITypeSymbol? argumentType = argument?.Value.WalkDownBuiltInConversion().Type;
-        return argumentType is not null && ShouldReport(argumentType, genericEnumerableSymbol, equatableSymbol)
+        return argumentType is not null && ShouldReport(argumentType, genericEnumerableSymbol)
             ? argumentType
             : null;
     }
 
-    private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol, INamedTypeSymbol? equatableSymbol)
+    private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol)
         => comparedType.SpecialType != SpecialType.System_String
-            && ImplementsGenericEnumerable(comparedType, genericEnumerableSymbol)
-            // When the compared type declares its own equality (implements IEquatable&lt;itself&gt; or overrides
-            // object.Equals), the author has deliberately opted into a custom, non-reference equality. Assert.AreEqual
-            // then honors that intent via EqualityComparer&lt;T&gt;.Default, so suggesting a sequence/structural comparison
-            // would be second-guessing a deliberate decision (see issue #9971). We only warn on collection types that
-            // fall back to reference equality — the actual footgun this rule exists to catch.
-            && !DeclaresOwnEquality(comparedType, equatableSymbol);
+            && ImplementsGenericEnumerable(comparedType, genericEnumerableSymbol);
 
-    // Type parameters can't declare their own equality; their constraints drive ImplementsGenericEnumerable,
-    // but a bare `where T : IEnumerable<...>` is still the reference-equality footgun we want to flag.
     private static bool DeclaresOwnEquality(ITypeSymbol type, INamedTypeSymbol? equatableSymbol)
-        => type is INamedTypeSymbol namedType
-            && ((equatableSymbol is not null &&
-                    namedType.AllInterfaces.Any(i =>
-                        SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, equatableSymbol) &&
-                        i.TypeArguments.Length == 1 &&
-                        SymbolEqualityComparer.Default.Equals(i.TypeArguments[0], namedType)))
-                || OverridesObjectEquals(namedType));
+    {
+        switch (type)
+        {
+            case INamedTypeSymbol namedType:
+                return ImplementsSelfEquatable(namedType, namedType, equatableSymbol) || OverridesObjectEquals(namedType);
+
+            // EqualityComparer&lt;T&gt;.Default honors an `IEquatable<T>` constraint, and a class constraint that itself
+            // declares its own equality is likewise usable. A bare `where T : IEnumerable<...>` constraint has neither,
+            // so it stays the reference-equality footgun we still want to flag.
+            case ITypeParameterSymbol typeParameter:
+                foreach (ITypeSymbol constraintType in typeParameter.ConstraintTypes)
+                {
+                    if ((constraintType is INamedTypeSymbol namedConstraint && ImplementsSelfEquatable(namedConstraint, typeParameter, equatableSymbol))
+                        || DeclaresOwnEquality(constraintType, equatableSymbol))
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+
+            default:
+                return false;
+        }
+    }
+
+    // Returns true when `candidate` is or implements IEquatable&lt;equalityType&gt;, i.e. the equality contract that
+    // EqualityComparer&lt;equalityType&gt;.Default would dispatch to. `equalityType` is the type whose default comparer
+    // is used (the compared type or the type parameter); `candidate` is the type (or constraint) we inspect.
+    private static bool ImplementsSelfEquatable(INamedTypeSymbol candidate, ITypeSymbol equalityType, INamedTypeSymbol? equatableSymbol)
+    {
+        if (equatableSymbol is null)
+        {
+            return false;
+        }
+
+        // The candidate can be the IEquatable&lt;T&gt; interface itself (e.g. a `where T : IEquatable<T>` constraint)
+        // or a type that lists it among its implemented interfaces (e.g. `class C : IEquatable<C>`).
+        if (IsEquatableOf(candidate, equalityType, equatableSymbol))
+        {
+            return true;
+        }
+
+        foreach (INamedTypeSymbol implemented in candidate.AllInterfaces)
+        {
+            if (IsEquatableOf(implemented, equalityType, equatableSymbol))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsEquatableOf(INamedTypeSymbol type, ITypeSymbol equalityType, INamedTypeSymbol equatableSymbol)
+        => SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, equatableSymbol)
+            && type.TypeArguments.Length == 1
+            && SymbolEqualityComparer.Default.Equals(type.TypeArguments[0], equalityType);
 
     private static bool OverridesObjectEquals(INamedTypeSymbol type)
     {
@@ -149,7 +220,8 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             foreach (ISymbol member in current.GetMembers(nameof(Equals)))
             {
                 if (member is IMethodSymbol { IsOverride: true, Parameters.Length: 1, ReturnType.SpecialType: SpecialType.System_Boolean } method &&
-                    method.Parameters[0].Type.SpecialType == SpecialType.System_Object)
+                    method.Parameters[0].Type.SpecialType == SpecialType.System_Object &&
+                    OverrideRootIsObjectEquals(method))
                 {
                     return true;
                 }
@@ -157,6 +229,21 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         }
 
         return false;
+    }
+
+    // `IsOverride` only proves the method overrides *some* virtual slot. A base class can declare
+    // `new virtual bool Equals(object)`, and a derived override of that member is not an override of
+    // object.Equals — EqualityComparer&lt;T&gt;.Default still dispatches the unchanged object.Equals slot
+    // (reference equality). Follow the override chain to its root and require it to be object.Equals.
+    private static bool OverrideRootIsObjectEquals(IMethodSymbol method)
+    {
+        IMethodSymbol root = method;
+        while (root.OverriddenMethod is { } overridden)
+        {
+            root = overridden;
+        }
+
+        return root.ContainingType?.SpecialType == SpecialType.System_Object;
     }
 
     private static bool HasNullLiteralArgument(IInvocationOperation invocation, string parameterName)
