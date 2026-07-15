@@ -217,14 +217,12 @@ internal sealed partial class TrxReportEngine
     private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, string runName, CancellationToken cancellationToken)
     {
         string outputFull = Path.GetFullPath(outputDirectory);
-        string mergedDeploymentRoot = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(runName);
+        string mergedDeploymentRoot = GetConfinedDeploymentRootLeaf(runName);
         string mergedRootFull = Path.GetFullPath(Path.Combine(outputFull, mergedDeploymentRoot));
 
-        // The sanitizer leaves '.' and '..' intact, so a hostile runName ('..') could point the merged
-        // deployment root outside the output directory. Reject anything that escapes lexically, and also
-        // reject when the deployment root (or any component of it below the output directory) is a
-        // reparse point — a symlink/junction there would resolve writes outside the confined root even
-        // though the lexical check passes.
+        // The confined leaf can no longer be '.' or '..', but keep the defensive lexical/reparse checks:
+        // reject if the deployment root escapes the output directory or any component below it is a
+        // reparse point (a symlink/junction there would resolve writes outside the confined root).
         if (!IsUnderDirectory(mergedRootFull, outputFull) || HasReparsePointComponent(mergedRootFull, outputFull))
         {
             return;
@@ -232,17 +230,33 @@ internal sealed partial class TrxReportEngine
 
         string mergedInRoot = Path.Combine(mergedRootFull, "In");
 
-        // Absolute directories of every input report. A destination folder must never be wholesale-
-        // deleted when it contains one of these, otherwise relocation would remove the originals (which
-        // RFC 018 requires to stay on disk) or a sibling/later input's report and attachments.
-        var protectedInputDirectories = new List<string>(inputPaths.Count);
-        foreach (string inputPath in inputPaths)
+        // Absolute directories that must never be wholesale-deleted by relocation: each input report's
+        // parent directory AND each input's resolved source 'In' root. Deleting a destination that
+        // contains one of these would remove the originals (which RFC 018 requires to stay on disk) or a
+        // sibling/later input's report and attachments.
+        var protectedDirectories = new List<string>(inputPaths.Count * 2);
+        for (int i = 0; i < inputPaths.Count && i < reports.Count; i++)
         {
             try
             {
-                if (Path.GetDirectoryName(Path.GetFullPath(inputPath)) is { Length: > 0 } dir)
+                if (Path.GetDirectoryName(Path.GetFullPath(inputPaths[i])) is not { Length: > 0 } inputDir)
                 {
-                    protectedInputDirectories.Add(dir);
+                    continue;
+                }
+
+                protectedDirectories.Add(inputDir);
+
+                string? deploymentRoot = reports[i].Root is { } r
+                    ? FindChild(r, "TestSettings")?.Elements().FirstOrDefault(e => string.Equals(e.Name.LocalName, "Deployment", StringComparison.Ordinal))?.Attribute("runDeploymentRoot")?.Value
+                    : null;
+
+                if (!RoslynString.IsNullOrEmpty(deploymentRoot))
+                {
+                    string source = Path.GetFullPath(Path.Combine(inputDir, deploymentRoot, "In"));
+                    if (IsUnderDirectory(source, inputDir))
+                    {
+                        protectedDirectories.Add(source);
+                    }
                 }
             }
             catch (Exception ex) when (ex is ArgumentException or NotSupportedException)
@@ -323,7 +337,7 @@ internal sealed partial class TrxReportEngine
                 // If it does (e.g. an input lives under the merged 'In' root), a blanket delete would
                 // remove originals or sibling/later inputs, so we overlay the copy instead (per-file
                 // overwrite; CopyDirectoryRecursive still removes stale destination reparse points).
-                bool destinationContainsInput = ContainsAnyDirectory(destForInput, protectedInputDirectories);
+                bool destinationContainsInput = ContainsAnyDirectory(destForInput, protectedDirectories);
 
                 if (strictOverlap)
                 {
@@ -436,9 +450,17 @@ internal sealed partial class TrxReportEngine
         }
         finally
         {
-            if (Directory.Exists(staging))
+            // Best-effort cleanup: a failure here must not replace an in-flight OperationCanceledException
+            // (or the real merge exception) with an I/O/authorization error.
+            try
             {
-                Directory.Delete(staging, recursive: true);
+                if (Directory.Exists(staging))
+                {
+                    Directory.Delete(staging, recursive: true);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
             }
         }
     }
@@ -653,9 +675,21 @@ internal sealed partial class TrxReportEngine
             NamespaceUri + "TestSettings",
             new XAttribute("name", "default"),
             new XAttribute("id", Guid.NewGuid()));
-        string runDeploymentRoot = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(runName);
-        testSettings.Add(new XElement(NamespaceUri + "Deployment", new XAttribute("runDeploymentRoot", runDeploymentRoot)));
+        testSettings.Add(new XElement(NamespaceUri + "Deployment", new XAttribute("runDeploymentRoot", GetConfinedDeploymentRootLeaf(runName))));
         return testSettings;
+    }
+
+    /// <summary>
+    /// Produces a single, confined deployment-root leaf from <paramref name="runName"/> for use both in
+    /// the emitted <c>TestSettings/Deployment/@runDeploymentRoot</c> and in attachment relocation, so the
+    /// two always agree and neither can escape the output directory. The file-name sanitizer already
+    /// replaces path separators and reserved names, so the only residual escape values are <c>.</c> and
+    /// <c>..</c>, which are prefixed to keep the leaf confined.
+    /// </summary>
+    private static string GetConfinedDeploymentRootLeaf(string runName)
+    {
+        string leaf = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(runName);
+        return leaf is "." or ".." ? "_" + leaf : leaf;
     }
 
     private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums, XElement runInfos, XElement collectorDataEntries)

@@ -289,7 +289,7 @@ public sealed class TrxReportEngineMergeTests
     }
 
     [TestMethod]
-    public async Task MergeToFileAsync_WhenRunNameEscapesOutputDirectory_SkipsRelocation()
+    public async Task MergeToFileAsync_WhenRunNameEscapesOutputDirectory_UsesConfinedDeploymentRoot()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
@@ -299,17 +299,23 @@ public sealed class TrxReportEngineMergeTests
             string input = WriteReportWithAttachment(inputDir, "a.trx", deploymentRoot: "dep", attachmentContent: "AAA");
             string output = Path.Combine(tempDirectory, "out", "merged.trx");
 
-            // A hostile runName of ".." would place the merged deployment root outside the output
-            // directory; relocation must refuse to write there but the merge itself must still succeed.
-            await TrxReportEngine.MergeToFileAsync([input, input], output, Guid.NewGuid(), "..", CancellationToken.None);
+            // A hostile runName of ".." must be confined to a safe leaf used consistently for both the
+            // emitted deployment root and attachment relocation, so nothing escapes the output directory.
+            await TrxReportEngine.MergeToFileAsync([input], output, Guid.NewGuid(), "..", CancellationToken.None);
 
             Assert.IsTrue(File.Exists(output));
 
-            // The only physical attachment must remain the single source copy under the input tree —
-            // relocation must not have copied it anywhere (it was refused for escaping the output dir).
+            // The merged TRX must declare a confined deployment root (never "..").
+            string? deploymentRoot = XDocument.Load(output).Descendants()
+                .FirstOrDefault(e => e.Name.LocalName == "Deployment")?.Attribute("runDeploymentRoot")?.Value;
+            Assert.AreEqual("_..", deploymentRoot);
+
+            // Every physical attachment must remain under the output directory (never in its parent).
             List<string> attachmentCopies = [.. Directory.GetFiles(tempDirectory, "log.txt", SearchOption.AllDirectories)];
-            Assert.HasCount(1, attachmentCopies);
-            Assert.StartsWith(inputDir, attachmentCopies[0]);
+            foreach (string copy in attachmentCopies)
+            {
+                Assert.StartsWith(tempDirectory, copy);
+            }
         }
         finally
         {

@@ -175,7 +175,7 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 break;
 
             case SessionFileArtifact sessionFileArtifact:
-                var fileArtifactMessages = CreateFileArtifactMessages(_executionId, sessionFileArtifact);
+                FileArtifactMessages fileArtifactMessages = CreateFileArtifactMessages(_executionId, sessionFileArtifact);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;

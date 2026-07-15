@@ -17,7 +17,9 @@ namespace Microsoft.Testing.Extensions.CtrfReport;
 /// <list type="bullet">
 ///   <item><description><c>results.tests[]</c> arrays are concatenated as-is.</description></item>
 ///   <item><description><c>results.summary</c> counters are re-derived by counting the merged <c>tests[]</c> (so <c>summary.tests</c> always matches the array length); <c>start</c>/<c>stop</c> use the earliest/latest across inputs, <c>duration</c> is the resulting span.</description></item>
-///   <item><description><c>reportFormat</c>, <c>specVersion</c>, <c>tool</c> and <c>environment</c> are taken from the first report; <c>reportId</c> is freshly generated.</description></item>
+///   <item><description><c>reportFormat</c> and <c>specVersion</c> are taken from the first report; <c>reportId</c> is freshly generated.</description></item>
+///   <item><description><c>tool</c> keeps a concrete identity only when every input reported the exact same tool object; otherwise (inputs disagree or any input omits it) a neutral merger identity is used, so one framework is not attributed to another's tests.</description></item>
+///   <item><description><c>environment</c> keeps the first report's shared fields, but module-specific values under <c>extra</c> (<c>testApplication</c>, <c>exitCode</c>) are dropped rather than presented as describing all merged modules.</description></item>
 /// </list>
 /// </remarks>
 internal static class CtrfReportMerger

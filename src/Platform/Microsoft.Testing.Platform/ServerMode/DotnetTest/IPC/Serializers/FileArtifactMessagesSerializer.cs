@@ -46,6 +46,10 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
         |---FileArtifactMessageList[0].SessionUid Id---| (2 bytes)
         |---FileArtifactMessageList[0].SessionUid Size---| (4 bytes)
         |---FileArtifactMessageList[0].SessionUid Value---| (n bytes)
+
+        |---FileArtifactMessageList[0].Kind Id---| (2 bytes)
+        |---FileArtifactMessageList[0].Kind Size---| (4 bytes)
+        |---FileArtifactMessageList[0].Kind Value---| (n bytes)
     */
 
 internal sealed class FileArtifactMessagesSerializer : NamedPipeSerializer<FileArtifactMessages>, INamedPipeSerializer
