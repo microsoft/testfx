@@ -53,11 +53,14 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
                 return;
             }
 
-            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, genericEnumerableSymbol), OperationKind.Invocation);
+            // May be null on very old target frameworks; the equality-opt-out check simply becomes a no-op then.
+            INamedTypeSymbol? equatableSymbol = compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIEquatable1);
+
+            context.RegisterOperationAction(context => AnalyzeInvocation(context, assertSymbol, genericEnumerableSymbol, equatableSymbol), OperationKind.Invocation);
         });
     }
 
-    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol genericEnumerableSymbol)
+    private static void AnalyzeInvocation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, INamedTypeSymbol genericEnumerableSymbol, INamedTypeSymbol? equatableSymbol)
     {
         var invocation = (IInvocationOperation)context.Operation;
         IMethodSymbol targetMethod = invocation.TargetMethod;
@@ -89,10 +92,10 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         // patterns where the caller widened to a non-collection type (e.g. `Assert.AreEqual<object>(arr1, arr2)`
         // or `Assert.AreEqual((object)arr1, (object)arr2)`) which would otherwise silently use reference equality.
         ITypeSymbol comparedType = targetMethod.TypeArguments[0];
-        ITypeSymbol? reportedType = ShouldReport(comparedType, genericEnumerableSymbol)
+        ITypeSymbol? reportedType = ShouldReport(comparedType, genericEnumerableSymbol, equatableSymbol)
             ? comparedType
-            : GetCollectionArgumentType(invocation, firstParameterName, genericEnumerableSymbol)
-                ?? GetCollectionArgumentType(invocation, "actual", genericEnumerableSymbol);
+            : GetCollectionArgumentType(invocation, firstParameterName, genericEnumerableSymbol, equatableSymbol)
+                ?? GetCollectionArgumentType(invocation, "actual", genericEnumerableSymbol, equatableSymbol);
 
         if (reportedType is null)
         {
@@ -104,7 +107,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, methodName, comparedTypeDisplay));
     }
 
-    private static ITypeSymbol? GetCollectionArgumentType(IInvocationOperation invocation, string parameterName, INamedTypeSymbol genericEnumerableSymbol)
+    private static ITypeSymbol? GetCollectionArgumentType(IInvocationOperation invocation, string parameterName, INamedTypeSymbol genericEnumerableSymbol, INamedTypeSymbol? equatableSymbol)
     {
         IArgumentOperation? argument = invocation.Arguments.FirstOrDefault(arg => arg.Parameter?.Name == parameterName);
 
@@ -113,14 +116,48 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         // operand to a non-collection type (or vice versa), so the call-site static type — the result
         // of the user-defined conversion — is what the user wrote and what we should reason about.
         ITypeSymbol? argumentType = argument?.Value.WalkDownBuiltInConversion().Type;
-        return argumentType is not null && ShouldReport(argumentType, genericEnumerableSymbol)
+        return argumentType is not null && ShouldReport(argumentType, genericEnumerableSymbol, equatableSymbol)
             ? argumentType
             : null;
     }
 
-    private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol)
+    private static bool ShouldReport(ITypeSymbol comparedType, INamedTypeSymbol genericEnumerableSymbol, INamedTypeSymbol? equatableSymbol)
         => comparedType.SpecialType != SpecialType.System_String
-            && ImplementsGenericEnumerable(comparedType, genericEnumerableSymbol);
+            && ImplementsGenericEnumerable(comparedType, genericEnumerableSymbol)
+            // When the compared type declares its own equality (implements IEquatable&lt;itself&gt; or overrides
+            // object.Equals), the author has deliberately opted into a custom, non-reference equality. Assert.AreEqual
+            // then honors that intent via EqualityComparer&lt;T&gt;.Default, so suggesting a sequence/structural comparison
+            // would be second-guessing a deliberate decision (see issue #9971). We only warn on collection types that
+            // fall back to reference equality — the actual footgun this rule exists to catch.
+            && !DeclaresOwnEquality(comparedType, equatableSymbol);
+
+    // Type parameters can't declare their own equality; their constraints drive ImplementsGenericEnumerable,
+    // but a bare `where T : IEnumerable<...>` is still the reference-equality footgun we want to flag.
+    private static bool DeclaresOwnEquality(ITypeSymbol type, INamedTypeSymbol? equatableSymbol)
+        => type is INamedTypeSymbol namedType
+            && ((equatableSymbol is not null &&
+                    namedType.AllInterfaces.Any(i =>
+                        SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, equatableSymbol) &&
+                        i.TypeArguments.Length == 1 &&
+                        SymbolEqualityComparer.Default.Equals(i.TypeArguments[0], namedType)))
+                || OverridesObjectEquals(namedType));
+
+    private static bool OverridesObjectEquals(INamedTypeSymbol type)
+    {
+        for (INamedTypeSymbol? current = type; current is not null && current.SpecialType != SpecialType.System_Object; current = current.BaseType)
+        {
+            foreach (ISymbol member in current.GetMembers(nameof(Equals)))
+            {
+                if (member is IMethodSymbol { IsOverride: true, Parameters.Length: 1, ReturnType.SpecialType: SpecialType.System_Boolean } method &&
+                    method.Parameters[0].Type.SpecialType == SpecialType.System_Object)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
     private static bool HasNullLiteralArgument(IInvocationOperation invocation, string parameterName)
     {
