@@ -43,6 +43,14 @@ public sealed class GitHubActionsExitCodeTests
     }
 
     [TestMethod]
+    public void GetReason_ForUnknownCode_ReturnsGenericNonSuccessReason()
+    {
+        // 255 is outside the documented ExitCode set: it must not throw and must fall back to the generic reason.
+        string reason = GitHubActionsExitCode.GetReason(255);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(reason));
+    }
+
+    [TestMethod]
     public void GetReason_ForKnownCode_MentionsRelevantOption()
     {
         Assert.Contains("--minimum-expected-tests", GitHubActionsExitCode.GetReason(9));

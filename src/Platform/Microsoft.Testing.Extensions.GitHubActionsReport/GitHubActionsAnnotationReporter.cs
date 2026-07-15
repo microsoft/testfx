@@ -129,7 +129,7 @@ internal sealed class GitHubActionsAnnotationReporter :
         }
     }
 
-    public Task OnTestSessionStartingAsync(ITestSessionContext sessionUid) => Task.CompletedTask;
+    public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
 
     public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
     {
