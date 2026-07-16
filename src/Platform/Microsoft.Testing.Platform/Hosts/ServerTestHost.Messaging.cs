@@ -62,16 +62,28 @@ internal sealed partial class ServerTestHost
             // cancellation/shutdown noise above Trace.
             if (ex is OperationCanceledException)
             {
-                await _logger.LogTraceAsync($"Suppressed cancellation while sending '{method}': {ex}").ConfigureAwait(false);
+                await TryLogAsync(LogLevel.Trace, $"Suppressed cancellation while sending '{method}': {ex}").ConfigureAwait(false);
             }
             else
             {
-                await _logger.LogDebugAsync($"Suppressed failure while sending '{method}': {ex}").ConfigureAwait(false);
+                await TryLogAsync(LogLevel.Debug, $"Suppressed failure while sending '{method}': {ex}").ConfigureAwait(false);
             }
         }
         finally
         {
             _requestCounter.Signal();
+        }
+    }
+
+    private async Task TryLogAsync(LogLevel logLevel, string message)
+    {
+        try
+        {
+            await _logger.LogAsync(logLevel, message, null, LoggingExtensions.Formatter).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Diagnostics emitted from best-effort paths must not change their suppression behavior.
         }
     }
 

@@ -89,7 +89,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             // There is no other thread to surface this to; the test run itself should
             // still be allowed to complete. This is unexpected (not a known shutdown/disposal race), so
             // surface it at Debug for diagnosability without being noisy by default.
-            _logger.LogDebug($"Unexpected exception while rendering test progress; erasing progress and stopping the refresher thread: {ex}");
+            TryLogDebug($"Unexpected exception while rendering test progress; erasing progress and stopping the refresher thread: {ex}");
         }
 
         try
@@ -105,7 +105,19 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         catch (Exception ex)
         {
             // Unexpected failure while erasing progress during teardown; surface it at Debug for diagnosability.
-            _logger.LogDebug($"Unexpected exception while erasing test progress during teardown: {ex}");
+            TryLogDebug($"Unexpected exception while erasing test progress during teardown: {ex}");
+        }
+    }
+
+    private void TryLogDebug(string message)
+    {
+        try
+        {
+            _logger.LogDebug(message);
+        }
+        catch (Exception)
+        {
+            // Refresher-thread diagnostics must not escape as unhandled exceptions or skip terminal cleanup.
         }
     }
 

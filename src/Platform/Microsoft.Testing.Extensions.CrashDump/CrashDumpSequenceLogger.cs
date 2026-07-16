@@ -129,7 +129,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             {
                 // Reporting a best-effort diagnostic must not turn its original file failure into a
                 // session-start failure when the output transport is unavailable or being cancelled.
-                await _logger.LogWarningAsync($"Failed to display the crash sequence file warning for '{_sequenceFilePath}': {outputException}").ConfigureAwait(false);
+                await TryLogWarningAsync($"Failed to display the crash sequence file warning for '{_sequenceFilePath}': {outputException}").ConfigureAwait(false);
             }
             finally
             {
@@ -147,7 +147,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
                     }
                     catch (Exception cleanupException) when (IsExpectedFileException(cleanupException))
                     {
-                        await _logger.LogWarningAsync($"Failed to close crash sequence file '{_sequenceFilePath}' after initialization failed: {cleanupException}").ConfigureAwait(false);
+                        await TryLogWarningAsync($"Failed to close crash sequence file '{_sequenceFilePath}' after initialization failed: {cleanupException}").ConfigureAwait(false);
                     }
                 }
             }
@@ -216,7 +216,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
                 // output for a long test run hitting a persistent I/O problem (e.g. a full disk). The
                 // full exception (ex.ToString()) is preserved so the root cause is not lost even
                 // though only the log file captures it.
-                await _logger.LogWarningAsync(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileWriteError, _sequenceFilePath, ex)).ConfigureAwait(false);
+                await TryLogWarningAsync(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileWriteError, _sequenceFilePath, ex)).ConfigureAwait(false);
             }
         }
         finally
@@ -276,6 +276,18 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             or PathTooLongException
             or DirectoryNotFoundException
             or System.Security.SecurityException;
+
+    private async Task TryLogWarningAsync(string message)
+    {
+        try
+        {
+            await _logger.LogWarningAsync(message).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Fallback diagnostics must not make this best-effort extension fail the test session.
+        }
+    }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()

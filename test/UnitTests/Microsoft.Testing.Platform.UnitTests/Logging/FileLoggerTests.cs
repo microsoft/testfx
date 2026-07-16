@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
-
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 
@@ -451,8 +449,8 @@ public sealed class FileLoggerTests : IDisposable
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
 
-        var consoleMessages = new ConcurrentQueue<string>();
-        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>())).Callback<string>(consoleMessages.Enqueue);
+        var consoleMessage = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>())).Callback<string>(message => consoleMessage.TrySetResult(message));
 
         // Make the underlying stream throw once the consumer loop tries to write to it, simulating a real I/O
         // failure (e.g. disk full / access denied) surfacing from inside the write loop.
@@ -469,16 +467,10 @@ public sealed class FileLoggerTests : IDisposable
 
         fileLogger.Log(LogLevel.Trace, Message, null, Formatter, Category);
 
-        // Poll until the write loop has reported the failure (bounded so a regression fails fast instead of hanging).
-        DateTime deadline = DateTime.UtcNow.AddSeconds(5);
-        while (consoleMessages.IsEmpty && DateTime.UtcNow < deadline)
-        {
-            await Task.Delay(10, TestContext.CancellationToken);
-        }
-
-        Assert.IsTrue(consoleMessages.TryDequeue(out string? message), "The write-loop failure must be reported.");
-        Assert.IsTrue(consoleMessages.IsEmpty, "The write-loop failure must be reported exactly once.");
-        Assert.IsNotNull(message);
+        Task completedTask = await Task.WhenAny(consoleMessage.Task, Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken));
+        Assert.AreSame(consoleMessage.Task, completedTask, "The write-loop failure must be reported before the timeout.");
+        string message = await consoleMessage.Task;
+        _mockConsole.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Once);
         Assert.Contains(FileName, message, $"Expected the log file name '{FileName}' in: {message}");
         Assert.Contains("may be incomplete", message, $"Expected an 'incomplete' warning in: {message}");
         Assert.Contains(nameof(NotSupportedException), message, $"Expected the full exception type/detail (not just Message) in: {message}");

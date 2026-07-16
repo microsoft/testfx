@@ -95,8 +95,20 @@ internal sealed class TcpMessageHandler(
                      InnerException: SocketException { SocketErrorCode: SocketError.ConnectionReset }
                  })
         {
-            await _logger.LogDebugAsync($"TCP connection reset while reading; treating as client disconnect: {ex}").ConfigureAwait(false);
+            await TryLogDebugAsync($"TCP connection reset while reading; treating as client disconnect: {ex}").ConfigureAwait(false);
             return null;
+        }
+    }
+
+    private async Task TryLogDebugAsync(string message)
+    {
+        try
+        {
+            await _logger.LogDebugAsync(message).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // A graceful disconnect must remain graceful even when a logging provider fails.
         }
     }
 

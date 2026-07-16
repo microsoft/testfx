@@ -86,6 +86,13 @@ public sealed class CrashDumpSequenceLoggerTests
             _mockOutputDevice
                 .Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new InvalidOperationException("Output transport unavailable."));
+            _mockLogger
+                .Setup(x => x.LogAsync(
+                    LogLevel.Warning,
+                    It.IsAny<string>(),
+                    null,
+                    It.IsAny<Func<string, Exception?, string>>()))
+                .ThrowsAsync(new IOException("Logging sink unavailable."));
 
             CrashDumpSequenceLogger logger = CreateLogger();
             Assert.IsTrue(await logger.IsEnabledAsync());

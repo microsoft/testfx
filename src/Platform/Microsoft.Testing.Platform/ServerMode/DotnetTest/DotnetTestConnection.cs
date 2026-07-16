@@ -273,11 +273,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         {
             // Best-effort: failing to establish the control channel degrades to "no server-initiated cancel"
             // rather than affecting the test run.
-            await _logger.LogDebugAsync($"Failed to connect to the server control pipe '{_serverControlPipeName}'; the server-initiated cancel feature will stay disabled for this run: {ex}").ConfigureAwait(false);
+            await TryLogAsync(LogLevel.Debug, $"Failed to connect to the server control pipe '{_serverControlPipeName}'; the server-initiated cancel feature will stay disabled for this run: {ex}").ConfigureAwait(false);
             return;
         }
 
-        await _logger.LogDebugAsync($"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
+        await TryLogAsync(LogLevel.Debug, $"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
 
         await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
     }
@@ -304,7 +304,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         {
             // We are shutting down (dispose or app cancellation) - nothing to do. Expected shutdown, so this stays
             // at Trace to avoid noise.
-            await _logger.LogTraceAsync($"Server control pipe '{_serverControlPipeName}' listener stopped: shutdown requested.").ConfigureAwait(false);
+            await TryLogAsync(LogLevel.Trace, $"Server control pipe '{_serverControlPipeName}' listener stopped: shutdown requested.").ConfigureAwait(false);
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
@@ -312,14 +312,14 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             // cooperative cancel so we still try to wind down and report whatever completed. NOTE: this makes it a
             // protocol requirement that the SDK keep the control pipe open until the data session ends - an early
             // close for any reason is interpreted here as a cancel.
-            await _logger.LogDebugAsync($"Server control pipe '{_serverControlPipeName}' dropped while the session was live; treating it as a cooperative cancel: {ex}").ConfigureAwait(false);
             await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+            await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' dropped while the session was live; treating it as a cooperative cancel: {ex}").ConfigureAwait(false);
         }
         catch (Exception ex)
         {
             // Cancellation raced with a pipe error (e.g. the stream was disposed during teardown); ignore. This is
             // an expected shutdown race, so it stays at Trace.
-            await _logger.LogTraceAsync($"Server control pipe '{_serverControlPipeName}' listener observed a race between shutdown and a pipe error during teardown: {ex}").ConfigureAwait(false);
+            await TryLogAsync(LogLevel.Trace, $"Server control pipe '{_serverControlPipeName}' listener observed a race between shutdown and a pipe error during teardown: {ex}").ConfigureAwait(false);
         }
     }
 
@@ -358,7 +358,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             Task completed = await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
             if (completed != listenerTask)
             {
-                await _logger.LogDebugAsync($"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
+                await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
             }
         }
     }
@@ -377,17 +377,41 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 // Bounded wait: the cancel + dispose above unblock the parked read quickly. Never hang exit.
                 if (!listenerTask.Wait(TimeSpan.FromSeconds(5)))
                 {
-                    _logger.LogDebug($"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during dispose; continuing without waiting further.");
+                    TryLog(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during dispose; continuing without waiting further.");
                 }
             }
             catch (Exception ex)
             {
                 // Best-effort shutdown.
-                _logger.LogDebug($"Ignoring failure while waiting for the server control pipe '{_serverControlPipeName}' listener to finish during dispose: {ex}");
+                TryLog(LogLevel.Debug, $"Ignoring failure while waiting for the server control pipe '{_serverControlPipeName}' listener to finish during dispose: {ex}");
             }
         }
 
         _serverControlListenerCts?.Dispose();
         _dotnetTestPipeClient?.Dispose();
+    }
+
+    private async Task TryLogAsync(LogLevel logLevel, string message)
+    {
+        try
+        {
+            await _logger.LogAsync(logLevel, message, null, LoggingExtensions.Formatter).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Control-channel diagnostics must never alter connection, cancellation, or shutdown behavior.
+        }
+    }
+
+    private void TryLog(LogLevel logLevel, string message)
+    {
+        try
+        {
+            _logger.Log(logLevel, message, null, LoggingExtensions.Formatter);
+        }
+        catch (Exception)
+        {
+            // Dispose-time diagnostics are best-effort and must not make disposal fail.
+        }
     }
 }
