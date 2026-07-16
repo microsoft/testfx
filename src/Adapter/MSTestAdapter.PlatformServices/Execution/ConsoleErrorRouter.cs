@@ -7,8 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed class ConsoleErrorRouter : ConsoleRouter
 {
-    public ConsoleErrorRouter(TextWriter originalConsoleErr)
-        : base(originalConsoleErr)
+    public ConsoleErrorRouter(TextWriter originalConsoleErr, bool echoLive)
+        : base(originalConsoleErr, echoLive)
     {
     }
 

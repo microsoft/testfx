@@ -1,6 +1,19 @@
 #nullable enable
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRouter.ConsoleErrorRouter(System.IO.TextWriter! originalConsoleErr) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRouter.ConsoleErrorRouter(System.IO.TextWriter! originalConsoleErr, bool echoLive) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut, bool echoLive) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole, bool echoLive) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter(System.IO.TextWriter? liveEchoTarget) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.OutputCaptureMode.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.get -> System.Guid?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Live = 2 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.None = 0 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Result = 1 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.SetParameterMetadataScanCallbackForTesting(System.Action? callback) -> void

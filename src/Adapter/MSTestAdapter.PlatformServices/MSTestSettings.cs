@@ -31,7 +31,7 @@ internal sealed partial class MSTestSettings
     /// </summary>
     public MSTestSettings()
     {
-        CaptureDebugTraces = true;
+        OutputCaptureMode = TestOutputCaptureMode.Result;
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
         TreatDiscoveryWarningsAsErrors = true;
@@ -78,7 +78,12 @@ internal sealed partial class MSTestSettings
     /// <summary>
     /// Gets a value indicating whether capture debug traces.
     /// </summary>
-    public bool CaptureDebugTraces { get; private set; }
+    public bool CaptureDebugTraces => OutputCaptureMode != TestOutputCaptureMode.None;
+
+    /// <summary>
+    /// Gets a value indicating how Console/Debug/Trace output produced during test execution is handled.
+    /// </summary>
+    internal TestOutputCaptureMode OutputCaptureMode { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.

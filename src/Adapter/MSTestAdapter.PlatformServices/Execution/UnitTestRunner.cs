@@ -71,11 +71,15 @@ internal sealed partial class UnitTestRunner
 
         Logger.OnLogMessage += message => (TestContext.Current as TestContextImplementation)?.WriteConsoleOut(message);
 
-        if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
+        TestOutputCaptureMode outputCaptureMode = MSTestSettings.CurrentSettings.OutputCaptureMode;
+        if (outputCaptureMode != TestOutputCaptureMode.None)
         {
-            Console.SetOut(new ConsoleOutRouter(Console.Out));
-            Console.SetError(new ConsoleErrorRouter(Console.Error));
-            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter()));
+            bool echoLive = outputCaptureMode == TestOutputCaptureMode.Live;
+            TextWriter originalOut = Console.Out;
+            TextWriter originalError = Console.Error;
+            Console.SetOut(new ConsoleOutRouter(originalOut, echoLive));
+            Console.SetError(new ConsoleErrorRouter(originalError, echoLive));
+            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(echoLive ? originalOut : null)));
         }
 
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();

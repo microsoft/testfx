@@ -7,8 +7,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed class ConsoleOutRouter : ConsoleRouter
 {
-    public ConsoleOutRouter(TextWriter originalConsoleOut)
-        : base(originalConsoleOut)
+    public ConsoleOutRouter(TextWriter originalConsoleOut, bool echoLive)
+        : base(originalConsoleOut, echoLive)
     {
     }
 

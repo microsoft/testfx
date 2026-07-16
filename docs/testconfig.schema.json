@@ -156,8 +156,11 @@
           "additionalProperties": false,
           "properties": {
             "captureTrace": {
-              "type": "boolean",
-              "description": "When true, captures Debug and Trace output during test execution. Defaults to true."
+              "description": "Controls how Console, Debug and Trace output produced during test execution is handled. Accepts a boolean (true = 'Result', false = 'None') for backward compatibility, or one of the modes: 'None' (discard), 'Result' (capture into the test result, the default), 'Live' (capture into the test result and additionally echo it live to the console as the test runs, similar to xUnit's showLiveOutput). Defaults to 'Result'.",
+              "oneOf": [
+                { "type": "boolean" },
+                { "type": "string", "enum": ["None", "Result", "Live"] }
+              ]
             }
           }
         },

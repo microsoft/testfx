@@ -200,6 +200,73 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.CaptureDebugTraces.Should().BeFalse();
     }
 
+    public void OutputCaptureModeShouldDefaultToResult()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldMapLegacyBooleanTrueToResult()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>True</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void OutputCaptureModeShouldMapLegacyBooleanFalseToNone()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>False</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.None);
+        adapterSettings.CaptureDebugTraces.Should().BeFalse();
+    }
+
+    public void OutputCaptureModeShouldBeConsumedFromRunSettingsWhenSpecifiedAsEnum()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>Live</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Live);
+        adapterSettings.CaptureDebugTraces.Should().BeTrue();
+    }
+
     public void TestTimeoutShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingsXml =
@@ -1280,6 +1347,50 @@ public class MSTestSettingsTests : TestContainer
         settings.DisableParallelization.Should().BeFalse();
         settings.ParallelizationWorkers.Should().Be(4);
         settings.ParallelizationScope.Should().Be(ExecutionScope.ClassLevel);
+    }
+
+    public void ConfigJson_OutputCaptureMode_AcceptsEnumValue()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "Live" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Live);
+        settings.CaptureDebugTraces.Should().BeTrue();
+    }
+
+    public void ConfigJson_OutputCaptureMode_MapsLegacyBooleanFalseToNone()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "false" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.None);
+        settings.CaptureDebugTraces.Should().BeFalse();
     }
 
     public void ConfigJson_WithDeprecatedFlatOrderTestsByNameInClassKey_ValueIsSetAndWarningIsEmitted()
