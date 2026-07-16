@@ -176,6 +176,13 @@ jobs:
             mkdir -p /tmp/ax
             curl -sSL --retry 3 --max-filesize "${MAX_ZIP_BYTES}" "${url}" -o /tmp/a.zip \
               || { echo "::warning::Skipping ${name}: download failed or exceeded ${MAX_ZIP_BYTES} bytes."; continue; }
+            # `--max-filesize` only aborts when the server sends a Content-Length;
+            # enforce the cap again post-download via stat in case the header is
+            # absent or stripped by a proxy.
+            ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
+            if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
+              echo "::warning::Skipping ${name}: downloaded ${ZIP_BYTES} bytes exceeds ${MAX_ZIP_BYTES}."; continue
+            fi
             UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
             # zip / unexpected `unzip -l` output), we can't verify it — skip the

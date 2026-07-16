@@ -1,12 +1,12 @@
 ---
 # Shared body for the build-failure-analysis workflows.
 #
-# Imported by build-failure-analysis.md (pull_request trigger) and
-# build-failure-analysis-command.md (slash command). Keeps the prompt that
-# delegates to the build-failure-analyst agent in one place. Per-trigger
-# wiring (steps, env, mcp-servers, permissions) lives in each caller because
-# gh-aw merges those fields from imports but each main workflow must still
-# re-declare its top-level permissions.
+# Imported by build-failure-analysis.md (check_run + workflow_dispatch
+# triggers) and build-failure-analysis-command.md (slash command). Keeps the
+# prompt that delegates to the build-failure-analyst agent in one place.
+# Per-trigger wiring (steps, env, mcp-servers, permissions) lives in each
+# caller because gh-aw merges those fields from imports but each main workflow
+# must still re-declare its top-level permissions.
 
 description: "Shared body for build-failure-analysis workflows"
 ---
