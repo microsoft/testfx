@@ -191,16 +191,33 @@ jobs:
             echo "::warning::ADO build ${BUILD_ID} sourceBranch '${SRC_BRANCH}' does not match PR #${PR_NUMBER} (refs/pull/${PR_NUMBER}/merge); refusing to avoid posting to the wrong PR."; emit_none
           fi
 
+          # Anchor the head SHA to the revision THIS build actually analyzed
+          # (`triggerInfo["pr.sourceSha"]`), not the PR's current head. The
+          # `refs/pull/<n>/merge` branch is stable, so a supplied/parsed build
+          # id may correspond to an older push; deriving the SHA from the build
+          # keeps permalinks and inline-suggestion positions consistent with
+          # the binlog being analyzed rather than pairing stale errors with
+          # newer source.
+          BUILD_PR_SHA=$(printf '%s' "${build_json}" | jq -r '.triggerInfo["pr.sourceSha"] // empty')
+          if [ -n "${BUILD_PR_SHA}" ]; then
+            HEAD_SHA="${BUILD_PR_SHA}"
+          fi
+          echo "Analyzing build ${BUILD_ID} at PR head revision '${HEAD_SHA}'."
+
           # --- 5. Download every Logs_Build_* artifact and extract binlogs ---
           artifacts_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1")
           names=$(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
           [ -z "${names}" ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
           # Guards for untrusted PR-produced archives: cap the compressed
-          # download and the reported uncompressed size, and bound extraction
-          # time, so a zip bomb / oversized artifact can't exhaust the runner.
-          MAX_ZIP_BYTES=524288000      # 500 MB compressed per artifact
-          MAX_UNZIP_BYTES=2147483648   # 2 GB uncompressed per artifact
+          # download and the reported uncompressed size per artifact, bound
+          # extraction time, AND enforce a cumulative uncompressed budget across
+          # all legs so many individually-small artifacts can't collectively
+          # exhaust the runner's disk.
+          MAX_ZIP_BYTES=524288000       # 500 MB compressed per artifact
+          MAX_UNZIP_BYTES=2147483648    # 2 GB uncompressed per artifact
+          MAX_TOTAL_BYTES=4294967296    # 4 GB uncompressed across all artifacts
+          TOTAL_BYTES=0
           mkdir -p /tmp/binlogs
           count=0
           for name in ${names}; do
@@ -220,6 +237,10 @@ jobs:
             if [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
             fi
+            if [ $((TOTAL_BYTES + UNCOMP)) -gt "${MAX_TOTAL_BYTES}" ]; then
+              echo "::warning::Cumulative uncompressed budget ${MAX_TOTAL_BYTES} reached at ${name}; stopping extraction."; break
+            fi
+            TOTAL_BYTES=$((TOTAL_BYTES + UNCOMP))
             # Extract ONLY `*.binlog` entries with paths junked (`-j`) under a
             # timeout so a malicious/relative entry (zip-slip) can't escape the
             # destination and extraction can't run unbounded.

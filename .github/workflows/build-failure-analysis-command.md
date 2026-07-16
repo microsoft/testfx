@@ -103,22 +103,37 @@ jobs:
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, rel/*); skipping."; emit_none ;;
           esac
 
-          # --- Find the PR's most recent COMPLETED microsoft.testfx build (merge ref) ---
-          # Fetch the latest completed build regardless of result so we can
-          # detect a PR that has since gone green (or been force-pushed to a
-          # passing state): if the newest completed build did not fail, there
-          # is nothing current to analyse and re-posting a stale failure would
-          # pair old binlog errors with current source / permalinks.
+          # --- Find the PR's most recent microsoft.testfx build (merge ref) ---
+          # Query the newest build REGARDLESS of status (queue-time desc). If
+          # the newest build is still queued/running — e.g. right after a
+          # force-push — skip: analysing an older completed failure now would
+          # pair a stale binlog with the PR's current head. Only proceed when
+          # the newest build is completed AND failed. The head SHA is then
+          # anchored to that build's own revision (below), so links/suggestions
+          # always match the analysed binlog.
           builds_json=$(curl -sSL --retry 3 \
-            "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&statusFilter=completed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1")
+            "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&queryOrder=queueTimeDescending&\$top=1&api-version=7.1")
           BUILD_ID=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].id // empty')
+          BUILD_STATUS=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].status // empty')
           BUILD_RESULT=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].result // empty')
-          echo "Latest completed microsoft.testfx build for PR #${PR_NUMBER}: id='${BUILD_ID}' result='${BUILD_RESULT}'"
-          [ -z "${BUILD_ID}" ] && { echo "::warning::No completed microsoft.testfx build found for PR #${PR_NUMBER}."; emit_none; }
-          if [ "${BUILD_RESULT}" != "failed" ]; then
-            echo "::warning::PR #${PR_NUMBER}'s latest microsoft.testfx build (${BUILD_ID}) result is '${BUILD_RESULT}', not failed — the failure looks resolved; nothing to analyse."
+          echo "Newest microsoft.testfx build for PR #${PR_NUMBER}: id='${BUILD_ID}' status='${BUILD_STATUS}' result='${BUILD_RESULT}'"
+          [ -z "${BUILD_ID}" ] && { echo "::warning::No microsoft.testfx build found for PR #${PR_NUMBER}."; emit_none; }
+          if [ "${BUILD_STATUS}" != "completed" ]; then
+            echo "::warning::PR #${PR_NUMBER}'s newest microsoft.testfx build (${BUILD_ID}) is still '${BUILD_STATUS}'; wait for it to finish before analysing."
             emit_none
           fi
+          if [ "${BUILD_RESULT}" != "failed" ]; then
+            echo "::warning::PR #${PR_NUMBER}'s newest microsoft.testfx build (${BUILD_ID}) result is '${BUILD_RESULT}', not failed — the failure looks resolved; nothing to analyse."
+            emit_none
+          fi
+
+          # Anchor the head SHA to the revision this build analyzed
+          # (`triggerInfo["pr.sourceSha"]`) rather than the PR's current head,
+          # so permalinks / inline suggestions match the binlog exactly.
+          build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
+          BUILD_PR_SHA=$(printf '%s' "${build_json}" | jq -r '.triggerInfo["pr.sourceSha"] // empty')
+          [ -n "${BUILD_PR_SHA}" ] && HEAD_SHA="${BUILD_PR_SHA}"
+          echo "Analyzing build ${BUILD_ID} at PR head revision '${HEAD_SHA}'."
 
           # --- Download every Logs_Build_* artifact and extract binlogs ---
           artifacts_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1")
@@ -126,10 +141,14 @@ jobs:
           [ -z "${names}" ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
           # Guards for untrusted PR-produced archives: cap the compressed
-          # download and the reported uncompressed size, and bound extraction
-          # time, so a zip bomb / oversized artifact can't exhaust the runner.
-          MAX_ZIP_BYTES=524288000      # 500 MB compressed per artifact
-          MAX_UNZIP_BYTES=2147483648   # 2 GB uncompressed per artifact
+          # download and the reported uncompressed size per artifact, bound
+          # extraction time, AND enforce a cumulative uncompressed budget across
+          # all legs so many individually-small artifacts can't collectively
+          # exhaust the runner's disk.
+          MAX_ZIP_BYTES=524288000       # 500 MB compressed per artifact
+          MAX_UNZIP_BYTES=2147483648    # 2 GB uncompressed per artifact
+          MAX_TOTAL_BYTES=4294967296    # 4 GB uncompressed across all artifacts
+          TOTAL_BYTES=0
           mkdir -p /tmp/binlogs
           count=0
           for name in ${names}; do
@@ -149,6 +168,10 @@ jobs:
             if [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
             fi
+            if [ $((TOTAL_BYTES + UNCOMP)) -gt "${MAX_TOTAL_BYTES}" ]; then
+              echo "::warning::Cumulative uncompressed budget ${MAX_TOTAL_BYTES} reached at ${name}; stopping extraction."; break
+            fi
+            TOTAL_BYTES=$((TOTAL_BYTES + UNCOMP))
             # Extract ONLY `*.binlog` entries with paths junked (`-j`) under a
             # timeout so a malicious/relative entry (zip-slip) can't escape the
             # destination and extraction can't run unbounded.
