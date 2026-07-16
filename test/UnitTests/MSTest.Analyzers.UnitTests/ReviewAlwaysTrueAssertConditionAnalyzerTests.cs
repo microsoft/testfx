@@ -1808,4 +1808,118 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameDateTime_Diagnostic()
+    {
+        // DateTime is a primitive-like value type with reflexive built-in equality, so a self-comparison
+        // is genuinely always true and should still be flagged.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    DateTime x = DateTime.Now;
+                    [|Assert.AreEqual(x, x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameValueWithPolymorphicComparerType_NoDiagnostic()
+    {
+        // The comparison uses EqualityComparer<Base>.Default (the method type argument), which invokes the
+        // non-reflexive IEquatable<Base>, even though the operand's static type is the sealed Derived.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Derived();
+                    Assert.AreEqual<Base>(x, x);
+                }
+
+                private class Base : IEquatable<Base>
+                {
+                    public bool Equals(Base other) => false;
+                }
+
+                private sealed class Derived : Base
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameStructWithNonReflexiveField_NoDiagnostic()
+    {
+        // A struct using the default field-based ValueType.Equals compares its fields via their equality,
+        // so a field whose Equals is not reflexive makes the self-comparison return false.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Wrapper();
+                    Assert.AreEqual(x, x);
+                }
+
+                private struct Wrapper
+                {
+                    public NeverEqual Field;
+                }
+
+                private sealed class NeverEqual
+                {
+                    public override bool Equals(object obj) => false;
+                    public override int GetHashCode() => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameNullable_NoDiagnostic()
+    {
+        // Nullable<T> delegates equality to the underlying T, which may not be reflexive, so it is treated
+        // conservatively.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int? x = 1;
+                    Assert.AreEqual(x, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
