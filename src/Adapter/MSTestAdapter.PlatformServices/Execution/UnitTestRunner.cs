@@ -88,16 +88,15 @@ internal sealed partial class UnitTestRunner
     // Console.SetOut/SetError replace the process-wide console, and Trace.Listeners is process-wide too.
     // We install our routing exactly once per process: re-wrapping on every runner would stack routers on
     // top of each other (and Console.Out returns a synchronized wrapper, not our router, so a type check
-    // cannot reliably detect an already-installed router). Installing once guarantees a single capture hop
-    // per write and makes the live echo target the real console rather than a previously installed router.
+    // cannot reliably detect an already-installed router). The installed routers read the capture mode on
+    // every write (via MSTestSettings.CurrentSettings), so a reused host that changes OutputCaptureMode
+    // between runs is still honored without re-installing.
     private static int s_outputRoutingInstalled;
 
     private static void ConfigureOutputRouting(TestOutputCaptureMode mode)
     {
-        // None means "do not capture": leave Console/Trace untouched so output flows to its normal
-        // destination, matching the legacy CaptureTraceOutput=false behavior. Within a single test session
-        // the capture mode is constant, so we do not tear down routing a previous run may have installed
-        // (restoring the process-wide console mid-session is not thread-safe).
+        // Nothing to install while the very first run does not capture. Once any run needs capture we install
+        // the routers, and from then on their per-write mode check handles None/Result/Live for every run.
         if (mode == TestOutputCaptureMode.None)
         {
             return;
@@ -109,12 +108,12 @@ internal sealed partial class UnitTestRunner
             return;
         }
 
-        bool echoLive = mode == TestOutputCaptureMode.Live;
+        Func<TestOutputCaptureMode> modeProvider = static () => MSTestSettings.CurrentSettings.OutputCaptureMode;
         TextWriter originalOut = Console.Out;
         TextWriter originalError = Console.Error;
-        Console.SetOut(new ConsoleOutRouter(originalOut, echoLive));
-        Console.SetError(new ConsoleErrorRouter(originalError, echoLive));
-        Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(echoLive ? originalOut : null)));
+        Console.SetOut(new ConsoleOutRouter(originalOut, modeProvider));
+        Console.SetError(new ConsoleErrorRouter(originalError, modeProvider));
+        Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(originalOut, modeProvider)));
     }
 
 #pragma warning disable CA1822 // Mark members as static

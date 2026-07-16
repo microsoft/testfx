@@ -3,6 +3,7 @@
 
 using AwesomeAssertions;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -21,11 +22,13 @@ public class ConsoleRouterTests : TestContainer
     private TestContextImplementation CreateTestContext()
         => new(_testMethod.Object, null, new Dictionary<string, object?>(), null, null);
 
-    public void ConsoleOutRouter_WhenEchoLive_WritesToBothTestContextAndOriginalConsole()
+    private static Func<TestOutputCaptureMode> Mode(TestOutputCaptureMode mode) => () => mode;
+
+    public void ConsoleOutRouter_InLiveMode_WritesToBothTestContextAndOriginalConsole()
     {
         var original = new StringWriter();
         TestContextImplementation testContext = CreateTestContext();
-        var router = new ConsoleOutRouter(original, echoLive: true);
+        var router = new ConsoleOutRouter(original, Mode(TestOutputCaptureMode.Live));
 
         using (TestContextImplementation.SetCurrentTestContext(testContext))
         {
@@ -34,18 +37,16 @@ public class ConsoleRouterTests : TestContainer
             router.Write("world".ToCharArray(), 0, 5);
         }
 
-        // Captured into the test result.
+        // Captured into the test result and echoed live to the original console.
         testContext.GetAndClearOutput().Should().Be("hello world");
-
-        // And echoed live to the original console.
         original.ToString().Should().Be("hello world");
     }
 
-    public void ConsoleOutRouter_WhenNotEchoLive_WritesOnlyToTestContext()
+    public void ConsoleOutRouter_InResultMode_WritesOnlyToTestContext()
     {
         var original = new StringWriter();
         TestContextImplementation testContext = CreateTestContext();
-        var router = new ConsoleOutRouter(original, echoLive: false);
+        var router = new ConsoleOutRouter(original, Mode(TestOutputCaptureMode.Result));
 
         using (TestContextImplementation.SetCurrentTestContext(testContext))
         {
@@ -56,11 +57,27 @@ public class ConsoleRouterTests : TestContainer
         original.ToString().Should().BeEmpty();
     }
 
-    public void ConsoleErrorRouter_WhenEchoLive_WritesToBothTestContextAndOriginalConsole()
+    public void ConsoleOutRouter_InNoneMode_PassesThroughWithoutCapturing()
     {
         var original = new StringWriter();
         TestContextImplementation testContext = CreateTestContext();
-        var router = new ConsoleErrorRouter(original, echoLive: true);
+        var router = new ConsoleOutRouter(original, Mode(TestOutputCaptureMode.None));
+
+        using (TestContextImplementation.SetCurrentTestContext(testContext))
+        {
+            router.Write("hello");
+        }
+
+        // None does not capture even when a test is running; output flows straight to the console.
+        testContext.GetAndClearOutput().Should().BeNull();
+        original.ToString().Should().Be("hello");
+    }
+
+    public void ConsoleErrorRouter_InLiveMode_WritesToBothTestContextAndOriginalConsole()
+    {
+        var original = new StringWriter();
+        TestContextImplementation testContext = CreateTestContext();
+        var router = new ConsoleErrorRouter(original, Mode(TestOutputCaptureMode.Live));
 
         using (TestContextImplementation.SetCurrentTestContext(testContext))
         {
@@ -75,7 +92,7 @@ public class ConsoleRouterTests : TestContainer
     {
         var original = new StringWriter();
         TestContextImplementation testContext = CreateTestContext();
-        var router = new ConsoleOutRouter(original, echoLive: true);
+        var router = new ConsoleOutRouter(original, Mode(TestOutputCaptureMode.Live));
 
         // No current test context -> passthrough to the original console, nothing captured.
         router.Write("outside");
@@ -84,25 +101,30 @@ public class ConsoleRouterTests : TestContainer
         testContext.GetAndClearOutput().Should().BeNull();
     }
 
-    public void TraceTextWriter_WhenLiveEchoTargetProvided_WritesToBothTestContextAndTarget()
+    public void ConsoleOutRouter_HonorsModeChangeBetweenWrites()
     {
-        var target = new StringWriter();
+        var original = new StringWriter();
         TestContextImplementation testContext = CreateTestContext();
-        var writer = new TraceTextWriter(target);
+        TestOutputCaptureMode mode = TestOutputCaptureMode.Result;
+        var router = new ConsoleOutRouter(original, () => mode);
 
         using (TestContextImplementation.SetCurrentTestContext(testContext))
         {
-            writer.Write("trace-line");
+            router.Write("a");
+            mode = TestOutputCaptureMode.Live;
+            router.Write("b");
         }
 
-        testContext.GetAndClearTrace().Should().Be("trace-line");
-        target.ToString().Should().Be("trace-line");
+        // Both writes are captured; only the second (Live) is echoed live.
+        testContext.GetAndClearOutput().Should().Be("ab");
+        original.ToString().Should().Be("b");
     }
 
-    public void TraceTextWriter_WhenNoLiveEchoTarget_WritesOnlyToTestContext()
+    public void TraceTextWriter_InLiveMode_WritesToBothTestContextAndConsole()
     {
+        var console = new StringWriter();
         TestContextImplementation testContext = CreateTestContext();
-        var writer = new TraceTextWriter(liveEchoTarget: null);
+        var writer = new TraceTextWriter(console, Mode(TestOutputCaptureMode.Live));
 
         using (TestContextImplementation.SetCurrentTestContext(testContext))
         {
@@ -110,5 +132,37 @@ public class ConsoleRouterTests : TestContainer
         }
 
         testContext.GetAndClearTrace().Should().Be("trace-line");
+        console.ToString().Should().Be("trace-line");
+    }
+
+    public void TraceTextWriter_InResultMode_CapturesWithoutEcho()
+    {
+        var console = new StringWriter();
+        TestContextImplementation testContext = CreateTestContext();
+        var writer = new TraceTextWriter(console, Mode(TestOutputCaptureMode.Result));
+
+        using (TestContextImplementation.SetCurrentTestContext(testContext))
+        {
+            writer.Write("trace-line");
+        }
+
+        testContext.GetAndClearTrace().Should().Be("trace-line");
+        console.ToString().Should().BeEmpty();
+    }
+
+    public void TraceTextWriter_InNoneMode_DoesNotCapture()
+    {
+        var console = new StringWriter();
+        TestContextImplementation testContext = CreateTestContext();
+        var writer = new TraceTextWriter(console, Mode(TestOutputCaptureMode.None));
+
+        using (TestContextImplementation.SetCurrentTestContext(testContext))
+        {
+            writer.Write("trace-line");
+        }
+
+        // None leaves trace to the default listeners; our writer neither captures nor echoes.
+        testContext.GetAndClearTrace().Should().BeNull();
+        console.ToString().Should().BeEmpty();
     }
 }

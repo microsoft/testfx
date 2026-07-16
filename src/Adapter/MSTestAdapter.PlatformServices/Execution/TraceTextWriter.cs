@@ -8,31 +8,43 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed class TraceTextWriter : TextWriter
 {
-    private readonly TextWriter? _liveEchoTarget;
+    private readonly TextWriter _console;
+    private readonly Func<TestOutputCaptureMode> _modeProvider;
 
-    public TraceTextWriter(TextWriter? liveEchoTarget)
-        => _liveEchoTarget = liveEchoTarget;
+    public TraceTextWriter(TextWriter console, Func<TestOutputCaptureMode> modeProvider)
+    {
+        _console = console;
+        _modeProvider = modeProvider;
+    }
 
     public override Encoding Encoding => Encoding.UTF8;
 
+    // Installed once per process; the capture mode is read on every write so a reused host that changes
+    // OutputCaptureMode between runs is honored. Trace is only captured/echoed while a test is running:
+    // framework/adapter trace emitted during host setup or between tests is left to the default listeners.
     public override void Write(char value)
     {
-        if (TestContext.Current as TestContextImplementation is { } testContext)
+        TestOutputCaptureMode mode = _modeProvider();
+        if (mode != TestOutputCaptureMode.None && TestContext.Current as TestContextImplementation is { } testContext)
         {
             testContext.WriteTrace(value);
-
-            // Only echo live while a test is running. Trace emitted by the framework/adapter during host
-            // setup or between tests must not be surfaced as a test's live output.
-            _liveEchoTarget?.Write(value);
+            if (mode == TestOutputCaptureMode.Live)
+            {
+                _console.Write(value);
+            }
         }
     }
 
     public override void Write(string? value)
     {
-        if (TestContext.Current as TestContextImplementation is { } testContext)
+        TestOutputCaptureMode mode = _modeProvider();
+        if (mode != TestOutputCaptureMode.None && TestContext.Current as TestContextImplementation is { } testContext)
         {
             testContext.WriteTrace(value);
-            _liveEchoTarget?.Write(value);
+            if (mode == TestOutputCaptureMode.Live)
+            {
+                _console.Write(value);
+            }
         }
     }
 }

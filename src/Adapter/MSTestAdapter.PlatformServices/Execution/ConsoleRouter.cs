@@ -9,22 +9,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal abstract class ConsoleRouter : TextWriter
 {
     private readonly TextWriter _originalConsole;
-    private readonly bool _echoLive;
+    private readonly Func<TestOutputCaptureMode> _modeProvider;
 
-    protected ConsoleRouter(TextWriter originalConsole, bool echoLive)
+    protected ConsoleRouter(TextWriter originalConsole, Func<TestOutputCaptureMode> modeProvider)
     {
         _originalConsole = originalConsole;
-        _echoLive = echoLive;
+        _modeProvider = modeProvider;
     }
 
     public override Encoding Encoding => Encoding.UTF8;
 
+    // The routers are installed once per process, but the capture mode is read on every write so a
+    // reused host that changes OutputCaptureMode between runs is honored:
+    //   None   -> pass straight through to the console (do not capture)
+    //   Result -> capture into the current test result (do not echo)
+    //   Live   -> capture into the current test result and echo live to the console
+    // Writes made when no test is running always pass straight through.
     public override void Write(char value)
     {
-        if (TestContext.Current is TestContextImplementation testContext)
+        TestOutputCaptureMode mode = _modeProvider();
+        if (mode != TestOutputCaptureMode.None && TestContext.Current is TestContextImplementation testContext)
         {
             WriteToTestContext(testContext, value);
-            if (_echoLive)
+            if (mode == TestOutputCaptureMode.Live)
             {
                 _originalConsole.Write(value);
             }
@@ -37,10 +44,11 @@ internal abstract class ConsoleRouter : TextWriter
 
     public override void Write(string? value)
     {
-        if (TestContext.Current is TestContextImplementation testContext)
+        TestOutputCaptureMode mode = _modeProvider();
+        if (mode != TestOutputCaptureMode.None && TestContext.Current is TestContextImplementation testContext)
         {
             WriteToTestContext(testContext, value);
-            if (_echoLive)
+            if (mode == TestOutputCaptureMode.Live)
             {
                 _originalConsole.Write(value);
             }
@@ -53,10 +61,11 @@ internal abstract class ConsoleRouter : TextWriter
 
     public override void Write(char[] buffer, int index, int count)
     {
-        if (TestContext.Current is TestContextImplementation testContext)
+        TestOutputCaptureMode mode = _modeProvider();
+        if (mode != TestOutputCaptureMode.None && TestContext.Current is TestContextImplementation testContext)
         {
             WriteToTestContext(testContext, buffer, index, count);
-            if (_echoLive)
+            if (mode == TestOutputCaptureMode.Live)
             {
                 _originalConsole.Write(buffer, index, count);
             }

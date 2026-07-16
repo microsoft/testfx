@@ -1417,6 +1417,28 @@ public class MSTestSettingsTests : TestContainer
         settings.CaptureDebugTraces.Should().BeFalse();
     }
 
+    public void ConfigJson_OutputCaptureMode_RejectsNumericValue()
+    {
+        // Arrange
+        var configDictionary = new Dictionary<string, string>
+        {
+            { "mstest:output:captureTrace", "2" },
+        };
+
+        var mockConfig = new Mock<IConfiguration>();
+        mockConfig.Setup(config => config[It.IsAny<string>()])
+                  .Returns((string key) => configDictionary.TryGetValue(key, out string? value) ? value : null);
+
+        var settings = new MSTestSettings();
+
+        // Act
+        MSTestSettings.SetSettingsFromConfig(mockConfig.Object, _mockMessageLogger.Object.ToAdapterMessageLogger(), settings);
+
+        // Assert - numeric input must not be treated as an enum ordinal (2 -> Live); it is rejected and the default is kept.
+        settings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '2' for runsettings entry 'output:captureTrace', setting will be ignored."), Times.Once);
+    }
+
     public void RunSettings_WithGlobalFixtureTimeouts_ValuesAreSetCorrectly()
     {
         string runSettingsXml =
