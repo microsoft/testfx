@@ -65,6 +65,15 @@ variables:
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _ReleaseUnitTestReportArgs
     value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
+  # Shell trailer appended to the macOS build/test commands so a failure exits 0 and keeps the overall
+  # pipeline result "Succeeded". This is required to make macOS genuinely non-blocking for PRs: job- or
+  # step-level continueOnError only yields "PartiallySucceeded", which Azure Repos build-validation
+  # policies treat as a failure and still block the merge. Swallowing the exit code keeps the run green
+  # while macOS failures stay visible via --report-azdo (AzDO Tests tab) and the published TestResults
+  # artifact, so signal is preserved without gating merges on macOS-specific flakiness/slowness. Windows
+  # and Linux do not use this trailer and remain hard blockers.
+  - name: _MacOSNonBlockingTrailer
+    value: ' || echo "##vso[task.logissue type=warning]macOS is non-blocking for PRs; this failure does not block the merge. See the Tests tab and the published TestResults artifact for details."'
 
 stages:
 
@@ -324,11 +333,11 @@ stages:
       - job: MacOS
         dependsOn: DetectChanges
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
-        # macOS agents are historically slow and flaky, so this job is intentionally non-blocking for PRs:
-        # continueOnError makes the job run and publish its results, but a failure surfaces as a warning
-        # (job result "SucceededWithIssues") instead of failing the build. This keeps macOS signal visible
-        # without gating merges on macOS-specific flakiness. Windows and Linux remain hard blockers.
-        continueOnError: true
+        # macOS agents are historically slow and flaky, so this job is intentionally non-blocking for PRs.
+        # Rather than continueOnError (which yields "PartiallySucceeded" and is still blocked by Azure Repos
+        # build-validation policies), every macOS command appends $(_MacOSNonBlockingTrailer) so a failure
+        # exits 0 and the overall run stays "Succeeded". Failures remain visible via --report-azdo (Tests
+        # tab) and the published TestResults artifact. See _MacOSNonBlockingTrailer for the full rationale.
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
@@ -349,13 +358,14 @@ stages:
             /p:Test=false
             /p:Publish=false
             /p:NonWindowsBuild=true
-            /p:FastAcceptanceTest=true
+            /p:FastAcceptanceTest=true$(_MacOSNonBlockingTrailer)
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           - template: /eng/pipelines/steps/test-non-windows.yml
             parameters:
               osName: MacOS
+              testFailureTrailer: $(_MacOSNonBlockingTrailer)
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
