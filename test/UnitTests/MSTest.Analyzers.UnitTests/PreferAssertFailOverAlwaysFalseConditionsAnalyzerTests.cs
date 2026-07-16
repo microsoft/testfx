@@ -2023,4 +2023,60 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedNonEqualConstantsWithCustomComparer_NoDiagnostic()
+    {
+        // A caller-supplied comparer can return any result, so the comparison is not provably always false.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(1, 2, new AlwaysEqualComparer());
+                }
+
+                private sealed class AlwaysEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => true;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithCustomComparer_NoDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    Assert.AreNotEqual(x, x, new AlwaysEqualComparer());
+                }
+
+                private sealed class AlwaysEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => true;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
