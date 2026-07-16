@@ -46,12 +46,14 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
 
     public const string System = "System";
+    public const string SystemCollectionsGenericEqualityComparer1 = "System.Collections.Generic.EqualityComparer`1";
     public const string SystemCollectionsGenericIEnumerable1 = "System.Collections.Generic.IEnumerable`1";
     public const string SystemCollectionsIDictionary = "System.Collections.IDictionary";
     public const string SystemDescriptionAttribute = "System.ComponentModel.DescriptionAttribute";
     public const string SystemFunc1 = "System.Func`1";
     public const string SystemIAsyncDisposable = "System.IAsyncDisposable";
     public const string SystemIDisposable = "System.IDisposable";
+    public const string SystemIEquatable1 = "System.IEquatable`1";
     public const string SystemLinqEnumerable = "System.Linq.Enumerable";
     public const string SystemLinqExpressionsExpression1 = "System.Linq.Expressions.Expression`1";
     public const string SystemOperatingSystem = "System.OperatingSystem";
