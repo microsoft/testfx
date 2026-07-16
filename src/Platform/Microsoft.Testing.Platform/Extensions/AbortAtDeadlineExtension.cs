@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -48,11 +48,12 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
 
         if (DeadlineHelper.TryGetDeadline(environment, out DateTimeOffset deadline) && capability is not null)
         {
-            _stopAt = deadline - DeadlineHelper.GetStopMargin(environment);
+            DateTimeOffset stopAt = deadline - DeadlineHelper.GetStopMargin(environment);
+            _stopAt = stopAt;
 
             // The deadline is absolute wall-clock time, so we can arm a one-shot timer now. If the
             // computed instant is already in the past, fire as soon as possible.
-            TimeSpan dueTime = _stopAt.Value - clock.UtcNow;
+            TimeSpan dueTime = stopAt - clock.UtcNow;
             if (dueTime < TimeSpan.Zero)
             {
                 dueTime = TimeSpan.Zero;

@@ -199,13 +199,13 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
         await _logger.LogDebugAsync($"Connected to the test host server pipe '{_namedPipeClient.PipeName}'").ConfigureAwait(false);
 
         _activityTimer = new Timer(
-            _ => _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken),
+            _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: false),
             null,
             _activityTimerValue!.Value,
             TimeSpan.FromMilliseconds(-1));
 
         // Arm a one-shot timer for the absolute CI deadline. Whichever fires first (inactivity hang
-        // or approaching deadline) takes the dump; TakeDumpOfTreeAsync guards against a double dump.
+        // or approaching deadline) takes the dump; TriggerDumpOnce ensures only one of them runs.
         if (_deadlineDumpAt is { } deadlineDumpAt)
         {
             TimeSpan dueTime = deadlineDumpAt - _clock.UtcNow;
@@ -215,7 +215,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             }
 
             _deadlineTimer = new Timer(
-                _ => _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken),
+                _ => TriggerDumpOnce(cancellationToken, triggeredByDeadline: true),
                 null,
                 dueTime,
                 TimeSpan.FromMilliseconds(-1));
@@ -278,18 +278,34 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     [UnsupportedOSPlatform("ios")]
     [UnsupportedOSPlatform("tvos")]
     [UnsupportedOSPlatform("wasi")]
-    private async Task TakeDumpOfTreeAsync(CancellationToken cancellationToken)
+    private void TriggerDumpOnce(CancellationToken cancellationToken, bool triggeredByDeadline)
     {
-        ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
-
-        // The inactivity timer and the deadline timer can both fire; only dump once.
+        // The inactivity timer and the deadline timer can both fire. Only the first one starts the
+        // dump. The loser must not touch _activityIndicatorTask, otherwise it could overwrite the
+        // winner's real (long running) dump task with a completed no-op and let Dispose/DisposeAsync
+        // stop waiting and tear down while the dump is still running.
         if (Interlocked.Exchange(ref _dumpTaken, 1) != 0)
         {
             return;
         }
 
-        await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
-        await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)), cancellationToken).ConfigureAwait(false);
+        _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken, triggeredByDeadline);
+    }
+
+    private async Task TakeDumpOfTreeAsync(CancellationToken cancellationToken, bool triggeredByDeadline)
+    {
+        ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
+
+        string dumpReason = triggeredByDeadline
+            ? $"CI deadline reached (dump scheduled at {_deadlineDumpAt:o})"
+            : $"Hang dump timeout({_activityTimerValue}) expired";
+
+        await _logger.LogInformationAsync($"{dumpReason}. Taking hang dump.").ConfigureAwait(false);
+        await _outputDisplay.DisplayAsync(
+            new ErrorMessageOutputDeviceData(triggeredByDeadline
+                ? ExtensionResources.HangDumpDeadlineReached
+                : string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)),
+            cancellationToken).ConfigureAwait(false);
 
         using IProcess process = _processHandler.GetProcessById(_testHostProcessInformation.PID);
         var processTree = (await process.GetProcessTreeAsync(_logger, _outputDisplay, cancellationToken).ConfigureAwait(false)).Where(p => p.Process?.Name is not null and not "conhost" and not "WerFault").ToList();
@@ -311,7 +327,7 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
                 await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.DumpingProcess, process.Id, process.Name)), cancellationToken).ConfigureAwait(false);
             }
 
-            await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
+            await _logger.LogInformationAsync($"{dumpReason}.").ConfigureAwait(false);
 
             // Do not suspend processes with NetClient dumper it stops the diagnostic thread running in
             // them and hang dump request will get stuck forever, because the process is not co-operating.

@@ -42,6 +42,11 @@
         <target state="translated">Файл дампа зависания</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpDeadlineReached">
+        <source>CI deadline reached: taking a hang dump before the run is hard-cancelled.</source>
+        <target state="new">CI deadline reached: taking a hang dump before the run is hard-cancelled.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">Переменной среды "{0}" присвоено значение "{1}" вместо "{2}"</target>

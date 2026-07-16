@@ -42,6 +42,11 @@
         <target state="translated">挂起转储文件</target>
         <note />
       </trans-unit>
+      <trans-unit id="HangDumpDeadlineReached">
+        <source>CI deadline reached: taking a hang dump before the run is hard-cancelled.</source>
+        <target state="new">CI deadline reached: taking a hang dump before the run is hard-cancelled.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="HangDumpEnvironmentVariableInvalidValueErrorMessage">
         <source>Environment variable '{0}' is set to '{1}' instead of '{2}'</source>
         <target state="translated">环境变量“{0}”设置为“{1}”，而不是“{2}”</target>
