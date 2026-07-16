@@ -2118,4 +2118,43 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithDefaultEqualityComparer_Diagnostic()
+    {
+        // EqualityComparer<T>.Default passed explicitly is the default comparer, so the self-comparison is
+        // still provably always false and must be flagged.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreNotEqual(x, x, EqualityComparer<int>.Default)|];
+                }
+            }
+            """;
+        string fixedCode = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    Assert.Fail();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }
