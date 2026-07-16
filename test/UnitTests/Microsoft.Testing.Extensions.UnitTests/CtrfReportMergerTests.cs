@@ -182,6 +182,23 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    public void Merge_ReportIdIsUnaffectedByIgnoredNonCtrfInput()
+    {
+        string a = BuildReport(testEntries: [Test("a", "passed")]);
+        string b = BuildReport(testEntries: [Test("b", "failed")]);
+
+        // A non-CTRF input (missing the reportFormat discriminator) is skipped by the merge, so it must not
+        // participate in the deterministic reportId — the id must match the CTRF-only merge exactly.
+        string nonCtrf = "{\"results\":{\"summary\":{},\"tests\":[]}}";
+
+        string? ctrfOnlyId = (string?)JsonNode.Parse(CtrfReportMerger.Merge([a, b]))!["reportId"];
+        string? withNoiseId = (string?)JsonNode.Parse(CtrfReportMerger.Merge([a, nonCtrf, b]))!["reportId"];
+
+        Assert.IsNotNull(ctrfOnlyId);
+        Assert.AreEqual(ctrfOnlyId, withNoiseId);
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WhenOutputAliasesAnInput_ThrowsArgumentException()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");

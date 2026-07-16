@@ -22,7 +22,7 @@ internal sealed partial class TrxReportEngine
     /// <list type="bullet">
     ///   <item><description><c>Results</c> and <c>TestEntries</c> are unioned as-is; <c>TestDefinitions</c> are deduplicated by <c>id</c> (ids are derived deterministically from each test's UID and the schema forbids duplicates).</description></item>
     ///   <item><description><c>TestLists</c> are deduplicated by <c>id</c> (the well-known lists are shared across files).</description></item>
-    ///   <item><description><c>Counters</c> attributes are summed; <c>Times</c> use the earliest start and latest finish.</description></item>
+    ///   <item><description><c>Counters</c> attributes are summed; <c>Times</c> use the earliest <c>creation</c>/<c>queuing</c>/<c>start</c> and latest <c>finish</c> derived from the inputs (attributes no input supplies are omitted).</description></item>
     ///   <item><description><c>RunInfos</c> (crash/exit diagnostics) and <c>CollectorDataEntries</c> (attachment references) are carried across from every input's <c>ResultSummary</c>.</description></item>
     ///   <item><description>The result summary outcome is <c>Failed</c> if any input failed, otherwise <c>Completed</c>.</description></item>
     ///   <item><description>Attachment hrefs inside <c>CollectorDataEntries</c> are carried as-is; because they are relative to each input's deployment root, the physical attachment files are only relocated to the merged deployment root by <see cref="MergeToFileAsync"/> (which has the source paths). Callers of the in-memory <see cref="Merge"/> that need resolvable attachments should relocate them separately.</description></item>
@@ -78,6 +78,8 @@ internal sealed partial class TrxReportEngine
         var counterSums = new Dictionary<string, long>(StringComparer.Ordinal);
 
         bool anyFailure = false;
+        DateTimeOffset? earliestCreation = null;
+        DateTimeOffset? earliestQueuing = null;
         DateTimeOffset? earliestStart = null;
         DateTimeOffset? latestFinish = null;
         int inputIndex = 0;
@@ -137,6 +139,21 @@ internal sealed partial class TrxReportEngine
             XElement? times = FindChild(testRun, "Times");
             if (times is not null)
             {
+                // Each Times attribute is tracked independently from its own inputs rather than fabricated
+                // from the start: creation and queuing predate execution and cannot be derived from start,
+                // so any that no input supplies is omitted from the merged report instead of invented.
+                if (TryParseDateTimeOffset(times.Attribute("creation")?.Value, out DateTimeOffset creation)
+                    && (earliestCreation is null || creation < earliestCreation))
+                {
+                    earliestCreation = creation;
+                }
+
+                if (TryParseDateTimeOffset(times.Attribute("queuing")?.Value, out DateTimeOffset queuing)
+                    && (earliestQueuing is null || queuing < earliestQueuing))
+                {
+                    earliestQueuing = queuing;
+                }
+
                 if (TryParseDateTimeOffset(times.Attribute("start")?.Value, out DateTimeOffset start)
                     && (earliestStart is null || start < earliestStart))
                 {
@@ -178,7 +195,7 @@ internal sealed partial class TrxReportEngine
             new XAttribute("id", runId),
             new XAttribute("name", runName));
 
-        mergedTestRun.Add(BuildTimes(earliestStart, latestFinish));
+        mergedTestRun.Add(BuildTimes(earliestCreation, earliestQueuing, earliestStart, latestFinish));
         mergedTestRun.Add(BuildTestSettings(runId, runName));
         mergedTestRun.Add(mergedResults);
         mergedTestRun.Add(mergedTestDefinitions);
@@ -238,8 +255,12 @@ internal sealed partial class TrxReportEngine
         // "<inputDir>/<inputDeploymentRoot>/In/..."). Relocate those trees into the merged report's
         // deployment root — isolated per input so identical file names from different modules do not
         // collide — and rewrite the input's hrefs to match, before the merge clones them.
+        // The merged deployment root is made unique per run (see GetConfinedDeploymentRootLeaf) so this
+        // relocation always writes into a fresh tree and can never mutate the attachments referenced by a
+        // previously committed merged TRX at the same output path; a failed serialization therefore leaves
+        // that prior report and its files consistent, and only orphaned files under the new root remain.
         // Best-effort and path-confined: failures never fail the merge.
-        RelocateAttachments(inputPaths, reports, outputDirectory, runName, cancellationToken);
+        RelocateAttachments(inputPaths, reports, outputDirectory, runId, runName, cancellationToken);
 
         XDocument merged = Merge(reports, runId, runName);
 
@@ -271,10 +292,10 @@ internal sealed partial class TrxReportEngine
     /// failure is swallowed so it never fails the merge (never-fail-the-run invariant); a reference that
     /// cannot be relocated is dropped rather than left dangling or pointing outside the deployment root.
     /// </summary>
-    private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, string runName, CancellationToken cancellationToken)
+    private static void RelocateAttachments(IReadOnlyList<string> inputPaths, IReadOnlyList<XDocument> reports, string outputDirectory, Guid runId, string runName, CancellationToken cancellationToken)
     {
         string outputFull = Path.GetFullPath(outputDirectory);
-        string mergedDeploymentRoot = GetConfinedDeploymentRootLeaf(runName);
+        string mergedDeploymentRoot = GetConfinedDeploymentRootLeaf(runId, runName);
         string mergedRootFull = Path.GetFullPath(Path.Combine(outputFull, mergedDeploymentRoot));
 
         // The confined leaf can no longer be '.' or '..', but keep the defensive lexical/reparse checks:
@@ -903,13 +924,21 @@ internal sealed partial class TrxReportEngine
         }
     }
 
-    private static XElement BuildTimes(DateTimeOffset? earliestStart, DateTimeOffset? latestFinish)
+    private static XElement BuildTimes(DateTimeOffset? earliestCreation, DateTimeOffset? earliestQueuing, DateTimeOffset? earliestStart, DateTimeOffset? latestFinish)
     {
         var times = new XElement(NamespaceUri + "Times");
+        if (earliestCreation is { } creation)
+        {
+            times.SetAttributeValue("creation", creation);
+        }
+
+        if (earliestQueuing is { } queuing)
+        {
+            times.SetAttributeValue("queuing", queuing);
+        }
+
         if (earliestStart is { } start)
         {
-            times.SetAttributeValue("creation", start);
-            times.SetAttributeValue("queuing", start);
             times.SetAttributeValue("start", start);
         }
 
@@ -927,7 +956,7 @@ internal sealed partial class TrxReportEngine
             NamespaceUri + "TestSettings",
             new XAttribute("name", "default"),
             new XAttribute("id", CreateDeterministicSettingsId(runId)));
-        testSettings.Add(new XElement(NamespaceUri + "Deployment", new XAttribute("runDeploymentRoot", GetConfinedDeploymentRootLeaf(runName))));
+        testSettings.Add(new XElement(NamespaceUri + "Deployment", new XAttribute("runDeploymentRoot", GetConfinedDeploymentRootLeaf(runId, runName))));
         return testSettings;
     }
 
@@ -954,16 +983,20 @@ internal sealed partial class TrxReportEngine
     }
 
     /// <summary>
-    /// Produces a single, confined deployment-root leaf from <paramref name="runName"/> for use both in
-    /// the emitted <c>TestSettings/Deployment/@runDeploymentRoot</c> and in attachment relocation, so the
-    /// two always agree and neither can escape the output directory. The file-name sanitizer already
-    /// replaces path separators and reserved names, so the only residual escape values are <c>.</c> and
-    /// <c>..</c>, which are prefixed to keep the leaf confined.
+    /// Produces a single, confined, per-run-unique deployment-root leaf from <paramref name="runName"/> and
+    /// <paramref name="runId"/> for use both in the emitted <c>TestSettings/Deployment/@runDeploymentRoot</c>
+    /// and in attachment relocation, so the two always agree and neither can escape the output directory. The
+    /// file-name sanitizer already replaces path separators and reserved names, so the only residual escape
+    /// values are <c>.</c> and <c>..</c>, which are prefixed to keep the leaf confined. The run id (which is
+    /// deterministic for a given logical run, preserving RFC 018 idempotency) is appended so a merge never
+    /// reuses the deployment tree of a previously committed report at the same output path — relocation then
+    /// cannot mutate that prior report's referenced files, and a failed merge leaves it consistent.
     /// </summary>
-    private static string GetConfinedDeploymentRootLeaf(string runName)
+    private static string GetConfinedDeploymentRootLeaf(Guid runId, string runName)
     {
         string leaf = ReportFileNameSanitizer.ReplaceInvalidFileNameChars(runName);
-        return leaf is "." or ".." ? "_" + leaf : leaf;
+        leaf = leaf is "." or ".." ? "_" + leaf : leaf;
+        return leaf + "." + runId.ToString("N", CultureInfo.InvariantCulture);
     }
 
     private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums, XElement? output, XElement runInfos, XElement collectorDataEntries, XElement resultFiles)

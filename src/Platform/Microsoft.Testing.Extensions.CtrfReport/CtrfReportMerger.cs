@@ -47,6 +47,11 @@ internal static class CtrfReportMerger
         JsonObject? first = null;
         var mergedTests = new JsonArray();
 
+        // Accumulate the raw JSON of every ACCEPTED CTRF input so the deterministic reportId is derived only
+        // from the payloads that actually contributed to the merge. Hashing the unfiltered inputs would let a
+        // rejected non-CTRF input (which is skipped below) change the merged report's identity.
+        var acceptedReports = new List<string>(inputReports.Count);
+
         long? earliestStart = null;
         long? latestStop = null;
 
@@ -87,6 +92,7 @@ internal static class CtrfReportMerger
 
             first ??= root;
             reportCount++;
+            acceptedReports.Add(reportJson);
 
             if (root["results"]?["environment"] is JsonObject environment)
             {
@@ -221,7 +227,7 @@ internal static class CtrfReportMerger
         {
             ["reportFormat"] = first["reportFormat"]?.DeepClone() ?? "CTRF",
             ["specVersion"] = first["specVersion"]?.DeepClone() ?? "0.0.0",
-            ["reportId"] = CreateDeterministicReportId(inputReports),
+            ["reportId"] = CreateDeterministicReportId(acceptedReports),
             ["timestamp"] = DateTimeOffset.FromUnixTimeMilliseconds(stopMs).ToString("O", CultureInfo.InvariantCulture),
             // The merged document is produced by this merger, not by any input, so stamp its own identity
             // rather than carrying the first input's 'generatedBy' (which could report a different producer
@@ -371,18 +377,20 @@ internal static class CtrfReportMerger
     }
 
     /// <summary>
-    /// Derives a stable <c>reportId</c> from the raw input reports so identical inputs reproduce the same
-    /// id on every retry (RFC 018 idempotency) without a random source or reusing an input report's id.
-    /// A non-cryptographic 128-bit FNV-1a fill is sufficient here — the id only needs to be deterministic
-    /// and collision-resistant enough to identify a merged report, not secret.
+    /// Derives a stable <c>reportId</c> from the accepted CTRF input reports so identical inputs reproduce
+    /// the same id on every retry (RFC 018 idempotency) without a random source or reusing an input report's
+    /// id. Only the payloads that passed CTRF validation are hashed, so a rejected non-CTRF input cannot
+    /// alter the merged report's identity. A non-cryptographic 128-bit FNV-1a fill is sufficient here — the
+    /// id only needs to be deterministic and collision-resistant enough to identify a merged report, not
+    /// secret.
     /// </summary>
-    private static string CreateDeterministicReportId(IReadOnlyList<string> inputReports)
+    private static string CreateDeterministicReportId(IReadOnlyList<string> acceptedReports)
     {
         const ulong fnvPrime = 1099511628211UL;
         ulong hashLow = 14695981039346656037UL;
         ulong hashHigh = 0x9E3779B97F4A7C15UL;
 
-        foreach (string report in inputReports)
+        foreach (string report in acceptedReports)
         {
             foreach (char c in report)
             {

@@ -75,24 +75,7 @@ internal static class MergeOutputFileHelper
 #if NETCOREAPP
         try
         {
-            string? root = Path.GetPathRoot(full);
-            if (RoslynString.IsNullOrEmpty(root))
-            {
-                return full;
-            }
-
-            string resolved = root;
-            foreach (string part in full.Substring(root.Length).Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
-            {
-                string next = Path.Combine(resolved, part);
-                resolved = Directory.Exists(next)
-                    ? new DirectoryInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
-                    : File.Exists(next)
-                        ? new FileInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
-                        : next;
-            }
-
-            return resolved;
+            return ResolveSymlinks(full, remainingHops: 40);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
         {
@@ -102,6 +85,51 @@ internal static class MergeOutputFileHelper
         return full;
 #endif
     }
+
+#if NETCOREAPP
+    // Resolves every symlink in 'full' to a stable canonical path — including symlinks in the ANCESTOR
+    // directories of a link's target — so two paths that name the same file compare equal regardless of
+    // which symlinked route reaches it. A single per-component pass is not enough: when a link's target
+    // string itself embeds another symlink (e.g. macOS '/var' -> '/private/var', so a link stored as
+    // '/var/.../real' resolves to a path whose '/var' prefix is still a link), the canonical form would
+    // otherwise depend on the route taken and the read-only-input alias check would miss an aliased output.
+    // Each time a link is followed we therefore recurse from the (absolute) target so its own ancestors are
+    // canonicalized too. 'remainingHops' bounds recursion so a symlink cycle degrades to the lexical path
+    // instead of looping forever.
+    private static string ResolveSymlinks(string full, int remainingHops)
+    {
+        string? root = Path.GetPathRoot(full);
+        if (remainingHops <= 0 || RoslynString.IsNullOrEmpty(root))
+        {
+            return full;
+        }
+
+        string[] parts = full.Substring(root.Length).Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries);
+        string resolved = root;
+        for (int i = 0; i < parts.Length; i++)
+        {
+            string next = Path.Combine(resolved, parts[i]);
+            FileSystemInfo? entry = Directory.Exists(next)
+                ? new DirectoryInfo(next)
+                : File.Exists(next)
+                    ? new FileInfo(next)
+                    : null;
+
+            // Follow a single hop only; recursion re-canonicalizes the target's ancestors and any further
+            // links in the chain uniformly.
+            if (entry?.ResolveLinkTarget(returnFinalTarget: false)?.FullName is { } linkTarget)
+            {
+                string remainder = string.Join(Path.DirectorySeparatorChar.ToString(), parts, i + 1, parts.Length - (i + 1));
+                string combined = remainder.Length == 0 ? linkTarget : Path.Combine(linkTarget, remainder);
+                return ResolveSymlinks(Path.GetFullPath(combined), remainingHops - 1);
+            }
+
+            resolved = next;
+        }
+
+        return resolved;
+    }
+#endif
 
     // Whether two paths name the SAME file depends on the case sensitivity of the specific filesystem/
     // directory that will hold the output — which can differ by volume and, on Windows, per-directory — so
@@ -168,14 +196,23 @@ internal static class MergeOutputFileHelper
 
     private static void ReplaceFile(string tempPath, string outputPath)
     {
-        // Delete any destination entry unconditionally — a regular file, or a symlink/hardlink alias
-        // (including a DANGLING symlink, for which File.Exists is false yet the entry still exists and
-        // would make File.Move fail). File.Delete is a no-op when nothing exists, and deleting a link
-        // removes only the link (never its target's content); an exact alias of an input has already been
-        // rejected, so this cannot delete an input in place.
+#if NETCOREAPP
+        // Atomic replace. File.Move(overwrite: true) maps to rename(2) / MoveFileEx(REPLACE_EXISTING),
+        // which swaps the destination in a single step, so an interruption or competing writer can never
+        // leave the previous report permanently missing (the failure mode of a delete-then-move sequence).
+        // It also replaces a symlink or dangling-link ENTRY rather than following it — only the link is
+        // swapped, never its target's content — and an exact alias of an input has already been rejected,
+        // so this cannot truncate an input in place.
+        File.Move(tempPath, outputPath, overwrite: true);
+#else
+        // .NET Framework's File.Move has no atomic-overwrite overload. Fall back to delete-then-move. On
+        // this runtime the alias check has already fail-closed on any reparse-point ancestor of the output,
+        // and File.Delete removes only a link entry (never a link target's content), so this cannot delete
+        // an input in place; deleting a dangling link (for which File.Exists is false yet the entry exists)
+        // also lets the subsequent File.Move succeed.
         File.Delete(outputPath);
-
         File.Move(tempPath, outputPath);
+#endif
     }
 
     private static void TryDeleteFile(string path)
