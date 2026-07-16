@@ -250,33 +250,57 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
-    public async Task MergeToFileAsync_WhenOutputDiffersFromInputOnlyByCase_IsRejectedOnCaseInsensitiveDirectory()
+    public async Task MergeToFileAsync_WhenOutputAliasesInputByCaseOnly_IsRejectedOnCaseInsensitiveFilesystem()
     {
-        // End-to-end sibling of the seam test above: on a case-insensitive directory (Windows/macOS temp dirs
-        // are), an output that differs from an input only by CASE aliases that input and must be rejected so a
-        // read-only source is never overwritten. On a genuinely case-sensitive directory the two names are
-        // distinct, so the merge is allowed. The directory's real sensitivity is probed independently (folding
-        // only the file name) so the assertion adapts to the host filesystem.
+        // End-to-end sibling of the seam test above, scoped to a single scenario: on a case-insensitive
+        // directory (Windows/macOS temp dirs are), an output that differs from an input only by CASE aliases
+        // that input and must be rejected so a read-only source is never overwritten. Skipped on a genuinely
+        // case-sensitive host, where the two names are distinct (that scenario is covered by the sibling test).
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
         try
         {
+            if (!IsDirectoryCaseInsensitive(tempDirectory))
+            {
+                Assert.Inconclusive("Host temp filesystem is case-sensitive; covered by the case-sensitive sibling test.");
+            }
+
             string input = Path.Combine(tempDirectory, "report.json");
             File.WriteAllText(input, BuildReport());
 
             string casedOutput = Path.Combine(tempDirectory, "REPORT.json");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => CtrfReportMerger.MergeToFileAsync([input], casedOutput, CancellationToken.None));
+            Assert.IsTrue(File.Exists(input));
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task MergeToFileAsync_WhenOutputDiffersByCaseOnly_IsAllowedOnCaseSensitiveFilesystem()
+    {
+        // Complementary scenario to the case-insensitive test above: on a genuinely case-sensitive directory,
+        // an output that differs from an input only by CASE is a distinct file, so the merge is allowed and the
+        // input is preserved. Skipped on a case-insensitive host (that scenario is the sibling test).
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
             if (IsDirectoryCaseInsensitive(tempDirectory))
             {
-                await Assert.ThrowsExactlyAsync<ArgumentException>(
-                    () => CtrfReportMerger.MergeToFileAsync([input], casedOutput, CancellationToken.None));
-                Assert.IsTrue(File.Exists(input));
+                Assert.Inconclusive("Host temp filesystem is case-insensitive; covered by the case-insensitive sibling test.");
             }
-            else
-            {
-                await CtrfReportMerger.MergeToFileAsync([input], casedOutput, CancellationToken.None);
-                Assert.IsTrue(File.Exists(input));
-                Assert.IsTrue(File.Exists(casedOutput));
-            }
+
+            string input = Path.Combine(tempDirectory, "report.json");
+            File.WriteAllText(input, BuildReport());
+
+            string casedOutput = Path.Combine(tempDirectory, "REPORT.json");
+            await CtrfReportMerger.MergeToFileAsync([input], casedOutput, CancellationToken.None);
+            Assert.IsTrue(File.Exists(input));
+            Assert.IsTrue(File.Exists(casedOutput));
         }
         finally
         {
