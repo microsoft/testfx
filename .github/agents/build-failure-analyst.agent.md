@@ -18,7 +18,7 @@ You are read-only with respect to the repository. You ship findings via the gh-a
 
 ## Inputs the Calling Workflow Provides
 
-The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) locates the failed **Azure DevOps** `microsoft.testfx` build, downloads the `.binlog` that build already produced (it does **not** rebuild), uploads it as an artifact, and the gh-aw MCP gateway mounts it read-only into the `binlog-mcp` container at `/data/build.binlog`. The caller also sets the environment variables below. You must read all of them before doing anything else.
+The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) locates the failed **Azure DevOps** `microsoft.testfx` build, downloads the `.binlog` each build leg produced (it does **not** rebuild), uploads them as an artifact, and the gh-aw MCP gateway mounts them read-only into the `binlog-mcp` container under the directory `/data/binlogs` (one `*.binlog` per leg, enumerated in `GH_AW_BINLOG_LIST`). The caller also sets the environment variables below. You must read all of them before doing anything else.
 
 | Variable                  | Meaning |
 | ------------------------- | ------- |
@@ -28,8 +28,8 @@ The caller (typically `build-failure-analysis.md` or `build-failure-analysis-com
 | `GH_AW_BINLOG_HOST_PATH`  | URL of the originating Azure DevOps build (`https://dev.azure.com/dnceng-public/public/_build/results?buildId=…`). Use only for permalinks / human-facing references — read the binlog data via MCP. |
 | `GH_AW_BUILD_OUTCOME`     | Always `failure` when this agent runs — the workflow only activates after the Azure DevOps `microsoft.testfx` build failed. |
 | `GH_AW_PR_NUMBER`         | Pull request number to post the analysis on. Pass it explicitly on every `add_comment` / `create_pull_request_review_comment` call (the workflows use `target: "*"`). |
-| `GH_AW_PR_HEAD_SHA`       | Commit SHA at the PR head (or branch tip). Used for permalinks. |
-| `GH_AW_WORKSPACE`         | `$GITHUB_WORKSPACE` — used to convert absolute paths emitted by the compiler into repo-relative paths. |
+| `GH_AW_PR_HEAD_SHA`       | Commit SHA at the PR head. Use for permalinks **and** as the ref when reading source files (see below). |
+| `GH_AW_WORKSPACE`         | `$GITHUB_WORKSPACE`. **Note:** because these workflows trigger on `check_run` / slash command / dispatch, the workspace is **not** a checkout of the failing PR — do not read source from it. Read PR source through the GitHub API at `GH_AW_PR_HEAD_SHA` instead (see Step 4). |
 
 If a `binlog-mcp` call fails, fall back to the Azure DevOps build referenced by `GH_AW_BINLOG_HOST_PATH` (its logs are viewable there) and call out the gap in the summary comment.
 
@@ -110,7 +110,7 @@ Available capabilities:
 
 ### Step 4 — Read source context for the highest-confidence fix
 
-For each root cause, identify the **smallest set of files** that need to change. Read those files from the workspace (paths in the errors JSON are absolute — convert with `GH_AW_WORKSPACE`).
+For each root cause, identify the **smallest set of files** that need to change. The runner workspace is **not** a checkout of the failing PR (these workflows run on `check_run` / slash command / dispatch, so the workspace is the default branch or empty). Read PR source through the **GitHub API / `github` MCP tool at the `GH_AW_PR_HEAD_SHA` ref** (convert the absolute compiler paths in the binlog to repo-relative paths first), never from the local workspace.
 
 - For Roslyn / C# errors: read 6 lines above and 10 lines below the reported line.
 - For MSBuild errors: read the offending element and the surrounding `<PropertyGroup>` / `<ItemGroup>` / `<Target>`.

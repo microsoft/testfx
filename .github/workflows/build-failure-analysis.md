@@ -112,6 +112,9 @@ jobs:
           GH_AW_REPO: ${{ github.repository }}
           ADO_API: "https://dev.azure.com/dnceng-public/public/_apis"
           ADO_BUILD_UI: "https://dev.azure.com/dnceng-public/public/_build/results"
+          # microsoft.testfx pipeline definition id in dnceng-public/public (used to
+          # validate a dispatched build id belongs to the right pipeline).
+          ADO_BUILD_DEFINITION_ID: "209"
           EVENT_NAME: ${{ github.event_name }}
           CHECK_DETAILS_URL: ${{ github.event.check_run.details_url }}
           CHECK_HEAD_SHA: ${{ github.event.check_run.head_sha }}
@@ -159,13 +162,25 @@ jobs:
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, rel/*); skipping."; emit_none ;;
           esac
 
-          # --- 4. On dispatch, confirm the ADO build actually failed ---
+          # --- 4. On dispatch, validate the build: it must have failed, be
+          #        the microsoft.testfx definition (209), and belong to this PR
+          #        (sourceBranch refs/pull/<PR>/merge). Build id and PR number
+          #        are independent dispatch inputs, so guard against a mismatch
+          #        that would post one build's analysis onto the wrong PR.
           if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
-            RESULT=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1" | jq -r '.result // empty')
-            echo "ADO build ${BUILD_ID} result: '${RESULT}'"
+            build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
+            RESULT=$(printf '%s' "${build_json}" | jq -r '.result // empty')
+            DEF_ID=$(printf '%s' "${build_json}" | jq -r '.definition.id // empty')
+            SRC_BRANCH=$(printf '%s' "${build_json}" | jq -r '.sourceBranch // empty')
+            echo "ADO build ${BUILD_ID}: result='${RESULT}' definition='${DEF_ID}' sourceBranch='${SRC_BRANCH}'"
             if [ "${RESULT}" != "failed" ]; then
-              echo "::warning::ADO build ${BUILD_ID} did not fail (result='${RESULT}'); nothing to analyze."
-              emit_none
+              echo "::warning::ADO build ${BUILD_ID} did not fail (result='${RESULT}'); nothing to analyze."; emit_none
+            fi
+            if [ "${DEF_ID}" != "${ADO_BUILD_DEFINITION_ID}" ]; then
+              echo "::warning::ADO build ${BUILD_ID} is definition '${DEF_ID}', not microsoft.testfx (${ADO_BUILD_DEFINITION_ID}); refusing."; emit_none
+            fi
+            if [ "${SRC_BRANCH}" != "refs/pull/${PR_NUMBER}/merge" ]; then
+              echo "::warning::ADO build ${BUILD_ID} sourceBranch '${SRC_BRANCH}' does not match PR #${PR_NUMBER} (refs/pull/${PR_NUMBER}/merge); refusing to avoid posting to the wrong PR."; emit_none
             fi
           fi
 

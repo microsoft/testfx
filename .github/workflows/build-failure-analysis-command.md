@@ -106,12 +106,22 @@ jobs:
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, rel/*); skipping."; emit_none ;;
           esac
 
-          # --- Find the PR's most recent failed microsoft.testfx build (merge ref) ---
+          # --- Find the PR's most recent COMPLETED microsoft.testfx build (merge ref) ---
+          # Fetch the latest completed build regardless of result so we can
+          # detect a PR that has since gone green (or been force-pushed to a
+          # passing state): if the newest completed build did not fail, there
+          # is nothing current to analyse and re-posting a stale failure would
+          # pair old binlog errors with current source / permalinks.
           builds_json=$(curl -sSL --retry 3 \
-            "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&statusFilter=completed&resultFilter=failed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1")
+            "${ADO_API}/build/builds?definitions=${ADO_BUILD_DEFINITION_ID}&branchName=refs/pull/${PR_NUMBER}/merge&statusFilter=completed&queryOrder=finishTimeDescending&\$top=1&api-version=7.1")
           BUILD_ID=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].id // empty')
-          echo "Latest failed microsoft.testfx build for PR #${PR_NUMBER}: '${BUILD_ID}'"
-          [ -z "${BUILD_ID}" ] && { echo "::warning::No completed+failed microsoft.testfx build found for PR #${PR_NUMBER}."; emit_none; }
+          BUILD_RESULT=$(printf '%s' "${builds_json}" | jq -r '.value // [] | .[0].result // empty')
+          echo "Latest completed microsoft.testfx build for PR #${PR_NUMBER}: id='${BUILD_ID}' result='${BUILD_RESULT}'"
+          [ -z "${BUILD_ID}" ] && { echo "::warning::No completed microsoft.testfx build found for PR #${PR_NUMBER}."; emit_none; }
+          if [ "${BUILD_RESULT}" != "failed" ]; then
+            echo "::warning::PR #${PR_NUMBER}'s latest microsoft.testfx build (${BUILD_ID}) result is '${BUILD_RESULT}', not failed — the failure looks resolved; nothing to analyse."
+            emit_none
+          fi
 
           # --- Download every Logs_Build_* artifact and extract binlogs ---
           artifacts_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1")

@@ -21,8 +21,9 @@ failed.
 ## Instructions
 
 1. Read the agent-context environment variables: `GH_AW_BUILD_OUTCOME`,
-   `GH_AW_BINLOG_PATH`, `GH_AW_BINLOG_HOST_PATH`, `GH_AW_PR_NUMBER`,
-   `GH_AW_PR_HEAD_SHA`, `GH_AW_WORKSPACE`.
+   `GH_AW_BINLOG_LIST`, `GH_AW_BINLOG_DIR`, `GH_AW_BINLOG_PATH`,
+   `GH_AW_BINLOG_HOST_PATH`, `GH_AW_PR_NUMBER`, `GH_AW_PR_HEAD_SHA`,
+   `GH_AW_WORKSPACE`.
 
 2. If `GH_AW_BUILD_OUTCOME == 'success'`, the build did not actually fail —
    there is nothing to analyze. Call `noop` with the message
@@ -34,15 +35,19 @@ failed.
    selection apply so the workflow does not break if a specific model name is
    absent from the repository's Copilot model allowlist. In the sub-agent
    prompt include:
-   - All six `GH_AW_*` environment values verbatim so the sub-agent knows
-     which binlog to query (`GH_AW_BINLOG_PATH` is the in-container path
-     `/data/build.binlog` exposed by the `binlog-mcp` MCP server) and where
-     to post.
-   - A reminder that the binlog is live-queryable through the `binlog-mcp`
-     MCP server: the sub-agent should call MCP tools such as
-     `binlog_overview`, `binlog_errors`, `binlog_warnings` (and others as
-     needed) with `binlog_file: "$GH_AW_BINLOG_PATH"`, rather than reading
-     pre-dumped JSON files.
+   - All `GH_AW_*` environment values verbatim so the sub-agent knows which
+     binlogs to query and where to post. In particular pass
+     `GH_AW_BINLOG_LIST` (newline-separated in-container paths, one per
+     failed-build leg, under `GH_AW_BINLOG_DIR` = `/data/binlogs`) and
+     `GH_AW_PR_NUMBER` / `GH_AW_PR_HEAD_SHA`.
+   - A reminder that the binlogs are live-queryable through the `binlog-mcp`
+     MCP server: the sub-agent should iterate **every** path in
+     `GH_AW_BINLOG_LIST` and call MCP tools such as `binlog_errors`,
+     `binlog_overview`, `binlog_warnings` (and others as needed) with
+     `binlog_file` set to each leg's path — a build failure usually surfaces
+     in only one leg, so it must not analyse just the first. If no leg has
+     errors (e.g. a test-only / Helix failure) it should say the build
+     compiled cleanly rather than invent fixes.
    - A reminder that the parent workflow `noop`s immediately and that the
      sub-agent itself is responsible for calling `add_comment` (summary) and
      `create_pull_request_review_comment` (inline `suggestion` blocks),
