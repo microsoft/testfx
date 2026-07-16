@@ -20,16 +20,21 @@ public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixtur
     public TestContext TestContext { get; set; } = default!;
 
     [TestMethod]
-    public async Task RunFSharpTestWithSpaceAndDotInName()
+    public async Task DiscoversFSharpTestWithSpaceAndDotInName()
     {
         TestHost testHost = AssetFixture.GetTestHost();
 
-        // The test display name contains a space and a '.' — assert it is discovered as a single test.
         TestHostResult listResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, listResult.ExitCode, listResult.StandardOutput);
         Assert.Contains("Test method passing with a . in it", listResult.StandardOutput);
+    }
 
+    [TestMethod]
+    public async Task RunsFSharpTestWithSpaceAndDotInName()
+    {
+        TestHost testHost = AssetFixture.GetTestHost();
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
         Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
         Assert.Contains("Test run summary: Passed!", result.StandardOutput);
         Assert.Contains("failed: 0", result.StandardOutput);
