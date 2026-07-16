@@ -38,17 +38,31 @@ internal static class AssertConditionAnalyzerHelper
         && IsProvablyReflexiveSelfEquality(GetComparedType(operation, expectedOrNotExpectedParameterName));
 
     /// <summary>
-    /// Returns <see langword="true"/> when the invoked <c>Assert</c> overload accepts a caller-supplied
-    /// <see cref="System.Collections.Generic.IEqualityComparer{T}"/>, in which case the comparison can
-    /// return any result and must not be treated as an always-true/always-false condition.
+    /// Returns <see langword="true"/> when the invoked <c>Assert</c> overload is passed a non-default
+    /// <see cref="System.Collections.Generic.IEqualityComparer{T}"/> argument, in which case the comparison can
+    /// return any result and must not be treated as an always-true/always-false condition. A <see langword="null"/>
+    /// comparer is treated by MSTest as <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/>, so it
+    /// does not change the equality semantics and is not considered a custom comparer here.
     /// </summary>
-    internal static bool HasEqualityComparerParameter(IInvocationOperation operation)
-        => operation.TargetMethod.Parameters.Any(static parameter =>
+    internal static bool HasNonDefaultEqualityComparerArgument(IInvocationOperation operation)
+    {
+        IParameterSymbol? comparerParameter = operation.TargetMethod.Parameters.FirstOrDefault(static parameter =>
             parameter.Type is INamedTypeSymbol
             {
                 Name: "IEqualityComparer",
                 ContainingNamespace: { Name: "Generic", ContainingNamespace: { Name: "Collections", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } },
             });
+
+        if (comparerParameter is null)
+        {
+            return false;
+        }
+
+        // A null (or omitted) comparer is equivalent to EqualityComparer<T>.Default, so it does not change the
+        // equality semantics. Any other comparer (including a non-constant one) can return an arbitrary result.
+        return GetArgumentWithName(operation, comparerParameter.Name) is { } comparerArgument
+            && comparerArgument.ConstantValue is not { HasValue: true, Value: null };
+    }
 
     /// <summary>
     /// Gets the type <c>T</c> whose <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/> the
