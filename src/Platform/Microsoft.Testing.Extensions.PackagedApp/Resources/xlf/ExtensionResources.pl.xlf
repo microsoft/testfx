@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">Manifest spakowanej aplikacji deklaruje wiele aplikacji i żaden z nich nie jest jednoznacznie zgodny z plikiem wykonywalnym „{0}”. Identyfikatory modelu użytkownika aplikacji (Application User Model ID): {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">Manifest spakowanej aplikacji nie deklaruje prawidłowego &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</target>
+        <target state="translated">Wdraża niezapakowany (o swobodnym układzie) testowy host systemu Windows (na przykład niezapakowany interfejs WinUI) do izolowanego katalogu i uruchamia go stamtąd. Uruchamianie prawdziwie spakowanej aplikacji (MSIX) – platforma uniwersalna systemu Windows lub spakowanej WinUI – poprzez zarejestrowanie jej układu i aktywację za pomocą identyfikatora Application User Model ID nie zostało jeszcze zaimplementowane (zobacz https://github.com/microsoft/testfx/issues/9933).</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</target>
+        <target state="translated">Nie można uruchomić spakowanej aplikacji systemu Windows „{0}” (znaleziono „{1}”). Uruchomienie aplikacji spakowanej (MSIX) wymaga zarejestrowania układu w menedżerze pakietów (PackageManager) oraz aktywowania go za pomocą identyfikatora modelu użytkownika aplikacji (Application User Model ID), czego to rozszerzenie jeszcze nie obsługuje (zobacz https://github.com/microsoft/testfx/issues/9933). Obecnie można uruchamiać tylko hosty testowe bez pakietu (o swobodnym układzie).</target>
         <note />
       </trans-unit>
     </body>

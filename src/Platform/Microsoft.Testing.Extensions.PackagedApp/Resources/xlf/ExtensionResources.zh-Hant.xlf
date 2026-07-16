@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">封裝的應用程式資訊清單會宣告多個應用程式，且沒有一個能唯一地符合可執行檔 '{0}'。候選應用程式使用者模型識別碼: {1}。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</target>
+        <target state="translated">將未封裝 (鬆散配置) Windows 測試主機 (例如，未封裝的 WinUI) 部署至隔離的目錄，然後從該處啟動它。透過註冊配置並依應用程式使用者模型識別碼啟用它來啟動正版封裝 (MSIX) 應用程式 (UWP 或封裝的 WinUI) 尚未實作 (請參閱 https://github.com/microsoft/testfx/issues/9933)。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</target>
+        <target state="translated">無法啟動已封裝的 Windows 應用程式 '{0}' (找到 '{1}')。啟動已封裝 (MSIX) 應用程式需要向 PackageManager 註冊配置，並依應用程式使用者模型識別碼啟用它，此延伸模組尚未實作 (請參閱 https://github.com/microsoft/testfx/issues/9933)。目前只能啟動未封裝 (鬆散配置) 測試主機。</target>
         <note />
       </trans-unit>
     </body>

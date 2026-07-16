@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">Il manifesto dell'app in pacchetto dichiara più applicazioni e nessuna corrisponde in modo univoco all'eseguibile '{0}'. ID modello utente applicazione candidata: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">Il manifesto dell'app in pacchetto non dichiara un elemento &lt;Identity Name="..." Publisher="..." /&gt; valido.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</target>
+        <target state="translated">Distribuisce un host di test Windows non in pacchetto (layout libero) (ad esempio, WinUI non in pacchetto) in una directory isolata e lo avvia da lì. L'avvio di un'app in pacchetto (MSIX), piattaforma UWP o WinUI in pacchetto, registrandone il layout e attivandolo in base all'ID modello utente dell'applicazione non è ancora implementato (vedere https://github.com/microsoft/testfx/issues/9933).</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</target>
+        <target state="translated">Non è possibile avviare l'app di Windows in pacchetto '{0}' (trovato '{1}'). L'avvio di un'app in pacchetto (MSIX) richiede la registrazione del layout con PackageManager e l'attivazione in base all'ID modello utente dell'applicazione, che questa estensione non implementa ancora (vedere https://github.com/microsoft/testfx/issues/9933). Oggi è possibile avviare solo host di test non in pacchetto (layout libero).</target>
         <note />
       </trans-unit>
     </body>
