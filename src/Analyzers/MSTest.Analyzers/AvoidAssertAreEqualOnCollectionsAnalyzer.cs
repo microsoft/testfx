@@ -138,7 +138,10 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
                 continue;
             }
 
-            IOperation value = argument.Value.WalkDownConversion();
+            // Only peel built-in conversions (identity, implicit reference, boxing). A user-defined conversion actually
+            // executes and can turn a null source into a custom comparer, so it must be treated as opaque — otherwise a
+            // null underneath a user-defined operator would be misclassified as the default comparer.
+            IOperation value = argument.Value.WalkDownBuiltInConversion();
 
             // Any constant-null comparer (null literal, `default`, `default(IEqualityComparer<T>)`, a const null field, …)
             // falls back to EqualityComparer<T>.Default in Assert, and a reference to `EqualityComparer<T>.Default` is that
