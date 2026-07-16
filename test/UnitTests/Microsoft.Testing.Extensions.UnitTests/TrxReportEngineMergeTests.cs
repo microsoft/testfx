@@ -19,6 +19,58 @@ public sealed class TrxReportEngineMergeTests
         => Assert.ThrowsExactly<ArgumentException>(() => TrxReportEngine.Merge([], Guid.NewGuid(), "run"));
 
     [TestMethod]
+    public async Task MergeToFileAsync_WithNoInputs_ThrowsWithoutTouchingFilesystem()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"trx-merge-{Guid.NewGuid():N}");
+        try
+        {
+            // An empty input list must be rejected before any filesystem work — the output directory must
+            // not be created for an invalid call.
+            string output = Path.Combine(tempDirectory, "out", "merged.trx");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => TrxReportEngine.MergeToFileAsync([], output, Guid.NewGuid(), "run", CancellationToken.None));
+
+            Assert.IsFalse(Directory.Exists(tempDirectory));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
+    public void Merge_CarriesRunLevelOutputMessages()
+    {
+        // VSTest records run-level skipped/informational messages under ResultSummary/Output/TextMessages;
+        // the merge must carry them across (in schema order, right after Counters) rather than dropping them.
+        var outputA = new XElement(
+            Ns + "Output",
+            new XElement(Ns + "StdOut", "hello from a"),
+            new XElement(Ns + "TextMessages", new XElement(Ns + "Message", "skipped test X")));
+        var outputB = new XElement(
+            Ns + "Output",
+            new XElement(Ns + "TextMessages", new XElement(Ns + "Message", "informational Y")));
+        XDocument a = BuildReport(resultSummaryChildren: [outputA]);
+        XDocument b = BuildReport(resultSummaryChildren: [outputB]);
+
+        XElement summary = ResultSummary(TrxReportEngine.Merge([a, b], Guid.NewGuid(), "run"));
+
+        // Output must appear immediately after Counters (schema order).
+        List<string> childOrder = [.. summary.Elements().Select(e => e.Name.LocalName)];
+        Assert.AreEqual("Counters", childOrder[0]);
+        Assert.AreEqual("Output", childOrder[1]);
+
+        XElement output = summary.Elements().First(e => e.Name.LocalName == "Output");
+        Assert.AreEqual("hello from a", output.Elements().First(e => e.Name.LocalName == "StdOut").Value);
+        List<string> messages = [.. output.Descendants().Where(e => e.Name.LocalName == "Message").Select(e => e.Value)];
+        Assert.Contains("skipped test X", messages);
+        Assert.Contains("informational Y", messages);
+    }
+
+    [TestMethod]
     public void Merge_SetsProvidedRunIdAndName()
     {
         var runId = Guid.NewGuid();

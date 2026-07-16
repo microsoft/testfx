@@ -17,6 +17,27 @@ public sealed class JUnitReportMergerTests
         => Assert.ThrowsExactly<ArgumentException>(() => JUnitReportMerger.Merge([], "run"));
 
     [TestMethod]
+    public async Task MergeToFileAsync_WithNoInputs_ThrowsWithoutCreatingOutputDirectory()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"junit-merge-{Guid.NewGuid():N}");
+        try
+        {
+            string output = Path.Combine(tempDirectory, "out", "merged.xml");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => JUnitReportMerger.MergeToFileAsync([], output, "run", CancellationToken.None));
+
+            Assert.IsFalse(Directory.Exists(tempDirectory));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void Merge_SumsRootCounters()
     {
         XDocument a = BuildReport(tests: 3, failures: 1, errors: 0, skipped: 1, time: 1.5);

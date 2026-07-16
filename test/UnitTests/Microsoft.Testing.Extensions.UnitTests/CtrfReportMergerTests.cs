@@ -19,6 +19,27 @@ public sealed class CtrfReportMergerTests
         => Assert.ThrowsExactly<ArgumentException>(() => CtrfReportMerger.Merge([]));
 
     [TestMethod]
+    public async Task MergeToFileAsync_WithNoInputs_ThrowsWithoutCreatingOutputDirectory()
+    {
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        try
+        {
+            string output = Path.Combine(tempDirectory, "out", "merged.json");
+            await Assert.ThrowsExactlyAsync<ArgumentException>(
+                () => CtrfReportMerger.MergeToFileAsync([], output, CancellationToken.None));
+
+            Assert.IsFalse(Directory.Exists(tempDirectory));
+        }
+        finally
+        {
+            if (Directory.Exists(tempDirectory))
+            {
+                Directory.Delete(tempDirectory, recursive: true);
+            }
+        }
+    }
+
+    [TestMethod]
     public void Merge_ConcatenatesTests()
     {
         string a = BuildReport(testEntries: [Test("TestA", "passed"), Test("TestB", "failed")]);

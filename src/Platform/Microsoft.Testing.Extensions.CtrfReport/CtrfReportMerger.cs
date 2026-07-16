@@ -248,6 +248,13 @@ internal static class CtrfReportMerger
             throw new ArgumentNullException(nameof(outputPath));
         }
 
+        // Reject an empty input list before any filesystem work (Merge throws for empty input, but only
+        // after the output directory would already have been created).
+        if (inputPaths.Count == 0)
+        {
+            throw new ArgumentException("At least one CTRF report is required to merge.", nameof(inputPaths));
+        }
+
         // RFC 018 treats per-module inputs as read-only and requires them to remain on disk; reject an
         // output that aliases an input so a merge can never overwrite one of its own sources.
         EnsureOutputDoesNotAliasInput(inputPaths, outputPath);
@@ -459,10 +466,34 @@ internal static class CtrfReportMerger
         string outputCanonical = GetCanonicalPath(outputPath);
         foreach (string inputPath in inputPaths)
         {
-            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, FileSystemPathComparison))
             {
                 throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
             }
+        }
+    }
+
+    // Whether two file paths name the SAME file depends on the filesystem's case sensitivity: on a
+    // case-insensitive volume (Windows, default macOS) 'a.json' and 'A.json' are the same file and must
+    // collide; on a case-sensitive volume (typical Linux) they are DISTINCT files, so a case-insensitive
+    // comparison would wrongly reject a legitimate separate output. Probe once and cache.
+    private static readonly StringComparison FileSystemPathComparison =
+        IsFileSystemCaseSensitive() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+    private static bool IsFileSystemCaseSensitive()
+    {
+        try
+        {
+            string upper = Path.Combine(Path.GetTempPath(), "CASESENSITIVEPROBE" + Guid.NewGuid().ToString("N"));
+            using (new FileStream(upper, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0x1000, FileOptions.DeleteOnClose))
+            {
+                return !File.Exists(upper.ToLowerInvariant());
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            // If the probe fails, assume case-insensitive-but-preserving (rejects more, never less).
+            return false;
         }
     }
 

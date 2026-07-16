@@ -67,6 +67,11 @@ internal sealed partial class TrxReportEngine
         var mergedCollectorDataEntries = new XElement(NamespaceUri + "CollectorDataEntries");
         var mergedResultFiles = new XElement(NamespaceUri + "ResultFiles");
 
+        // VSTest records run-level skipped/informational messages under <ResultSummary>/<Output> (see
+        // TrxReportEngine.Metadata.cs). Collect each input's Output element so those messages are merged
+        // rather than silently dropped.
+        var resultSummaryOutputs = new List<XElement>();
+
         // Preserve the order in which counter attributes are first seen so the merged
         // <Counters> element keeps the well-known TRX attribute ordering.
         var counterAttributeOrder = new List<string>();
@@ -123,6 +128,10 @@ internal sealed partial class TrxReportEngine
                 CloneChildrenInto(FindChild(resultSummary, "RunInfos"), mergedRunInfos);
                 CloneChildrenInto(FindChild(resultSummary, "CollectorDataEntries"), mergedCollectorDataEntries);
                 CloneChildrenInto(FindChild(resultSummary, "ResultFiles"), mergedResultFiles);
+                if (FindChild(resultSummary, "Output") is { } output)
+                {
+                    resultSummaryOutputs.Add(output);
+                }
             }
 
             XElement? times = FindChild(testRun, "Times");
@@ -175,7 +184,7 @@ internal sealed partial class TrxReportEngine
         mergedTestRun.Add(mergedTestDefinitions);
         mergedTestRun.Add(mergedTestEntries);
         mergedTestRun.Add(mergedTestLists);
-        mergedTestRun.Add(BuildResultSummary(anyFailure ? "Failed" : "Completed", counterAttributeOrder, counterSums, mergedRunInfos, mergedCollectorDataEntries, mergedResultFiles));
+        mergedTestRun.Add(BuildResultSummary(anyFailure ? "Failed" : "Completed", counterAttributeOrder, counterSums, MergeResultSummaryOutputs(resultSummaryOutputs), mergedRunInfos, mergedCollectorDataEntries, mergedResultFiles));
 
         return new XDocument(new XDeclaration("1.0", "UTF-8", null), mergedTestRun);
     }
@@ -198,6 +207,13 @@ internal sealed partial class TrxReportEngine
         if (outputPath is null)
         {
             throw new ArgumentNullException(nameof(outputPath));
+        }
+
+        // Reject an empty input list before any filesystem work: Merge throws for empty input, but only
+        // after output-directory creation and attachment relocation would already have touched the disk.
+        if (inputPaths.Count == 0)
+        {
+            throw new ArgumentException("At least one TRX report is required to merge.", nameof(inputPaths));
         }
 
         // RFC 018 treats per-module inputs as read-only and requires them to remain on disk. The merged
@@ -1005,10 +1021,35 @@ internal sealed partial class TrxReportEngine
         string outputCanonical = GetCanonicalPath(outputPath);
         foreach (string inputPath in inputPaths)
         {
-            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, FileSystemPathComparison))
             {
                 throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
             }
+        }
+    }
+
+    // Whether two file paths name the SAME file depends on the filesystem's case sensitivity: on a
+    // case-insensitive volume (Windows, default macOS) 'a.trx' and 'A.trx' are the same file and must
+    // collide; on a case-sensitive volume (typical Linux) they are DISTINCT files, so a case-insensitive
+    // comparison would wrongly reject a legitimate separate output. Probe once and cache.
+    private static readonly StringComparison FileSystemPathComparison =
+        IsFileSystemCaseSensitive() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+
+    private static bool IsFileSystemCaseSensitive()
+    {
+        try
+        {
+            string upper = Path.Combine(Path.GetTempPath(), "CASESENSITIVEPROBE" + Guid.NewGuid().ToString("N"));
+            using (new FileStream(upper, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0x1000, FileOptions.DeleteOnClose))
+            {
+                return !File.Exists(upper.ToLowerInvariant());
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            // If the probe fails, assume case-insensitive-but-preserving (the safer, more conservative
+            // choice for the alias check: it rejects more, never less).
+            return false;
         }
     }
 
@@ -1089,7 +1130,7 @@ internal sealed partial class TrxReportEngine
         return leaf is "." or ".." ? "_" + leaf : leaf;
     }
 
-    private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums, XElement runInfos, XElement collectorDataEntries, XElement resultFiles)
+    private static XElement BuildResultSummary(string outcome, List<string> counterAttributeOrder, Dictionary<string, long> counterSums, XElement? output, XElement runInfos, XElement collectorDataEntries, XElement resultFiles)
     {
         var counters = new XElement(NamespaceUri + "Counters");
         foreach (string name in counterAttributeOrder)
@@ -1102,8 +1143,13 @@ internal sealed partial class TrxReportEngine
             new XAttribute("outcome", outcome),
             counters);
 
-        // Emit the diagnostics/attachment children only when they carry content, matching the shape
-        // the single-run producer writes (which omits empty <RunInfos>/<CollectorDataEntries>/<ResultFiles>).
+        // Emit the optional children in TRX schema order (Counters, Output, RunInfos, CollectorDataEntries,
+        // ResultFiles), and only when they carry content, matching the single-run producer's shape.
+        if (output is not null)
+        {
+            resultSummary.Add(output);
+        }
+
         if (runInfos.HasElements)
         {
             resultSummary.Add(runInfos);
@@ -1120,6 +1166,81 @@ internal sealed partial class TrxReportEngine
         }
 
         return resultSummary;
+    }
+
+    /// <summary>
+    /// Merges the run-level <c>&lt;Output&gt;</c> elements of every input <c>ResultSummary</c> into a single
+    /// one so run-level std streams and informational/skipped <c>TextMessages</c> survive the merge. The
+    /// scalar text children (<c>StdOut</c>/<c>StdErr</c>/<c>DebugTrace</c>) are concatenated and the
+    /// <c>Message</c> entries under <c>TextMessages</c> are unioned. Returns <see langword="null"/> when
+    /// nothing is present.
+    /// </summary>
+    private static XElement? MergeResultSummaryOutputs(List<XElement> outputs)
+    {
+        if (outputs.Count == 0)
+        {
+            return null;
+        }
+
+        var stdOut = new StringBuilder();
+        var stdErr = new StringBuilder();
+        var debugTrace = new StringBuilder();
+        var messages = new List<XElement>();
+
+        foreach (XElement output in outputs)
+        {
+            AppendOutputText(stdOut, FindChild(output, "StdOut"));
+            AppendOutputText(stdErr, FindChild(output, "StdErr"));
+            AppendOutputText(debugTrace, FindChild(output, "DebugTrace"));
+
+            if (FindChild(output, "TextMessages") is { } textMessages)
+            {
+                foreach (XElement message in textMessages.Elements().Where(e => string.Equals(e.Name.LocalName, "Message", StringComparison.Ordinal)))
+                {
+                    messages.Add(new XElement(message));
+                }
+            }
+        }
+
+        var merged = new XElement(NamespaceUri + "Output");
+        if (stdOut.Length > 0)
+        {
+            merged.Add(new XElement(NamespaceUri + "StdOut", stdOut.ToString()));
+        }
+
+        if (stdErr.Length > 0)
+        {
+            merged.Add(new XElement(NamespaceUri + "StdErr", stdErr.ToString()));
+        }
+
+        if (debugTrace.Length > 0)
+        {
+            merged.Add(new XElement(NamespaceUri + "DebugTrace", debugTrace.ToString()));
+        }
+
+        if (messages.Count > 0)
+        {
+            var textMessages = new XElement(NamespaceUri + "TextMessages");
+            textMessages.Add(messages);
+            merged.Add(textMessages);
+        }
+
+        return merged.HasElements ? merged : null;
+    }
+
+    private static void AppendOutputText(StringBuilder builder, XElement? element)
+    {
+        if (element is null || RoslynString.IsNullOrEmpty(element.Value))
+        {
+            return;
+        }
+
+        if (builder.Length > 0)
+        {
+            builder.Append('\n');
+        }
+
+        builder.Append(element.Value);
     }
 
     private static bool TryParseDateTimeOffset(string? value, out DateTimeOffset result)
