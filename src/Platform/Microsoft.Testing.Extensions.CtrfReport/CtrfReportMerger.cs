@@ -464,33 +464,64 @@ internal static class CtrfReportMerger
         }
 #endif
         string outputCanonical = GetCanonicalPath(outputPath);
+        StringComparison comparison = GetOutputPathComparison(outputPath);
         foreach (string inputPath in inputPaths)
         {
-            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, FileSystemPathComparison))
+            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, comparison))
             {
                 throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
             }
         }
     }
 
-    // Whether two file paths name the SAME file depends on the filesystem's case sensitivity: on a
-    // case-insensitive volume (Windows, default macOS) 'a.json' and 'A.json' are the same file and must
-    // collide; on a case-sensitive volume (typical Linux) they are DISTINCT files, so a case-insensitive
-    // comparison would wrongly reject a legitimate separate output. Probe once and cache.
-    private static readonly StringComparison FileSystemPathComparison =
-        IsFileSystemCaseSensitive() ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+    // Whether two paths name the SAME file depends on the case sensitivity of the specific filesystem/
+    // directory that will hold the output — which can differ by volume and, on Windows, per-directory — so
+    // this is probed at the output's OWN location (nearest existing ancestor) rather than a fixed temp dir.
+    // On a case-insensitive location 'a.json' and 'A.json' are the same file and must collide; on a
+    // case-sensitive one they are distinct. An alias can only occur when the two paths share a directory,
+    // so that shared location's sensitivity is the correct one (a different-directory input never compares
+    // equal).
+    private static StringComparison GetOutputPathComparison(string outputPath)
+    {
+        string? probeDirectory = FindNearestExistingDirectory(outputPath);
+        return probeDirectory is not null && IsDirectoryCaseSensitive(probeDirectory)
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
+    }
 
-    private static bool IsFileSystemCaseSensitive()
+    private static string? FindNearestExistingDirectory(string path)
+    {
+        string? current = Path.GetDirectoryName(Path.GetFullPath(path));
+        while (!RoslynString.IsNullOrEmpty(current))
+        {
+            if (Directory.Exists(current))
+            {
+                return current;
+            }
+
+            string? parent = Path.GetDirectoryName(current);
+            if (parent is null || string.Equals(parent, current, StringComparison.Ordinal))
+            {
+                break;
+            }
+
+            current = parent;
+        }
+
+        return current;
+    }
+
+    private static bool IsDirectoryCaseSensitive(string directory)
     {
         try
         {
-            string upper = Path.Combine(Path.GetTempPath(), "CASESENSITIVEPROBE" + Guid.NewGuid().ToString("N"));
+            string upper = Path.Combine(directory, "CASESENSITIVEPROBE" + Guid.NewGuid().ToString("N"));
             using (new FileStream(upper, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0x1000, FileOptions.DeleteOnClose))
             {
                 return !File.Exists(upper.ToLowerInvariant());
             }
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
             // If the probe fails, assume case-insensitive-but-preserving (rejects more, never less).
             return false;
