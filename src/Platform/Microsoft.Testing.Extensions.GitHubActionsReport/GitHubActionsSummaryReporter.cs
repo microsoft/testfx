@@ -221,8 +221,15 @@ internal sealed class GitHubActionsSummaryReporter :
     /// <see cref="FileShare.Read"/> — which denies other writers — so at most one process appends at a time, and
     /// retry on the resulting sharing violation (an <see cref="IOException"/>) until the holder releases the file.
     /// Each write is a single small section, so contention clears almost immediately; the bounded attempt count
-    /// still lets a genuinely unwritable path surface as the caller's best-effort warning rather than looping
+    /// still lets a genuinely unlockable file surface as the caller's best-effort warning rather than looping
     /// forever.
+    /// <para>
+    /// Retries are scoped to <em>acquiring</em> the exclusive append handle only. Once the handle is acquired the
+    /// process appends alone, so contention can no longer occur; a failure that happens <em>during</em> the write
+    /// (e.g. disk full) may already have appended a partial section, and retrying would re-append the full section
+    /// on top of it and corrupt the summary. Such a mid-write failure is therefore propagated straight to the
+    /// caller's best-effort warning path instead of being retried.
+    /// </para>
     /// </remarks>
     internal static /* for testing */ async Task AppendStepSummaryWithRetryAsync(
         IFileSystem fileSystem,
@@ -235,19 +242,30 @@ internal sealed class GitHubActionsSummaryReporter :
         for (int attempt = 1; ; attempt++)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            IFileStream stream;
             try
             {
-                using IFileStream stream = fileSystem.NewFileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
-                using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false));
-                await writer.WriteAsync(content).ConfigureAwait(false);
-                return;
+                stream = fileSystem.NewFileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
             }
             catch (IOException) when (attempt < maxAttempts)
             {
                 // Another test-host process currently holds the summary file open for writing. Back off briefly
                 // and retry so this assembly's section is appended intact once the holder releases the file.
                 await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                continue;
             }
+
+            // The exclusive append handle is acquired: from here on we append alone, so any failure is a genuine
+            // write error (not contention) and must not be retried — a partial append followed by a full re-append
+            // would corrupt the summary. Let it propagate to the caller's best-effort warning path.
+            using (stream)
+            using (var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false)))
+            {
+                await writer.WriteAsync(content).ConfigureAwait(false);
+            }
+
+            return;
         }
     }
 

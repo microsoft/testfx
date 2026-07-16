@@ -171,6 +171,25 @@ public sealed class GitHubActionsSummaryReporterTests
         fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Exactly(3));
     }
 
+    [TestMethod]
+    public async Task AppendStepSummaryWithRetryAsync_DoesNotRetry_WhenWriteFailsAfterHandleAcquired()
+    {
+        // The handle is acquired successfully but the write/flush fails (e.g. disk full). Retrying would re-append
+        // the full section on top of a partial one, so the failure must propagate after a single attempt.
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(s => s.Stream).Returns(new ThrowOnWriteStream());
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(fileStream.Object);
+
+        await Assert.ThrowsExactlyAsync<IOException>(() => GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
+            fileSystem.Object, "summary.md", "partial", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None));
+
+        // Exactly one acquisition: a post-acquire write failure is not contention and must not be retried.
+        fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Once);
+    }
+
     private static Mock<IFileSystem> CreateFileSystemWritingTo(Stream target)
     {
         var fileStream = new Mock<IFileStream>();
@@ -180,5 +199,30 @@ public sealed class GitHubActionsSummaryReporterTests
         fileSystem.Setup(f => f.NewFileStream(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(fileStream.Object);
         return fileSystem;
+    }
+
+    // A writable stream that fails on any attempt to write or flush, simulating a mid-write I/O error (e.g. disk full)
+    // after the exclusive append handle has already been acquired.
+    private sealed class ThrowOnWriteStream : Stream
+    {
+        public override bool CanRead => false;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => true;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position { get => 0; set => throw new NotSupportedException(); }
+
+        public override void Flush() => throw new IOException("There is not enough space on the disk.");
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new IOException("There is not enough space on the disk.");
+
+        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+
+        public override void SetLength(long value) => throw new NotSupportedException();
     }
 }
