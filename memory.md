@@ -1,13 +1,12 @@
 # Efficiency Improver — Persistent Memory for microsoft/testfx
 
 ## Last Updated
-2026-07-10 UTC
+2026-07-16 UTC
 
 ## Round-Robin Schedule
 
-Tasks run this session: **4, 5, 2, 3, 7**
-Last run before this: Tasks 2, 3, 7 (2026-07-09)
-Last run before that: Tasks 5, 7 (2026-07-08)
+Tasks run this session: **2, 3, 7**
+Last run before this: Tasks 4, 5, 2, 3, 7 (2026-07-10)
 Next run should prioritise: Tasks 1 (validate), 5 (issue comments), 6 (infra), 7 (always)
 
 ## Build / Test / Benchmark Commands
@@ -22,7 +21,6 @@ Next run should prioritise: Tasks 1 (validate), 5 (issue comments), 6 (infra), 7
 Notes:
 - Repo-local SDK at `.dotnet/dotnet` (Arcade-provisioned). Must run `./build.sh` first to install.
 - Required SDK version: `11.0.100-preview.7.26359.110` (not available in agent env)
-- `--no-restore` flag is broken; always run with full restore.
 - Performance runner: `test/Performance/MSTest.Performance.Runner/`
 
 ## Efficiency Notes
@@ -37,12 +35,15 @@ Notes:
 - **MSBuildCompatibilityHelper**: Already caches MSBuild version and feature-check results with `??=` pattern.
 - **TrxReport**: Well-optimized — binary format for streaming store, XElement DOM only at report-generation time (not hot path).
 - **bool.Parse in InvokeTestingPlatformTask**: Already cached as fields in RFC 018 commit (c66515a). No pending PR needed.
-- **StackTraceHelper.TryFindLocationFromStackFrame (MSBuild)**: Was using Regex.Split+LINQ Take(20); replaced with string.Split+for loop (PR pending).
+- **StackTraceHelper.TryFindLocationFromStackFrame (MSBuild)**: Already fixed in main — uses string.Split + for loop (no Regex.Split or LINQ).
 - **Server mode TestNode serializer**: Uses LINQ Select().ToList() per test update — minor, dominated by network I/O, not worth changing.
+- **TestCaseExtensions.GetTestName / GetClassNameWhenFullyQualifiedNameStartsWith**: Was allocating `$"{testClassName}."` on every call per test case. Fixed in PR branch `efficiency/avoid-string-interpolation-in-hot-path` — uses direct length+char+StartsWith checks.
+- **TestMethodFilter._supportedProperties**: Created per TestElementFilterProvider instance (once per test source) — not a hot path, not worth fixing.
+- **Assert.Matches.ToRegex**: Creates new Regex per call by design; user can pass pre-built Regex overload.
 
 ## Open PRs / Issues Created by Efficiency Improver
 
-- **PR for branch `efficiency/stacktrace-string-split`** — Replace Regex.Split+Take(20) with string.Split+for in MSBuild StackTraceHelper. PR number TBD.
+- **PR for branch `efficiency/avoid-string-interpolation-in-hot-path`** — Avoid per-test string allocations in GetTestName/GetClassNameWhenFullyQualifiedNameStartsWith. PR# TBD.
 - Previous work:
   - #9713 (Scenario2 proposal) — closed as completed by Evangelink, resolved by #9728
   - #9714 (JsonSerializerOptions caching) — closed as completed by Evangelink
@@ -68,7 +69,8 @@ Notes:
 
 | Date | PR/Issue | Summary |
 |------|----------|---------|
-| 2026-07-10 | branch pushed (PR# TBD) | Replace Regex.Split+Take(20) with string.Split+for in MSBuild StackTraceHelper |
+| 2026-07-16 | branch pushed (PR# TBD) | Avoid string interpolation allocations in GetTestName/GetClassNameWhenFullyQualifiedNameStartsWith |
+| 2026-07-10 | PR# TBD (branch efficiency/stacktrace-string-split — no longer needed, already in main) | StackTraceHelper already fixed in main |
 | 2026-07-09 | bool.Parse now in main | Cache `bool.Parse` results already in RFC 018 commit; no separate PR needed |
 | 2026-07-08 | #9712 comment | Energy impact of Azure.Identity dependency; recommended TokenCredential abstraction |
 | 2026-07-10 | #9714 (closed) | Cache JsonSerializerOptions in PlainProcess + DotnetTestProcess; remove CA1869 pragmas |
@@ -83,6 +85,6 @@ Notes:
 
 ## Backlog Cursor
 
-- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅
+- Code scan cursor: CtrfReport ✅, HtmlReport ✅, Adapter/ ✅, TestFramework/ ✅, Platform/ hot paths ✅, VSTestBridge ✅, AzureDevOps extensions ✅, MSBuild tasks ✅, TrxReport ✅, ServerMode ✅, Platform/Capabilities ✅, Platform/Terminal ✅
 - Issue comments cursor: #8824 ✅, #9712 ✅ — next: scan for new efficiency issues
-- Next code scan area: `src/Platform/Microsoft.Testing.Platform/` — capabilities, lifecycle, test execution pipeline
+- Next code scan area: TestFramework assertions, TestFramework/Extensions
