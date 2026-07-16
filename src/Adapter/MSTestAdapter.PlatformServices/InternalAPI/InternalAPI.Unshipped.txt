@@ -1,4 +1,8 @@
 #nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestCleanup = 7 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestInitialize = 6 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestCleanupTimeout.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestInitializeTimeout.get -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.get -> System.Guid?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.set -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int

@@ -385,6 +385,8 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.class_cleanup_timeout"] = (double)settings.ClassCleanupTimeout;
         metrics["mstest.setting.test_initialize_timeout"] = (double)settings.TestInitializeTimeout;
         metrics["mstest.setting.test_cleanup_timeout"] = (double)settings.TestCleanupTimeout;
+        metrics["mstest.setting.global_test_initialize_timeout"] = (double)settings.GlobalTestInitializeTimeout;
+        metrics["mstest.setting.global_test_cleanup_timeout"] = (double)settings.GlobalTestCleanupTimeout;
         metrics["mstest.setting.cooperative_cancellation"] = AsTelemetryBool(settings.CooperativeCancellationTimeout);
 
         // Behavior

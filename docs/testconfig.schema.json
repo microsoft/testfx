@@ -70,6 +70,16 @@
               "minimum": 1,
               "description": "Timeout, in milliseconds, for [TestCleanup] methods. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
             },
+            "globalTestInitialize": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [GlobalTestInitialize] methods. Falls back to 'testInitialize' when not set. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
+            "globalTestCleanup": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Timeout, in milliseconds, for [GlobalTestCleanup] methods. Falls back to 'testCleanup' when not set. Must be a strictly positive integer; a value of 0 or less is rejected with a warning and ignored. Omit this key to use the default (no timeout)."
+            },
             "useCooperativeCancellation": {
               "type": "boolean",
               "description": "When true, MSTest uses cooperative cancellation for timeouts instead of aborting the thread. Defaults to false."
