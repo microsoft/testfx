@@ -129,9 +129,9 @@ internal static class AssertConditionAnalyzerHelper
             current is { SpecialType: not SpecialType.System_Object and not SpecialType.System_ValueType };
             current = current.BaseType)
         {
-            foreach (ISymbol member in current.GetMembers())
+            foreach (ISymbol member in current.GetMembers(nameof(object.Equals)))
             {
-                if (member is IMethodSymbol { IsOverride: true, Name: nameof(object.Equals), Parameters: [{ Type.SpecialType: SpecialType.System_Object }] })
+                if (member is IMethodSymbol { IsOverride: true, Parameters: [{ Type.SpecialType: SpecialType.System_Object }] })
                 {
                     return true;
                 }
