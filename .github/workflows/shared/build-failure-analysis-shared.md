@@ -43,9 +43,11 @@ for posting results, and a small set of read-only `shell` commands (including
      server (`binlog_errors`, `binlog_overview`, `binlog_warnings`, …) with
      `binlog_file` set to each leg's path — a failure usually surfaces in only
      one leg, so do not analyse just the first. If no leg shows errors **and**
-     no failed-target/process evidence, report that the build compiled cleanly
-     (the failure is elsewhere, e.g. a test/Helix stage) rather than inventing
-     fixes.
+     no failed-target/process evidence, the build compiled cleanly — the
+     pipeline failure is then a **non-build** (test/Helix/publishing) failure,
+     which is **out of scope**. This workflow analyses build failures only, so
+     **post nothing**: call `noop` with a short reason and stop. Do **not**
+     post a summary comment and do **not** invent fixes.
    - Post exactly one summary via `add_comment` and any inline
      `suggestion` blocks via `create_pull_request_review_comment`, **targeting
      the pull request `GH_AW_PR_NUMBER` explicitly** (these workflows use
@@ -54,5 +56,5 @@ for posting results, and a small set of read-only `shell` commands (including
    - `submit_pull_request_review` is **not** a safe output for this workflow;
      inline comments stand alone.
 
-4. When you have posted the analysis (or the `noop` for a clean/no-binlog
-   case), stop.
+4. When you have posted the analysis for a genuine build failure (or called
+   `noop` for a clean-compile / non-build failure), stop.

@@ -57,7 +57,7 @@ The failed Azure DevOps build publishes **one binlog per build leg** (e.g. Linux
 
 1. For **each** path in `GH_AW_BINLOG_LIST`, call `binlog_errors { binlog_file: "<path>" }`. Concentrate your analysis on the leg(s) that actually report errors (each error has `{ severity, code, message, file, line, column, project }`).
 2. For the leg(s) with errors, call `binlog_overview { binlog_file: "<path>" }` for build configuration/context, and `binlog_warnings { binlog_file: "<path>", top: 10 }` when the failure looks like a `WarnAsError` promotion.
-3. If a leg reports **no** errors from `binlog_errors`, that alone does **not** prove it compiled cleanly — a target can fail without emitting an MSBuild error, and non-MSBuild/process failures leave no error records. Before concluding a leg is clean, also check `binlog_overview` and look for failed targets / `OnError` handlers / process-termination clues (see **Defensive Behavior** below). Only when **every** leg shows no errors **and** no failed-target/process evidence should you report that the build compiled cleanly and the failure is elsewhere (most often a test / Helix stage); in that case name the failing stage if you can identify it, link the [Azure DevOps build](${GH_AW_BINLOG_HOST_PATH}), and stop — do **not** invent code fixes.
+3. If a leg reports **no** errors from `binlog_errors`, that alone does **not** prove it compiled cleanly — a target can fail without emitting an MSBuild error, and non-MSBuild/process failures leave no error records. Before concluding a leg is clean, also check `binlog_overview` and look for failed targets / `OnError` handlers / process-termination clues (see **Defensive Behavior** below). Only when **every** leg shows no errors **and** no failed-target/process evidence has the build itself compiled cleanly. This workflow analyses **build** failures only: a clean compile means the pipeline failure is a **non-build** failure (most often a test / Helix / publishing stage), which is out of scope. In that case **post nothing** — call `noop` with a short reason (e.g. `"Build compiled cleanly across all legs; pipeline failure is in a non-build stage (test/Helix) — out of scope for build-failure analysis."`) and stop. Do **not** post a summary comment and do **not** invent code fixes.
 
 Pass each `binlog_file` verbatim from `GH_AW_BINLOG_LIST`. Because the MCP server is live, ask follow-up questions when these calls leave gaps — searching for specific error codes, listing targets that failed in a given project, or pulling task-level timing. Discover the full tool surface with `binlog-mcp`'s own `tools/list` (the MCP gateway exposes it automatically).
 
@@ -107,7 +107,9 @@ If the source line at the reported `file:line` does not look like a plausible ca
 
 ### Step 5 — Build the PR comment
 
-Always post **exactly one** summary comment via `add_comment` (targeting the pull request `GH_AW_PR_NUMBER`). Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
+This step applies **only when you have confirmed a genuine build failure** (at least one leg has build errors or failed-target/process evidence). If every leg compiled cleanly, do not reach this step — `noop` silently per Step 2 instead.
+
+When there is a build failure, post **exactly one** summary comment via `add_comment` (targeting the pull request `GH_AW_PR_NUMBER`). Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
 
 Template:
 
