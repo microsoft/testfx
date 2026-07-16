@@ -56,6 +56,13 @@ on:
 # PR targets an in-scope base branch.
 if: needs.fetch-binlog.outputs.binlog-found == 'true'
 
+# Least-privilege for the workflow/agent jobs. The agent runs read-only; it
+# does NOT post directly. All PR writes (summary comment + inline review
+# suggestions) go through gh-aw **safe-outputs**, which the compiler emits as
+# a separate `safe_outputs` job granted `pull-requests: write` + `issues:
+# write` in the generated lock. Keep `pull-requests: read` here so the AI
+# agent job stays least-privilege — do NOT raise it to `write`, that would
+# hand PR-write scope to the agent job unnecessarily.
 permissions:
   contents: read
   pull-requests: read
