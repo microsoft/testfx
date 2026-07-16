@@ -3,20 +3,22 @@
 #
 # Imported by build-failure-analysis.md (check_run + workflow_dispatch
 # triggers) and build-failure-analysis-command.md (slash command). Keeps the
-# prompt that delegates to the build-failure-analyst agent in one place.
-# Per-trigger wiring (steps, env, mcp-servers, permissions) lives in each
-# caller because gh-aw merges those fields from imports but each main workflow
-# must still re-declare its top-level permissions.
+# prompt that drives the build-failure analysis in one place. Per-trigger
+# wiring (steps, env, mcp-servers, permissions) lives in each caller because
+# gh-aw merges those fields from imports but each main workflow must still
+# re-declare its top-level permissions.
 
 description: "Shared body for build-failure-analysis workflows"
 ---
 
 # Build Failure Analyst
 
-Delegate to the `build-failure-analyst` agent defined at
-`.github/agents/build-failure-analyst.agent.md` to analyze the binary log of
-the build that just ran and post a PR review when (and only when) the build
-failed.
+You are the **build-failure analyst**. Analyze the binary logs of the Azure
+DevOps build that just failed and post a PR review — directly, in this job.
+Do **not** try to spawn a sub-agent: the `task` tool is intentionally not
+available here; the only tools this workflow allows are `binlog-mcp`,
+`github`, the `safeoutputs` writers, and a small set of read-only `shell`
+commands (including `cat`).
 
 ## Instructions
 
@@ -29,44 +31,27 @@ failed.
    there is nothing to analyze. Call `noop` with the message
    `"Build succeeded — no analysis required."` and stop.
 
-3. Otherwise, launch the `build-failure-analyst` agent as a **background**
-   task (`task` tool, `agent_type: "build-failure-analyst"` so the custom
-   agent defined at `.github/agents/build-failure-analyst.agent.md` is loaded,
-   `mode: "background"`).
-   Do **not** pin a specific `model` — let the workflow-level default model
-   selection apply so the workflow does not break if a specific model name is
-   absent from the repository's Copilot model allowlist. In the sub-agent
-   prompt include:
-   - All `GH_AW_*` environment values verbatim so the sub-agent knows which
-     binlogs to query and where to post. In particular pass
-     `GH_AW_BINLOG_LIST` (newline-separated in-container paths, one per
-     failed-build leg, under `GH_AW_BINLOG_DIR` = `/data/binlogs`) and
-     `GH_AW_PR_NUMBER` / `GH_AW_PR_HEAD_SHA`.
-   - A reminder that the binlogs are live-queryable through the `binlog-mcp`
-     MCP server: the sub-agent should iterate **every** path in
-     `GH_AW_BINLOG_LIST` and call MCP tools such as `binlog_errors`,
-     `binlog_overview`, `binlog_warnings` (and others as needed) with
-     `binlog_file` set to each leg's path — a build failure usually surfaces
-     in only one leg, so it must not analyse just the first. If no leg has
-     errors (e.g. a test-only / Helix failure) it should say the build
-     compiled cleanly rather than invent fixes.
-   - A reminder that the parent workflow `noop`s immediately and that the
-     sub-agent itself is responsible for calling `add_comment` (summary) and
-     `create_pull_request_review_comment` (inline `suggestion` blocks),
-     **targeting the pull request `GH_AW_PR_NUMBER` explicitly** — these
-     workflows are triggered by `check_run` / slash command and use
-     `target: "*"`, so there is no implicit "triggering PR"; the PR number
-     must be passed on every safe-output call.
-   - A reminder that `submit_pull_request_review` is **not** a safe output
-     for this workflow — inline comments stand alone.
+3. Load your detailed playbook: `cat .github/agents/build-failure-analyst.agent.md`
+   (it is checked out with the repository config). Follow that methodology —
+   root-cause grouping, source-context reading via the GitHub API at
+   `GH_AW_PR_HEAD_SHA`, comment/suggestion formatting, and defensive behavior.
+   In summary:
+   - Iterate **every** path in `GH_AW_BINLOG_LIST` (newline-separated
+     in-container binlog paths, one per failed-build leg, under
+     `GH_AW_BINLOG_DIR` = `/data/binlogs`) and query the `binlog-mcp` MCP
+     server (`binlog_errors`, `binlog_overview`, `binlog_warnings`, …) with
+     `binlog_file` set to each leg's path — a failure usually surfaces in only
+     one leg, so do not analyse just the first. If no leg shows errors **and**
+     no failed-target/process evidence, report that the build compiled cleanly
+     (the failure is elsewhere, e.g. a test/Helix stage) rather than inventing
+     fixes.
+   - Post exactly one summary via `add_comment` and any inline
+     `suggestion` blocks via `create_pull_request_review_comment`, **targeting
+     the pull request `GH_AW_PR_NUMBER` explicitly** (these workflows use
+     `target: "*"`, so there is no implicit "triggering PR" — pass the number
+     on every safe-output call).
+   - `submit_pull_request_review` is **not** a safe output for this workflow;
+     inline comments stand alone.
 
-4. **Immediately after launching the background task** — do NOT wait for it
-   to finish and do NOT read its result — call `noop` with a brief status
-   message such as
-   `"Build-failure analyst launched in background for PR #N. It will post the analysis directly."`.
-   Then stop.
-
-> **Important**: Reading the background agent result would pull its entire
-> conversation (including every binlog query and every source file it
-> inspected) into your context. Do not call `read_agent` or any equivalent
-> after calling `noop`.
+4. When you have posted the analysis (or the `noop` for a clean/no-binlog
+   case), stop.

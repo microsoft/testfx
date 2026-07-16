@@ -145,12 +145,19 @@ jobs:
           # so re-read the head here and skip if it moved.
           build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
           BUILD_PR_SHA=$(printf '%s' "${build_json}" | jq -r '.triggerInfo["pr.sourceSha"] // empty')
-          CURRENT_HEAD=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha' 2>/dev/null)
-          if [ -n "${BUILD_PR_SHA}" ] && [ -n "${CURRENT_HEAD}" ] && [ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]; then
+          CURRENT_HEAD=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha // empty' 2>/dev/null)
+          # Fail CLOSED: if either SHA can't be resolved (transient API failure
+          # or missing Azure triggerInfo), skip rather than risk analyzing a
+          # stale binlog against the current diff.
+          if [ -z "${BUILD_PR_SHA}" ] || [ -z "${CURRENT_HEAD}" ]; then
+            echo "::warning::Could not resolve build revision ('${BUILD_PR_SHA}') and/or current PR head ('${CURRENT_HEAD}'); skipping."
+            emit_none
+          fi
+          if [ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]; then
             echo "::warning::Build ${BUILD_ID} analyzed revision '${BUILD_PR_SHA}' but PR #${PR_NUMBER} head is now '${CURRENT_HEAD}'; skipping stale build (a newer build will cover the current revision)."
             emit_none
           fi
-          HEAD_SHA="${CURRENT_HEAD:-${BUILD_PR_SHA:-${HEAD_SHA}}}"
+          HEAD_SHA="${CURRENT_HEAD}"
           echo "Analyzing build ${BUILD_ID} at PR head revision '${HEAD_SHA}'."
 
           # --- Download every Logs_Build_* artifact and extract binlogs ---
@@ -174,14 +181,15 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            curl -sSL --retry 3 --max-filesize "${MAX_ZIP_BYTES}" "${url}" -o /tmp/a.zip \
-              || { echo "::warning::Skipping ${name}: download failed or exceeded ${MAX_ZIP_BYTES} bytes."; continue; }
-            # `--max-filesize` only aborts when the server sends a Content-Length;
-            # enforce the cap again post-download via stat in case the header is
-            # absent or stripped by a proxy.
+            # Hard-cap the bytes written to disk regardless of Content-Length:
+            # stream through `head -c` (cap + 1) and bound total time.
+            curl -sSL --retry 3 --max-time 300 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip || true
             ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
+            if [ "${ZIP_BYTES}" -eq 0 ]; then
+              echo "::warning::Skipping ${name}: empty or failed download."; continue
+            fi
             if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
-              echo "::warning::Skipping ${name}: downloaded ${ZIP_BYTES} bytes exceeds ${MAX_ZIP_BYTES}."; continue
+              echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
             fi
             UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt

@@ -206,13 +206,21 @@ jobs:
           # build/check for the current head will cover it.
           BUILD_PR_SHA=$(printf '%s' "${build_json}" | jq -r '.triggerInfo["pr.sourceSha"] // empty')
           CURRENT_HEAD=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
-          if [ -n "${BUILD_PR_SHA}" ] && [ -n "${CURRENT_HEAD}" ] && [ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]; then
+          # Fail CLOSED: if either the build's analyzed revision or the current
+          # PR head can't be resolved, skip — we must not analyze a possibly
+          # stale binlog against the current diff (inline comments have no
+          # commit_id and target the current PR diff).
+          if [ -z "${BUILD_PR_SHA}" ] || [ -z "${CURRENT_HEAD}" ]; then
+            echo "::warning::Could not resolve build revision ('${BUILD_PR_SHA}') and/or current PR head ('${CURRENT_HEAD}'); skipping to avoid analyzing a stale binlog against the current diff."
+            emit_none
+          fi
+          if [ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]; then
             echo "::warning::Build ${BUILD_ID} analyzed revision '${BUILD_PR_SHA}' but PR #${PR_NUMBER} head is now '${CURRENT_HEAD}'; skipping stale build (a newer build/check will cover the current revision)."
             emit_none
           fi
           # Consistent now: build revision == current PR head. Use it for
           # permalinks so they line up with the inline comments' diff target.
-          HEAD_SHA="${CURRENT_HEAD:-${BUILD_PR_SHA:-${HEAD_SHA}}}"
+          HEAD_SHA="${CURRENT_HEAD}"
           echo "Analyzing build ${BUILD_ID} at PR head revision '${HEAD_SHA}'."
 
           # --- 5. Download every Logs_Build_* artifact and extract binlogs ---
@@ -236,14 +244,17 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            curl -sSL --retry 3 --max-filesize "${MAX_ZIP_BYTES}" "${url}" -o /tmp/a.zip \
-              || { echo "::warning::Skipping ${name}: download failed or exceeded ${MAX_ZIP_BYTES} bytes."; continue; }
-            # `--max-filesize` only aborts when the server sends a Content-Length;
-            # enforce the cap again post-download via stat in case the header is
-            # absent or stripped by a proxy.
+            # Hard-cap the bytes written to disk regardless of Content-Length:
+            # stream through `head -c` (cap + 1) and bound total time. This
+            # closes the gap where `curl --max-filesize` alone would let a
+            # length-less response write unbounded data before any post-check.
+            curl -sSL --retry 3 --max-time 300 "${url}" 2>/dev/null | head -c $((MAX_ZIP_BYTES + 1)) > /tmp/a.zip || true
             ZIP_BYTES=$(stat -c%s /tmp/a.zip 2>/dev/null || echo 0)
+            if [ "${ZIP_BYTES}" -eq 0 ]; then
+              echo "::warning::Skipping ${name}: empty or failed download."; continue
+            fi
             if [ "${ZIP_BYTES}" -gt "${MAX_ZIP_BYTES}" ]; then
-              echo "::warning::Skipping ${name}: downloaded ${ZIP_BYTES} bytes exceeds ${MAX_ZIP_BYTES}."; continue
+              echo "::warning::Skipping ${name}: download exceeded ${MAX_ZIP_BYTES} bytes."; continue
             fi
             UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
             # Fail safe: if the uncompressed size isn't a plain integer (corrupt
