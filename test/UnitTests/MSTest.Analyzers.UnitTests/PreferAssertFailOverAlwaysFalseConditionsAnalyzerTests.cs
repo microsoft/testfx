@@ -1951,4 +1951,76 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithOverriddenEquals_NoDiagnostic()
+    {
+        // The type overrides object.Equals, so Assert.AreNotEqual routes through user code and the
+        // self-comparison is a legitimate way to exercise the equality contract (see issue #9972).
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreNotEqual(x, x);
+                }
+
+                private sealed class MyType
+                {
+                    public override bool Equals(object obj) => false;
+                    public override int GetHashCode() => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreNotEqualIsPassedSameLocalWithoutCustomEquality_Diagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreNotEqual(x, x)|];
+                }
+
+                private sealed class MyType
+                {
+                }
+            }
+            """;
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.Fail();
+                }
+
+                private sealed class MyType
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
 }

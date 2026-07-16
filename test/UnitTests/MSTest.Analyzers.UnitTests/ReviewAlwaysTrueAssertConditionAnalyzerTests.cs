@@ -1510,4 +1510,176 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithOverriddenEquals_NoDiagnostic()
+    {
+        // The type overrides object.Equals, so Assert.AreEqual routes through user code and the
+        // self-comparison is a legitimate way to exercise the equality contract (see issue #9972).
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreEqual(x, x);
+                }
+
+                private sealed class MyType
+                {
+                    public override bool Equals(object obj) => obj is MyType;
+                    public override int GetHashCode() => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithEquatable_NoDiagnostic()
+    {
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreEqual(x, x);
+                }
+
+                private struct MyType : IEquatable<MyType>
+                {
+                    public bool Equals(MyType other) => true;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithOnlyEqualityOperator_Diagnostic()
+    {
+        // EqualityComparer<T>.Default (used by Assert.AreEqual) never calls operator ==; it uses
+        // IEquatable<T>.Equals or the virtual object.Equals. A type that only overloads == (without
+        // overriding Equals or implementing IEquatable<T>) still compares by reference, so the
+        // self-comparison is genuinely always true and must be flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreEqual(x, x)|];
+                }
+
+            #pragma warning disable CS0660, CS0661
+                private sealed class MyType
+                {
+                    public static bool operator ==(MyType left, MyType right) => true;
+                    public static bool operator !=(MyType left, MyType right) => false;
+                }
+            #pragma warning restore CS0660, CS0661
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithEquatableOfOtherType_Diagnostic()
+    {
+        // The type implements IEquatable<string>, not IEquatable<MyType>, so EqualityComparer<MyType>.Default
+        // falls back to reference equality and the self-comparison is genuinely always true.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreEqual(x, x)|];
+                }
+
+                private sealed class MyType : IEquatable<string>
+                {
+                    public bool Equals(string other) => true;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameGenericTypeParameter_NoDiagnostic()
+    {
+        // T can be substituted with a type whose equality is not reflexive, so we cannot prove the
+        // comparison is always true.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Helper(1);
+                }
+
+                private static void Helper<T>(T value)
+                {
+                    Assert.AreEqual(value, value);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithoutCustomEquality_Diagnostic()
+    {
+        // A reference type that does not customize equality falls back to reference equality,
+        // so a self-comparison is genuinely always true and should still be flagged.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    [|Assert.AreEqual(x, x)|];
+                }
+
+                private sealed class MyType
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
