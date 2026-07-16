@@ -3,7 +3,13 @@
     <OutputType>Exe</OutputType>
     <LangVersion>preview</LangVersion>
     <GenerateProgramFile>false</GenerateProgramFile>
-    <IsTestingPlatformApplication>true</IsTestingPlatformApplication>
+    <!-- These test assets contain intentionally failing tests (they are fixtures consumed by the
+         acceptance/integration tests). They must build as Microsoft.Testing.Platform executables so
+         vstest.console (18.10+) can host them through the translation layer, but they must NOT be
+         picked up and executed by CI's Debug Test step, which runs 'dotnet test' on TestFx.slnx with
+         -p:UsingDotNetTest=true. So we only mark them as testing-platform applications when NOT running
+         under 'dotnet test'. -->
+    <IsTestingPlatformApplication Condition=" '$(UsingDotNetTest)' != 'true' ">true</IsTestingPlatformApplication>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)_MtpEntryPoint.cs" Link="_MtpEntryPoint.cs" />
