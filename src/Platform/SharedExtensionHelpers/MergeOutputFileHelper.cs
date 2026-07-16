@@ -172,10 +172,16 @@ internal static class MergeOutputFileHelper
     {
         try
         {
-            string upper = Path.Combine(directory, "CASESENSITIVEPROBE" + Guid.NewGuid().ToString("N"));
-            using (new FileStream(upper, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0x1000, FileOptions.DeleteOnClose))
+            string probeName = "CASESENSITIVEPROBE" + Guid.NewGuid().ToString("N");
+            string probePath = Path.Combine(directory, probeName);
+            using (new FileStream(probePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0x1000, FileOptions.DeleteOnClose))
             {
-                return !File.Exists(upper.ToLowerInvariant());
+                // Only lower-case the generated probe FILE NAME, keeping the real 'directory' path intact.
+                // Lower-casing the whole path would corrupt the directory portion, so a case-insensitive
+                // child directory sitting beneath a case-sensitive parent (e.g. an ext4 casefold dir named
+                // with uppercase chars) would be probed at a non-existent lowercased parent, File.Exists
+                // would return false, and the location would be misreported as case-sensitive.
+                return !File.Exists(Path.Combine(directory, probeName.ToLowerInvariant()));
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)

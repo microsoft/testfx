@@ -221,6 +221,57 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    public async Task MergeToFileAsync_WhenOutputDiffersFromInputOnlyByCase_IsRejectedOnCaseInsensitiveDirectory()
+    {
+        // Regression: the case-sensitivity probe used to lower-case the WHOLE candidate path, corrupting the
+        // directory portion, so a case-insensitive location (e.g. a Windows temp dir) could be misreported as
+        // case-sensitive. That made the alias check use an ordinal comparison and miss that 'report.json' and
+        // 'REPORT.json' are the SAME file, letting the merge overwrite a read-only input. With the probe fixed
+        // (only the generated file name is lower-cased), a case-only output must alias the input and be
+        // rejected on a case-insensitive directory; on a genuinely case-sensitive one the names are distinct.
+        string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDirectory);
+        try
+        {
+            string input = Path.Combine(tempDirectory, "report.json");
+            File.WriteAllText(input, BuildReport());
+
+            string casedOutput = Path.Combine(tempDirectory, "REPORT.json");
+            if (IsDirectoryCaseInsensitive(tempDirectory))
+            {
+                await Assert.ThrowsExactlyAsync<ArgumentException>(
+                    () => CtrfReportMerger.MergeToFileAsync([input], casedOutput, CancellationToken.None));
+                Assert.IsTrue(File.Exists(input));
+            }
+            else
+            {
+                await CtrfReportMerger.MergeToFileAsync([input], casedOutput, CancellationToken.None);
+                Assert.IsTrue(File.Exists(input));
+                Assert.IsTrue(File.Exists(casedOutput));
+            }
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
+
+    private static bool IsDirectoryCaseInsensitive(string directory)
+    {
+        string probe = Path.Combine(directory, "CaseProbe" + Guid.NewGuid().ToString("N"));
+        File.WriteAllText(probe, string.Empty);
+        try
+        {
+            // Only the file name is lower-cased so the (possibly case-sensitive) directory path stays intact.
+            return File.Exists(Path.Combine(directory, Path.GetFileName(probe).ToLowerInvariant()));
+        }
+        finally
+        {
+            File.Delete(probe);
+        }
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WritesMergedFileToDisk()
     {
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
