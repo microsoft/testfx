@@ -58,13 +58,25 @@ internal static class AssertConditionAnalyzerHelper
             return false;
         }
 
-        // A null (or omitted) comparer is equivalent to EqualityComparer<T>.Default, so it does not change the
-        // equality semantics. Any other comparer (including a non-constant one) can return an arbitrary result.
-        // Strip only built-in conversions so a user-defined conversion cannot hide a null source that it turns
-        // into a non-null comparer.
-        return GetRawArgumentValueWithName(operation, comparerParameter.Name)?.WalkDownBuiltInConversion() is { } comparerArgument
-            && comparerArgument.ConstantValue is not { HasValue: true, Value: null };
+        // A null (or omitted) comparer, or an explicit EqualityComparer<T>.Default, is equivalent to the default
+        // comparer and does not change the equality semantics. Any other comparer (including a non-constant one)
+        // can return an arbitrary result. Strip only built-in conversions so a user-defined conversion cannot hide
+        // a null source that it turns into a non-null comparer.
+        IOperation? comparerArgument = GetRawArgumentValueWithName(operation, comparerParameter.Name)?.WalkDownBuiltInConversion();
+        return comparerArgument is not null
+            && comparerArgument.ConstantValue is not { HasValue: true, Value: null }
+            && !IsDefaultEqualityComparerReference(comparerArgument);
     }
+
+    private static bool IsDefaultEqualityComparerReference(IOperation operation)
+        => operation is IPropertyReferenceOperation
+        {
+            Property:
+            {
+                Name: "Default",
+                ContainingType: INamedTypeSymbol { Name: "EqualityComparer", ContainingNamespace: { Name: "Generic", ContainingNamespace: { Name: "Collections", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } } },
+            },
+        };
 
     /// <summary>
     /// Gets the type <c>T</c> whose <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/> the
