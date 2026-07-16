@@ -22,6 +22,15 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
 > `dotnet/sdk`**. testfx is authoritative; any change to the shared files is a coordinated,
 > potentially breaking, wire-protocol change. The enumeration of shared files is
 > `ServerMode/DotnetTest/DotnetTestProtocolContract.props`.
+>
+> **Shared wire contract vs. per-repo transport.** Only the *wire contract* (serializer/field IDs,
+> message models, serializers, handshake/state constants) is shared source. The **named-pipe transport**
+> (framing loop, buffering, connection-loss reactions, unknown-message handling, pipe-name resolution) is
+> deliberately **not** shared and is implemented independently on each side (`NamedPipeConnectionBase`,
+> `NamedPipeServer`, `NamedPipeClient` are local to testfx). Wherever this document describes transport
+> *behavior*, it describes testfx's implementation. The current `dotnet/sdk` data-pipe server implements
+> its own transport and **diverges** in several places (called out inline below); such behaviors are not
+> protocol guarantees and must not be assumed to be symmetric across both sides.
 
 ---
 
@@ -67,7 +76,7 @@ Rules and behavior:
 | Variable | Set by | Purpose |
 | --- | --- | --- |
 | `TESTINGPLATFORM_DOTNETTEST_EXECUTIONID` | The test host on first connect (if not already set) | The Execution ID. Propagated to child processes (test host controller, orchestrator) so all handshakes of one `dotnet test` invocation share it. If already present it is **not** overwritten. |
-| `TESTINGPLATFORM_PIPE_DIRECTORY` | User (optional) | On Unix, overrides the directory used to place the domain-socket file (see §3). |
+| `TESTINGPLATFORM_PIPE_DIRECTORY` | User (optional) | On Unix, overrides the directory used to place the domain-socket file, **for pipes created by testfx's `NamedPipeServer`** (see §3). It does **not** relocate a pipe created by the other side: the current `dotnet/sdk` data-pipe server still resolves Unix names as `Path.Combine("/tmp", name)` and does not honor this variable/`TMPDIR` (nor the 103-byte precheck). Since the SDK creates the data pipe, this variable effectively only affects pipes testfx itself creates (e.g. the sibling controller pipe). |
 
 ---
 
@@ -81,7 +90,7 @@ The pipe is a `System.IO.Pipes` named pipe opened as `PipeDirection.InOut`,
 SDK for the control pipe) resolves the name locally and hands the **fully-resolved** value to the peer.
 The peer uses it verbatim and never recomputes it. This keeps the SDK and host versions decoupled.
 
-`NamedPipeServer.GetPipeName(name)` computes the OS name:
+`NamedPipeServer.GetPipeName(name)` (testfx's server-side helper) computes the OS name:
 
 - **Windows:** `testingplatform.pipe.<name-with-'\'-replaced-by-'.'>`.
 - **Unix:** a domain-socket **file path** `Path.Combine(<directory>, name)` where `<directory>` is
@@ -94,8 +103,12 @@ The peer uses it verbatim and never recomputes it. This keeps the SDK and host v
   (`sockaddr_un.sun_path` budget: 104 − 1 for the NUL terminator, using macOS' smaller limit for
   portability); otherwise creation fails fast.
 
-> On the data pipe the SDK is the server, so it performs this resolution and passes the result via
-> `--dotnet-test-pipe`. The test host simply opens a `NamedPipeClient` to `.`/`<name>`.
+> [!NOTE]
+> This resolution describes testfx's `NamedPipeServer`. On the **data** pipe the SDK is the creator, and
+> the current `dotnet/sdk` server resolves Unix names as `/tmp/<name>` only (no
+> `TESTINGPLATFORM_PIPE_DIRECTORY`/`TMPDIR` relocation and no 103-byte precheck). Because the peer always
+> uses the fully-resolved name verbatim, this divergence is harmless for interop — it only changes *where*
+> the SDK's socket file lands. The test host simply opens a `NamedPipeClient` to `.`/`<name>`.
 
 ---
 
@@ -120,8 +133,11 @@ payloadLength = 4 (serializerId) + body.Length
 - **EOF handling:** a `0`-byte read (clean disconnect, whether at a frame boundary or mid-message) makes
   the reader return `null`, which the transport interprets as "peer disconnected". See §11 for the
   behavioral consequences.
-- On Windows, after each write the writer calls `WaitForPipeDrain()` to ensure the frame is flushed to
-  the peer before returning.
+- On Windows, testfx's frame writer calls `WaitForPipeDrain()` after each write to ensure the frame is
+  flushed to the peer before returning. This is a **testfx transport detail, not a bidirectional
+  requirement**: it applies to the testfx client's *request* writes (and testfx's server); the current
+  `dotnet/sdk` reply writer only writes + flushes and has no drain call. A conforming reader must not
+  depend on the peer draining.
 - The read buffer is 250,000 bytes; larger bodies are streamed in chunks.
 
 ```mermaid
@@ -484,7 +500,7 @@ agent.
 | 1.1.0 | Not a wire change: signals the host no longer plugs in `TerminalOutputDevice`, so the SDK can safely keep its live `TerminalTestReporter` output on. |
 | 1.2.0 | Adds `AzureDevOpsLogMessage` (ID 11). Host forwards ADO logging commands (only on an ADO agent). |
 | 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
-| 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. |
+| 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. **testfx-side / pending SDK support:** the current `dotnet/sdk` advertises only `1.0.0`–`1.3.0` and does not vendor serializers 13/14, so it cannot advertise `ServerControlPipeName` or drive the channel yet. In practice the negotiated version tops out at 1.3.0 until the coordinated SDK change lands (see §12). |
 
 Compatibility rules / assumptions:
 
@@ -492,8 +508,11 @@ Compatibility rules / assumptions:
   message an older SDK can't decode.
 - Unknown **field IDs** within a known message are skipped (§5.1) — a newer host can add fields without
   breaking an older SDK.
-- Unknown **serializer IDs** are a hard error (there is no serializer to look up), so new *messages*
-  must be version-gated, whereas new *fields* are safe.
+- Unknown **serializer IDs**: the testfx receiver has no serializer to look up, but the current
+  `dotnet/sdk` data-pipe server is created with `skipUnknownMessages: true`, so it produces an
+  `UnknownMessage`, logs and skips it, and still replies with `VoidResponse`. Either way, new *messages*
+  must be **version-gated** for their semantics to be understood — do not rely on a receiver decoding an
+  unknown serializer ID. (Unknown *fields* within a known message are always safe, per the previous rule.)
 - The control channel is capability-gated (presence of the pipe-name property) so an older SDK that
   never advertises the pipe simply leaves it disabled.
 
@@ -515,12 +534,21 @@ cooperative cancel (see §12) rather than an error. Consequently it is a **proto
 SDK keep the control pipe open for the entire data session** — closing it early is interpreted as a
 cancel request.
 
-**Server side.** If the *client* (host) disconnects while the SDK is writing a reply, the SDK treats it
-as a graceful disconnect and exits its read loop without crashing.
+**Server side (testfx `NamedPipeServer`).** If the *client* (host) disconnects while testfx's server is
+writing a reply, it catches the `IOException`/`ObjectDisposedException`, treats it as a graceful
+disconnect, and exits its read loop without crashing. This is a **testfx transport behavior**; the
+current `dotnet/sdk` data-pipe server does **not** wrap its reply writes this way, so a disconnect there
+faults its server loop instead. Neither behavior is a protocol guarantee.
 
 ---
 
 ## 12. Reverse server-control channel (≥ 1.4.0)
+
+> [!NOTE]
+> **testfx-side / pending SDK support.** The host side of this channel is implemented in testfx, but the
+> current `dotnet/sdk` does not advertise `ServerControlPipeName` or vendor serializers 13/14, so the
+> channel is **not yet driven end-to-end by `dotnet test`**. It activates only once a coordinated SDK
+> change ships. The section below describes the intended/host-side behavior.
 
 Purpose: let the SDK push a control signal (today only session cancellation, e.g. from a global
 `--maximum-failed-tests` or `--timeout`) to the running test host, even while the host is otherwise
