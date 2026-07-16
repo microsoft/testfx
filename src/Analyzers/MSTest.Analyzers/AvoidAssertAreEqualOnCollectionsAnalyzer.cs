@@ -106,7 +106,7 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         //     (and therefore the type's own equality) is not used at all. A `null` comparer or an explicit
         //     `EqualityComparer&lt;T&gt;.Default` argument is equivalent to the parameterless overload (Assert falls back to
         //     the default comparer — see Assert.AreEqual.cs), so those keep the opt-out.
-        if (!HasCustomComparerArgument(invocation, equalityComparerSymbol) && DeclaresOwnEquality(comparedType, equatableSymbol))
+        if (!HasCustomComparerArgument(invocation, comparedType, equalityComparerSymbol) && DeclaresOwnEquality(comparedType, equatableSymbol))
         {
             return;
         }
@@ -126,10 +126,11 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
         context.ReportDiagnostic(invocation.CreateDiagnostic(Rule, methodName, comparedTypeDisplay));
     }
 
-    // Returns true only when a `comparer` argument is supplied that is not provably the default comparer.
-    // `null` and `EqualityComparer<T>.Default` both dispatch to EqualityComparer<T>.Default at runtime, so they must
-    // keep the equality opt-out; any other comparer bypasses the type's own equality and should re-enable the diagnostic.
-    private static bool HasCustomComparerArgument(IInvocationOperation invocation, INamedTypeSymbol? equalityComparerSymbol)
+    // Returns true only when a `comparer` argument is supplied that is not provably the default comparer for the
+    // selected type argument T. `null` and `EqualityComparer<T>.Default` both dispatch to EqualityComparer<T>.Default at
+    // runtime, so they must keep the equality opt-out; any other comparer bypasses the type's own equality and should
+    // re-enable the diagnostic.
+    private static bool HasCustomComparerArgument(IInvocationOperation invocation, ITypeSymbol comparedType, INamedTypeSymbol? equalityComparerSymbol)
     {
         foreach (IArgumentOperation argument in invocation.Arguments)
         {
@@ -146,11 +147,17 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzer : DiagnosticAnalyze
             // Any constant-null comparer (null literal, `default`, `default(IEqualityComparer<T>)`, a const null field, …)
             // falls back to EqualityComparer<T>.Default in Assert, and a reference to `EqualityComparer<T>.Default` is that
             // same default comparer — neither bypasses the type's own equality.
+            //
+            // The reference must be `EqualityComparer<T>.Default` for the *selected* T: `IEqualityComparer<in T>` is
+            // contravariant, so `Assert.AreEqual<Derived>(d1, d2, EqualityComparer<Base>.Default)` compiles, but that base
+            // comparer dispatches to Base's equality — not Derived's — so it is a custom comparer for T = Derived.
             bool isDefaultComparer =
                 value.ConstantValue is { HasValue: true, Value: null }
                 || (value is IPropertyReferenceOperation { Property: { Name: "Default", IsStatic: true } property }
                     && equalityComparerSymbol is not null
-                    && SymbolEqualityComparer.Default.Equals(property.ContainingType.OriginalDefinition, equalityComparerSymbol));
+                    && SymbolEqualityComparer.Default.Equals(property.ContainingType.OriginalDefinition, equalityComparerSymbol)
+                    && property.ContainingType.TypeArguments.Length == 1
+                    && SymbolEqualityComparer.Default.Equals(property.ContainingType.TypeArguments[0], comparedType));
 
             return !isDefaultComparer;
         }
