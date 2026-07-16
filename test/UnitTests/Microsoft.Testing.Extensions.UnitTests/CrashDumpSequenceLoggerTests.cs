@@ -74,6 +74,42 @@ public sealed class CrashDumpSequenceLoggerTests
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
+    public async Task OnTestSessionStartingAsync_WhenWarningDisplayFails_DoesNotFailSessionStart()
+    {
+        string path = Path.GetTempFileName();
+        try
+        {
+            _mockEnvironment
+                .Setup(x => x.GetEnvironmentVariable(CrashDumpEnvironmentVariableProvider.SequenceFileEnvironmentVariableName))
+                .Returns(path);
+            _mockOutputDevice
+                .Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("Output transport unavailable."));
+
+            CrashDumpSequenceLogger logger = CreateLogger();
+            Assert.IsTrue(await logger.IsEnabledAsync());
+
+            using (new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                await logger.OnTestSessionStartingAsync(new Microsoft.Testing.Platform.Services.TestSessionContext(CancellationToken.None));
+            }
+
+            _mockLogger.Verify(
+                x => x.LogAsync(
+                    LogLevel.Warning,
+                    It.Is<string>(message => message.Contains(path) && message.Contains(nameof(InvalidOperationException))),
+                    null,
+                    It.IsAny<Func<string, Exception?, string>>()),
+                Times.Once);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [TestMethod]
     public async Task ConsumeAsync_WhenWriteFails_LogsWarningWithPathAndFullExceptionDetail()
     {
         string path = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -155,7 +191,7 @@ public sealed class CrashDumpSequenceLoggerTests
         public override long Position
         {
             get => throw new NotSupportedException();
-            set => throw new NotSupportedException();
+            set => throw new NotSupportedException($"Cannot set stream position to {value}.");
         }
 
         // No-op: constructing the StreamWriter with AutoFlush = true triggers an immediate Flush()

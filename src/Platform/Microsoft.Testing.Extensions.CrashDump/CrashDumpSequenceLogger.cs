@@ -109,7 +109,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             await _writer.WriteLineAsync(FileHeader).ConfigureAwait(false);
             await _writer.FlushAsync().ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or PathTooLongException or DirectoryNotFoundException or System.Security.SecurityException)
+        catch (Exception ex) when (IsExpectedFileException(ex))
         {
             // The sequence file is a best-effort diagnostic. If we cannot open it (e.g. the disk is
             // full, ACLs deny write, the path is invalid, or any other filesystem-level error), we
@@ -118,18 +118,38 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             // it) and behave as if the feature were disabled — failing the test run for this would
             // be worse than missing the diagnostic. The full exception (ex.ToString()) is included so
             // the root cause is not lost.
-            await _outputDevice.DisplayAsync(
-                this,
-                new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileOpenError, _sequenceFilePath, ex)),
-                testSessionContext.CancellationToken).ConfigureAwait(false);
-            if (_writer is not null)
+            try
             {
-#if NETCOREAPP
-                await _writer.DisposeAsync().ConfigureAwait(false);
-#else
-                _writer.Dispose();
-#endif
+                await _outputDevice.DisplayAsync(
+                    this,
+                    new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileOpenError, _sequenceFilePath, ex)),
+                    testSessionContext.CancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception outputException)
+            {
+                // Reporting a best-effort diagnostic must not turn its original file failure into a
+                // session-start failure when the output transport is unavailable or being cancelled.
+                await _logger.LogWarningAsync($"Failed to display the crash sequence file warning for '{_sequenceFilePath}': {outputException}").ConfigureAwait(false);
+            }
+            finally
+            {
+                StreamWriter? writer = _writer;
                 _writer = null;
+                if (writer is not null)
+                {
+                    try
+                    {
+#if NETCOREAPP
+                        await writer.DisposeAsync().ConfigureAwait(false);
+#else
+                        writer.Dispose();
+#endif
+                    }
+                    catch (Exception cleanupException) when (IsExpectedFileException(cleanupException))
+                    {
+                        await _logger.LogWarningAsync($"Failed to close crash sequence file '{_sequenceFilePath}' after initialization failed: {cleanupException}").ConfigureAwait(false);
+                    }
+                }
             }
         }
     }
@@ -247,6 +267,15 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
 
     private static string Sanitize(string value)
         => value.Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ');
+
+    private static bool IsExpectedFileException(Exception ex)
+        => ex is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or DirectoryNotFoundException
+            or System.Security.SecurityException;
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()

@@ -14,8 +14,7 @@ internal sealed partial class ServerModeManager
     {
         ICommandLineOptions commandLineService = serviceProvider.GetCommandLineOptions();
 
-        int? clientPort;
-        clientPort = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientPortOptionKey, out string[]? clientPortArgs)
+        int clientPort = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientPortOptionKey, out string[]? clientPortArgs)
             ? int.Parse(clientPortArgs[0], CultureInfo.InvariantCulture)
             : throw new InvalidOperationException(PlatformResources.MissingClientPortFoJsonRpc);
 
@@ -24,6 +23,6 @@ internal sealed partial class ServerModeManager
             : "localhost";
 
         ILogger logger = serviceProvider.GetLoggerFactory().CreateLogger<MessageHandlerFactory>();
-        return new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice(), logger);
+        return new MessageHandlerFactory(clientHostName, clientPort, serviceProvider.GetOutputDevice(), logger);
     }
 }
