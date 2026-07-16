@@ -45,8 +45,11 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
 - **Server-control pipe** — an optional *reverse* named pipe, created and listened on by the SDK, used
   to push control signals (today only session cancellation) SDK → host. Its name is advertised in the
   handshake reply.
-- **Execution ID** — a GUID (`"N"` format) identifying one logical `dotnet test` invocation. Shared
-  across the test host, test host controller, and orchestrator processes via an environment variable.
+- **Execution ID** — a GUID (`"N"` format) identifying one **test-application execution** (one root
+  test-app process and its child process tree). It is shared across that test host, its test host
+  controller, and its orchestrator processes via an environment variable. It is **not** a per-CLI-command
+  identifier: a single `dotnet test` command that launches several test applications (e.g. a
+  multi-project run) gives each root test application its **own** Execution ID by default.
 - **Instance ID** — a GUID (`"N"` format) identifying one specific connecting process/`DotnetTestConnection`.
 - **Session UID** — the MTP test session identifier for a run.
 
@@ -75,7 +78,7 @@ Rules and behavior:
 
 | Variable | Set by | Purpose |
 | --- | --- | --- |
-| `TESTINGPLATFORM_DOTNETTEST_EXECUTIONID` | The test host on first connect (if not already set) | The Execution ID. Propagated to child processes (test host controller, orchestrator) so all handshakes of one `dotnet test` invocation share it. If already present it is **not** overwritten. |
+| `TESTINGPLATFORM_DOTNETTEST_EXECUTIONID` | The root test application on first connect (if not already set) | The Execution ID. Each root test-app process generates its own value in `AfterCommonServiceSetupAsync` (if unset) and propagates it via the environment **only to its child process tree** (its test host controller, orchestrator). So all handshakes *within one test-application execution* share it, but separate test applications launched by one multi-project `dotnet test` command normally get **different** IDs. If already present it is **not** overwritten. |
 | `TESTINGPLATFORM_PIPE_DIRECTORY` | User (optional) | On Unix, overrides the directory used to place the domain-socket file, **for pipes created by testfx's `NamedPipeServer`** (see §3). It does **not** relocate a pipe created by the other side: the current `dotnet/sdk` data-pipe server still resolves Unix names as `Path.Combine("/tmp", name)` and does not honor this variable/`TMPDIR` (nor the 103-byte precheck). Since the SDK creates the data pipe, this variable effectively only affects pipes testfx itself creates (e.g. the sibling controller pipe). |
 
 ---
@@ -522,9 +525,11 @@ Compatibility rules / assumptions:
 
 The connection-loss semantics differ by pipe and are a core part of the contract.
 
-**Data pipe (`exitProcessOnConnectionLoss: true`).** If the SDK disconnects while the host is writing a
-request, or the host reads EOF where a reply was expected, there is no way to recover, so the host
-process **exits abnormally** with exit code `GenericFailure` (1), after writing a diagnostic to stderr.
+**Data pipe (`exitProcessOnConnectionLoss: true`).** If the SDK disconnects there is no way to recover,
+so the host process **exits abnormally** with exit code `GenericFailure` (1). This happens on two paths:
+the host reads EOF where a reply was expected, or a write fails with `IOException`/`ObjectDisposedException`
+while sending a request. On the **read-EOF** path the host also writes a diagnostic to stderr before
+exiting; the **write-failure** path calls `Exit(GenericFailure)` directly **without** that diagnostic.
 This is deliberate: if the user kills `dotnet.exe`, the test host must die too rather than orphan.
 
 **Server-control pipe (`exitProcessOnConnectionLoss: false`).** A dropped control pipe must **not** kill
@@ -616,7 +621,7 @@ sequenceDiagram
         Host->>SDK: TestSessionEvent(TestSessionStart)
         SDK-->>Host: VoidResponse
         loop per test node update
-            Host->>SDK: Discovered / Result / InProgress / FileArtifact / Display / ADO
+            Host->>SDK: Discovered / Result / FileArtifact / Display / ADO
             SDK-->>Host: VoidResponse
         end
         Host->>SDK: TestSessionEvent(TestSessionEnd)
@@ -625,10 +630,10 @@ sequenceDiagram
     Host->>Host: OnExit: cancel & dispose control listener
 ```
 
-### Multi-process runs
+### Multi-process runs (one test-application execution)
 
-A single `dotnet test` invocation may involve several MTP processes that each perform the handshake on
-the same Execution ID:
+A single **test-application execution** may involve several MTP processes that each perform the
+handshake on the **same** Execution ID:
 
 - **Test host** — `HostType = TestHost` (or `ServerTestHost`); actually runs tests.
 - **Test host controller** — `HostType = TestHostController`; monitors/restarts the test host.
@@ -636,7 +641,9 @@ the same Execution ID:
   executions (e.g. the retry orchestrator, which also sends `OrchestratorFeature`). A control-channel
   cancel maps to cancelling its application token, which propagates to the orchestrated hosts.
 
-Each process advertises its own `InstanceId`; the shared `ExecutionId` lets the SDK correlate them.
+These are the root test-app process and its child process tree. Each advertises its own `InstanceId`;
+the shared `ExecutionId` lets the SDK correlate the processes **of that one execution**. A multi-project
+`dotnet test` command launches several such trees, each with its own Execution ID (see §1/§2).
 
 ---
 
