@@ -34,9 +34,6 @@ concurrency:
   group: build-failure-analysis-${{ github.event.issue.number || github.event.pull_request.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number || github.run_id }}
   cancel-in-progress: true
 
-env:
-  NUGET_MCP_VERSION: '1.4.3'
-
 timeout-minutes: 30
 
 network:
@@ -87,7 +84,7 @@ jobs:
           ADO_BUILD_UI: "https://dev.azure.com/dnceng-public/public/_build/results"
           # microsoft.testfx pipeline definition id in dnceng-public/public.
           ADO_BUILD_DEFINITION_ID: "209"
-          PR_NUMBER: ${{ github.event.issue.number }}
+          PR_NUMBER: ${{ github.event.issue.number || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number }}
         run: |
           # Advisory + best-effort. On any gap emit binlog-found=false so the
           # agent pipeline stays inert.
@@ -95,7 +92,7 @@ jobs:
           set +o pipefail
           emit_none() { echo "binlog-found=false" >> "$GITHUB_OUTPUT"; exit 0; }
 
-          [ -z "${PR_NUMBER}" ] && { echo "::warning::No PR number on the slash-command event."; emit_none; }
+          [ -z "${PR_NUMBER}" ] && { echo "::warning::No PR number resolved from the slash-command event / aw_context."; emit_none; }
 
           # --- Scope check: only analyse PRs targeting main / rel/* ---
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
@@ -128,6 +125,11 @@ jobs:
           names=$(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
           [ -z "${names}" ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
+          # Guards for untrusted PR-produced archives: cap the compressed
+          # download and the reported uncompressed size, and bound extraction
+          # time, so a zip bomb / oversized artifact can't exhaust the runner.
+          MAX_ZIP_BYTES=524288000      # 500 MB compressed per artifact
+          MAX_UNZIP_BYTES=2147483648   # 2 GB uncompressed per artifact
           mkdir -p /tmp/binlogs
           count=0
           for name in ${names}; do
@@ -135,12 +137,17 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            curl -sSL --retry 3 "${url}" -o /tmp/a.zip || continue
-            # Extract ONLY `*.binlog` entries with paths junked (`-j`) so a
-            # malicious/relative artifact entry (zip-slip, `../…`) can never
-            # write outside /tmp/ax. Artifacts originate from PR builds, so
-            # treat them as untrusted input.
-            unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || continue
+            curl -sSL --retry 3 --max-filesize "${MAX_ZIP_BYTES}" "${url}" -o /tmp/a.zip \
+              || { echo "::warning::Skipping ${name}: download failed or exceeded ${MAX_ZIP_BYTES} bytes."; continue; }
+            UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
+            if [ -n "${UNCOMP}" ] && [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
+              echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
+            fi
+            # Extract ONLY `*.binlog` entries with paths junked (`-j`) under a
+            # timeout so a malicious/relative entry (zip-slip) can't escape the
+            # destination and extraction can't run unbounded.
+            timeout 120 unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
+              || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
             i=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
@@ -180,22 +187,6 @@ steps:
     with:
       name: build-failure-analysis-data
       path: /tmp/binlogs
-
-  - name: Setup .NET (for NuGet MCP Server)
-    uses: actions/setup-dotnet@v5.4.0
-    with:
-      dotnet-version: '9.0.x'
-
-  - name: Install NuGet MCP Server
-    continue-on-error: true
-    # See build-failure-analysis.md for why we install into a `bin` directory
-    # under the runner tool cache (agent sandbox PATH) rather than `--global`,
-    # and run from `/tmp` (avoid the repo's internal-SDK `global.json`).
-    working-directory: /tmp
-    run: |
-      TOOL_DIR="${RUNNER_TOOL_CACHE:-/opt/hostedtoolcache}/nuget-mcp-server/bin"
-      dotnet tool install NuGet.Mcp.Server --version "$NUGET_MCP_VERSION" --tool-path "$TOOL_DIR"
-      echo "$TOOL_DIR" >> "$GITHUB_PATH"
 
   - name: Export agent context
     env:
@@ -244,8 +235,6 @@ tools:
     - "uniq"
     - "ls"
     - "find"
-    - "dotnet"
-    - "NuGet.Mcp.Server"
 
 safe-outputs:
   messages:

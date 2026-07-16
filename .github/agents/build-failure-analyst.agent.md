@@ -76,37 +76,24 @@ Common .NET / MSBuild root-cause patterns. Use these as a starting point, but tr
 | StyleCop violation | `SA####` | Trailing whitespace, missing newline, tuple casing, etc. |
 | Analyzer rule violation | `CA####` | Code-quality rule. Pay attention to `WarnAsError` lift. |
 | MSBuild task / target failure | `MSB####` | Missing file, malformed XML, broken import. |
-| NuGet resolution failure | `NU####`, `NETSDK####` | Package not found, version conflict, TFM not supported, banned dependency, or a version not yet available on the configured feeds. **Use the NuGet MCP server** to resolve. |
+| NuGet resolution failure | `NU####`, `NETSDK####` | Package not found, version conflict, TFM not supported, banned dependency, or a version not yet available on the configured feeds. Diagnose per Step 3b. |
 | Localization regression | `xlf` parsing error, `LCMessages` | `.resx` modified without rebuild; never hand-edit `.xlf`. |
 
 Group every error in the binlog under exactly one root-cause cluster. If two clusters share a probable common cause (e.g., a single deleted method causes both `CS0103` and `RS0017`), merge them.
 
-### Step 3b — Use NuGet MCP Server for package issues
+### Step 3b — Diagnosing NuGet package failures
 
-When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable package warnings, use the **NuGet MCP Server** (installed as a dotnet tool on `PATH` via `dotnet tool install --tool-path`) via the `bash` tool:
+When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable-package warnings, diagnose them **from the binlog evidence plus the PR's package files** — do not rely on any locally installed tool, because the runner does not contain a checkout of the failing PR (these workflows reuse the Azure DevOps binlog and never build the PR locally).
 
-```bash
-# Get a remediation plan for vulnerable/conflicting packages.
-# The tool is installed as a global dotnet tool and exposes the command
-# `NuGet.Mcp.Server` directly on PATH — invoke it by name (NOT via
-# `dotnet NuGet.Mcp.Server`, which would look for a `dotnet-NuGet.Mcp.Server`
-# subcommand that does not exist).
-NuGet.Mcp.Server --source https://api.nuget.org/v3/index.json --project /path/to/project.csproj
-```
+Approach:
+1. From `binlog_errors` (and drill-downs), identify the exact package id(s), the requested vs. resolved version(s), and the project(s) involved — `NU####` messages state these precisely.
+2. Read the PR's dependency files through the **GitHub API at `GH_AW_PR_HEAD_SHA`** — typically `Directory.Packages.props`, `eng/Versions.props`, and the offending `.csproj` — to see the current pins.
+3. Propose a concrete, minimal version change as a `suggestion` block on the relevant line.
 
-The NuGet MCP Server can resolve version conflicts by analyzing the full transitive dependency graph. Use it to generate concrete version updates for `Directory.Packages.props`, `eng/Versions.props`, or `.csproj` files.
-
-Available capabilities:
-1. **Fix vulnerable packages** — resolves version conflicts including transitive dependencies.
-2. **Get latest package version** — finds the latest compatible version of a package.
-3. **Update package** — plans upgrades based on the project's dependency graph.
-
-**Example workflow for NU1605:**
-1. Read the error to identify which package was downgraded and which projects are involved.
-2. Run `NuGet.Mcp.Server` via bash with `fix_vulnerable_packages` to get a resolution plan.
-3. Use the resolution plan to construct a concrete `suggestion` block (e.g., updating the version in `eng/Versions.props` or `Directory.Packages.props`).
-
-> **Note:** The NuGet MCP server operates on the workspace's actual project files and NuGet configuration. It has access to the repository's NuGet feeds and can resolve transitive dependency chains that are impossible to reason about from error messages alone.
+Notes:
+- `NU1605` (downgrade): find where the lower version is pinned and raise it to satisfy the transitive requirement named in the error.
+- `NU1102` / `NU1100` (not found): the version usually exists on nuget.org but is not yet on the repo's configured feeds — flag mirroring/feed availability as the likely cause rather than proposing a downgrade.
+- If the transitive graph is too complex to resolve confidently from the error text and package files alone, say so and recommend a maintainer run the restore locally, rather than guessing.
 
 ### Step 4 — Read source context for the highest-confidence fix
 
@@ -114,7 +101,7 @@ For each root cause, identify the **smallest set of files** that need to change.
 
 - For Roslyn / C# errors: read 6 lines above and 10 lines below the reported line.
 - For MSBuild errors: read the offending element and the surrounding `<PropertyGroup>` / `<ItemGroup>` / `<Target>`.
-- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `NuGet.Mcp.Server` (the tool's command name on `PATH` — not `dotnet NuGet.Mcp.Server`) to get a concrete resolution plan.
+- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package (via the GitHub API at `GH_AW_PR_HEAD_SHA`) and propose a version change per Step 3b.
 
 If the source line at the reported `file:line` does not look like a plausible cause (sometimes the compiler reports the *call site*, not the *declaration site*), search the PR-changed files for the symbol named in the error message and use that as the suggestion target.
 

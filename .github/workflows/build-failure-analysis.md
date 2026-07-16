@@ -15,11 +15,11 @@ description: >-
 # that build's GitHub check reports failure, this workflow downloads the
 # binlogs from **all** build legs (anonymously — dnceng-public/public is a
 # public project) and the agent analyses whichever leg(s) actually contain
-# errors. Reusing the binlogs avoids a duplicate build and removes any fork-PR
-# code-execution risk: this workflow only downloads build artifacts (data) and
-# never **builds or executes** PR code. (gh-aw does a sparse checkout of the
-# base repo's own `.github` config to run the agent; PR code is never fetched,
-# built, or run.)
+# errors. Reusing the binlogs avoids a duplicate build: the analysis pipeline
+# only downloads build artifacts (data) and reads them — it does **not** build
+# or execute PR code. (gh-aw's generated jobs may run `actions/checkout` for
+# agent context; that is a checkout of the repository for tooling, not a build
+# or execution of the PR's code.)
 
 on:
   # `check_run` fires for every check on a commit, so the `fetch-binlog` job
@@ -64,9 +64,6 @@ permissions:
 concurrency:
   group: build-failure-analysis-${{ github.event.check_run.pull_requests[0].number || inputs.pr-number || github.event.check_run.head_sha || github.run_id }}
   cancel-in-progress: true
-
-env:
-  NUGET_MCP_VERSION: '1.4.3'
 
 timeout-minutes: 30
 
@@ -171,26 +168,27 @@ jobs:
             *) echo "::warning::PR #${PR_NUMBER} base '${BASE_REF}' is out of scope (main, rel/*); skipping."; emit_none ;;
           esac
 
-          # --- 4. On dispatch, validate the build: it must have failed, be
-          #        the microsoft.testfx definition (209), and belong to this PR
-          #        (sourceBranch refs/pull/<PR>/merge). Build id and PR number
-          #        are independent dispatch inputs, so guard against a mismatch
-          #        that would post one build's analysis onto the wrong PR.
-          if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
-            build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
-            RESULT=$(printf '%s' "${build_json}" | jq -r '.result // empty')
-            DEF_ID=$(printf '%s' "${build_json}" | jq -r '.definition.id // empty')
-            SRC_BRANCH=$(printf '%s' "${build_json}" | jq -r '.sourceBranch // empty')
-            echo "ADO build ${BUILD_ID}: result='${RESULT}' definition='${DEF_ID}' sourceBranch='${SRC_BRANCH}'"
-            if [ "${RESULT}" != "failed" ]; then
-              echo "::warning::ADO build ${BUILD_ID} did not fail (result='${RESULT}'); nothing to analyze."; emit_none
-            fi
-            if [ "${DEF_ID}" != "${ADO_BUILD_DEFINITION_ID}" ]; then
-              echo "::warning::ADO build ${BUILD_ID} is definition '${DEF_ID}', not microsoft.testfx (${ADO_BUILD_DEFINITION_ID}); refusing."; emit_none
-            fi
-            if [ "${SRC_BRANCH}" != "refs/pull/${PR_NUMBER}/merge" ]; then
-              echo "::warning::ADO build ${BUILD_ID} sourceBranch '${SRC_BRANCH}' does not match PR #${PR_NUMBER} (refs/pull/${PR_NUMBER}/merge); refusing to avoid posting to the wrong PR."; emit_none
-            fi
+          # --- 4. Validate the build for EVERY trigger (not just dispatch):
+          #        it must be the microsoft.testfx definition (209), have failed, and
+          #        belong to this PR (sourceBranch == refs/pull/<PR>/merge).
+          #        For `check_run` the build id is parsed from a check payload
+          #        we don't fully trust; for dispatch the build id and PR
+          #        number are independent inputs. Validating on both paths
+          #        prevents downloading an unrelated build or posting its
+          #        analysis to the wrong PR.
+          build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
+          RESULT=$(printf '%s' "${build_json}" | jq -r '.result // empty')
+          DEF_ID=$(printf '%s' "${build_json}" | jq -r '.definition.id // empty')
+          SRC_BRANCH=$(printf '%s' "${build_json}" | jq -r '.sourceBranch // empty')
+          echo "ADO build ${BUILD_ID}: result='${RESULT}' definition='${DEF_ID}' sourceBranch='${SRC_BRANCH}'"
+          if [ "${DEF_ID}" != "${ADO_BUILD_DEFINITION_ID}" ]; then
+            echo "::warning::ADO build ${BUILD_ID} is definition '${DEF_ID}', not microsoft.testfx (${ADO_BUILD_DEFINITION_ID}); refusing."; emit_none
+          fi
+          if [ "${RESULT}" != "failed" ]; then
+            echo "::warning::ADO build ${BUILD_ID} did not fail (result='${RESULT}'); nothing to analyze."; emit_none
+          fi
+          if [ "${SRC_BRANCH}" != "refs/pull/${PR_NUMBER}/merge" ]; then
+            echo "::warning::ADO build ${BUILD_ID} sourceBranch '${SRC_BRANCH}' does not match PR #${PR_NUMBER} (refs/pull/${PR_NUMBER}/merge); refusing to avoid posting to the wrong PR."; emit_none
           fi
 
           # --- 5. Download every Logs_Build_* artifact and extract binlogs ---
@@ -198,6 +196,11 @@ jobs:
           names=$(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
           [ -z "${names}" ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
+          # Guards for untrusted PR-produced archives: cap the compressed
+          # download and the reported uncompressed size, and bound extraction
+          # time, so a zip bomb / oversized artifact can't exhaust the runner.
+          MAX_ZIP_BYTES=524288000      # 500 MB compressed per artifact
+          MAX_UNZIP_BYTES=2147483648   # 2 GB uncompressed per artifact
           mkdir -p /tmp/binlogs
           count=0
           for name in ${names}; do
@@ -205,12 +208,17 @@ jobs:
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
-            curl -sSL --retry 3 "${url}" -o /tmp/a.zip || continue
-            # Extract ONLY `*.binlog` entries with paths junked (`-j`) so a
-            # malicious/relative artifact entry (zip-slip, `../…`) can never
-            # write outside /tmp/ax. Artifacts originate from PR builds, so
-            # treat them as untrusted input.
-            unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || continue
+            curl -sSL --retry 3 --max-filesize "${MAX_ZIP_BYTES}" "${url}" -o /tmp/a.zip \
+              || { echo "::warning::Skipping ${name}: download failed or exceeded ${MAX_ZIP_BYTES} bytes."; continue; }
+            UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
+            if [ -n "${UNCOMP}" ] && [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
+              echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
+            fi
+            # Extract ONLY `*.binlog` entries with paths junked (`-j`) under a
+            # timeout so a malicious/relative entry (zip-slip) can't escape the
+            # destination and extraction can't run unbounded.
+            timeout 120 unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
+              || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
             i=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
@@ -251,25 +259,6 @@ steps:
     with:
       name: build-failure-analysis-data
       path: /tmp/binlogs
-
-  - name: Setup .NET (for NuGet MCP Server)
-    uses: actions/setup-dotnet@v5.4.0
-    with:
-      dotnet-version: '9.0.x'
-
-  - name: Install NuGet MCP Server
-    continue-on-error: true
-    # Run from `/tmp` so `dotnet` does not walk into the repo's `global.json`
-    # (which pins an internal-only SDK preview). Install into a `bin` directory
-    # under the runner tool cache instead of `--global`: the gh-aw/AWF sandbox
-    # that runs the agent's shell tools builds its PATH from `bin` directories
-    # found under the tool cache and does NOT mount ~/.dotnet/tools, so
-    # `--global` would leave `NuGet.Mcp.Server` uninvokable by the agent.
-    working-directory: /tmp
-    run: |
-      TOOL_DIR="${RUNNER_TOOL_CACHE:-/opt/hostedtoolcache}/nuget-mcp-server/bin"
-      dotnet tool install NuGet.Mcp.Server --version "$NUGET_MCP_VERSION" --tool-path "$TOOL_DIR"
-      echo "$TOOL_DIR" >> "$GITHUB_PATH"
 
   - name: Export agent context
     env:
@@ -318,8 +307,6 @@ tools:
     - "uniq"
     - "ls"
     - "find"
-    - "dotnet"
-    - "NuGet.Mcp.Server"
 
 safe-outputs:
   messages:
