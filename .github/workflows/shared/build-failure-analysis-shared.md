@@ -30,7 +30,9 @@ failed.
    `"Build succeeded — no analysis required."` and stop.
 
 3. Otherwise, launch the `build-failure-analyst` agent as a **background**
-   task (`task` tool, `agent_type: "general-purpose"`, `mode: "background"`).
+   task (`task` tool, `agent_type: "build-failure-analyst"` so the custom
+   agent defined at `.github/agents/build-failure-analyst.agent.md` is loaded,
+   `mode: "background"`).
    Do **not** pin a specific `model` — let the workflow-level default model
    selection apply so the workflow does not break if a specific model name is
    absent from the repository's Copilot model allowlist. In the sub-agent

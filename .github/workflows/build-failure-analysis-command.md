@@ -136,7 +136,11 @@ jobs:
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
             curl -sSL --retry 3 "${url}" -o /tmp/a.zip || continue
-            unzip -q /tmp/a.zip -d /tmp/ax || continue
+            # Extract ONLY `*.binlog` entries with paths junked (`-j`) so a
+            # malicious/relative artifact entry (zip-slip, `../…`) can never
+            # write outside /tmp/ax. Artifacts originate from PR builds, so
+            # treat them as untrusted input.
+            unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || continue
             i=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
@@ -145,7 +149,7 @@ jobs:
               cp "${bl}" "${dest}.binlog"
               count=$((count + 1))
               i=$((i + 1))
-            done < <(find /tmp/ax -name '*.binlog' -type f)
+            done < <(find /tmp/ax -maxdepth 1 -name '*.binlog' -type f)
           done
           echo "Extracted ${count} binlog(s) into /tmp/binlogs:"
           ls -la /tmp/binlogs || true

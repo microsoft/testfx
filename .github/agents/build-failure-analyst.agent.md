@@ -29,7 +29,7 @@ The caller (typically `build-failure-analysis.md` or `build-failure-analysis-com
 | `GH_AW_BUILD_OUTCOME`     | Always `failure` when this agent runs — the workflow only activates after the Azure DevOps `microsoft.testfx` build failed. |
 | `GH_AW_PR_NUMBER`         | Pull request number to post the analysis on. Pass it explicitly on every `add_comment` / `create_pull_request_review_comment` call (the workflows use `target: "*"`). |
 | `GH_AW_PR_HEAD_SHA`       | Commit SHA at the PR head. Use for permalinks **and** as the ref when reading source files (see below). |
-| `GH_AW_WORKSPACE`         | `$GITHUB_WORKSPACE`. **Note:** because these workflows trigger on `check_run` / slash command / dispatch, the workspace is **not** a checkout of the failing PR — do not read source from it. Read PR source through the GitHub API at `GH_AW_PR_HEAD_SHA` instead (see Step 4). |
+| `GH_AW_WORKSPACE`         | `$GITHUB_WORKSPACE`. The workspace **may or may not** be a checkout of the failing PR depending on the trigger (the slash-command path checks out the PR branch; the `check_run` / dispatch paths do not). Do not rely on it for PR source — the GitHub API at `GH_AW_PR_HEAD_SHA` is the source of truth (see Step 4). |
 
 If a `binlog-mcp` call fails, fall back to the Azure DevOps build referenced by `GH_AW_BINLOG_HOST_PATH` (its logs are viewable there) and call out the gap in the summary comment.
 
@@ -110,7 +110,7 @@ Available capabilities:
 
 ### Step 4 — Read source context for the highest-confidence fix
 
-For each root cause, identify the **smallest set of files** that need to change. The runner workspace is **not** a checkout of the failing PR (these workflows run on `check_run` / slash command / dispatch, so the workspace is the default branch or empty). Read PR source through the **GitHub API / `github` MCP tool at the `GH_AW_PR_HEAD_SHA` ref** (convert the absolute compiler paths in the binlog to repo-relative paths first), never from the local workspace.
+For each root cause, identify the **smallest set of files** that need to change. Depending on the trigger the runner workspace may not be a checkout of the failing PR (the `check_run` / dispatch paths run on the default branch or an unrelated ref), so treat the **GitHub API / `github` MCP tool at the `GH_AW_PR_HEAD_SHA` ref** as the source of truth for PR source (convert the absolute compiler paths in the binlog to repo-relative paths first) rather than reading the local workspace.
 
 - For Roslyn / C# errors: read 6 lines above and 10 lines below the reported line.
 - For MSBuild errors: read the offending element and the surrounding `<PropertyGroup>` / `<ItemGroup>` / `<Target>`.

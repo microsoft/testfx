@@ -16,14 +16,23 @@ description: >-
 # binlogs from **all** build legs (anonymously — dnceng-public/public is a
 # public project) and the agent analyses whichever leg(s) actually contain
 # errors. Reusing the binlogs avoids a duplicate build and removes any fork-PR
-# code-execution risk: this workflow only downloads artifacts (data), it never
-# checks out or runs PR code.
+# code-execution risk: this workflow only downloads build artifacts (data) and
+# never **builds or executes** PR code. (gh-aw does a sparse checkout of the
+# base repo's own `.github` config to run the agent; PR code is never fetched,
+# built, or run.)
 
 on:
   # `check_run` fires for every check on a commit, so the `fetch-binlog` job
   # below filters tightly to the `microsoft.testfx` build check reporting failure.
   check_run:
     types: [completed]
+  # Advisory analysis should run for **every** failing PR — including external
+  # contributors' PRs, which are the most likely to break the build. Disable
+  # gh-aw's default author-association gate (which would otherwise skip
+  # non-write-access actors, and on `check_run` the actor is the pipeline app
+  # anyway). This is safe here: the workflow only reads a public binlog and
+  # posts advisory comments — it never builds or executes PR code.
+  roles: all
   # Manual entry point for reruns / testing: analyse a specific Azure DevOps
   # build id and post to a specific PR.
   workflow_dispatch:
@@ -197,7 +206,11 @@ jobs:
             rm -rf /tmp/ax /tmp/a.zip
             mkdir -p /tmp/ax
             curl -sSL --retry 3 "${url}" -o /tmp/a.zip || continue
-            unzip -q /tmp/a.zip -d /tmp/ax || continue
+            # Extract ONLY `*.binlog` entries with paths junked (`-j`) so a
+            # malicious/relative artifact entry (zip-slip, `../…`) can never
+            # write outside /tmp/ax. Artifacts originate from PR builds, so
+            # treat them as untrusted input.
+            unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 || continue
             i=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
@@ -206,7 +219,7 @@ jobs:
               cp "${bl}" "${dest}.binlog"
               count=$((count + 1))
               i=$((i + 1))
-            done < <(find /tmp/ax -name '*.binlog' -type f)
+            done < <(find /tmp/ax -maxdepth 1 -name '*.binlog' -type f)
           done
           echo "Extracted ${count} binlog(s) into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
