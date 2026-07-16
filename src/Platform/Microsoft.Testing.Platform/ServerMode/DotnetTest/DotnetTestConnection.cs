@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
@@ -20,6 +21,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     private readonly IEnvironment _environment;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
+    private readonly ILogger _logger;
 
     private NamedPipeClient? _dotnetTestPipeClient;
 
@@ -32,11 +34,21 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
     public DotnetTestConnection(CommandLineHandler commandLineHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
+        : this(commandLineHandler, environment, testApplicationModuleInfo, cancellationTokenSource, new NopLogger())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DotnetTestConnection"/> class with a logger for low-noise
+    /// diagnostics of the control-pipe connect/listen/cancel/exit paths.
+    /// </summary>
+    public DotnetTestConnection(CommandLineHandler commandLineHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource, ILogger logger)
     {
         _commandLineHandler = commandLineHandler;
         _environment = environment;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _cancellationTokenSource = cancellationTokenSource;
+        _logger = logger;
     }
 
     public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
@@ -257,12 +269,15 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             connectCts.CancelAfter(TimeSpan.FromSeconds(30));
             await controlClient.ConnectAsync(connectCts.Token).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Best-effort: failing to establish the control channel degrades to "no server-initiated cancel"
             // rather than affecting the test run.
+            await _logger.LogDebugAsync($"Failed to connect to the server control pipe '{_serverControlPipeName}'; the server-initiated cancel feature will stay disabled for this run: {ex}").ConfigureAwait(false);
             return;
         }
+
+        await _logger.LogDebugAsync($"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
 
         await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
     }
@@ -287,19 +302,24 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         }
         catch (OperationCanceledException)
         {
-            // We are shutting down (dispose or app cancellation) - nothing to do.
+            // We are shutting down (dispose or app cancellation) - nothing to do. Expected shutdown, so this stays
+            // at Trace to avoid noise.
+            await _logger.LogTraceAsync($"Server control pipe '{_serverControlPipeName}' listener stopped: shutdown requested.").ConfigureAwait(false);
         }
-        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             // The control pipe dropped while the session was still live => the host went away. Treat it as a
             // cooperative cancel so we still try to wind down and report whatever completed. NOTE: this makes it a
             // protocol requirement that the SDK keep the control pipe open until the data session ends - an early
             // close for any reason is interpreted here as a cancel.
+            await _logger.LogDebugAsync($"Server control pipe '{_serverControlPipeName}' dropped while the session was live; treating it as a cooperative cancel: {ex}").ConfigureAwait(false);
             await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Cancellation raced with a pipe error (e.g. the stream was disposed during teardown); ignore.
+            // Cancellation raced with a pipe error (e.g. the stream was disposed during teardown); ignore. This is
+            // an expected shutdown race, so it stays at Trace.
+            await _logger.LogTraceAsync($"Server control pipe '{_serverControlPipeName}' listener observed a race between shutdown and a pipe error during teardown: {ex}").ConfigureAwait(false);
         }
     }
 
@@ -335,7 +355,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         if (_serverControlListenerTask is { } listenerTask)
         {
             // Bounded wait so a stuck listener can never hang the exit path on any target framework.
-            await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
+            Task completed = await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
+            if (completed != listenerTask)
+            {
+                await _logger.LogDebugAsync($"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
+            }
         }
     }
 
@@ -351,11 +375,15 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             try
             {
                 // Bounded wait: the cancel + dispose above unblock the parked read quickly. Never hang exit.
-                listenerTask.Wait(TimeSpan.FromSeconds(5));
+                if (!listenerTask.Wait(TimeSpan.FromSeconds(5)))
+                {
+                    _logger.LogDebug($"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during dispose; continuing without waiting further.");
+                }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // Best-effort shutdown.
+                _logger.LogDebug($"Ignoring failure while waiting for the server control pipe '{_serverControlPipeName}' listener to finish during dispose: {ex}");
             }
         }
 

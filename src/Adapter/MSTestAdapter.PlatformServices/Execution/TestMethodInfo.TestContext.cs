@@ -58,7 +58,7 @@ internal partial class TestMethodInfo
 
             result.Outcome = UnitTestOutcome.Failed;
             StackTraceInformation? stackTraceInfo = realException.GetStackTraceInformation();
-            result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInfo);
+            result.TestFailureException = new TestFailedException(UnitTestOutcome.Failed, errorMessage, stackTraceInfo, realException);
         }
 
         return false;

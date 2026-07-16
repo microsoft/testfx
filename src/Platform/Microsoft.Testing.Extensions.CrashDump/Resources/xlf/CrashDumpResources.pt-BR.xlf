@@ -84,10 +84,20 @@ Há suporte para os seguintes espaços reservados: {pname} (nome do executável 
         <target state="translated">Arquivo de sequência de falhas</target>
         <note />
       </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileOpenError">
+        <source>Failed to open crash sequence file '{0}' for writing: {1}. Test sequence information will not be available if the test host crashes.</source>
+        <target state="new">Failed to open crash sequence file '{0}' for writing: {1}. Test sequence information will not be available if the test host crashes.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
+      </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>
         <target state="translated">Falha ao ler o arquivo de sequência de '{0}': {1}</target>
         <note>{0} is the crash sequence file path. {1} is the error message.</note>
+      </trans-unit>
+      <trans-unit id="CrashDumpSequenceFileWriteError">
+        <source>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</source>
+        <target state="new">Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
         <source>The following tests were still running when the test host crashed (format: [&lt;time-elapsed-since-start&gt;] &lt;name&gt;):</source>

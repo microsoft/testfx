@@ -152,7 +152,7 @@ internal sealed class NamedPipeServer : NamedPipeConnectionBase, IServer
                 // The client disconnected while we were writing the reply. Treat it as a graceful disconnect
                 // (symmetric with the read-side EOF handling above) so the server loop exits without crashing
                 // the host.
-                await _logger.LogDebugAsync($"Pipe {PipeName.Name} broken while writing reply; treating as client disconnect: {ex.Message}").ConfigureAwait(false);
+                await _logger.LogDebugAsync($"Pipe {PipeName.Name} broken while writing reply; treating as client disconnect: {ex}").ConfigureAwait(false);
                 clientDisconnected = true;
             }
 

@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -22,6 +23,7 @@ internal sealed partial class ServerModeManager
             ? clientHostArgs[0]
             : "localhost";
 
-        return new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice());
+        ILogger logger = serviceProvider.GetLoggerFactory().CreateLogger<MessageHandlerFactory>();
+        return new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice(), logger);
     }
 }

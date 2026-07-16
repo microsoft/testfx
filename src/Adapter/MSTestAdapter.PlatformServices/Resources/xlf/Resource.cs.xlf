@@ -117,9 +117,9 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problém nasazení testovacího běhu: Nepodařilo se zkopírovat soubor {0} do {1}: {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>

@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 
@@ -172,7 +173,7 @@ internal sealed partial class TerminalOutputDevice
             HeartbeatSilenceThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
             SlowTestThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
             SlowestTestsCount = slowestTestsCount,
-        });
+        }, _loggerFactory.CreateLogger<TerminalTestReporter>());
     }
 
     // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the

@@ -3,6 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -93,6 +94,19 @@ internal sealed partial class TerminalTestReporter : IDisposable
         IConsole console,
         Func<bool> isCancellationRequested,
         TerminalTestReporterOptions options)
+        : this(console, isCancellationRequested, options, new NopLogger())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal, manual refresh, and a
+    /// logger for low-noise diagnostics of unexpected progress rendering/erase failures.
+    /// </summary>
+    public TerminalTestReporter(
+        IConsole console,
+        Func<bool> isCancellationRequested,
+        TerminalTestReporterOptions options,
+        ILogger logger)
     {
         _isCancellationRequested = isCancellationRequested;
         _options = options;
@@ -132,7 +146,7 @@ internal sealed partial class TerminalTestReporter : IDisposable
             ? new CursorProgressRenderer()
             : new SilenceDrivenHeartbeatRenderer(_options.HeartbeatSilenceThreshold, _options.SlowTestThreshold, () => CreateStopwatch());
 
-        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer);
+        _terminalWithProgress = new TestProgressStateAwareTerminal(terminal, showProgress, renderer, logger);
     }
 
     public void PrintOutOfProcessArtifacts()

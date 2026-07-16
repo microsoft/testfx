@@ -9,6 +9,7 @@ using System.Net.Sockets;
 #if !NETCOREAPP
 using Microsoft.Testing.Platform.Helpers;
 #endif
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
@@ -28,6 +29,20 @@ internal sealed class TcpMessageHandler(
     };
 
     private readonly IMessageFormatter _formatter = formatter;
+    private readonly ILogger _logger = new NopLogger();
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TcpMessageHandler"/> class with a logger for low-noise
+    /// transport diagnostics (e.g. connection resets).
+    /// </summary>
+    public TcpMessageHandler(
+        TcpClient client,
+        Stream clientToServerStream,
+        Stream serverToClientStream,
+        IMessageFormatter formatter,
+        ILogger logger)
+        : this(client, clientToServerStream, serverToClientStream, formatter)
+        => _logger = logger;
 
     public async Task<RpcMessage?> ReadAsync(CancellationToken cancellationToken)
     {
@@ -80,6 +95,7 @@ internal sealed class TcpMessageHandler(
                      InnerException: SocketException { SocketErrorCode: SocketError.ConnectionReset }
                  })
         {
+            await _logger.LogDebugAsync($"TCP connection reset while reading; treating as client disconnect: {ex}").ConfigureAwait(false);
             return null;
         }
     }

@@ -21,4 +21,9 @@ internal sealed class AdapterSettingsException : Exception
         : base(message)
     {
     }
+
+    internal AdapterSettingsException(string? message, Exception? innerException)
+        : base(message, innerException)
+    {
+    }
 }

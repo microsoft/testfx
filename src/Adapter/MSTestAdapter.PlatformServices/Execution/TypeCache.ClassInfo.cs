@@ -88,10 +88,21 @@ internal sealed partial class TypeCache
 
             return t;
         }
-        catch (TypeLoadException)
+        catch (TypeLoadException ex)
         {
             // This means the class containing the test method could not be found.
-            // Return null so we return a not found result.
+            // Return null so we return a not found result, but don't silently swallow the
+            // exception: trace a warning with the type/assembly context and the full exception
+            // so the underlying cause (e.g. a missing or mismatched assembly) is discoverable.
+            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            {
+                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                    "TypeCache.LoadType: Failed to load type '{0}' from assembly '{1}'. The corresponding test(s) will be reported as not found. {2}",
+                    typeName,
+                    assemblyName,
+                    ex);
+            }
+
             return null;
         }
         catch (Exception ex)

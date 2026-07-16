@@ -67,10 +67,22 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoShouldReturnNullIfLoadingTypeThrowsTypeLoadException()
     {
+        _testablePlatformServiceProvider.MockTraceLogger.Setup(l => l.IsWarningEnabled).Returns(true);
+
         TestMethod testMethod = CreateTestMethod("M", "System.TypedReference[]", "A", displayName: null);
 
         _typeCache.GetTestMethodInfo(testMethod)
             .Should().BeNull();
+
+        // The TypeLoadException must not be silently swallowed: a warning containing the type name,
+        // the assembly name, and the exception itself must be traced so the failure is discoverable.
+        _testablePlatformServiceProvider.MockTraceLogger.Verify(
+            l => l.Warning(
+                It.IsAny<string>(),
+                "System.TypedReference[]",
+                "A",
+                It.IsAny<TypeLoadException>()),
+            Times.Once);
     }
 
     public void GetTestMethodInfoShouldThrowIfLoadingTypeThrowsException()

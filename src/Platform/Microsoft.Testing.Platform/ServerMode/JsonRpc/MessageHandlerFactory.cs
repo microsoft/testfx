@@ -8,6 +8,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 #if NETSTANDARD
 using Microsoft.Testing.Platform.Helpers;
 #endif
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 
@@ -20,17 +21,32 @@ internal sealed partial class ServerModeManager
         private readonly string _host;
         private readonly int _port;
         private readonly IOutputDevice _outputDevice;
+        private readonly ILogger _logger;
 
         public MessageHandlerFactory(
             string host,
             int port,
             IOutputDevice outputDevice)
+            : this(host, port, outputDevice, new NopLogger())
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MessageHandlerFactory"/> class with a logger that is
+        /// forwarded to the created <see cref="TcpMessageHandler"/> for low-noise transport diagnostics.
+        /// </summary>
+        public MessageHandlerFactory(
+            string host,
+            int port,
+            IOutputDevice outputDevice,
+            ILogger logger)
         {
             // Workaround for slow "localhost" resolve: https://github.com/dotnet/runtime/issues/31085
             // this will pass 127.0.0.1.
             _host = host != "localhost" ? host : IPAddress.Loopback.ToString();
             _port = port;
             _outputDevice = outputDevice;
+            _logger = logger;
         }
 
         public string Uid => nameof(MessageHandlerFactory);
@@ -72,7 +88,7 @@ internal sealed partial class ServerModeManager
                 // InvalidOperationException ("The operation is not allowed on non-connected sockets").
                 cancellationToken.ThrowIfCancellationRequested();
                 NetworkStream stream = client.GetStream();
-                IMessageHandler messageHandler = new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter());
+                IMessageHandler messageHandler = new TcpMessageHandler(client, clientToServerStream: stream, serverToClientStream: stream, FormatterUtilities.CreateFormatter(), _logger);
                 shouldDisposeClient = false;
                 return messageHandler;
             }

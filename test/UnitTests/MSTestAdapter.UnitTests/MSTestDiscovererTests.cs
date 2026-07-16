@@ -5,6 +5,7 @@ using AwesomeAssertions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -206,6 +207,36 @@ public class MSTestDiscovererTests : TestContainer
     {
         _mockTestSourceHandler.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
         MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }, _mockTestSourceHandler.Object).Should().BeFalse();
+    }
+
+    public void GetSettingsExceptionMessageShouldReturnPlainMessageWhenThereIsNoInnerException()
+    {
+        var ex = new AdapterSettingsException("Invalid value 'Pond' specified for 'Scope'.");
+
+        MSTestDiscovererHelpers.GetSettingsExceptionMessage(ex).Should().Be("Invalid value 'Pond' specified for 'Scope'.");
+    }
+
+    public void GetSettingsExceptionMessageShouldIncludeInnerExceptionDetailsWhenPresent()
+    {
+        var innerException = new FormatException("The attribute 'Workers' could not be parsed as an integer.");
+        var ex = new AdapterSettingsException("Invalid runsettings configuration for 'MSTest'.", innerException);
+
+        string message = MSTestDiscovererHelpers.GetSettingsExceptionMessage(ex);
+
+        // The message must retain the outer configuration context together with the inner exception's
+        // type/message so the underlying parsing/config failure is discoverable, not silently lost.
+        message.Should().Contain("Invalid runsettings configuration for 'MSTest'.");
+        message.Should().Contain(nameof(FormatException));
+        message.Should().Contain(innerException.Message);
+    }
+
+    public void AdapterSettingsExceptionShouldSetInnerExceptionWhenProvided()
+    {
+        var innerException = new FormatException("bad format");
+        var ex = new AdapterSettingsException("outer message", innerException);
+
+        ex.Message.Should().Be("outer message");
+        ex.InnerException.Should().BeSameAs(innerException);
     }
 
     [TestClass]

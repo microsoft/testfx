@@ -49,11 +49,24 @@ internal sealed partial class ServerTestHost
                 await _messageHandler.WriteRequestAsync(notification, cancellationToken).ConfigureAwait(false);
             }
         }
-        catch
+        catch (Exception ex)
         {
             if (rethrowException)
             {
                 throw;
+            }
+
+            // This path is only reachable for best-effort forwarding (checkServerExit: true call sites, e.g.
+            // log/telemetry forwarding to the client) where the caller explicitly opted out of propagating the
+            // failure. Log it so a silently dropped message stays diagnosable, without escalating expected
+            // cancellation/shutdown noise above Trace.
+            if (ex is OperationCanceledException)
+            {
+                await _logger.LogTraceAsync($"Suppressed cancellation while sending '{method}': {ex}").ConfigureAwait(false);
+            }
+            else
+            {
+                await _logger.LogDebugAsync($"Suppressed failure while sending '{method}': {ex}").ConfigureAwait(false);
             }
         }
         finally

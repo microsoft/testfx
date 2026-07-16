@@ -430,7 +430,61 @@ public sealed class FileLoggerTests : IDisposable
 #endif
 
         Assert.IsFalse(fileLogger.IsFileHandleReleased, "A flush timeout must leave the file handle owned by the still-running consumer.");
-        _mockConsole.Verify(x => x.WriteLine(It.Is<string>(s => s.Contains("Failed to flush logs"))), Times.Once);
+
+        // The warning must identify the affected log file (by its full path) and make clear the file may be
+        // incomplete, so a user investigating a hang can find and interpret the right file.
+        _mockConsole.Verify(
+            x => x.WriteLine(It.Is<string>(s => s.Contains("Failed to flush logs") && s.Contains(FileName) && s.Contains("may be incomplete"))),
+            Times.Once);
+    }
+
+    // Deterministic guard: an exception thrown from inside the consumer write loop must be reported with the log
+    // file's identity and the full exception detail (not just Message), and must never recurse back into the
+    // FileLogger's own (now-faulted) sink -- it goes to the injected IConsole instead.
+    [TestMethod]
+    public async Task FileLogger_WhenWriteLoopThrows_ReportsFileNameAndFullExceptionDetailToConsole()
+    {
+        _mockFileSystem.Setup(x => x.ExistFile(It.IsAny<string>())).Returns(false);
+        _mockFileStreamFactory
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+
+        var consoleMessages = new List<string>();
+        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>())).Callback<string>(consoleMessages.Add);
+
+        // Make the underlying stream throw once the consumer loop tries to write to it, simulating a real I/O
+        // failure (e.g. disk full / access denied) surfacing from inside the write loop.
+        _mockStream.Setup(x => x.Stream).Returns(new ThrowingStream());
+
+        FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Trace,
+            _mockClock.Object,
+            new SystemTask(),
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockFileStreamFactory.Object);
+
+        fileLogger.Log(LogLevel.Trace, Message, null, Formatter, Category);
+
+        // Poll until the write loop has reported the failure (bounded so a regression fails fast instead of hanging).
+        DateTime deadline = DateTime.UtcNow.AddSeconds(5);
+        while (consoleMessages.Count == 0 && DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(10, TestContext.CancellationToken);
+        }
+
+        Assert.HasCount(1, consoleMessages, "The write-loop failure must be reported exactly once.");
+        string message = consoleMessages[0];
+        Assert.Contains(FileName, message, $"Expected the log file name '{FileName}' in: {message}");
+        Assert.Contains("may be incomplete", message, $"Expected an 'incomplete' warning in: {message}");
+        Assert.Contains(nameof(NotSupportedException), message, $"Expected the full exception type/detail (not just Message) in: {message}");
+
+#if NETCOREAPP
+        await fileLogger.DisposeAsync();
+#else
+        fileLogger.Dispose();
+#endif
     }
 
     void IDisposable.Dispose()
@@ -514,5 +568,24 @@ public sealed class FileLoggerTests : IDisposable
                 _shouldDispose = true;
             }
         }
+    }
+
+    // Stream whose Write/WriteAsync always throws, used to deterministically fault the FileLogger's consumer write
+    // loop and verify the resulting console warning identifies the log file and preserves full exception detail.
+    private sealed class ThrowingStream : MemoryStream
+    {
+        public override void Write(byte[] buffer, int offset, int count)
+            => throw new NotSupportedException("Simulated I/O failure.");
+
+        public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            => throw new NotSupportedException("Simulated I/O failure.");
+
+#if NETCOREAPP
+        public override void Write(ReadOnlySpan<byte> buffer)
+            => throw new NotSupportedException("Simulated I/O failure.");
+
+        public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+            => throw new NotSupportedException("Simulated I/O failure.");
+#endif
     }
 }
