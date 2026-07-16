@@ -198,17 +198,21 @@ jobs:
             echo "::warning::ADO build ${BUILD_ID} sourceBranch '${SRC_BRANCH}' does not match PR #${PR_NUMBER} (refs/pull/${PR_NUMBER}/merge); refusing to avoid posting to the wrong PR."; emit_none
           fi
 
-          # Anchor the head SHA to the revision THIS build actually analyzed
-          # (`triggerInfo["pr.sourceSha"]`), not the PR's current head. The
-          # `refs/pull/<n>/merge` branch is stable, so a supplied/parsed build
-          # id may correspond to an older push; deriving the SHA from the build
-          # keeps permalinks and inline-suggestion positions consistent with
-          # the binlog being analyzed rather than pairing stale errors with
-          # newer source.
+          # Require the build's analyzed revision to equal the PR's CURRENT
+          # head. gh-aw safe-output review comments carry no `commit_id` — they
+          # target the current PR diff — so analyzing a stale revision would
+          # produce inline suggestions that get rejected or land on the wrong
+          # lines. If the PR has advanced since this build ran, skip: a newer
+          # build/check for the current head will cover it.
           BUILD_PR_SHA=$(printf '%s' "${build_json}" | jq -r '.triggerInfo["pr.sourceSha"] // empty')
-          if [ -n "${BUILD_PR_SHA}" ]; then
-            HEAD_SHA="${BUILD_PR_SHA}"
+          CURRENT_HEAD=$(printf '%s' "${PR_JSON}" | jq -r '.head.sha // empty')
+          if [ -n "${BUILD_PR_SHA}" ] && [ -n "${CURRENT_HEAD}" ] && [ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]; then
+            echo "::warning::Build ${BUILD_ID} analyzed revision '${BUILD_PR_SHA}' but PR #${PR_NUMBER} head is now '${CURRENT_HEAD}'; skipping stale build (a newer build/check will cover the current revision)."
+            emit_none
           fi
+          # Consistent now: build revision == current PR head. Use it for
+          # permalinks so they line up with the inline comments' diff target.
+          HEAD_SHA="${CURRENT_HEAD:-${BUILD_PR_SHA:-${HEAD_SHA}}}"
           echo "Analyzing build ${BUILD_ID} at PR head revision '${HEAD_SHA}'."
 
           # --- 5. Download every Logs_Build_* artifact and extract binlogs ---
@@ -258,9 +262,15 @@ jobs:
               [ -f "${bl}" ] || continue
               dest="/tmp/binlogs/${name}"
               [ ${i} -gt 0 ] && dest="/tmp/binlogs/${name}.${i}"
-              cp "${bl}" "${dest}.binlog"
-              count=$((count + 1))
-              i=$((i + 1))
+              # Only count a leg as staged when the copy actually succeeds —
+              # `set +e` is on, so a failed `cp` must not inflate `count` (which
+              # gates `binlog-found=true` and thus agent activation).
+              if cp "${bl}" "${dest}.binlog"; then
+                count=$((count + 1))
+                i=$((i + 1))
+              else
+                echo "::warning::Failed to stage ${bl}; skipping."
+              fi
             done < <(find /tmp/ax -maxdepth 1 -name '*.binlog' -type f)
           done
           echo "Extracted ${count} binlog(s) into /tmp/binlogs:"

@@ -163,8 +163,8 @@ a workflow needs elevated access (then use the GitHub App above).
 
 | Workflow | Trigger | Description |
 | --- | --- | --- |
-| [`build-failure-analysis.md`](./build-failure-analysis.md) | PR opened/synchronize/reopened on `main` or `rel/*` | Runs `./build.sh --binaryLog`; on failure, the `build-failure-analyst` agent reads JSON dumps from the binlog, posts a summary comment, and attaches inline `suggestion` blocks. Advisory only — not a gating check. |
-| [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the build-failure analysis on demand (after force-pushes, dismissed comments, etc.). |
+| [`build-failure-analysis.md`](./build-failure-analysis.md) | Azure Pipelines `microsoft.testfx` check `completed` (failure) on a PR to `main` or `rel/*` | Downloads the binary logs that failed Azure DevOps build already produced (all build legs — it does **not** rebuild), and the `build-failure-analyst` agent queries them via `binlog-mcp`, posts a summary comment, and attaches inline `suggestion` blocks. Advisory only — not a gating check. |
+| [`build-failure-analysis-command.md`](./build-failure-analysis-command.md) | `/analyze-build-failure` on a PR | Re-runs the analysis on demand: inspects the PR's latest `microsoft.testfx` build and, only when it failed, downloads its binlogs and analyzes them (no rebuild). |
 | [`add-tests.md`](./add-tests.md) | `/add-tests` on a PR | Generates unit tests for code introduced in a pull request. |
 | [`grade-tests-on-pr.agent.md`](./grade-tests-on-pr.agent.md) | PR opened/reopened/synchronize/ready_for_review touching `test/**` | Automatically grades new and modified test methods and posts a single PR scorecard comment via the `grade-tests` skill. |
 | [`grade-tests.agent.md`](./grade-tests.agent.md) | `/grade-tests` on a PR | Re-runs the test-quality grading on demand. |

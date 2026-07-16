@@ -57,7 +57,7 @@ The failed Azure DevOps build publishes **one binlog per build leg** (e.g. Linux
 
 1. For **each** path in `GH_AW_BINLOG_LIST`, call `binlog_errors { binlog_file: "<path>" }`. Concentrate your analysis on the leg(s) that actually report errors (each error has `{ severity, code, message, file, line, column, project }`).
 2. For the leg(s) with errors, call `binlog_overview { binlog_file: "<path>" }` for build configuration/context, and `binlog_warnings { binlog_file: "<path>", top: 10 }` when the failure looks like a `WarnAsError` promotion.
-3. If **no** leg's binlog contains errors, the compilation itself succeeded and the pipeline failure is elsewhere (most often a test / Helix stage). Post a single summary comment stating the build compiled cleanly, name the failing stage if you can identify it, link the [Azure DevOps build](${GH_AW_BINLOG_HOST_PATH}), and stop — do **not** invent code fixes.
+3. If a leg reports **no** errors from `binlog_errors`, that alone does **not** prove it compiled cleanly — a target can fail without emitting an MSBuild error, and non-MSBuild/process failures leave no error records. Before concluding a leg is clean, also check `binlog_overview` and look for failed targets / `OnError` handlers / process-termination clues (see **Defensive Behavior** below). Only when **every** leg shows no errors **and** no failed-target/process evidence should you report that the build compiled cleanly and the failure is elsewhere (most often a test / Helix stage); in that case name the failing stage if you can identify it, link the [Azure DevOps build](${GH_AW_BINLOG_HOST_PATH}), and stop — do **not** invent code fixes.
 
 Pass each `binlog_file` verbatim from `GH_AW_BINLOG_LIST`. Because the MCP server is live, ask follow-up questions when these calls leave gaps — searching for specific error codes, listing targets that failed in a given project, or pulling task-level timing. Discover the full tool surface with `binlog-mcp`'s own `tools/list` (the MCP gateway exposes it automatically).
 
@@ -92,7 +92,7 @@ Approach:
 
 Notes:
 - `NU1605` (downgrade): find where the lower version is pinned and raise it to satisfy the transitive requirement named in the error.
-- `NU1102` / `NU1100` (not found): the version usually exists on nuget.org but is not yet on the repo's configured feeds — flag mirroring/feed availability as the likely cause rather than proposing a downgrade.
+- `NU1102` / `NU1100` (not found): confirm the exact package **and version** the error names, then verify availability before proposing a remedy. If that version is published on nuget.org but absent from the repo's configured feeds, feed mirroring is the likely cause; if it is **not** on nuget.org either, treat it as a typo or an unpublished/incorrect version rather than a mirroring gap. Do not assume mirroring without evidence that the version exists upstream.
 - If the transitive graph is too complex to resolve confidently from the error text and package files alone, say so and recommend a maintainer run the restore locally, rather than guessing.
 
 ### Step 4 — Read source context for the highest-confidence fix

@@ -3,12 +3,14 @@ name: "Build Failure Analysis (command)"
 description: >-
   Rerun the build-failure analysis on a pull request when a maintainer comments
   `/analyze-build-failure`. Same body as `build-failure-analysis.md` — it does
-  NOT rebuild: it finds the PR's most recent **failed** Azure Pipelines
-  `microsoft.testfx` build, downloads the binary logs that build already produced
-  (all build legs), and delegates to the `build-failure-analyst` agent (which
-  queries the binlogs live via the containerized `binlog-mcp` MCP server).
-  Useful when a previous run was cancelled, the analysis comment was dismissed,
-  or the agent needs another pass after a force-push.
+  NOT rebuild: it inspects the PR's **latest** Azure Pipelines `microsoft.testfx`
+  build and, **only when that latest build has failed** (it stops if the
+  newest build is still running or has succeeded), downloads the binary logs
+  that build already produced (all build legs) and delegates to the
+  `build-failure-analyst` agent (which queries the binlogs live via the
+  containerized `binlog-mcp` MCP server). Useful when a previous run was
+  cancelled, the analysis comment was dismissed, or the agent needs another
+  pass.
 
 on:
   slash_command:
@@ -134,12 +136,21 @@ jobs:
             emit_none
           fi
 
-          # Anchor the head SHA to the revision this build analyzed
-          # (`triggerInfo["pr.sourceSha"]`) rather than the PR's current head,
-          # so permalinks / inline suggestions match the binlog exactly.
+          # Require the build's analyzed revision to equal the PR's CURRENT
+          # head. gh-aw safe-output review comments carry no `commit_id` (they
+          # target the current PR diff), so analyzing a stale revision would
+          # misplace/reject inline suggestions. The PR can advance between
+          # selecting the build and downloading artifacts, and right after a
+          # force-push this query can still return the previous failed build —
+          # so re-read the head here and skip if it moved.
           build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
           BUILD_PR_SHA=$(printf '%s' "${build_json}" | jq -r '.triggerInfo["pr.sourceSha"] // empty')
-          [ -n "${BUILD_PR_SHA}" ] && HEAD_SHA="${BUILD_PR_SHA}"
+          CURRENT_HEAD=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha' 2>/dev/null)
+          if [ -n "${BUILD_PR_SHA}" ] && [ -n "${CURRENT_HEAD}" ] && [ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]; then
+            echo "::warning::Build ${BUILD_ID} analyzed revision '${BUILD_PR_SHA}' but PR #${PR_NUMBER} head is now '${CURRENT_HEAD}'; skipping stale build (a newer build will cover the current revision)."
+            emit_none
+          fi
+          HEAD_SHA="${CURRENT_HEAD:-${BUILD_PR_SHA:-${HEAD_SHA}}}"
           echo "Analyzing build ${BUILD_ID} at PR head revision '${HEAD_SHA}'."
 
           # --- Download every Logs_Build_* artifact and extract binlogs ---
@@ -189,9 +200,15 @@ jobs:
               [ -f "${bl}" ] || continue
               dest="/tmp/binlogs/${name}"
               [ ${i} -gt 0 ] && dest="/tmp/binlogs/${name}.${i}"
-              cp "${bl}" "${dest}.binlog"
-              count=$((count + 1))
-              i=$((i + 1))
+              # Only count a leg as staged when the copy actually succeeds —
+              # `set +e` is on, so a failed `cp` must not inflate `count` (which
+              # gates `binlog-found=true` and thus agent activation).
+              if cp "${bl}" "${dest}.binlog"; then
+                count=$((count + 1))
+                i=$((i + 1))
+              else
+                echo "::warning::Failed to stage ${bl}; skipping."
+              fi
             done < <(find /tmp/ax -maxdepth 1 -name '*.binlog' -type f)
           done
           echo "Extracted ${count} binlog(s) into /tmp/binlogs:"
