@@ -198,6 +198,15 @@ jobs:
             if ! printf '%s' "${UNCOMP}" | grep -qE '^[0-9]+$'; then
               echo "::warning::Skipping ${name}: could not determine uncompressed size (unparseable unzip output)."; continue
             fi
+            # ZIP64 uncompressed sizes can reach ~20 digits — beyond Bash's
+            # signed 64-bit range, where `-gt` (and the cumulative `$((...))`
+            # below) error out and, under `set +e`, would let an oversized
+            # archive slip past the guard. Any value with more digits than the
+            # limit is unambiguously larger, so reject on decimal length first;
+            # after this, UNCOMP fits safely in the integer range used below.
+            if [ "${#UNCOMP}" -gt "${#MAX_UNZIP_BYTES}" ]; then
+              echo "::warning::Skipping ${name}: uncompressed size has ${#UNCOMP} digits, exceeding the ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
+            fi
             if [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
             fi

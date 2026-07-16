@@ -28,7 +28,7 @@ The caller (typically `build-failure-analysis.md` or `build-failure-analysis-com
 | `GH_AW_BINLOG_HOST_PATH`  | URL of the originating Azure DevOps build (`https://dev.azure.com/dnceng-public/public/_build/results?buildId=…`). Use only for permalinks / human-facing references — read the binlog data via MCP. |
 | `GH_AW_BUILD_OUTCOME`     | Always `failure` when this agent runs — the workflow only activates after the Azure DevOps `microsoft.testfx` build failed. |
 | `GH_AW_PR_NUMBER`         | Pull request number to post the analysis on. Pass it explicitly on every `add_comment` / `create_pull_request_review_comment` call (the workflows use `target: "*"`). |
-| `GH_AW_PR_HEAD_SHA`       | Commit SHA the analysis targets. The workflow guarantees this equals **both** the analyzed build's revision (`triggerInfo["pr.sourceSha"]`) **and** the PR's current head — it skips stale builds where they differ. Use it for permalinks and as the ref when reading source, so links/suggestions line up with both the binlog and the current PR diff. |
+| `GH_AW_PR_HEAD_SHA`       | Commit SHA the analysis targets. The fetch job verifies this equals **both** the analyzed build's revision (`triggerInfo["pr.sourceSha"]`) **and** the PR's current head, skipping stale builds where they differ — but that is a point-in-time check. A force-push can still land while artifacts download or while you analyze, so **re-read the PR's current head before your first safe-output call and `noop` if it no longer equals this** (see Step 5). Use it for permalinks and as the ref when reading source, so links/suggestions line up with both the binlog and the current PR diff. |
 | `GH_AW_WORKSPACE`         | `$GITHUB_WORKSPACE`. The runner workspace is **not** a reliable checkout of the failing PR at `GH_AW_PR_HEAD_SHA` on any trigger (the generated jobs check out the repo for agent config using the event's default ref, not the PR head). Do not read PR source from it — the GitHub API at `GH_AW_PR_HEAD_SHA` is the source of truth (see Step 4). |
 
 If a `binlog-mcp` call fails, fall back to the Azure DevOps build referenced by `GH_AW_BINLOG_HOST_PATH` (its logs are viewable there) and call out the gap in the summary comment.
@@ -92,7 +92,7 @@ Approach:
 
 Notes:
 - `NU1605` (downgrade): find where the lower version is pinned and raise it to satisfy the transitive requirement named in the error.
-- `NU1102` / `NU1100` (not found): confirm the exact package **and version** the error names, then verify availability before proposing a remedy. If that version is published on nuget.org but absent from the repo's configured feeds, feed mirroring is the likely cause; if it is **not** on nuget.org either, treat it as a typo or an unpublished/incorrect version rather than a mirroring gap. Do not assume mirroring without evidence that the version exists upstream.
+- `NU1102` / `NU1100` (not found): confirm the exact package **and version** the error names from the binlog, and note which configured feeds were searched (the `NU1102` message lists them). You have **no** network or NuGet tool, so do **not** assert whether that version exists on nuget.org or any upstream feed. Base your conclusion only on the binlog's feed/version evidence and the PR's package files: if the pin looks wrong (typo, non-existent version) relative to those files, say so; when whether the version exists upstream is the deciding factor, state that explicitly and ask a maintainer to confirm upstream availability (or run the restore locally) rather than guessing at a mirroring gap.
 - If the transitive graph is too complex to resolve confidently from the error text and package files alone, say so and recommend a maintainer run the restore locally, rather than guessing.
 
 ### Step 4 — Read source context for the highest-confidence fix
@@ -109,7 +109,7 @@ If the source line at the reported `file:line` does not look like a plausible ca
 
 This step applies **only when you have confirmed a genuine build failure** (at least one leg has build errors or failed-target/process evidence). If every leg compiled cleanly, do not reach this step — `noop` silently per Step 2 instead.
 
-When there is a build failure, post **exactly one** summary comment via `add_comment` (targeting the pull request `GH_AW_PR_NUMBER`). Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
+When there is a build failure, first re-verify the target revision: read the current head of PR `GH_AW_PR_NUMBER` via the GitHub API (`get_pull_request` → `head.sha`). If it cannot be read, or no longer equals `GH_AW_PR_HEAD_SHA`, the PR moved (e.g. a force-push) while you were downloading/analyzing — `noop` with a short reason and stop, because your inline suggestions carry no `commit_id` and would land on the wrong lines of the new diff. Otherwise post **exactly one** summary comment via `add_comment` (targeting the pull request `GH_AW_PR_NUMBER`). Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
 
 Template:
 
