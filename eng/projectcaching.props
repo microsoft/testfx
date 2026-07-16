@@ -8,9 +8,19 @@
     GlobalPackageReference that pulls in the plugin (and auto-imports its build props/targets) live in
     Directory.Packages.props. Here we only override the plugin's default settings for this repo.
 
-    When adding to a list-typed setting, always append to the existing value ($(Setting);newvalue) so the
-    plugin's own defaults are preserved. See https://github.com/microsoft/MSBuildCache for the full list of
-    settings and their meanings.
+    IMPORTANT (evaluation order):
+      This file is imported from Directory.Build.props, which is evaluated BEFORE the plugin's own
+      build/*.props (they come in via the NuGet-generated obj/*.nuget.g.props). The plugin sets its list
+      defaults (e.g. MSBuildCacheIgnoredOutputPatterns, MSBuildCacheGlobalPropertiesToIgnore) with
+      Condition="'$(Setting)' == ''", so any value assigned to one of those settings HERE would be seen as
+      non-empty and would SUPPRESS the plugin default. Therefore:
+        * Only set settings that either have no plugin default, or that you intend to fully own.
+        * To extend a setting that HAS a plugin default, set the complete intended value (the defaults are
+          not visible at this import point; see the README for each setting's default), or add the
+          customization from a hook that runs after the plugin package props.
+      The settings below are safe at this point: MSBuildCacheCacheUniverse is a scalar override, and the
+      plugin provides no default for MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns.
+      See https://github.com/microsoft/MSBuildCache for the full list of settings and their defaults.
   -->
   <PropertyGroup>
     <!-- Bump this to invalidate every existing cache entry (e.g. after a toolchain change that the
@@ -19,8 +29,12 @@
 
     <!--
       Visual Studio / Application Insights telemetry (Microsoft.ApplicationInsights is referenced by product
-      code) reads config and cache files from a detached process after the owning project has finished
-      building. These accesses do not affect build correctness, so allow them rather than failing the cache.
+      code) reads config and cache files from a detached process AFTER the owning project has finished
+      building. Only paths that provably do not feed the project's outputs belong here: these are pure
+      telemetry side-effect reads, so excluding them from cache accounting is correct. Do NOT add compiler or
+      other tool inputs here; those must stay tracked (that is what the SharedCompilation package handles).
+      The self-reference preserves any value already supplied (e.g. via a global property); the plugin does
+      not provide a default for this particular setting.
     -->
     <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
       $(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);

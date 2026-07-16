@@ -168,6 +168,11 @@ stages:
           # MSBuildCache (BuildXL) plugin uses as its shared cache backend. See docs/build-caching.md.
           - name: EnablePipelineCache
             value: true
+          # Fork PRs do not receive $(System.AccessToken) (see the comment near the top of this file), and
+          # the Azure Pipelines cache backend requires it. So the BuildXL cached build path runs only for
+          # non-fork builds; fork builds fall back to the normal (uncached) Arcade build below.
+          - name: _IsFork
+            value: $[eq(variables['System.PullRequest.IsFork'], 'True')]
         strategy:
           matrix:
             Release:
@@ -187,12 +192,14 @@ stages:
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpFolder" -Value "$(Build.SourcesDirectory)\artifacts\CrashDumps" -PropertyType ExpandString -Force
               New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\Windows Error Reporting\LocalDumps" -Name "DumpCount" -Value 10 -PropertyType DWord -Force
 
-        # BuildXL (MSBuildCache) is enabled for the Windows build. The plugin only engages when the actual
-        # project graph is the MSBuild entry point -- it does NOT engage through Arcade's Build.proj (which
-        # builds projects via a nested MSBuild task) -- and it requires the x64 desktop MSBuild.exe with
-        # -reportFileAccesses. So the build is split into three steps: Arcade restores the toolset + all
-        # packages, the compile runs under the cache via x64 desktop MSBuild on TestFx.slnx, then Arcade
-        # packs the produced outputs. See docs/build-caching.md.
+        # BuildXL (MSBuildCache) is enabled for the non-fork Windows build. The plugin only engages when the
+        # actual project graph is the MSBuild entry point -- it does NOT engage through Arcade's Build.proj
+        # (which builds projects via a nested MSBuild task) -- and it requires the x64 desktop MSBuild.exe
+        # with -reportFileAccesses. So the build is split into three steps: Arcade restores the toolset + all
+        # packages (with caching opted in, so the plugin's GlobalPackageReference is restored and imported),
+        # the compile runs under the cache via x64 desktop MSBuild on TestFx.slnx, then Arcade packs the
+        # produced outputs. Fork builds skip these and use the uncached fallback further below.
+        # See docs/build-caching.md.
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -201,18 +208,22 @@ stages:
             /p:Sign=false
             /p:Pack=false
             /p:Publish=false
+            /p:MSBuildCacheEnabled=true
           name: Restore
-          displayName: Restore (Arcade)
+          displayName: Restore (Arcade, cache)
+          condition: and(succeeded(), ne(variables._IsFork, 'True'))
 
         - pwsh: >-
             eng\build-with-cache.ps1
             -Configuration $(_BuildConfig)
             -NoRestore
+            -ci
             -Targets Build
-            -BinaryLog $(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\BuildCache.binlog
+            -BinLogPath $(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\BuildCache.binlog
             -ExtraProperties FastAcceptanceTest=true
           name: Build
           displayName: Build (BuildXL cache)
+          condition: and(succeeded(), ne(variables._IsFork, 'True'))
           env:
             # Required by the Azure Pipelines cache backend to read/write Pipeline Caching content.
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -223,11 +234,23 @@ stages:
             /p:Restore=false
             /p:Build=false
             /p:Test=false
-            /p:Sign=false
             /p:Publish=false
             /p:FastAcceptanceTest=true
           name: Pack
-          displayName: Pack (Arcade)
+          displayName: Sign + Pack (Arcade)
+          condition: and(succeeded(), ne(variables._IsFork, 'True'))
+
+        # Fork fallback: no $(System.AccessToken), so the Azure Pipelines cache backend is unavailable. Run
+        # the normal (uncached) Arcade build, matching the pre-caching behaviour.
+        - script: eng\common\CIBuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            /p:Publish=false
+            /p:Test=false
+            /p:FastAcceptanceTest=true
+          name: BuildNoCache
+          displayName: Build (no cache, fork)
+          condition: and(succeeded(), eq(variables._IsFork, 'True'))
 
         - ${{ if eq(parameters.SkipTests, False) }}:
 
