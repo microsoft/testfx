@@ -61,6 +61,7 @@ internal static class DotnetTestPipeProtocol
         public const byte ExecutionMode = 10;
         public const byte OrchestratorFeature = 11;
         public const byte ServerControlPipeName = 12;
+        public const byte AttemptNumber = 13;
     }
 
     public static class ServerControlKinds

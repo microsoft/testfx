@@ -130,9 +130,8 @@ internal sealed partial class TerminalTestReporter
         _terminalWithProgress.NotifyTestCompleted();
         if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
-            // Capture the attempt number (1-based) at completion time so the per-test "(try N)" annotation reflects
-            // the retry attempt this result belongs to.
-            int attempt = asm.TryCount;
+            // Resolve the attempt from the result's instance so multiple instances can participate in one attempt.
+            int attempt = asm.GetAttemptNumber(instanceId);
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
                 attempt,

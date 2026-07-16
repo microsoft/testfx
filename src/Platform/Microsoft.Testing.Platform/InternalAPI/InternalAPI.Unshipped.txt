@@ -12,6 +12,9 @@ Microsoft.Testing.Platform.IPC.Models.FileArtifactMessage.Kind.init -> void
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.AttemptNumber = 13 -> byte
 const Microsoft.Testing.Platform.IPC.NamedPipeServer.MaxUnixDomainSocketPathLengthInBytes = 103 -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.AssemblyRunStarted(string! assembly, string? targetFramework, string? architecture, string! executionId, string! instanceId, int attemptNumber) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.GetAttemptNumber(string! instanceId) -> int
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState.NotifyHandshake(string! instanceId, int attemptNumber) -> void
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
 Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void

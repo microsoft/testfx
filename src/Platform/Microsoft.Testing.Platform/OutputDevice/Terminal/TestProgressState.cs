@@ -22,9 +22,9 @@ internal sealed class TestProgressState
     // uid under a new instance id) replace rather than double-count the earlier attempt's result.
     private readonly Dictionary<string, TestNodeInfoEntry> _testUidToResults = [];
 
-    // Maps each instance id seen for this assembly to its 1-based attempt number. Each new instance id is a retry
-    // attempt; the highest attempt number always equals TryCount. In most runs there is exactly one (no retry).
-    // This lookup is O(1) because GetAttemptNumberFromInstanceId is called for every reported test result.
+    // Maps each instance id seen for this assembly to its 1-based attempt number. New protocol peers report the
+    // attempt explicitly, allowing multiple instances (for example, shards) to belong to the same attempt. Legacy
+    // peers omit it, in which case each new instance is inferred to be the next retry attempt.
     private readonly Dictionary<string, int> _instanceIdToAttemptNumber = [];
 
     // Records the last-seen (display name, duration) for every test node, keyed by test node uid, so the
@@ -85,7 +85,7 @@ internal sealed class TestProgressState
     /// <summary>Gets or sets a value indicating whether the assembly run completed successfully (set by the orchestrator on completion).</summary>
     public bool Success { get; internal set; }
 
-    /// <summary>Gets the number of attempts (handshakes) seen for this assembly; greater than 1 indicates retries.</summary>
+    /// <summary>Gets the highest attempt number seen for this assembly; greater than 1 indicates retries.</summary>
     public int TryCount { get; private set; }
 
     public void ReportPassingTest(string testNodeUid, string instanceId)
@@ -129,23 +129,46 @@ internal sealed class TestProgressState
                 .Take(count)];
 
     /// <summary>
-    /// Registers a handshake for the given <paramref name="instanceId"/>. A previously unseen instance id is a new
-    /// retry attempt and bumps <see cref="TryCount"/>; re-seeing the current attempt is a no-op.
+    /// Registers a legacy handshake for the given <paramref name="instanceId"/>. A previously unseen instance id is
+    /// inferred to be a new retry attempt; re-seeing an instance id is a no-op.
     /// </summary>
     internal void NotifyHandshake(string instanceId)
+        => NotifyHandshakeCore(instanceId, attemptNumber: null);
+
+    /// <summary>
+    /// Registers a handshake with an explicit 1-based <paramref name="attemptNumber"/>. Different instances can
+    /// belong to the same attempt, while one instance cannot change attempts after it has been registered.
+    /// </summary>
+    internal void NotifyHandshake(string instanceId, int attemptNumber)
+        => NotifyHandshakeCore(instanceId, attemptNumber);
+
+    private int NotifyHandshakeCore(string instanceId, int? attemptNumber)
     {
-        if (!_instanceIdToAttemptNumber.TryGetValue(instanceId, out int attemptNumber))
+        if (_instanceIdToAttemptNumber.TryGetValue(instanceId, out int registeredAttemptNumber))
         {
-            // A previously unseen instance id is a new attempt; attempt numbers are 1-based and the latest always
-            // equals TryCount.
-            TryCount++;
-            _instanceIdToAttemptNumber[instanceId] = TryCount;
+            return !attemptNumber.HasValue || attemptNumber.Value == registeredAttemptNumber
+                ? registeredAttemptNumber
+                : throw ApplicationStateGuard.Unreachable();
         }
-        else if (attemptNumber != TryCount)
+
+        int resolvedAttemptNumber;
+        if (attemptNumber.HasValue)
         {
-            // We received a handshake for an instance id that is not the most recent one — unexpected ordering.
-            throw ApplicationStateGuard.Unreachable();
+            if (attemptNumber.Value < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(attemptNumber));
+            }
+
+            resolvedAttemptNumber = attemptNumber.Value;
         }
+        else
+        {
+            resolvedAttemptNumber = TryCount + 1;
+        }
+
+        _instanceIdToAttemptNumber.Add(instanceId, resolvedAttemptNumber);
+        TryCount = Math.Max(TryCount, resolvedAttemptNumber);
+        return resolvedAttemptNumber;
     }
 
     private void ReportGenericTestResult(
@@ -154,7 +177,7 @@ internal sealed class TestProgressState
         Func<TestNodeInfoEntry, TestNodeInfoEntry> incrementTestNodeInfoEntry,
         Action<TestProgressState> incrementCountAction)
     {
-        int currentAttemptNumber = GetAttemptNumberFromInstanceId(instanceId);
+        int currentAttemptNumber = GetAttemptNumber(instanceId);
 
         if (_testUidToResults.TryGetValue(testNodeUid, out TestNodeInfoEntry value))
         {
@@ -186,7 +209,7 @@ internal sealed class TestProgressState
         incrementCountAction(this);
     }
 
-    private int GetAttemptNumberFromInstanceId(string instanceId)
+    internal int GetAttemptNumber(string instanceId)
         => _instanceIdToAttemptNumber.TryGetValue(instanceId, out int attemptNumber)
             ? attemptNumber
             : throw ApplicationStateGuard.Unreachable();
