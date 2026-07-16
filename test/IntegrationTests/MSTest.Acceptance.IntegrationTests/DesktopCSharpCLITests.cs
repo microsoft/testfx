@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
 /// Acceptance-style rewrite of the former CLITestBase-based desktop tests. Instead of referencing
@@ -12,24 +13,11 @@ namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 /// (Microsoft.Testing.Platform) host.
 /// </summary>
 [TestClass]
-public sealed class DesktopCSharpCLITests
+public sealed class DesktopCSharpCLITests : AcceptanceTestBase<DesktopCSharpCLITests.TestAssetFixture>
 {
     private static readonly string[] Platforms = ["x86", "x64"];
 
-    private static TestAssetFixture AssetFixture { get; set; } = default!;
-
     public TestContext TestContext { get; set; } = default!;
-
-    [ClassInitialize]
-    public static async Task ClassInitialize(TestContext testContext)
-    {
-        AssetFixture = new TestAssetFixture();
-        await AssetFixture.InitializeAsync(testContext.CancellationToken);
-    }
-
-    [ClassCleanup]
-    public static void ClassCleanup()
-        => AssetFixture.Dispose();
 
     public static IEnumerable<object[]> PlatformAndConfiguration()
     {
@@ -72,10 +60,10 @@ public sealed class DesktopCSharpCLITests
         Assert.Contains("skipped: 1", result.StandardOutput);
     }
 
-    private sealed class TestAssetFixture : IDisposable
+    public sealed class TestAssetFixture : ITestAssetFixture
     {
         private readonly TempDirectory _tempDirectory = new();
-        private readonly Dictionary<string, TestAsset> _assetsByPlatform = new();
+        private readonly Dictionary<string, TestAsset> _assetsByPlatform = [];
 
         private static string ProjectName(string platform) => $"DesktopTestProject{platform}";
 
@@ -90,7 +78,7 @@ public sealed class DesktopCSharpCLITests
                 string code = SourceCode
                     .PatchCodeWithReplace("$ProjectName$", projectName)
                     .PatchCodeWithReplace("$Platform$", platform)
-                    .PatchCodeWithReplace("$MSTestVersion$", AcceptanceVersions.MSTestVersion);
+                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
 
                 TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, code, _tempDirectory);
                 await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Debug", callerMemberName: $"{projectName}_Debug", cancellationToken: cancellationToken);

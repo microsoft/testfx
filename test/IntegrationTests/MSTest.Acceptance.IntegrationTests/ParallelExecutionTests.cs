@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
 /// Acceptance-style rewrite of the former CLITestBase-based parallel execution tests. The parallel
@@ -16,26 +17,13 @@ namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 /// so this rewrite only pins the deterministic test outcomes.
 /// </remarks>
 [TestClass]
-public sealed class ParallelExecutionTests
+public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutionTests.TestAssetFixture>
 {
     private const string MethodParallelProjectName = "ParallelMethodsTestProject";
     private const string ClassParallelProjectName = "ParallelClassesTestProject";
     private const string DoNotParallelizeProjectName = "DoNotParallelizeTestProject";
 
-    private static TestAssetFixture AssetFixture { get; set; } = default!;
-
     public TestContext TestContext { get; set; } = default!;
-
-    [ClassInitialize]
-    public static async Task ClassInitialize(TestContext testContext)
-    {
-        AssetFixture = new TestAssetFixture();
-        await AssetFixture.InitializeAsync(testContext.CancellationToken);
-    }
-
-    [ClassCleanup]
-    public static void ClassCleanup()
-        => AssetFixture.Dispose();
 
     [TestMethod]
     public async Task AllMethodsShouldRunInParallel()
@@ -80,10 +68,10 @@ public sealed class ParallelExecutionTests
         Assert.Contains("SimpleTest22", result.StandardOutput);
     }
 
-    private sealed class TestAssetFixture : IDisposable
+    public sealed class TestAssetFixture : ITestAssetFixture
     {
         private readonly TempDirectory _tempDirectory = new();
-        private readonly Dictionary<string, TestAsset> _assets = new();
+        private readonly Dictionary<string, TestAsset> _assets = [];
 
         public TestHost GetTestHost(string projectName)
             => TestHost.LocateFrom(_assets[projectName].TargetAssetPath, projectName, "net462");
@@ -97,7 +85,7 @@ public sealed class ParallelExecutionTests
                 (DoNotParallelizeProjectName, DoNotParallelizeSourceCode),
             })
             {
-                string patched = code.PatchCodeWithReplace("$MSTestVersion$", AcceptanceVersions.MSTestVersion);
+                string patched = code.PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
                 TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, patched, _tempDirectory);
                 await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", callerMemberName: projectName, cancellationToken: cancellationToken);
                 _assets.Add(projectName, asset);

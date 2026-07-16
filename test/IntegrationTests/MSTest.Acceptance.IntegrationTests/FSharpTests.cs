@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
 /// Acceptance-style rewrite of the former CLITestBase-based F# test. The F# test asset is generated
@@ -11,24 +12,11 @@ namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 /// (Microsoft.Testing.Platform) host.
 /// </summary>
 [TestClass]
-public sealed class TestProjectFSharpTests
+public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixture>
 {
     private const string ProjectName = "FSharpTestProject";
 
-    private static TestAssetFixture AssetFixture { get; set; } = default!;
-
     public TestContext TestContext { get; set; } = default!;
-
-    [ClassInitialize]
-    public static async Task ClassInitialize(TestContext testContext)
-    {
-        AssetFixture = new TestAssetFixture();
-        await AssetFixture.InitializeAsync(testContext.CancellationToken);
-    }
-
-    [ClassCleanup]
-    public static void ClassCleanup()
-        => AssetFixture.Dispose();
 
     [TestMethod]
     public async Task RunFSharpTestWithSpaceAndDotInName()
@@ -47,7 +35,7 @@ public sealed class TestProjectFSharpTests
         Assert.Contains("succeeded: 1", result.StandardOutput);
     }
 
-    private sealed class TestAssetFixture : IDisposable
+    public sealed class TestAssetFixture : ITestAssetFixture
     {
         private readonly TempDirectory _tempDirectory = new();
         private TestAsset? _asset;
@@ -57,7 +45,7 @@ public sealed class TestProjectFSharpTests
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            string code = SourceCode.PatchCodeWithReplace("$MSTestVersion$", AcceptanceVersions.MSTestVersion);
+            string code = SourceCode.PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
             _asset = await TestAsset.GenerateAssetAsync(ProjectName, code, _tempDirectory);
             await DotnetCli.RunAsync($"build \"{_asset.TargetAssetPath}\" -c Release", callerMemberName: ProjectName, cancellationToken: cancellationToken);
         }
