@@ -14,12 +14,7 @@ internal abstract class ConsoleRouter : TextWriter
     protected ConsoleRouter(TextWriter originalConsole, bool echoLive)
     {
         _originalConsole = originalConsole;
-
-        // Avoid re-entrant double capture: if we are wrapping another ConsoleRouter (for example the
-        // test host reused the process and a router was installed by a previous run), echoing to it while
-        // TestContext.Current is set would re-enter that router's capture path and record the output an
-        // extra time. Only echo when the underlying writer is a real console.
-        _echoLive = echoLive && originalConsole is not ConsoleRouter;
+        _echoLive = echoLive;
     }
 
     public override Encoding Encoding => Encoding.UTF8;

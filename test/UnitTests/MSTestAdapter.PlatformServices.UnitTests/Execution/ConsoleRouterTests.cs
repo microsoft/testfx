@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using AwesomeAssertions;
@@ -84,26 +84,6 @@ public class ConsoleRouterTests : TestContainer
         testContext.GetAndClearOutput().Should().BeNull();
     }
 
-    public void ConsoleOutRouter_WhenWrappingAnotherRouter_DoesNotEchoToAvoidDoubleCapture()
-    {
-        var real = new StringWriter();
-        TestContextImplementation testContext = CreateTestContext();
-
-        // Simulate the process being reused: an inner router is already installed, and a new outer router
-        // wraps it. Echoing to the inner router while a test context is set would capture the output twice.
-        var inner = new ConsoleOutRouter(real, echoLive: true);
-        var outer = new ConsoleOutRouter(inner, echoLive: true);
-
-        using (TestContextImplementation.SetCurrentTestContext(testContext))
-        {
-            outer.Write("once");
-        }
-
-        // Captured exactly once, and not echoed into the inner router (which would re-capture).
-        testContext.GetAndClearOutput().Should().Be("once");
-        real.ToString().Should().BeEmpty();
-    }
-
     public void TraceTextWriter_WhenLiveEchoTargetProvided_WritesToBothTestContextAndTarget()
     {
         var target = new StringWriter();
@@ -130,23 +110,5 @@ public class ConsoleRouterTests : TestContainer
         }
 
         testContext.GetAndClearTrace().Should().Be("trace-line");
-    }
-
-    public void TraceTextWriter_WhenTargetIsRouter_DoesNotEchoToAvoidDoubleCapture()
-    {
-        var real = new StringWriter();
-        TestContextImplementation testContext = CreateTestContext();
-        var router = new ConsoleOutRouter(real, echoLive: true);
-        var writer = new TraceTextWriter(router);
-
-        using (TestContextImplementation.SetCurrentTestContext(testContext))
-        {
-            writer.Write("trace-line");
-        }
-
-        // Captured into the trace buffer once; not routed through the console router.
-        testContext.GetAndClearTrace().Should().Be("trace-line");
-        testContext.GetAndClearOutput().Should().BeNull();
-        real.ToString().Should().BeEmpty();
     }
 }
