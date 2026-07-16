@@ -1,0 +1,618 @@
+# 004 - `dotnet test` Named-Pipe Protocol
+
+This document is the descriptive specification of the **`dotnet test` pipe protocol** (a.k.a. the
+`dotnettestcli` protocol): the small, versioned, **binary** protocol used over a named pipe between a
+Microsoft.Testing.Platform (MTP) test application and the `dotnet test` implementation shipped in the
+.NET SDK.
+
+It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-protocol-intro.md):
+
+| | JSON-RPC server mode | `dotnet test` pipe protocol (this doc) |
+| --- | --- | --- |
+| Activation | `--server` (or `--server jsonrpc`) | `--server dotnettestcli --dotnet-test-pipe <name>` |
+| Wire format | JSON-RPC 2.0 over stdio / TCP | Custom length-prefixed **binary** framing over a named pipe |
+| Shape | Full request/response + notifications, bidirectional | **Push-only** data channel (host → SDK) + auxiliary reverse control channel |
+| Role of the runner | Server | Client (connects out to the SDK's pipe server) |
+
+> [!IMPORTANT]
+> **Source of truth.** The wire contract (serializer IDs, field IDs, handshake/session/state
+> constants, message models, and serializers) lives in
+> `src/Platform/Microsoft.Testing.Platform/ServerMode/DotnetTest/IPC/` and
+> `src/Platform/Microsoft.Testing.Platform/IPC/`. Those files are **vendored (hand-copied) into
+> `dotnet/sdk`**. testfx is authoritative; any change to the shared files is a coordinated,
+> potentially breaking, wire-protocol change. The enumeration of shared files is
+> `ServerMode/DotnetTest/DotnetTestProtocolContract.props`.
+
+---
+
+## 1. Terminology
+
+- **Test application / test host** — the MTP-based test executable (the process being run by
+  `dotnet test`). In this protocol it is the **pipe client**.
+- **SDK / `dotnet test`** — the .NET SDK component that launches test applications and renders their
+  output. It is the **pipe server** (it creates and listens on the data pipe).
+- **Data pipe** — the primary named pipe, whose OS name is supplied via `--dotnet-test-pipe`. All
+  test data flows host → SDK on it.
+- **Server-control pipe** — an optional *reverse* named pipe, created and listened on by the SDK, used
+  to push control signals (today only session cancellation) SDK → host. Its name is advertised in the
+  handshake reply.
+- **Execution ID** — a GUID (`"N"` format) identifying one logical `dotnet test` invocation. Shared
+  across the test host, test host controller, and orchestrator processes via an environment variable.
+- **Instance ID** — a GUID (`"N"` format) identifying one specific connecting process/`DotnetTestConnection`.
+- **Session UID** — the MTP test session identifier for a run.
+
+---
+
+## 2. Activation & configuration
+
+The SDK starts the test application with:
+
+```text
+<testapp> --server dotnettestcli --dotnet-test-pipe <osPipeName> [other options]
+```
+
+Rules and behavior:
+
+- `--server` accepts zero or one argument. The value `dotnettestcli` (case-insensitive) selects this
+  protocol. `--server jsonrpc` (or `--server` with no value) selects JSON-RPC server mode instead.
+- `--server dotnettestcli` **requires** `--dotnet-test-pipe`; command-line validation fails otherwise
+  (`PlatformCommandLineDotnetTestCliRequiresPipe`).
+- `--dotnet-test-pipe` takes **exactly one** argument: the fully-resolved OS pipe name/path the SDK is
+  already listening on (see §3).
+- Both options are built-in and hidden (they surface in `--help` output but are not meant for direct
+  end-user use).
+
+### Environment variables
+
+| Variable | Set by | Purpose |
+| --- | --- | --- |
+| `TESTINGPLATFORM_DOTNETTEST_EXECUTIONID` | The test host on first connect (if not already set) | The Execution ID. Propagated to child processes (test host controller, orchestrator) so all handshakes of one `dotnet test` invocation share it. If already present it is **not** overwritten. |
+| `TESTINGPLATFORM_PIPE_DIRECTORY` | User (optional) | On Unix, overrides the directory used to place the domain-socket file (see §3). |
+
+---
+
+## 3. Pipe naming & transport
+
+The pipe is a `System.IO.Pipes` named pipe opened as `PipeDirection.InOut`,
+`PipeTransmissionMode.Byte`, `PipeOptions.Asynchronous`, and — on .NET (Core) — `PipeOptions.CurrentUserOnly`
+(hardens the ACL so only the current user can connect).
+
+**Pipe name resolution invariant:** the process that *creates* the pipe (the SDK for the data pipe; the
+SDK for the control pipe) resolves the name locally and hands the **fully-resolved** value to the peer.
+The peer uses it verbatim and never recomputes it. This keeps the SDK and host versions decoupled.
+
+`NamedPipeServer.GetPipeName(name)` computes the OS name:
+
+- **Windows:** `testingplatform.pipe.<name-with-'\'-replaced-by-'.'>`.
+- **Unix:** a domain-socket **file path** `Path.Combine(<directory>, name)` where `<directory>` is
+  resolved with precedence:
+  1. `TESTINGPLATFORM_PIPE_DIRECTORY` (explicit override; created & write-probed, fails fast with an
+     actionable message if unusable),
+  2. `Path.GetTempPath()` (honors `TMPDIR`),
+  3. `/tmp` (legacy default).
+  The path is normalized to an absolute path. Its UTF-8 byte length must be ≤ **103** bytes
+  (`sockaddr_un.sun_path` budget: 104 − 1 for the NUL terminator, using macOS' smaller limit for
+  portability); otherwise creation fails fast.
+
+> On the data pipe the SDK is the server, so it performs this resolution and passes the result via
+> `--dotnet-test-pipe`. The test host simply opens a `NamedPipeClient` to `.`/`<name>`.
+
+---
+
+## 4. Framing
+
+Every message — request and reply, on both the data and control pipes — is a single frame:
+
+```text
++-------------------------+------------------------+------------------------+
+| int32  payloadLength    | int32  serializerId    | byte[] body            |
+| (little-endian)         | (little-endian)        | (serializerId's shape) |
++-------------------------+------------------------+------------------------+
+        4 bytes                   4 bytes                 N bytes
+
+payloadLength = 4 (serializerId) + body.Length
+```
+
+- All multi-byte integers use `BitConverter` (little-endian on all supported platforms).
+- The reader first reads exactly 4 bytes (`payloadLength`), then reads exactly `payloadLength` bytes
+  (which contain the 4-byte `serializerId` followed by the body), looping over partial reads.
+- `serializerId` selects the deserializer from the shared registry (§6).
+- **EOF handling:** a `0`-byte read (clean disconnect, whether at a frame boundary or mid-message) makes
+  the reader return `null`, which the transport interprets as "peer disconnected". See §11 for the
+  behavioral consequences.
+- On Windows, after each write the writer calls `WaitForPipeDrain()` to ensure the frame is flushed to
+  the peer before returning.
+- The read buffer is 250,000 bytes; larger bodies are streamed in chunks.
+
+```mermaid
+flowchart LR
+    A["Message object"] --> B["Serialize body<br/>(field envelope, §5)"]
+    B --> C["Prepend int32 serializerId"]
+    C --> D["Prepend int32 payloadLength"]
+    D --> E["Write frame to PipeStream + Flush<br/>(WaitForPipeDrain on Windows)"]
+```
+
+---
+
+## 5. Body serialization format
+
+Bodies use a **self-describing, forward-compatible field envelope**. The design follows the concept of
+**optional properties**: each field carries an ID and a size, unknown IDs are skipped, and new fields
+are added with new IDs. Existing IDs are **never** reused or repurposed.
+
+### 5.1 Standard field envelope
+
+Most messages are:
+
+```text
+uint16  fieldCount
+repeat fieldCount times:
+    uint16  fieldId
+    int32   fieldSize      // size in bytes of the following value
+    byte[]  value          // interpretation depends on fieldId
+```
+
+- `fieldCount` counts only the fields actually present. **Optional (null) fields are omitted entirely**
+  — the writer computes `fieldCount` from the non-null fields. A reader must therefore treat any absent
+  field as "not provided" and apply its own default.
+- On an **unrecognized `fieldId`**, the reader skips exactly `fieldSize` bytes and continues. This is
+  what makes older readers forward-compatible with newer producers.
+
+```mermaid
+flowchart TD
+    S["Read uint16 fieldCount"] --> L{"more fields?"}
+    L -- yes --> R["Read uint16 fieldId<br/>Read int32 fieldSize"]
+    R --> K{"fieldId recognized?"}
+    K -- yes --> H["Read value per field type"]
+    K -- no --> Z["Seek forward fieldSize bytes"]
+    H --> L
+    Z --> L
+    L -- no --> D["Return deserialized object"]
+```
+
+### 5.2 Primitive value encodings
+
+| Type | Encoding | `fieldSize` written |
+| --- | --- | --- |
+| `string` | `int32 lengthInBytes` + UTF-8 bytes | For **top-level list-envelope strings** the `int32` length is part of the value; for **fields written via `WriteField(id, string)`** there is no separate size prefix — the value *is* the length-prefixed string, and the reader reads `fieldSize` raw UTF-8 bytes. See note below. |
+| `int` | 4 bytes | `4` |
+| `long` | 8 bytes | `8` |
+| `ushort` | 2 bytes | `2` |
+| `bool` | 1 byte | `1` |
+| `byte` | 1 byte | `1` |
+
+> [!NOTE]
+> **Two string conventions coexist and are both part of the contract.**
+>
+> - Scalar string fields written with `WriteField(stream, id, value)` emit `uint16 id` then a
+>   length-prefixed UTF-8 string (`int32 len` + bytes). The reader reads the `int32 size` from the
+>   envelope as the byte count and calls `ReadStringValue(stream, size)` — i.e. for these fields the
+>   envelope `size` equals the UTF-8 byte length and there is **no** second length prefix.
+> - Strings inside a **list payload element** (e.g. `ParameterTypeFullNames`) are written with
+>   `WriteString` (a self-contained `int32 len` + bytes) and read with `ReadString`.
+>
+> Implementers must follow the exact per-serializer layout (each serializer file has a byte-layout
+> comment). The round-trip contract tests
+> (`test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests`) pin the bytes.
+
+### 5.3 List payloads (deferred size back-fill)
+
+List-valued fields (e.g. the message lists inside the "*Messages" envelopes) are written as:
+
+```text
+uint16  fieldId
+int32   payloadSize        // reserved, back-filled after writing the payload
+int32   listLength
+repeat listLength times:
+    <element>              // usually a nested field envelope (§5.1)
+```
+
+The writer reserves the 4-byte `payloadSize`, writes `listLength` + elements, then seeks back and
+patches `payloadSize` with the number of bytes written. This requires a **seekable** stream
+(a `MemoryStream` is used for buffering before the frame hits the pipe). A `null`/empty list writes
+nothing at all (the field is omitted and not counted in `fieldCount`).
+
+### 5.4 Execution-scoped header
+
+The four list-carrying `dotnet test` messages (`DiscoveredTestMessages`, `TestResultMessages`,
+`TestInProgressMessages`, `FileArtifactMessages`) share two leading fields with pinned IDs:
+
+- `ExecutionId` — field ID **1**
+- `InstanceId` — field ID **2**
+
+Both are optional strings; the message-specific list field(s) follow. `AzureDevOpsLogMessage` and
+`DisplayMessage` also place `ExecutionId`/`InstanceId` at IDs 1/2 but carry scalar payloads (not lists).
+
+---
+
+## 6. Serializer registry (message IDs)
+
+All serializers are registered in one registry shared by both pipes
+(`RegisterSerializers.RegisterAllSerializers`). **IDs are frozen for backwards compatibility** — never
+change or reuse an ID.
+
+| ID | Message | Direction (data pipe) | Kind | Since |
+| --: | --- | --- | --- | --- |
+| 0 | `VoidResponse` | SDK → host (reply) | Response | 1.0.0 |
+| 1 | `TestHostCompletedRequest` | *test host controller pipe* | Request | 1.0.0 |
+| 2 | `TestHostProcessPIDRequest` | *test host controller pipe* | Request | 1.0.0 |
+| 3 | `CommandLineOptionMessages` | host → SDK | Request | 1.0.0 |
+| 4 | *(reserved — removed serializer)* | — | — | — |
+| 5 | `DiscoveredTestMessages` | host → SDK | Request | 1.0.0 |
+| 6 | `TestResultMessages` | host → SDK | Request | 1.0.0 |
+| 7 | `FileArtifactMessages` | host → SDK | Request | 1.0.0 |
+| 8 | `TestSessionEvent` | host → SDK | Request | 1.0.0 |
+| 9 | `HandshakeMessage` | host → SDK, and SDK → host reply | Request + Response | 1.0.0 |
+| 10 | `TestInProgressMessages` | host → SDK | Request | 1.0.0 |
+| 11 | `AzureDevOpsLogMessage` | host → SDK | Request | 1.2.0 |
+| 12 | `DisplayMessage` | host → SDK | Request | 1.3.0 |
+| 13 | `WaitForServerControlRequest` | host → SDK (on control pipe) | Request | 1.4.0 |
+| 14 | `ServerControlMessage` | SDK → host reply (on control pipe) | Response | 1.4.0 |
+
+> IDs 1 and 2 belong to the sibling **test host controller** pipe (a monitoring channel between a test
+> host controller process and the test host). They share the same framing and registry but are not part
+> of the SDK data flow; they are listed here because they occupy IDs in the shared registry.
+
+---
+
+## 7. Request/reply model
+
+Although data flows host → SDK, the transport is still **request/reply** at the frame level: the client
+(host) writes one request frame and blocks reading exactly one reply frame before sending the next. This
+serializes all sends behind a single lock (`RequestReplyAsync` holds a `SemaphoreSlim`), so messages are
+delivered in order.
+
+- For every data message the SDK replies with a **`VoidResponse`** (serializer ID 0, empty body). The
+  host ignores the value; it only needs the reply to know the SDK consumed the message and to unblock
+  the next send.
+- The one exception is the **handshake**: the SDK replies with a `HandshakeMessage` (§9), not a
+  `VoidResponse`.
+
+The protocol is therefore "push-only" from a *semantic* standpoint (the SDK never initiates a data
+request), but every push is acknowledged.
+
+```mermaid
+sequenceDiagram
+    participant H as Test host (client)
+    participant S as dotnet test SDK (server)
+    Note over H,S: data pipe, one in-flight message at a time
+    H->>S: DiscoveredTestMessages / TestResultMessages / ...
+    S-->>H: VoidResponse
+    H->>S: next message
+    S-->>H: VoidResponse
+```
+
+---
+
+## 8. Handshake & version negotiation
+
+Before any data is sent, the host performs one handshake round-trip on the data pipe.
+
+### 8.1 Host → SDK: `HandshakeMessage` (request)
+
+A `HandshakeMessage` body is a map `byte -> string`:
+
+```text
+uint16  propertyCount
+repeat propertyCount times:
+    byte    propertyId
+    string  value          // int32 len + UTF-8 bytes
+```
+
+Property IDs (`HandshakeMessagePropertyNames`):
+
+| ID | Name | Set by host | Meaning |
+| --: | --- | --- | --- |
+| 0 | `PID` | yes | Host process ID. |
+| 1 | `Architecture` | yes | `RuntimeInformation.ProcessArchitecture`. |
+| 2 | `Framework` | yes | `RuntimeInformation.FrameworkDescription`. |
+| 3 | `OS` | yes | `RuntimeInformation.OSDescription`. |
+| 4 | `SupportedProtocolVersions` | yes | Semicolon-separated list the host supports (see §10). |
+| 5 | `HostType` | yes | `TestHost`, `TestHostController`, `ServerTestHost`, or `TestHostOrchestrator`. |
+| 6 | `ModulePath` | yes | Full path of the test application. |
+| 7 | `ExecutionId` | yes | The Execution ID (from the env var). |
+| 8 | `InstanceId` | yes | The per-connection Instance ID. |
+| 9 | `IsIDE` | **reply-only** | Consumer requests full discovery details (see §9). |
+| 10 | `ExecutionMode` | yes | `run`, `help`, or `discover` — lets the SDK detect mismatches (e.g. `--help` leaking into a run). |
+| 11 | `OrchestratorFeature` | orchestrator only | The orchestrator extension Uid (e.g. retry). |
+| 12 | `ServerControlPipeName` | **reply-only** | OS name of the reverse control pipe (see §12). |
+
+### 8.2 SDK → host: `HandshakeMessage` (reply)
+
+The SDK replies with its own `HandshakeMessage`. The host reads these properties:
+
+- `SupportedProtocolVersions` (ID 4): the **single** version the SDK negotiated. The host checks it is
+  in its own supported set; if not, the run is treated as **incompatible** (exit code
+  `IncompatibleProtocolVersion`).
+- `IsIDE` (ID 9): when `"true"`, the host streams **full** discovery details and streams per-test
+  in-progress updates as results (see §9).
+- `ServerControlPipeName` (ID 12): when non-empty, enables the reverse control channel (§12). This is a
+  **capability signal gated on the property's presence**, independent of the version string.
+
+### 8.3 Negotiation algorithm
+
+The host advertises `ProtocolConstants.SupportedVersions` (currently `"1.0.0;1.1.0;1.2.0;1.3.0;1.4.0"`).
+The SDK picks the **highest version present in both sets** and returns that single value. The host then:
+
+- Confirms the returned value is in its supported set (compatibility gate).
+- Derives feature flags from the negotiated `Version`:
+  - `IsLogForwardingSupported` = negotiated ≥ `1.2.0`
+  - `IsDisplayMessageForwardingSupported` = negotiated ≥ `1.3.0`
+
+```mermaid
+sequenceDiagram
+    participant H as Test host
+    participant S as dotnet test SDK
+    H->>S: HandshakeMessage(PID, OS, SupportedProtocolVersions="1.0.0;...;1.4.0", HostType, ExecutionId, InstanceId, ExecutionMode, ...)
+    S->>S: pick highest mutually-supported version
+    S-->>H: HandshakeMessage(SupportedProtocolVersions=<negotiated>, [IsIDE], [ServerControlPipeName])
+    H->>H: validate compatibility; set IsIDE / forwarding / control-channel flags
+    alt incompatible
+        H->>H: exit IncompatibleProtocolVersion
+    else compatible
+        H->>H: proceed to run/discover/help
+    end
+```
+
+---
+
+## 9. Message catalog (data pipe)
+
+Every message below is a host → SDK request answered with a `VoidResponse`. `ExecutionId`/`InstanceId`
+are the execution-scoped header fields (IDs 1/2) unless noted.
+
+### 9.1 `TestSessionEvent` (ID 8)
+
+Sent at the boundaries of the test session.
+
+| Field ID | Name | Type | Notes |
+| --: | --- | --- | --- |
+| 1 | `SessionType` | byte | `SessionEventTypes`: `0` = TestSessionStart, `1` = TestSessionEnd. |
+| 2 | `SessionUid` | string | The MTP session UID. |
+| 3 | `ExecutionId` | string | Execution ID. |
+
+The host sends `TestSessionStart` on session start and `TestSessionEnd` on session finish. (Note: this
+message's field IDs 1/2/3 are `SessionType`/`SessionUid`/`ExecutionId` — it does **not** use the shared
+execution-scoped header helper.)
+
+### 9.2 `DiscoveredTestMessages` (ID 5)
+
+Emitted for every discovered test (state `Discovered`). Carries a list of `DiscoveredTestMessage`:
+
+| Field ID | Name | Type | Populated when |
+| --: | --- | --- | --- |
+| 1 | `Uid` | string | always |
+| 2 | `DisplayName` | string | always |
+| 3 | `FilePath` | string | IDE only |
+| 4 | `LineNumber` | int | IDE only |
+| 5 | `Namespace` | string | IDE only |
+| 6 | `TypeName` | string | IDE only |
+| 7 | `MethodName` | string | IDE only |
+| 8 | `Traits` | list of `TraitMessage`(`Key`,`Value`) | IDE only |
+| 9 | `ParameterTypeFullNames` | list of string | IDE only |
+
+> **`IsIDE` gating.** In non-IDE runs (e.g. plain `dotnet test`) only `Uid` + `DisplayName` are sent to
+> keep the payload minimal. When the SDK set `IsIDE=true` in its handshake reply (an IDE, or
+> `dotnet test --list-tests json`) the host sends the full location/identifier/traits details.
+
+### 9.3 `TestResultMessages` (ID 6)
+
+Carries two lists: `SuccessfulTestMessageList` (ID 3) and `FailedTestMessageList` (ID 4).
+
+Mapping from MTP node state → which list is used:
+
+| MTP state | `State` byte (`TestStates`) | Sent as |
+| --- | --: | --- |
+| Passed | 1 | Successful list |
+| Skipped | 2 | Successful list |
+| InProgress (IDE only) | 7 | Successful list |
+| Failed | 3 | Failed list |
+| Error | 4 | Failed list |
+| Timeout | 5 | Failed list |
+| Cancelled | 6 | Failed list |
+
+`SuccessfulTestResultMessage` fields: `Uid`(1), `DisplayName`(2), `State`(3, byte), `Duration`(4, long
+ticks), `Reason`(5), `StandardOutput`(6), `ErrorOutput`(7), `SessionUid`(8).
+
+`FailedTestResultMessage` fields: `Uid`(1), `DisplayName`(2), `State`(3), `Duration`(4), `Reason`(5),
+`ExceptionMessageList`(6), `StandardOutput`(7), `ErrorOutput`(8), `SessionUid`(9), `Expected`(10),
+`Actual`(11).
+
+- `ExceptionMessage` fields: `ErrorMessage`(1), `ErrorType`(2), `StackTrace`(3). Exceptions are
+  flattened (aggregate/inner exceptions expanded) before sending.
+- `Expected`/`Actual` (added after `SessionUid`, older readers skip them) carry structured
+  assertion-diff values captured by assertion libraries from `Exception.Data["assert.expected"]` /
+  `["assert.actual"]`. Only failed tests populate them; error/timeout/cancelled send null.
+
+### 9.4 `TestInProgressMessages` (ID 10)
+
+For non-IDE consumers, `InProgress` test-node updates are streamed here (rendered as a "currently
+running tests" panel) instead of as `TestResultMessages`. Each `TestInProgressMessage` carries
+`Uid`(1) + `DisplayName`(2). (In IDE mode, in-progress updates go through `TestResultMessages` instead.)
+
+### 9.5 `FileArtifactMessages` (ID 7)
+
+Reports produced files (per-test artifacts, session artifacts, and standalone `FileArtifact`s). Each
+`FileArtifactMessage`: `FullPath`(1), `DisplayName`(2), `Description`(3), `TestUid`(4),
+`TestDisplayName`(5), `SessionUid`(6). Test-scoped artifacts fill `TestUid`/`TestDisplayName`; session
+and standalone artifacts leave them empty.
+
+### 9.6 `CommandLineOptionMessages` (ID 3)
+
+Sent only on the **help** path (`--help`). Carries `ModulePath`(1) and a list of
+`CommandLineOptionMessage`(`Name`(1), `Description`(2), `IsHidden`(3, bool), `IsBuiltIn`(4, bool)),
+sorted by name. Tool-provided options (`IToolCommandLineOptionsProvider`) are excluded. This lets the
+SDK render `dotnet test --help` from the test host's actual option set.
+
+### 9.7 `AzureDevOpsLogMessage` (ID 11, ≥ 1.2.0)
+
+`ExecutionId`(1), `InstanceId`(2), `LogText`(3). Under the pipe protocol the host installs a forwarding
+output device that discards regular output, so Azure DevOps logging commands (`##[group]`, `##vso[...]`)
+produced by the AzureDevOpsReport extension would otherwise be lost. When ≥ 1.2.0 is negotiated **and**
+the host is running on an Azure DevOps agent, those marked lines are forwarded verbatim for the SDK to
+write to its reporter (and thus the pipeline log).
+
+### 9.8 `DisplayMessage` (ID 12, ≥ 1.3.0)
+
+`ExecutionId`(1), `InstanceId`(2), `Level`(3, byte), `Text`(4). A generic host diagnostic forwarded so
+warning/error messages produced **outside** test results (hang/crash dump diagnostics, retry summaries,
+generic extension/framework warnings and errors) are not swallowed. `Level` is `DisplayMessageLevels`:
+`0` Information, `1` Warning, `2` Error. The SDK maps them to `WriteMessage` / `WriteWarningMessage` /
+`WriteErrorMessage`. Regular (informational) host output is still discarded by the forwarding device;
+only warning/error levels are relayed. Unlike the Azure DevOps path, this is **not** gated on an ADO
+agent.
+
+---
+
+## 10. Versioning & compatibility
+
+`SupportedVersions = "1.0.0;1.1.0;1.2.0;1.3.0;1.4.0"`.
+
+| Version | What it adds / signals |
+| --- | --- |
+| 1.0.0 | Base protocol. With an SDK that only supports 1.0.0, **neither side shows live output** (the SDK suppresses its reporter to avoid colliding with host output). |
+| 1.1.0 | Not a wire change: signals the host no longer plugs in `TerminalOutputDevice`, so the SDK can safely keep its live `TerminalTestReporter` output on. |
+| 1.2.0 | Adds `AzureDevOpsLogMessage` (ID 11). Host forwards ADO logging commands (only on an ADO agent). |
+| 1.3.0 | Adds `DisplayMessage` (ID 12). Host forwards warning/error host diagnostics (always). |
+| 1.4.0 | Adds the reverse **server-control** channel (`WaitForServerControlRequest` ID 13, `ServerControlMessage` ID 14). Version is bumped so negotiated state advances in lockstep, but the feature itself is gated on the `ServerControlPipeName` handshake property, not on the version. |
+
+Compatibility rules / assumptions:
+
+- Forwarding of 1.2.0/1.3.0 messages is **gated on the negotiated version** — the host never sends a
+  message an older SDK can't decode.
+- Unknown **field IDs** within a known message are skipped (§5.1) — a newer host can add fields without
+  breaking an older SDK.
+- Unknown **serializer IDs** are a hard error (there is no serializer to look up), so new *messages*
+  must be version-gated, whereas new *fields* are safe.
+- The control channel is capability-gated (presence of the pipe-name property) so an older SDK that
+  never advertises the pipe simply leaves it disabled.
+
+---
+
+## 11. Connection-loss behavior (assumptions)
+
+The connection-loss semantics differ by pipe and are a core part of the contract.
+
+**Data pipe (`exitProcessOnConnectionLoss: true`).** If the SDK disconnects while the host is writing a
+request, or the host reads EOF where a reply was expected, there is no way to recover, so the host
+process **exits abnormally** with exit code `GenericFailure` (1), after writing a diagnostic to stderr.
+This is deliberate: if the user kills `dotnet.exe`, the test host must die too rather than orphan.
+
+**Server-control pipe (`exitProcessOnConnectionLoss: false`).** A dropped control pipe must **not** kill
+the host. Instead the listener treats an unexpected early close as "host went away ⇒ cooperative
+cancel" (see §12). Consequently it is a **protocol requirement that the SDK keep the control pipe open
+for the entire data session** — closing it early is interpreted as a cancel request.
+
+**Server side.** If the *client* (host) disconnects while the SDK is writing a reply, the SDK treats it
+as a graceful disconnect and exits its read loop without crashing.
+
+---
+
+## 12. Reverse server-control channel (≥ 1.4.0)
+
+Purpose: let the SDK push a control signal (today only session cancellation, e.g. from a global
+`--maximum-failed-tests` or `--timeout`) to the running test host, even while the host is otherwise
+silent.
+
+Setup and flow:
+
+1. In its handshake reply the SDK advertises `ServerControlPipeName` (a pipe it is already listening on).
+   Each connecting process (test host, controller, orchestrator) that receives this property opens its
+   **own** client to that name, so the SDK must accept one control connection per connecting process.
+2. On a successful, compatible handshake with the property present, the host — on a **background task**,
+   so test start is never blocked — connects to the control pipe (bounded by a 30s connect timeout) and
+   parks a long-poll `WaitForServerControlRequest` (ID 13, empty body).
+3. When the SDK wants to signal, it completes that request with a `ServerControlMessage` (ID 14) whose
+   `Kind`(1) is a `ServerControlKinds` value (today only `1` = `CancelSession`). The host then invokes
+   its cancel reaction **exactly once** (idempotent via an interlocked flag), preferring a graceful stop
+   so trx/artifacts are still produced. Unknown `Kind` values are ignored and the host keeps parking.
+4. If the control pipe drops unexpectedly while the session is live, the host also treats it as a
+   cancel (see §11).
+
+```mermaid
+sequenceDiagram
+    participant H as Test host
+    participant S as dotnet test SDK
+    Note over H,S: after handshake advertised ServerControlPipeName
+    H->>S: connect control pipe (background, 30s timeout)
+    H->>S: WaitForServerControlRequest (parked long-poll)
+    Note over S: user cancels / global limit hit
+    S-->>H: ServerControlMessage(Kind=CancelSession)
+    H->>H: request graceful session stop (once)
+    Note over H,S: host keeps control pipe open until data session ends
+```
+
+The auxiliary channel is best-effort: if it cannot be established, the run continues unaffected with the
+feature simply disabled.
+
+---
+
+## 13. End-to-end lifecycle
+
+The host builder creates a `DotnetTestConnection` and calls `AfterCommonServiceSetupAsync`, which — when
+`--server dotnettestcli` + `--dotnet-test-pipe` are present — sets/reads the Execution ID env var and
+connects the data-pipe client. The overall flow:
+
+```mermaid
+sequenceDiagram
+    participant SDK as dotnet test SDK
+    participant Host as Test host
+
+    SDK->>SDK: create & listen on data pipe
+    SDK->>Host: launch: --server dotnettestcli --dotnet-test-pipe <name> [--list-tests|--help|...]
+    Host->>SDK: connect data pipe
+    Host->>SDK: HandshakeMessage (request)
+    SDK-->>Host: HandshakeMessage (reply: negotiated version, [IsIDE], [ServerControlPipeName])
+
+    alt incompatible version
+        Host->>Host: exit IncompatibleProtocolVersion
+    else help mode
+        Host->>SDK: CommandLineOptionMessages
+        SDK-->>Host: VoidResponse
+    else run / discover
+        opt control channel advertised
+            Host->>SDK: connect control pipe + park WaitForServerControlRequest
+        end
+        Host->>SDK: TestSessionEvent(TestSessionStart)
+        SDK-->>Host: VoidResponse
+        loop per test node update
+            Host->>SDK: Discovered / Result / InProgress / FileArtifact / Display / ADO
+            SDK-->>Host: VoidResponse
+        end
+        Host->>SDK: TestSessionEvent(TestSessionEnd)
+        SDK-->>Host: VoidResponse
+    end
+    Host->>Host: OnExit: cancel & dispose control listener
+```
+
+### Multi-process runs
+
+A single `dotnet test` invocation may involve several MTP processes that each perform the handshake on
+the same Execution ID:
+
+- **Test host** — `HostType = TestHost` (or `ServerTestHost`); actually runs tests.
+- **Test host controller** — `HostType = TestHostController`; monitors/restarts the test host.
+- **Test host orchestrator** — `HostType = TestHostOrchestrator`; drives one or more test host
+  executions (e.g. the retry orchestrator, which also sends `OrchestratorFeature`). A control-channel
+  cancel maps to cancelling its application token, which propagates to the orchestrated hosts.
+
+Each process advertises its own `InstanceId`; the shared `ExecutionId` lets the SDK correlate them.
+
+---
+
+## 14. Implementation references
+
+| Concern | File(s) |
+| --- | --- |
+| Wire contract (IDs, field IDs) | `ServerMode/DotnetTest/IPC/ObjectFieldIds.cs` |
+| Constants (states, versions, handshake props) | `ServerMode/DotnetTest/IPC/Constants.cs` |
+| Serializer registry | `IPC/Serializers/RegisterSerializers.cs` |
+| Serializer primitives / envelope | `IPC/Serializers/BaseSerializer.cs`, `NamedPipeSerializer.cs` |
+| Framing / transport | `IPC/NamedPipeConnectionBase.cs`, `NamedPipeServer.cs`, `NamedPipeClient.cs` |
+| Pipe naming | `NamedPipeServer.GetPipeName` |
+| Message models | `ServerMode/DotnetTest/IPC/Models/*.cs`, `IPC/Models/*.cs` |
+| Message serializers | `ServerMode/DotnetTest/IPC/Serializers/*.cs` |
+| Host connection / handshake / control channel | `ServerMode/DotnetTest/DotnetTestConnection.cs` |
+| Host data consumer (state → message mapping) | `ServerMode/DotnetTest/IPC/DotnetTestDataConsumer.cs` |
+| Shared-source manifest (vendored to dotnet/sdk) | `ServerMode/DotnetTest/DotnetTestProtocolContract.props` |
+| Black-box protocol reference / tests | `test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/DotnetTestPipe/*`, `test/UnitTests/Microsoft.Testing.Platform.DotnetTestProtocolContract.UnitTests/*` |
