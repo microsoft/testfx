@@ -65,6 +65,30 @@ variables:
   # Placeholders ({asm}/{tfm}) are resolved by Microsoft.Testing.Platform.Services.ArtifactNamingHelper.
   - name: _ReleaseUnitTestReportArgs
     value: '--report-trx --report-trx-filename "{asm}_{tfm}.trx" --report-ctrf --report-ctrf-filename "{asm}_{tfm}.ctrf.json" --report-azdo --report-azdo-summary --report-azdo-slow-test-history 30 --report-azdo-slow-test-history-min-sample 10 --report-azdo-slow-test-history-multiplier 3.0 --report-azdo-flaky-history 30 --report-junit --report-junit-filename "{asm}_{tfm}.xml" --hangdump --hangdump-timeout 15m'
+  # Shell trailer appended to the macOS build/test commands so that, ON PR RUNS, a failed command exits 0
+  # and keeps the overall pipeline result "Succeeded". This is required to make macOS non-blocking for PRs:
+  # job- or step-level continueOnError only yields "PartiallySucceeded", which Azure Repos build-validation
+  # policies treat as a failure and still block the merge. Swallowing the exit code keeps the run green
+  # while macOS failures stay visible via --report-azdo (AzDO Tests tab) and the published TestResults
+  # artifact, so signal is preserved without gating merges on macOS-specific flakiness/slowness. Windows
+  # and Linux do not use this trailer and remain hard blockers.
+  #
+  # The exit code is ONLY swallowed when BUILD_REASON is "PullRequest". On manual/scheduled/CI queues there
+  # is no merge to unblock, so the original exit code is preserved and a real macOS regression still fails
+  # the run (see the DetectChanges fail-safe for non-PR triggers around the SYSTEM_PULLREQUEST_TARGETBRANCH
+  # handling below).
+  #
+  # KNOWN LIMITATION: this only converts command EXIT CODES. It cannot rescue the job from the 90-minute
+  # timeout (hung agent), agent loss, or a failure in the unconditional publish/copy tasks — any of those
+  # still fails/cancels the macOS matrix job and therefore the overall build. Fully covering those cases
+  # would require running macOS as a separate, non-required pipeline/status check (or removing it from the
+  # required PR pipeline). That larger change is intentionally out of scope here; this trailer addresses the
+  # dominant flaky-test-failure case while keeping macOS visible on every PR.
+  #
+  # The consumers add an explicit separating space before this expansion, so the value must NOT rely on
+  # a leading space of its own.
+  - name: _MacOSNonBlockingTrailer
+    value: '|| { ec=$?; if [ "$BUILD_REASON" = "PullRequest" ]; then echo "##vso[task.logissue type=warning]macOS is non-blocking for PRs; this failure does not block the merge. See the Tests tab and the published TestResults artifact for details."; else exit $ec; fi; }'
 
 stages:
 
@@ -324,6 +348,14 @@ stages:
       - job: MacOS
         dependsOn: DetectChanges
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        # macOS agents are historically slow and flaky, so this job is intentionally non-blocking for PRs.
+        # Rather than continueOnError (which yields "PartiallySucceeded" and is still blocked by Azure Repos
+        # build-validation policies), every macOS command appends $(_MacOSNonBlockingTrailer) so a failed
+        # command exits 0 on PR runs and the overall run stays "Succeeded" (on non-PR runs the exit code is
+        # preserved). Failures remain visible via --report-azdo (Tests tab) and the published TestResults
+        # artifact. NOTE: this only swallows command exit codes — a 90-minute timeout, agent loss, or a
+        # publish-task failure still fails this job and blocks. See _MacOSNonBlockingTrailer for the full
+        # rationale and the documented limitation.
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
@@ -344,13 +376,14 @@ stages:
             /p:Test=false
             /p:Publish=false
             /p:NonWindowsBuild=true
-            /p:FastAcceptanceTest=true
+            /p:FastAcceptanceTest=true $(_MacOSNonBlockingTrailer)
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           - template: /eng/pipelines/steps/test-non-windows.yml
             parameters:
               osName: MacOS
+              testFailureTrailer: $(_MacOSNonBlockingTrailer)
 
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:

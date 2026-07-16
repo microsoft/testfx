@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 
 See full log [of v4.3.2...v4.4.0](https://github.com/microsoft/testfx/compare/v4.3.2...v4.4.0)
 
+### Added
+
+* Add dedicated timeout configuration for `[GlobalTestInitialize]` / `[GlobalTestCleanup]` fixtures via the `timeout:globalTestInitialize` / `timeout:globalTestCleanup` `testconfig.json` keys (RunSettings XML: `GlobalTestInitializeTimeout` / `GlobalTestCleanupTimeout`). These fall back to the per-test `testInitialize` / `testCleanup` timeouts when unset, and global fixture timeout/cancellation diagnostics now use dedicated messages ("Global test initialize/cleanup method ...") in [#9985](https://github.com/microsoft/testfx/issues/9985)
+
 ### Changed
 
 * Make MSTest's Microsoft.Testing.Platform path native-only: `MSTest.TestAdapter` no longer depends on `Microsoft.Testing.Extensions.VSTestBridge` and now references `Microsoft.Testing.Extensions.TrxReport.Abstractions`, `Microsoft.Testing.Extensions.Telemetry`, and `Microsoft.TestPlatform.ObjectModel` directly by @Evangelink in [#9755](https://github.com/microsoft/testfx/pull/9755)

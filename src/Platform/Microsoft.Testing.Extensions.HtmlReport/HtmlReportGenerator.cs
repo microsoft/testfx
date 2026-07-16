@@ -24,6 +24,8 @@ internal sealed class HtmlReportGenerator : ReportGeneratorBase<HtmlReportGenera
 
     protected override string ArtifactDisplayName => ExtensionResources.HtmlReportArtifactDisplayName;
 
+    protected override string? ArtifactKind => "microsoft.testing.html";
+
     protected override string ArtifactDescription => ExtensionResources.HtmlReportArtifactDescription;
 
     protected override string GetGenerationLogMessage(int testResultCount)

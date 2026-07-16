@@ -31,6 +31,8 @@ internal sealed partial class MSTestSettings
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
+        CurrentSettings.GlobalTestCleanupTimeout = settings.GlobalTestCleanupTimeout;
+        CurrentSettings.GlobalTestInitializeTimeout = settings.GlobalTestInitializeTimeout;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.LaunchDebuggerOnAssertionFailure = settings.LaunchDebuggerOnAssertionFailure;
@@ -139,6 +141,12 @@ internal sealed partial class MSTestSettings
                         break;
                     case "TESTCLEANUPTIMEOUT":
                         ParseTimeoutSetting(reader.ReadInnerXml(), "TestCleanupTimeout", logger, v => settings.TestCleanupTimeout = v);
+                        break;
+                    case "GLOBALTESTINITIALIZETIMEOUT":
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "GlobalTestInitializeTimeout", logger, v => settings.GlobalTestInitializeTimeout = v);
+                        break;
+                    case "GLOBALTESTCLEANUPTIMEOUT":
+                        ParseTimeoutSetting(reader.ReadInnerXml(), "GlobalTestCleanupTimeout", logger, v => settings.GlobalTestCleanupTimeout = v);
                         break;
                     case "COOPERATIVECANCELLATIONTIMEOUT":
                         ParseBoolSetting(reader.ReadInnerXml(), "CooperativeCancellationTimeout", logger, v => settings.CooperativeCancellationTimeout = v);

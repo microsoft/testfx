@@ -154,7 +154,7 @@
       </trans-unit>
       <trans-unit id="SlowestTests">
         <source>Slowest tests:</source>
-        <target state="new">Slowest tests:</target>
+        <target state="translated">Test più lenti:</target>
         <note />
       </trans-unit>
       <trans-unit id="StackFrameAt">
@@ -258,12 +258,12 @@ Questa opzione ha la precedenza sul flag --no-progress deprecato.</target>
       </trans-unit>
       <trans-unit id="TerminalShowSlowestTestsOptionDescription">
         <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
-        <target state="new">Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</target>
+        <target state="translated">Mostra il numero specificato di test più lenti (in base alla durata di esecuzione segnalata) nel riepilogo dell'esecuzione. È previsto un numero intero positivo.</target>
         <note />
       </trans-unit>
       <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
         <source>--show-slowest-tests expects a single positive integer parameter.</source>
-        <target state="new">--show-slowest-tests expects a single positive integer parameter.</target>
+        <target state="translated">--show-slowest-tests prevede un singolo parametro intero positivo.</target>
         <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">

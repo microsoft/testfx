@@ -16,6 +16,10 @@
 [TPINTERNAL]static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetSystemClock(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Helpers.IClock!
 [TPINTERNAL]virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 [TPINTERNAL]virtual Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.FileArtifact(System.IO.FileInfo! fileInfo, string! displayName, string? description, string? kind) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.Kind.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.Kind.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.SessionFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, System.IO.FileInfo! fileInfo, string! displayName, string? description, string? kind) -> void
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities
 [TPEXP]Microsoft.Testing.Platform.Services.IClientCapabilities.IsStateful.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Services.IClientInfo.Capabilities.get -> Microsoft.Testing.Platform.Services.IClientCapabilities!

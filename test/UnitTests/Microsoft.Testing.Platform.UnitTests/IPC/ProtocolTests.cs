@@ -383,8 +383,8 @@ public sealed class ProtocolTests
             "MyExecId",
             "MyInstId",
             [
-                new FileArtifactMessage("/full/path/artifact1.txt", "artifact1", "description1", "uid-1", "Test 1", "session-1"),
-                new FileArtifactMessage("/full/path/artifact2.coverage", "artifact2", null, null, null, null),
+                new FileArtifactMessage("/full/path/artifact1.txt", "artifact1", "description1", "uid-1", "Test 1", "session-1", "microsoft.testing.trx"),
+                new FileArtifactMessage("/full/path/artifact2.coverage", "artifact2", null, null, null, null, null),
             ]);
 
         var stream = new MemoryStream();
@@ -405,6 +405,7 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.TestUid, actualArtifact.TestUid);
             Assert.AreEqual(expected.TestDisplayName, actualArtifact.TestDisplayName);
             Assert.AreEqual(expected.SessionUid, actualArtifact.SessionUid);
+            Assert.AreEqual(expected.Kind, actualArtifact.Kind);
         }
     }
 
