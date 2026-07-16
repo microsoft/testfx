@@ -50,6 +50,9 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
     private TimeSpan? _activityTimerValue;
     private Timer? _activityTimer;
+    private DateTimeOffset? _deadlineDumpAt;
+    private Timer? _deadlineTimer;
+    private int _dumpTaken;
     private Task? _waitConnectionTask;
     private Task? _activityIndicatorTask;
     private NamedPipeServer? _singleConnectionNamedPipeServer;
@@ -129,6 +132,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 
         await _logger.LogInformationAsync($"Hang dump timeout setup {_activityTimerValue}.").ConfigureAwait(false);
 
+        // In addition to the inactivity timeout above, honor an absolute CI deadline (if provided).
+        // We compute the wall-clock instant at which we should start taking the dump so that the dump
+        // has a chance to complete before the CI runner hard-kills the process.
+        if (DeadlineHelper.TryGetDeadline(_environment, out DateTimeOffset deadline))
+        {
+            _deadlineDumpAt = deadline - DeadlineHelper.GetDumpMargin(_environment);
+            await _logger.LogInformationAsync($"Hang dump deadline setup {_deadlineDumpAt:o}.").ConfigureAwait(false);
+        }
+
         _singleConnectionNamedPipeServer = new(_pipeNameDescription, CallbackAsync, _environment, _logger, _task, cancellationToken);
         _singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
         _singleConnectionNamedPipeServer.RegisterSerializer(new ConsumerPipeNameRequestSerializer(), typeof(ConsumerPipeNameRequest));
@@ -191,6 +203,23 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
             null,
             _activityTimerValue!.Value,
             TimeSpan.FromMilliseconds(-1));
+
+        // Arm a one-shot timer for the absolute CI deadline. Whichever fires first (inactivity hang
+        // or approaching deadline) takes the dump; TakeDumpOfTreeAsync guards against a double dump.
+        if (_deadlineDumpAt is { } deadlineDumpAt)
+        {
+            TimeSpan dueTime = deadlineDumpAt - _clock.UtcNow;
+            if (dueTime < TimeSpan.Zero)
+            {
+                dueTime = TimeSpan.Zero;
+            }
+
+            _deadlineTimer = new Timer(
+                _ => _activityIndicatorTask = TakeDumpOfTreeAsync(cancellationToken),
+                null,
+                dueTime,
+                TimeSpan.FromMilliseconds(-1));
+        }
     }
 
     private static string GetDiskInfo()
@@ -225,6 +254,15 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
 #endif
         }
 
+        if (_deadlineTimer is not null)
+        {
+#if NETCOREAPP
+            await _deadlineTimer.DisposeAsync().ConfigureAwait(false);
+#else
+            _deadlineTimer.Dispose();
+#endif
+        }
+
         if (!testHostProcessInformation.HasExitedGracefully)
         {
             _logger.LogDebug($"Testhost didn't exit gracefully '{testHostProcessInformation.ExitCode}')");
@@ -243,6 +281,12 @@ internal sealed class HangDumpProcessLifetimeHandler : ITestHostProcessLifetimeH
     private async Task TakeDumpOfTreeAsync(CancellationToken cancellationToken)
     {
         ApplicationStateGuard.Ensure(_testHostProcessInformation is not null);
+
+        // The inactivity timer and the deadline timer can both fire; only dump once.
+        if (Interlocked.Exchange(ref _dumpTaken, 1) != 0)
+        {
+            return;
+        }
 
         await _logger.LogInformationAsync($"Hang dump timeout({_activityTimerValue}) expired.").ConfigureAwait(false);
         await _outputDisplay.DisplayAsync(new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, ExtensionResources.HangDumpTimeoutExpired, _activityTimerValue)), cancellationToken).ConfigureAwait(false);
