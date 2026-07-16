@@ -162,8 +162,8 @@ jobs:
 
           # --- Download every Logs_Build_* artifact and extract binlogs ---
           artifacts_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}/artifacts?api-version=7.1")
-          names=$(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
-          [ -z "${names}" ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
+          mapfile -t names < <(printf '%s' "${artifacts_json}" | jq -r '.value // [] | map(select(.name | test("^Logs_Build_"))) | .[].name')
+          [ "${#names[@]}" -eq 0 ] && { echo "::warning::No Logs_Build_* artifacts on build ${BUILD_ID}."; emit_none; }
 
           # Guards for untrusted PR-produced archives: cap the compressed
           # download and the reported uncompressed size per artifact, bound
@@ -176,7 +176,7 @@ jobs:
           TOTAL_BYTES=0
           mkdir -p /tmp/binlogs
           count=0
-          for name in ${names}; do
+          for name in "${names[@]}"; do
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
@@ -229,6 +229,17 @@ jobs:
           echo "Extracted ${count} binlog(s) into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
           [ "${count}" -eq 0 ] && { echo "::warning::No *.binlog found in any Logs_Build_* artifact of build ${BUILD_ID}."; emit_none; }
+
+          # The download/extract loop above can take minutes. Re-read the PR
+          # head right before activating and fail CLOSED if it moved or can't
+          # be resolved: a force-push during that window would otherwise leave
+          # the analyzed binlog stale relative to the current diff (inline
+          # comments carry no commit_id and target the current diff).
+          LATEST_HEAD=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha // empty' 2>/dev/null)
+          if [ -z "${LATEST_HEAD}" ] || [ "${LATEST_HEAD}" != "${HEAD_SHA}" ]; then
+            echo "::warning::PR #${PR_NUMBER} head changed during artifact download ('${HEAD_SHA}' -> '${LATEST_HEAD}') or could not be re-resolved; skipping to avoid posting stale-build suggestions against the new diff."
+            emit_none
+          fi
 
           {
             echo "binlog-found=true"
