@@ -421,12 +421,12 @@
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
         <source>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</source>
-        <target state="new">The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</target>
+        <target state="translated">Le répertoire de canal nommé « {0} » n’existe pas ou n’est pas accessible en écriture : {1}. Définissez la variable d’environnement « {2} » sur un répertoire accessible en écriture existant, ou supprimez-la pour revenir au répertoire temporaire par défaut.</target>
         <note>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</note>
       </trans-unit>
       <trans-unit id="NamedPipePathTooLongErrorMessage">
         <source>The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Use a shorter directory by setting the '{3}' environment variable, or by setting 'TMPDIR' when '{3}' is not set.</source>
-        <target state="new">The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Use a shorter directory by setting the '{3}' environment variable, or by setting 'TMPDIR' when '{3}' is not set.</target>
+        <target state="translated">Le chemin du canal nommé « {0} » mesure {1} octets, ce qui dépasse le maximum de {2} octets autorisés pour un socket de domaine Unix. Utilisez un répertoire plus court en définissant la variable d’environnement « {3} », ou en définissant « TMPDIR » lorsque « {3} » n’est pas défini.</target>
         <note>{0} is the full pipe path, {1} is its length in bytes, {2} is the maximum allowed length in bytes, {3} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</note>
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -978,7 +978,7 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop.
 {0}</source>
-        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop.
+        <target state="translated">Une exception inattendue s’est produite dans la boucle d’écriture FileLogger.
 {0}</target>
         <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
