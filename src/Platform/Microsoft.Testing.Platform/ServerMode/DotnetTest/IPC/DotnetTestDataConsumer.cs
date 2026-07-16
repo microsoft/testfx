@@ -165,7 +165,8 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                                 artifact.Description ?? string.Empty,
                                 testNodeUpdateMessage.TestNode.Uid.Value,
                                 testNodeUpdateMessage.TestNode.DisplayName,
-                                testNodeUpdateMessage.SessionUid.Value)
+                                testNodeUpdateMessage.SessionUid.Value,
+                                null)
                         ]);
 
                     await _dotnetTestConnection.SendMessageAsync(testFileArtifactMessages).ConfigureAwait(false);
@@ -174,40 +175,51 @@ internal sealed class DotnetTestDataConsumer : IPushOnlyProtocolConsumer
                 break;
 
             case SessionFileArtifact sessionFileArtifact:
-                var fileArtifactMessages = new FileArtifactMessages(
-                    _executionId,
-                    DotnetTestConnection.InstanceId,
-                    [
-                        new FileArtifactMessage(
-                            sessionFileArtifact.FileInfo.FullName,
-                            sessionFileArtifact.DisplayName,
-                            sessionFileArtifact.Description ?? string.Empty,
-                            string.Empty,
-                            string.Empty,
-                            sessionFileArtifact.SessionUid.Value)
-                    ]);
+                FileArtifactMessages fileArtifactMessages = CreateFileArtifactMessages(_executionId, sessionFileArtifact);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
 
             case FileArtifact fileArtifact:
-                fileArtifactMessages = new(
-                    _executionId,
-                    DotnetTestConnection.InstanceId,
-                    [
-                        new FileArtifactMessage(
-                            fileArtifact.FileInfo.FullName,
-                            fileArtifact.DisplayName,
-                            fileArtifact.Description ?? string.Empty,
-                            string.Empty,
-                            string.Empty,
-                            string.Empty)
-                    ]);
+                fileArtifactMessages = CreateFileArtifactMessages(_executionId, fileArtifact);
 
                 await _dotnetTestConnection.SendMessageAsync(fileArtifactMessages).ConfigureAwait(false);
                 break;
         }
     }
+
+    // Maps a session-scoped artifact to its wire message. Extracted so the producer-to-wire mapping
+    // (in particular the Kind carried for post-processing grouping) is unit-testable without a live pipe.
+    internal static FileArtifactMessages CreateFileArtifactMessages(string? executionId, SessionFileArtifact sessionFileArtifact)
+        => new(
+            executionId,
+            DotnetTestConnection.InstanceId,
+            [
+                new FileArtifactMessage(
+                    sessionFileArtifact.FileInfo.FullName,
+                    sessionFileArtifact.DisplayName,
+                    sessionFileArtifact.Description ?? string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    sessionFileArtifact.SessionUid.Value,
+                    sessionFileArtifact.Kind)
+            ]);
+
+    // Maps a (non session-scoped) artifact to its wire message. See the SessionFileArtifact overload.
+    internal static FileArtifactMessages CreateFileArtifactMessages(string? executionId, FileArtifact fileArtifact)
+        => new(
+            executionId,
+            DotnetTestConnection.InstanceId,
+            [
+                new FileArtifactMessage(
+                    fileArtifact.FileInfo.FullName,
+                    fileArtifact.DisplayName,
+                    fileArtifact.Description ?? string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    fileArtifact.Kind)
+            ]);
 
     private static TestNodeDetails? GetTestNodeDetails(TestNodeUpdateMessage testNodeUpdateMessage)
     {

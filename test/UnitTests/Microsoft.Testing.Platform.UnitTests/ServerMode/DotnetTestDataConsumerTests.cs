@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.IPC;
+using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -79,6 +80,53 @@ public sealed class DotnetTestDataConsumerTests
         Assert.AreEqual(TestStates.Error, details.State);
         Assert.IsNull(details.Expected);
         Assert.IsNull(details.Actual);
+    }
+
+    [TestMethod]
+    public void CreateFileArtifactMessages_FromSessionFileArtifact_PreservesKind()
+    {
+        // Exercises the producer-to-wire mapping the serializer round-trip tests bypass (they start from
+        // an already-populated FileArtifactMessage). Without this a regression that dropped the Kind here
+        // would break post-processing grouping while every serializer test stayed green.
+        var artifact = new SessionFileArtifact(new SessionUid("session"), new FileInfo("/path/a.trx"), "a.trx", "desc", "microsoft.testing.trx");
+
+        FileArtifactMessages messages = DotnetTestDataConsumer.CreateFileArtifactMessages("exec-1", artifact);
+
+        Assert.AreEqual("exec-1", messages.ExecutionId);
+        Assert.HasCount(1, messages.FileArtifacts);
+        Assert.AreEqual("microsoft.testing.trx", messages.FileArtifacts[0].Kind);
+        Assert.AreEqual("session", messages.FileArtifacts[0].SessionUid);
+    }
+
+    [TestMethod]
+    public void CreateFileArtifactMessages_FromSessionFileArtifactWithoutKind_SendsNullKind()
+    {
+        var artifact = new SessionFileArtifact(new SessionUid("session"), new FileInfo("/path/a.txt"), "a.txt");
+
+        FileArtifactMessages messages = DotnetTestDataConsumer.CreateFileArtifactMessages("exec-1", artifact);
+
+        Assert.IsNull(messages.FileArtifacts[0].Kind);
+    }
+
+    [TestMethod]
+    public void CreateFileArtifactMessages_FromFileArtifact_PreservesKind()
+    {
+        var artifact = new FileArtifact(new FileInfo("/path/a.trx"), "a.trx", "desc", "microsoft.testing.trx");
+
+        FileArtifactMessages messages = DotnetTestDataConsumer.CreateFileArtifactMessages("exec-1", artifact);
+
+        Assert.HasCount(1, messages.FileArtifacts);
+        Assert.AreEqual("microsoft.testing.trx", messages.FileArtifacts[0].Kind);
+    }
+
+    [TestMethod]
+    public void CreateFileArtifactMessages_FromFileArtifactWithoutKind_SendsNullKind()
+    {
+        var artifact = new FileArtifact(new FileInfo("/path/a.txt"), "a.txt");
+
+        FileArtifactMessages messages = DotnetTestDataConsumer.CreateFileArtifactMessages("exec-1", artifact);
+
+        Assert.IsNull(messages.FileArtifacts[0].Kind);
     }
 
     private static DotnetTestDataConsumer.TestNodeDetails InvokeGetTestNodeDetails(IProperty stateProperty)
