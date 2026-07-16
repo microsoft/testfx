@@ -17,9 +17,10 @@ description: >-
 # public project) and the agent analyses whichever leg(s) actually contain
 # errors. Reusing the binlogs avoids a duplicate build: the analysis pipeline
 # only downloads build artifacts (data) and reads them — it does **not** build
-# or execute PR code. (gh-aw's generated jobs may run `actions/checkout` for
-# agent context; that is a checkout of the repository for tooling, not a build
-# or execution of the PR's code.)
+# or execute PR code. (gh-aw's generated jobs may run `actions/checkout` —
+# depending on the trigger — to fetch the repository for agent
+# configuration/context; that is a checkout for tooling only, and no build or
+# execution of the PR's code is performed.)
 
 on:
   # `check_run` fires for every check on a commit, so the `fetch-binlog` job
@@ -151,6 +152,18 @@ jobs:
           echo "Azure DevOps build id: '${BUILD_ID}'"
           [ -z "${BUILD_ID}" ] && { echo "::warning::Could not resolve an ADO build id."; emit_none; }
 
+          # Fetch the build metadata once, up front: it is the authoritative
+          # source both for the PR number (via sourceBranch) and for the
+          # definition/result/revision validated in step 4.
+          build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
+          RESULT=$(printf '%s' "${build_json}" | jq -r '.result // empty')
+          DEF_ID=$(printf '%s' "${build_json}" | jq -r '.definition.id // empty')
+          SRC_BRANCH=$(printf '%s' "${build_json}" | jq -r '.sourceBranch // empty')
+          # A PR build's sourceBranch is exactly `refs/pull/<n>/merge`, so it
+          # identifies the PR unambiguously — unlike the commit->PRs API, which
+          # can return several PRs in an unspecified order.
+          BUILD_PR_NUM=$(printf '%s' "${SRC_BRANCH}" | sed -n 's#^refs/pull/\([0-9]\{1,\}\)/merge$#\1#p')
+
           # --- 2. Resolve the PR number + head SHA ---
           if [ "${EVENT_NAME}" = "workflow_dispatch" ]; then
             PR_NUMBER="${DISPATCH_PR_NUMBER}"
@@ -159,11 +172,10 @@ jobs:
             PR_NUMBER="${CHECK_PR_NUMBER}"
             HEAD_SHA="${CHECK_HEAD_SHA}"
           fi
-          # Fork PRs don't populate check_run.pull_requests; fall back to the
-          # commit -> PR association API.
-          if [ -z "${PR_NUMBER}" ] && [ -n "${HEAD_SHA}" ]; then
-            PR_NUMBER=$(gh api "repos/${GH_AW_REPO}/commits/${HEAD_SHA}/pulls" --jq '.[0].number // empty' 2>/dev/null)
-          fi
+          # Fork PRs don't populate check_run.pull_requests; use the PR number
+          # named by the build's own sourceBranch (authoritative) instead of
+          # guessing the first entry from the commit->PRs association.
+          [ -z "${PR_NUMBER}" ] && PR_NUMBER="${BUILD_PR_NUM}"
           [ -z "${PR_NUMBER}" ] && { echo "::warning::Could not resolve a PR number."; emit_none; }
 
           # --- 3. Scope check: only analyse PRs targeting main / rel/* ---
@@ -183,10 +195,6 @@ jobs:
           #        number are independent inputs. Validating on both paths
           #        prevents downloading an unrelated build or posting its
           #        analysis to the wrong PR.
-          build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
-          RESULT=$(printf '%s' "${build_json}" | jq -r '.result // empty')
-          DEF_ID=$(printf '%s' "${build_json}" | jq -r '.definition.id // empty')
-          SRC_BRANCH=$(printf '%s' "${build_json}" | jq -r '.sourceBranch // empty')
           echo "ADO build ${BUILD_ID}: result='${RESULT}' definition='${DEF_ID}' sourceBranch='${SRC_BRANCH}'"
           if [ "${DEF_ID}" != "${ADO_BUILD_DEFINITION_ID}" ]; then
             echo "::warning::ADO build ${BUILD_ID} is definition '${DEF_ID}', not microsoft.testfx (${ADO_BUILD_DEFINITION_ID}); refusing."; emit_none
@@ -239,7 +247,14 @@ jobs:
           TOTAL_BYTES=0
           mkdir -p /tmp/binlogs
           count=0
+          staged_legs=0
           for name in "${names[@]}"; do
+            # `name` is PR-controlled ADO artifact metadata and the
+            # `^Logs_Build_` filter only anchors the prefix, so sanitize it
+            # before using it in any on-disk path (guards against `/` or `..`
+            # traversal); keep the original `name` for the artifacts_json lookup.
+            safe_name=$(printf '%s' "${name}" | tr -c 'A-Za-z0-9._-' '_')
+            before=${count}
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
@@ -287,8 +302,8 @@ jobs:
             i=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
-              dest="/tmp/binlogs/${name}"
-              [ ${i} -gt 0 ] && dest="/tmp/binlogs/${name}.${i}"
+              dest="/tmp/binlogs/${safe_name}"
+              [ ${i} -gt 0 ] && dest="/tmp/binlogs/${safe_name}.${i}"
               # Only count a leg as staged when the copy actually succeeds —
               # `set +e` is on, so a failed `cp` must not inflate `count` (which
               # gates `binlog-found=true` and thus agent activation).
@@ -299,10 +314,22 @@ jobs:
                 echo "::warning::Failed to stage ${bl}; skipping."
               fi
             done < <(find /tmp/ax -maxdepth 1 -name '*.binlog' -type f)
+            # This leg produced at least one usable binlog.
+            [ "${count}" -gt "${before}" ] && staged_legs=$((staged_legs + 1))
           done
-          echo "Extracted ${count} binlog(s) into /tmp/binlogs:"
+          echo "Extracted ${count} binlog(s) from ${staged_legs}/${#names[@]} legs into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
           [ "${count}" -eq 0 ] && { echo "::warning::No *.binlog found in any Logs_Build_* artifact of build ${BUILD_ID}."; emit_none; }
+          # Fail CLOSED on a partial set: if any Logs_Build_* leg did not yield
+          # a usable binlog (download/extract failure, size-guard skip, or no
+          # binlog inside), we cannot see every leg. Activating anyway would let
+          # the agent treat the retrieved legs as the whole build and possibly
+          # mis-classify a real build break in a missing leg as a clean compile /
+          # non-build failure. A later build/check will re-trigger the analysis.
+          if [ "${staged_legs}" -ne "${#names[@]}" ]; then
+            echo "::warning::Only ${staged_legs} of ${#names[@]} Logs_Build_* legs produced a usable binlog; skipping to avoid analyzing an incomplete build (a missing leg could be the one that failed)."
+            emit_none
+          fi
 
           # The download/extract loop above can take minutes. Re-read the PR
           # head right before activating and fail CLOSED if it moved or can't

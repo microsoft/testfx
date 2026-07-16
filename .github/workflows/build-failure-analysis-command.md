@@ -176,7 +176,14 @@ jobs:
           TOTAL_BYTES=0
           mkdir -p /tmp/binlogs
           count=0
+          staged_legs=0
           for name in "${names[@]}"; do
+            # `name` is PR-controlled ADO artifact metadata and the
+            # `^Logs_Build_` filter only anchors the prefix, so sanitize it
+            # before using it in any on-disk path (guards against `/` or `..`
+            # traversal); keep the original `name` for the artifacts_json lookup.
+            safe_name=$(printf '%s' "${name}" | tr -c 'A-Za-z0-9._-' '_')
+            before=${count}
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
@@ -222,8 +229,8 @@ jobs:
             i=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
-              dest="/tmp/binlogs/${name}"
-              [ ${i} -gt 0 ] && dest="/tmp/binlogs/${name}.${i}"
+              dest="/tmp/binlogs/${safe_name}"
+              [ ${i} -gt 0 ] && dest="/tmp/binlogs/${safe_name}.${i}"
               # Only count a leg as staged when the copy actually succeeds —
               # `set +e` is on, so a failed `cp` must not inflate `count` (which
               # gates `binlog-found=true` and thus agent activation).
@@ -234,10 +241,22 @@ jobs:
                 echo "::warning::Failed to stage ${bl}; skipping."
               fi
             done < <(find /tmp/ax -maxdepth 1 -name '*.binlog' -type f)
+            # This leg produced at least one usable binlog.
+            [ "${count}" -gt "${before}" ] && staged_legs=$((staged_legs + 1))
           done
-          echo "Extracted ${count} binlog(s) into /tmp/binlogs:"
+          echo "Extracted ${count} binlog(s) from ${staged_legs}/${#names[@]} legs into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
           [ "${count}" -eq 0 ] && { echo "::warning::No *.binlog found in any Logs_Build_* artifact of build ${BUILD_ID}."; emit_none; }
+          # Fail CLOSED on a partial set: if any Logs_Build_* leg did not yield
+          # a usable binlog (download/extract failure, size-guard skip, or no
+          # binlog inside), we cannot see every leg. Activating anyway would let
+          # the agent treat the retrieved legs as the whole build and possibly
+          # mis-classify a real build break in a missing leg as a clean compile /
+          # non-build failure. A later build/check will re-trigger the analysis.
+          if [ "${staged_legs}" -ne "${#names[@]}" ]; then
+            echo "::warning::Only ${staged_legs} of ${#names[@]} Logs_Build_* legs produced a usable binlog; skipping to avoid analyzing an incomplete build (a missing leg could be the one that failed)."
+            emit_none
+          fi
 
           # The download/extract loop above can take minutes. Re-read the PR
           # head right before activating and fail CLOSED if it moved or can't
