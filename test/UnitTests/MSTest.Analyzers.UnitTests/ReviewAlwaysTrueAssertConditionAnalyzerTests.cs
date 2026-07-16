@@ -1924,4 +1924,28 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithNullComparer_Diagnostic()
+    {
+        // MSTest treats a null comparer as EqualityComparer<T>.Default, so the self-comparison is still
+        // provably always true and must be flagged.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual(x, x, (IEqualityComparer<int>)null)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
