@@ -1543,6 +1543,8 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
     [TestMethod]
     public async Task WhenAssertAreEqualIsPassedSameLocalWithEquatable_NoDiagnostic()
     {
+        // A sealed type implementing IEquatable<self> (without overriding object.Equals) routes equality
+        // through user code, so it must not be flagged. This exercises the IEquatable<T> detection branch.
         string code = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -1557,7 +1559,7 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
                     Assert.AreEqual(x, x);
                 }
 
-                private struct MyType : IEquatable<MyType>
+                private sealed class MyType : IEquatable<MyType>
                 {
                     public bool Equals(MyType other) => true;
                 }
