@@ -176,12 +176,7 @@ internal static class MergeOutputFileHelper
             string probePath = Path.Combine(directory, probeName);
             using (new FileStream(probePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0x1000, FileOptions.DeleteOnClose))
             {
-                // Only lower-case the generated probe FILE NAME, keeping the real 'directory' path intact.
-                // Lower-casing the whole path would corrupt the directory portion, so a case-insensitive
-                // child directory sitting beneath a case-sensitive parent (e.g. an ext4 casefold dir named
-                // with uppercase chars) would be probed at a non-existent lowercased parent, File.Exists
-                // would return false, and the location would be misreported as case-sensitive.
-                return !File.Exists(Path.Combine(directory, probeName.ToLowerInvariant()));
+                return !File.Exists(BuildCaseFoldedProbePath(directory, probeName));
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
@@ -191,6 +186,16 @@ internal static class MergeOutputFileHelper
             return false;
         }
     }
+
+    // Builds the case-folded candidate used to detect case sensitivity: ONLY the generated probe file name
+    // is lower-cased, while the real 'directory' path is preserved verbatim. Lower-casing the whole combined
+    // path (the previous bug) corrupts the directory portion, so a case-insensitive child directory sitting
+    // beneath a case-sensitive, differently-cased ancestor (e.g. an ext4 casefold dir named with uppercase
+    // chars) would be probed at a non-existent lowercased ancestor: File.Exists returns false and the
+    // location is misreported as case-sensitive. Kept as its own seam so this behaviour can be unit-tested
+    // without needing to materialize a mixed-sensitivity filesystem.
+    internal static string BuildCaseFoldedProbePath(string directory, string probeFileName)
+        => Path.Combine(directory, probeFileName.ToLowerInvariant());
 
     private static string GetTempSiblingPath(string outputPath)
     {

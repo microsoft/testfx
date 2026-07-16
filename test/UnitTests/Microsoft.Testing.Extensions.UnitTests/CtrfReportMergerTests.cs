@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection;
 using System.Text.Json.Nodes;
 
 using Microsoft.Testing.Extensions.CtrfReport;
@@ -221,14 +222,41 @@ public sealed class CtrfReportMergerTests
     }
 
     [TestMethod]
+    public void BuildCaseFoldedProbePath_LowerCasesOnlyFileName_PreservingCaseSensitiveDirectory()
+    {
+        // Regression seam for the case-sensitivity probe. The probe compares the created file against a
+        // case-folded candidate to decide whether the directory is case-sensitive. The bug lower-cased the
+        // WHOLE combined path, corrupting the directory portion: a case-insensitive child directory beneath a
+        // case-sensitive, differently-cased ancestor was then probed at a non-existent lowercased ancestor, so
+        // File.Exists returned false and the directory was misreported as case-sensitive. That in turn made
+        // EnsureOutputDoesNotAliasInput compare paths ordinally and miss that 'a.trx' and 'A.trx' are the same
+        // file, risking overwrite of a read-only input. Assert directly that only the generated file name is
+        // case-folded while the (potentially case-sensitive, uppercased) directory path is preserved verbatim.
+        // Reverting the production fix to lower-case the whole path fails this test on every platform.
+        // The helper is an internal type linked into several extension assemblies, so it is reached via the
+        // unambiguous CtrfReport assembly (a simple-name reference would be ambiguous across those copies).
+        MethodInfo buildProbe = typeof(CtrfReportMerger).Assembly
+            .GetType("Microsoft.Testing.Extensions.MergeOutputFileHelper", throwOnError: true)!
+            .GetMethod("BuildCaseFoldedProbePath", BindingFlags.Static | BindingFlags.NonPublic)!;
+
+        string directory = Path.Combine("SomeCaseSensitive", "PARENT", "Child");
+        const string probeFileName = "CASESENSITIVEPROBEabc123";
+
+        string candidate = (string)buildProbe.Invoke(null, [directory, probeFileName])!;
+
+        Assert.AreEqual(Path.Combine(directory, "casesensitiveprobeabc123"), candidate);
+        Assert.AreEqual(directory, Path.GetDirectoryName(candidate));
+        Assert.AreEqual("casesensitiveprobeabc123", Path.GetFileName(candidate));
+    }
+
+    [TestMethod]
     public async Task MergeToFileAsync_WhenOutputDiffersFromInputOnlyByCase_IsRejectedOnCaseInsensitiveDirectory()
     {
-        // Regression: the case-sensitivity probe used to lower-case the WHOLE candidate path, corrupting the
-        // directory portion, so a case-insensitive location (e.g. a Windows temp dir) could be misreported as
-        // case-sensitive. That made the alias check use an ordinal comparison and miss that 'report.json' and
-        // 'REPORT.json' are the SAME file, letting the merge overwrite a read-only input. With the probe fixed
-        // (only the generated file name is lower-cased), a case-only output must alias the input and be
-        // rejected on a case-insensitive directory; on a genuinely case-sensitive one the names are distinct.
+        // End-to-end sibling of the seam test above: on a case-insensitive directory (Windows/macOS temp dirs
+        // are), an output that differs from an input only by CASE aliases that input and must be rejected so a
+        // read-only source is never overwritten. On a genuinely case-sensitive directory the two names are
+        // distinct, so the merge is allowed. The directory's real sensitivity is probed independently (folding
+        // only the file name) so the assertion adapts to the host filesystem.
         string tempDirectory = Path.Combine(Path.GetTempPath(), $"ctrf-merge-{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDirectory);
         try
