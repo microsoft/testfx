@@ -30,10 +30,19 @@ internal sealed class GitHubActionsSummaryReporter :
     private const int MaxFailures = 20;
     private const int MaxSlowestTests = 10;
 
+    // GITHUB_STEP_SUMMARY is a single shared file that every test-host process appends to. Under a
+    // concurrent multi-assembly `dotnet test` run, contention is resolved by an exclusive-append retry loop
+    // (see AppendStepSummaryWithRetryAsync). Twenty attempts at 50 ms bound the wait to ~1s, which is ample
+    // to serialize the tiny per-assembly writes while still failing fast (into a best-effort warning) on a
+    // genuinely unwritable path.
+    private const int StepSummaryMaxWriteAttempts = 20;
+    private static readonly TimeSpan StepSummaryRetryDelay = TimeSpan.FromMilliseconds(50);
+
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
     private readonly IOutputDevice _outputDevice;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
     private readonly ILogger _logger;
     private readonly Lazy<string> _targetFrameworkMoniker;
     private readonly bool _isEnabled;
@@ -53,12 +62,14 @@ internal sealed class GitHubActionsSummaryReporter :
         IFileSystem fileSystem,
         IOutputDevice outputDevice,
         ITestApplicationModuleInfo testApplicationModuleInfo,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode,
         ILoggerFactory loggerFactory)
     {
         _environment = environment;
         _fileSystem = fileSystem;
         _outputDevice = outputDevice;
         _testApplicationModuleInfo = testApplicationModuleInfo;
+        _testApplicationProcessExitCode = testApplicationProcessExitCode;
         _logger = loggerFactory.CreateLogger<GitHubActionsSummaryReporter>();
         _targetFrameworkMoniker = new(TargetFrameworkMonikerHelper.GetTargetFrameworkMonikerIncludingPlatform);
         _isEnabled = GitHubActionsFeature.IsEnabled(commandLineOptions, environment, GitHubActionsCommandLineOptions.GitHubActionsStepSummary);
@@ -171,13 +182,11 @@ internal sealed class GitHubActionsSummaryReporter :
                 snapshot = [.. _records.Values];
             }
 
-            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name", _targetFrameworkMoniker.Value);
+            string markdown = BuildMarkdown(snapshot, _testApplicationModuleInfo.TryGetAssemblyName() ?? "unknown assembly name", _targetFrameworkMoniker.Value, _testApplicationProcessExitCode.GetProcessExitCode());
 
             try
             {
-                using IFileStream stream = _fileSystem.NewFileStream(path!, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-                using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false));
-                await writer.WriteAsync(markdown).ConfigureAwait(false);
+                await AppendStepSummaryWithRetryAsync(_fileSystem, path!, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -200,7 +209,67 @@ internal sealed class GitHubActionsSummaryReporter :
         }
     }
 
-    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker)
+    /// <summary>
+    /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file in a way that is safe
+    /// when multiple test-host processes (one per assembly / target framework in a <c>dotnet test</c> run) write
+    /// concurrently.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="FileMode.Append"/> only seeks to the end of the file once, at open time, and performs no
+    /// atomic OS-level append. Opening with <see cref="FileShare.ReadWrite"/> would therefore let two processes
+    /// position at the same offset and interleave or overwrite each other's section. We instead open with
+    /// <see cref="FileShare.Read"/> — which denies other writers — so at most one process appends at a time, and
+    /// retry on the resulting sharing violation (an <see cref="IOException"/>) until the holder releases the file.
+    /// Each write is a single small section, so contention clears almost immediately; the bounded attempt count
+    /// still lets a genuinely unlockable file surface as the caller's best-effort warning rather than looping
+    /// forever.
+    /// <para>
+    /// Retries are scoped to <em>acquiring</em> the exclusive append handle only. Once the handle is acquired the
+    /// process appends alone, so contention can no longer occur; a failure that happens <em>during</em> the write
+    /// (e.g. disk full) may already have appended a partial section, and retrying would re-append the full section
+    /// on top of it and corrupt the summary. Such a mid-write failure is therefore propagated straight to the
+    /// caller's best-effort warning path instead of being retried.
+    /// </para>
+    /// </remarks>
+    internal static /* for testing */ async Task AppendStepSummaryWithRetryAsync(
+        IFileSystem fileSystem,
+        string path,
+        string content,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            IFileStream stream;
+            try
+            {
+                stream = fileSystem.NewFileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                // Another test-host process currently holds the summary file open for writing. Back off briefly
+                // and retry so this assembly's section is appended intact once the holder releases the file.
+                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+
+            // The exclusive append handle is acquired: from here on we append alone, so any failure is a genuine
+            // write error (not contention) and must not be retried — a partial append followed by a full re-append
+            // would corrupt the summary. Let it propagate to the caller's best-effort warning path.
+            using (stream)
+            using (var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false)))
+            {
+                await writer.WriteAsync(content).ConfigureAwait(false);
+            }
+
+            return;
+        }
+    }
+
+    internal static /* for testing */ string BuildMarkdown(IReadOnlyList<TestRecord> records, string assemblyName, string targetFrameworkMoniker, int exitCode)
     {
         int total = records.Count;
         int passed = 0;
@@ -231,7 +300,10 @@ internal sealed class GitHubActionsSummaryReporter :
             }
         }
 
-        string statusIcon = failed > 0 ? "❌" : "✅";
+        // Reflect the process verdict, not just the failed-test count: a run can end in failure with zero failed
+        // tests (e.g. zero tests discovered or a --minimum-expected-tests violation), which must not show ✅.
+        bool runFailed = failed > 0 || GitHubActionsExitCode.IndicatesFailure(exitCode);
+        string statusIcon = runFailed ? "❌" : "✅";
 
         var builder = new StringBuilder();
         builder.Append("## ").Append(statusIcon).Append(" Test Run Summary — ").Append(assemblyName).Append(" (").Append(targetFrameworkMoniker).Append(")\n\n");
@@ -242,6 +314,21 @@ internal sealed class GitHubActionsSummaryReporter :
             .Append(" | ").Append(failed.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(skipped.ToString(CultureInfo.InvariantCulture))
             .Append(" | ").Append(FormatDuration(totalDuration)).Append(" |\n\n");
+
+        // Surface a non-test-result failure that this reporter can observe once the session has finished
+        // (zero tests, --minimum-expected-tests, --maximum-failed-tests, test-adapter session failure) as a
+        // GitHub alert callout. Plain pass / at-least-one-failed outcomes are already conveyed by the totals
+        // table and the failures section, so no callout is added for them.
+        if (!GitHubActionsExitCode.IsTestResultOutcome(exitCode))
+        {
+            string calloutText = string.Format(
+                CultureInfo.InvariantCulture,
+                GitHubActionsResources.ExitCodeCallout,
+                exitCode.ToString(CultureInfo.InvariantCulture),
+                GitHubActionsExitCode.GetName(exitCode),
+                GitHubActionsExitCode.GetReason(exitCode));
+            builder.Append("> [!WARNING]\n> ").Append(EscapeInlineCode(calloutText)).Append("\n\n");
+        }
 
         if (failures.Count > 0)
         {
