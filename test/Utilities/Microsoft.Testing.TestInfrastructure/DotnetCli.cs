@@ -112,12 +112,21 @@ public static class DotnetCli
     private static bool IsDotNetTestWithExeOrDll(string args)
         => args.StartsWith("test ", StringComparison.Ordinal) && (args.Contains(".dll") || args.Contains(".exe"));
 
-    // Workaround NuGet issue https://github.com/NuGet/Home/issues/14064
     private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
         => await Policy
-            .Handle<InvalidOperationException>(ex => ex.Message.Contains("MSB4236"))
+            .Handle<InvalidOperationException>(IsRetriableBuildFailure)
             .WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: static _ => TimeSpan.FromSeconds(2))
             .ExecuteAsync(async ct => await CallTheMuxerCoreAsync(args, environmentVariables, workingDirectory, failIfReturnValueIsNotZero, binlogBaseFileName, ct), cancellationToken);
+
+    // Some build failures are transient tooling/environment issues rather than real product failures, so retrying
+    // the whole muxer invocation (which regenerates the binlog file name, see CallTheMuxerCoreAsync) is safe:
+    // - MSB4236: NuGet SDK-resolver flakiness (https://github.com/NuGet/Home/issues/14064).
+    // - MSB4166 "... exited prematurely. Shutting down.": an MSBuild worker node crashes mid-build (e.g. an
+    //   intermittent BinaryLogger ObjectDisposedException on the logging thread), which cancels the whole build.
+    // Both surface as an InvalidOperationException whose message embeds the captured build output.
+    private static bool IsRetriableBuildFailure(InvalidOperationException ex)
+        => ex.Message.Contains("MSB4236")
+            || ex.Message.Contains("exited prematurely. Shutting down.");
 
     private static async Task<DotnetMuxerResult> CallTheMuxerCoreAsync(string args, Dictionary<string, string?> environmentVariables, string? workingDirectory, bool failIfReturnValueIsNotZero, string binlogBaseFileName, CancellationToken cancellationToken)
     {
