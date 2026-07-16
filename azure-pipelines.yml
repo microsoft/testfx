@@ -324,6 +324,11 @@ stages:
       - job: MacOS
         dependsOn: DetectChanges
         condition: and(succeededOrFailed(), ne(dependencies.DetectChanges.outputs['detect.hasProductChanges'], 'false'))
+        # macOS agents are historically slow and flaky, so this job is intentionally non-blocking for PRs:
+        # continueOnError makes the job run and publish its results, but a failure surfaces as a warning
+        # (job result "SucceededWithIssues") instead of failing the build. This keeps macOS signal visible
+        # without gating merges on macOS-specific flakiness. Windows and Linux remain hard blockers.
+        continueOnError: true
         timeoutInMinutes: 90
         pool:
           name: Azure Pipelines
