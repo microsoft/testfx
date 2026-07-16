@@ -5,6 +5,10 @@ extern alias ghactions;
 
 using ghactions::Microsoft.Testing.Extensions.GitHubActionsReport;
 
+using Microsoft.Testing.Platform.Helpers;
+
+using Moq;
+
 using GitHubActionsTerminalKind = ghactions::Microsoft.Testing.Extensions.TerminalKind;
 using GitHubActionsTestRecord = ghactions::Microsoft.Testing.Extensions.TestRecord;
 
@@ -116,5 +120,65 @@ public sealed class GitHubActionsSummaryReporterTests
         Assert.Contains("## ❌ Test Run Summary — CalculatorTests (net9.0)", markdown);
         Assert.Contains("Exit code 9 — MinimumExpectedTestsPolicyViolation:", markdown);
         Assert.Contains("--minimum-expected-tests", markdown);
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithRetryAsync_WritesContent_OnFirstAttempt()
+    {
+        var buffer = new MemoryStream();
+        Mock<IFileSystem> fileSystem = CreateFileSystemWritingTo(buffer);
+
+        await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
+            fileSystem.Object, "summary.md", "hello world", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+        // UTF8Encoding(false) is used by the reporter, so there is no BOM to strip.
+        Assert.AreEqual("hello world", Encoding.UTF8.GetString(buffer.ToArray()));
+        fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithRetryAsync_RetriesOnSharingViolation_ThenSucceeds()
+    {
+        var buffer = new MemoryStream();
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(s => s.Stream).Returns(buffer);
+
+        var fileSystem = new Mock<IFileSystem>();
+        // First open loses the race against another process (sharing violation), the second one wins.
+        fileSystem.SetupSequence(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Throws(new IOException("The process cannot access the file because it is being used by another process."))
+            .Returns(fileStream.Object);
+
+        await GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
+            fileSystem.Object, "summary.md", "second-wins", maxAttempts: 5, retryDelay: TimeSpan.Zero, CancellationToken.None);
+
+        Assert.AreEqual("second-wins", Encoding.UTF8.GetString(buffer.ToArray()));
+        fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Exactly(2));
+    }
+
+    [TestMethod]
+    public async Task AppendStepSummaryWithRetryAsync_Rethrows_WhenAllAttemptsFail()
+    {
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Throws(new IOException("locked"));
+
+        // After exhausting the bounded attempts the final IOException propagates so the caller can surface its
+        // best-effort warning rather than looping forever.
+        await Assert.ThrowsExactlyAsync<IOException>(() => GitHubActionsSummaryReporter.AppendStepSummaryWithRetryAsync(
+            fileSystem.Object, "summary.md", "never-written", maxAttempts: 3, retryDelay: TimeSpan.Zero, CancellationToken.None));
+
+        fileSystem.Verify(f => f.NewFileStream("summary.md", FileMode.Append, FileAccess.Write, FileShare.Read), Times.Exactly(3));
+    }
+
+    private static Mock<IFileSystem> CreateFileSystemWritingTo(Stream target)
+    {
+        var fileStream = new Mock<IFileStream>();
+        fileStream.Setup(s => s.Stream).Returns(target);
+
+        var fileSystem = new Mock<IFileSystem>();
+        fileSystem.Setup(f => f.NewFileStream(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(fileStream.Object);
+        return fileSystem;
     }
 }

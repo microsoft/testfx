@@ -30,6 +30,14 @@ internal sealed class GitHubActionsSummaryReporter :
     private const int MaxFailures = 20;
     private const int MaxSlowestTests = 10;
 
+    // GITHUB_STEP_SUMMARY is a single shared file that every test-host process appends to. Under a
+    // concurrent multi-assembly `dotnet test` run, contention is resolved by an exclusive-append retry loop
+    // (see AppendStepSummaryWithRetryAsync). Twenty attempts at 50 ms bound the wait to ~1s, which is ample
+    // to serialize the tiny per-assembly writes while still failing fast (into a best-effort warning) on a
+    // genuinely unwritable path.
+    private const int StepSummaryMaxWriteAttempts = 20;
+    private static readonly TimeSpan StepSummaryRetryDelay = TimeSpan.FromMilliseconds(50);
+
     private readonly IEnvironment _environment;
     private readonly IFileSystem _fileSystem;
     private readonly IOutputDevice _outputDevice;
@@ -178,9 +186,7 @@ internal sealed class GitHubActionsSummaryReporter :
 
             try
             {
-                using IFileStream stream = _fileSystem.NewFileStream(path!, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
-                using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false));
-                await writer.WriteAsync(markdown).ConfigureAwait(false);
+                await AppendStepSummaryWithRetryAsync(_fileSystem, path!, markdown, StepSummaryMaxWriteAttempts, StepSummaryRetryDelay, testSessionContext.CancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -200,6 +206,48 @@ internal sealed class GitHubActionsSummaryReporter :
         catch (Exception ex)
         {
             _logger.LogUnexpectedException(nameof(OnTestSessionFinishingAsync), ex);
+        }
+    }
+
+    /// <summary>
+    /// Appends <paramref name="content"/> to the shared <c>GITHUB_STEP_SUMMARY</c> file in a way that is safe
+    /// when multiple test-host processes (one per assembly / target framework in a <c>dotnet test</c> run) write
+    /// concurrently.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="FileMode.Append"/> only seeks to the end of the file once, at open time, and performs no
+    /// atomic OS-level append. Opening with <see cref="FileShare.ReadWrite"/> would therefore let two processes
+    /// position at the same offset and interleave or overwrite each other's section. We instead open with
+    /// <see cref="FileShare.Read"/> — which denies other writers — so at most one process appends at a time, and
+    /// retry on the resulting sharing violation (an <see cref="IOException"/>) until the holder releases the file.
+    /// Each write is a single small section, so contention clears almost immediately; the bounded attempt count
+    /// still lets a genuinely unwritable path surface as the caller's best-effort warning rather than looping
+    /// forever.
+    /// </remarks>
+    internal static /* for testing */ async Task AppendStepSummaryWithRetryAsync(
+        IFileSystem fileSystem,
+        string path,
+        string content,
+        int maxAttempts,
+        TimeSpan retryDelay,
+        CancellationToken cancellationToken)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                using IFileStream stream = fileSystem.NewFileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+                using var writer = new StreamWriter(stream.Stream, new UTF8Encoding(false));
+                await writer.WriteAsync(content).ConfigureAwait(false);
+                return;
+            }
+            catch (IOException) when (attempt < maxAttempts)
+            {
+                // Another test-host process currently holds the summary file open for writing. Back off briefly
+                // and retry so this assembly's section is appended intact once the holder releases the file.
+                await Task.Delay(retryDelay, cancellationToken).ConfigureAwait(false);
+            }
         }
     }
 
