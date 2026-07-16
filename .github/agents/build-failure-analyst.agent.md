@@ -84,8 +84,12 @@ Group every error in the binlog under exactly one root-cause cluster. If two clu
 When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable package warnings, use the **NuGet MCP Server** (installed as a dotnet global tool) via the `bash` tool:
 
 ```bash
-# Get a remediation plan for vulnerable/conflicting packages
-dotnet NuGet.Mcp.Server -- --source https://api.nuget.org/v3/index.json --project /path/to/project.csproj
+# Get a remediation plan for vulnerable/conflicting packages.
+# The tool is installed as a global dotnet tool and exposes the command
+# `NuGet.Mcp.Server` directly on PATH — invoke it by name (NOT via
+# `dotnet NuGet.Mcp.Server`, which would look for a `dotnet-NuGet.Mcp.Server`
+# subcommand that does not exist).
+NuGet.Mcp.Server --source https://api.nuget.org/v3/index.json --project /path/to/project.csproj
 ```
 
 The NuGet MCP Server can resolve version conflicts by analyzing the full transitive dependency graph. Use it to generate concrete version updates for `Directory.Packages.props` or `.csproj` files.
@@ -108,7 +112,7 @@ For each root cause, identify the **smallest set of files** that need to change.
 
 - For Roslyn / C# errors: read 6 lines above and 10 lines below the reported line.
 - For MSBuild errors: read the offending element and the surrounding `<PropertyGroup>` / `<ItemGroup>` / `<Target>`.
-- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `dotnet NuGet.Mcp.Server` to get a concrete resolution plan.
+- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `NuGet.Mcp.Server` (the global tool's command name — not `dotnet NuGet.Mcp.Server`) to get a concrete resolution plan.
 
 If the source line at the reported `file:line` does not look like a plausible cause (sometimes the compiler reports the *call site*, not the *declaration site*), search the PR-changed files for the symbol named in the error message and use that as the suggestion target.
 
@@ -183,7 +187,7 @@ For each error whose `file:line` lies **inside the PR diff** (you can verify by 
 
 Hard caps and rules:
 
-- Maximum **10 inline suggestion comments** per run (the workflow's `create-pull-request-review-comment: max: 10` enforces this).
+- Maximum **25 inline suggestion comments** per run (the workflow's `create-pull-request-review-comment: max: 25` enforces this). In practice aim for the top 5 highest-priority issues; the higher cap only exists to absorb Copilot CLI retry amplification.
 - Suggestions must be valid C# / XML / etc. when applied — don't propose pseudo-code.
 - Only post inline on lines that are *part of the diff*; otherwise the GitHub API rejects the comment and the safe-output handler drops the whole batch.
 - When determining which lines are "in the diff", note that `\ No newline at end of file` markers in the patch are **not** code lines — skip them when computing line mappings.
