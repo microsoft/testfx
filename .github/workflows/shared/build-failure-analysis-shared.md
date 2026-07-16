@@ -28,7 +28,7 @@ server is **read-only** here), the `safeoutputs` writers (including the
 1. Read the agent-context environment variables: `GH_AW_BUILD_OUTCOME`,
    `GH_AW_BINLOG_LIST`, `GH_AW_BINLOG_DIR`, `GH_AW_BINLOG_PATH`,
    `GH_AW_BINLOG_HOST_PATH`, `GH_AW_PR_NUMBER`, `GH_AW_PR_HEAD_SHA`,
-   `GH_AW_WORKSPACE`.
+   `GH_AW_PR_MERGE_SHA`, `GH_AW_WORKSPACE`.
 
 2. If `GH_AW_BUILD_OUTCOME == 'success'`, the build did not actually fail —
    there is nothing to analyze. Call `noop` with the message

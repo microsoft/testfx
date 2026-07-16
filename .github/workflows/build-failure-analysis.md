@@ -152,6 +152,12 @@ jobs:
           fi
           echo "Azure DevOps build id: '${BUILD_ID}'"
           [ -z "${BUILD_ID}" ] && { echo "::warning::Could not resolve an ADO build id."; emit_none; }
+          # The build id feeds directly into ADO API URLs below; require it to
+          # be purely numeric (esp. on workflow_dispatch, where it is free-form
+          # input) so a malformed value can't alter the request path/query.
+          if ! printf '%s' "${BUILD_ID}" | grep -qE '^[0-9]+$'; then
+            echo "::warning::Resolved ADO build id '${BUILD_ID}' is not numeric; refusing."; emit_none
+          fi
 
           # Fetch the build metadata once, up front: it is the authoritative
           # source both for the PR number (via sourceBranch) and for the
@@ -177,6 +183,12 @@ jobs:
             HEAD_SHA="${CHECK_HEAD_SHA}"
           fi
           [ -z "${PR_NUMBER}" ] && { echo "::warning::Could not resolve a PR number."; emit_none; }
+          # PR_NUMBER feeds `gh api .../pulls/<n>` and the `refs/pull/<n>/merge`
+          # comparison; require it numeric so a malformed value can't reach the
+          # GitHub API path (traversal-like input) or skew the branch match.
+          if ! printf '%s' "${PR_NUMBER}" | grep -qE '^[0-9]+$'; then
+            echo "::warning::Resolved PR number '${PR_NUMBER}' is not numeric; refusing."; emit_none
+          fi
 
           # --- 3. Scope check: only analyse PRs targeting main / rel/* ---
           PR_JSON=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
