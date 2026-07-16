@@ -81,6 +81,7 @@ jobs:
       binlog-found: ${{ steps.fetch.outputs.binlog-found }}
       pr-number: ${{ steps.fetch.outputs.pr-number }}
       pr-head-sha: ${{ steps.fetch.outputs.pr-head-sha }}
+      pr-merge-sha: ${{ steps.fetch.outputs.pr-merge-sha }}
       ado-build-id: ${{ steps.fetch.outputs.ado-build-id }}
       ado-build-url: ${{ steps.fetch.outputs.ado-build-url }}
     steps:
@@ -145,7 +146,10 @@ jobs:
           # so re-read the head here and skip if it moved.
           build_json=$(curl -sSL --retry 3 "${ADO_API}/build/builds/${BUILD_ID}?api-version=7.1")
           BUILD_PR_SHA=$(printf '%s' "${build_json}" | jq -r '.triggerInfo["pr.sourceSha"] // empty')
-          CURRENT_HEAD=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha // empty' 2>/dev/null)
+          BUILD_MERGE_SHA=$(printf '%s' "${build_json}" | jq -r '.sourceVersion // empty')
+          PR_JSON2=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          CURRENT_HEAD=$(printf '%s' "${PR_JSON2}" | jq -r '.head.sha // empty')
+          CURRENT_MERGE=$(printf '%s' "${PR_JSON2}" | jq -r '.merge_commit_sha // empty')
           # Fail CLOSED: if either SHA can't be resolved (transient API failure
           # or missing Azure triggerInfo), skip rather than risk analyzing a
           # stale binlog against the current diff.
@@ -155,6 +159,13 @@ jobs:
           fi
           if [ "${BUILD_PR_SHA}" != "${CURRENT_HEAD}" ]; then
             echo "::warning::Build ${BUILD_ID} analyzed revision '${BUILD_PR_SHA}' but PR #${PR_NUMBER} head is now '${CURRENT_HEAD}'; skipping stale build (a newer build will cover the current revision)."
+            emit_none
+          fi
+          # ADO builds GitHub's `refs/pull/<n>/merge` ref, so build_json.sourceVersion
+          # is that merge commit; if the base branch advanced it differs from the
+          # PR's current merge_commit_sha even with the head unchanged. Skip stale merges.
+          if [ -n "${BUILD_MERGE_SHA}" ] && [ -n "${CURRENT_MERGE}" ] && [ "${BUILD_MERGE_SHA}" != "${CURRENT_MERGE}" ]; then
+            echo "::warning::Build ${BUILD_ID} merge revision '${BUILD_MERGE_SHA}' but PR #${PR_NUMBER} current merge is '${CURRENT_MERGE}' (base branch advanced); skipping stale merge."
             emit_none
           fi
           HEAD_SHA="${CURRENT_HEAD}"
@@ -221,7 +232,6 @@ jobs:
             if [ $((TOTAL_BYTES + UNCOMP)) -gt "${MAX_TOTAL_BYTES}" ]; then
               echo "::warning::Cumulative uncompressed budget ${MAX_TOTAL_BYTES} reached at ${name}; stopping extraction."; break
             fi
-            TOTAL_BYTES=$((TOTAL_BYTES + UNCOMP))
             # Refuse the archive if any entry path is absolute or has a `..`
             # component (defense-in-depth over unzip's own traversal guard),
             # then extract `*.binlog` entries *preserving* their in-archive
@@ -232,6 +242,11 @@ jobs:
             fi
             timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
               || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
+            # Consume the cumulative budget only once the archive actually
+            # extracted — not on a suspicious-path or extraction-failure skip
+            # above — so a skipped leg can't wrongly exhaust the budget and
+            # force later legs to be dropped as "incomplete".
+            TOTAL_BYTES=$((TOTAL_BYTES + UNCOMP))
             i=0
             leg_staged=0
             while IFS= read -r bl; do
@@ -274,9 +289,17 @@ jobs:
           # be resolved: a force-push during that window would otherwise leave
           # the analyzed binlog stale relative to the current diff (inline
           # comments carry no commit_id and target the current diff).
-          LATEST_HEAD=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" --jq '.head.sha // empty' 2>/dev/null)
+          LATEST_PR=$(gh api "repos/${GH_AW_REPO}/pulls/${PR_NUMBER}" 2>/dev/null)
+          LATEST_HEAD=$(printf '%s' "${LATEST_PR}" | jq -r '.head.sha // empty')
+          LATEST_MERGE=$(printf '%s' "${LATEST_PR}" | jq -r '.merge_commit_sha // empty')
           if [ -z "${LATEST_HEAD}" ] || [ "${LATEST_HEAD}" != "${HEAD_SHA}" ]; then
             echo "::warning::PR #${PR_NUMBER} head changed during artifact download ('${HEAD_SHA}' -> '${LATEST_HEAD}') or could not be re-resolved; skipping to avoid posting stale-build suggestions against the new diff."
+            emit_none
+          fi
+          # The base branch may also have advanced during the download; if the
+          # merge revision moved from what the build analyzed, skip (stale merge).
+          if [ -n "${BUILD_MERGE_SHA}" ] && [ -n "${LATEST_MERGE}" ] && [ "${LATEST_MERGE}" != "${BUILD_MERGE_SHA}" ]; then
+            echo "::warning::PR #${PR_NUMBER} merge revision changed during artifact download ('${BUILD_MERGE_SHA}' -> '${LATEST_MERGE}'); skipping stale merge."
             emit_none
           fi
 
@@ -284,6 +307,7 @@ jobs:
             echo "binlog-found=true"
             echo "pr-number=${PR_NUMBER}"
             echo "pr-head-sha=${HEAD_SHA}"
+            echo "pr-merge-sha=${BUILD_MERGE_SHA}"
             echo "ado-build-id=${BUILD_ID}"
             echo "ado-build-url=${ADO_BUILD_UI}?buildId=${BUILD_ID}"
           } >> "$GITHUB_OUTPUT"
@@ -311,6 +335,7 @@ steps:
       GH_AW_BINLOG_FOUND_VALUE: ${{ needs.fetch-binlog.outputs.binlog-found }}
       GH_AW_PR_NUMBER_VALUE: ${{ needs.fetch-binlog.outputs.pr-number }}
       GH_AW_PR_HEAD_SHA_VALUE: ${{ needs.fetch-binlog.outputs.pr-head-sha }}
+      GH_AW_PR_MERGE_SHA_VALUE: ${{ needs.fetch-binlog.outputs.pr-merge-sha }}
       GH_AW_ADO_BUILD_URL_VALUE: ${{ needs.fetch-binlog.outputs.ado-build-url }}
       GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
     run: |
@@ -334,6 +359,7 @@ steps:
         echo "GH_AW_BINLOG_HOST_PATH=${GH_AW_ADO_BUILD_URL_VALUE}"
         echo "GH_AW_PR_NUMBER=${GH_AW_PR_NUMBER_VALUE}"
         echo "GH_AW_PR_HEAD_SHA=${GH_AW_PR_HEAD_SHA_VALUE}"
+        echo "GH_AW_PR_MERGE_SHA=${GH_AW_PR_MERGE_SHA_VALUE}"
         echo "GH_AW_WORKSPACE=${GH_AW_GITHUB_WORKSPACE}"
         echo "GH_AW_BINLOG_LIST<<GH_AW_EOF"
         printf '%s' "$LIST"
