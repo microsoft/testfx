@@ -70,7 +70,7 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  group: build-failure-analysis-${{ github.event.check_run.pull_requests[0].number || inputs.pr-number || github.event.check_run.head_sha || github.run_id }}
+  group: build-failure-analysis-${{ github.event.check_run.pull_requests[0].number || inputs['pr-number'] || github.event.check_run.head_sha || github.run_id }}
   cancel-in-progress: true
 
 timeout-minutes: 30
@@ -133,8 +133,8 @@ jobs:
           CHECK_DETAILS_URL: ${{ github.event.check_run.details_url }}
           CHECK_HEAD_SHA: ${{ github.event.check_run.head_sha }}
           CHECK_PR_NUMBER: ${{ github.event.check_run.pull_requests[0].number }}
-          DISPATCH_BUILD_ID: ${{ inputs.ado-build-id }}
-          DISPATCH_PR_NUMBER: ${{ inputs.pr-number }}
+          DISPATCH_BUILD_ID: ${{ inputs['ado-build-id'] }}
+          DISPATCH_PR_NUMBER: ${{ inputs['pr-number'] }}
         run: |
           # Advisory + best-effort: on any gap emit binlog-found=false and the
           # agent pipeline stays inert.
@@ -248,13 +248,14 @@ jobs:
           mkdir -p /tmp/binlogs
           count=0
           staged_legs=0
+          ai=0
           for name in "${names[@]}"; do
             # `name` is PR-controlled ADO artifact metadata and the
             # `^Logs_Build_` filter only anchors the prefix, so sanitize it
             # before using it in any on-disk path (guards against `/` or `..`
             # traversal); keep the original `name` for the artifacts_json lookup.
             safe_name=$(printf '%s' "${name}" | tr -c 'A-Za-z0-9._-' '_')
-            before=${count}
+            ai=$((ai + 1))
             url=$(printf '%s' "${artifacts_json}" | jq -r --arg n "${name}" '.value[] | select(.name==$n) | .resource.downloadUrl // empty')
             [ -z "${url}" ] && continue
             rm -rf /tmp/ax /tmp/a.zip
@@ -294,28 +295,38 @@ jobs:
               echo "::warning::Cumulative uncompressed budget ${MAX_TOTAL_BYTES} reached at ${name}; stopping extraction."; break
             fi
             TOTAL_BYTES=$((TOTAL_BYTES + UNCOMP))
-            # Extract ONLY `*.binlog` entries with paths junked (`-j`) under a
-            # timeout so a malicious/relative entry (zip-slip) can't escape the
-            # destination and extraction can't run unbounded.
-            timeout 120 unzip -j -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
+            # Refuse the archive if any entry path is absolute or has a `..`
+            # component (defense-in-depth over unzip's own traversal guard),
+            # then extract `*.binlog` entries *preserving* their in-archive
+            # paths (no `-j`) under a fresh dir + timeout, so two binlogs that
+            # share a basename in different folders don't overwrite each other.
+            if unzip -Z1 /tmp/a.zip 2>/dev/null | grep -qE '(^/|(^|/)\.\.(/|$))'; then
+              echo "::warning::Skipping ${name}: archive has a suspicious (absolute or ..) entry path."; continue
+            fi
+            timeout 120 unzip -o /tmp/a.zip '*.binlog' -d /tmp/ax >/dev/null 2>&1 \
               || { echo "::warning::Skipping ${name}: extraction failed or timed out."; continue; }
             i=0
+            leg_staged=0
             while IFS= read -r bl; do
               [ -f "${bl}" ] || continue
-              dest="/tmp/binlogs/${safe_name}"
-              [ ${i} -gt 0 ] && dest="/tmp/binlogs/${safe_name}.${i}"
-              # Only count a leg as staged when the copy actually succeeds —
-              # `set +e` is on, so a failed `cp` must not inflate `count` (which
-              # gates `binlog-found=true` and thus agent activation).
-              if cp "${bl}" "${dest}.binlog"; then
+              # Every destination is uniquely prefixed with the artifact index
+              # (`ai`) and a per-file counter (`i`), so neither a cross-artifact
+              # sanitize collision nor same-basename entries within one archive
+              # can overwrite a previously staged leg's binlog. `safe_name` is
+              # kept only for readability.
+              dest="/tmp/binlogs/${ai}_${i}_${safe_name}.binlog"
+              # Only count a staged binlog when the copy actually succeeds —
+              # `set +e` is on, so a failed `cp` must not inflate the counts.
+              if cp "${bl}" "${dest}"; then
                 count=$((count + 1))
                 i=$((i + 1))
+                leg_staged=1
               else
                 echo "::warning::Failed to stage ${bl}; skipping."
               fi
-            done < <(find /tmp/ax -maxdepth 1 -name '*.binlog' -type f)
+            done < <(find /tmp/ax -type f -name '*.binlog')
             # This leg produced at least one usable binlog.
-            [ "${count}" -gt "${before}" ] && staged_legs=$((staged_legs + 1))
+            [ "${leg_staged}" -eq 1 ] && staged_legs=$((staged_legs + 1))
           done
           echo "Extracted ${count} binlog(s) from ${staged_legs}/${#names[@]} legs into /tmp/binlogs:"
           ls -la /tmp/binlogs || true
