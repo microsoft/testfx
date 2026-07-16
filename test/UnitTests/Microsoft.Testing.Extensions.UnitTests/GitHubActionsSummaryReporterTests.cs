@@ -213,7 +213,14 @@ public sealed class GitHubActionsSummaryReporterTests
 
         public override long Length => throw new NotSupportedException();
 
-        public override long Position { get => 0; set => throw new NotSupportedException(); }
+        public override long Position
+        {
+            get => 0;
+
+            // Position is not settable on this write-only, non-seekable test stream. The discard makes the
+            // otherwise-ignored assigned value explicit so static analysis doesn't flag it.
+            set => _ = value;
+        }
 
         public override void Flush() => throw new IOException("There is not enough space on the disk.");
 
