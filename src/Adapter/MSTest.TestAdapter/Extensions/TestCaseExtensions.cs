@@ -59,8 +59,12 @@ internal static class TestCaseExtensions
         string fullyQualifiedName = testCase.FullyQualifiedName;
 
         // Not using Replace because there can be multiple instances of that string.
-        string name = fullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
-            ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
+        // Avoid allocating $"{testClassName}." by checking length and the separator character directly.
+        string name = testClassName is not null
+            && fullyQualifiedName.Length > testClassName.Length
+            && fullyQualifiedName[testClassName.Length] == '.'
+            && fullyQualifiedName.StartsWith(testClassName, StringComparison.Ordinal)
+            ? fullyQualifiedName.Substring(testClassName.Length + 1)
             : fullyQualifiedName;
 
         return name;
@@ -144,9 +148,21 @@ internal static class TestCaseExtensions
     internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
 
     private static string? GetClassNameWhenFullyQualifiedNameStartsWith(this TestCase testCase, string? testClassName)
-        => testClassName is not null && testCase.FullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
+    {
+        if (testClassName is null)
+        {
+            return null;
+        }
+
+        string fullyQualifiedName = testCase.FullyQualifiedName;
+
+        // Avoid allocating $"{testClassName}." by checking length and the separator character directly.
+        return fullyQualifiedName.Length > testClassName.Length
+            && fullyQualifiedName[testClassName.Length] == '.'
+            && fullyQualifiedName.StartsWith(testClassName, StringComparison.Ordinal)
             ? testClassName
             : null;
+    }
 
     internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 
