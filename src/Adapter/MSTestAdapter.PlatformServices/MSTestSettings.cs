@@ -83,7 +83,7 @@ internal sealed partial class MSTestSettings
     public bool CaptureDebugTraces => OutputCaptureMode != TestOutputCaptureMode.None;
 
     /// <summary>
-    /// Gets a value indicating how Console/Debug/Trace output produced during test execution is handled.
+    /// Gets a value indicating how Console/Trace output produced during test execution is handled.
     /// </summary>
     internal TestOutputCaptureMode OutputCaptureMode { get; private set; }
 

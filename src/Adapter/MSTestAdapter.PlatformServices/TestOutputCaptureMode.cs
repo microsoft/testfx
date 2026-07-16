@@ -4,12 +4,12 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
 /// <summary>
-/// Controls how Console/Debug/Trace output produced while a test is running is handled.
+/// Controls how Console/Trace output produced while a test is running is handled.
 /// </summary>
 internal enum TestOutputCaptureMode
 {
     /// <summary>
-    /// Output is not captured into the test result. Console/Debug/Trace writes are left untouched and flow
+    /// Output is not captured into the test result. Console/Trace writes are left untouched and flow
     /// to their normal destination (equivalent to the legacy <c>CaptureTraceOutput=false</c> setting).
     /// </summary>
     None,

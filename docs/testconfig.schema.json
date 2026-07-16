@@ -166,7 +166,7 @@
           "additionalProperties": false,
           "properties": {
             "captureTrace": {
-              "description": "Controls how Console, Debug and Trace output produced during test execution is handled. Accepts a boolean (true = 'Result', false = 'None') for backward compatibility, or one of the modes (case-insensitive): 'None' (do not capture; output flows to the console as usual), 'Result' (capture into the test result, the default), 'Live' (capture into the test result and additionally echo it live to the console as the test runs, similar to xUnit's showLiveOutput). Defaults to 'Result'.",
+              "description": "Controls how Console and Trace output produced during test execution is handled. Accepts a boolean (true = 'Result', false = 'None') for backward compatibility, or one of the modes (case-insensitive): 'None' (do not capture; output flows to the console as usual), 'Result' (capture into the test result, the default), 'Live' (capture into the test result and additionally echo it live to the console as the test runs, similar to xUnit's showLiveOutput). Defaults to 'Result'.",
               "oneOf": [
                 { "type": "boolean" },
                 { "type": "string", "pattern": "^([Nn][Oo][Nn][Ee]|[Rr][Ee][Ss][Uu][Ll][Tt]|[Ll][Ii][Vv][Ee])$" }
