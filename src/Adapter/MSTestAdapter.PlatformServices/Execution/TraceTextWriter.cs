@@ -20,9 +20,11 @@ internal sealed class TraceTextWriter : TextWriter
         if (TestContext.Current as TestContextImplementation is { } testContext)
         {
             testContext.WriteTrace(value);
-        }
 
-        _liveEchoTarget?.Write(value);
+            // Only echo live while a test is running. Trace emitted by the framework/adapter during host
+            // setup or between tests must not be surfaced as a test's live output.
+            _liveEchoTarget?.Write(value);
+        }
     }
 
     public override void Write(string? value)
@@ -30,8 +32,7 @@ internal sealed class TraceTextWriter : TextWriter
         if (TestContext.Current as TestContextImplementation is { } testContext)
         {
             testContext.WriteTrace(value);
+            _liveEchoTarget?.Write(value);
         }
-
-        _liveEchoTarget?.Write(value);
     }
 }
