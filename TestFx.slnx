@@ -102,12 +102,8 @@
     <Project Path="test/IntegrationTests/TestAssets/DataSourceTestProject/DataSourceTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/DeploymentTestProject.Never/DeploymentTestProject.Never.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/DeploymentTestProject.PreserveNewest/DeploymentTestProject.PreserveNewest.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx64Debug/DesktopTestProjectx64Debug.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx64Release/DesktopTestProjectx64Release.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx86Debug/DesktopTestProjectx86Debug.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx86Release/DesktopTestProjectx86Release.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/DiscoverInternalsProject/DiscoverInternalsProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DoNotParallelizeTestProject/DoNotParallelizeTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/DynamicDataTestProject/DynamicDataTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/FixturesTestProject/FixturesTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/FSharpTestProject/FSharpTestProject.fsproj" />
@@ -115,8 +111,6 @@
     <Project Path="test/IntegrationTests/TestAssets/HierarchyProject/HierarchyProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/LibProjectReferencedByDataSourceTest/LibProjectReferencedByDataSourceTest.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/OutputTestProject/OutputTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/ParallelTestClass/ParallelClassesTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/ParallelTestMethods/ParallelMethodsTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/SampleFrameworkExtensions/SampleFrameworkExtensions.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/SampleProjectForAssemblyResolution/SampleProjectForAssemblyResolution.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/SuiteLifeCycleTestProject/SuiteLifeCycleTestProject.csproj" />

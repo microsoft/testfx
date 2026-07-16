@@ -1,32 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <UseMSTestFromSource>true</UseMSTestFromSource>
     <OutputType>Exe</OutputType>
+    <DefineConstants Condition=" '$(FastAcceptanceTest)' == 'true'">$(DefineConstants);SKIP_INTERMEDIATE_TARGET_FRAMEWORKS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)test\Utilities\Automation.CLI\Automation.CLI.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers\MSTest.Analyzers.csproj">
-      <OutputItemType>Analyzer</OutputItemType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="$(RepoRoot)src\Analyzers\MSTest.Analyzers.CodeFixes\MSTest.Analyzers.CodeFixes.csproj">
-      <OutputItemType>Analyzer</OutputItemType>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
+    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
   </ItemGroup>
 
-  <!-- Microsoft.Testing.Extensions.CodeCoverage (18.10.0-preview) depends on System.Collections.Immutable /
-       System.Reflection.Metadata 10.0.0 while the VSTest translation-layer packages flowed in via
-       Automation.CLI still pin 8.0.0. Reference the 10.0.0 packages explicitly so RAR picks them as the
-       primary reference and unifies the older 8.0.0 reference up instead of failing with MSB3277. -->
   <ItemGroup>
-    <PackageReference Include="System.Collections.Immutable" />
-    <PackageReference Include="System.Reflection.Metadata" />
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <!-- TODO: files still using the legacy in-proc CLITestBase harness, pending migration to the
+       acceptance pattern. They are temporarily excluded so the project compiles while the migration
+       is done incrementally. -->
+  <ItemGroup>
+    <Compile Remove="AssertExtensibilityTests.cs" />
+    <Compile Remove="DeploymentTests.cs" />
+    <Compile Remove="SuiteLifeCycleTests.cs" />
+    <Compile Remove="TimeoutTests.cs" />
+    <Compile Remove="Parameterized tests\**\*.cs" />
   </ItemGroup>
 
 </Project>

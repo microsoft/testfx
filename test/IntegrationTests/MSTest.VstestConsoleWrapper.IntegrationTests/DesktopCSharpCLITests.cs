@@ -1,94 +1,154 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+/// <summary>
+/// Acceptance-style rewrite of the former CLITestBase-based desktop tests. Instead of referencing
+/// pre-built desktop test-asset projects, the test asset is generated inline and built for every
+/// (platform, configuration) combination, then executed out-of-process through the MSTest runner
+/// (Microsoft.Testing.Platform) host.
+/// </summary>
 [TestClass]
-public class DesktopCSharpCLITests : CLITestBase
+public sealed class DesktopCSharpCLITests
 {
-    private const string X86DebugTestProject = "DesktopTestProjectx86Debug";
-    private const string X64DebugTestProject = "DesktopTestProjectx64Debug";
-    private const string X86ReleaseTestProject = "DesktopTestProjectx86Release";
-    private const string X64ReleaseTestProject = "DesktopTestProjectx64Release";
-    private const string RunSetting =
-        """
-        <RunSettings>
-          <RunConfiguration>
-            <TargetPlatform>x64</TargetPlatform>
-          </RunConfiguration>
-        </RunSettings>
-        """;
+    private static readonly string[] Platforms = ["x86", "x64"];
 
-    [TestMethod]
-    public void DiscoverTestsx86Debug()
+    private static TestAssetFixture AssetFixture { get; set; } = default!;
+
+    public TestContext TestContext { get; set; } = default!;
+
+    [ClassInitialize]
+    public static async Task ClassInitialize(TestContext testContext)
     {
-        string[] sources = [X86DebugTestProject];
-        DoDiscoveryAndValidateDiscoveredTests(sources);
+        AssetFixture = new TestAssetFixture();
+        await AssetFixture.InitializeAsync(testContext.CancellationToken);
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+        => AssetFixture.Dispose();
+
+    public static IEnumerable<object[]> PlatformAndConfiguration()
+    {
+        foreach (string platform in Platforms)
+        {
+            foreach (BuildConfiguration configuration in new[] { BuildConfiguration.Debug, BuildConfiguration.Release })
+            {
+                yield return [platform, configuration];
+            }
+        }
     }
 
     [TestMethod]
-    public void DiscoverTestsx64Debug()
+    [DynamicData(nameof(PlatformAndConfiguration))]
+    public async Task DiscoverAllTests(string platform, BuildConfiguration configuration)
     {
-        string[] sources = [X64DebugTestProject];
-        DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
+        TestHost testHost = AssetFixture.GetTestHost(platform, configuration);
+
+        TestHostResult result = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("PassingTest", result.StandardOutput);
+        Assert.Contains("FailingTest", result.StandardOutput);
+        Assert.Contains("SkippingTest", result.StandardOutput);
     }
 
     [TestMethod]
-    public void DiscoverTestsx86Release()
+    [DynamicData(nameof(PlatformAndConfiguration))]
+    public async Task RunAllTests(string platform, BuildConfiguration configuration)
     {
-        string[] sources = [X86ReleaseTestProject];
-        DoDiscoveryAndValidateDiscoveredTests(sources);
+        TestHost testHost = AssetFixture.GetTestHost(platform, configuration);
+
+        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+
+        // PassingTest passes, FailingTest fails, SkippingTest is skipped ([Ignore]).
+        Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("Test run summary: Failed!", result.StandardOutput);
+        Assert.Contains("failed: 1", result.StandardOutput);
+        Assert.Contains("succeeded: 1", result.StandardOutput);
+        Assert.Contains("skipped: 1", result.StandardOutput);
     }
+
+    private sealed class TestAssetFixture : IDisposable
+    {
+        private readonly TempDirectory _tempDirectory = new();
+        private readonly Dictionary<string, TestAsset> _assetsByPlatform = new();
+
+        private static string ProjectName(string platform) => $"DesktopTestProject{platform}";
+
+        public TestHost GetTestHost(string platform, BuildConfiguration configuration)
+            => TestHost.LocateFrom(_assetsByPlatform[platform].TargetAssetPath, ProjectName(platform), "net462", buildConfiguration: configuration);
+
+        public async Task InitializeAsync(CancellationToken cancellationToken)
+        {
+            foreach (string platform in Platforms)
+            {
+                string projectName = ProjectName(platform);
+                string code = SourceCode
+                    .PatchCodeWithReplace("$ProjectName$", projectName)
+                    .PatchCodeWithReplace("$Platform$", platform)
+                    .PatchCodeWithReplace("$MSTestVersion$", AcceptanceVersions.MSTestVersion);
+
+                TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, code, _tempDirectory);
+                await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Debug", callerMemberName: $"{projectName}_Debug", cancellationToken: cancellationToken);
+                await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", callerMemberName: $"{projectName}_Release", cancellationToken: cancellationToken);
+                _assetsByPlatform.Add(platform, asset);
+            }
+        }
+
+        public void Dispose()
+        {
+            foreach (TestAsset asset in _assetsByPlatform.Values)
+            {
+                asset.Dispose();
+            }
+
+            _tempDirectory.Dispose();
+        }
+
+        private const string SourceCode = """
+#file $ProjectName$.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFramework>net462</TargetFramework>
+    <PlatformTarget>$Platform$</PlatformTarget>
+    <AssemblyName>$ProjectName$</AssemblyName>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace SampleUnitTestProject;
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void PassingTest() => Assert.AreEqual(2, 2);
 
     [TestMethod]
-    public void DiscoverTestsx64Release()
-    {
-        string[] sources = [X64ReleaseTestProject];
-        DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
-    }
+    public void FailingTest() => Assert.AreEqual(2, 3);
 
+    [Ignore]
     [TestMethod]
-    public void RunAllTestsx86Debug()
+    public void SkippingTest()
     {
-        string[] sources = [X86DebugTestProject];
-        RunAllTestsAndValidateResults(sources);
     }
-
-    [TestMethod]
-    public void RunAllTestsx64Debug()
-    {
-        string[] sources = [X64DebugTestProject];
-        RunAllTestsAndValidateResults(sources, RunSetting);
-    }
-
-    [TestMethod]
-    public void RunAllTestsx86Release()
-    {
-        string[] sources = [X86ReleaseTestProject];
-        RunAllTestsAndValidateResults(sources);
-    }
-
-    [TestMethod]
-    public void RunAllTestsx64Release()
-    {
-        string[] sources = [X64ReleaseTestProject];
-        RunAllTestsAndValidateResults(sources, RunSetting);
-    }
-
-    private void DoDiscoveryAndValidateDiscoveredTests(string[] sources, string runSettings = "")
-    {
-        InvokeVsTestForDiscovery(sources, runSettings);
-        string[] listOfTests = ["SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest"];
-        ValidateDiscoveredTests(listOfTests);
-    }
-
-    private void RunAllTestsAndValidateResults(string[] sources, string runSettings = "")
-    {
-        InvokeVsTestForExecution(sources, runSettings);
-        ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest");
-        ValidateFailedTests(false, "SampleUnitTestProject.UnitTest1.FailingTest");
-        ValidateSkippedTests("SampleUnitTestProject.UnitTest1.SkippingTest");
+}
+""";
     }
 }

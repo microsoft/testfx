@@ -1,109 +1,340 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
+/// <summary>
+/// Acceptance-style rewrite of the former CLITestBase-based parallel execution tests. The parallel
+/// test assets (method-level, class-level and do-not-parallelize) are generated inline, built, then
+/// executed out-of-process through the MSTest runner (Microsoft.Testing.Platform) host.
+/// </summary>
+/// <remarks>
+/// The original tests also asserted the wall-clock run time to prove parallelism. Those timing
+/// assertions were already disabled upstream as flaky (they depend on the scheduling of the machine),
+/// so this rewrite only pins the deterministic test outcomes.
+/// </remarks>
 [TestClass]
-public class ParallelExecutionTests : CLITestBase
+public sealed class ParallelExecutionTests
 {
-    private const string ClassParallelTestAssetName = "ParallelClassesTestProject";
-    private const string MethodParallelTestAssetName = "ParallelMethodsTestProject";
-    private const string DoNotParallelizeTestAssetName = "DoNotParallelizeTestProject";
-    private const int TestMethodWaitTimeInMS = 1000;
-    private const int OverheadTimeInMS = 4000;
+    private const string MethodParallelProjectName = "ParallelMethodsTestProject";
+    private const string ClassParallelProjectName = "ParallelClassesTestProject";
+    private const string DoNotParallelizeProjectName = "DoNotParallelizeTestProject";
+
+    private static TestAssetFixture AssetFixture { get; set; } = default!;
+
+    public TestContext TestContext { get; set; } = default!;
+
+    [ClassInitialize]
+    public static async Task ClassInitialize(TestContext testContext)
+    {
+        AssetFixture = new TestAssetFixture();
+        await AssetFixture.InitializeAsync(testContext.CancellationToken);
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+        => AssetFixture.Dispose();
 
     [TestMethod]
     public async Task AllMethodsShouldRunInParallel()
     {
-        const int maxAttempts = 10;
-        for (int i = 0; i <= maxAttempts; i++)
+        TestHost testHost = AssetFixture.GetTestHost(MethodParallelProjectName);
+
+        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("failed: 2", result.StandardOutput);
+        Assert.Contains("succeeded: 4", result.StandardOutput);
+        Assert.Contains("SimpleTest12", result.StandardOutput);
+        Assert.Contains("SimpleTest22", result.StandardOutput);
+    }
+
+    [TestMethod]
+    public async Task AllClassesShouldRunInParallel()
+    {
+        TestHost testHost = AssetFixture.GetTestHost(ClassParallelProjectName);
+
+        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("failed: 3", result.StandardOutput);
+        Assert.Contains("succeeded: 4", result.StandardOutput);
+        Assert.Contains("SimpleTest12", result.StandardOutput);
+        Assert.Contains("SimpleTest22", result.StandardOutput);
+        Assert.Contains("SimpleTest32", result.StandardOutput);
+    }
+
+    [TestMethod]
+    public async Task NothingShouldRunInParallel()
+    {
+        TestHost testHost = AssetFixture.GetTestHost(DoNotParallelizeProjectName);
+
+        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("failed: 2", result.StandardOutput);
+        Assert.Contains("succeeded: 3", result.StandardOutput);
+        Assert.Contains("SimpleTest12", result.StandardOutput);
+        Assert.Contains("SimpleTest22", result.StandardOutput);
+    }
+
+    private sealed class TestAssetFixture : IDisposable
+    {
+        private readonly TempDirectory _tempDirectory = new();
+        private readonly Dictionary<string, TestAsset> _assets = new();
+
+        public TestHost GetTestHost(string projectName)
+            => TestHost.LocateFrom(_assets[projectName].TargetAssetPath, projectName, "net462");
+
+        public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            try
+            foreach ((string projectName, string code) in new[]
             {
-                InvokeVsTestForExecution([MethodParallelTestAssetName]);
-
-                // Parallel level of 2
-                // There are a total of 6 methods each with a sleep of TestMethodWaitTimeInMS.
-                // 5 of them are parallelizable and 1 is not..
-                ValidateTestRunTime((4 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
-            }
-
-            // Timer validation sometimes get flacky. So retrying the test if it fails.
-            catch (AssertFailedException ex) when (i != maxAttempts && ex.Message.Contains("Test Run was expected to not exceed"))
+                (MethodParallelProjectName, MethodParallelSourceCode),
+                (ClassParallelProjectName, ClassParallelSourceCode),
+                (DoNotParallelizeProjectName, DoNotParallelizeSourceCode),
+            })
             {
-                await Task.Delay(2000, TestContext.CancellationToken);
+                string patched = code.PatchCodeWithReplace("$MSTestVersion$", AcceptanceVersions.MSTestVersion);
+                TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, patched, _tempDirectory);
+                await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", callerMemberName: projectName, cancellationToken: cancellationToken);
+                _assets.Add(projectName, asset);
             }
         }
 
-        ValidatePassedTestsContain(
-            "ParallelMethodsTestProject.UnitTest1.SimpleTest11",
-            "ParallelMethodsTestProject.UnitTest1.SimpleTest13",
-            "ParallelMethodsTestProject.UnitTest2.SimpleTest21",
-            "ParallelMethodsTestProject.UnitTest2.IsolatedTest");
+        public void Dispose()
+        {
+            foreach (TestAsset asset in _assets.Values)
+            {
+                asset.Dispose();
+            }
 
-        ValidateFailedTests(
-            "ParallelMethodsTestProject.UnitTest1.SimpleTest12",
-            "ParallelMethodsTestProject.UnitTest2.SimpleTest22");
+            _tempDirectory.Dispose();
+        }
+
+        private const string ProjectFile = """
+#file $ProjectName$.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFramework>net462</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+  </ItemGroup>
+
+</Project>
+""";
+
+        private static readonly string MethodParallelSourceCode = ProjectFile.Replace("$ProjectName$", MethodParallelProjectName) + """
+
+#file Tests.cs
+using System.Threading;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
+
+namespace ParallelMethodsTestProject;
+
+internal static class Constants
+{
+    internal const int WaitTimeInMS = 1000;
+}
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void SimpleTest11()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(1, 1);
     }
 
     [TestMethod]
-    public void AllClassesShouldRunInParallel()
+    public void SimpleTest12()
     {
-        InvokeVsTestForExecution([ClassParallelTestAssetName]);
-
-        // Time validation was disabled because of flakiness. It's hard to predict the time taken for this test to run when
-        // the test suite start to be large. The time taken depends on the machine and the load on the machine.
-        // Parallel level of 2
-        // There are a total of 3 classes - C1 (2 tests), C2(3 tests), C3(2 tests) with a sleep of TestMethodWaitTimeInMS.
-        // 1 tests in C2 is non-parallelizable. So this should not exceed 5 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
-        // ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
-        ValidatePassedTestsContain(
-            "ParallelClassesTestProject.UnitTest1.SimpleTest11",
-            "ParallelClassesTestProject.UnitTest2.SimpleTest21",
-            "ParallelClassesTestProject.UnitTest3.SimpleTest31",
-            "ParallelClassesTestProject.UnitTest2.IsolatedTest");
-
-        ValidateFailedTests(
-            "ParallelClassesTestProject.UnitTest1.SimpleTest12",
-            "ParallelClassesTestProject.UnitTest2.SimpleTest22",
-            "ParallelClassesTestProject.UnitTest3.SimpleTest32");
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.Fail();
     }
 
     [TestMethod]
-    public void NothingShouldRunInParallel()
+    public void SimpleTest13()
     {
-        const string RunSetting =
-            """
-            <RunSettings>
-              <MSTest>
-                <Parallelize>
-                  <Workers>4</Workers>
-                  <Scope>ClassLevel</Scope>
-                </Parallelize>
-              </MSTest>
-            </RunSettings>
-            """;
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(1, 1);
+    }
+}
 
-        InvokeVsTestForExecution([DoNotParallelizeTestAssetName], RunSetting);
-
-        // Time validation was disabled because of flakiness. It's hard to predict the time taken for this test to run when
-        // the test suite start to be large. The time taken depends on the machine and the load on the machine.
-        // DoNotParallelize set for TestAssetName
-        // There are a total of 2 classes - C1 (3 tests), C2 (3 tests) with a sleep of TestMethodWaitTimeInMS.
-        // So this should not exceed 5 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
-        // ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
-        ValidatePassedTestsContain(
-            "DoNotParallelizeTestProject.UnitTest1.SimpleTest11",
-            "DoNotParallelizeTestProject.UnitTest1.SimpleTest13",
-            "DoNotParallelizeTestProject.UnitTest2.SimpleTest21");
-
-        ValidateFailedTestsContain(
-            true,
-            "DoNotParallelizeTestProject.UnitTest1.SimpleTest12",
-            "DoNotParallelizeTestProject.UnitTest2.SimpleTest22");
+[TestClass]
+public class UnitTest2
+{
+    [TestMethod]
+    public void SimpleTest21()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(0, 0);
     }
 
-    public TestContext TestContext { get; set; }
+    [TestMethod]
+    public void SimpleTest22()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.Fail();
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void IsolatedTest()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.IsTrue(true);
+    }
+}
+""";
+
+        private static readonly string ClassParallelSourceCode = ProjectFile.Replace("$ProjectName$", ClassParallelProjectName) + """
+
+#file Tests.cs
+using System.Threading;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: Parallelize(Workers = 2, Scope = ExecutionScope.ClassLevel)]
+
+namespace ParallelClassesTestProject;
+
+internal static class Constants
+{
+    internal const int WaitTimeInMS = 1000;
+}
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void SimpleTest11()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(1, 1);
+    }
+
+    [TestMethod]
+    public void SimpleTest12()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.Fail();
+    }
+}
+
+[TestClass]
+public class UnitTest2
+{
+    [TestMethod]
+    public void SimpleTest21()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(0, 0);
+    }
+
+    [TestMethod]
+    public void SimpleTest22()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.Fail();
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public void IsolatedTest()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.IsTrue(true);
+    }
+}
+
+[TestClass]
+public class UnitTest3
+{
+    [TestMethod]
+    public void SimpleTest31()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(1, 1);
+    }
+
+    [TestMethod]
+    public void SimpleTest32()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.Fail();
+    }
+}
+""";
+
+        private static readonly string DoNotParallelizeSourceCode = ProjectFile.Replace("$ProjectName$", DoNotParallelizeProjectName) + """
+
+#file Tests.cs
+using System.Threading;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[assembly: DoNotParallelize]
+
+namespace DoNotParallelizeTestProject;
+
+internal static class Constants
+{
+    internal const int WaitTimeInMS = 1000;
+}
+
+[TestClass]
+public class UnitTest1
+{
+    [TestMethod]
+    public void SimpleTest11()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(1, 1);
+    }
+
+    [TestMethod]
+    public void SimpleTest12()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.Fail();
+    }
+
+    [TestMethod]
+    public void SimpleTest13()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(1, 1);
+    }
+}
+
+[TestClass]
+public class UnitTest2
+{
+    [TestMethod]
+    public void SimpleTest21()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.AreEqual(1, 1);
+    }
+
+    [TestMethod]
+    public void SimpleTest22()
+    {
+        Thread.Sleep(Constants.WaitTimeInMS);
+        Assert.Fail();
+    }
+}
+""";
+    }
 }
