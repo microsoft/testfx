@@ -690,4 +690,79 @@ public sealed class MemberConditionShouldBeValidAnalyzerTests
                 .WithLocation(0)
                 .WithArguments("Conditions", "Missing2"));
     }
+
+    [TestMethod]
+    public async Task WhenMemberNameIsEmptyString_NoDiagnostic()
+    {
+        // The analyzer's ValidateMember calls string.IsNullOrWhiteSpace and returns early
+        // for empty/whitespace member names without reporting a diagnostic; the runtime
+        // constructor already throws ArgumentException for such values.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsReady => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Conditions), "")]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMemberNameIsWhitespace_NoDiagnostic()
+    {
+        // Same early-return path as empty string: whitespace-only names are skipped.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsReady => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Conditions), "   ")]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenMemberNameIsEmptyInParamsArray_NoDiagnostic()
+    {
+        // Empty strings in the params array portion are also skipped; only the valid member
+        // name "IsReady" is resolved (and it resolves correctly → no diagnostic).
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public static class Conditions
+            {
+                public static bool IsReady => true;
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [MemberCondition(typeof(Conditions), "IsReady", "")]
+                [TestMethod]
+                public void TestMethod() { }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
