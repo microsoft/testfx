@@ -3,17 +3,23 @@
 
 using System.Collections.Immutable;
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
-namespace MSTest.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class DynamicDataTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class DynamicDataTests : AcceptanceTestBase<DynamicDataTests.TestAssetFixture>
 {
     private const string TestAssetName = "DynamicDataTestProject";
+
+    private static string GetAssetFullPath(string _) => AssetFixture.AssemblyPath;
 
     [TestMethod]
     public async Task ExecuteDynamicDataTests()
@@ -133,5 +139,21 @@ public class DynamicDataTests : CLITestBase
             "TestMethodSourceOnCurrentType (1,\"a\")",
             "TestMethodSourceOnCurrentType (2,\"b\")");
         VerifyE2E.FailedTestCount(testResults, 0);
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAssetName;
+
+        protected override string SourceFiles
+            => GeneratedAssetSource.FromSharedDirectories(
+                @"test\IntegrationTests\TestAssets\DynamicDataTestProject",
+                @"test\IntegrationTests\TestAssets\LibProjectReferencedByDataSourceTest");
+
+        protected override string AdditionalProjectItems => $"""
+            <ItemGroup>
+              <PackageReference Include="Newtonsoft.Json" Version="{GeneratedAssetSource.GetPackageVersion("Newtonsoft.Json")}" />
+            </ItemGroup>
+            """;
     }
 }

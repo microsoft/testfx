@@ -1,14 +1,20 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.IntegrationTests;
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
+
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class DataSourceTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class AdapterDataSourceTests : AcceptanceTestBase<AdapterDataSourceTests.TestAssetFixture>
 {
     private const string TestAssetName = "DataSourceTestProject";
+
+    private static string GetAssetFullPath(string _) => AssetFixture.AssemblyPath;
 
 #pragma warning disable IDE0051 // Remove unused private members
     [TestMethod]
@@ -32,5 +38,22 @@ public class DataSourceTests : CLITestBase
             testResults,
             "CsvTestMethod (Data Row 1)",
             "CsvTestMethod (Data Row 3)");
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAssetName;
+
+        protected override string SourceFiles
+            => GeneratedAssetSource.FromSharedDirectories(
+                @"test\IntegrationTests\TestAssets\DataSourceTestProject");
+
+        protected override string AdditionalProjectItems => """
+            <ItemGroup>
+              <None Update="a.csv">
+                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+              </None>
+            </ItemGroup>
+            """;
     }
 }

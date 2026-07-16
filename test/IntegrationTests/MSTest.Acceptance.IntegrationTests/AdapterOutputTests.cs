@@ -1,15 +1,19 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
-namespace MSTest.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class OutputTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class AdapterOutputTests : AcceptanceTestBase<AdapterOutputTests.TestAssetFixture>
 {
     private const string TestAssetName = "OutputTestProject";
 
@@ -27,16 +31,16 @@ public class OutputTests : CLITestBase
         // This allows us to capture output from tasks even when they are running in parallel.
 
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
         Assert.HasCount(3, testCases);
-        CollectionAssert.AllItemsAreNotNull(testCases, "All test cases should be non-null.");
+        Assert.AreAllNotNull(testCases, "All test cases should be non-null.");
 
         System.Collections.Immutable.ImmutableArray<TestResult> testResults = await RunTestsAsync(testCases);
         Assert.HasCount(3, testResults);
-        CollectionAssert.AllItemsAreNotNull(testResults, "All test results should be non-null.");
+        Assert.AreAllNotNull(testResults, "All test results should be non-null.");
 
         // Assert
         // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
@@ -98,11 +102,11 @@ public class OutputTests : CLITestBase
         var failureMessageBuilder = new StringBuilder();
         foreach (TestResult testResult in testResults)
         {
-            failureMessageBuilder.AppendLine($"TestResult: {testResult.DisplayName}");
+            failureMessageBuilder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"TestResult: {testResult.DisplayName}");
             foreach (TestResultMessage message in testResult.Messages)
             {
-                failureMessageBuilder.AppendLine($"  {message.Category}:");
-                failureMessageBuilder.AppendLine($"    {message.Text}:");
+                failureMessageBuilder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"  {message.Category}:");
+                failureMessageBuilder.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"    {message.Text}:");
             }
 
             failureMessageBuilder.AppendLine();
@@ -111,5 +115,12 @@ public class OutputTests : CLITestBase
         string becauseMessage = failureMessageBuilder.ToString();
         Assert.Contains("ClassInitialize", output, becauseMessage);
         Assert.Contains("ClassCleanup", output, becauseMessage);
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAssetName;
+
+        protected override string SourceFiles => GeneratedAssetSource.Output;
     }
 }

@@ -1,12 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.IntegrationTests;
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
+
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class TestCategoriesFromTestDataRowTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class TestCategoriesFromTestDataRowTests : AcceptanceTestBase<TestCategoriesFromTestDataRowTests.TestAssetFixture>
 {
     private const string TestAssetName = "TestCategoriesFromTestDataRowProject";
 
@@ -14,7 +18,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public void TestCategoriesFromTestDataRow_ShouldDiscoverTestsWithIntegrationCategory()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act - Filter by "Integration" category which should come from TestDataRow
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~Integration");
@@ -30,7 +34,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public void TestCategoriesFromTestDataRow_ShouldDiscoverTestsWithUnitCategory()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act - Filter by "Unit" category which should come from TestDataRow
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~Unit");
@@ -46,7 +50,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public void TestCategoriesFromTestDataRow_ShouldCombineMethodAndDataCategories()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act - Filter by "MethodLevel" category (method attribute)
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> methodLevelTests = DiscoverTests(assemblyPath, "TestCategory~MethodLevel");
@@ -69,7 +73,7 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
     public async Task TestCategoriesFromTestDataRow_ShouldExecuteCorrectly()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestCategoriesFromTestDataRowTests");
@@ -85,5 +89,12 @@ public class TestCategoriesFromTestDataRowTests : CLITestBase
             "Test with method and data categories");
 
         VerifyE2E.FailedTestCount(testResults, 0);
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAssetName;
+
+        protected override string SourceFiles => GeneratedAssetSource.TestCategories;
     }
 }

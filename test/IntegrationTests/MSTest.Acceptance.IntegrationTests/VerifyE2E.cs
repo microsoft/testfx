@@ -5,13 +5,10 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
-namespace MSTest.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 public static class VerifyE2E
 {
-    public static void ContainsTestsDiscovered(IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)
-        => ContainsTestsDiscovered(actualTests, expectedTests);
-
     public static void PassedTestCount(IEnumerable<TestResult> actual, int expectedCount)
         => AssertOutcomeCount(actual, TestOutcome.Passed, expectedCount);
 
@@ -43,7 +40,7 @@ public static class VerifyE2E
     {
         if (matchCount)
         {
-            Assert.AreEqual(expectedTests.Count(), discoveredTests.Count());
+            Assert.HasCount(expectedTests.Count(), discoveredTests);
         }
 
         foreach (string test in expectedTests)

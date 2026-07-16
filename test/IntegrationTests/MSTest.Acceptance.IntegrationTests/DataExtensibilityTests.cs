@@ -3,17 +3,23 @@
 
 using System.Collections.Immutable;
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
-namespace MSTest.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class DataExtensibilityTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class DataExtensibilityTests : AcceptanceTestBase<DataExtensibilityTests.TestAssetFixture>
 {
     private const string TestAssetName = "FxExtensibilityTestProject";
+
+    private static string GetAssetFullPath(string _) => AssetFixture.AssemblyPath;
 
     /*
         Add tests for:
@@ -136,5 +142,15 @@ public class DataExtensibilityTests : CLITestBase
             "CustomDisableExpansionTestDataSourceTestMethod1 (4,5,6)");
 
         VerifyE2E.TestsFailed(testResults);
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAssetName;
+
+        protected override string SourceFiles
+            => GeneratedAssetSource.FromSharedDirectories(
+                @"test\IntegrationTests\TestAssets\FxExtensibilityTestProject",
+                @"samples\FxExtensibility");
     }
 }
