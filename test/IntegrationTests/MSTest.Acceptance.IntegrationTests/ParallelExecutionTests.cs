@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.TestInfrastructure;
 
@@ -12,11 +14,12 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// executed out-of-process through the MSTest runner (Microsoft.Testing.Platform) host.
 /// </summary>
 /// <remarks>
-/// The original tests also asserted the wall-clock run time to prove parallelism. Those timing
-/// assertions were already disabled upstream as flaky (they depend on the scheduling of the machine),
-/// so this rewrite only pins the deterministic test outcomes.
+/// The generated assets record their maximum concurrent test count. This deterministically verifies
+/// that method-level and class-level parallelization overlap tests while <see cref="DoNotParallelizeAttribute"/>
+/// keeps execution serial, without relying on a flaky wall-clock threshold.
 /// </remarks>
 [TestClass]
+[OSCondition(OperatingSystems.Windows)]
 public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutionTests.TestAssetFixture>
 {
     private const string MethodParallelProjectName = "ParallelMethodsTestProject";
@@ -37,6 +40,7 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         Assert.Contains("succeeded: 4", result.StandardOutput);
         Assert.Contains("SimpleTest12", result.StandardOutput);
         Assert.Contains("SimpleTest22", result.StandardOutput);
+        Assert.IsGreaterThanOrEqualTo(2, AssetFixture.ReadMaximumConcurrency(MethodParallelProjectName));
     }
 
     [TestMethod]
@@ -52,6 +56,7 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         Assert.Contains("SimpleTest12", result.StandardOutput);
         Assert.Contains("SimpleTest22", result.StandardOutput);
         Assert.Contains("SimpleTest32", result.StandardOutput);
+        Assert.IsGreaterThanOrEqualTo(2, AssetFixture.ReadMaximumConcurrency(ClassParallelProjectName));
     }
 
     [TestMethod]
@@ -59,13 +64,15 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
     {
         TestHost testHost = AssetFixture.GetTestHost(DoNotParallelizeProjectName);
 
-        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
+        string settingsPath = AssetFixture.GetRunSettingsPath(DoNotParallelizeProjectName);
+        TestHostResult result = await testHost.ExecuteAsync($"--settings \"{settingsPath}\" --output detailed", cancellationToken: TestContext.CancellationToken);
 
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
         Assert.Contains("failed: 2", result.StandardOutput);
         Assert.Contains("succeeded: 3", result.StandardOutput);
         Assert.Contains("SimpleTest12", result.StandardOutput);
         Assert.Contains("SimpleTest22", result.StandardOutput);
+        Assert.AreEqual(1, AssetFixture.ReadMaximumConcurrency(DoNotParallelizeProjectName));
     }
 
     public sealed class TestAssetFixture : ITestAssetFixture
@@ -75,6 +82,15 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
 
         public TestHost GetTestHost(string projectName)
             => TestHost.LocateFrom(_assets[projectName].TargetAssetPath, projectName, "net462");
+
+        public string GetRunSettingsPath(string projectName)
+            => Path.Combine(_assets[projectName].TargetAssetPath, "parallel.runsettings");
+
+        public int ReadMaximumConcurrency(string projectName)
+        {
+            string probePath = Path.Combine(GetTestHost(projectName).DirectoryName, "ParallelProbe.txt");
+            return int.Parse(File.ReadAllText(probePath), CultureInfo.InvariantCulture);
+        }
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
@@ -121,7 +137,48 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
 </Project>
 """;
 
-        private static readonly string MethodParallelSourceCode = ProjectFile.Replace("$ProjectName$", MethodParallelProjectName) + """
+        private const string ParallelProbeSourceCode = """
+
+#file ParallelProbe.cs
+using System;
+using System.Globalization;
+using System.IO;
+using System.Threading;
+
+internal static class ParallelProbe
+{
+    private static int s_active;
+    private static int s_maximum;
+
+    public static void Run(Action assertion)
+    {
+        int active = Interlocked.Increment(ref s_active);
+        int maximum;
+        while (active > (maximum = Volatile.Read(ref s_maximum))
+            && Interlocked.CompareExchange(ref s_maximum, active, maximum) != maximum)
+        {
+        }
+
+        try
+        {
+            Thread.Sleep(1000);
+        }
+        finally
+        {
+            Interlocked.Decrement(ref s_active);
+        }
+
+        assertion();
+    }
+
+    public static void WriteResult()
+        => File.WriteAllText(
+            Path.Combine(AppContext.BaseDirectory, "ParallelProbe.txt"),
+            Volatile.Read(ref s_maximum).ToString(CultureInfo.InvariantCulture));
+}
+""";
+
+        private static readonly string MethodParallelSourceCode = ProjectFile.Replace("$ProjectName$", MethodParallelProjectName) + ParallelProbeSourceCode + """
 
 #file Tests.cs
 using System.Threading;
@@ -141,54 +198,80 @@ public class UnitTest1
 {
     [TestMethod]
     public void SimpleTest11()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(1, 1);
-    }
+        => ParallelProbe.Run(() => Assert.AreEqual(1, 1));
 
     [TestMethod]
     public void SimpleTest12()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.Fail();
-    }
+        => ParallelProbe.Run(() => Assert.Fail());
 
     [TestMethod]
     public void SimpleTest13()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(1, 1);
-    }
+        => ParallelProbe.Run(() => Assert.AreEqual(1, 1));
 }
 
 [TestClass]
 public class UnitTest2
 {
-    [TestMethod]
-    public void SimpleTest21()
+    private static bool s_assemblyInitCalled;
+    private static bool s_assemblyCleanCalled;
+    private static bool s_classInitCalled;
+    private static bool s_classCleanCalled;
+
+    [AssemblyInitialize]
+    public static void AssemblyInit(TestContext context)
     {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(0, 0);
+        Assert.IsFalse(s_assemblyInitCalled);
+        s_assemblyInitCalled = true;
+    }
+
+    [ClassInitialize]
+    public static void ClassInit(TestContext context)
+    {
+        Assert.IsFalse(s_classInitCalled);
+        s_classInitCalled = true;
+    }
+
+    [TestInitialize]
+    public void Initialize()
+    {
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        Assert.IsFalse(s_classCleanCalled);
+        s_classCleanCalled = true;
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
+    {
+        Assert.IsFalse(s_assemblyCleanCalled);
+        s_assemblyCleanCalled = true;
+        ParallelProbe.WriteResult();
     }
 
     [TestMethod]
+    public void SimpleTest21()
+        => ParallelProbe.Run(() => Assert.AreEqual(0, 0));
+
+    [TestMethod]
     public void SimpleTest22()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.Fail();
-    }
+        => ParallelProbe.Run(() => Assert.Fail());
 
     [TestMethod]
     [DoNotParallelize]
     public void IsolatedTest()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.IsTrue(true);
-    }
+        => ParallelProbe.Run(() => Assert.IsTrue(true));
 }
 """;
 
-        private static readonly string ClassParallelSourceCode = ProjectFile.Replace("$ProjectName$", ClassParallelProjectName) + """
+        private static readonly string ClassParallelSourceCode = ProjectFile.Replace("$ProjectName$", ClassParallelProjectName) + ParallelProbeSourceCode + """
 
 #file Tests.cs
 using System.Threading;
@@ -208,43 +291,72 @@ public class UnitTest1
 {
     [TestMethod]
     public void SimpleTest11()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(1, 1);
-    }
+        => ParallelProbe.Run(() => Assert.AreEqual(1, 1));
 
     [TestMethod]
     public void SimpleTest12()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.Fail();
-    }
+        => ParallelProbe.Run(() => Assert.Fail());
 }
 
 [TestClass]
 public class UnitTest2
 {
-    [TestMethod]
-    public void SimpleTest21()
+    private static bool s_assemblyInitCalled;
+    private static bool s_assemblyCleanCalled;
+    private static bool s_classInitCalled;
+    private static bool s_classCleanCalled;
+
+    [AssemblyInitialize]
+    public static void AssemblyInit(TestContext context)
     {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(0, 0);
+        Assert.IsFalse(s_assemblyInitCalled);
+        s_assemblyInitCalled = true;
+    }
+
+    [ClassInitialize]
+    public static void ClassInit(TestContext context)
+    {
+        Assert.IsFalse(s_classInitCalled);
+        s_classInitCalled = true;
+    }
+
+    [TestInitialize]
+    public void Initialize()
+    {
+    }
+
+    [TestCleanup]
+    public void Cleanup()
+    {
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        Assert.IsFalse(s_classCleanCalled);
+        s_classCleanCalled = true;
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
+    {
+        Assert.IsFalse(s_assemblyCleanCalled);
+        s_assemblyCleanCalled = true;
+        ParallelProbe.WriteResult();
     }
 
     [TestMethod]
+    public void SimpleTest21()
+        => ParallelProbe.Run(() => Assert.AreEqual(0, 0));
+
+    [TestMethod]
     public void SimpleTest22()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.Fail();
-    }
+        => ParallelProbe.Run(() => Assert.Fail());
 
     [TestMethod]
     [DoNotParallelize]
     public void IsolatedTest()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.IsTrue(true);
-    }
+        => ParallelProbe.Run(() => Assert.IsTrue(true));
 }
 
 [TestClass]
@@ -252,21 +364,15 @@ public class UnitTest3
 {
     [TestMethod]
     public void SimpleTest31()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(1, 1);
-    }
+        => ParallelProbe.Run(() => Assert.AreEqual(1, 1));
 
     [TestMethod]
     public void SimpleTest32()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.Fail();
-    }
+        => ParallelProbe.Run(() => Assert.Fail());
 }
 """;
 
-        private static readonly string DoNotParallelizeSourceCode = ProjectFile.Replace("$ProjectName$", DoNotParallelizeProjectName) + """
+        private static readonly string DoNotParallelizeSourceCode = ProjectFile.Replace("$ProjectName$", DoNotParallelizeProjectName) + ParallelProbeSourceCode + """
 
 #file Tests.cs
 using System.Threading;
@@ -286,43 +392,42 @@ public class UnitTest1
 {
     [TestMethod]
     public void SimpleTest11()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(1, 1);
-    }
+        => ParallelProbe.Run(() => Assert.AreEqual(1, 1));
 
     [TestMethod]
     public void SimpleTest12()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.Fail();
-    }
+        => ParallelProbe.Run(() => Assert.Fail());
 
     [TestMethod]
     public void SimpleTest13()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(1, 1);
-    }
+        => ParallelProbe.Run(() => Assert.AreEqual(1, 1));
 }
 
 [TestClass]
 public class UnitTest2
 {
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
+        => ParallelProbe.WriteResult();
+
     [TestMethod]
     public void SimpleTest21()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(1, 1);
-    }
+        => ParallelProbe.Run(() => Assert.AreEqual(1, 1));
 
     [TestMethod]
     public void SimpleTest22()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.Fail();
-    }
+        => ParallelProbe.Run(() => Assert.Fail());
 }
+
+#file parallel.runsettings
+<RunSettings>
+  <MSTest>
+    <Parallelize>
+      <Workers>4</Workers>
+      <Scope>ClassLevel</Scope>
+    </Parallelize>
+  </MSTest>
+</RunSettings>
 """;
     }
 }

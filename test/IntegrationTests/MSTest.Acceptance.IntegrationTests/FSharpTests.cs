@@ -12,6 +12,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// (Microsoft.Testing.Platform) host.
 /// </summary>
 [TestClass]
+[OSCondition(OperatingSystems.Windows)]
 public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixture>
 {
     private const string ProjectName = "FSharpTestProject";

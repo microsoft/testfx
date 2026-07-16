@@ -13,6 +13,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// (Microsoft.Testing.Platform) host.
 /// </summary>
 [TestClass]
+[OSCondition(OperatingSystems.Windows)]
 public sealed class DesktopCSharpCLITests : AcceptanceTestBase<DesktopCSharpCLITests.TestAssetFixture>
 {
     private static readonly string[] Platforms = ["x86", "x64"];
