@@ -72,8 +72,10 @@ variables:
   # while macOS failures stay visible via --report-azdo (AzDO Tests tab) and the published TestResults
   # artifact, so signal is preserved without gating merges on macOS-specific flakiness/slowness. Windows
   # and Linux do not use this trailer and remain hard blockers.
+  # The consumers add an explicit separating space before this expansion, so the value must NOT rely on
+  # a leading space of its own.
   - name: _MacOSNonBlockingTrailer
-    value: ' || echo "##vso[task.logissue type=warning]macOS is non-blocking for PRs; this failure does not block the merge. See the Tests tab and the published TestResults artifact for details."'
+    value: '|| echo "##vso[task.logissue type=warning]macOS is non-blocking for PRs; this failure does not block the merge. See the Tests tab and the published TestResults artifact for details."'
 
 stages:
 
@@ -358,7 +360,7 @@ stages:
             /p:Test=false
             /p:Publish=false
             /p:NonWindowsBuild=true
-            /p:FastAcceptanceTest=true$(_MacOSNonBlockingTrailer)
+            /p:FastAcceptanceTest=true $(_MacOSNonBlockingTrailer)
           displayName: Build
 
         - ${{ if eq(parameters.SkipTests, False) }}:

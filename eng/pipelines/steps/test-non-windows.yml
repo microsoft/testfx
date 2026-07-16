@@ -9,12 +9,13 @@ parameters:
   values:
   - Linux
   - MacOS
-# Shell trailer appended to the two `dotnet test` commands below. Defaults to empty so Linux fails the
-# job (and thus the run) on any test failure, keeping it a hard PR blocker. The macOS job passes
-# $(_MacOSNonBlockingTrailer) (" || echo ...") so a macOS test failure exits 0 and the overall run stays
-# "Succeeded" — the only way to make macOS genuinely non-blocking, because job/step-level continueOnError
-# only produces "PartiallySucceeded", which Azure Repos build-validation policies still treat as a block.
-# macOS failures remain visible via --report-azdo (Tests tab) and the published TestResults artifact.
+# Shell trailer appended (with an explicit separating space) to the two `dotnet test` commands below.
+# Defaults to empty so Linux fails the job (and thus the run) on any test failure, keeping it a hard PR
+# blocker. The macOS job passes $(_MacOSNonBlockingTrailer) ("|| echo ...") so a macOS test failure exits
+# 0 and the overall run stays "Succeeded" — the only way to make macOS genuinely non-blocking, because
+# job/step-level continueOnError only produces "PartiallySucceeded", which Azure Repos build-validation
+# policies still treat as a block. macOS failures remain visible via --report-azdo (Tests tab) and the
+# published TestResults artifact.
 - name: testFailureTrailer
   type: string
   default: ''
@@ -29,7 +30,7 @@ steps:
 # by Microsoft.Testing.Platform actually reaches the live build log; with the default (true), the
 # output is buffered into a per-module .log file and only surfaced on failure, so no live progress
 # is visible during long-running test sessions.
-- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false${{ parameters.testFailureTrailer }}
+- script: dotnet test --solution NonWindowsTests.slnf -c $(_BuildConfig) --no-build -bl:$(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig)/TestStep.binlog -p:UsingDotNetTest=true -p:TestingPlatformCaptureOutput=false ${{ parameters.testFailureTrailer }}
   name: Test
   displayName: Test
   condition: and(succeeded(), eq(variables._BuildConfig, 'Debug'))
@@ -59,7 +60,7 @@ steps:
 #   --coverage — coverage upload is Debug-only (see "Merge coverage" / "Publish coverage to
 #     Azure DevOps" steps in azure-pipelines.yml), so collecting coverage in Release would just
 #     write unused .coverage files.
-- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) $(_ReleaseUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace${{ parameters.testFailureTrailer }}
+- script: dotnet test --no-build --test-modules "artifacts/bin/*UnitTests*/$(_BuildConfig)/**/*UnitTests.dll" --results-directory $(BUILD.SOURCESDIRECTORY)/artifacts/TestResults/$(_BuildConfig) $(_ReleaseUnitTestReportArgs) --diagnostic --diagnostic-output-directory $(BUILD.SOURCESDIRECTORY)/artifacts/log/$(_BuildConfig) --diagnostic-verbosity trace ${{ parameters.testFailureTrailer }}
   name: TestRelease
   displayName: Test (unit tests only)
   condition: and(succeeded(), eq(variables._BuildConfig, 'Release'))
