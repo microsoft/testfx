@@ -231,6 +231,8 @@ internal sealed partial class MSTestSettings
         ParseTimeoutSetting(configuration, "timeout:classCleanup", logger, value => settings.ClassCleanupTimeout = value);
         ParseTimeoutSetting(configuration, "timeout:testInitialize", logger, value => settings.TestInitializeTimeout = value);
         ParseTimeoutSetting(configuration, "timeout:testCleanup", logger, value => settings.TestCleanupTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:globalTestInitialize", logger, value => settings.GlobalTestInitializeTimeout = value);
+        ParseTimeoutSetting(configuration, "timeout:globalTestCleanup", logger, value => settings.GlobalTestCleanupTimeout = value);
 
         if (configuration["mstest:parallelism:workers"] is string workers)
         {

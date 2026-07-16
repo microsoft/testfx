@@ -7,6 +7,10 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRou
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut, bool echoLive) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole, bool echoLive) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter(System.IO.TextWriter? liveEchoTarget) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestCleanup = 7 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestInitialize = 6 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestCleanupTimeout.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestInitializeTimeout.get -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.OutputCaptureMode.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.get -> System.Guid?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.set -> void

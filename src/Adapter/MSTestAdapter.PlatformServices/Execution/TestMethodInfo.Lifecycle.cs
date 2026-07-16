@@ -277,8 +277,8 @@ internal partial class TestMethodInfo
             arguments: [TestContext],
             timeoutInfo,
             timeoutTokenSource,
-            Resource.TestInitializeWasCancelled,
-            Resource.TestInitializeTimedOut).ConfigureAwait(false);
+            Resource.GlobalTestInitializeWasCancelled,
+            Resource.GlobalTestInitializeTimedOut).ConfigureAwait(false);
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeCleanupMethodAsync(MethodInfo methodInfo, object classInstance, CancellationTokenSource? timeoutTokenSource)
     {
@@ -305,8 +305,8 @@ internal partial class TestMethodInfo
             arguments: [TestContext],
             timeoutInfo,
             timeoutTokenSource,
-            Resource.TestCleanupWasCancelled,
-            Resource.TestCleanupTimedOut).ConfigureAwait(false);
+            Resource.GlobalTestCleanupWasCancelled,
+            Resource.GlobalTestCleanupTimedOut).ConfigureAwait(false);
 
     private async SynchronizationContextPreservingTask<TestFailedException?> InvokeFixtureMethodAsync(
         MethodInfo methodInfo,

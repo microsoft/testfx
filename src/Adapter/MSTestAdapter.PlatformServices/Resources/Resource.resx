@@ -316,6 +316,22 @@ but received {4} argument(s), with types '{5}'.</value>
     <value>Found two conflicting types for generic parameter '{0}'. The conflicting types are '{1}' and '{2}'.</value>
     <comment>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</comment>
   </data>
+  <data name="GlobalTestCleanupTimedOut" xml:space="preserve">
+    <value>Global test cleanup method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</comment>
+  </data>
+  <data name="GlobalTestCleanupWasCancelled" xml:space="preserve">
+    <value>Global test cleanup method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the global test cleanup method name.</comment>
+  </data>
+  <data name="GlobalTestInitializeTimedOut" xml:space="preserve">
+    <value>Global test initialize method '{0}.{1}' timed out after {2}ms</value>
+    <comment>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</comment>
+  </data>
+  <data name="GlobalTestInitializeWasCancelled" xml:space="preserve">
+    <value>Global test initialize method '{0}.{1}' was canceled</value>
+    <comment>{0} is the type name. {1} is the global test initialize method name.</comment>
+  </data>
   <data name="InvalidParallelScopeValue" xml:space="preserve">
     <value>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</value>
     <comment>{0} is the invalid scope value. {1} is the supported scope list. {Locked="Scope"}</comment>

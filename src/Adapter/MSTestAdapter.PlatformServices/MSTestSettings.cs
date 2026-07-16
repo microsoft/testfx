@@ -44,6 +44,8 @@ internal sealed partial class MSTestSettings
         ClassCleanupTimeout = 0;
         TestInitializeTimeout = 0;
         TestCleanupTimeout = 0;
+        GlobalTestInitializeTimeout = 0;
+        GlobalTestCleanupTimeout = 0;
         CooperativeCancellationTimeout = false;
         OrderTestsByNameInClass = false;
         RandomizeTestOrder = false;
@@ -149,14 +151,24 @@ internal sealed partial class MSTestSettings
     internal int ClassCleanupTimeout { get; private set; }
 
     /// <summary>
-    ///  Gets specified global TestInitializeTimeout timeout.
+    ///  Gets specified TestInitialize timeout.
     /// </summary>
     internal int TestInitializeTimeout { get; private set; }
 
     /// <summary>
-    ///  Gets specified global TestCleanupTimeout timeout.
+    ///  Gets specified TestCleanup timeout.
     /// </summary>
     internal int TestCleanupTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified GlobalTestInitialize timeout. Falls back to <see cref="TestInitializeTimeout"/> when not set.
+    /// </summary>
+    internal int GlobalTestInitializeTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified GlobalTestCleanup timeout. Falls back to <see cref="TestCleanupTimeout"/> when not set.
+    /// </summary>
+    internal int GlobalTestCleanupTimeout { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether all timeouts should be cooperative.
