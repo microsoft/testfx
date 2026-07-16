@@ -26,6 +26,18 @@ internal sealed partial class MSTestSettings
     /// <param name="configuration">The configuration.</param>
     internal static void PopulateSettings(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)
     {
+        try
+        {
+            PopulateSettingsCore(settingsXml, logger, configuration);
+        }
+        catch (XmlException ex)
+        {
+            throw new AdapterSettingsException(Resource.InvalidSettingsXml, ex);
+        }
+    }
+
+    private static void PopulateSettingsCore(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)
+    {
 #if !WINDOWS_UWP
         if (configuration?["mstest"] is not null
             && settingsXml is not null

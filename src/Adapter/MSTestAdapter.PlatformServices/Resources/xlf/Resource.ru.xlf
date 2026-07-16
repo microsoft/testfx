@@ -101,6 +101,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">Трассировка отладки:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="new">Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</target>
+        <note>{0} is the assembly or module path. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">Ошибка развертывания при тестовом запуске: недопустимый элемент развертывания "{0}". В выходном каталоге "{1}" указано, что развертывание этого элемента должно быть выполнено не в корневом каталоге развертывания, что запрещено.</target>
@@ -257,6 +262,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">В поле "Workers" указано недопустимое значение "{0}". Оно должно быть неотрицательным целым числом.</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="new">MSTestAdapter failed to parse the runsettings XML.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

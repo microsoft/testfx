@@ -216,18 +216,17 @@ public class MSTestDiscovererTests : TestContainer
         MSTestDiscovererHelpers.GetSettingsExceptionMessage(ex).Should().Be("Invalid value 'Pond' specified for 'Scope'.");
     }
 
-    public void GetSettingsExceptionMessageShouldIncludeInnerExceptionDetailsWhenPresent()
+    public void GetSettingsExceptionMessageShouldIncludeMalformedXmlDetailsFromPopulateSettings()
     {
-        var innerException = new FormatException("The attribute 'Workers' could not be parsed as an integer.");
-        var ex = new AdapterSettingsException("Invalid runsettings configuration for 'MSTest'.", innerException);
+        Action act = () => MSTestSettings.PopulateSettings("<RunSettings><MSTest>", null, null);
+        AdapterSettingsException ex = act.Should().Throw<AdapterSettingsException>().Which;
 
         string message = MSTestDiscovererHelpers.GetSettingsExceptionMessage(ex);
 
-        // The message must retain the outer configuration context together with the inner exception's
-        // type/message so the underlying parsing/config failure is discoverable, not silently lost.
-        message.Should().Contain("Invalid runsettings configuration for 'MSTest'.");
-        message.Should().Contain(nameof(FormatException));
-        message.Should().Contain(innerException.Message);
+        ex.InnerException.Should().BeOfType<XmlException>();
+        message.Should().Contain(ex.Message);
+        message.Should().Contain(nameof(XmlException));
+        message.Should().Contain(ex.InnerException.Message);
     }
 
     public void AdapterSettingsExceptionShouldSetInnerExceptionWhenProvided()

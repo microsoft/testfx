@@ -53,7 +53,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
         {
             // Retain the assembly path together with the exception type and full inner-exception
             // chain, so the underlying reason the dependency graph could not be walked is not lost.
-            warnings.Add(string.Format(CultureInfo.CurrentCulture, Resource.MissingDeploymentDependency, assemblyPath, ex.GetFormattedExceptionMessage()));
+            warnings.Add(string.Format(CultureInfo.CurrentCulture, Resource.DeploymentDependencyLoadFailed, assemblyPath, ex.GetFormattedExceptionMessage()));
             return Array.Empty<string>(); // Otherwise just return no dependencies.
         }
 

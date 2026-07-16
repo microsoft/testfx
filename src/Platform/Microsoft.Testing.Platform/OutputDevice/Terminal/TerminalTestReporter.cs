@@ -99,8 +99,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with custom terminal, manual refresh, and a
-    /// logger for low-noise diagnostics of unexpected progress rendering/erase failures.
+    /// Initializes a new instance of the <see cref="TerminalTestReporter"/> class with cancellation state, reporter options,
+    /// and a logger for low-noise diagnostics of unexpected progress rendering/erase failures.
     /// </summary>
     public TerminalTestReporter(
         IConsole console,

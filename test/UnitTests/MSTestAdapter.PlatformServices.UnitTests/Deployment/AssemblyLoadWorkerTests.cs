@@ -56,6 +56,8 @@ public class AssemblyLoadWorkerTests : TestContainer
         // underlying reason the dependency graph could not be walked is discoverable, not silently lost.
         dependentAssemblies.Should().BeEmpty();
         warnings.Should().ContainSingle();
+        warnings[0].Should().Contain("Failed to load");
+        warnings[0].Should().NotContain("was not found");
         warnings[0].Should().Contain("C:\\temp\\test3424.dll");
         warnings[0].Should().Contain(nameof(BadImageFormatException));
         warnings[0].Should().Contain(loadException.Message);

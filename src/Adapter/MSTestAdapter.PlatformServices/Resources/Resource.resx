@@ -180,6 +180,14 @@
     <value>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</value>
     <comment>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</comment>
   </data>
+  <data name="InvalidSettingsXml" xml:space="preserve">
+    <value>MSTestAdapter failed to parse the runsettings XML.</value>
+    <comment>{Locked="MSTestAdapter"}{Locked="runsettings"}</comment>
+  </data>
+  <data name="DeploymentDependencyLoadFailed" xml:space="preserve">
+    <value>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</value>
+    <comment>{0} is the assembly or module path. {1} is the reason the assembly or module could not be loaded.</comment>
+  </data>
   <data name="MissingDeploymentDependency" xml:space="preserve">
     <value>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</value>
     <comment>{0} is the assembly or module name. {1} is the reason the dependency was not found.</comment>
