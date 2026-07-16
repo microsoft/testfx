@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text.Json;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.TestInfrastructure;
 
@@ -37,12 +39,21 @@ public sealed class DesktopCSharpCLITests : AcceptanceTestBase<DesktopCSharpCLIT
     {
         TestHost testHost = AssetFixture.GetTestHost(platform, configuration);
 
-        TestHostResult result = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync("--list-tests json", cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
-        Assert.Contains("PassingTest", result.StandardOutput);
-        Assert.Contains("FailingTest", result.StandardOutput);
-        Assert.Contains("SkippingTest", result.StandardOutput);
+        using var document = JsonDocument.Parse(result.StandardOutput);
+        string[] discoveredTests =
+        [
+            .. document.RootElement.GetProperty("tests")
+                .EnumerateArray()
+                .Select(test => test.GetProperty("displayName").GetString()!),
+        ];
+
+        Assert.HasCount(3, discoveredTests);
+        Assert.Contains("PassingTest", discoveredTests);
+        Assert.Contains("FailingTest", discoveredTests);
+        Assert.Contains("SkippingTest", discoveredTests);
     }
 
     [TestMethod]
@@ -51,10 +62,12 @@ public sealed class DesktopCSharpCLITests : AcceptanceTestBase<DesktopCSharpCLIT
     {
         TestHost testHost = AssetFixture.GetTestHost(platform, configuration);
 
-        TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
 
-        // PassingTest passes, FailingTest fails, SkippingTest is skipped ([Ignore]).
         Assert.AreNotEqual(0, result.ExitCode, result.StandardOutput);
+        Assert.Contains("passed PassingTest", result.StandardOutput);
+        Assert.Contains("failed FailingTest", result.StandardOutput);
+        Assert.Contains("skipped SkippingTest", result.StandardOutput);
         Assert.Contains("Test run summary: Failed!", result.StandardOutput);
         Assert.Contains("failed: 1", result.StandardOutput);
         Assert.Contains("succeeded: 1", result.StandardOutput);
