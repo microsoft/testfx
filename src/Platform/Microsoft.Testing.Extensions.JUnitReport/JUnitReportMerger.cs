@@ -131,7 +131,7 @@ internal static class JUnitReportMerger
         // RFC 018 treats per-module inputs as read-only and requires them to remain on disk; reject an
         // output that aliases an input so a merge (which writes with a truncating File.Create) can never
         // overwrite one of its own sources.
-        EnsureOutputDoesNotAliasInput(inputPaths, outputPath);
+        MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(inputPaths, outputPath);
 
         var reports = new List<XDocument>(inputPaths.Count);
         foreach (string inputPath in inputPaths)
@@ -148,65 +148,18 @@ internal static class JUnitReportMerger
             Directory.CreateDirectory(outputDirectory);
         }
 
-        // Write to a temporary sibling, then replace the destination ENTRY. If the output path is a
-        // symlink/hardlink alias of an input (which the textual alias check above cannot detect because
-        // Path.GetFullPath does not resolve links), replacing the entry removes only the link and leaves
-        // the read-only source intact, rather than truncating it in place via File.Create.
-        string tempPath = GetTempSiblingPath(outputPath);
-        try
+        // Write to a temporary sibling, then replace the destination ENTRY, so a symlink/hardlink output
+        // alias of an input has only its link removed rather than the read-only source truncated in place.
+        await MergeOutputFileHelper.WriteViaTemporarySiblingAsync(outputPath, async tempPath =>
         {
-            using (FileStream stream = File.Create(tempPath))
-            {
+            using FileStream stream = File.Create(tempPath);
 #if NETCOREAPP
-                await merged.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
+            await merged.SaveAsync(stream, SaveOptions.None, cancellationToken).ConfigureAwait(false);
 #else
-                merged.Save(stream, SaveOptions.None);
-                await Task.CompletedTask.ConfigureAwait(false);
+            merged.Save(stream, SaveOptions.None);
+            await Task.CompletedTask.ConfigureAwait(false);
 #endif
-            }
-
-            ReplaceFile(tempPath, outputPath);
-        }
-        finally
-        {
-            TryDeleteFile(tempPath);
-        }
-    }
-
-    private static string GetTempSiblingPath(string outputPath)
-    {
-        string directory = Path.GetDirectoryName(Path.GetFullPath(outputPath)) is { Length: > 0 } dir
-            ? dir
-            : Directory.GetCurrentDirectory();
-        return Path.Combine(directory, Path.GetFileName(outputPath) + "." + Guid.NewGuid().ToString("N") + ".tmp");
-    }
-
-    private static void ReplaceFile(string tempPath, string outputPath)
-    {
-        // Delete any destination entry unconditionally — a regular file, or a symlink/hardlink alias
-        // (including a DANGLING symlink, for which File.Exists is false yet the entry still exists and
-        // would make File.Move fail). File.Delete is a no-op when nothing exists, and deleting a link
-        // removes only the link (never its target's content); an exact (case-insensitive) alias of an
-        // input has already been rejected, so this cannot delete an input in place.
-        File.Delete(outputPath);
-
-        File.Move(tempPath, outputPath);
-    }
-
-    private static void TryDeleteFile(string path)
-    {
-        try
-        {
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // Best-effort temp cleanup: leaking a .tmp sibling is preferable to masking the primary
-            // exception (or the successful result) with a cleanup failure.
-        }
+        }).ConfigureAwait(false);
     }
 
     private static long ReadLong(XElement element, string attributeName)
@@ -229,151 +182,5 @@ internal static class JUnitReportMerger
         }
 
         return DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal, out result);
-    }
-
-    /// <summary>
-    /// Rejects an output path that resolves to one of the input report paths, so a merge never overwrites
-    /// a source report (RFC 018 keeps inputs on disk, read-only). Paths are canonicalized (symlinks
-    /// resolved where the runtime supports it) and compared case-insensitively, so a differently-cased
-    /// path or a symlinked parent directory that aliases an input directory is still detected.
-    /// </summary>
-    private static void EnsureOutputDoesNotAliasInput(IReadOnlyList<string> inputPaths, string outputPath)
-    {
-#if !NETCOREAPP
-        // This runtime cannot resolve symlinks/junctions, so a symlinked output parent directory that
-        // aliases an input directory would slip past the textual comparison below and let the write
-        // replace the input. Fail closed when any existing ancestor of the output is a reparse point.
-        if (HasReparsePointAncestor(outputPath))
-        {
-            throw new ArgumentException($"The output path '{outputPath}' has a symbolic-link parent directory that cannot be safely resolved on this runtime; refusing to write to avoid overwriting a read-only input.", nameof(outputPath));
-        }
-#endif
-        string outputCanonical = GetCanonicalPath(outputPath);
-        StringComparison comparison = GetOutputPathComparison(outputPath);
-        foreach (string inputPath in inputPaths)
-        {
-            if (string.Equals(GetCanonicalPath(inputPath), outputCanonical, comparison))
-            {
-                throw new ArgumentException($"The output path '{outputPath}' cannot be one of the input report paths; inputs are treated as read-only.", nameof(outputPath));
-            }
-        }
-    }
-
-    // Whether two paths name the SAME file depends on the case sensitivity of the specific filesystem/
-    // directory that will hold the output — which can differ by volume and, on Windows, per-directory — so
-    // this is probed at the output's OWN location (nearest existing ancestor) rather than a fixed temp dir.
-    // On a case-insensitive location 'a.xml' and 'A.xml' are the same file and must collide; on a
-    // case-sensitive one they are distinct. An alias can only occur when the two paths share a directory,
-    // so that shared location's sensitivity is the correct one (a different-directory input never compares
-    // equal).
-    private static StringComparison GetOutputPathComparison(string outputPath)
-    {
-        string? probeDirectory = FindNearestExistingDirectory(outputPath);
-        return probeDirectory is not null && IsDirectoryCaseSensitive(probeDirectory)
-            ? StringComparison.Ordinal
-            : StringComparison.OrdinalIgnoreCase;
-    }
-
-    private static string? FindNearestExistingDirectory(string path)
-    {
-        string? current = Path.GetDirectoryName(Path.GetFullPath(path));
-        while (!RoslynString.IsNullOrEmpty(current))
-        {
-            if (Directory.Exists(current))
-            {
-                return current;
-            }
-
-            string? parent = Path.GetDirectoryName(current);
-            if (parent is null || string.Equals(parent, current, StringComparison.Ordinal))
-            {
-                break;
-            }
-
-            current = parent;
-        }
-
-        return current;
-    }
-
-    private static bool IsDirectoryCaseSensitive(string directory)
-    {
-        try
-        {
-            string upper = Path.Combine(directory, "CASESENSITIVEPROBE" + Guid.NewGuid().ToString("N"));
-            using (new FileStream(upper, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None, 0x1000, FileOptions.DeleteOnClose))
-            {
-                return !File.Exists(upper.ToLowerInvariant());
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
-        {
-            // If the probe fails, assume case-insensitive-but-preserving (rejects more, never less).
-            return false;
-        }
-    }
-
-#if !NETCOREAPP
-    private static bool HasReparsePointAncestor(string path)
-    {
-        string? current = Path.GetDirectoryName(Path.GetFullPath(path));
-        while (!RoslynString.IsNullOrEmpty(current))
-        {
-            if (Directory.Exists(current) && (File.GetAttributes(current) & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-            {
-                return true;
-            }
-
-            string? parent = Path.GetDirectoryName(current);
-            if (parent is null || string.Equals(parent, current, StringComparison.Ordinal))
-            {
-                break;
-            }
-
-            current = parent;
-        }
-
-        return false;
-    }
-#endif
-
-    /// <summary>
-    /// Canonicalizes <paramref name="path"/> to a full path with symlinks/junctions resolved in every
-    /// existing component (so a symlinked parent directory that aliases another location is detected). On
-    /// runtimes without link resolution (netstandard/.NET Framework) it falls back to the lexical full
-    /// path.
-    /// </summary>
-    private static string GetCanonicalPath(string path)
-    {
-        string full = Path.GetFullPath(path);
-#if NETCOREAPP
-        try
-        {
-            string? root = Path.GetPathRoot(full);
-            if (RoslynString.IsNullOrEmpty(root))
-            {
-                return full;
-            }
-
-            string resolved = root;
-            foreach (string part in full.Substring(root.Length).Split([Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries))
-            {
-                string next = Path.Combine(resolved, part);
-                resolved = Directory.Exists(next)
-                    ? new DirectoryInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
-                    : File.Exists(next)
-                        ? new FileInfo(next).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? next
-                        : next;
-            }
-
-            return resolved;
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
-        {
-            return full;
-        }
-#else
-        return full;
-#endif
     }
 }
