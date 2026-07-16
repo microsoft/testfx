@@ -212,7 +212,7 @@ internal sealed partial class MSTestSettings
         {
             setSetting(boolResult ? TestOutputCaptureMode.Result : TestOutputCaptureMode.None);
         }
-        else if (TryParseEnum(rawValue, out TestOutputCaptureMode mode))
+        else if (TryParseCaptureMode(rawValue, out TestOutputCaptureMode mode))
         {
             setSetting(mode);
         }
@@ -220,6 +220,20 @@ internal sealed partial class MSTestSettings
         {
             logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, rawValue, settingName));
         }
+    }
+
+    private static bool TryParseCaptureMode(string value, out TestOutputCaptureMode mode)
+    {
+        // Enum.TryParse (used by TryParseEnum) also accepts numeric strings such as "2", which would
+        // silently enable an unexpected mode. Reject purely numeric input so only the documented values
+        // (the legacy booleans and the TestOutputCaptureMode names) are honored.
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+        {
+            mode = default;
+            return false;
+        }
+
+        return TryParseEnum(value, out mode);
     }
 
     private static void ParseTimeoutSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<int> setSetting)

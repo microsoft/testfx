@@ -127,7 +127,7 @@ internal sealed partial class MSTestSettings
         {
             setSetting(boolResult ? TestOutputCaptureMode.Result : TestOutputCaptureMode.None);
         }
-        else if (TryParseEnum(value, out TestOutputCaptureMode mode))
+        else if (TryParseCaptureMode(value, out TestOutputCaptureMode mode))
         {
             setSetting(mode);
         }

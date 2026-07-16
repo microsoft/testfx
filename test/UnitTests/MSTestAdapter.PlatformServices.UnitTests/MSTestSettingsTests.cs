@@ -269,6 +269,24 @@ public class MSTestSettingsTests : TestContainer
         adapterSettings.CaptureDebugTraces.Should().BeTrue();
     }
 
+    public void OutputCaptureModeShouldRejectNumericValueAndKeepDefault()
+    {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>2</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias, _mockMessageLogger.Object.ToAdapterMessageLogger())!;
+
+        // Numeric input must not be treated as an enum ordinal (2 -> Live); it is rejected and the default is kept.
+        adapterSettings.OutputCaptureMode.Should().Be(TestOutputCaptureMode.Result);
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, "Invalid value '2' for runsettings entry 'CaptureTraceOutput', setting will be ignored."), Times.Once);
+    }
+
     public void TestTimeoutShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingsXml =
