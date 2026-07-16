@@ -60,7 +60,9 @@ internal static class AssertConditionAnalyzerHelper
 
         // A null (or omitted) comparer is equivalent to EqualityComparer<T>.Default, so it does not change the
         // equality semantics. Any other comparer (including a non-constant one) can return an arbitrary result.
-        return GetArgumentWithName(operation, comparerParameter.Name) is { } comparerArgument
+        // Strip only built-in conversions so a user-defined conversion cannot hide a null source that it turns
+        // into a non-null comparer.
+        return GetRawArgumentValueWithName(operation, comparerParameter.Name)?.WalkDownBuiltInConversion() is { } comparerArgument
             && comparerArgument.ConstantValue is not { HasValue: true, Value: null };
     }
 

@@ -1948,4 +1948,29 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithDefaultComparer_Diagnostic()
+    {
+        // default(IEqualityComparer<int>) is null, which MSTest treats as EqualityComparer<T>.Default, so the
+        // self-comparison is still provably always true. Only built-in conversions are stripped when inspecting
+        // the comparer argument.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    [|Assert.AreEqual(x, x, default(IEqualityComparer<int>))|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
