@@ -1997,4 +1997,39 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedContravariantDefaultComparer_NoDiagnostic()
+    {
+        // IEqualityComparer<T> is contravariant, so EqualityComparer<Base>.Default can be passed where an
+        // IEqualityComparer<Derived> is expected. That is NOT EqualityComparer<Derived>.Default and can return a
+        // different (non-reflexive) result, so it must not be treated as the default comparer.
+        string code = """
+            using System;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new Derived();
+                    Assert.AreEqual<Derived>(x, x, EqualityComparer<Base>.Default);
+                }
+
+                private class Base : IEquatable<Base>
+                {
+                    public bool Equals(Base other) => false;
+                }
+
+                private sealed class Derived : Base
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
