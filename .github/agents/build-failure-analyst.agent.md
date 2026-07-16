@@ -18,18 +18,20 @@ You are read-only with respect to the repository. You ship findings via the gh-a
 
 ## Inputs the Calling Workflow Provides
 
-The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) runs the build, uploads the `.binlog` file as an artifact, and the gh-aw MCP gateway mounts it read-only into the `binlog-mcp` container at `/data/build.binlog`. The caller also sets the environment variables below. You must read all of them before doing anything else.
+The caller (typically `build-failure-analysis.md` or `build-failure-analysis-command.md`) locates the failed **Azure DevOps** `microsoft.testfx` build, downloads the `.binlog` that build already produced (it does **not** rebuild), uploads it as an artifact, and the gh-aw MCP gateway mounts it read-only into the `binlog-mcp` container at `/data/build.binlog`. The caller also sets the environment variables below. You must read all of them before doing anything else.
 
 | Variable                  | Meaning |
 | ------------------------- | ------- |
-| `GH_AW_BINLOG_PATH`       | In-container path of the `*.binlog` (`/data/build.binlog`). Pass this verbatim as `binlog_file` on every `binlog_*` MCP tool call. Empty when the build produced no binlog. |
-| `GH_AW_BINLOG_HOST_PATH`  | Absolute path on the runner workspace where the binlog originally lived. Use only for permalinks / human-facing references — read the data via MCP, not via `cat`. |
-| `GH_AW_BUILD_OUTCOME`     | `success` or `failure` (the exit status of `./build.sh --binaryLog`). |
-| `GH_AW_PR_NUMBER`         | Pull request number (when triggered by `pull_request` or a slash command on a PR). Empty for `workflow_dispatch` on a branch. |
+| `GH_AW_BINLOG_LIST`       | Newline-separated list of in-container binlog paths — one per failed-build leg (e.g. `/data/binlogs/Logs_Build_Linux_Debug.binlog`). Pass each as `binlog_file` on the `binlog_*` MCP tools. |
+| `GH_AW_BINLOG_DIR`        | Directory the binlogs are mounted under (`/data/binlogs`); enumerate `*.binlog` here if `GH_AW_BINLOG_LIST` is unavailable. |
+| `GH_AW_BINLOG_PATH`       | The first entry of `GH_AW_BINLOG_LIST` — a single-path convenience for prompts/tools that expect one. Empty when no binlog was retrieved. |
+| `GH_AW_BINLOG_HOST_PATH`  | URL of the originating Azure DevOps build (`https://dev.azure.com/dnceng-public/public/_build/results?buildId=…`). Use only for permalinks / human-facing references — read the binlog data via MCP. |
+| `GH_AW_BUILD_OUTCOME`     | Always `failure` when this agent runs — the workflow only activates after the Azure DevOps `microsoft.testfx` build failed. |
+| `GH_AW_PR_NUMBER`         | Pull request number to post the analysis on. Pass it explicitly on every `add_comment` / `create_pull_request_review_comment` call (the workflows use `target: "*"`). |
 | `GH_AW_PR_HEAD_SHA`       | Commit SHA at the PR head (or branch tip). Used for permalinks. |
 | `GH_AW_WORKSPACE`         | `$GITHUB_WORKSPACE` — used to convert absolute paths emitted by the compiler into repo-relative paths. |
 
-The raw `./build.sh` stdout/stderr is also available at `/tmp/build-output.log` as a fallback when the binlog is missing or any MCP call fails.
+If a `binlog-mcp` call fails, fall back to the Azure DevOps build referenced by `GH_AW_BINLOG_HOST_PATH` (its logs are viewable there) and call out the gap in the summary comment.
 
 ---
 
@@ -39,27 +41,27 @@ The raw `./build.sh` stdout/stderr is also available at `/tmp/build-output.log` 
 
 1. Read `GH_AW_BUILD_OUTCOME`.
 2. If the value is `success`, post a `noop` with the message `Build succeeded — no analysis required.` and stop. (The workflow should have skipped you in this case, but be defensive.)
-3. If the value is `failure` but `GH_AW_BINLOG_PATH` is empty, post a single comment via `add_comment` with the body:
+3. If the value is `failure` but `GH_AW_BINLOG_LIST` is empty, post a single comment via `add_comment` with the body:
 
    > 🔍 **Build Failure Analysis** — the build failed but no binary log was produced. See the [workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}) for raw logs.
-   >
-   > `<!-- build-failure-analysis -->`
+
+   <!-- build-failure-analysis -->
+
+   (Emit the `<!-- build-failure-analysis -->` line as a **raw HTML comment**, not wrapped in backticks — it must stay invisible in the rendered comment so `hide-older-comments` marker detection matches it.)
 
    Then stop.
 
-### Step 2 — Gather data from the binlog
+### Step 2 — Gather data from the binlogs
 
-Query the binlog through the `binlog-mcp` MCP server. Every tool call must pass the binlog path via the `binlog_file` argument, set to the value of `GH_AW_BINLOG_PATH` (i.e. `/data/build.binlog`). The MCP gateway has the file mounted read-only at that path.
+The failed Azure DevOps build publishes **one binlog per build leg** (e.g. Linux Debug, Windows Release, macOS Debug). They are mounted read-only under `GH_AW_BINLOG_DIR` (`/data/binlogs`) and enumerated, one path per line, in `GH_AW_BINLOG_LIST`. A build failure usually surfaces in only one leg, and some pipeline failures (e.g. test-only / Helix failures) leave every build binlog clean — so triage across all of them:
 
-Run these three calls first; they are the equivalents of the previous JSON dumps and cover the common case:
+1. For **each** path in `GH_AW_BINLOG_LIST`, call `binlog_errors { binlog_file: "<path>" }`. Concentrate your analysis on the leg(s) that actually report errors (each error has `{ severity, code, message, file, line, column, project }`).
+2. For the leg(s) with errors, call `binlog_overview { binlog_file: "<path>" }` for build configuration/context, and `binlog_warnings { binlog_file: "<path>", top: 10 }` when the failure looks like a `WarnAsError` promotion.
+3. If **no** leg's binlog contains errors, the compilation itself succeeded and the pipeline failure is elsewhere (most often a test / Helix stage). Post a single summary comment stating the build compiled cleanly, name the failing stage if you can identify it, link the [Azure DevOps build](${GH_AW_BINLOG_HOST_PATH}), and stop — do **not** invent code fixes.
 
-1. `binlog_overview { binlog_file: "$GH_AW_BINLOG_PATH" }` — high-level summary (build configuration, projects, targets executed, totals). Use it to confirm what was built and where it broke.
-2. `binlog_errors { binlog_file: "$GH_AW_BINLOG_PATH" }` — primary input: every error with `{ severity, code, message, file, line, column, project }`. If empty, drop to Step 6 with a "build failed but no MSBuild errors captured" comment.
-3. `binlog_warnings { binlog_file: "$GH_AW_BINLOG_PATH", top: 10 }` — useful when the failure is caused by a `WarnAsError` promotion.
+Pass each `binlog_file` verbatim from `GH_AW_BINLOG_LIST`. Because the MCP server is live, ask follow-up questions when these calls leave gaps — searching for specific error codes, listing targets that failed in a given project, or pulling task-level timing. Discover the full tool surface with `binlog-mcp`'s own `tools/list` (the MCP gateway exposes it automatically).
 
-Because the MCP server is live, you can ask follow-up questions when the three calls above leave gaps. Useful drill-downs include searching for specific error codes, listing targets that failed in a given project, or pulling task-level timing. Discover the full tool surface with `binlog-mcp`'s own `tools/list` (the MCP gateway exposes it automatically).
-
-If any MCP call fails (server crash, timeout, malformed response), fall back to grepping `/tmp/build-output.log` for `: error ` / `: warning ` lines and call out the gap in the summary comment.
+If any MCP call fails (server crash, timeout, malformed response), note the gap in the summary comment and link the Azure DevOps build (`GH_AW_BINLOG_HOST_PATH`) so a human can inspect its logs directly.
 
 ### Step 3 — Group errors by root cause
 
@@ -74,14 +76,14 @@ Common .NET / MSBuild root-cause patterns. Use these as a starting point, but tr
 | StyleCop violation | `SA####` | Trailing whitespace, missing newline, tuple casing, etc. |
 | Analyzer rule violation | `CA####` | Code-quality rule. Pay attention to `WarnAsError` lift. |
 | MSBuild task / target failure | `MSB####` | Missing file, malformed XML, broken import. |
-| NuGet resolution failure | `NU####`, `NETSDK####` | Package not found, version conflict, TFM not supported, banned dependency. **Use the NuGet MCP server** to resolve. |
+| NuGet resolution failure | `NU####`, `NETSDK####` | Package not found, version conflict, TFM not supported, banned dependency, or a version not yet available on the configured feeds. **Use the NuGet MCP server** to resolve. |
 | Localization regression | `xlf` parsing error, `LCMessages` | `.resx` modified without rebuild; never hand-edit `.xlf`. |
 
 Group every error in the binlog under exactly one root-cause cluster. If two clusters share a probable common cause (e.g., a single deleted method causes both `CS0103` and `RS0017`), merge them.
 
 ### Step 3b — Use NuGet MCP Server for package issues
 
-When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable package warnings, use the **NuGet MCP Server** (installed as a dotnet global tool) via the `bash` tool:
+When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`, `NU1102`, etc.) or vulnerable package warnings, use the **NuGet MCP Server** (installed as a dotnet tool on `PATH` via `dotnet tool install --tool-path`) via the `bash` tool:
 
 ```bash
 # Get a remediation plan for vulnerable/conflicting packages.
@@ -92,7 +94,7 @@ When the errors include NuGet resolution failures (`NU1605`, `NU1608`, `NU1100`,
 NuGet.Mcp.Server --source https://api.nuget.org/v3/index.json --project /path/to/project.csproj
 ```
 
-The NuGet MCP Server can resolve version conflicts by analyzing the full transitive dependency graph. Use it to generate concrete version updates for `Directory.Packages.props` or `.csproj` files.
+The NuGet MCP Server can resolve version conflicts by analyzing the full transitive dependency graph. Use it to generate concrete version updates for `Directory.Packages.props`, `eng/Versions.props`, or `.csproj` files.
 
 Available capabilities:
 1. **Fix vulnerable packages** — resolves version conflicts including transitive dependencies.
@@ -102,7 +104,7 @@ Available capabilities:
 **Example workflow for NU1605:**
 1. Read the error to identify which package was downgraded and which projects are involved.
 2. Run `NuGet.Mcp.Server` via bash with `fix_vulnerable_packages` to get a resolution plan.
-3. Use the resolution plan to construct a concrete `suggestion` block (e.g., updating the version in `Directory.Packages.props`).
+3. Use the resolution plan to construct a concrete `suggestion` block (e.g., updating the version in `eng/Versions.props` or `Directory.Packages.props`).
 
 > **Note:** The NuGet MCP server operates on the workspace's actual project files and NuGet configuration. It has access to the repository's NuGet feeds and can resolve transitive dependency chains that are impossible to reason about from error messages alone.
 
@@ -112,13 +114,13 @@ For each root cause, identify the **smallest set of files** that need to change.
 
 - For Roslyn / C# errors: read 6 lines above and 10 lines below the reported line.
 - For MSBuild errors: read the offending element and the surrounding `<PropertyGroup>` / `<ItemGroup>` / `<Target>`.
-- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `NuGet.Mcp.Server` (the global tool's command name — not `dotnet NuGet.Mcp.Server`) to get a concrete resolution plan.
+- For NuGet failures: read the `.csproj`, `Directory.Packages.props`, and `eng/Versions.props` rows mentioning the package. Then run `NuGet.Mcp.Server` (the tool's command name on `PATH` — not `dotnet NuGet.Mcp.Server`) to get a concrete resolution plan.
 
 If the source line at the reported `file:line` does not look like a plausible cause (sometimes the compiler reports the *call site*, not the *declaration site*), search the PR-changed files for the symbol named in the error message and use that as the suggestion target.
 
 ### Step 5 — Build the PR comment
 
-Always post **exactly one** summary comment via `add_comment`. Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
+Always post **exactly one** summary comment via `add_comment` (targeting the pull request `GH_AW_PR_NUMBER`). Mark it with the HTML marker `<!-- build-failure-analysis -->` so future runs (and humans) can identify and supersede it. The gh-aw `add-comment` config in `build-failure-analysis.md` has `hide-older-comments: true`, which collapses prior runs on update.
 
 Template:
 
