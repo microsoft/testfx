@@ -140,7 +140,13 @@ jobs:
             curl -sSL --retry 3 --max-filesize "${MAX_ZIP_BYTES}" "${url}" -o /tmp/a.zip \
               || { echo "::warning::Skipping ${name}: download failed or exceeded ${MAX_ZIP_BYTES} bytes."; continue; }
             UNCOMP=$(unzip -l /tmp/a.zip 2>/dev/null | tail -1 | awk '{print $1}')
-            if [ -n "${UNCOMP}" ] && [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
+            # Fail safe: if the uncompressed size isn't a plain integer (corrupt
+            # zip / unexpected `unzip -l` output), we can't verify it — skip the
+            # artifact rather than let a non-numeric value bypass the `-gt` guard.
+            if ! printf '%s' "${UNCOMP}" | grep -qE '^[0-9]+$'; then
+              echo "::warning::Skipping ${name}: could not determine uncompressed size (unparseable unzip output)."; continue
+            fi
+            if [ "${UNCOMP}" -gt "${MAX_UNZIP_BYTES}" ]; then
               echo "::warning::Skipping ${name}: uncompressed size ${UNCOMP} exceeds ${MAX_UNZIP_BYTES} guard (possible zip bomb)."; continue
             fi
             # Extract ONLY `*.binlog` entries with paths junked (`-j`) under a
