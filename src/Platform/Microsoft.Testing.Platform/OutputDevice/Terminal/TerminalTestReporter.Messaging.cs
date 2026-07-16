@@ -70,8 +70,9 @@ internal sealed partial class TerminalTestReporter
 
         if (_options.ShowActiveTests)
         {
-            asm.TestNodeResultsState ??= new(Interlocked.Increment(ref _counter));
-            asm.TestNodeResultsState.AddRunningTestNode(
+            TestNodeResultsState testNodeResultsState = asm.GetOrCreateTestNodeResultsState(
+                () => new(Interlocked.Increment(ref _counter)));
+            testNodeResultsState.AddRunningTestNode(
                 Interlocked.Increment(ref _counter), testNodeUid, MakeControlCharactersVisible(displayName, true), CreateStopwatch());
         }
 

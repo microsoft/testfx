@@ -1843,10 +1843,17 @@ public sealed class TerminalTestReporterTests
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\ShardedFlaky.dll" : "/repo/ShardedFlaky.dll";
         const string executionId = "exec-sharded";
 
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-1", attemptNumber: 1);
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-2", attemptNumber: 1);
-        ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-1", "flaky", TestOutcome.Fail);
-        ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-2", "passing", TestOutcome.Passed);
+        Parallel.Invoke(
+            () =>
+            {
+                terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-1", attemptNumber: 1);
+                ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-1", "flaky", TestOutcome.Fail);
+            },
+            () =>
+            {
+                terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-2", attemptNumber: 1);
+                ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-2", "passing", TestOutcome.Passed);
+            });
 
         terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-2-shard-1", attemptNumber: 2);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-2-shard-1", "flaky", TestOutcome.Passed);
