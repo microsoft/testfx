@@ -1092,6 +1092,48 @@ public sealed class AvoidAssertAreEqualOnCollectionsAnalyzerTests
     }
 
     [TestMethod]
+    public async Task WhenUsingAssertAreEqualOnCollectionWithBaseTypeDefaultComparer_ReportDiagnostic()
+    {
+        // IEqualityComparer<in T> is contravariant, so EqualityComparer<Base>.Default compiles as the comparer for a
+        // Derived argument. But it dispatches to Base's equality, not Derived's IEquatable<Derived>, so it is a custom
+        // comparer for T = Derived and MSTEST0065 must still fire.
+        string code = """
+            #nullable enable
+            using System;
+            using System.Collections;
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Derived c1 = new();
+                    Derived c2 = new();
+                    {|#0:Assert.AreEqual(c1, c2, EqualityComparer<Base>.Default)|};
+                }
+
+                private class Base
+                {
+                }
+
+                private sealed class Derived : Base, IEnumerable<int>, IEquatable<Derived>
+                {
+                    public bool Equals(Derived? other) => true;
+
+                    public IEnumerator<int> GetEnumerator() => new List<int>().GetEnumerator();
+
+                    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code, ExpectedDiagnostic("Assert.AreEqual", "Derived"));
+    }
+
+    [TestMethod]
     public async Task WhenUsingAssertAreEqualOnCollectionImplementingIEquatableWithNullComparer_DoNotReportDiagnostic()
     {
         // A null comparer is replaced with EqualityComparer<MyCollection>.Default by Assert, so it is equivalent to the
