@@ -30,38 +30,74 @@ internal static class AssertConditionAnalyzerHelper
 
     /// <summary>
     /// Returns <see langword="true"/> when <c>expected</c>/<c>notExpected</c> and <c>actual</c> are the
-    /// same side-effect-free reference (see <see cref="HasIdenticalExpectedAndActual"/>) <em>and</em> the
-    /// compared type does not route equality through user code.
+    /// same side-effect-free reference (see <see cref="HasIdenticalExpectedAndActual"/>) <em>and</em> a
+    /// self-comparison of that value using the default equality comparer is provably always equal.
+    /// </summary>
+    internal static bool HasIdenticalExpectedAndActualWithBuiltInEquality(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
+        => HasIdenticalExpectedAndActual(operation, expectedOrNotExpectedParameterName)
+        && IsProvablyReflexiveSelfEquality(GetArgumentWithName(operation, expectedOrNotExpectedParameterName)?.Type);
+
+    /// <summary>
+    /// Returns <see langword="true"/> when the invoked <c>Assert</c> overload accepts a caller-supplied
+    /// <see cref="System.Collections.Generic.IEqualityComparer{T}"/>, in which case the comparison can
+    /// return any result and must not be treated as an always-true/always-false condition.
+    /// </summary>
+    internal static bool HasEqualityComparerParameter(IInvocationOperation operation)
+        => operation.TargetMethod.Parameters.Any(static parameter =>
+            parameter.Type is INamedTypeSymbol
+            {
+                Name: "IEqualityComparer",
+                ContainingNamespace: { Name: "Generic", ContainingNamespace: { Name: "Collections", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } },
+            });
+
+    /// <summary>
+    /// Returns <see langword="true"/> when a self-comparison of a value of <paramref name="type"/> using the
+    /// default equality comparer is provably always equal.
     /// </summary>
     /// <remarks>
     /// <c>Assert.AreEqual</c>/<c>AreNotEqual</c> compare using <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/>,
-    /// which calls user-provided equality when the type overrides <see cref="object.Equals(object)"/> or implements
-    /// <see cref="System.IEquatable{T}"/>. In those cases a self-comparison can legitimately be used to test the type's
-    /// equality contract and might not always evaluate to the same result, so it must not be reported as an
-    /// always-true/always-false condition.
+    /// which dispatches to <see cref="System.IEquatable{T}"/><c>.Equals</c> when the type implements it, otherwise to the
+    /// virtual <see cref="object.Equals(object)"/>. The result is only provable when the runtime type is known exactly
+    /// (a value type or a sealed type) and that type does not customize equality with a potentially non-reflexive
+    /// override. A non-sealed reference type, an interface, or a type parameter can hold an instance whose overridden
+    /// equality is not reflexive, so nothing can be proven from the static type.
     /// </remarks>
-    internal static bool HasIdenticalExpectedAndActualWithBuiltInEquality(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
-        => HasIdenticalExpectedAndActual(operation, expectedOrNotExpectedParameterName)
-        && !HasUserDefinedEquality(GetArgumentWithName(operation, expectedOrNotExpectedParameterName)?.Type);
-
-    private static bool HasUserDefinedEquality(ITypeSymbol? type)
+    private static bool IsProvablyReflexiveSelfEquality(ITypeSymbol? type)
     {
-        // Primitives, enums, and other well-known types have reflexive, built-in equality.
-        if (type is null || type.SpecialType != SpecialType.None || type.TypeKind is TypeKind.Enum)
+        if (type is null)
         {
             return false;
         }
 
-        // A type parameter can be substituted with any type, including one whose equality is not
-        // reflexive, so we cannot prove the comparison is always true. Treat it conservatively.
+        // A type parameter can be substituted with a type whose equality is not reflexive.
         if (type.TypeKind is TypeKind.TypeParameter)
+        {
+            return false;
+        }
+
+        // Arrays are non-sealed reference types but always use reflexive reference equality
+        // (they never override Equals), so a self-comparison is provably always equal.
+        if (type.TypeKind is TypeKind.Array)
         {
             return true;
         }
 
-        // Assert.AreEqual/AreNotEqual compare with EqualityComparer<T>.Default, which dispatches to
-        // IEquatable<T>.Equals when the type implements it, otherwise to the virtual object.Equals.
-        // The == operator is never consulted, so it is intentionally not checked here.
+        // A non-sealed reference type (including object, base classes, and interfaces) can hold a derived
+        // instance whose overridden Equals is not reflexive. Only value types and sealed types have an
+        // exactly-known runtime type.
+        return type is not { IsReferenceType: true, IsSealed: false }
+            && !HasUserDefinedEquality(type);
+    }
+
+    private static bool HasUserDefinedEquality(ITypeSymbol type)
+    {
+        // Primitives, enums, and other well-known types have reflexive, built-in equality.
+        if (type.SpecialType != SpecialType.None || type.TypeKind is TypeKind.Enum)
+        {
+            return false;
+        }
+
+        // The == operator is never consulted by EqualityComparer<T>.Default, so it is intentionally not checked here.
         for (ITypeSymbol? current = type;
             current is { SpecialType: not SpecialType.System_Object and not SpecialType.System_ValueType };
             current = current.BaseType)

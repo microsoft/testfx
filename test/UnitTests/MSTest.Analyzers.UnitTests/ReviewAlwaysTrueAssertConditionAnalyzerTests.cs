@@ -1682,4 +1682,130 @@ public sealed class ReviewAlwaysTrueAssertConditionAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameArray_Diagnostic()
+    {
+        // Arrays use reference equality, so a self-comparison is genuinely always true.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new int[0];
+                    [|Assert.AreEqual(x, x)|];
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalOfPolymorphicType_NoDiagnostic()
+    {
+        // A non-sealed reference type can hold a derived instance whose overridden Equals is not
+        // reflexive, so equality cannot be proven from the static type.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    object x = new object();
+                    Assert.AreEqual(x, x);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalOfNonSealedType_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    var x = new MyType();
+                    Assert.AreEqual(x, x);
+                }
+
+                private class MyType
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedEqualConstantsWithCustomComparer_NoDiagnostic()
+    {
+        // A caller-supplied comparer can return any result, so the comparison is not provably always true.
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreEqual(1, 1, new NeverEqualComparer());
+                }
+
+                private sealed class NeverEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => false;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertAreEqualIsPassedSameLocalWithCustomComparer_NoDiagnostic()
+    {
+        string code = """
+            using System.Collections.Generic;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    int x = 1;
+                    Assert.AreEqual(x, x, new NeverEqualComparer());
+                }
+
+                private sealed class NeverEqualComparer : IEqualityComparer<int>
+                {
+                    public bool Equals(int x, int y) => false;
+                    public int GetHashCode(int obj) => 0;
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, code);
+    }
 }
