@@ -35,7 +35,7 @@ internal static class AssertConditionAnalyzerHelper
     /// </summary>
     internal static bool HasIdenticalExpectedAndActualWithBuiltInEquality(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
         => HasIdenticalExpectedAndActual(operation, expectedOrNotExpectedParameterName)
-        && IsProvablyReflexiveSelfEquality(GetArgumentWithName(operation, expectedOrNotExpectedParameterName)?.Type);
+        && IsProvablyReflexiveSelfEquality(GetComparedType(operation, expectedOrNotExpectedParameterName));
 
     /// <summary>
     /// Returns <see langword="true"/> when the invoked <c>Assert</c> overload accepts a caller-supplied
@@ -51,48 +51,61 @@ internal static class AssertConditionAnalyzerHelper
             });
 
     /// <summary>
+    /// Gets the type <c>T</c> whose <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/> the
+    /// invoked <c>Assert.AreEqual</c>/<c>AreNotEqual</c> overload uses to compare the values. For the generic
+    /// overloads this is the method type argument (not the operand's static type, which may differ through an
+    /// implicit conversion); for non-generic overloads it is the declared parameter type.
+    /// </summary>
+    private static ITypeSymbol? GetComparedType(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
+        => operation.TargetMethod.TypeArguments is [{ } typeArgument]
+            ? typeArgument
+            : operation.TargetMethod.Parameters.FirstOrDefault(parameter => parameter.Name == expectedOrNotExpectedParameterName)?.Type;
+
+    /// <summary>
     /// Returns <see langword="true"/> when a self-comparison of a value of <paramref name="type"/> using the
     /// default equality comparer is provably always equal.
     /// </summary>
     /// <remarks>
     /// <c>Assert.AreEqual</c>/<c>AreNotEqual</c> compare using <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/>,
     /// which dispatches to <see cref="System.IEquatable{T}"/><c>.Equals</c> when the type implements it, otherwise to the
-    /// virtual <see cref="object.Equals(object)"/>. The result is only provable when the runtime type is known exactly
-    /// (a value type or a sealed type) and that type does not customize equality with a potentially non-reflexive
-    /// override. A non-sealed reference type, an interface, or a type parameter can hold an instance whose overridden
-    /// equality is not reflexive, so nothing can be proven from the static type.
+    /// virtual <see cref="object.Equals(object)"/>. Reflexivity can only be proven conservatively:
+    /// <list type="bullet">
+    /// <item>primitives, <see cref="string"/>, and enums have reflexive built-in equality;</item>
+    /// <item>arrays and sealed reference types without customized equality use reflexive reference equality;</item>
+    /// <item>a non-sealed reference type, an interface, or a type parameter can hold an instance whose overridden
+    /// equality is not reflexive;</item>
+    /// <item>a non-primitive value type relying on the default field-based <c>ValueType.Equals</c> (or <c>Nullable&lt;T&gt;</c>,
+    /// which delegates to the underlying type) may compare a field whose equality is not reflexive, and a custom struct
+    /// override could itself be non-reflexive.</item>
+    /// </list>
     /// </remarks>
     private static bool IsProvablyReflexiveSelfEquality(ITypeSymbol? type)
     {
-        if (type is null)
+        if (type is null || type.TypeKind is TypeKind.TypeParameter)
         {
             return false;
         }
 
-        // A type parameter can be substituted with a type whose equality is not reflexive.
-        if (type.TypeKind is TypeKind.TypeParameter)
+        if (type.IsReferenceType)
         {
-            return false;
+            // Arrays always use reflexive reference equality (they never override Equals). Any other reference
+            // type is only provable when its runtime type is known exactly (sealed) and it does not customize
+            // equality with a potentially non-reflexive override. Non-sealed types, interfaces, and object can
+            // hold a derived instance whose overridden Equals is not reflexive.
+            return type.TypeKind is TypeKind.Array
+                || (type.IsSealed && !HasUserDefinedEquality(type));
         }
 
-        // Arrays are non-sealed reference types but always use reflexive reference equality
-        // (they never override Equals), so a self-comparison is provably always equal.
-        if (type.TypeKind is TypeKind.Array)
-        {
-            return true;
-        }
-
-        // A non-sealed reference type (including object, base classes, and interfaces) can hold a derived
-        // instance whose overridden Equals is not reflexive. Only value types and sealed types have an
-        // exactly-known runtime type.
-        return type is not { IsReferenceType: true, IsSealed: false }
-            && !HasUserDefinedEquality(type);
+        // Value types: only primitives (and enums) have provably reflexive built-in equality. Nullable<T> and
+        // structs relying on the default (or a custom) equality could be non-reflexive.
+        return type.OriginalDefinition.SpecialType is not SpecialType.System_Nullable_T
+            && (type.SpecialType is not SpecialType.None || type.TypeKind is TypeKind.Enum);
     }
 
     private static bool HasUserDefinedEquality(ITypeSymbol type)
     {
-        // Primitives, enums, and other well-known types have reflexive, built-in equality.
-        if (type.SpecialType != SpecialType.None || type.TypeKind is TypeKind.Enum)
+        // string overrides Equals but its equality is reflexive; it is handled as a primitive by the caller.
+        if (type.SpecialType != SpecialType.None)
         {
             return false;
         }
