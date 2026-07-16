@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
@@ -53,7 +53,7 @@ internal static class AssertConditionAnalyzerHelper
                 ContainingNamespace: { Name: "Generic", ContainingNamespace: { Name: "Collections", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } },
             });
 
-        if (comparerParameter is null)
+        if (comparerParameter is not { Type: INamedTypeSymbol { TypeArguments: [{ } comparerElementType] } })
         {
             return false;
         }
@@ -65,18 +65,15 @@ internal static class AssertConditionAnalyzerHelper
         IOperation? comparerArgument = GetRawArgumentValueWithName(operation, comparerParameter.Name)?.WalkDownBuiltInConversion();
         return comparerArgument is not null
             && comparerArgument.ConstantValue is not { HasValue: true, Value: null }
-            && !IsDefaultEqualityComparerReference(comparerArgument);
+            && !IsDefaultEqualityComparerReference(comparerArgument, comparerElementType);
     }
 
-    private static bool IsDefaultEqualityComparerReference(IOperation operation)
-        => operation is IPropertyReferenceOperation
-        {
-            Property:
-            {
-                Name: "Default",
-                ContainingType: INamedTypeSymbol { Name: "EqualityComparer", ContainingNamespace: { Name: "Generic", ContainingNamespace: { Name: "Collections", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } } },
-            },
-        };
+    // EqualityComparer<X>.Default is only the default comparer for T when X is T. IEqualityComparer<T> is
+    // contravariant, so e.g. EqualityComparer<Base>.Default can be passed as IEqualityComparer<Derived>, in
+    // which case it is a non-default comparer that may return a different result.
+    private static bool IsDefaultEqualityComparerReference(IOperation operation, ITypeSymbol comparerElementType)
+        => operation is IPropertyReferenceOperation { Property: { Name: "Default", ContainingType: INamedTypeSymbol { Name: "EqualityComparer", TypeArguments: [{ } elementType], ContainingNamespace: { Name: "Generic", ContainingNamespace: { Name: "Collections", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } } } } }
+            && SymbolEqualityComparer.Default.Equals(elementType, comparerElementType);
 
     /// <summary>
     /// Gets the type <c>T</c> whose <see cref="System.Collections.Generic.EqualityComparer{T}.Default"/> the
