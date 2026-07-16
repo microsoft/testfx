@@ -59,8 +59,8 @@ Rules and behavior:
   (`PlatformCommandLineDotnetTestCliRequiresPipe`).
 - `--dotnet-test-pipe` takes **exactly one** argument: the fully-resolved OS pipe name/path the SDK is
   already listening on (see §3).
-- Both options are built-in and hidden (they surface in `--help` output but are not meant for direct
-  end-user use).
+- Both options are built-in and **hidden**: the platform omits them from `--help`, so they are only
+  listed by `--info`. They are not meant for direct end-user use.
 
 ### Environment variables
 
@@ -174,7 +174,7 @@ flowchart TD
 
 | Type | Encoding | `fieldSize` written |
 | --- | --- | --- |
-| `string` | `int32 lengthInBytes` + UTF-8 bytes | For **top-level list-envelope strings** the `int32` length is part of the value; for **fields written via `WriteField(id, string)`** there is no separate size prefix — the value *is* the length-prefixed string, and the reader reads `fieldSize` raw UTF-8 bytes. See note below. |
+| `string` | `int32 byteLength` + UTF-8 bytes | For a scalar field written via `WriteField(id, string)`, the emitted `int32` **is** the envelope `fieldSize` (the UTF-8 byte length), followed directly by the raw UTF-8 bytes — there is no second length prefix. Strings that are **list elements** carry their own `int32 byteLength` prefix instead. See note below. |
 | `int` | 4 bytes | `4` |
 | `long` | 8 bytes | `8` |
 | `ushort` | 2 bytes | `2` |
@@ -184,10 +184,10 @@ flowchart TD
 > [!NOTE]
 > **Two string conventions coexist and are both part of the contract.**
 >
-> - Scalar string fields written with `WriteField(stream, id, value)` emit `uint16 id` then a
->   length-prefixed UTF-8 string (`int32 len` + bytes). The reader reads the `int32 size` from the
->   envelope as the byte count and calls `ReadStringValue(stream, size)` — i.e. for these fields the
->   envelope `size` equals the UTF-8 byte length and there is **no** second length prefix.
+> - Scalar string fields written with `WriteField(stream, id, value)` emit `uint16 id`, then an
+>   `int32` byte length, then the raw UTF-8 bytes. That `int32` is exactly the envelope `fieldSize`,
+>   so the reader reads it as the size and calls `ReadStringValue(stream, size)` — there is **no**
+>   second length prefix inside the value.
 > - Strings inside a **list payload element** (e.g. `ParameterTypeFullNames`) are written with
 >   `WriteString` (a self-contained `int32 len` + bytes) and read with `ReadString`.
 >
@@ -243,7 +243,7 @@ change or reuse an ID.
 | 7 | `FileArtifactMessages` | host → SDK | Request | 1.0.0 |
 | 8 | `TestSessionEvent` | host → SDK | Request | 1.0.0 |
 | 9 | `HandshakeMessage` | host → SDK, and SDK → host reply | Request + Response | 1.0.0 |
-| 10 | `TestInProgressMessages` | host → SDK | Request | 1.0.0 |
+| 10 | `TestInProgressMessages` | host → SDK¹ | Request | 1.0.0 |
 | 11 | `AzureDevOpsLogMessage` | host → SDK | Request | 1.2.0 |
 | 12 | `DisplayMessage` | host → SDK | Request | 1.3.0 |
 | 13 | `WaitForServerControlRequest` | host → SDK (on control pipe) | Request | 1.4.0 |
@@ -252,6 +252,9 @@ change or reuse an ID.
 > IDs 1 and 2 belong to the sibling **test host controller** pipe (a monitoring channel between a test
 > host controller process and the test host). They share the same framing and registry but are not part
 > of the SDK data flow; they are listed here because they occupy IDs in the shared registry.
+>
+> ¹ `TestInProgressMessages` (ID 10) is registered and round-tripped but is **not currently emitted** on
+> the data pipe — see §9.4.
 
 ---
 
@@ -426,9 +429,16 @@ ticks), `Reason`(5), `StandardOutput`(6), `ErrorOutput`(7), `SessionUid`(8).
 
 ### 9.4 `TestInProgressMessages` (ID 10)
 
-For non-IDE consumers, `InProgress` test-node updates are streamed here (rendered as a "currently
-running tests" panel) instead of as `TestResultMessages`. Each `TestInProgressMessage` carries
-`Uid`(1) + `DisplayName`(2). (In IDE mode, in-progress updates go through `TestResultMessages` instead.)
+Each `TestInProgressMessage` carries `Uid`(1) + `DisplayName`(2), scoped to report a test that is
+currently running (rendered by non-IDE consumers as a "currently running tests" panel).
+
+> [!NOTE]
+> **Currently a registered wire shape only.** `DotnetTestDataConsumer` constructs a
+> `TestInProgressMessages` for non-IDE `InProgress` node updates, but `DotnetTestConnection.SendMessageAsync`
+> has no `case` for it today, so this message is **not actually sent** on the data pipe in the current
+> source. Its serializer (ID 10) is registered and round-tripped, so the wire shape is fixed; a future
+> change can wire it into `SendMessageAsync` without a protocol bump. In IDE mode, `InProgress` updates
+> are sent as `TestResultMessages` (see §9.3) instead.
 
 ### 9.5 `FileArtifactMessages` (ID 7)
 
@@ -499,9 +509,11 @@ process **exits abnormally** with exit code `GenericFailure` (1), after writing 
 This is deliberate: if the user kills `dotnet.exe`, the test host must die too rather than orphan.
 
 **Server-control pipe (`exitProcessOnConnectionLoss: false`).** A dropped control pipe must **not** kill
-the host. Instead the listener treats an unexpected early close as "host went away ⇒ cooperative
-cancel" (see §12). Consequently it is a **protocol requirement that the SDK keep the control pipe open
-for the entire data session** — closing it early is interpreted as a cancel request.
+the test host. This listener runs *inside the test host* as the control-pipe **client**, so an
+unexpected early close means the **SDK/server peer went away**; the listener treats that as a
+cooperative cancel (see §12) rather than an error. Consequently it is a **protocol requirement that the
+SDK keep the control pipe open for the entire data session** — closing it early is interpreted as a
+cancel request.
 
 **Server side.** If the *client* (host) disconnects while the SDK is writing a reply, the SDK treats it
 as a graceful disconnect and exits its read loop without crashing.
@@ -526,8 +538,8 @@ Setup and flow:
    `Kind`(1) is a `ServerControlKinds` value (today only `1` = `CancelSession`). The host then invokes
    its cancel reaction **exactly once** (idempotent via an interlocked flag), preferring a graceful stop
    so trx/artifacts are still produced. Unknown `Kind` values are ignored and the host keeps parking.
-4. If the control pipe drops unexpectedly while the session is live, the host also treats it as a
-   cancel (see §11).
+4. If the control pipe drops unexpectedly while the session is live (i.e. the SDK/server peer went
+   away), the host also treats it as a cancel (see §11).
 
 ```mermaid
 sequenceDiagram
