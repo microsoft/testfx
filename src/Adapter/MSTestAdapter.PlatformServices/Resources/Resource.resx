@@ -186,7 +186,7 @@
   </data>
   <data name="DeploymentDependencyLoadFailed" xml:space="preserve">
     <value>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</value>
-    <comment>{0} is the assembly or module path. {1} is the reason the assembly or module could not be loaded.</comment>
+    <comment>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</comment>
   </data>
   <data name="MissingDeploymentDependency" xml:space="preserve">
     <value>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</value>

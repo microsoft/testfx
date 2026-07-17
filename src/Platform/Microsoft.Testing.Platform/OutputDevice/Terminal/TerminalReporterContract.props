@@ -14,8 +14,9 @@
 
     SCOPE
       The set is the reporter + its rendering/state types + the small platform abstractions it depends on
-      (IConsole/IStopwatch/IColor/System* + RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser
-      /TestRunSummaryHelper/ZeroTestsPolicy). It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
+      (IConsole/IStopwatch/IColor/System* + ILogger/LogLevel/LoggingExtensions/NopLogger +
+      RoslynString/ApplicationStateGuard/StackTraceHelper/TargetFrameworkParser/TestRunSummaryHelper/ZeroTestsPolicy).
+      It deliberately EXCLUDES TerminalTestReporterCommandLineOptionsProvider.cs (MTP
       command-line specific - the SDK has its own CLI) and TerminalResources.cs (the hand-written [Embedded]
       accessor used by in-repo IVT-linked consumers; standalone consumers compile the resx instead - see below).
 
@@ -26,14 +27,12 @@
       TestRunSummaryHelper/ZeroTestsPolicy) are 'internal' and not exported either (no InternalsVisibleTo to an
       external consumer), so they also never conflict.
 
-      The exception is IColor and SystemConsoleColor: those two ARE shipped *public* API of Microsoft.Testing.Platform
-      (Microsoft.Testing.Platform.OutputDevice.FormattedTextOutputDeviceData.ForegroundColor/BackgroundColor), so a consumer that
-      ALSO references the platform would get CS0436 'conflicts with imported type' for them. They are public API, so
-      they cannot be made [Embedded]/internal in the platform. Instead, when the consumer references
-      Microsoft.Testing.Platform we DROP the duplicated copies (see the _RemoveTerminalReporter* target below) and let
-      the single reporter use of 'SystemConsoleColor?' (TerminalTestReporter.Messaging.cs) bind to the platform's
-      public types - no CS0436 and no consumer-side NoWarn. A consumer that does NOT reference the platform keeps the
-      copies and compiles standalone.
+      The exceptions are the public logging abstractions (ILogger, LogLevel, and LoggingExtensions) plus IColor and
+      SystemConsoleColor, which are shipped *public* API of Microsoft.Testing.Platform. A consumer that ALSO references
+      the platform would get CS0436 conflicts for local copies. These types cannot be made [Embedded]/internal in the
+      platform, so the duplicated copies are dropped when the consumer references Microsoft.Testing.Platform (see the
+      _RemoveTerminalReporter* target below), allowing reporter references to bind to the platform's public types
+      without consumer-side NoWarn. A standalone consumer keeps the copies and compiles without a platform reference.
 
     USAGE
       Import this file from any project that needs the reporter source. Microsoft.Testing.Platform itself does
