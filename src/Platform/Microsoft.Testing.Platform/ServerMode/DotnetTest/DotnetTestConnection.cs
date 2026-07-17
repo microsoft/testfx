@@ -292,7 +292,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             return;
         }
 
-        await TryLogBoundedAsync(LogLevel.Debug, $"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
+        await TryLogAsync(LogLevel.Debug, $"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
 
         await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
     }
@@ -373,7 +373,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             Task completed = await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
             if (completed != listenerTask)
             {
-                await TryLogBoundedAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
+                await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
             }
         }
     }
@@ -405,21 +405,19 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
 
     private async Task TryLogAsync(LogLevel logLevel, string message)
     {
-        try
+        var loggingTask = Task.Run(async () =>
         {
-            await _logger.LogAsync(logLevel, message, null, LoggingExtensions.Formatter).ConfigureAwait(false);
-        }
-        catch (Exception)
-        {
-            // Control-channel diagnostics must never alter connection, cancellation, or shutdown behavior.
-        }
-    }
+            try
+            {
+                await _logger.LogAsync(logLevel, message, null, LoggingExtensions.Formatter).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // Control-channel diagnostics must never alter connection, cancellation, or shutdown behavior.
+            }
+        });
 
-    private async Task TryLogBoundedAsync(LogLevel logLevel, string message)
-    {
-        // Isolate synchronous provider work, then drain briefly while logging is still alive. This keeps the exit
-        // bound finite and avoids racing service-provider disposal for the diagnostic this path exists to emit.
-        var loggingTask = Task.Run(() => TryLogAsync(logLevel, message));
+        // Isolate synchronous provider work and bound providers that return a task which never completes.
         await Task.WhenAny(loggingTask, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false);
     }
 }
