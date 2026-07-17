@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">パッケージ化されたアプリ マニフェストで複数のアプリケーションが宣言されており、実行可能ファイル '{0}' に一意に一致するものがありません。候補のアプリケーション ユーザー モデル ID: {1}。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">パッケージ アプリ マニフェストに有効な &lt;Identity Name="..." Publisher="..." /&gt;要素が宣言されていません。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
