@@ -26,6 +26,7 @@ internal sealed partial class MSTestSettings
     /// <param name="configuration">The configuration.</param>
     internal static void PopulateSettings(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)
     {
+#if !WINDOWS_UWP
         try
         {
             PopulateSettingsCore(settingsXml, logger, configuration);
@@ -34,6 +35,9 @@ internal sealed partial class MSTestSettings
         {
             throw new AdapterSettingsException(Resource.InvalidSettingsXml, ex);
         }
+#else
+        PopulateSettingsCore(settingsXml, logger, configuration);
+#endif
     }
 
     private static void PopulateSettingsCore(string? settingsXml, IAdapterMessageLogger? logger, IConfiguration? configuration)

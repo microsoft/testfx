@@ -122,8 +122,20 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     }
 
     public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, IProgressRenderer renderer)
-        : this(terminal, showProgress, renderer, new NopLogger())
+        : this(terminal, showProgress, renderer, new EmbeddedNopLogger())
     {
+    }
+
+    private sealed class EmbeddedNopLogger : ILogger
+    {
+        public bool IsEnabled(LogLevel logLevel) => false;
+
+        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+        {
+        }
+
+        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+            => Task.CompletedTask;
     }
 
     /// <summary>
