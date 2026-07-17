@@ -164,7 +164,7 @@ public sealed class CrashDumpSequenceLoggerTests
             _mockLogger.Verify(
                 x => x.LogAsync(
                     LogLevel.Warning,
-                    It.Is<string>(message => message.Contains(path) && message.Contains(nameof(IOException)) && message.Contains("   at ")),
+                    It.Is<string>(message => message.Contains(path) && message.Contains(nameof(IOException)) && message.Contains(nameof(ThrowingStream))),
                     null,
                     It.IsAny<Func<string, Exception?, string>>()),
                 Times.Once);
@@ -186,7 +186,7 @@ public sealed class CrashDumpSequenceLoggerTests
         => data is WarningMessageOutputDeviceData warning
         && warning.Message.Contains(path)
         && warning.Message.Contains(nameof(IOException))
-        && warning.Message.Contains("   at ");
+        && warning.Message.Contains(nameof(CrashDumpSequenceLogger.OnTestSessionStartingAsync));
 
     private sealed class ThrowingStream : Stream
     {

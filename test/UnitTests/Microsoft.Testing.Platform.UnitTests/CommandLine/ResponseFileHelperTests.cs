@@ -51,7 +51,7 @@ public sealed class ResponseFileHelperTests
                 // The error must retain the full exception detail (type name, message, and stack trace via
                 // ToString()), not just the exception Message, so the failure stays diagnosable.
                 Assert.Contains(nameof(IOException), errors[0]);
-                Assert.Contains("   at ", errors[0]);
+                Assert.Contains(nameof(ResponseFileHelper.TryReadResponseFile), errors[0]);
             }
         }
         finally
@@ -178,7 +178,7 @@ public sealed class ResponseFileHelperTests
             // The error must retain the full exception detail (type name and stack trace via ToString()), not
             // just the exception Message, consistent with the IOException branch.
             Assert.Contains(nameof(FormatException), errors[0]);
-            Assert.Contains("   at ", errors[0]);
+            Assert.Contains(nameof(ResponseFileHelper.TryReadResponseFile), errors[0]);
         }
         finally
         {
