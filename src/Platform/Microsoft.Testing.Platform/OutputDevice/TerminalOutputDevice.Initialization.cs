@@ -173,7 +173,7 @@ internal sealed partial class TerminalOutputDevice
             HeartbeatSilenceThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SILENCE_SECONDS, defaultSeconds: 30),
             SlowTestThreshold = GetProgressThreshold(_environment, MTP_PROGRESS_SLOW_TEST_SECONDS, defaultSeconds: 60),
             SlowestTestsCount = slowestTestsCount,
-        }, _loggerFactory.CreateLogger<TerminalTestReporter>());
+        }, _loggerFactory.CreateLogger<TestProgressStateAwareTerminal>());
     }
 
     // Reads the --show-slowest-tests option, returning the requested count of slowest tests to list in the
