@@ -15,6 +15,12 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IStopPoliciesService _policiesService;
     private readonly ConcurrentBag<ServerLogMessage> _messages = [];
+    private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
+#if NET9_0_OR_GREATER
+    private readonly Lock _progressMessagesLock = new();
+#else
+    private readonly object _progressMessagesLock = new();
+#endif
 
     private ServerTestHost? _serverTestHost;
 
@@ -53,12 +59,47 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     public string Description => nameof(ServerModePerCallOutputDevice);
 
     public async Task DisplayAfterSessionEndRunAsync(CancellationToken cancellationToken)
-        => await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null, cancellationToken).ConfigureAwait(false);
+    {
+        lock (_progressMessagesLock)
+        {
+            _progressMessages.Clear();
+        }
+
+        await LogAsync(LogLevel.Trace, PlatformResources.FinishedTestSession, padding: null, cancellationToken).ConfigureAwait(false);
+    }
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
         switch (data)
         {
+            case SessionMessageOutputDeviceData sessionMessageData:
+                await LogAsync(LogLevel.Information, sessionMessageData.Message, padding: null, cancellationToken).ConfigureAwait(false);
+                break;
+
+            case ProgressMessageOutputDeviceData progressMessageData:
+                var identity = new ProgressMessageIdentity(producer.Uid, progressMessageData.Key);
+                bool shouldLog = false;
+                lock (_progressMessagesLock)
+                {
+                    if (progressMessageData.Message is null)
+                    {
+                        _progressMessages.Remove(identity);
+                    }
+                    else if (!_progressMessages.TryGetValue(identity, out string? existingMessage)
+                        || existingMessage != progressMessageData.Message)
+                    {
+                        _progressMessages[identity] = progressMessageData.Message;
+                        shouldLog = true;
+                    }
+                }
+
+                if (shouldLog)
+                {
+                    await LogAsync(LogLevel.Information, progressMessageData.Message!, padding: null, cancellationToken).ConfigureAwait(false);
+                }
+
+                break;
+
             case FormattedTextOutputDeviceData formattedTextOutputDeviceData:
                 await LogAsync(LogLevel.Information, formattedTextOutputDeviceData.Text, formattedTextOutputDeviceData.Padding, cancellationToken).ConfigureAwait(false);
                 break;
@@ -80,6 +121,8 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
                 break;
         }
     }
+
+    private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
     public async Task DisplayBannerAsync(string? bannerMessage, CancellationToken cancellationToken)
     {
