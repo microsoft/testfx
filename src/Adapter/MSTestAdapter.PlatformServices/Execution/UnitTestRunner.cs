@@ -111,6 +111,7 @@ internal sealed partial class UnitTestRunner
         Func<TestOutputCaptureMode> modeProvider = static () => MSTestSettings.CurrentSettings.OutputCaptureMode;
         TextWriter originalOut = Console.Out;
         TextWriter originalError = Console.Error;
+        TestContextImplementation.ConfigureLiveOutputWriter(originalOut);
         Console.SetOut(new ConsoleOutRouter(originalOut, modeProvider));
         Console.SetError(new ConsoleErrorRouter(originalError, modeProvider));
         Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(originalOut, modeProvider)));

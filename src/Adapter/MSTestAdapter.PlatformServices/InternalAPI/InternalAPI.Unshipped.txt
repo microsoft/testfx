@@ -22,3 +22,4 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMeth
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.SetParameterMetadataScanCallbackForTesting(System.Action? callback) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsMultiThreaded.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ConfigureLiveOutputWriter(System.IO.TextWriter! liveOutputWriter) -> void

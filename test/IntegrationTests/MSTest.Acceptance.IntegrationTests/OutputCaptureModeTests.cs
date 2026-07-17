@@ -16,6 +16,8 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
 
     private const string ConsoleOutMarker = "CAPTUREMODE_CONSOLE_OUT";
     private const string TraceMarker = "CAPTUREMODE_TRACE";
+    private const string TestContextWriteMarker = "CAPTUREMODE_TESTCONTEXT_WRITE_ONLY";
+    private const string TestContextWriteLineMarker = "CAPTUREMODE_TESTCONTEXT_LINE_ONLY";
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -34,6 +36,9 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
         // shows up even though the test passed (a passing test's captured output is not otherwise printed).
         testHostResult.AssertOutputContains(ConsoleOutMarker);
         testHostResult.AssertOutputContains(TraceMarker);
+        // Exact counts also guard against routing the live echo back through captured standard output.
+        AssertMarkerOccursExactlyOnce(testHostResult, TestContextWriteMarker);
+        AssertMarkerOccursExactlyOnce(testHostResult, TestContextWriteLineMarker);
     }
 
     [TestMethod]
@@ -52,6 +57,8 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
         // In Result mode (the default), output is captured into the result but not streamed live, so a
         // passing test's output is not surfaced.
         testHostResult.AssertOutputDoesNotContain(ConsoleOutMarker);
+        testHostResult.AssertOutputDoesNotContain(TestContextWriteMarker);
+        testHostResult.AssertOutputDoesNotContain(TestContextWriteLineMarker);
     }
 
     [TestMethod]
@@ -67,8 +74,11 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
         testHostResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
         testHostResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
 
-        // A failed test surfaces its captured Console output in the failure block.
+        // A failed test surfaces captured output in the failure block, proving that TestContext live echo remains
+        // additive and does not remove the messages from the completed result.
         testHostResult.AssertOutputContains(ConsoleOutMarker);
+        AssertMarkerOccursExactlyOnce(testHostResult, TestContextWriteMarker);
+        AssertMarkerOccursExactlyOnce(testHostResult, TestContextWriteLineMarker);
     }
 
     [TestMethod]
@@ -85,8 +95,11 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
         testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
 
         // In None mode nothing is captured, so Console output is not intercepted and flows straight to the
-        // console as the test runs (even for a passing test).
+        // console as the test runs (even for a passing test). TestContext output keeps its legacy result-only
+        // behavior and is not echoed live.
         testHostResult.AssertOutputContains(ConsoleOutMarker);
+        testHostResult.AssertOutputDoesNotContain(TestContextWriteMarker);
+        testHostResult.AssertOutputDoesNotContain(TestContextWriteLineMarker);
     }
 
     [TestMethod]
@@ -121,6 +134,8 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
 
         // The legacy boolean false maps to None: nothing captured, so output flows straight to the console.
         testHostResult.AssertOutputContains(ConsoleOutMarker);
+        testHostResult.AssertOutputDoesNotContain(TestContextWriteMarker);
+        testHostResult.AssertOutputDoesNotContain(TestContextWriteLineMarker);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -204,12 +219,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [TestClass]
 public class UnitTest1
 {
+    public TestContext TestContext { get; set; }
+
     [TestMethod]
     public void PassingTestWithOutput()
     {
         Console.WriteLine("CAPTUREMODE_CONSOLE_OUT");
         Console.Error.WriteLine("CAPTUREMODE_CONSOLE_ERR");
         Trace.WriteLine("CAPTUREMODE_TRACE");
+        TestContext.Write("CAPTUREMODE_TESTCONTEXT_WRITE_ONLY");
+        TestContext.WriteLine("CAPTUREMODE_TESTCONTEXT_LINE_ONLY");
     }
 
     [TestMethod]
@@ -218,9 +237,14 @@ public class UnitTest1
         Console.WriteLine("CAPTUREMODE_CONSOLE_OUT");
         Console.Error.WriteLine("CAPTUREMODE_CONSOLE_ERR");
         Trace.WriteLine("CAPTUREMODE_TRACE");
+        TestContext.Write("CAPTUREMODE_TESTCONTEXT_WRITE_ONLY");
+        TestContext.WriteLine("CAPTUREMODE_TESTCONTEXT_LINE_ONLY");
         Assert.Fail("BOOM");
     }
 }
 """;
     }
+
+    private static void AssertMarkerOccursExactlyOnce(TestHostResult testHostResult, string marker)
+        => Assert.HasCount(1, Regex.Matches(testHostResult.StandardOutput, Regex.Escape(marker)), testHostResult.ToString());
 }
