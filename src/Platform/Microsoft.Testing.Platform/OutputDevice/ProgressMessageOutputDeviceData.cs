@@ -12,6 +12,8 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <see langword="null"/> <see cref="Message"/> removes the message from an interactive progress area.
 /// When interactive progress is unavailable or disabled, each changed value is written as a durable line instead;
 /// those lines remain in terminal scrollback and cannot be removed by a later update.
+/// Progress messages are currently not forwarded through the <c>dotnet test</c> pipe protocol, where the SDK owns
+/// terminal rendering. Keyed protocol forwarding is required before this payload can be represented there.
 /// </remarks>
 public sealed class ProgressMessageOutputDeviceData : IOutputDeviceData
 {
