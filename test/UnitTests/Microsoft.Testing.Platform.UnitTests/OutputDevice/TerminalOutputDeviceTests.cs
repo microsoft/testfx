@@ -69,6 +69,21 @@ public sealed class TerminalOutputDeviceTests
         Assert.AreEqual(2, CountOccurrences(standardError, "Restoring"));
     }
 
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_HotReloadCycleResetsProgressMessageDeduplication()
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(
+            async outputDevice =>
+            {
+                await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+                await outputDevice.DisplayAfterHotReloadSessionEndAsync(CancellationToken.None);
+                await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            },
+            isHotReloadEnabled: true);
+
+        Assert.AreEqual(2, CountOccurrences(standardError, "Restoring"));
+    }
+
     private static async Task AssertListTestsJsonStandardErrorAsync(IOutputDeviceData data, string expectedMessage)
     {
         string standardError = await CaptureListTestsJsonStandardErrorAsync(
@@ -80,7 +95,9 @@ public sealed class TerminalOutputDeviceTests
         Assert.IsFalse(standardError.Contains("##vso[task.logissue", StringComparison.Ordinal), standardError.Replace("##", "[hash][hash]"));
     }
 
-    private static async Task<string> CaptureListTestsJsonStandardErrorAsync(Func<TerminalOutputDevice, Task> action)
+    private static async Task<string> CaptureListTestsJsonStandardErrorAsync(
+        Func<TerminalOutputDevice, Task> action,
+        bool isHotReloadEnabled = false)
     {
         await ConsoleErrorSemaphore.WaitAsync();
         TextWriter originalError = Console.Error;
@@ -89,7 +106,7 @@ public sealed class TerminalOutputDeviceTests
 
         try
         {
-            using TerminalOutputDevice outputDevice = CreateListTestsJsonAzureDevOpsOutputDevice();
+            using TerminalOutputDevice outputDevice = CreateListTestsJsonAzureDevOpsOutputDevice(isHotReloadEnabled);
             await outputDevice.InitializeAsync();
 
             await action(outputDevice);
@@ -216,7 +233,7 @@ public sealed class TerminalOutputDeviceTests
             testApplicationCancellationTokenSource.Object);
     }
 
-    private static TerminalOutputDevice CreateListTestsJsonAzureDevOpsOutputDevice()
+    private static TerminalOutputDevice CreateListTestsJsonAzureDevOpsOutputDevice(bool isHotReloadEnabled = false)
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
@@ -232,12 +249,15 @@ public sealed class TerminalOutputDeviceTests
         var testApplicationCancellationTokenSource = new Mock<ITestApplicationCancellationTokenSource>();
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
 
+        var runtimeFeature = new Mock<IRuntimeFeature>();
+        runtimeFeature.SetupGet(x => x.IsHotReloadEnabled).Returns(isHotReloadEnabled);
+
         return new TerminalOutputDevice(
             Mock.Of<IConsole>(),
             testApplicationModuleInfo.Object,
             Mock.Of<ITestHostControllerInfo>(),
             Mock.Of<IAsyncMonitor>(),
-            Mock.Of<IRuntimeFeature>(),
+            runtimeFeature.Object,
             environment.Object,
             Mock.Of<IPlatformInformation>(),
             new TestCommandLineOptions(new Dictionary<string, string[]>

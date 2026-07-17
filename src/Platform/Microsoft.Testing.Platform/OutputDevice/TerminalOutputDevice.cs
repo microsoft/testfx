@@ -80,6 +80,14 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
 
     private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
+    private void ClearJsonProgressMessages()
+    {
+        lock (_jsonProgressMessagesLock)
+        {
+            _jsonProgressMessages.Clear();
+        }
+    }
+
     public TerminalOutputDevice(
         IConsole console,
         ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,

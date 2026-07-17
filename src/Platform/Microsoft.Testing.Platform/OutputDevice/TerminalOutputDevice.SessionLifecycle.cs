@@ -106,6 +106,7 @@ internal sealed partial class TerminalOutputDevice
             // cycle would produce multiple growing JSON documents on stdout, which would break
             // any consumer that pipes the output (the accumulated _discoveredTestsForJson buffer
             // would also re-include earlier tests every cycle).
+            ClearJsonProgressMessages();
             return;
         }
 
@@ -146,10 +147,7 @@ internal sealed partial class TerminalOutputDevice
                     _console.WriteLine(DiscoveredTestsJsonSerializer.Serialize(_discoveredTestsForJson));
                 }
 
-                lock (_jsonProgressMessagesLock)
-                {
-                    _jsonProgressMessages.Clear();
-                }
+                ClearJsonProgressMessages();
             }
 
             return;

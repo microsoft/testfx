@@ -27,7 +27,8 @@ internal sealed partial class TerminalOutputDevice
             // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
             // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
             // here: they must be written to stdout to be processed, but stdout belongs to JSON.
-            // Warnings and informational text are dropped to keep stdout strictly JSON.
+            // Warnings and regular informational text are dropped, while structured session and progress
+            // messages are routed to stderr, keeping stdout strictly JSON.
             switch (data)
             {
                 case SessionMessageOutputDeviceData sessionMessageData:
