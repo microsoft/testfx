@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">Le manifeste de l’application packagée ne déclare pas d’élément valide &lt;Identity Name="..." Publisher="..." /&gt; élément.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
