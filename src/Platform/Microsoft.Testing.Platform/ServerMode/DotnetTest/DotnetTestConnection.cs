@@ -328,7 +328,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             // protocol requirement that the SDK keep the control pipe open until the data session ends - an early
             // close for any reason is interpreted here as a cancel.
             await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
-            await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' dropped while the session was live; treating it as a cooperative cancel: {ex}").ConfigureAwait(false);
+            await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener failed while the session was live; ensuring cooperative cancellation: {ex}").ConfigureAwait(false);
         }
         catch (Exception ex)
         {

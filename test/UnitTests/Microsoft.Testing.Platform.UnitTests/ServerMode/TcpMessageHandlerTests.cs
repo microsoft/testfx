@@ -14,10 +14,13 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TcpMessageHandlerTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public async Task ReadAsync_ConnectionReset_LogsFullExceptionAndReturnsNullWhenLoggerFails()
     {
         SocketException connectionReset = new((int)SocketError.ConnectionReset);
+        var logAttempted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ILogger> logger = new();
         logger
             .Setup(x => x.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
@@ -26,6 +29,7 @@ public sealed class TcpMessageHandlerTests
                 {
                     Assert.Contains(nameof(SocketException), message);
                     Assert.Contains(connectionReset.Message, message);
+                    logAttempted.TrySetResult();
                 })
             .ThrowsAsync(new IOException("Logging failed."));
 
@@ -40,6 +44,7 @@ public sealed class TcpMessageHandlerTests
         RpcMessage? message = await handler.ReadAsync(CancellationToken.None);
 
         Assert.IsNull(message);
+        await logAttempted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
         logger.Verify(
             x => x.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter),
             Times.Once);

@@ -62,11 +62,11 @@ internal sealed partial class ServerTestHost
             // cancellation/shutdown noise above Trace.
             if (ex is OperationCanceledException)
             {
-                await TryLogAsync(LogLevel.Trace, $"Suppressed cancellation while sending '{method}': {ex}").ConfigureAwait(false);
+                QueueLog(LogLevel.Trace, $"Suppressed cancellation while sending '{method}': {ex}");
             }
             else
             {
-                await TryLogAsync(LogLevel.Debug, $"Suppressed failure while sending '{method}': {ex}").ConfigureAwait(false);
+                QueueLog(LogLevel.Debug, $"Suppressed failure while sending '{method}': {ex}");
             }
         }
         finally
@@ -86,6 +86,9 @@ internal sealed partial class ServerTestHost
             // Diagnostics emitted from best-effort paths must not change their suppression behavior.
         }
     }
+
+    private void QueueLog(LogLevel logLevel, string message)
+        => _ = Task.Run(() => TryLogAsync(logLevel, message));
 
     internal Task SendTestUpdateCompleteAsync(Guid runId, CancellationToken cancellationToken)
         => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null), cancellationToken);

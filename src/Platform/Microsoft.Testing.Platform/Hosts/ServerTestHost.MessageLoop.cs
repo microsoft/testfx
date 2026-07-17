@@ -134,7 +134,7 @@ internal sealed partial class ServerTestHost
                             // This is intentionally not using PlatformResources.ExceptionDuringCancellationWarningMessage
                             // It's meant for troubleshooting and shouldn't be localized.
                             // The localized message that is user-facing will be displayed in the DisplayAsync call next line.
-                            await TryLogAsync(LogLevel.Warning, $"Exception during the cancellation of request id '{args.CancelRequestId}': {cancellationException}").ConfigureAwait(false);
+                            QueueLog(LogLevel.Warning, $"Exception during the cancellation of request id '{args.CancelRequestId}': {cancellationException}");
 
                             await ServiceProvider.GetOutputDevice().DisplayAsync(
                                 this,
