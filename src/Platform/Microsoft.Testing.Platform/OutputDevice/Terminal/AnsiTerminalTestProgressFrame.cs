@@ -238,18 +238,31 @@ internal sealed class AnsiTerminalTestProgressFrame
     {
         List<TextElement> elements = [];
         int totalWidth = 0;
+        bool textWasNormalized = false;
         TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
         while (enumerator.MoveNext())
         {
-            string element = enumerator.GetTextElement();
-            int width = GetTerminalCellWidth(element);
-            elements.Add(new TextElement(element, width));
-            totalWidth += width;
+            string originalElement = enumerator.GetTextElement();
+            TextElement element = CreateTextElement(originalElement);
+            textWasNormalized |= !ReferenceEquals(originalElement, element.Text);
+            elements.Add(element);
+            totalWidth += element.Width;
         }
 
         if (totalWidth <= availableWidth)
         {
-            terminal.Append(text);
+            if (textWasNormalized)
+            {
+                foreach (TextElement element in elements)
+                {
+                    terminal.Append(element.Text);
+                }
+            }
+            else
+            {
+                terminal.Append(text);
+            }
+
             return;
         }
 
@@ -293,24 +306,46 @@ internal sealed class AnsiTerminalTestProgressFrame
         }
     }
 
-    private static int GetTerminalCellWidth(string textElement)
+    private static TextElement CreateTextElement(string textElement)
     {
         int width = 0;
         bool hasEmojiPresentationSelector = false;
+        StringBuilder? normalizedText = null;
         for (int i = 0; i < textElement.Length;)
         {
-            int codePoint = char.ConvertToUtf32(textElement, i);
+            int codePoint;
+            int codeUnitCount;
+            bool isMalformedSurrogate = char.IsSurrogate(textElement[i])
+                && !char.IsSurrogatePair(textElement, i);
+            if (isMalformedSurrogate)
+            {
+                normalizedText ??= new StringBuilder(textElement.Length).Append(textElement, 0, i);
+                normalizedText.Append('\uFFFD');
+                codePoint = 0xFFFD;
+                codeUnitCount = 1;
+            }
+            else
+            {
+                codePoint = char.ConvertToUtf32(textElement, i);
+                codeUnitCount = char.IsSurrogatePair(textElement, i) ? 2 : 1;
+                normalizedText?.Append(textElement, i, codeUnitCount);
+            }
+
             hasEmojiPresentationSelector |= codePoint == 0xFE0F;
-            UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(textElement, i);
+            UnicodeCategory category = isMalformedSurrogate
+                ? UnicodeCategory.OtherSymbol
+                : CharUnicodeInfo.GetUnicodeCategory(textElement, i);
             if (category is not (UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark or UnicodeCategory.Format))
             {
                 width = Math.Max(width, IsWideCodePoint(codePoint) ? 2 : 1);
             }
 
-            i += char.IsSurrogatePair(textElement, i) ? 2 : 1;
+            i += codeUnitCount;
         }
 
-        return hasEmojiPresentationSelector ? Math.Max(width, 2) : width;
+        return new TextElement(
+            normalizedText?.ToString() ?? textElement,
+            hasEmojiPresentationSelector ? Math.Max(width, 2) : width);
     }
 
     private static bool IsWideCodePoint(int codePoint)
