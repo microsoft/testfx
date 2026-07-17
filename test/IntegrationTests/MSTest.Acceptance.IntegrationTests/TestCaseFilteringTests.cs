@@ -3,12 +3,15 @@
 
 using System.Collections.Immutable;
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
 
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
-namespace MSTest.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
 /// Regression guard for the platform-agnostic filtering refactor (neutral <c>ITestElementFilter</c>).
@@ -20,7 +23,8 @@ namespace MSTest.IntegrationTests;
 /// re-routes — so a future change cannot silently break <c>--filter</c>.
 /// </summary>
 [TestClass]
-public class TestCaseFilteringTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class TestCaseFilteringTests : AcceptanceTestBase<TestCaseFilteringTests.TestAssetFixture>
 {
     private const string TestAsset = "DiscoverInternalsProject";
 
@@ -30,7 +34,7 @@ public class TestCaseFilteringTests : CLITestBase
     [TestMethod]
     public void FilterByFullyQualifiedNameSelectsExactlyTheMatchingTestDuringDiscovery()
     {
-        string assemblyPath = GetAssetFullPath(TestAsset);
+        string assemblyPath = AssetFixture.AssemblyPath;
         TestCase target = GetTargetTestCase(assemblyPath);
 
         ImmutableArray<TestCase> filtered = DiscoverTests(assemblyPath, $"FullyQualifiedName={target.FullyQualifiedName}");
@@ -43,7 +47,7 @@ public class TestCaseFilteringTests : CLITestBase
     [TestMethod]
     public void FilterByIdSelectsExactlyTheMatchingTestDuringDiscovery()
     {
-        string assemblyPath = GetAssetFullPath(TestAsset);
+        string assemblyPath = AssetFixture.AssemblyPath;
         TestCase target = GetTargetTestCase(assemblyPath);
 
         ImmutableArray<TestCase> filtered = DiscoverTests(assemblyPath, $"Id={target.Id}");
@@ -56,7 +60,7 @@ public class TestCaseFilteringTests : CLITestBase
     [TestMethod]
     public async Task FilterByFullyQualifiedNameSelectsExactlyTheMatchingTestDuringExecution()
     {
-        string assemblyPath = GetAssetFullPath(TestAsset);
+        string assemblyPath = AssetFixture.AssemblyPath;
         ImmutableArray<TestCase> allTests = DiscoverTests(assemblyPath);
         TestCase target = allTests.First(t => t.DisplayName == TargetDisplayName);
 
@@ -75,7 +79,7 @@ public class TestCaseFilteringTests : CLITestBase
     [TestMethod]
     public async Task FilterByIdSelectsExactlyTheMatchingTestDuringExecution()
     {
-        string assemblyPath = GetAssetFullPath(TestAsset);
+        string assemblyPath = AssetFixture.AssemblyPath;
         ImmutableArray<TestCase> allTests = DiscoverTests(assemblyPath);
         Guid targetId = allTests.First(t => t.DisplayName == TargetDisplayName).Id;
 
@@ -103,5 +107,12 @@ public class TestCaseFilteringTests : CLITestBase
         {
             testCase.LocalExtensionData = null;
         }
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAsset;
+
+        protected override string SourceFiles => GeneratedAssetSource.DiscoverInternals;
     }
 }

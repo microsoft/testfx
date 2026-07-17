@@ -1,12 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.IntegrationTests;
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
+
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class DiscoverInternalsTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class DiscoverInternalsTests : AcceptanceTestBase<DiscoverInternalsTests.TestAssetFixture>
 {
     private const string TestAsset = "DiscoverInternalsProject";
 
@@ -14,7 +18,7 @@ public class DiscoverInternalsTests : CLITestBase
     public async Task InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
-        string assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
@@ -31,7 +35,7 @@ public class DiscoverInternalsTests : CLITestBase
     public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
     {
         // Arrange
-        string assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
@@ -45,7 +49,7 @@ public class DiscoverInternalsTests : CLITestBase
     [TestMethod]
     public async Task AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
-        string assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
@@ -58,5 +62,12 @@ public class DiscoverInternalsTests : CLITestBase
         VerifyE2E.TestsPassed(
             testResults,
             "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)");
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAsset;
+
+        protected override string SourceFiles => GeneratedAssetSource.DiscoverInternals;
     }
 }

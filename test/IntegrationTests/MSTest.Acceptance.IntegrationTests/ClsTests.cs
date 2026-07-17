@@ -1,12 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.IntegrationTests;
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
+
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public class ClsTests : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class ClsTests : AcceptanceTestBase<ClsTests.TestAssetFixture>
 {
     private const string TestAssetName = "ClsTestProject";
 
@@ -16,7 +20,7 @@ public class ClsTests : CLITestBase
     public async Task TestsAreRun()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
@@ -30,5 +34,12 @@ public class ClsTests : CLITestBase
             "StringDataRow (\"some string\")",
             "StringDataRow2 (\"some string\")",
             "StringDataRow2 (\"some other string\")");
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => TestAssetName;
+
+        protected override string SourceFiles => GeneratedAssetSource.Cls;
     }
 }

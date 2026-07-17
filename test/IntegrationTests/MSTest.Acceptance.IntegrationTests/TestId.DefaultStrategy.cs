@@ -1,12 +1,16 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.IntegrationTests;
+using static MSTest.Acceptance.IntegrationTests.AdapterTestHost;
+
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
-public partial class TestId : CLITestBase
+[OSCondition(OperatingSystems.Windows)]
+public sealed class TestId : AcceptanceTestBase<TestId.TestAssetFixture>
 {
     private const string DefaultStrategyDll = "TestIdProject.DefaultStrategy";
 
@@ -14,7 +18,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_DataRowArray_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowArraysTests");
@@ -29,8 +33,8 @@ public partial class TestId : CLITestBase
             "DataRowArraysTests (0,[0,0,0])");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
     }
 
@@ -38,7 +42,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_DataRowString_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowStringTests");
@@ -54,8 +58,8 @@ public partial class TestId : CLITestBase
             "DataRowStringTests (\"  \")");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
     }
 
@@ -63,7 +67,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_DynamicDataArrays_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataArraysTests");
@@ -78,8 +82,8 @@ public partial class TestId : CLITestBase
             "DynamicDataArraysTests (0,[0,0,0])");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
     }
 
@@ -87,7 +91,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_DynamicDataTuple_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataTuplesTests");
@@ -101,8 +105,8 @@ public partial class TestId : CLITestBase
             "DynamicDataTuplesTests ((1, text, False))");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
     }
 
@@ -110,7 +114,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_DynamicDataGenericCollections_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataGenericCollectionsTests");
@@ -126,8 +130,8 @@ public partial class TestId : CLITestBase
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
     }
 
@@ -135,7 +139,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_TestDataSourceArrays_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceArraysTests");
@@ -150,8 +154,8 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
     }
 
@@ -159,7 +163,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_TestDataSourceTuples_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceTuplesTests");
@@ -173,8 +177,8 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
     }
 
@@ -182,7 +186,7 @@ public partial class TestId : CLITestBase
     public async Task TestIdUniqueness_TestDataSourceGenericCollections_DefaultStrategy()
     {
         // Arrange
-        string assemblyPath = GetAssetFullPath(DefaultStrategyDll);
+        string assemblyPath = AssetFixture.AssemblyPath;
 
         // Act
         System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceGenericCollectionsTests");
@@ -198,8 +202,17 @@ public partial class TestId : CLITestBase
             "Custom name");
 
         // We cannot assert the expected ID as it is path dependent
-        CollectionAssert.AllItemsAreUnique(
-            testResults.Select(x => x.TestCase.Id.ToString()).ToList(),
+        Assert.AreAllDistinct(
+            testResults.Select(x => x.TestCase.Id.ToString()),
             "Test IDs should be unique.");
+    }
+
+    public sealed class TestAssetFixture : GeneratedAssetFixture
+    {
+        protected override string ProjectName => DefaultStrategyDll;
+
+        protected override string SourceFiles
+            => GeneratedAssetSource.FromSharedDirectories(
+                @"test\IntegrationTests\TestAssets\TestIdProject.DefaultStrategy");
     }
 }
