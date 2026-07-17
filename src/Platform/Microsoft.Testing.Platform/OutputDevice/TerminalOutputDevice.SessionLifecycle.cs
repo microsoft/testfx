@@ -145,6 +145,11 @@ internal sealed partial class TerminalOutputDevice
                 {
                     _console.WriteLine(DiscoveredTestsJsonSerializer.Serialize(_discoveredTestsForJson));
                 }
+
+                lock (_jsonProgressMessagesLock)
+                {
+                    _jsonProgressMessages.Clear();
+                }
             }
 
             return;

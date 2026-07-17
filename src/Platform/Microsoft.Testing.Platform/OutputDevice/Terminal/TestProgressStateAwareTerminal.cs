@@ -314,7 +314,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         int activeWorkerCount = _progressItems.Count(static progress => progress is not null);
         int visibleCount = Math.Min(
             MaximumVisibleProgressMessages,
-            Math.Max(0, _terminal.Height - 1 - activeWorkerCount));
+            Math.Max(0, _terminal.Height - 2 - activeWorkerCount));
         _visibleProgressMessages = _progressMessages.Values
             .OrderByDescending(static state => state.Version)
             .Take(visibleCount)

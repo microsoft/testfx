@@ -227,8 +227,20 @@ internal sealed class AnsiTerminalTestProgressFrame
     private void AppendProgressMessage(TerminalProgressMessageState message, RenderedProgressItem currentLine, AnsiTerminal terminal)
     {
         currentLine.RenderedDurationLength = 0;
+        int availableWidth = Math.Max(0, Width - 1);
+        if (availableWidth == 0)
+        {
+            return;
+        }
+
+        if (availableWidth < 3)
+        {
+            terminal.Append(message.Text[..Math.Min(message.Text.Length, availableWidth)]);
+            return;
+        }
+
         int charsTaken = 0;
-        AppendToWidth(terminal, message.Text, Width - 1, ref charsTaken);
+        AppendToWidth(terminal, message.Text, availableWidth, ref charsTaken);
     }
 
     private static void AppendToWidth(AnsiTerminal terminal, string text, int width, ref int charsTaken)

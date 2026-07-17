@@ -62,6 +62,12 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // by the platform before DisplayAfterSessionEndRunInternalAsync runs, so no extra locking is
     // required. The list stays empty (and effectively unused) outside JSON mode.
     private readonly List<TestNode> _discoveredTestsForJson = [];
+    private readonly Dictionary<ProgressMessageIdentity, string> _jsonProgressMessages = [];
+#if NET9_0_OR_GREATER
+    private readonly Lock _jsonProgressMessagesLock = new();
+#else
+    private readonly object _jsonProgressMessagesLock = new();
+#endif
 
     private TerminalTestReporter? _terminalTestReporter;
     private bool _bannerDisplayed;
@@ -71,6 +77,8 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private bool _isAzureDevOpsEnvironment;
     private ILogger? _logger;
     private TestProcessRole? _processRole;
+
+    private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
     public TerminalOutputDevice(
         IConsole console,

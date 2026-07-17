@@ -23,6 +23,8 @@ namespace Microsoft.Testing.Platform.UnitTests.OutputDevice;
 public sealed class TerminalOutputDeviceTests
 {
     private static readonly SemaphoreSlim ConsoleErrorSemaphore = new(1, 1);
+    private static readonly IOutputDeviceDataProducer Producer = Mock.Of<IOutputDeviceDataProducer>(
+        producer => producer.Uid == "producer");
 
     [TestMethod]
     public async Task DisplayAsync_ListTestsJsonInAzureDevOps_WritesPlainErrorOnlyToStandardError()
@@ -36,7 +38,49 @@ public sealed class TerminalOutputDeviceTests
         await AssertListTestsJsonStandardErrorAsync(new ExceptionOutputDeviceData(exception), exception.Message);
     }
 
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_WritesSessionMessageToStandardError()
+        => await AssertListTestsJsonStandardErrorAsync(new SessionMessageOutputDeviceData("Restoring assets"), "Restoring assets");
+
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_WritesOnlyChangedProgressMessagesToStandardError()
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(async outputDevice =>
+        {
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restored"), CancellationToken.None);
+        });
+
+        Assert.AreEqual(1, CountOccurrences(standardError, "Restoring"));
+        Assert.AreEqual(1, CountOccurrences(standardError, "Restored"));
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_ProgressMessageAfterRemovalWritesSameValueAgain()
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(async outputDevice =>
+        {
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", null), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+        });
+
+        Assert.AreEqual(2, CountOccurrences(standardError, "Restoring"));
+    }
+
     private static async Task AssertListTestsJsonStandardErrorAsync(IOutputDeviceData data, string expectedMessage)
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(
+            outputDevice => outputDevice.DisplayAsync(Producer, data, CancellationToken.None));
+
+        Assert.Contains(expectedMessage, standardError);
+        // Replace "##" so the assertion failure (if it fires) does not itself contain a literal
+        // ##vso command that an Azure DevOps agent watching the test output could mistakenly act on.
+        Assert.IsFalse(standardError.Contains("##vso[task.logissue", StringComparison.Ordinal), standardError.Replace("##", "[hash][hash]"));
+    }
+
+    private static async Task<string> CaptureListTestsJsonStandardErrorAsync(Func<TerminalOutputDevice, Task> action)
     {
         await ConsoleErrorSemaphore.WaitAsync();
         TextWriter originalError = Console.Error;
@@ -48,13 +92,9 @@ public sealed class TerminalOutputDeviceTests
             using TerminalOutputDevice outputDevice = CreateListTestsJsonAzureDevOpsOutputDevice();
             await outputDevice.InitializeAsync();
 
-            await outputDevice.DisplayAsync(Mock.Of<IOutputDeviceDataProducer>(), data, CancellationToken.None);
+            await action(outputDevice);
 
-            string standardError = errorWriter.ToString();
-            Assert.Contains(expectedMessage, standardError);
-            // Replace "##" so the assertion failure (if it fires) does not itself contain a literal
-            // ##vso command that an Azure DevOps agent watching the test output could mistakenly act on.
-            Assert.IsFalse(standardError.Contains("##vso[task.logissue", StringComparison.Ordinal), standardError.Replace("##", "[hash][hash]"));
+            return errorWriter.ToString();
         }
         finally
         {
@@ -62,6 +102,9 @@ public sealed class TerminalOutputDeviceTests
             ConsoleErrorSemaphore.Release();
         }
     }
+
+    private static int CountOccurrences(string text, string value)
+        => (text.Length - text.Replace(value, string.Empty).Length) / value.Length;
 
     [TestMethod]
     public async Task InitializeAsync_NoProgressLegacyFlag_WritesDeprecationWarningToStandardError()

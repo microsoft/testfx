@@ -555,8 +555,7 @@ public sealed class TerminalTestReporterTests
         progressAwareTerminal.WriteToTerminal(static _ => { });
         progressAwareTerminal.StopShowingProgress();
 
-        Assert.HasCount(1, renderer.Messages);
-        Assert.AreEqual("Text 4", renderer.Messages[0].Text);
+        Assert.IsEmpty(renderer.Messages);
     }
 
     [TestMethod]
@@ -616,6 +615,21 @@ public sealed class TerminalTestReporterTests
             .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
             .Single();
         Assert.HasCount(9, renderedMessage);
+    }
+
+    [TestMethod]
+    [DataRow(1, 0)]
+    [DataRow(2, 1)]
+    [DataRow(3, 2)]
+    public void AnsiTerminal_RenderProgress_NarrowTerminalDoesNotWriteReservedColumn(int width, int expectedMessageLength)
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: width, windowWidth: width);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "0123456789")]);
+
+        string renderedMessage = console.Output.Replace(Environment.NewLine, string.Empty);
+        Assert.HasCount(expectedMessageLength, renderedMessage);
     }
 
     [TestMethod]

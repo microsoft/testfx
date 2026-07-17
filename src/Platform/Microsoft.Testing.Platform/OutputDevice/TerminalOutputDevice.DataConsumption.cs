@@ -30,6 +30,36 @@ internal sealed partial class TerminalOutputDevice
             // Warnings and informational text are dropped to keep stdout strictly JSON.
             switch (data)
             {
+                case SessionMessageOutputDeviceData sessionMessageData:
+                    await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
+                    await WriteToStandardErrorAsync(sessionMessageData.Message).ConfigureAwait(false);
+                    break;
+
+                case ProgressMessageOutputDeviceData progressMessageData:
+                    await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
+                    var identity = new ProgressMessageIdentity(producer.Uid, progressMessageData.Key);
+                    bool shouldWrite = false;
+                    lock (_jsonProgressMessagesLock)
+                    {
+                        if (progressMessageData.Message is null)
+                        {
+                            _jsonProgressMessages.Remove(identity);
+                        }
+                        else if (!_jsonProgressMessages.TryGetValue(identity, out string? existingMessage)
+                            || existingMessage != progressMessageData.Message)
+                        {
+                            _jsonProgressMessages[identity] = progressMessageData.Message;
+                            shouldWrite = true;
+                        }
+                    }
+
+                    if (shouldWrite)
+                    {
+                        await WriteToStandardErrorAsync(progressMessageData.Message!).ConfigureAwait(false);
+                    }
+
+                    break;
+
                 case ErrorMessageOutputDeviceData errorData:
                     await LogDebugAsync(errorData.Message).ConfigureAwait(false);
                     await WriteToStandardErrorAsync(errorData.Message).ConfigureAwait(false);
