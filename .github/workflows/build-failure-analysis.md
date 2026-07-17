@@ -17,10 +17,10 @@ description: >-
 # public project) and the agent analyses whichever leg(s) actually contain
 # errors. Reusing the binlogs avoids a duplicate build: the analysis pipeline
 # only downloads build artifacts (data) and reads them — it does **not** build
-# or execute PR code. (gh-aw's generated jobs may run `actions/checkout` —
-# depending on the trigger — to fetch the repository for agent
-# configuration/context; that is a checkout for tooling only, and no build or
-# execution of the PR's code is performed.)
+# or execute PR code. (gh-aw's generated agent job **does** check out the
+# repository — via `actions/checkout` — to load the workflow's own agent
+# configuration; that checkout is for tooling only and uses the event's ref,
+# **not** the PR head, so no PR code is built or executed.)
 
 on:
   # `check_run` fires for every check on a commit, so the `fetch-binlog` job
@@ -70,7 +70,13 @@ permissions:
   copilot-requests: write
 
 concurrency:
-  group: build-failure-analysis-${{ github.event.check_run.pull_requests[0].number || inputs['pr-number'] || github.event.check_run.head_sha || github.run_id }}
+  # Only real `microsoft.testfx` check_run events (and manual dispatch for a
+  # PR) use a PR/head-scoped group, so a newer analysis supersedes an
+  # in-progress one for the same PR. Every OTHER completed check_run on the PR
+  # would otherwise land in the same group and — with cancel-in-progress —
+  # abort the running real analysis, so those get a unique per-run group that
+  # collides with nothing.
+  group: ${{ (github.event_name == 'check_run' && github.event.check_run.name == 'microsoft.testfx' && format('build-failure-analysis-{0}', github.event.check_run.pull_requests[0].number || github.event.check_run.head_sha)) || (github.event_name == 'workflow_dispatch' && format('build-failure-analysis-{0}', inputs['pr-number'])) || format('build-failure-analysis-run-{0}', github.run_id) }}
   cancel-in-progress: true
 
 timeout-minutes: 30
