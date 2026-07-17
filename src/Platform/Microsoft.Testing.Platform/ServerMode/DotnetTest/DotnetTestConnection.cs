@@ -140,6 +140,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
         };
 
+        if (hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost)
+        {
+            properties.Add(HandshakeMessagePropertyNames.AttemptNumber, GetAttemptNumber());
+        }
+
         if (additionalHandshakeProperties is not null)
         {
             foreach (KeyValuePair<byte, string> property in additionalHandshakeProperties)
@@ -181,6 +186,16 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             : _commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
                 ? HandshakeMessageExecutionModes.Discover
                 : HandshakeMessageExecutionModes.Run;
+
+    private string GetAttemptNumber()
+    {
+        string? value = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
+        return RoslynString.IsNullOrEmpty(value)
+            ? "1"
+            : int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int attemptNumber) && attemptNumber >= 1
+                ? attemptNumber.ToString(CultureInfo.InvariantCulture)
+                : throw new InvalidOperationException($"Environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER}' must contain a positive integer.");
+    }
 
     public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions) => supportedProtocolVersions.Split(';').Contains(protocolVersion);
 

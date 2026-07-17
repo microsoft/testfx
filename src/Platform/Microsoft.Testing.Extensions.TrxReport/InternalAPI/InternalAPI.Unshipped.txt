@@ -1,4 +1,5 @@
 #nullable enable
+const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.TrxArtifactKind = "microsoft.testing.trx" -> string!
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, System.Guid runId, string! runName) -> System.Xml.Linq.XDocument!
@@ -20,5 +21,6 @@ static Microsoft.Testing.Platform.IPC.Serializers.BaseSerializer.WriteListPayloa
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Expected = 10 -> ushort
 const Microsoft.Testing.Platform.IPC.FailedTestResultMessageFieldsId.Actual = 11 -> ushort
 Microsoft.Testing.Extensions.MergeOutputFileHelper
+static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!

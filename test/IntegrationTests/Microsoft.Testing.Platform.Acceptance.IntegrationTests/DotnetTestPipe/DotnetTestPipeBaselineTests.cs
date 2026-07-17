@@ -57,6 +57,31 @@ public class DotnetTestPipeBaselineTests : AcceptanceTestBase<DotnetTestPipeBase
             FakeDotnetTestSdk.DefaultSupportedProtocolVersions,
             result.NegotiatedProtocolVersion,
             "An old SDK that only supports 1.0.0 should negotiate down to '1.0.0'.");
+        Assert.AreEqual(
+            "1",
+            result.ReceivedHandshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber],
+            "A non-retried test host should report attempt 1.");
+    }
+
+    [TestMethod]
+    public async Task DotnetTestPipe_InvalidAttemptNumber_FailsBeforeHandshake()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent);
+
+        FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+            testHost,
+            environmentVariables: new()
+            {
+                { "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER", "0" },
+            },
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.AreNotEqual((int)ExitCode.Success, result.TestHostResult.ExitCode);
+        Assert.IsNull(result.ReceivedHandshake, "An invalid attempt number must fail before a handshake is sent.");
+        Assert.Contains(
+            "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER",
+            result.TestHostResult.StandardOutput + result.TestHostResult.StandardError);
     }
 
     [TestMethod]
