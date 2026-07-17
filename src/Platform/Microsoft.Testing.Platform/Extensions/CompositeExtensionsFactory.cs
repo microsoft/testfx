@@ -80,7 +80,7 @@ TestHost: IDataConsumer, ITestApplicationLifetime
                         Volatile.Write(ref _instance, _factory());
                     }
                 }
-                catch (Exception ex) when (ex is not OutOfMemoryException and not StackOverflowException)
+                catch (Exception ex) when (ex is not OperationCanceledException and not OutOfMemoryException and not StackOverflowException)
                 {
                     // Preserve the original exception as InnerException so the underlying failure (e.g. a
                     // dependency the factory tried to resolve or construct) is never lost, while making the

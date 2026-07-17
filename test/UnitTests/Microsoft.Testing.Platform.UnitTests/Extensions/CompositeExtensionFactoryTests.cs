@@ -41,6 +41,18 @@ public sealed class CompositeExtensionFactoryTests
     }
 
     [TestMethod]
+    public void GetInstance_WhenFactoryIsCancelled_PreservesCancellationException()
+    {
+        OperationCanceledException cancellationException = new("Factory was cancelled.");
+        CompositeExtensionFactory<TestExtension> factory = new(() => throw cancellationException);
+
+        OperationCanceledException thrown = Assert.ThrowsExactly<OperationCanceledException>(
+            () => ((ICompositeExtensionFactory)factory).GetInstance());
+
+        Assert.AreSame(cancellationException, thrown);
+    }
+
+    [TestMethod]
     public void GetInstance_WhenFactoryReturnsNull_ThrowsActionableMessageIdentifyingExtensionType()
     {
         CompositeExtensionFactory<TestExtension> factory = new(() => null!);
