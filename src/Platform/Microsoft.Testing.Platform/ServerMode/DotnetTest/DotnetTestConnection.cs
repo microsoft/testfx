@@ -373,7 +373,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             Task completed = await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
             if (completed != listenerTask)
             {
-                await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
+                QueueLog(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.");
             }
         }
     }
@@ -392,13 +392,13 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
                 // Bounded wait: the cancel + dispose above unblock the parked read quickly. Never hang exit.
                 if (!listenerTask.Wait(TimeSpan.FromSeconds(5)))
                 {
-                    TryLog(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during dispose; continuing without waiting further.");
+                    QueueLog(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during dispose; continuing without waiting further.");
                 }
             }
             catch (Exception ex)
             {
                 // Best-effort shutdown.
-                TryLog(LogLevel.Debug, $"Ignoring failure while waiting for the server control pipe '{_serverControlPipeName}' listener to finish during dispose: {ex}");
+                QueueLog(LogLevel.Debug, $"Ignoring failure while waiting for the server control pipe '{_serverControlPipeName}' listener to finish during dispose: {ex}");
             }
         }
 
@@ -418,15 +418,8 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         }
     }
 
-    private void TryLog(LogLevel logLevel, string message)
-    {
-        try
-        {
-            _logger.Log(logLevel, message, null, LoggingExtensions.Formatter);
-        }
-        catch (Exception)
-        {
-            // Dispose-time diagnostics are best-effort and must not make disposal fail.
-        }
-    }
+    private void QueueLog(LogLevel logLevel, string message)
+        // Isolate the provider invocation on the thread pool. A custom provider may block synchronously before
+        // returning its Task, so merely not awaiting LogAsync would still violate the bounded shutdown contract.
+        => _ = Task.Run(() => TryLogAsync(logLevel, message));
 }
