@@ -23,6 +23,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 internal sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
+    private sealed class LiveOutputScope(TestContext? testContext)
+    {
+        private int _isActive = 1;
+
+        internal TestContext? TestContext { get; } = testContext;
+
+        internal bool IsActive => Volatile.Read(ref _isActive) == 1;
+
+        internal void Deactivate()
+            => Volatile.Write(ref _isActive, 0);
+    }
+
     internal sealed class SynchronizedStringBuilder
     {
         private readonly StringBuilder _builder = new();
@@ -72,6 +84,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 #endif
     private readonly IAdapterMessageLogger? _messageLogger;
     private readonly TestRunCancellationToken? _testRunCancellationToken;
+    private readonly TextWriter? _liveOutputWriter;
+    private readonly Func<TestOutputCaptureMode> _outputCaptureModeProvider;
+
+    private static readonly AsyncLocal<LiveOutputScope?> CurrentLiveOutputScope = new();
+    private static TextWriter? s_liveOutputWriter;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
 
@@ -113,6 +130,25 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
     internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
+        : this(
+            testMethod,
+            testClassFullName,
+            properties,
+            messageLogger,
+            testRunCancellationToken,
+            Volatile.Read(ref s_liveOutputWriter),
+            static () => MSTestSettings.CurrentSettings.OutputCaptureMode)
+    {
+    }
+
+    private TestContextImplementation(
+        ITestMethod? testMethod,
+        string? testClassFullName,
+        IDictionary<string, object?> properties,
+        IAdapterMessageLogger? messageLogger,
+        TestRunCancellationToken? testRunCancellationToken,
+        TextWriter? liveOutputWriter,
+        Func<TestOutputCaptureMode> outputCaptureModeProvider)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
@@ -146,6 +182,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
         _messageLogger = messageLogger;
         _testRunCancellationToken = testRunCancellationToken;
+        _liveOutputWriter = liveOutputWriter;
+        _outputCaptureModeProvider = outputCaptureModeProvider;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
@@ -190,6 +228,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     {
         string? msg = message?.Replace("\0", "\\0");
         GetTestContextMessagesStringBuilder().Append(msg);
+        WriteLive(msg, appendLine: false);
     }
 
     /// <summary>
@@ -202,6 +241,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         GetTestContextMessagesStringBuilder().Append(message);
+        WriteLive(message, appendLine: false);
     }
 
     /// <summary>
@@ -213,6 +253,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     {
         string? msg = message?.Replace("\0", "\\0");
         GetTestContextMessagesStringBuilder().AppendLine(msg);
+        WriteLive(msg, appendLine: true);
     }
 
     /// <summary>
@@ -225,6 +266,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         GetTestContextMessagesStringBuilder().AppendLine(message);
+        WriteLive(message, appendLine: true);
     }
 
     /// <summary>
@@ -439,15 +481,29 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal readonly struct ScopedTestContextSetter : IDisposable
     {
+        private readonly LiveOutputScope _liveOutputScope;
+
         internal ScopedTestContextSetter(TestContext? testContext)
-            => TestContext.Current = testContext;
+        {
+            TestContext.Current = testContext;
+            _liveOutputScope = new(testContext);
+            CurrentLiveOutputScope.Value = _liveOutputScope;
+        }
 
         public void Dispose()
-            => TestContext.Current = null;
+        {
+            _liveOutputScope.Deactivate();
+            TestContext.Current = null;
+            CurrentLiveOutputScope.Value = null;
+        }
     }
 
     internal static ScopedTestContextSetter SetCurrentTestContext(TestContext? testContext)
         => new(testContext);
+
+    // This writer is captured together with the process-wide Console routers and shares their install-once lifetime.
+    internal static void ConfigureLiveOutputWriter(TextWriter liveOutputWriter)
+        => Volatile.Write(ref s_liveOutputWriter, liveOutputWriter);
 
     internal void WriteConsoleOut(char value)
         => GetOutStringBuilder().Append(value);
@@ -495,6 +551,26 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     {
         _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _testContextMessageStringBuilder;
+    }
+
+    private void WriteLive(string? message, bool appendLine)
+    {
+        if (_liveOutputWriter is null
+            || _outputCaptureModeProvider() != TestOutputCaptureMode.Live
+            || CurrentLiveOutputScope.Value is not { IsActive: true } liveOutputScope
+            || !ReferenceEquals(liveOutputScope.TestContext, this))
+        {
+            return;
+        }
+
+        if (appendLine)
+        {
+            _liveOutputWriter.WriteLine(message);
+        }
+        else
+        {
+            _liveOutputWriter.Write(message);
+        }
     }
 
     internal string? GetAndClearOutput()
