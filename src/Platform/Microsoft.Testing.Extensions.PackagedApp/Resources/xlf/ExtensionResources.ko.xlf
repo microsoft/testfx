@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">패키지되지 않은(느슨한 레이아웃) Windows 테스트 호스트(예: 패키지되지 않은 WinUI)를 격리된 디렉터리에 배포한 다음, 그 위치에서 시작합니다. 그리고 Windows 빌드에서는 패키지된 완전 신뢰 MSIX 데스크톱 테스트 호스트를 등록하고 애플리케이션 사용자 모델 ID로 활성화합니다. 신뢰 UWP/AppContainer 호스트는 지원되지 않습니다. https://github.com/microsoft/testfx/issues/9933을 참조하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,17 +24,17 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">패키지된 Windows 앱 '{0}'을(를) 시작할 수 없습니다. '{1}'이(가) 검색되었습니다. 패키지된(MSIX) 앱을 등록하고 활성화하려면 net8.0-windows10.0.19041.0 이상용으로 제공되는 이 확장의 Windows 빌드가 필요합니다. NuGet이 해당 자산을 선택하도록 대상은 'net8.0-windows10.0.19041.0'(또는 플랫폼 버전 10.0.19041.0 이상에서는 이후 버전의 net*-windows 대상 프레임워크 모니커)로 설정하세요. 현재 빌드는 패키지되지 않은(느슨한 레이아웃) 테스트 호스트만 시작합니다. https://github.com/microsoft/testfx/issues/9933을 참조하세요.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
+        <target state="translated">패키지된 Windows 앱 '{0}'을(를) 활성화할 수 없습니다('{1}'을(를) 찾음). 해당 매니페스트에 &lt;Application&gt;가 선언되어 있지 않아 활성화할 애플리케이션 사용자 모델 ID가 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
-        <target state="new">Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</target>
+        <target state="translated">패키지된 Windows 앱 레이아웃 '{0}'을(를) 등록하지 못했습니다. 서명되지 않은 빌드 출력 레이아웃을 등록하려면 개발자 모드(또는 사이드로드)를 활성화해야 합니다. 오류: {1}</target>
         <note />
       </trans-unit>
     </body>

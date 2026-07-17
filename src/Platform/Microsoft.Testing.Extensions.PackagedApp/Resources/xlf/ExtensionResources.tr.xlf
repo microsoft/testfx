@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Paketlenmemiş (gevşek düzenli) bir Windows test konağını (örneğin, paketlenmemiş WinUI) yalıtılmış bir dizine dağıtır ve oradan başlatır ve — Windows derlemesinde — paketlenmiş, tam güvenilir bir MSIX masaüstü test konağını kaydeder ve onu Uygulama Kullanıcı Modeli Kimliği ile etkinleştirir. Gerçek UWP/AppContainer konakları desteklenmez. https://github.com/microsoft/testfx/issues/9933 bağlantısına bakın.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,17 +24,17 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Paketlenmiş '{0}' Windows uygulaması başlatılamıyor ('{1}' bulundu). Paketlenmiş (MSIX) bir uygulamayı kaydedip etkinleştirmek için bu uzantının Windows derlemesi gerekir. Bu derleme, net8.0-windows10.0.19041.0 ve sonraki sürümler için sunulur. NuGet'in bu varlığı seçmesi için 'net8.0-windows10.0.19041.0' (veya platform sürümü 10.0.19041.0 ya da daha yüksek olan daha yeni bir net*-windows Hedef Çerçeve Bilinen Adı) hedefleyin. Geçerli derleme yalnızca paketlenmemiş (gevşek düzenli) test konaklarını başlatır. https://github.com/microsoft/testfx/issues/9933 bağlantısına bakın.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
+        <target state="translated">Paketlenmiş Windows uygulaması '{0}' etkinleştirilemiyor ('{1}' bulundu): bildiriminde &lt;Application&gt; tanımlı olmadığı için etkinleştirilecek bir Uygulama Kullanıcı Modeli Kimliği yok.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
-        <target state="new">Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</target>
+        <target state="translated">Paketlenmiş Windows uygulaması düzeni '{0}' kaydedilemedi. İmzalanmamış bir derleme çıktısı düzenini kaydetmek için Geliştirici Modu'nun (veya dışarıdan yüklemenin) etkinleştirilmesi gerekir. Hata: {1}</target>
         <note />
       </trans-unit>
     </body>
