@@ -1,4 +1,24 @@
 #nullable enable
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRouter.ConsoleErrorRouter(System.IO.TextWriter! originalConsoleErr) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter() -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRouter.ConsoleErrorRouter(System.IO.TextWriter! originalConsoleErr, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter(System.IO.TextWriter! console, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestCleanup = 7 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind.GlobalTestInitialize = 6 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.FixtureKind
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestCleanupTimeout.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.GlobalTestInitializeTimeout.get -> int
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.OutputCaptureMode.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.get -> System.Guid?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestElement.CachedTestNodeUid.set -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Live = 2 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.None = 0 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Result = 1 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.SetParameterMetadataScanCallbackForTesting(System.Action? callback) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.RuntimeContext.IsMultiThreaded.get -> bool

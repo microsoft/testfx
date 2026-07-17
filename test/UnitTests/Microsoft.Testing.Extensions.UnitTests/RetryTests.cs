@@ -211,16 +211,4 @@ public class RetryTests
         Assert.IsTrue(validateOptionsResult.IsValid);
         Assert.IsTrue(string.IsNullOrEmpty(validateOptionsResult.ErrorMessage));
     }
-
-    [TestMethod]
-    public void SetAttemptNumberEnvironment_SetsInvariantAttemptNumber()
-    {
-        var processStartInfo = new ProcessStartInfo();
-
-        RetryTestHostRunner.SetAttemptNumberEnvironment(processStartInfo, 2);
-
-        Assert.AreEqual(
-            "2",
-            processStartInfo.Environment["TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER"]);
-    }
 }

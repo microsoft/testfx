@@ -274,6 +274,9 @@ public sealed class TestApplicationResultTests : IDisposable
     [DataRow("8;2", (int)ExitCode.Success)]
     [DataRow("8;", (int)ExitCode.Success)]
     [DataRow("8;2;", (int)ExitCode.Success)]
+    [DataRow(" 8 ", (int)ExitCode.Success)]
+    [DataRow("+8", (int)ExitCode.Success)]
+    [DataRow("2;8", (int)ExitCode.Success)]
     [DataRow("5", (int)ExitCode.ZeroTests)]
     [DataRow("5;7", (int)ExitCode.ZeroTests)]
     [DataRow("5;", (int)ExitCode.ZeroTests)]
@@ -281,6 +284,10 @@ public sealed class TestApplicationResultTests : IDisposable
     [DataRow(";", (int)ExitCode.ZeroTests)]
     [DataRow(null, (int)ExitCode.ZeroTests)]
     [DataRow("", (int)ExitCode.ZeroTests)]
+    [DataRow("8abc", (int)ExitCode.ZeroTests)]
+    [DataRow("-8", (int)ExitCode.ZeroTests)]
+    [DataRow("2147483648", (int)ExitCode.ZeroTests)]
+    [DataRow("18446744073709551624", (int)ExitCode.ZeroTests)]
     [TestMethod]
     public void GetProcessExitCodeAsync_IgnoreExitCodes(string? argument, int expectedExitCode)
     {

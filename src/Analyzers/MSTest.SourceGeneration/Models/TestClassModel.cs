@@ -39,6 +39,31 @@ internal enum ConstantValueKind
 internal sealed record TestParameterModel(string FullyQualifiedType, string Name);
 
 /// <summary>
+/// The kind of member a <c>[DynamicData]</c> source resolves to at compile time, so the generator can
+/// emit the right accessor (property/field read vs. method call).
+/// </summary>
+internal enum DynamicDataMemberKind
+{
+    Property,
+    Method,
+    Field,
+}
+
+/// <summary>
+/// A <c>[DynamicData]</c> source resolved at compile time so the generator can register a reflection-free
+/// accessor with <c>DynamicDataSourceResolver</c>. The source member (and optional custom display-name
+/// method) are resolved to concrete symbols so the emitted delegate reads them directly instead of the
+/// runtime reflecting over the declaring type.
+/// </summary>
+internal sealed record DynamicDataSourceModel(
+    string DeclaringTypeFullyQualifiedName,
+    string SourceName,
+    DynamicDataMemberKind MemberKind,
+    string RequestedSourceType,
+    string? DisplayNameDeclaringTypeFullyQualifiedName,
+    string? DisplayNameMethodName);
+
+/// <summary>
 /// One row of arguments from a <c>[DataRow]</c> attribute, materialized at compile time so
 /// the consumer can iterate without re-reading <c>DataRowAttribute.Data</c> via reflection.
 /// </summary>
@@ -54,7 +79,8 @@ internal sealed record TestMethodModel(
     bool IsTestMethod,
     EquatableArray<TestParameterModel> Parameters,
     EquatableArray<AttributeApplicationModel> Attributes,
-    EquatableArray<DataRowModel> DataRows);
+    EquatableArray<DataRowModel> DataRows,
+    EquatableArray<DynamicDataSourceModel> DynamicDataSources);
 
 internal sealed record TestPropertyModel(
     string Name,

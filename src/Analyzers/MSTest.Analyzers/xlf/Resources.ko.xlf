@@ -47,6 +47,21 @@ The type declaring these methods should also respect the following rules:
         <target state="translated">AssemblyCleanup 메서드에는 올바른 레이아웃이 있어야 합니다.</target>
         <note>{Locked="AssemblyCleanup"}</note>
       </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotDescription">
+        <source>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</source>
+        <target state="translated">'[AssemblyFixtureProvider]' 검색은 런타임 어셈블리 참조 그래프를 따라가며 이루어지며, 런타임이 동적 코드를 생성할 수 없으면 이 기능은 지원되지 않습니다(예: Native AOT 또는 Blazor WebAssembly AOT에서). 이러한 빌드에서는 이 특성이 무시되므로 제공된 어셈블리 초기화 및 정리 메서드가 실행되지 않습니다. 대신 테스트 어셈블리에서 '[AssemblyInitialize]' 및 '[AssemblyCleanup]' 메서드를 직접 선언하세요.</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
+      </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat">
+        <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</source>
+        <target state="translated">'[AssemblyFixtureProvider]'는 AOT(Ahead-Of-Time) 컴파일(예: Native AOT 또는 Blazor WebAssembly AOT)에서 지원되지 않으며 런타임에 무시됩니다.</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
+      </trans-unit>
+      <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotTitle">
+        <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</source>
+        <target state="translated">'[AssemblyFixtureProvider]'는 AOT(Ahead-Of-Time) 컴파일에서 지원되지 않습니다.</target>
+        <note>{Locked="[AssemblyFixtureProvider]"}</note>
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
         <source>Methods marked with '[AssemblyInitialize]' should follow the following layout to be valid:
 -it can't be declared on a generic class

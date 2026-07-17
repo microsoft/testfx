@@ -9,6 +9,8 @@
     <!-- Embedded helpers from Microsoft.Testing.Platform -->
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\CIEnvironmentDetector.cs" Link="Helpers\CIEnvironmentDetector.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynString.cs" Link="Helpers\RoslynString.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynDebug.cs" Link="Helpers\RoslynDebug.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RuntimeFeatureHelper.cs" Link="Helpers\RuntimeFeatureHelper.cs" />
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Messages\SingleConsumerUnboundedChannel.cs" Link="Helpers\SingleConsumerUnboundedChannel.cs" />
   </ItemGroup>
 

@@ -36,32 +36,45 @@ public class DotnetTestPipeOrchestratorHandshakeTests : AcceptanceTestBase<Dotne
         FakeDotnetTestSdkMultiConnectionResult result = await FakeDotnetTestSdkMultiConnection.RunAsync(
             testHost,
             extraArguments: $"--retry-failed-tests 3 --results-directory {resultDirectory}",
-            environmentVariables: new() { { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" } },
+            environmentVariables: new()
+            {
+                { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
+                { "RETRY_MARKER_DIRECTORY", resultDirectory },
+            },
             cancellationToken: TestContext.CancellationToken);
 
-        // The orchestrator process and both test hosts it spawned should have connected and handshaked.
-        // The first host reports a failure, causing the retry orchestrator to launch a second host that passes.
+        result.TestHostResult.AssertExitCodeIs(ExitCode.Success);
+
         Dictionary<byte, string> orchestratorHandshake = Assert.ContainsSingle(result.HandshakesWithHostType(TestHostOrchestratorHostType));
 
         Assert.IsTrue(
             orchestratorHandshake.TryGetValue(DotnetTestPipeProtocol.HandshakeProperties.OrchestratorFeature, out string? feature),
             "Orchestrator handshake is missing the OrchestratorFeature property.");
         Assert.AreEqual(RetryOrchestratorFeature, feature);
-        Assert.AreEqual("1", orchestratorHandshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber]);
+        Assert.IsFalse(
+            orchestratorHandshake.ContainsKey(DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber),
+            "The orchestrator itself should not report a test-host attempt number.");
 
-        // The test hosts handshake as plain TestHosts and must not carry an orchestrator feature. Their explicit
-        // attempt numbers let dotnet test attribute results without inferring attempts from InstanceId changes.
-        Dictionary<byte, string>[] testHostHandshakes = [.. result.HandshakesWithHostType(TestHostHostType)];
+        Dictionary<byte, string>[] testHostHandshakes =
+        [
+            .. result.HandshakesWithHostType(TestHostHostType)
+                .OrderBy(handshake => int.Parse(handshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber], CultureInfo.InvariantCulture)),
+        ];
+
         Assert.HasCount(2, testHostHandshakes);
+        Assert.AreEqual("1", testHostHandshakes[0][DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber]);
+        Assert.AreEqual("2", testHostHandshakes[1][DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber]);
+        Assert.AreEqual(
+            testHostHandshakes[0][DotnetTestPipeProtocol.HandshakeProperties.ExecutionId],
+            testHostHandshakes[1][DotnetTestPipeProtocol.HandshakeProperties.ExecutionId],
+            "All retry attempts should remain part of the same logical execution.");
+        Assert.AreNotEqual(
+            testHostHandshakes[0][DotnetTestPipeProtocol.HandshakeProperties.InstanceId],
+            testHostHandshakes[1][DotnetTestPipeProtocol.HandshakeProperties.InstanceId],
+            "Each retry attempt runs in a distinct test-host process.");
         Assert.IsTrue(
             testHostHandshakes.All(handshake => !handshake.ContainsKey(DotnetTestPipeProtocol.HandshakeProperties.OrchestratorFeature)),
             "Test host handshakes should not carry the OrchestratorFeature property.");
-        Assert.AreSequenceEqual(
-            new[] { "1", "2" },
-            testHostHandshakes
-                .Select(handshake => handshake[DotnetTestPipeProtocol.HandshakeProperties.AttemptNumber])
-                .Order()
-                .ToArray());
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -90,7 +103,6 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Messages;
 
 public class Program
 {
@@ -110,7 +122,7 @@ public class DummyTestFramework : ITestFramework, IDataProducer
     public string Version => "2.0.0";
     public string DisplayName => nameof(DummyTestFramework);
     public string Description => nameof(DummyTestFramework);
-    public Type[] DataTypesProduced => [typeof(TestNodeUpdateMessage)];
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
@@ -118,15 +130,28 @@ public class DummyTestFramework : ITestFramework, IDataProducer
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        string? attemptNumber = Environment.GetEnvironmentVariable("TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER");
-        TestNodeStateProperty result = attemptNumber == "1"
-            ? new FailedTestNodeStateProperty("Fail the first attempt to exercise retry.")
+        string markerDirectory = Environment.GetEnvironmentVariable("RETRY_MARKER_DIRECTORY")!;
+        Directory.CreateDirectory(markerDirectory);
+        string markerPath = Path.Combine(markerDirectory, "first-attempt.failed");
+        bool isFirstAttempt = !File.Exists(markerPath);
+        if (isFirstAttempt)
+        {
+            File.WriteAllText(markerPath, string.Empty);
+        }
+
+        TestNodeStateProperty state = isFirstAttempt
+            ? new FailedTestNodeStateProperty()
             : PassedTestNodeStateProperty.CachedInstance;
-
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
-            context.Request.Session.SessionUid,
-            new TestNode() { Uid = "test-1", DisplayName = "RetryTest", Properties = new(result) }));
-
+        await context.MessageBus.PublishAsync(
+            this,
+            new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode
+                {
+                    Uid = "flaky",
+                    DisplayName = "FlakyTest",
+                    Properties = new(state),
+                }));
         context.Complete();
     }
 }

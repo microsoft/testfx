@@ -152,6 +152,11 @@
         <target state="translated">omitido</target>
         <note />
       </trans-unit>
+      <trans-unit id="SlowestTests">
+        <source>Slowest tests:</source>
+        <target state="translated">Pruebas más lentas:</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
         <target state="translated">a las</target>
@@ -250,6 +255,16 @@ Esta opción tiene prioridad sobre la marca --no-progress en desuso.</target>
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
         <target state="translated">--show-stdout y --show-stderr esperan un único parámetro con el valor "All", "Failed" o "None".</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionDescription">
+        <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
+        <target state="translated">Muestra el número especificado de pruebas más lentas (por duración de ejecución notificada) en el resumen de ejecución. Espera un entero positivo.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
+        <source>--show-slowest-tests expects a single positive integer parameter.</source>
+        <target state="translated">--show-slowest-tests espera un único parámetro entero positivo.</target>
+        <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.

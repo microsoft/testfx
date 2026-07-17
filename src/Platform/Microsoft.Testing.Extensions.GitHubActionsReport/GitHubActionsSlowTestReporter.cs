@@ -42,22 +42,24 @@ internal sealed class GitHubActionsSlowTestReporter : SlowTestReporterBase
 
     protected override string GetTestName(TestNode testNode) => TestNodeIdentity.GetTestName(testNode);
 
+    protected override string GetDisplayLabel(TestNode testNode) => TestNodeIdentity.GetDisplayLabel(testNode);
+
     protected override TimeSpan ResolveThreshold(string testName) => _threshold;
 
-    protected override Task EmitSlowTestAsync(string testName, TimeSpan elapsed, CancellationToken cancellationToken)
+    protected override Task EmitSlowTestAsync(string testName, string displayLabel, TimeSpan elapsed, CancellationToken cancellationToken)
     {
-        string line = BuildNoticeLine(testName, elapsed);
+        string line = BuildNoticeLine(displayLabel, elapsed);
         return OutputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData(line), cancellationToken);
     }
 
-    internal static /* for testing */ string BuildNoticeLine(string testName, TimeSpan elapsed)
+    internal static /* for testing */ string BuildNoticeLine(string testLabel, TimeSpan elapsed)
     {
         string message = string.Format(
             CultureInfo.InvariantCulture,
             GitHubActionsResources.SlowTestStillRunning,
-            testName,
+            testLabel,
             ((long)elapsed.TotalSeconds).ToString(CultureInfo.InvariantCulture));
-        string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.SlowTestNoticeTitle, testName);
+        string title = string.Format(CultureInfo.InvariantCulture, GitHubActionsResources.SlowTestNoticeTitle, testLabel);
 
         return string.Format(
             CultureInfo.InvariantCulture,

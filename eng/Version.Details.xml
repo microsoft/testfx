@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26360.7">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="11.0.0-beta.26366.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>3169db01948537e61a9102477fab4a39663ba79d</Sha>
+      <Sha>39a14d239f4a9f26890081cfdd20b643e42cbf21</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.26360.7">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="11.0.0-beta.26366.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>3169db01948537e61a9102477fab4a39663ba79d</Sha>
+      <Sha>39a14d239f4a9f26890081cfdd20b643e42cbf21</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.26360.7">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="11.0.0-beta.26366.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>3169db01948537e61a9102477fab4a39663ba79d</Sha>
+      <Sha>39a14d239f4a9f26890081cfdd20b643e42cbf21</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0-preview.26360.1">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0-preview.26366.6">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>c8afd6efa3de89dbdff966c28c6c6e7a53ec522b</Sha>
+      <Sha>80fa2a3ba5cba38b8eafbe24b7bb8be58b9e82c4</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="4.4.0-preview.26360.5">
+    <Dependency Name="MSTest" Version="4.4.0-preview.26366.13">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>f19af28482c9d0101cc2a380fb05e2483460d703</Sha>
+      <Sha>50dfd65179b682b6e6e758dccccab579cceed945</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="2.4.0-preview.26360.5">
+    <Dependency Name="Microsoft.Testing.Platform" Version="2.4.0-preview.26366.13">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>f19af28482c9d0101cc2a380fb05e2483460d703</Sha>
+      <Sha>50dfd65179b682b6e6e758dccccab579cceed945</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

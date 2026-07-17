@@ -150,6 +150,7 @@ internal static class FileArtifactMessageFieldsId
     public const ushort TestUid = 4;
     public const ushort TestDisplayName = 5;
     public const ushort SessionUid = 6;
+    public const ushort Kind = 7;
 }
 
 [Embedded]

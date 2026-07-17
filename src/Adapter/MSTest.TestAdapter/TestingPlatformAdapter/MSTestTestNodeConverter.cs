@@ -37,7 +37,7 @@ internal static class MSTestTestNodeConverter
     /// </summary>
     public static TestNode ToDiscoveredTestNode(UnitTestElement element, bool isTrxEnabled)
     {
-        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null);
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null, out _);
         testNode.Properties.Add(DiscoveredTestNodeStateProperty.CachedInstance);
         return testNode;
     }
@@ -47,7 +47,7 @@ internal static class MSTestTestNodeConverter
     /// </summary>
     public static TestNode ToInProgressTestNode(UnitTestElement element, bool isTrxEnabled)
     {
-        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null);
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, displayNameOverride: null, out _);
         testNode.Properties.Add(InProgressTestNodeStateProperty.CachedInstance);
         return testNode;
     }
@@ -58,7 +58,7 @@ internal static class MSTestTestNodeConverter
     /// </summary>
     public static TestNode ToResultTestNode(UnitTestElement element, FrameworkTestResult result, DateTimeOffset startTime, DateTimeOffset endTime, bool isTrxEnabled, MSTestSettings settings)
     {
-        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, result.DisplayName);
+        TestNode testNode = CreateBaseTestNode(element, isTrxEnabled, result.DisplayName, out TestMethodIdentifierProperty? testMethodIdentifier);
 
         // Mirror TestResultExtensions.ToTestResult: the reported error message prefers the exception message and
         // falls back to the ignore reason; the stack trace comes straight from the framework result.
@@ -70,7 +70,7 @@ internal static class MSTestTestNodeConverter
 
         if (isTrxEnabled)
         {
-            AddTrxResultProperties(testNode, element, errorMessage, errorStackTrace);
+            AddTrxResultProperties(testNode, element, errorMessage, errorStackTrace, testMethodIdentifier);
         }
 
         AddMessagesAndOutput(testNode, result, isTrxEnabled);
@@ -82,7 +82,7 @@ internal static class MSTestTestNodeConverter
         return testNode;
     }
 
-    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride)
+    private static TestNode CreateBaseTestNode(UnitTestElement element, bool isTrxEnabled, string? displayNameOverride, out TestMethodIdentifierProperty? testMethodIdentifier)
     {
         TestMethod testMethod = element.TestMethod;
 
@@ -103,7 +103,7 @@ internal static class MSTestTestNodeConverter
             testNode.Properties.Add(new TestFileLocationProperty(element.DeclaringFilePath, new(position, position)));
         }
 
-        AddTestMethodIdentifier(testNode, testMethod);
+        testMethodIdentifier = AddTestMethodIdentifier(testNode, testMethod);
 
         return testNode;
     }
@@ -132,20 +132,20 @@ internal static class MSTestTestNodeConverter
         }
     }
 
-    private static void AddTestMethodIdentifier(TestNode testNode, TestMethod testMethod)
+    private static TestMethodIdentifierProperty? AddTestMethodIdentifier(TestNode testNode, TestMethod testMethod)
     {
         // NOTE: ManagedMethodName, in case of MSTest, carries the parameter types, so we prefer it to display the
         // parameter types in Test Explorer. This mirrors what the VSTest bridge did in AddAdditionalProperties.
         if (!testMethod.HasManagedMethodAndTypeProperties)
         {
-            return;
+            return null;
         }
 
         string? managedType = testMethod.ManagedTypeName;
         string? managedMethod = testMethod.ManagedMethodName;
         if (StringEx.IsNullOrEmpty(managedType) || StringEx.IsNullOrEmpty(managedMethod))
         {
-            return;
+            return null;
         }
 
         ManagedNameParser.ParseManagedMethodName(managedMethod, out string methodName, out int arity, out string[]? parameterTypes);
@@ -157,7 +157,9 @@ internal static class MSTestTestNodeConverter
 
         // AssemblyFullName and ReturnTypeFullName are not carried by the neutral model today; kept empty to match
         // the current (bridge) behavior. Populating them is a follow-up enabled by this native path.
-        testNode.Properties.Add(new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty));
+        var testMethodIdentifier = new TestMethodIdentifierProperty(assemblyFullName: string.Empty, @namespace, typeName, methodName, arity, parameterTypes, returnTypeFullName: string.Empty);
+        testNode.Properties.Add(testMethodIdentifier);
+        return testMethodIdentifier;
     }
 
     private static void AddOutcome(TestNode testNode, TestOutcome outcome, string? errorMessage, string? errorStackTrace)
@@ -188,7 +190,7 @@ internal static class MSTestTestNodeConverter
         }
     }
 
-    private static void AddTrxResultProperties(TestNode testNode, UnitTestElement element, string? errorMessage, string? errorStackTrace)
+    private static void AddTrxResultProperties(TestNode testNode, UnitTestElement element, string? errorMessage, string? errorStackTrace, TestMethodIdentifierProperty? testMethodIdentifierProperty)
     {
         if (!StringEx.IsNullOrEmpty(errorMessage) || !StringEx.IsNullOrEmpty(errorStackTrace))
         {
@@ -200,7 +202,6 @@ internal static class MSTestTestNodeConverter
         // TestMethod.DisplayName is always initialized (constructor sets it to displayName ?? name).
         testNode.Properties.Add(new TrxTestDefinitionName(testMethod.DisplayName));
 
-        TestMethodIdentifierProperty? testMethodIdentifierProperty = testNode.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
         if (testMethodIdentifierProperty is not null)
         {
             testNode.Properties.Add(new TrxFullyQualifiedTypeNameProperty(

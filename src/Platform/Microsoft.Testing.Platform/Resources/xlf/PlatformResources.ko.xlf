@@ -419,6 +419,16 @@
         <target state="translated">실행 중인 테스트 {0}</target>
         <note>{0} is the number of currently running tests.</note>
       </trans-unit>
+      <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
+        <source>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</source>
+        <target state="translated">명명된 파이프 디렉터리 '{0}'이(가) 없거나 쓸 수 없습니다: {1}. '{2}' 환경 변수를 기존의 쓰기 가능한 디렉터리로 설정하거나, 설정을 해제하여 기본 임시 디렉터리를 사용합니다.</target>
+        <note>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</note>
+      </trans-unit>
+      <trans-unit id="NamedPipePathTooLongErrorMessage">
+        <source>The named pipe path '{0}' is {1} bytes long, which exceeds the maximum of {2} bytes allowed for a Unix domain socket. Use a shorter directory by setting the '{3}' environment variable, or by setting 'TMPDIR' when '{3}' is not set.</source>
+        <target state="translated">명명된 파이프 경로 '{0}'의 길이는 {1}바이트로, Unix 도메인 소켓에 허용되는 최대 길이인 {2}바이트를 초과합니다. '{3}' 환경 변수를 설정하여 더 짧은 디렉터리를 사용하거나, '{3}'이(가) 설정되지 않은 경우 'TMPDIR'을 설정합니다.</target>
+        <note>{0} is the full pipe path, {1} is its length in bytes, {2} is the maximum allowed length in bytes, {3} is the environment variable name. Do not translate 'TMPDIR' or the environment variable name.</note>
+      </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
         <target state="translated">사용할 수 없음</target>
@@ -968,7 +978,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop.
 {0}</source>
-        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop.
+        <target state="translated">'FileLogger' 쓰기 루프에서 예기치 않은 예외가 발생했습니다.
 {0}</target>
         <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

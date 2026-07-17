@@ -22,6 +22,86 @@
         <target state="translated">Gerador de relatório do GitHub Actions</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExitCodeAnnotationTitle">
+        <source>Test run failed (exit code {0}: {1})</source>
+        <target state="new">Test run failed (exit code {0}: {1})</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized).</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeCallout">
+        <source>Exit code {0} — {1}: {2}</source>
+        <target state="new">Exit code {0} — {1}: {2}</target>
+        <note>{0} is the numeric exit code, {1} is the exit code name (not localized), {2} is the reason. Rendered as a callout in the job summary.</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonAtLeastOneTestFailed">
+        <source>At least one test failed.</source>
+        <target state="new">At least one test failed.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonDependentProcessExited">
+        <source>A dependent process exited unexpectedly.</source>
+        <target state="new">A dependent process exited unexpectedly.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonGenericFailure">
+        <source>The test run failed.</source>
+        <target state="new">The test run failed.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonIncompatibleProtocolVersion">
+        <source>An incompatible protocol version was negotiated.</source>
+        <target state="new">An incompatible protocol version was negotiated.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidCommandLine">
+        <source>The command line arguments are invalid.</source>
+        <target state="new">The command line arguments are invalid.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonInvalidPlatformSetup">
+        <source>The test platform setup is invalid.</source>
+        <target state="new">The test platform setup is invalid.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonMinimumExpectedTestsPolicyViolation">
+        <source>Fewer tests ran than required by --minimum-expected-tests.</source>
+        <target state="new">Fewer tests ran than required by --minimum-expected-tests.</target>
+        <note>{Locked="--minimum-expected-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonSuccess">
+        <source>The test run succeeded.</source>
+        <target state="new">The test run succeeded.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestAdapterTestSessionFailure">
+        <source>The test adapter reported a test session failure.</source>
+        <target state="new">The test adapter reported a test session failure.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestExecutionStoppedForMaxFailedTests">
+        <source>Test execution stopped after reaching the limit set by --maximum-failed-tests.</source>
+        <target state="new">Test execution stopped after reaching the limit set by --maximum-failed-tests.</target>
+        <note>{Locked="--maximum-failed-tests"}</note>
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestHostProcessExitedNonGracefully">
+        <source>The test host process exited non-gracefully.</source>
+        <target state="new">The test host process exited non-gracefully.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonTestSessionAborted">
+        <source>The test session was aborted.</source>
+        <target state="new">The test session was aborted.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonUnknown">
+        <source>The test run reported a non-success exit code.</source>
+        <target state="new">The test run reported a non-success exit code.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExitCodeReasonZeroTests">
+        <source>No tests were found to run. This often means a test filter matched nothing.</source>
+        <target state="new">No tests were found to run. This often means a test filter matched nothing.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="GroupTitle">
         <source>Tests: {0} ({1})</source>
         <target state="translated">Testes: {0} ({1})</target>

@@ -152,6 +152,11 @@
         <target state="translated">已跳過</target>
         <note />
       </trans-unit>
+      <trans-unit id="SlowestTests">
+        <source>Slowest tests:</source>
+        <target state="translated">最慢的測試:</target>
+        <note />
+      </trans-unit>
       <trans-unit id="StackFrameAt">
         <source>at</source>
         <target state="translated">於</target>
@@ -250,6 +255,16 @@ This option takes precedence over the deprecated --no-progress flag.</target>
         <source>--show-stdout and --show-stderr expect a single parameter with value 'All', 'Failed', or 'None'.</source>
         <target state="translated">--show-stdout 和 --show-stderr 需接收一個參數，其值必須為「All」、「Failed」或「None」。</target>
         <note>{Locked="--show-stdout"}{Locked="--show-stderr"}{Locked="All"}{Locked="Failed"}{Locked="None"}</note>
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionDescription">
+        <source>Show the specified number of slowest tests (by reported execution duration) in the run summary. Expects a positive integer.</source>
+        <target state="translated">顯示執行摘要中指定的最慢測試數目 (依照報告的執行持續時間)。應該是正整數。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TerminalShowSlowestTestsOptionInvalidArgument">
+        <source>--show-slowest-tests expects a single positive integer parameter.</source>
+        <target state="translated">--show-slowest-tests 應該是單一正整數參數。</target>
+        <note>{Locked="--show-slowest-tests"}</note>
       </trans-unit>
       <trans-unit id="TerminalShowStderrOptionDescription">
         <source>Determines when to show captured error output of a test.

@@ -53,6 +53,13 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.251106002" />
     <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
+    <!--
+      Deploy and launch the packaged WinUI test host through Microsoft.Testing.Platform's ITestHostLauncher
+      extension point. Referencing the package is enough: its MSBuild props register the launcher through the
+      SelfRegisteredExtensions that this app already calls in UnitTestApp.OnLaunched (do NOT also call
+      AddPackagedAppDeployment() explicitly, as only one test host launcher may be registered). MTP-only.
+    -->
+    <PackageReference Include="Microsoft.Testing.Extensions.PackagedApp" Version="$(MicrosoftTestingExtensionsPackagedAppVersion)" Condition=" '$(EnableMSTestRunner)' == 'true' " />
   </ItemGroup>
 
   <!--

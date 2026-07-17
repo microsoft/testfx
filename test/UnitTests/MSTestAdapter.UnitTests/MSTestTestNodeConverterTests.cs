@@ -59,6 +59,16 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
         node.Properties.Any<InProgressTestNodeStateProperty>().Should().BeTrue();
     }
 
+    public void ToInProgressTestNode_AddsTestMethodIdentifier_FromManagedNames()
+    {
+        // In-progress nodes must carry TestMethodIdentifierProperty: it is consumed by
+        // OpenTelemetryResultHandler.NotifyInProgress (test.method/class/namespace/assembly tags) and by the
+        // slow-test reporters via TestNodeIdentity, which otherwise fall back to the display name.
+        TestNode node = MSTestTestNodeConverter.ToInProgressTestNode(CreateElement(), isTrxEnabled: false);
+
+        node.Properties.Any<TestMethodIdentifierProperty>().Should().BeTrue();
+    }
+
     public void ToDiscoveredTestNode_AddsTestMethodIdentifier_FromManagedNames()
     {
         TestNode node = MSTestTestNodeConverter.ToDiscoveredTestNode(CreateElement(), isTrxEnabled: false);
@@ -228,6 +238,17 @@ public sealed class MSTestTestNodeConverterTests : TestContainer
             node.Properties.SingleOrDefault<Testing.Extensions.TrxReport.Abstractions.TrxFullyQualifiedTypeNameProperty>();
         typeName.Should().NotBeNull();
         typeName!.FullyQualifiedTypeName.Should().Be("MyNamespace.MyClass");
+    }
+
+    public void ToResultTestNode_AddsTestMethodIdentifier_FromManagedNames()
+    {
+        TestNode node = MSTestTestNodeConverter.ToResultTestNode(CreateElement(), new FrameworkTestResult { Outcome = UnitTestOutcome.Passed }, DateTimeOffset.Now, DateTimeOffset.Now, isTrxEnabled: false, new MSTestSettings());
+
+        TestMethodIdentifierProperty? identifier = node.Properties.SingleOrDefault<TestMethodIdentifierProperty>();
+        identifier.Should().NotBeNull();
+        identifier!.Namespace.Should().Be("MyNamespace");
+        identifier.TypeName.Should().Be("MyClass");
+        identifier.MethodName.Should().Be("MyMethod");
     }
 
     public void ToResultTestNode_UsesFullClassNameForTrxTypeName_WhenNoManagedMethodName()

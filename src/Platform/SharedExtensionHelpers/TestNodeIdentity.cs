@@ -50,8 +50,66 @@ internal static class TestNodeIdentity
         return fullyQualifiedName ?? testNode.DisplayName;
     }
 
+    /// <summary>
+    /// Resolves a human-friendly label for a <see cref="TestNode"/> that distinguishes individual
+    /// data-driven (parameterized) instances which otherwise share a single fully-qualified name.
+    /// </summary>
+    /// <remarks>
+    /// The label is the fully-qualified name from <see cref="GetTestName"/>, augmented with the
+    /// distinguishing part of the display name when the test is parameterized:
+    /// <list type="bullet">
+    /// <item><description>For a non-parameterized test the display name is just the method's simple name, which is
+    /// already part of the fully-qualified name, so the label is the fully-qualified name unchanged.</description></item>
+    /// <item><description>For a data-driven test the default display name is <c>MethodName (args)</c>; only the
+    /// distinguishing <c>(args)</c> suffix is appended so the method name is not repeated.</description></item>
+    /// <item><description>A fully custom display name that does not embed the method name is appended in parentheses.</description></item>
+    /// </list>
+    /// This keeps the fully-qualified name (used for history/threshold lookups) intact while giving each
+    /// parameterized instance a distinct, non-duplicated line in the output.
+    /// </remarks>
+    public static string GetDisplayLabel(TestNode testNode)
+    {
+        string identity = GetTestName(testNode);
+        string displayName = testNode.DisplayName;
+
+        if (RoslynString.IsNullOrEmpty(displayName)
+            || string.Equals(displayName, identity, StringComparison.Ordinal))
+        {
+            return identity;
+        }
+
+        string methodName = GetMethodSimpleName(identity);
+        if (string.Equals(displayName, methodName, StringComparison.Ordinal))
+        {
+            // Non-parameterized test: the display name is the method's simple name, already in 'identity'.
+            return identity;
+        }
+
+        if (methodName.Length > 0 && displayName.StartsWith(methodName, StringComparison.Ordinal))
+        {
+            // Data-driven test with the default 'MethodName (args)' display name: append only the
+            // distinguishing '(args)' suffix so the method name is not repeated. Guard on the suffix
+            // actually starting with '(' so a custom name that merely shares the method-name prefix
+            // (e.g. 'MyMethodology') is not mangled into 'MyMethod ology'; those fall through below.
+            string suffix = displayName.Substring(methodName.Length).TrimStart();
+            if (suffix.StartsWith("(", StringComparison.Ordinal))
+            {
+                return $"{identity} {suffix}";
+            }
+        }
+
+        // Custom display name that does not embed the method name: surface it alongside the identity.
+        return $"{identity} ({displayName})";
+    }
+
     private static string FormatFullyQualifiedName(TestMethodIdentifierProperty testMethodIdentifier)
         => RoslynString.IsNullOrEmpty(testMethodIdentifier.Namespace)
             ? $"{testMethodIdentifier.TypeName}.{testMethodIdentifier.MethodName}"
             : $"{testMethodIdentifier.Namespace}.{testMethodIdentifier.TypeName}.{testMethodIdentifier.MethodName}";
+
+    private static string GetMethodSimpleName(string fullyQualifiedName)
+    {
+        int lastDot = fullyQualifiedName.LastIndexOf('.');
+        return lastDot < 0 ? fullyQualifiedName : fullyQualifiedName.Substring(lastDot + 1);
+    }
 }

@@ -22,6 +22,7 @@ internal static class MetadataRegistryEmitter
 {
     private const string GeneratedNamespace = "MSTest.SourceGenerated";
     private const string RegistryClassName = "MSTestReflectionMetadata";
+    private const string UnitTestingNamespaceGlobal = "global::" + MSTestAttributeNames.UnitTestingNamespace;
 
     public static string EmitSupportTypes()
     {
@@ -67,8 +68,23 @@ internal static class MetadataRegistryEmitter
                 sb.AppendLine("public Attribute[] Attributes { get; set; } = Array.Empty<Attribute>();");
                 sb.AppendLine("/// <summary>Materialized argument tuples from <c>[DataRow]</c> attributes (empty for non-data-driven tests). Each <c>object?[]</c> corresponds to one <c>[DataRow]</c> application.</summary>");
                 sb.AppendLine("public IReadOnlyList<object?[]> DataRows { get; set; } = Array.Empty<object?[]>();");
+                sb.AppendLine("/// <summary>Source-generated accessors for this method's <c>[DynamicData]</c> sources (empty when none were resolved), registered with <c>DynamicDataSourceResolver</c> so the data is read without runtime reflection.</summary>");
+                sb.AppendLine("public IReadOnlyList<DynamicDataSourceReflectionInfo> DynamicDataSources { get; set; } = Array.Empty<DynamicDataSourceReflectionInfo>();");
                 sb.AppendLine("/// <summary>Direct invoker — replaces <see cref=\"System.Reflection.MethodInfo.Invoke(object, object[])\" />. Always returns a non-null <see cref=\"Task\" /> so the caller can <c>await</c> regardless of whether the underlying test method is <c>void</c>, <c>Task</c>, <c>Task&lt;T&gt;</c>, <c>ValueTask</c>, or <c>ValueTask&lt;T&gt;</c>; the result value (if any) is discarded.</summary>");
                 sb.AppendLine("public Func<object?, object?[]?, Task> Invoke { get; set; } = static (_, _) => Task.CompletedTask;");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("/// <summary>A compile-time-resolved <c>[DynamicData]</c> source: the declaring type, the source name, an accessor that returns the raw data object, and (optionally) a custom display-name accessor.</summary>");
+            using (sb.Block("internal sealed class DynamicDataSourceReflectionInfo"))
+            {
+                sb.AppendLine("public Type DeclaringType { get; set; } = null!;");
+                sb.AppendLine("public string SourceName { get; set; } = string.Empty;");
+                sb.AppendLine($"public {UnitTestingNamespaceGlobal}.DynamicDataSourceType SourceType {{ get; set; }}");
+                sb.AppendLine("public Func<object?[], object?> GetData { get; set; } = static _ => null;");
+                sb.AppendLine("public Type? DisplayNameDeclaringType { get; set; }");
+                sb.AppendLine("public string? DisplayNameMethodName { get; set; }");
+                sb.AppendLine("public Func<System.Reflection.MethodInfo, object?[]?, string?>? GetDisplayName { get; set; }");
             }
 
             sb.AppendLine();
@@ -239,6 +255,8 @@ internal static class MetadataRegistryEmitter
                     sb.AppendLine(",");
                     EmitDataRows(sb, method.DataRows);
                     sb.AppendLine(",");
+                    EmitDynamicDataSources(sb, method.DynamicDataSources);
+                    sb.AppendLine(",");
                     EmitMethodInvoker(sb, fqn, method);
                 }
 
@@ -373,6 +391,99 @@ internal static class MetadataRegistryEmitter
                 }
             }
         }
+    }
+
+    private static void EmitDynamicDataSources(IndentedStringBuilder sb, EquatableArray<DynamicDataSourceModel> sources)
+    {
+        if (sources.Length == 0)
+        {
+            sb.Append("DynamicDataSources = Array.Empty<DynamicDataSourceReflectionInfo>()");
+            sb.AppendLine();
+            return;
+        }
+
+        sb.AppendLine("DynamicDataSources = new DynamicDataSourceReflectionInfo[]");
+        using (sb.Block(null))
+        {
+            for (int i = 0; i < sources.Length; i++)
+            {
+                DynamicDataSourceModel source = sources[i];
+                sb.AppendLine("new DynamicDataSourceReflectionInfo");
+                using (sb.Block(null))
+                {
+                    sb.AppendLine($"DeclaringType = typeof({source.DeclaringTypeFullyQualifiedName}),");
+                    sb.AppendLine($"SourceName = \"{Escape(source.SourceName)}\",");
+                    sb.AppendLine($"SourceType = {UnitTestingNamespaceGlobal}.DynamicDataSourceType.{source.RequestedSourceType},");
+                    EmitDataProvider(sb, source);
+
+                    if (source.DisplayNameMethodName is { } displayNameMethod && source.DisplayNameDeclaringTypeFullyQualifiedName is { } displayNameType)
+                    {
+                        sb.AppendLine($"DisplayNameDeclaringType = typeof({displayNameType}),");
+                        sb.AppendLine($"DisplayNameMethodName = \"{Escape(displayNameMethod)}\",");
+                        EmitDisplayNameProvider(sb, displayNameType, EscapeIdentifier(displayNameMethod));
+                    }
+                }
+
+                if (i < sources.Length - 1)
+                {
+                    sb.AppendLine(",");
+                }
+                else
+                {
+                    sb.AppendLine();
+                }
+            }
+        }
+    }
+
+    private static void EmitDataProvider(IndentedStringBuilder sb, DynamicDataSourceModel source)
+    {
+        string member = $"(object?){source.DeclaringTypeFullyQualifiedName}.{EscapeIdentifier(source.SourceName)}";
+        switch (source.MemberKind)
+        {
+            // A field read cannot run user code, so it needs no exception translation (and reflection reads
+            // fields via FieldInfo.GetValue without TargetInvocationException wrapping anyway).
+            case DynamicDataMemberKind.Field:
+                sb.AppendLine($"GetData = static args => {member},");
+                break;
+
+            // Property getters and (parameterless) methods can run user code. The reflection fallback invokes
+            // them via PropertyInfo.GetValue / MethodInfo.Invoke, which wrap a thrown user exception in a
+            // TargetInvocationException. Mirror that so a throwing source surfaces the same exception type in
+            // source-generated mode as in reflection mode.
+            case DynamicDataMemberKind.Property:
+                EmitInvocationWrappedLambda(sb, "GetData = static args =>", $"return {member};");
+                break;
+
+            case DynamicDataMemberKind.Method:
+                EmitInvocationWrappedLambda(sb, "GetData = static args =>", $"return {member}();");
+                break;
+        }
+    }
+
+    private static void EmitDisplayNameProvider(IndentedStringBuilder sb, string declaringType, string methodName)
+
+        // The custom display-name method is user code; reflection calls it via MethodInfo.Invoke, which wraps
+        // a thrown exception in TargetInvocationException. Preserve that wrapping here too.
+        => EmitInvocationWrappedLambda(sb, "GetDisplayName = static (methodInfo, data) =>", $"return {declaringType}.{methodName}(methodInfo, data!);");
+
+    private static void EmitInvocationWrappedLambda(IndentedStringBuilder sb, string header, string bodyStatement)
+    {
+        sb.AppendLine(header);
+        using (sb.Block(null))
+        {
+            using (sb.Block("try"))
+            {
+                sb.AppendLine(bodyStatement);
+            }
+
+            using (sb.Block("catch (global::System.Exception ex)"))
+            {
+                sb.AppendLine("throw new global::System.Reflection.TargetInvocationException(ex);");
+            }
+        }
+
+        sb.AppendLine(",");
     }
 
     private static void EmitParameterTypes(IndentedStringBuilder sb, EquatableArray<TestParameterModel> parameters)
@@ -517,6 +628,13 @@ internal static class MetadataRegistryEmitter
 
     internal static string Escape(string value)
         => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    // Escapes a member/type identifier so a source name that happens to be a C# reserved keyword (e.g. a
+    // member declared as `@class`) is emitted as a valid identifier rather than breaking the generated code.
+    private static string EscapeIdentifier(string name)
+        => Microsoft.CodeAnalysis.CSharp.SyntaxFacts.GetKeywordKind(name) != Microsoft.CodeAnalysis.CSharp.SyntaxKind.None
+            ? "@" + name
+            : name;
 
     private static void AppendHeader(IndentedStringBuilder sb)
     {

@@ -101,6 +101,15 @@ internal sealed partial class TerminalTestReporter
             asm.TestNodeResultsState?.RemoveRunningTestNode(testNodeUid);
         }
 
+        // Record the reported duration for the "slowest tests" summary section. All outcomes are included (a slow
+        // test that then fails is still slow). Called on every completion so a retry that reports no timing clears
+        // the earlier attempt's stale duration rather than leaving it ranked. Gated on the feature so a run without
+        // --show-slowest-tests pays no bookkeeping cost.
+        if (_options.SlowestTestsCount > 0)
+        {
+            asm.RecordTestDuration(testNodeUid, displayName, duration);
+        }
+
         switch (outcome)
         {
             case TestOutcome.Error:
@@ -121,9 +130,8 @@ internal sealed partial class TerminalTestReporter
         _terminalWithProgress.NotifyTestCompleted();
         if (outcome != TestOutcome.Passed || GetShowPassedTests())
         {
-            // Capture the attempt number (1-based) at completion time so the per-test "(try N)" annotation reflects
-            // the retry attempt this result belongs to.
-            int attempt = asm.TryCount;
+            // Resolve the attempt from the result's instance so multiple instances can participate in one attempt.
+            int attempt = asm.GetAttemptNumber(instanceId);
             _terminalWithProgress.WriteToTerminal(terminal => RenderTestCompleted(
                 terminal,
                 attempt,
