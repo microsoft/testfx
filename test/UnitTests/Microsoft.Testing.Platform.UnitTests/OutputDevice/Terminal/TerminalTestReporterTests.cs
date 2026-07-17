@@ -541,6 +541,26 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressStateAwareTerminal_ProgressMessageIdentityComponentsRemainIndependent()
+    {
+        var terminal = new RecordingTerminal();
+        var renderer = new RecordingProgressRenderer();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer);
+
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-1", "producer-1", "shared", "base");
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-1", "producer-2", "shared", "other producer");
+        progressAwareTerminal.UpdateProgressMessage("execution-2", "instance-1", "producer-1", "shared", "other execution");
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-2", "producer-1", "shared", "other instance");
+        progressAwareTerminal.UpdateProgressMessage("execution-1", "instance-1", "producer-2", "shared", null);
+        progressAwareTerminal.UpdateProgressMessage("execution-2", "instance-1", "producer-1", "shared", "updated execution");
+        progressAwareTerminal.WriteToTerminal(static _ => { });
+
+        Assert.AreSequenceEqual(
+            new[] { "base", "other instance", "updated execution" },
+            renderer.Messages.Select(static message => message.Text).OrderBy(static message => message));
+    }
+
+    [TestMethod]
     public void TestProgressStateAwareTerminal_AfterTerminalShrinks_TrimsMessagesAndReservesWorkerRows()
     {
         var terminal = new RecordingTerminal { Height = 10 };
