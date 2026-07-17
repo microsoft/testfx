@@ -695,6 +695,19 @@ public class TestMethodInfoTests : TestContainer
         exception?.Message.Should().Be(errorMessage);
     }
 
+    public async Task TestMethodInfoInvokeShouldSetInnerExceptionToRealExceptionIfSetTestContextThrows()
+    {
+        var thrownException = new NotImplementedException("dummyExceptionMessage");
+        DummyTestClass.TestContextSetterBody = value => throw thrownException;
+
+        TestFailedException exception = (await _testMethodInfo.InvokeAsync(null)).TestFailureException as TestFailedException
+            ?? throw new InvalidOperationException("Expected a TestFailedException when setting TestContext throws.");
+
+        // The real user exception must be preserved as the inner exception so that callers/loggers
+        // relying on the exception chain (e.g. IDEs, TRX viewers) can still get to the original cause.
+        exception.InnerException.Should().BeSameAs(thrownException);
+    }
+
     public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows()
     {
         DummyTestClass.TestConstructorMethodBody = () => throw new NotImplementedException("dummyExceptionMessage");

@@ -101,6 +101,11 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <target state="translated">Traccia di debug:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="new">Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">Problema di distribuzione dell'esecuzione dei test: l'elemento di distribuzione '{0}' non è corretto. La directory di output '{1}' specifica l'elemento da distribuire all'esterno della directory radice della distribuzione e questa operazione non consentita.</target>
@@ -117,9 +122,9 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problema di distribuzione dell'esecuzione dei test: non è stato possibile copiare il file '{0}' in '{1}': {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -257,6 +262,11 @@ ma ha ricevuto {4} argomenti, con tipi '{5}'.</target>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">Il valore '{0}', specificato per 'Workers', non è valido. Il valore deve essere un numero intero non negativo.</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="new">MSTestAdapter failed to parse the runsettings XML.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>
