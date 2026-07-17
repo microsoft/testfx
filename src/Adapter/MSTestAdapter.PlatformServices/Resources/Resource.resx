@@ -138,8 +138,8 @@
     <comment>{0} is the file path. {1} is the exception type. {2} is the exception message.</comment>
   </data>
   <data name="DeploymentErrorFailedToCopyWithOverwrite" xml:space="preserve">
-    <value>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</value>
-    <comment>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</comment>
+    <value>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</value>
+    <comment>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</comment>
   </data>
   <data name="DeploymentErrorFailedToDeployDependencies" xml:space="preserve">
     <value>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</value>
@@ -179,6 +179,14 @@
   <data name="InvalidSettingsXmlElement" xml:space="preserve">
     <value>MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.</value>
     <comment>{0} is the unexpected XML element name. {1} is the settings section name. {Locked="MSTestAdapter"}</comment>
+  </data>
+  <data name="InvalidSettingsXml" xml:space="preserve">
+    <value>MSTestAdapter failed to parse the runsettings XML.</value>
+    <comment>{Locked="MSTestAdapter"}{Locked="runsettings"}</comment>
+  </data>
+  <data name="DeploymentDependencyLoadFailed" xml:space="preserve">
+    <value>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</value>
+    <comment>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</comment>
   </data>
   <data name="MissingDeploymentDependency" xml:space="preserve">
     <value>Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}</value>

@@ -128,6 +128,14 @@
     <value>The same instance of 'CompositeExtensionFactory' is already registered</value>
     <comment>{Locked="CompositeExtensionFactory"}</comment>
   </data>
+  <data name="CompositeExtensionFactoryInstantiationFailedErrorMessage" xml:space="preserve">
+    <value>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</value>
+    <comment>{0} is the extension type name.</comment>
+  </data>
+  <data name="CompositeExtensionFactoryReturnedNullInstanceErrorMessage" xml:space="preserve">
+    <value>The factory for composite extension '{0}' returned a null instance.</value>
+    <comment>{0} is the extension type name.</comment>
+  </data>
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
   </data>
@@ -334,13 +342,13 @@
     <comment>{0} is the timeout in seconds.</comment>
   </data>
   <data name="TimeoutFlushingLogsErrorMessage" xml:space="preserve">
-    <value>Failed to flush logs before the timeout of '{0}' seconds</value>
-    <comment>{0} is the timeout in seconds.</comment>
+    <value>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</value>
+    <comment>{0} is the log file path. {1} is the timeout in seconds.</comment>
   </data>
   <data name="UnexpectedExceptionInFileLoggerErrorMessage" xml:space="preserve">
-    <value>An unexpected exception occurred in the 'FileLogger' write loop.
-{0}</value>
-    <comment>{0} is the exception ToString output. {Locked="FileLogger"}</comment>
+    <value>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+{1}</value>
+    <comment>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</comment>
   </data>
   <data name="RetryFailedAfterTriesErrorMessage" xml:space="preserve">
     <value>Retry failed after {0} times</value>
@@ -727,7 +735,7 @@ Takes one argument as a time value with an explicit unit suffix. Accepted suffix
   </data>
   <data name="CommandLineParserFailedToReadResponseFile" xml:space="preserve">
     <value>Failed to read response file '{0}'. {1}.</value>
-    <comment>{0} is the response file path. {1} is the exception message.</comment>
+    <comment>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</comment>
   </data>
   <data name="CommandLineParserUnclosedQuoteInResponseFile" xml:space="preserve">
     <value>Unclosed quote in response file at line {0}</value>

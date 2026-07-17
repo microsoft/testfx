@@ -14,8 +14,7 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         using TempDirectory clone = new();
-        await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-        testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, AssetName);
+        testHost = await CloneTestHostAsync(testHost, clone, AssetName);
 
         string configFile = Path.Combine(testHost.DirectoryName, $"{AssetName}.testconfig.json");
         await File.WriteAllTextAsync(
@@ -48,8 +47,7 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         using TempDirectory clone = new();
-        await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-        testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, AssetName);
+        testHost = await CloneTestHostAsync(testHost, clone, AssetName);
 
         string configFile = Path.Combine(testHost.DirectoryName, $"{AssetName}.testconfig.json");
         File.Delete(configFile);
@@ -71,8 +69,7 @@ public sealed class TestConfigEnvironmentVariablesTests : AcceptanceTestBase<Tes
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         using TempDirectory clone = new();
-        await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-        testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, AssetName);
+        testHost = await CloneTestHostAsync(testHost, clone, AssetName);
 
         string configFile = Path.Combine(testHost.DirectoryName, $"{AssetName}.testconfig.json");
         await File.WriteAllTextAsync(
