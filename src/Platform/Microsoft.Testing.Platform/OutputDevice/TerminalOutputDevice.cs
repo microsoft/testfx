@@ -63,11 +63,6 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // required. The list stays empty (and effectively unused) outside JSON mode.
     private readonly List<TestNode> _discoveredTestsForJson = [];
     private readonly Dictionary<ProgressMessageIdentity, string> _jsonProgressMessages = [];
-#if NET9_0_OR_GREATER
-    private readonly Lock _jsonProgressMessagesLock = new();
-#else
-    private readonly object _jsonProgressMessagesLock = new();
-#endif
 
     private TerminalTestReporter? _terminalTestReporter;
     private bool _bannerDisplayed;
@@ -81,12 +76,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
     private void ClearJsonProgressMessages()
-    {
-        lock (_jsonProgressMessagesLock)
-        {
-            _jsonProgressMessages.Clear();
-        }
-    }
+        => _jsonProgressMessages.Clear();
 
     public TerminalOutputDevice(
         IConsole console,

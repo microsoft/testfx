@@ -112,7 +112,11 @@ internal sealed partial class TerminalOutputDevice
             // cycle would produce multiple growing JSON documents on stdout, which would break
             // any consumer that pipes the output (the accumulated _discoveredTestsForJson buffer
             // would also re-include earlier tests every cycle).
-            ClearJsonProgressMessages();
+            using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
+            {
+                ClearJsonProgressMessages();
+            }
+
             return;
         }
 

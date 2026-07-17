@@ -252,11 +252,16 @@ public sealed class TerminalOutputDeviceTests
         var runtimeFeature = new Mock<IRuntimeFeature>();
         runtimeFeature.SetupGet(x => x.IsHotReloadEnabled).Returns(isHotReloadEnabled);
 
+        var asyncMonitor = new Mock<IAsyncMonitor>();
+        asyncMonitor
+            .Setup(x => x.LockAsync(It.IsAny<TimeSpan>()))
+            .ReturnsAsync(Mock.Of<IDisposable>());
+
         return new TerminalOutputDevice(
             Mock.Of<IConsole>(),
             testApplicationModuleInfo.Object,
             Mock.Of<ITestHostControllerInfo>(),
-            Mock.Of<IAsyncMonitor>(),
+            asyncMonitor.Object,
             runtimeFeature.Object,
             environment.Object,
             Mock.Of<IPlatformInformation>(),

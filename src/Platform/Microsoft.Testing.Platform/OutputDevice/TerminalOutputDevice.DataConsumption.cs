@@ -22,26 +22,25 @@ internal sealed partial class TerminalOutputDevice
 
         if (_isListTestsJson)
         {
-            // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
-            // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
-            // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
-            // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
-            // here: they must be written to stdout to be processed, but stdout belongs to JSON.
-            // Warnings and regular informational text are dropped, while structured session and progress
-            // messages are routed to stderr, keeping stdout strictly JSON.
-            switch (data)
+            using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
             {
-                case SessionMessageOutputDeviceData sessionMessageData:
-                    await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(sessionMessageData.Message).ConfigureAwait(false);
-                    break;
+                // Machine-readable mode: keep stdout reserved for the JSON document so consumers can
+                // pipe it directly. Errors and exceptions still need surfacing somewhere, so route
+                // them to stderr via WriteToStandardErrorAsync (the only place that bypasses IConsole,
+                // which does not abstract stderr today). Azure Pipelines ##vso commands are skipped
+                // here: they must be written to stdout to be processed, but stdout belongs to JSON.
+                // Warnings and regular informational text are dropped, while structured session and progress
+                // messages are routed to stderr, keeping stdout strictly JSON.
+                switch (data)
+                {
+                    case SessionMessageOutputDeviceData sessionMessageData:
+                        await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
+                        await WriteToStandardErrorAsync(sessionMessageData.Message).ConfigureAwait(false);
+                        break;
 
-                case ProgressMessageOutputDeviceData progressMessageData:
-                    await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
-                    var identity = new ProgressMessageIdentity(producer.Uid, progressMessageData.Key);
-                    bool shouldWrite = false;
-                    lock (_jsonProgressMessagesLock)
-                    {
+                    case ProgressMessageOutputDeviceData progressMessageData:
+                        await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
+                        var identity = new ProgressMessageIdentity(producer.Uid, progressMessageData.Key);
                         if (progressMessageData.Message is null)
                         {
                             _jsonProgressMessages.Remove(identity);
@@ -50,27 +49,22 @@ internal sealed partial class TerminalOutputDevice
                             || existingMessage != progressMessageData.Message)
                         {
                             _jsonProgressMessages[identity] = progressMessageData.Message;
-                            shouldWrite = true;
+                            await WriteToStandardErrorAsync(progressMessageData.Message).ConfigureAwait(false);
                         }
-                    }
 
-                    if (shouldWrite)
-                    {
-                        await WriteToStandardErrorAsync(progressMessageData.Message!).ConfigureAwait(false);
-                    }
+                        break;
 
-                    break;
+                    case ErrorMessageOutputDeviceData errorData:
+                        await LogDebugAsync(errorData.Message).ConfigureAwait(false);
+                        await WriteToStandardErrorAsync(errorData.Message).ConfigureAwait(false);
+                        break;
 
-                case ErrorMessageOutputDeviceData errorData:
-                    await LogDebugAsync(errorData.Message).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(errorData.Message).ConfigureAwait(false);
-                    break;
-
-                case ExceptionOutputDeviceData exceptionData:
-                    string exceptionText = exceptionData.Exception.ToString();
-                    await LogDebugAsync(exceptionText).ConfigureAwait(false);
-                    await WriteToStandardErrorAsync(exceptionText).ConfigureAwait(false);
-                    break;
+                    case ExceptionOutputDeviceData exceptionData:
+                        string exceptionText = exceptionData.Exception.ToString();
+                        await LogDebugAsync(exceptionText).ConfigureAwait(false);
+                        await WriteToStandardErrorAsync(exceptionText).ConfigureAwait(false);
+                        break;
+                }
             }
 
             return;
