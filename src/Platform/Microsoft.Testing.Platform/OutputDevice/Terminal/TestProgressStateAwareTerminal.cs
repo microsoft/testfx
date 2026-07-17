@@ -150,16 +150,19 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         if (GetShowProgress())
         {
-            for (int i = 0; i < _progressItems.Length; i++)
+            lock (_lock)
             {
-                if (_progressItems[i] == null)
+                for (int i = 0; i < _progressItems.Length; i++)
                 {
-                    _progressItems[i] = testWorker;
-                    return i;
+                    if (_progressItems[i] == null)
+                    {
+                        _progressItems[i] = testWorker;
+                        return i;
+                    }
                 }
-            }
 
-            throw new InvalidOperationException("No empty slot found");
+                throw new InvalidOperationException("No empty slot found");
+            }
         }
 
         return 0;
@@ -281,7 +284,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         if (GetShowProgress())
         {
-            _progressItems[slotIndex] = null;
+            lock (_lock)
+            {
+                _progressItems[slotIndex] = null;
+            }
         }
     }
 
@@ -380,13 +386,16 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         if (GetShowProgress())
         {
-            // We increase the counter to say that this version of data is newer than what we had before and
-            // it should be completely re-rendered. Another approach would be to use timestamps, or to replace the
-            // instance and compare that, but that means more objects floating around.
-            _counter++;
+            lock (_lock)
+            {
+                // We increase the counter to say that this version of data is newer than what we had before and
+                // it should be completely re-rendered. Another approach would be to use timestamps, or to replace the
+                // instance and compare that, but that means more objects floating around.
+                _counter++;
 
-            TestProgressState? progress = _progressItems[slotIndex];
-            progress?.Version = _counter;
+                TestProgressState? progress = _progressItems[slotIndex];
+                progress?.Version = _counter;
+            }
         }
     }
 
