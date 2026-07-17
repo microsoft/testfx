@@ -1,6 +1,7 @@
 #nullable enable
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.AttemptNumber = 13 -> byte
+static Microsoft.Testing.Platform.DotnetTestConnection.GetAttemptNumber(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> string!
 static Microsoft.Testing.Platform.Services.ArtifactNamingHelper.ResolveAndSanitize(string! template, string! processName, string! processId, System.DateTimeOffset timestamp, System.Func<string!, string!>! sanitizeLeafFileName) -> string!
 Microsoft.Testing.Platform.Helpers.RuntimeFeatureHelper
 Microsoft.Testing.Platform.Logging.FileLogger.FileLogger(Microsoft.Testing.Platform.Logging.FileLoggerOptions! options, Microsoft.Testing.Platform.Logging.LogLevel logLevel, Microsoft.Testing.Platform.Helpers.IClock! clock, Microsoft.Testing.Platform.Helpers.ITask! task, Microsoft.Testing.Platform.Helpers.IConsole! console, Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, Microsoft.Testing.Platform.Helpers.IFileStreamFactory! fileStreamFactory, System.TimeSpan? flushTimeout = null) -> void

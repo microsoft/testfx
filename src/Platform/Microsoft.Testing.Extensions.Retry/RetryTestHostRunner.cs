@@ -65,8 +65,7 @@ internal static class RetryTestHostRunner
 
         // Tell the launched test host which retry attempt it is, so it can report an explicit AttemptNumber in
         // its dotnet test handshake instead of the consumer having to infer it from a change in InstanceId.
-        processStartInfo.Environment[EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER] =
-            attemptCount.ToString(CultureInfo.InvariantCulture);
+        SetAttemptNumberEnvironment(processStartInfo, attemptCount);
 
         await logger.LogDebugAsync($"Starting test host process, attempt {attemptCount}/{userMaxRetryCount}").ConfigureAwait(false);
         using IProcess testHostProcess = serviceProvider.GetProcessHandler().Start(processStartInfo)
@@ -127,4 +126,8 @@ internal static class RetryTestHostRunner
 
         return new AttemptResult { ExitCode = testHostProcess.ExitCode, ExitedBeforeConnect = false };
     }
+
+    internal static void SetAttemptNumberEnvironment(ProcessStartInfo processStartInfo, int attemptNumber)
+        => processStartInfo.Environment[EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER] =
+            attemptNumber.ToString(CultureInfo.InvariantCulture);
 }

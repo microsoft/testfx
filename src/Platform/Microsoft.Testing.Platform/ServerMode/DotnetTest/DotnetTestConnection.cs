@@ -126,7 +126,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionId,  _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_EXECUTIONID) ?? string.Empty },
             { HandshakeMessagePropertyNames.InstanceId, InstanceId },
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
-            { HandshakeMessagePropertyNames.AttemptNumber, GetAttemptNumber() },
+            { HandshakeMessagePropertyNames.AttemptNumber, GetAttemptNumber(_environment) },
         };
 
         if (additionalHandshakeProperties is not null)
@@ -175,11 +175,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     // TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER on each launched attempt; a normal (non-orchestrated) run has no
     // such variable and reports attempt 1. A malformed value defensively falls back to 1 rather than failing the
     // handshake.
-    private string GetAttemptNumber()
+    internal static string GetAttemptNumber(IEnvironment environment)
     {
-        string? value = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
+        string? value = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
         return !RoslynString.IsNullOrEmpty(value) && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int attempt) && attempt >= 1
-            ? value
+            ? attempt.ToString(CultureInfo.InvariantCulture)
             : "1";
     }
 
