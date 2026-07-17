@@ -129,7 +129,9 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             {
                 // Reporting a best-effort diagnostic must not turn its original file failure into a
                 // session-start failure when the output transport is unavailable or being cancelled.
-                await TryLogWarningAsync($"Failed to display the crash sequence file warning for '{_sequenceFilePath}': {outputException}").ConfigureAwait(false);
+                await TryLogWarningAsync(
+                    $"Failed to initialize crash sequence file '{_sequenceFilePath}': {ex}{Environment.NewLine}"
+                    + $"Additionally, displaying this warning failed: {outputException}").ConfigureAwait(false);
             }
             finally
             {

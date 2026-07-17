@@ -105,7 +105,10 @@ public sealed class CrashDumpSequenceLoggerTests
             _mockLogger.Verify(
                 x => x.LogAsync(
                     LogLevel.Warning,
-                    It.Is<string>(message => message.Contains(path) && message.Contains(nameof(InvalidOperationException))),
+                    It.Is<string>(message =>
+                        message.Contains(path)
+                        && message.Contains(nameof(IOException))
+                        && message.Contains(nameof(InvalidOperationException))),
                     null,
                     It.IsAny<Func<string, Exception?, string>>()),
                 Times.Once);

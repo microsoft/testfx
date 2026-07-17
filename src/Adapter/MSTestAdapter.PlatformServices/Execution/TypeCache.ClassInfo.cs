@@ -94,13 +94,20 @@ internal sealed partial class TypeCache
             // Return null so we return a not found result, but don't silently swallow the
             // exception: trace a warning with the type/assembly context and the full exception
             // so the underlying cause (e.g. a missing or mismatched assembly) is discoverable.
-            if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+            try
             {
-                PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
-                    "TypeCache.LoadType: Failed to load type '{0}' from assembly '{1}'. The corresponding test(s) will be reported as not found. {2}",
-                    typeName,
-                    assemblyName,
-                    ex);
+                if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsWarningEnabled)
+                {
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.Warning(
+                        "TypeCache.LoadType: Failed to load type '{0}' from assembly '{1}'. The corresponding test(s) will be reported as not found. {2}",
+                        typeName,
+                        assemblyName,
+                        ex);
+                }
+            }
+            catch (Exception)
+            {
+                // This diagnostic must not replace the established not-found result when a logging provider fails.
             }
 
             return null;
