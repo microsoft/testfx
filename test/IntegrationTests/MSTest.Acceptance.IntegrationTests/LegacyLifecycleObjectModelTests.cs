@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
@@ -159,7 +159,8 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
                 ]);
 
             Assert.IsFalse(
-                result.Messages.Any(message => message.Text?.Contains($"InheritedDerived.{otherMethodName}", StringComparison.Ordinal) == true),
+                result.Messages.Any(message => message.Text is not null
+                    && message.Text.Contains($"InheritedDerived.{otherMethodName}", StringComparison.Ordinal)),
                 $"Output from {otherMethodName} leaked into {methodName}.");
         }
     }
@@ -299,7 +300,8 @@ public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyL
         foreach (string otherPrefix in otherPrefixes.Where(prefix => prefix != scenarioPrefix))
         {
             Assert.IsFalse(
-                result.Messages.Any(message => message.Text?.Contains(otherPrefix, StringComparison.Ordinal) == true),
+                result.Messages.Any(message => message.Text is not null
+                    && message.Text.Contains(otherPrefix, StringComparison.Ordinal)),
                 $"{otherPrefix} output leaked into {testCase.FullyQualifiedName}.");
         }
 

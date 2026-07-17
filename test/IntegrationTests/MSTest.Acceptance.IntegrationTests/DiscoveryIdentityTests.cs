@@ -163,11 +163,12 @@ public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentit
         string[]? hierarchy = testCase.GetPropertyValue(TestCaseExtensions.HierarchyProperty) as string[];
 
         Assert.IsNotNull(hierarchy);
-        Assert.HasCount(4, hierarchy);
-        Assert.IsNull(hierarchy[0]);
-        Assert.AreEqual(expectedNamespace, hierarchy[1]);
-        Assert.AreEqual(expectedClassName, hierarchy[2]);
-        Assert.AreEqual(expectedMethodName, hierarchy[3]);
+        string[] nonNullHierarchy = hierarchy!;
+        Assert.HasCount(4, nonNullHierarchy);
+        Assert.IsNull(nonNullHierarchy[0]);
+        Assert.AreEqual(expectedNamespace, nonNullHierarchy[1]);
+        Assert.AreEqual(expectedClassName, nonNullHierarchy[2]);
+        Assert.AreEqual(expectedMethodName, nonNullHierarchy[3]);
     }
 
     private static void AssertUniqueIds(
