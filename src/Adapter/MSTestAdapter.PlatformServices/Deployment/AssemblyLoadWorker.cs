@@ -245,7 +245,7 @@ internal sealed class AssemblyLoadWorker : MarshalByRefObject
         {
             // Retain the assembly identity together with the exception type and full inner-exception
             // chain, so the reason the dependency could not be resolved/loaded is not lost.
-            string warning = string.Format(CultureInfo.CurrentCulture, Resource.MissingDeploymentDependency, assemblyString, ex.GetFormattedExceptionMessage());
+            string warning = string.Format(CultureInfo.CurrentCulture, Resource.DeploymentDependencyLoadFailed, assemblyString, ex.GetFormattedExceptionMessage());
             warnings.Add(warning);
             return;
         }

@@ -85,9 +85,9 @@ Prend en charge les espaces réservés suivants : {pname} (nom de l’exécutabl
         <note />
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileOpenError">
-        <source>Failed to open crash sequence file '{0}' for writing: {1}. Test sequence information will not be available if the test host crashes.</source>
-        <target state="new">Failed to open crash sequence file '{0}' for writing: {1}. Test sequence information will not be available if the test host crashes.</target>
-        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
+        <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
+        <target state="new">Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</target>
+        <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
         <source>Failed to read the crash sequence file '{0}': {1}</source>

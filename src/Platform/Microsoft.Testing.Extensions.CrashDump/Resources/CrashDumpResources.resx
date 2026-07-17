@@ -158,8 +158,8 @@ Supports the following placeholders: {pname} (process executable name, deferred 
     <comment>{0} is the crash sequence file path. {1} is the error message.</comment>
   </data>
   <data name="CrashDumpSequenceFileOpenError" xml:space="preserve">
-    <value>Failed to open crash sequence file '{0}' for writing: {1}. Test sequence information will not be available if the test host crashes.</value>
-    <comment>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</comment>
+    <value>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</value>
+    <comment>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</comment>
   </data>
   <data name="CrashDumpSequenceFileWriteError" xml:space="preserve">
     <value>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</value>
