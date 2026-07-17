@@ -239,6 +239,12 @@ internal sealed class AnsiTerminalTestProgressFrame
             return;
         }
 
+        if (message.Text.Length <= availableWidth)
+        {
+            terminal.Append(message.Text);
+            return;
+        }
+
         int charsTaken = 0;
         AppendToWidth(terminal, message.Text, availableWidth, ref charsTaken);
     }
