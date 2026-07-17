@@ -72,6 +72,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                     _terminal.StartUpdate();
                     try
                     {
+                        UpdateVisibleProgressMessagesUnderLock();
                         _renderer.OnTick(_terminal, _progressItems, _visibleProgressMessages);
                     }
                     finally
@@ -216,6 +217,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 try
                 {
                     _terminal.StartUpdate();
+                    UpdateVisibleProgressMessagesUnderLock();
                     _renderer.OnWrite(_terminal, _progressItems, write, _visibleProgressMessages);
                 }
                 finally
@@ -265,23 +267,26 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 {
                     _progressMessages.Remove(identity);
                 }
-                else if (!_progressMessages.TryGetValue(identity, out TerminalProgressMessageState? existing)
-                    || existing.Text != message)
+                else
                 {
-                    try
+                    bool hasExisting = _progressMessages.TryGetValue(identity, out TerminalProgressMessageState? existing);
+                    if (!hasExisting || existing is null || existing.Text != message)
                     {
-                        _terminal.StartUpdate();
-                        _terminal.AppendLine(message);
-                    }
-                    finally
-                    {
-                        _terminal.StopUpdate();
-                    }
+                        try
+                        {
+                            _terminal.StartUpdate();
+                            _terminal.AppendLine(message);
+                        }
+                        finally
+                        {
+                            _terminal.StopUpdate();
+                        }
 
-                    long version = ++_messageVersion;
-                    _progressMessages[identity] = existing is null
-                        ? new TerminalProgressMessageState(--_messageId, version, message)
-                        : new TerminalProgressMessageState(existing.Id, version, message);
+                        long version = ++_messageVersion;
+                        _progressMessages[identity] = existing is null
+                            ? new TerminalProgressMessageState(--_messageId, version, message)
+                            : new TerminalProgressMessageState(existing.Id, version, message);
+                    }
                 }
 
                 return;
@@ -300,13 +305,21 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 _progressMessages.Add(identity, new TerminalProgressMessageState(--_messageId, ++_messageVersion, message));
             }
 
-            int visibleCount = Math.Min(MaximumVisibleProgressMessages, Math.Max(0, _terminal.Height - 1));
-            _visibleProgressMessages = _progressMessages.Values
-                .OrderByDescending(static state => state.Version)
-                .Take(visibleCount)
-                .OrderBy(static state => state.Version)
-                .ToArray();
+            UpdateVisibleProgressMessagesUnderLock();
         }
+    }
+
+    private void UpdateVisibleProgressMessagesUnderLock()
+    {
+        int activeWorkerCount = _progressItems.Count(static progress => progress is not null);
+        int visibleCount = Math.Min(
+            MaximumVisibleProgressMessages,
+            Math.Max(0, _terminal.Height - 1 - activeWorkerCount));
+        _visibleProgressMessages = _progressMessages.Values
+            .OrderByDescending(static state => state.Version)
+            .Take(visibleCount)
+            .OrderBy(static state => state.Version)
+            .ToArray();
     }
 
     private void ClearProgressMessages()

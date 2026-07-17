@@ -536,6 +536,30 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressStateAwareTerminal_AfterTerminalShrinks_TrimsMessagesAndReservesWorkerRows()
+    {
+        var terminal = new RecordingTerminal { Height = 10 };
+        var renderer = new RecordingProgressRenderer();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer);
+        var stopwatchFactory = new StopwatchFactory();
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 2);
+        progressAwareTerminal.AddWorker(new TestProgressState(1, "a.dll", "net8.0", "x64", stopwatchFactory.CreateStopwatch(), isDiscovery: false));
+        progressAwareTerminal.AddWorker(new TestProgressState(2, "b.dll", "net8.0", "x64", stopwatchFactory.CreateStopwatch(), isDiscovery: false));
+        for (int i = 0; i < TestProgressStateAwareTerminal.MaximumVisibleProgressMessages; i++)
+        {
+            progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", $"message-{i}", $"Text {i}");
+        }
+
+        terminal.Height = 4;
+        progressAwareTerminal.WriteToTerminal(static _ => { });
+        progressAwareTerminal.StopShowingProgress();
+
+        Assert.HasCount(1, renderer.Messages);
+        Assert.AreEqual("Text 4", renderer.Messages[0].Text);
+    }
+
+    [TestMethod]
     public void TestProgressStateAwareTerminal_WhenProgressIsDisabled_WritesChangedMessagesDurably()
     {
         var terminal = new RecordingTerminal();
@@ -811,7 +835,7 @@ public sealed class TerminalTestReporterTests
 
         public int Width => int.MaxValue;
 
-        public int Height => int.MaxValue;
+        public int Height { get; set; } = int.MaxValue;
 
         public void Append(char value) => Events.Add($"Append:{value}");
 

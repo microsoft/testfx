@@ -45,18 +45,19 @@ internal sealed partial class TerminalOutputDevice
             return;
         }
 
+        TerminalTestReporter terminalTestReporter = _terminalTestReporter ?? throw ApplicationStateGuard.Unreachable();
         using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
         {
             switch (data)
             {
                 case SessionMessageOutputDeviceData sessionMessageData:
                     await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
-                    _terminalTestReporter.WriteMessage(sessionMessageData.Message);
+                    terminalTestReporter.WriteMessage(sessionMessageData.Message);
                     break;
 
                 case ProgressMessageOutputDeviceData progressMessageData:
                     await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
-                    _terminalTestReporter.UpdateProgressMessage(
+                    terminalTestReporter.UpdateProgressMessage(
                         InProcessExecutionId,
                         InProcessExecutionId,
                         producer.Uid,
@@ -66,32 +67,32 @@ internal sealed partial class TerminalOutputDevice
 
                 case FormattedTextOutputDeviceData formattedTextData:
                     await LogDebugAsync(formattedTextData.Text).ConfigureAwait(false);
-                    _terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);
+                    terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);
                     break;
 
                 case TextOutputDeviceData textData:
                     await LogDebugAsync(textData.Text).ConfigureAwait(false);
-                    _terminalTestReporter.WriteMessage(textData.Text);
+                    terminalTestReporter.WriteMessage(textData.Text);
                     break;
 
                 case WarningMessageOutputDeviceData warningData:
                     await LogDebugAsync(warningData.Message).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
-                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityWarning, warningData.Message));
+                        terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityWarning, warningData.Message));
                     }
 
-                    _terminalTestReporter.WriteWarningMessage(warningData.Message, null);
+                    terminalTestReporter.WriteWarningMessage(warningData.Message, null);
                     break;
 
                 case ErrorMessageOutputDeviceData errorData:
                     await LogDebugAsync(errorData.Message).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
-                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message));
+                        terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, errorData.Message));
                     }
 
-                    _terminalTestReporter.WriteErrorMessage(errorData.Message, null);
+                    terminalTestReporter.WriteErrorMessage(errorData.Message, null);
                     break;
 
                 case ExceptionOutputDeviceData exceptionOutputDeviceData:
@@ -99,10 +100,10 @@ internal sealed partial class TerminalOutputDevice
                     await LogDebugAsync(exceptionMessage).ConfigureAwait(false);
                     if (_isAzureDevOpsEnvironment)
                     {
-                        _terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionMessage));
+                        terminalTestReporter.WriteMessage(AzureDevOpsLogIssueFormatter.FormatLogIssue(AzureDevOpsLogIssueFormatter.SeverityError, exceptionMessage));
                     }
 
-                    _terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
+                    terminalTestReporter.WriteErrorMessage(exceptionOutputDeviceData.Exception);
                     break;
             }
         }
