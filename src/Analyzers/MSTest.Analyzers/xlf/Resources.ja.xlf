@@ -54,12 +54,12 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat">
         <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</source>
-        <target state="new">'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</target>
+        <target state="translated">[AssemblyFixtureProvider] は、Ahead-of-Time (AOT) コンパイル (Native AOT や Blazor WebAssembly AOT など) ではサポートされていないため、実行時に無視されます</target>
         <note>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotTitle">
         <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</source>
-        <target state="new">'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</target>
+        <target state="translated">'[AssemblyFixtureProvider]' は、AOT コンパイルではサポートされていません</target>
         <note>{Locked="[AssemblyFixtureProvider]"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
