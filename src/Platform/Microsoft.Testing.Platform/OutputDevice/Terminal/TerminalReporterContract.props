@@ -63,14 +63,23 @@
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\IStopwatch.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemConsole.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemStopwatch.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\ILogger.cs">
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\LogLevel.cs">
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\LoggingExtensions.cs">
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
+    </TerminalReporterContractSource>
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\NopLogger.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\IColor.cs">
       <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
-      <PlatformPublicColorAbstraction>true</PlatformPublicColorAbstraction>
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
     </TerminalReporterContractSource>
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\SystemConsoleColor.cs">
       <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
-      <PlatformPublicColorAbstraction>true</PlatformPublicColorAbstraction>
+      <PlatformPublicAbstraction>true</PlatformPublicAbstraction>
     </TerminalReporterContractSource>
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TargetFrameworkParser.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\TestRunSummaryHelper.cs" />
@@ -108,7 +117,7 @@
       <_TerminalReporterReferencesPlatform Condition=" '@(_TerminalReporterPlatformRef)' != '' ">true</_TerminalReporterReferencesPlatform>
     </PropertyGroup>
     <ItemGroup Condition=" '$(_TerminalReporterReferencesPlatform)' == 'true' ">
-      <Compile Remove="@(Compile)" Condition=" '%(Compile.PlatformPublicColorAbstraction)' == 'true' " />
+      <Compile Remove="@(Compile)" Condition=" '%(Compile.PlatformPublicAbstraction)' == 'true' " />
     </ItemGroup>
   </Target>
 
