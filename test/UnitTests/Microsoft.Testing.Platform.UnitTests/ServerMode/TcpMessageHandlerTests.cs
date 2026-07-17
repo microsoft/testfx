@@ -29,8 +29,9 @@ public sealed class TcpMessageHandlerTests
                 })
             .ThrowsAsync(new IOException("Logging failed."));
 
+        using TcpClient tcpClient = new();
         using var handler = new TcpMessageHandler(
-            new TcpClient(),
+            tcpClient,
             new ConnectionResetStream(connectionReset),
             new MemoryStream(),
             Mock.Of<IMessageFormatter>(),
