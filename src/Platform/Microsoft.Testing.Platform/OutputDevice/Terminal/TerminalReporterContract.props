@@ -63,6 +63,7 @@
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\IStopwatch.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemConsole.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Helpers\System\SystemStopwatch.cs" />
+    <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\Logging\NopLogger.cs" />
     <TerminalReporterContractSource Include="$(_TerminalContractPlatform)\OutputDevice\IColor.cs">
       <!-- Public API of Microsoft.Testing.Platform; dropped (not compiled) when the consumer references the platform. -->
       <PlatformPublicColorAbstraction>true</PlatformPublicColorAbstraction>

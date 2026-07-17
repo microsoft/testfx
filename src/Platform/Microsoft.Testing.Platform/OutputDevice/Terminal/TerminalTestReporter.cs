@@ -94,20 +94,8 @@ internal sealed partial class TerminalTestReporter : IDisposable
         IConsole console,
         Func<bool> isCancellationRequested,
         TerminalTestReporterOptions options)
-        : this(console, isCancellationRequested, options, new EmbeddedNopLogger())
+        : this(console, isCancellationRequested, options, new NopLogger())
     {
-    }
-
-    private sealed class EmbeddedNopLogger : ILogger
-    {
-        public bool IsEnabled(LogLevel logLevel) => false;
-
-        public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        {
-        }
-
-        public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-            => Task.CompletedTask;
     }
 
     /// <summary>
