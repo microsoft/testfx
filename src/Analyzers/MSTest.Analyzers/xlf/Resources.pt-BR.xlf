@@ -59,7 +59,7 @@ O tipo declarando esses métodos também deve respeitar as seguintes regras:
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotTitle">
         <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</source>
-        <target state="translated">''[AssemblyFixtureProvider]'' não tem suporte com compilação antecipada</target>
+        <target state="new">'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</target>
         <note>{Locked="[AssemblyFixtureProvider]"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">

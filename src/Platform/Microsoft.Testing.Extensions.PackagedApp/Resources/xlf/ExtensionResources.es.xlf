@@ -9,12 +9,12 @@
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="translated">El manifiesto de la aplicación empaquetada no declara un &lt;Identity Name="..." Publisher="..." /&gt; elemento.</target>
+        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="translated">Implementa un host de prueba de Windows no empaquetado (diseño flexible) (por ejemplo, WinUI sin empaquetar) en un directorio aislado y lo inicia desde allí y, en la compilación de Windows, registra un host de prueba de escritorio MSIX empaquetado y de plena confianza y lo activa mediante el identificador del modelo de usuario de aplicación. No se admiten los hosts verdaderos de UWP/AppContainer. Consulte https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,17 +24,17 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="translated">No se puede iniciar la aplicación de Windows empaquetada "{0}" (se encontró "{1}"). El registro y la activación de una aplicación empaquetada (MSIX) requiere la compilación de Windows de esta extensión, que se distribuye para net8.0-windows10.0.19041.0 y versiones posteriores. El destino es "net8.0-windows10.0.19041.0" (o un moniker posterior de net*-windows Target Framework en la versión de plataforma 10.0.19041.0 o posterior) para que NuGet seleccione ese recurso. La compilación actual solo inicia hosts de prueba no empaquetados (diseño flexible). Consulte https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="translated">No se puede activar la aplicación empaquetada de Windows "{0}" (se encontró ''{1}"): su manifiesto no declara ningún &lt;Aplicación&gt;, por lo que no hay ningún identificador de modelo de usuario de aplicación para activar.</target>
+        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
-        <target state="translated">No se pudo registrar el diseño empaquetado de la aplicación de Windows "{0}". El registro de un diseño de salida de compilación sin firmar requiere que se habilite el modo de desarrollador (o la instalación de prueba). Error: {1}</target>
+        <target state="new">Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</target>
         <note />
       </trans-unit>
     </body>

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="translated">Manifest spakowanej aplikacji deklaruje wiele aplikacji i żaden z nich nie jest jednoznacznie zgodny z plikiem wykonywalnym „{0}”. Identyfikatory modelu użytkownika aplikacji (Application User Model ID): {1}.</target>
+        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
