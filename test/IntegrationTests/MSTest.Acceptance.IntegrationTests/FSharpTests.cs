@@ -12,7 +12,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// (Microsoft.Testing.Platform) host.
 /// </summary>
 [TestClass]
-[OSCondition(OperatingSystems.Windows)]
 public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixture>
 {
     private const string ProjectName = "FSharpTestProject";
@@ -20,9 +19,10 @@ public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixtur
     public TestContext TestContext { get; set; } = default!;
 
     [TestMethod]
-    public async Task DiscoversFSharpTestWithSpaceAndDotInName()
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task DiscoversFSharpTestWithSpaceAndDotInName(string tfm)
     {
-        TestHost testHost = AssetFixture.GetTestHost();
+        TestHost testHost = AssetFixture.GetTestHost(tfm);
 
         TestHostResult listResult = await testHost.ExecuteAsync("--list-tests", cancellationToken: TestContext.CancellationToken);
         Assert.AreEqual(0, listResult.ExitCode, listResult.StandardOutput);
@@ -30,9 +30,10 @@ public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixtur
     }
 
     [TestMethod]
-    public async Task RunsFSharpTestWithSpaceAndDotInName()
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task RunsFSharpTestWithSpaceAndDotInName(string tfm)
     {
-        TestHost testHost = AssetFixture.GetTestHost();
+        TestHost testHost = AssetFixture.GetTestHost(tfm);
         TestHostResult result = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.ExitCode, result.StandardOutput);
@@ -46,12 +47,14 @@ public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixtur
         private readonly TempDirectory _tempDirectory = new();
         private TestAsset? _asset;
 
-        public TestHost GetTestHost()
-            => TestHost.LocateFrom(_asset!.TargetAssetPath, ProjectName, "net472");
+        public TestHost GetTestHost(string tfm)
+            => TestHost.LocateFrom(_asset!.TargetAssetPath, ProjectName, tfm);
 
         public async Task InitializeAsync(CancellationToken cancellationToken)
         {
-            string code = SourceCode.PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+            string code = SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
             _asset = await TestAsset.GenerateAssetAsync(ProjectName, code, _tempDirectory);
             await DotnetCli.RunAsync($"build \"{_asset.TargetAssetPath}\" -c Release", callerMemberName: ProjectName, cancellationToken: cancellationToken);
         }
@@ -67,7 +70,7 @@ public sealed class FSharpTests : AcceptanceTestBase<FSharpTests.TestAssetFixtur
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <GenerateProgramFile>false</GenerateProgramFile>

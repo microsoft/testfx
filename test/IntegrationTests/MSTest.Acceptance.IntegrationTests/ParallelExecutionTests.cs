@@ -19,7 +19,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// keeps execution serial, without relying on a flaky wall-clock threshold.
 /// </remarks>
 [TestClass]
-[OSCondition(OperatingSystems.Windows)]
 public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutionTests.TestAssetFixture>
 {
     private const string MethodParallelProjectName = "ParallelMethodsTestProject";
@@ -29,9 +28,10 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
     public TestContext TestContext { get; set; } = default!;
 
     [TestMethod]
-    public async Task AllMethodsShouldRunInParallel()
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task AllMethodsShouldRunInParallel(string tfm)
     {
-        TestHost testHost = AssetFixture.GetTestHost(MethodParallelProjectName);
+        TestHost testHost = AssetFixture.GetTestHost(MethodParallelProjectName, tfm);
 
         TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
 
@@ -40,13 +40,14 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         Assert.Contains("succeeded: 4", result.StandardOutput);
         Assert.Contains("SimpleTest12", result.StandardOutput);
         Assert.Contains("SimpleTest22", result.StandardOutput);
-        Assert.IsGreaterThanOrEqualTo(2, AssetFixture.ReadMaximumConcurrency(MethodParallelProjectName));
+        Assert.IsGreaterThanOrEqualTo(2, AssetFixture.ReadMaximumConcurrency(MethodParallelProjectName, tfm));
     }
 
     [TestMethod]
-    public async Task AllClassesShouldRunInParallel()
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task AllClassesShouldRunInParallel(string tfm)
     {
-        TestHost testHost = AssetFixture.GetTestHost(ClassParallelProjectName);
+        TestHost testHost = AssetFixture.GetTestHost(ClassParallelProjectName, tfm);
 
         TestHostResult result = await testHost.ExecuteAsync("--output detailed", cancellationToken: TestContext.CancellationToken);
 
@@ -56,13 +57,14 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         Assert.Contains("SimpleTest12", result.StandardOutput);
         Assert.Contains("SimpleTest22", result.StandardOutput);
         Assert.Contains("SimpleTest32", result.StandardOutput);
-        Assert.IsGreaterThanOrEqualTo(2, AssetFixture.ReadMaximumConcurrency(ClassParallelProjectName));
+        Assert.IsGreaterThanOrEqualTo(2, AssetFixture.ReadMaximumConcurrency(ClassParallelProjectName, tfm));
     }
 
     [TestMethod]
-    public async Task NothingShouldRunInParallel()
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task NothingShouldRunInParallel(string tfm)
     {
-        TestHost testHost = AssetFixture.GetTestHost(DoNotParallelizeProjectName);
+        TestHost testHost = AssetFixture.GetTestHost(DoNotParallelizeProjectName, tfm);
 
         string settingsPath = AssetFixture.GetRunSettingsPath(DoNotParallelizeProjectName);
         TestHostResult result = await testHost.ExecuteAsync($"--settings \"{settingsPath}\" --output detailed", cancellationToken: TestContext.CancellationToken);
@@ -72,7 +74,7 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         Assert.Contains("succeeded: 3", result.StandardOutput);
         Assert.Contains("SimpleTest12", result.StandardOutput);
         Assert.Contains("SimpleTest22", result.StandardOutput);
-        Assert.AreEqual(1, AssetFixture.ReadMaximumConcurrency(DoNotParallelizeProjectName));
+        Assert.AreEqual(1, AssetFixture.ReadMaximumConcurrency(DoNotParallelizeProjectName, tfm));
     }
 
     public sealed class TestAssetFixture : ITestAssetFixture
@@ -80,15 +82,15 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
         private readonly TempDirectory _tempDirectory = new();
         private readonly Dictionary<string, TestAsset> _assets = [];
 
-        public TestHost GetTestHost(string projectName)
-            => TestHost.LocateFrom(_assets[projectName].TargetAssetPath, projectName, "net462");
+        public TestHost GetTestHost(string projectName, string tfm)
+            => TestHost.LocateFrom(_assets[projectName].TargetAssetPath, projectName, tfm);
 
         public string GetRunSettingsPath(string projectName)
             => Path.Combine(_assets[projectName].TargetAssetPath, "parallel.runsettings");
 
-        public int ReadMaximumConcurrency(string projectName)
+        public int ReadMaximumConcurrency(string projectName, string tfm)
         {
-            string probePath = Path.Combine(GetTestHost(projectName).DirectoryName, "ParallelProbe.txt");
+            string probePath = Path.Combine(GetTestHost(projectName, tfm).DirectoryName, "ParallelProbe.txt");
             return int.Parse(File.ReadAllText(probePath), CultureInfo.InvariantCulture);
         }
 
@@ -101,7 +103,9 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
                 (DoNotParallelizeProjectName, DoNotParallelizeSourceCode),
             })
             {
-                string patched = code.PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
+                string patched = code
+                    .PatchTargetFrameworks(TargetFrameworks.All)
+                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion);
                 TestAsset asset = await TestAsset.GenerateAssetAsync(projectName, patched, _tempDirectory);
                 await DotnetCli.RunAsync($"build \"{asset.TargetAssetPath}\" -c Release", callerMemberName: projectName, cancellationToken: cancellationToken);
                 _assets.Add(projectName, asset);
@@ -125,7 +129,7 @@ public sealed class ParallelExecutionTests : AcceptanceTestBase<ParallelExecutio
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
