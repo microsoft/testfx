@@ -61,11 +61,13 @@ public sealed class LegacyTimeoutBehaviorTests : AcceptanceTestBase<LegacyTimeou
             timedResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             timedResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
             timedResult.AssertOutputContains("UserCancellationWithTimeout");
+            timedResult.AssertOutputContains("Test 'UserCancellationWithTimeout' was canceled");
             Assert.AreEqual("continued after cancellation", File.ReadAllText(timedMarkerPath));
 
             regularResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             regularResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
             regularResult.AssertOutputContains("UserCancellationWithoutTimeout");
+            regularResult.AssertOutputDoesNotContain("Test 'UserCancellationWithoutTimeout' was canceled");
             Assert.AreEqual("continued", File.ReadAllText(regularMarkerPath));
         }
         finally

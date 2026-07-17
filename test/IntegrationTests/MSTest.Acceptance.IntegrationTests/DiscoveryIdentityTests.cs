@@ -11,6 +11,8 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
+
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
@@ -35,7 +37,7 @@ public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentit
     }
 
     [TestMethod]
-    public void ParameterizedTestsHaveUniqueAdapterTestCaseIdsForEveryDataShape()
+    public async Task ParameterizedTestsHaveUniqueAdapterTestCaseIdsForEveryDataShape()
     {
         ImmutableArray<TestCase> testCases = DiscoverTests();
 
@@ -54,6 +56,18 @@ public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentit
             allIdentityCases.Length,
             allIdentityCases.Select(testCase => testCase.Id).Distinct().Count(),
             "Every discovered parameterized test case should have a unique adapter TestCase.Id.");
+
+        ImmutableArray<TestResult> results = await CLITestBase.RunTestsAsync(allIdentityCases);
+        Assert.HasCount(26, results);
+        Assert.IsTrue(results.All(result => result.Outcome == TestOutcome.Passed));
+        Assert.AreEqual(
+            results.Length,
+            results.Select(result => result.TestCase.Id).Distinct().Count(),
+            "Every executed parameterized test case should retain a unique adapter TestCase.Id.");
+        CollectionAssert.AreEquivalent(
+            allIdentityCases.Select(testCase => testCase.Id).ToArray(),
+            results.Select(result => result.TestCase.Id).ToArray(),
+            "Execution should preserve every TestCase.Id produced during discovery.");
     }
 
     [TestMethod]
