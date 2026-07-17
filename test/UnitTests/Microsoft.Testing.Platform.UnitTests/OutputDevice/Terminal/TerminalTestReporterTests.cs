@@ -637,6 +637,31 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void AnsiTerminal_RenderProgress_WideProgressMessageUsesTerminalCellWidth()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 10, windowWidth: 10);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "界界界界界界界界界")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.AreEqual("...界界界", renderedMessage);
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_NarrowProgressMessageDoesNotSplitSurrogatePair()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 2, windowWidth: 2);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "😀")]);
+
+        Assert.AreEqual(string.Empty, console.Output.Replace(Environment.NewLine, string.Empty));
+    }
+
+    [TestMethod]
     [DataRow(1, 0)]
     [DataRow(2, 1)]
     [DataRow(3, 2)]

@@ -228,26 +228,105 @@ internal sealed class AnsiTerminalTestProgressFrame
     {
         currentLine.RenderedDurationLength = 0;
         int availableWidth = Math.Max(0, Width - 1);
-        if (availableWidth == 0)
+        if (availableWidth > 0)
         {
+            AppendProgressMessageToWidth(terminal, message.Text, availableWidth);
+        }
+    }
+
+    private static void AppendProgressMessageToWidth(AnsiTerminal terminal, string text, int availableWidth)
+    {
+        List<TextElement> elements = [];
+        int totalWidth = 0;
+        TextElementEnumerator enumerator = StringInfo.GetTextElementEnumerator(text);
+        while (enumerator.MoveNext())
+        {
+            string element = enumerator.GetTextElement();
+            int width = GetTerminalCellWidth(element);
+            elements.Add(new TextElement(element, width));
+            totalWidth += width;
+        }
+
+        if (totalWidth <= availableWidth)
+        {
+            terminal.Append(text);
             return;
         }
 
         if (availableWidth < 3)
         {
-            terminal.Append(message.Text[..Math.Min(message.Text.Length, availableWidth)]);
+            AppendPrefixToWidth(terminal, elements, availableWidth);
             return;
         }
 
-        if (message.Text.Length <= availableWidth)
+        terminal.Append("...");
+        int remainingWidth = availableWidth - 3;
+        int firstElementToAppend = elements.Count;
+        for (int i = elements.Count - 1; i >= 0; i--)
         {
-            terminal.Append(message.Text);
-            return;
+            if (elements[i].Width > remainingWidth)
+            {
+                break;
+            }
+
+            remainingWidth -= elements[i].Width;
+            firstElementToAppend = i;
         }
 
-        int charsTaken = 0;
-        AppendToWidth(terminal, message.Text, availableWidth, ref charsTaken);
+        for (int i = firstElementToAppend; i < elements.Count; i++)
+        {
+            terminal.Append(elements[i].Text);
+        }
     }
+
+    private static void AppendPrefixToWidth(AnsiTerminal terminal, List<TextElement> elements, int availableWidth)
+    {
+        foreach (TextElement element in elements)
+        {
+            if (element.Width > availableWidth)
+            {
+                break;
+            }
+
+            terminal.Append(element.Text);
+            availableWidth -= element.Width;
+        }
+    }
+
+    private static int GetTerminalCellWidth(string textElement)
+    {
+        int width = 0;
+        for (int i = 0; i < textElement.Length;)
+        {
+            int codePoint = char.ConvertToUtf32(textElement, i);
+            UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(textElement, i);
+            if (category is not (UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark or UnicodeCategory.Format))
+            {
+                width = Math.Max(width, IsWideCodePoint(codePoint) ? 2 : 1);
+            }
+
+            i += char.IsSurrogatePair(textElement, i) ? 2 : 1;
+        }
+
+        return width;
+    }
+
+    private static bool IsWideCodePoint(int codePoint)
+        => codePoint is >= 0x1100
+            and (<= 0x115F
+                or 0x2329
+                or 0x232A
+                or (>= 0x2E80 and <= 0xA4CF and not 0x303F)
+                or (>= 0xAC00 and <= 0xD7A3)
+                or (>= 0xF900 and <= 0xFAFF)
+                or (>= 0xFE10 and <= 0xFE19)
+                or (>= 0xFE30 and <= 0xFE6F)
+                or (>= 0xFF00 and <= 0xFF60)
+                or (>= 0xFFE0 and <= 0xFFE6)
+                or (>= 0x1F300 and <= 0x1FAFF)
+                or (>= 0x20000 and <= 0x3FFFD));
+
+    private readonly record struct TextElement(string Text, int Width);
 
     private static void AppendToWidth(AnsiTerminal terminal, string text, int width, ref int charsTaken)
     {
