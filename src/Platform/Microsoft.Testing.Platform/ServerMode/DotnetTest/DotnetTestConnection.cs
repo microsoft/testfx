@@ -292,7 +292,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             return;
         }
 
-        await TryLogAsync(LogLevel.Debug, $"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
+        await TryLogBoundedAsync(LogLevel.Debug, $"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
 
         await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
     }
