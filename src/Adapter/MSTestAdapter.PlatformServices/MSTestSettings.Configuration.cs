@@ -126,6 +126,29 @@ internal sealed partial class MSTestSettings
         }
     }
 
+    private static void ParseCaptureTraceOutputSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<TestOutputCaptureMode> setSetting)
+    {
+        if (configuration[$"mstest:{key}"] is not string value)
+        {
+            return;
+        }
+
+        // Accept the legacy boolean spelling (true -> Result, false -> None) as well as the
+        // TestOutputCaptureMode enum names (None/Result/Live) so existing configs keep working.
+        if (bool.TryParse(value, out bool boolResult))
+        {
+            setSetting(boolResult ? TestOutputCaptureMode.Result : TestOutputCaptureMode.None);
+        }
+        else if (TryParseCaptureMode(value, out TestOutputCaptureMode mode))
+        {
+            setSetting(mode);
+        }
+        else
+        {
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, value, key));
+        }
+    }
+
     private static void ParseDebuggerLaunchModeSetting(IConfiguration configuration, string key, IAdapterMessageLogger? logger, Action<DebuggerLaunchMode> setSetting)
     {
         if (configuration[$"mstest:{key}"] is not string value)
@@ -205,7 +228,7 @@ internal sealed partial class MSTestSettings
 
         ParseBooleanSetting(configuration, "execution:randomizeTestOrder", logger, value => settings.RandomizeTestOrder = value);
         ParseSignedIntegerSetting(configuration, "execution:randomTestOrderSeed", logger, value => settings.RandomTestOrderSeed = value);
-        ParseBooleanSetting(configuration, "output:captureTrace", logger, value => settings.CaptureDebugTraces = value);
+        ParseCaptureTraceOutputSetting(configuration, "output:captureTrace", logger, value => settings.OutputCaptureMode = value);
         ParseBooleanSetting(configuration, "parallelism:enabled", logger, value => settings.DisableParallelization = !value);
         ParseBooleanSetting(configuration, "execution:mapInconclusiveToFailed", logger, value => settings.MapInconclusiveToFailed = value);
         ParseBooleanSetting(configuration, "execution:mapNotRunnableToFailed", logger, value => settings.MapNotRunnableToFailed = value);

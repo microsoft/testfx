@@ -398,6 +398,7 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.randomize_test_order"] = AsTelemetryBool(settings.RandomizeTestOrder);
         metrics["mstest.setting.random_test_order_seed_provided"] = AsTelemetryBool(settings.RandomTestOrderSeed.HasValue);
         metrics["mstest.setting.capture_debug_traces"] = AsTelemetryBool(settings.CaptureDebugTraces);
+        metrics["mstest.setting.output_capture_mode"] = settings.OutputCaptureMode.ToString();
     }
 
     // MTP's telemetry providers (e.g. AppInsightsProvider) reject raw boolean values and assert
