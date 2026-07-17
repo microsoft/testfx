@@ -311,6 +311,12 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     private void UpdateVisibleProgressMessagesUnderLock()
     {
+        if (_progressMessages.Count == 0)
+        {
+            _visibleProgressMessages = [];
+            return;
+        }
+
         int activeWorkerCount = _progressItems.Count(static progress => progress is not null);
         int visibleCount = Math.Min(
             MaximumVisibleProgressMessages,

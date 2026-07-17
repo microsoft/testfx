@@ -44,8 +44,7 @@ public sealed class ServerModePerCallOutputDeviceTests
 
         ServerLogMessage[] messages = GetMessages(device);
         Assert.HasCount(2, messages);
-        Assert.Contains("Restoring", messages.Select(static message => message.Message));
-        Assert.Contains("Restored", messages.Select(static message => message.Message));
+        Assert.AreSequenceEqual(new[] { "Restoring", "Restored" }, messages.Select(static message => message.Message));
     }
 
     [TestMethod]
@@ -73,7 +72,7 @@ public sealed class ServerModePerCallOutputDeviceTests
     }
 
     private static ServerLogMessage[] GetMessages(ServerModePerCallOutputDevice device)
-        => ((ConcurrentBag<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
+        => ((ConcurrentQueue<ServerLogMessage>)typeof(ServerModePerCallOutputDevice)
             .GetField("_messages", BindingFlags.Instance | BindingFlags.NonPublic)!
             .GetValue(device)!)
             .ToArray();

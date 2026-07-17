@@ -14,7 +14,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
 {
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly IStopPoliciesService _policiesService;
-    private readonly ConcurrentBag<ServerLogMessage> _messages = [];
+    private readonly ConcurrentQueue<ServerLogMessage> _messages = [];
     private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
 #if NET9_0_OR_GREATER
     private readonly Lock _progressMessagesLock = new();
@@ -44,7 +44,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
         // messages to Test Explorer as well.
         _serverTestHost = serverTestHost;
 
-        while (_messages.TryTake(out ServerLogMessage? message))
+        while (_messages.TryDequeue(out ServerLogMessage? message))
         {
             await LogAsync(message, serverTestHost.ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken).ConfigureAwait(false);
         }
@@ -153,7 +153,7 @@ internal sealed class ServerModePerCallOutputDevice : IPlatformOutputDevice, IOu
     {
         if (_serverTestHost is null)
         {
-            _messages.Add(message);
+            _messages.Enqueue(message);
         }
         else
         {
