@@ -23,6 +23,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 internal sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
+    private sealed class LiveOutputScope(TestContext? testContext)
+    {
+        private int _isActive = 1;
+
+        internal TestContext? TestContext { get; } = testContext;
+
+        internal bool IsActive => Volatile.Read(ref _isActive) == 1;
+
+        internal void Deactivate()
+            => Volatile.Write(ref _isActive, 0);
+    }
+
     internal sealed class SynchronizedStringBuilder
     {
         private readonly StringBuilder _builder = new();
@@ -75,6 +87,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     private readonly TextWriter? _liveOutputWriter;
     private readonly Func<TestOutputCaptureMode> _outputCaptureModeProvider;
 
+    private static readonly AsyncLocal<LiveOutputScope?> CurrentLiveOutputScope = new();
     private static TextWriter? s_liveOutputWriter;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
@@ -468,11 +481,21 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal readonly struct ScopedTestContextSetter : IDisposable
     {
+        private readonly LiveOutputScope _liveOutputScope;
+
         internal ScopedTestContextSetter(TestContext? testContext)
-            => TestContext.Current = testContext;
+        {
+            TestContext.Current = testContext;
+            _liveOutputScope = new(testContext);
+            CurrentLiveOutputScope.Value = _liveOutputScope;
+        }
 
         public void Dispose()
-            => TestContext.Current = null;
+        {
+            _liveOutputScope.Deactivate();
+            TestContext.Current = null;
+            CurrentLiveOutputScope.Value = null;
+        }
     }
 
     internal static ScopedTestContextSetter SetCurrentTestContext(TestContext? testContext)
@@ -534,7 +557,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     {
         if (_liveOutputWriter is null
             || _outputCaptureModeProvider() != TestOutputCaptureMode.Live
-            || !ReferenceEquals(TestContext.Current, this))
+            || CurrentLiveOutputScope.Value is not { IsActive: true } liveOutputScope
+            || !ReferenceEquals(liveOutputScope.TestContext, this))
         {
             return;
         }

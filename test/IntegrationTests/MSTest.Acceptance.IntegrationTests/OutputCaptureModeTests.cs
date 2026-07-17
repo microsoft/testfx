@@ -18,6 +18,7 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
     private const string TraceMarker = "CAPTUREMODE_TRACE";
     private const string TestContextWriteMarker = "CAPTUREMODE_TESTCONTEXT_WRITE_ONLY";
     private const string TestContextWriteLineMarker = "CAPTUREMODE_TESTCONTEXT_LINE_ONLY";
+    private const string StaleTestContextMarker = "CAPTUREMODE_STALE_TESTCONTEXT";
 
     [TestMethod]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -39,6 +40,21 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
         // Exact counts also guard against routing the live echo back through captured standard output.
         AssertMarkerOccursExactlyOnce(testHostResult, TestContextWriteMarker);
         AssertMarkerOccursExactlyOnce(testHostResult, TestContextWriteLineMarker);
+    }
+
+    [TestMethod]
+    [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
+    public async Task LiveMode_DoesNotEchoOutputFromCompletedTestContext(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
+            "--filter FullyQualifiedName~PassingTestWithDelayedOutput --settings capturelive.runsettings",
+            cancellationToken: TestContext.CancellationToken);
+
+        testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContainsSummary(failed: 0, passed: 1, skipped: 0);
+        testHostResult.AssertOutputDoesNotContain(StaleTestContextMarker);
     }
 
     [TestMethod]
@@ -213,12 +229,16 @@ public sealed class OutputCaptureModeTests : AcceptanceTestBase<OutputCaptureMod
 #file UnitTest1.cs
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
 public class UnitTest1
 {
+    private static readonly TaskCompletionSource<object> StaleWriteRelease = new TaskCompletionSource<object>();
+    private static Task StaleWriteTask;
+
     public TestContext TestContext { get; set; }
 
     [TestMethod]
@@ -240,6 +260,27 @@ public class UnitTest1
         TestContext.Write("CAPTUREMODE_TESTCONTEXT_WRITE_ONLY");
         TestContext.WriteLine("CAPTUREMODE_TESTCONTEXT_LINE_ONLY");
         Assert.Fail("BOOM");
+    }
+
+    [TestMethod]
+    public void PassingTestWithDelayedOutput()
+    {
+        TestContext capturedContext = TestContext;
+        StaleWriteTask = Task.Run(async () =>
+        {
+            await StaleWriteRelease.Task;
+            capturedContext.WriteLine("CAPTUREMODE_STALE_TESTCONTEXT");
+        });
+    }
+
+    [ClassCleanup]
+    public static async Task ReleaseDelayedOutput()
+    {
+        if (StaleWriteTask != null)
+        {
+            StaleWriteRelease.SetResult(null);
+            await StaleWriteTask;
+        }
     }
 }
 """;

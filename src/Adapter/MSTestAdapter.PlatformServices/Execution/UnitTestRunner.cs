@@ -91,30 +91,34 @@ internal sealed partial class UnitTestRunner
     // cannot reliably detect an already-installed router). The installed routers read the capture mode on
     // every write (via MSTestSettings.CurrentSettings), so a reused host that changes OutputCaptureMode
     // between runs is still honored without re-installing.
-    private static int s_outputRoutingInstalled;
+#if NET9_0_OR_GREATER
+    private static readonly Lock OutputRoutingLock = new();
+#else
+    private static readonly object OutputRoutingLock = new();
+#endif
+    private static bool s_outputRoutingInstalled;
 
     private static void ConfigureOutputRouting(TestOutputCaptureMode mode)
     {
-        // Nothing to install while the very first run does not capture. Once any run needs capture we install
-        // the routers, and from then on their per-write mode check handles None/Result/Live for every run.
-        if (mode == TestOutputCaptureMode.None)
+        lock (OutputRoutingLock)
         {
-            return;
-        }
+            // Nothing to install while the very first run does not capture. Once any run needs capture we install
+            // the routers, and from then on their per-write mode check handles None/Result/Live for every run.
+            if (s_outputRoutingInstalled || mode == TestOutputCaptureMode.None)
+            {
+                return;
+            }
 
-        // Install exactly once per process, even if multiple runners are constructed concurrently.
-        if (Interlocked.CompareExchange(ref s_outputRoutingInstalled, 1, 0) != 0)
-        {
-            return;
-        }
+            Func<TestOutputCaptureMode> modeProvider = static () => MSTestSettings.CurrentSettings.OutputCaptureMode;
+            TextWriter originalOut = Console.Out;
+            TextWriter originalError = Console.Error;
+            TestContextImplementation.ConfigureLiveOutputWriter(originalOut);
+            Console.SetOut(new ConsoleOutRouter(originalOut, modeProvider));
+            Console.SetError(new ConsoleErrorRouter(originalError, modeProvider));
+            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(originalOut, modeProvider)));
 
-        Func<TestOutputCaptureMode> modeProvider = static () => MSTestSettings.CurrentSettings.OutputCaptureMode;
-        TextWriter originalOut = Console.Out;
-        TextWriter originalError = Console.Error;
-        TestContextImplementation.ConfigureLiveOutputWriter(originalOut);
-        Console.SetOut(new ConsoleOutRouter(originalOut, modeProvider));
-        Console.SetError(new ConsoleErrorRouter(originalError, modeProvider));
-        Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(originalOut, modeProvider)));
+            s_outputRoutingInstalled = true;
+        }
     }
 
 #pragma warning disable CA1822 // Mark members as static
