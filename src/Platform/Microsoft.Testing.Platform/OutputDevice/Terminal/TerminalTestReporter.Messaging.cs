@@ -33,6 +33,9 @@ internal sealed partial class TerminalTestReporter
             key,
             MakeControlCharactersVisible(message, normalizeWhitespaceCharacters: true));
 
+    internal void ClearProgressMessages()
+        => _terminalWithProgress.ClearProgressMessages();
+
     private void WriteMessage(string text, TerminalColor? color = null, int? padding = null)
         => _terminalWithProgress.WriteToTerminal(terminal =>
         {

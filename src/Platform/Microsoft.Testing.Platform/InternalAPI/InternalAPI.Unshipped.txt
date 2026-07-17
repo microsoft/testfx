@@ -15,8 +15,10 @@ Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Te
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Text.get -> string!
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState.Version.get -> long
 Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalTestReporter.ClearProgressMessages() -> void
 const Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.MaximumVisibleProgressMessages = 5 -> int
 Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.UpdateProgressMessage(string! executionId, string! instanceId, string! producerUid, string! key, string? message) -> void
+Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressStateAwareTerminal.ClearProgressMessages() -> void
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress) -> void
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame.Render(Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame! previousFrame, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal! terminal) -> void
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.CursorProgressRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems) -> void

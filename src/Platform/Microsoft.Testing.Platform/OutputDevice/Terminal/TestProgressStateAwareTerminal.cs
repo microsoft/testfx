@@ -362,7 +362,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             .ToArray();
     }
 
-    private void ClearProgressMessages()
+    internal void ClearProgressMessages()
     {
         lock (_lock)
         {
