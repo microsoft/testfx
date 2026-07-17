@@ -93,23 +93,28 @@ public sealed class TaskExtensionsTests
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
     {
         ManualResetEvent waitException = new(false);
-        CancellationToken token = new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token;
-        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async ()
-            => await Task.Run(async () =>
+        using CancellationTokenSource cancellationTokenSource = new();
+        CancellationToken token = cancellationTokenSource.Token;
+        Task<int> task = Task.Run(async () =>
+        {
+            await Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+            try
             {
-                await Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
-                try
-                {
-                    return 2;
-                }
-                finally
-                {
-                    waitException.Set();
+                return 2;
+            }
+            finally
+            {
+                waitException.Set();
 #pragma warning disable CA2219 // Do not raise exceptions in finally clauses
-                    throw new InvalidOperationException();
+                throw new InvalidOperationException();
 #pragma warning restore CA2219 // Do not raise exceptions in finally clauses
-                }
-            }).WithCancellationAsync(token));
+            }
+        }).WithCancellationAsync(token);
+
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+        cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
+        OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(token, ex.CancellationToken);
         Assert.IsTrue(
             waitException.WaitOne(TimeSpan.FromSeconds(30)),
