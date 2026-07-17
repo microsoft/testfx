@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="translated">El manifiesto de la aplicación empaquetada no declara un &lt;Identity Name="..." Publisher="..." /&gt; elemento.</target>
+        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="translated">No se puede activar la aplicación empaquetada de Windows "{0}" (se encontró ''{1}"): su manifiesto no declara ningún &lt;Aplicación&gt;, por lo que no hay ningún identificador de modelo de usuario de aplicación para activar.</target>
+        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
