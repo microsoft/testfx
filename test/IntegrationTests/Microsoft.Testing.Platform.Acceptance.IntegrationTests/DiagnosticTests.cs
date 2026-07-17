@@ -20,7 +20,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_WhenDiagnosticIsSpecified_ReportIsGeneratedInDefaultLocation(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", cancellationToken: TestContext.CancellationToken);
@@ -46,7 +46,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_WhenDiagnosticAndOutputDirectoryAreSpecified_ReportIsGeneratedInSpecifiedLocation(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, "test1");
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         Assert.IsTrue(Directory.CreateDirectory(diagPath).Exists);
 
@@ -109,7 +109,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_EnableWithEnvironmentVariables_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -127,7 +127,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_EnableWithEnvironmentVariables_Verbosity_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -213,7 +213,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -234,7 +234,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_NewName_Succeeded(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
@@ -255,7 +255,7 @@ public class DiagnosticTests : AcceptanceTestBase<DiagnosticTests.TestAssetFixtu
     public async Task Diag_EnableWithEnvironmentVariables_SynchronousWrite_NewNameTakesPrecedence(string tfm)
     {
         string diagPath = Path.Combine(AssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
-        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, tfm);
+        string diagPathPattern = BuildDefaultDiagnosticFilePathPattern(diagPath, AssetName, tfm);
 
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, AssetName, tfm);
 
@@ -327,17 +327,6 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         using var reader = new StreamReader(path);
         string content = await reader.ReadToEndAsync();
         return (Regex.IsMatch(content, pattern), content);
-    }
-
-    // Build a regex matching the deterministic default diagnostic file name shape:
-    // "<asset-name>_<tfm>_<arch>_<yyMMddHHmmssfff>.diag". The arch token is taken from the
-    // current process (the testhost runs on the same machine, so its ProcessArchitecture matches).
-    private static string BuildDefaultDiagnosticFilePathPattern(string diagPath, string tfm)
-    {
-        string arch = RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
-        const string FileNamePlaceholder = "__DIAG_FILENAME__";
-        string combinedPath = Path.Combine(diagPath, FileNamePlaceholder).Replace(@"\", @"\\");
-        return combinedPath.Replace(FileNamePlaceholder, $@"{AssetName}_{Regex.Escape(tfm)}_{arch}_\d{{15}}\.diag");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
