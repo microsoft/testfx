@@ -19,9 +19,9 @@ tools (a later `safe_outputs` job performs the actual GitHub write).
 Do **not** try to spawn a sub-agent: the `task` tool is intentionally not
 available here. Work directly with the tools you do have: `binlog-mcp` to
 read the logs, the `github` tools to read PR/repo context (the GitHub MCP
-server is **read-only** here), the `safeoutputs` writers (including the
-`write` tool) to post results, and a small set of read-only `shell` commands
-(including `cat`).
+server is **read-only** here), the `safeoutputs` tools (`add_comment`,
+`create_pull_request_review_comment`, `noop`) to post results, and a small set
+of read-only `shell` commands (including `cat`).
 
 ## Instructions
 

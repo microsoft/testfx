@@ -10,7 +10,9 @@ description: >-
   `build-failure-analyst` agent (which queries the binlogs live via the
   containerized `binlog-mcp` MCP server). Useful when a previous run was
   cancelled, the analysis comment was dismissed, or the agent needs another
-  pass.
+  pass. Like the auto workflow it performs **no build**; the generated jobs do
+  check out the repository (and, for the slash-command event, the PR branch)
+  for agent tooling only — the PR's code is never built or executed.
 
 on:
   slash_command:
