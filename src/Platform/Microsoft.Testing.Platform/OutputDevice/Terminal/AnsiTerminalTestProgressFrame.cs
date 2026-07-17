@@ -296,9 +296,11 @@ internal sealed class AnsiTerminalTestProgressFrame
     private static int GetTerminalCellWidth(string textElement)
     {
         int width = 0;
+        bool hasEmojiPresentationSelector = false;
         for (int i = 0; i < textElement.Length;)
         {
             int codePoint = char.ConvertToUtf32(textElement, i);
+            hasEmojiPresentationSelector |= codePoint == 0xFE0F;
             UnicodeCategory category = CharUnicodeInfo.GetUnicodeCategory(textElement, i);
             if (category is not (UnicodeCategory.NonSpacingMark or UnicodeCategory.EnclosingMark or UnicodeCategory.Format))
             {
@@ -308,7 +310,7 @@ internal sealed class AnsiTerminalTestProgressFrame
             i += char.IsSurrogatePair(textElement, i) ? 2 : 1;
         }
 
-        return width;
+        return hasEmojiPresentationSelector ? Math.Max(width, 2) : width;
     }
 
     private static bool IsWideCodePoint(int codePoint)
@@ -323,6 +325,7 @@ internal sealed class AnsiTerminalTestProgressFrame
                 or (>= 0xFE30 and <= 0xFE6F)
                 or (>= 0xFF00 and <= 0xFF60)
                 or (>= 0xFFE0 and <= 0xFFE6)
+                or (>= 0x1F1E6 and <= 0x1F1FF)
                 or (>= 0x1F300 and <= 0x1FAFF)
                 or (>= 0x20000 and <= 0x3FFFD));
 

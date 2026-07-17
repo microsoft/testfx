@@ -675,6 +675,20 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void AnsiTerminal_RenderProgress_FlagSequenceUsesGraphemeCellWidth()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 6, windowWidth: 6);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "🇩🇪🇪🇸🇫🇷")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.AreEqual("...🇫🇷", renderedMessage);
+    }
+
+    [TestMethod]
     [DataRow(1, 0)]
     [DataRow(2, 1)]
     [DataRow(3, 2)]
