@@ -99,13 +99,13 @@
   </ItemGroup>
 
   <!--
-    IColor and SystemConsoleColor are shipped *public* API of Microsoft.Testing.Platform. When the consumer of this
-    contract ALSO references Microsoft.Testing.Platform, compiling local copies would raise CS0436 (conflicts with the
-    imported public types). Drop the local copies in that case so the reporter's single 'SystemConsoleColor?' use
-    binds to the platform's public types instead - no CS0436, no NoWarn. A consumer that does NOT reference the
-    platform keeps the copies and compiles standalone.
+    Some contract dependencies (logging abstractions and color types) are shipped *public* API of
+    Microsoft.Testing.Platform. When the consumer of this contract ALSO references Microsoft.Testing.Platform,
+    compiling local copies would raise CS0436 conflicts with the imported public types. Drop those local copies in
+    that case so reporter references bind to the platform's public types instead. A standalone consumer keeps the
+    copies and compiles without a platform reference.
   -->
-  <Target Name="_RemoveTerminalReporterDuplicatePublicColorAbstractions"
+  <Target Name="_RemoveTerminalReporterDuplicatePublicAbstractions"
           AfterTargets="ResolveReferences"
           BeforeTargets="CoreCompile">
     <ItemGroup>
