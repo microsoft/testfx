@@ -605,6 +605,20 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void AnsiTerminal_RenderProgress_ProgressMessageReservesFinalColumn()
+    {
+        var console = new StringBuilderConsoleWithCustomWidths(bufferWidth: 10, windowWidth: 10);
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "0123456789ABCDEF")]);
+
+        string renderedMessage = console.Output
+            .Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries)
+            .Single();
+        Assert.HasCount(9, renderedMessage);
+    }
+
+    [TestMethod]
     public void TestProgressStateAwareTerminal_CanStopProgressAcrossMultipleSessions()
     {
         var terminal = new RecordingTerminal();

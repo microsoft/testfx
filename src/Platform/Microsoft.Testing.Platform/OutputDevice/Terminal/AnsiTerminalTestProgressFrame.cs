@@ -228,7 +228,7 @@ internal sealed class AnsiTerminalTestProgressFrame
     {
         currentLine.RenderedDurationLength = 0;
         int charsTaken = 0;
-        AppendToWidth(terminal, message.Text, Width, ref charsTaken);
+        AppendToWidth(terminal, message.Text, Width - 1, ref charsTaken);
     }
 
     private static void AppendToWidth(AnsiTerminal terminal, string text, int width, ref int charsTaken)

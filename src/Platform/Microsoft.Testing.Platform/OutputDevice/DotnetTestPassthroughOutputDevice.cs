@@ -54,7 +54,7 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
 
     public string DisplayName => nameof(DotnetTestPassthroughOutputDevice);
 
-    public string Description => "Output device that discards informational host output but forwards Azure DevOps logging commands and warning/error messages to the SDK under the dotnet test pipe protocol.";
+    public string Description => "Output device that discards regular informational host output but forwards durable session messages, Azure DevOps logging commands, and warning/error messages to the SDK under the dotnet test pipe protocol.";
 
     // Returning false keeps this device from being registered as a data consumer, matching NopPlatformOutputDevice.
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);

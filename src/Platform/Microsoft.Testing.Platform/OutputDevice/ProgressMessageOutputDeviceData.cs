@@ -9,7 +9,9 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <remarks>
 /// Messages are scoped to their <see cref="Extensions.OutputDevice.IOutputDeviceDataProducer"/> and identified
 /// by <see cref="Key"/>. Sending another message with the same key replaces the previous text. A
-/// <see langword="null"/> <see cref="Message"/> removes the message.
+/// <see langword="null"/> <see cref="Message"/> removes the message from an interactive progress area.
+/// When interactive progress is unavailable or disabled, each changed value is written as a durable line instead;
+/// those lines remain in terminal scrollback and cannot be removed by a later update.
 /// </remarks>
 public sealed class ProgressMessageOutputDeviceData : IOutputDeviceData
 {
@@ -17,7 +19,9 @@ public sealed class ProgressMessageOutputDeviceData : IOutputDeviceData
     /// Initializes a new instance of the <see cref="ProgressMessageOutputDeviceData"/> class.
     /// </summary>
     /// <param name="key">The producer-local key used to replace or remove the message.</param>
-    /// <param name="message">The message to display, or <see langword="null"/> to remove it.</param>
+    /// <param name="message">
+    /// The message to display, or <see langword="null"/> to remove it from an interactive progress area.
+    /// </param>
     public ProgressMessageOutputDeviceData(string key, string? message)
     {
         Key = key;
