@@ -587,7 +587,7 @@ The type declaring these methods should also respect the following rules:
 – elle ne doit pas être générique
 – il doit prendre un paramètre de type « TestContext »
 – le type de retour doit être « void », « Task » ou « ValueTask ».
-
+{0}
 Le type déclarant ces méthodes doit également respecter les règles suivantes :
 - le type doit être une classe
 - la classe doit être « public » 
