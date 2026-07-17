@@ -269,12 +269,12 @@ internal sealed class AnsiTerminal : ITerminal
         _currentFrame.Clear();
     }
 
-    public void RenderProgress(TestProgressState?[] progress)
+    public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
     {
         // Reuse the spare frame instead of allocating a new one every tick.
         AnsiTerminalTestProgressFrame nextFrame = _spareFrame;
         nextFrame.Reset(Width, Height);
-        nextFrame.Render(_currentFrame, progress, terminal: this);
+        nextFrame.Render(_currentFrame, progress, messages, terminal: this);
         _spareFrame = _currentFrame;
         _currentFrame = nextFrame;
     }

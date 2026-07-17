@@ -12,6 +12,8 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [Embedded]
 internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 {
+    internal const int MaximumVisibleProgressMessages = 5;
+
     /// <summary>
     /// Protects access to state shared between the logger callbacks and the rendering thread.
     /// </summary>
@@ -24,14 +26,18 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
     private readonly IProgressRenderer _renderer;
+    private readonly Dictionary<ProgressMessageIdentity, TerminalProgressMessageState> _progressMessages = [];
 
     /// <summary>
     /// A cancellation token to signal the rendering thread that it should exit.
     /// </summary>
     private CancellationTokenSource? _cts;
     private TestProgressState?[] _progressItems = [];
+    private TerminalProgressMessageState[] _visibleProgressMessages = [];
     private bool? _showProgressCached;
     private int _progressErased;
+    private long _messageId;
+    private long _messageVersion;
 
     /// <summary>
     /// The thread that performs periodic refresh of the console output.
@@ -66,7 +72,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                     _terminal.StartUpdate();
                     try
                     {
-                        _renderer.OnTick(_terminal, _progressItems);
+                        _renderer.OnTick(_terminal, _progressItems, _visibleProgressMessages);
                     }
                     finally
                     {
@@ -126,6 +132,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     public void StartShowingProgress(int workerCount)
     {
+        Interlocked.Exchange(ref _stopped, 0);
         if (!GetShowProgress())
         {
             return;
@@ -133,7 +140,6 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
         _progressItems = new TestProgressState[workerCount];
         Interlocked.Exchange(ref _progressErased, 0);
-        Interlocked.Exchange(ref _stopped, 0);
 
         var cancellationTokenSource = new CancellationTokenSource();
         _cts = cancellationTokenSource;
@@ -147,8 +153,14 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     internal void StopShowingProgress()
     {
-        if (Interlocked.CompareExchange(ref _stopped, 1, 0) != 0 || !GetShowProgress())
+        if (Interlocked.CompareExchange(ref _stopped, 1, 0) != 0)
         {
+            return;
+        }
+
+        if (!GetShowProgress())
+        {
+            ClearProgressMessages();
             return;
         }
 
@@ -161,18 +173,23 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         refresher?.Join();
         cancellationTokenSource?.Dispose();
 
-        try
+        lock (_lock)
         {
-            if (Interlocked.CompareExchange(ref _progressErased, 1, 0) == 0)
+            try
             {
-                _terminal.EraseProgress();
+                if (Interlocked.CompareExchange(ref _progressErased, 1, 0) == 0)
+                {
+                    _terminal.EraseProgress();
+                }
+
+                _terminal.StopBusyIndicator();
+            }
+            catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
+            {
+                // Best-effort cleanup; we are already in teardown.
             }
 
-            _terminal.StopBusyIndicator();
-        }
-        catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
-        {
-            // Best-effort cleanup; we are already in teardown.
+            ClearProgressMessagesUnderLock();
         }
     }
 
@@ -199,7 +216,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 try
                 {
                     _terminal.StartUpdate();
-                    _renderer.OnWrite(_terminal, _progressItems, write);
+                    _renderer.OnWrite(_terminal, _progressItems, write, _visibleProgressMessages);
                 }
                 finally
                 {
@@ -230,6 +247,80 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         {
             _progressItems[slotIndex] = null;
         }
+    }
+
+    internal void UpdateProgressMessage(
+        string executionId,
+        string instanceId,
+        string producerUid,
+        string key,
+        string? message)
+    {
+        var identity = new ProgressMessageIdentity(executionId, instanceId, producerUid, key);
+        lock (_lock)
+        {
+            if (!GetShowProgress() || _renderer is SilenceDrivenHeartbeatRenderer)
+            {
+                if (message is null)
+                {
+                    _progressMessages.Remove(identity);
+                }
+                else if (!_progressMessages.TryGetValue(identity, out TerminalProgressMessageState? existing)
+                    || existing.Text != message)
+                {
+                    try
+                    {
+                        _terminal.StartUpdate();
+                        _terminal.AppendLine(message);
+                    }
+                    finally
+                    {
+                        _terminal.StopUpdate();
+                    }
+
+                    long version = ++_messageVersion;
+                    _progressMessages[identity] = existing is null
+                        ? new TerminalProgressMessageState(--_messageId, version, message)
+                        : new TerminalProgressMessageState(existing.Id, version, message);
+                }
+
+                return;
+            }
+
+            if (message is null)
+            {
+                _progressMessages.Remove(identity);
+            }
+            else if (_progressMessages.TryGetValue(identity, out TerminalProgressMessageState? existing))
+            {
+                _progressMessages[identity] = new TerminalProgressMessageState(existing.Id, ++_messageVersion, message);
+            }
+            else
+            {
+                _progressMessages.Add(identity, new TerminalProgressMessageState(--_messageId, ++_messageVersion, message));
+            }
+
+            int visibleCount = Math.Min(MaximumVisibleProgressMessages, Math.Max(0, _terminal.Height - 1));
+            _visibleProgressMessages = _progressMessages.Values
+                .OrderByDescending(static state => state.Version)
+                .Take(visibleCount)
+                .OrderBy(static state => state.Version)
+                .ToArray();
+        }
+    }
+
+    private void ClearProgressMessages()
+    {
+        lock (_lock)
+        {
+            ClearProgressMessagesUnderLock();
+        }
+    }
+
+    private void ClearProgressMessagesUnderLock()
+    {
+        _progressMessages.Clear();
+        _visibleProgressMessages = [];
     }
 
     internal void UpdateWorker(int slotIndex)
@@ -270,4 +361,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
         return showProgress == true;
     }
+
+    private readonly record struct ProgressMessageIdentity(
+        string ExecutionId,
+        string InstanceId,
+        string ProducerUid,
+        string Key);
 }

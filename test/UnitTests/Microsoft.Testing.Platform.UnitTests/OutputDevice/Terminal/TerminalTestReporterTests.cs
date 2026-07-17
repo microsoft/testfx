@@ -514,6 +514,73 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressStateAwareTerminal_ProgressMessages_AreReplacedRemovedAndLimited()
+    {
+        var terminal = new RecordingTerminal();
+        var renderer = new RecordingProgressRenderer();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer);
+
+        for (int i = 0; i < TestProgressStateAwareTerminal.MaximumVisibleProgressMessages + 1; i++)
+        {
+            progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", $"message-{i}", $"Text {i}");
+        }
+
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message-1", "Updated");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message-5", null);
+        progressAwareTerminal.WriteToTerminal(static _ => { });
+
+        Assert.HasCount(TestProgressStateAwareTerminal.MaximumVisibleProgressMessages, renderer.Messages);
+        Assert.Contains("Updated", renderer.Messages.Select(static message => message.Text));
+        Assert.DoesNotContain("Text 5", renderer.Messages.Select(static message => message.Text));
+        Assert.HasCount(1, renderer.Messages.Where(static message => message.Text == "Updated"));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_WhenProgressIsDisabled_WritesChangedMessagesDurably()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => false, new CursorProgressRenderer());
+
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restored");
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", null);
+
+        Assert.HasCount(1, terminal.Events.Where(static e => e == "AppendLine:Restoring"));
+        Assert.HasCount(1, terminal.Events.Where(static e => e == "AppendLine:Restored"));
+    }
+
+    [TestMethod]
+    public void TestProgressStateAwareTerminal_WhenProgressIsDisabled_DeduplicationResetsBetweenSessions()
+    {
+        var terminal = new RecordingTerminal();
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => false, new CursorProgressRenderer());
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.StopShowingProgress();
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+        progressAwareTerminal.UpdateProgressMessage("execution", "instance", "producer", "message", "Restoring");
+        progressAwareTerminal.StopShowingProgress();
+
+        Assert.HasCount(2, terminal.Events.Where(static e => e == "AppendLine:Restoring"));
+    }
+
+    [TestMethod]
+    public void AnsiTerminal_RenderProgress_RendersTransientMessageInProgressFrame()
+    {
+        var console = new StringBuilderConsole();
+        var terminal = new AnsiTerminal(console);
+
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "Restoring test assets")]);
+        terminal.RenderProgress([], [new TerminalProgressMessageState(1, 2, "Test assets restored")]);
+
+        Assert.Contains("Restoring test assets", console.Output);
+        Assert.Contains("Test assets restored", console.Output);
+    }
+
+    [TestMethod]
     public void TestProgressStateAwareTerminal_CanStopProgressAcrossMultipleSessions()
     {
         var terminal = new RecordingTerminal();
@@ -715,7 +782,7 @@ public sealed class TerminalTestReporterTests
 
         public void HideCursor() => throw new NotImplementedException();
 
-        public void RenderProgress(TestProgressState?[] progress) => throw new NotImplementedException();
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => throw new NotImplementedException();
 
         public void ResetColor()
         {
@@ -762,7 +829,7 @@ public sealed class TerminalTestReporterTests
 
         public void MoveCursorUp(int lineCount) => Events.Add($"MoveCursorUp:{lineCount}");
 
-        public void RenderProgress(TestProgressState?[] progress) => Events.Add("RenderProgress");
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => Events.Add("RenderProgress");
 
         public void ResetColor() => Events.Add("ResetColor");
 
@@ -779,6 +846,34 @@ public sealed class TerminalTestReporterTests
         public void StopBusyIndicator() => Events.Add("StopBusyIndicator");
 
         public void StopUpdate() => Events.Add("StopUpdate");
+    }
+
+    private sealed class RecordingProgressRenderer : IProgressRenderer
+    {
+        public TimeSpan TickInterval => TimeSpan.FromDays(1);
+
+        public TerminalProgressMessageState[] Messages { get; private set; } = [];
+
+        public void OnStart()
+        {
+        }
+
+        public void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null)
+            => Messages = messages ?? [];
+
+        public void OnWrite(
+            ITerminal terminal,
+            TestProgressState?[] progressItems,
+            Action<ITerminal> write,
+            TerminalProgressMessageState[]? messages = null)
+        {
+            Messages = messages ?? [];
+            write(terminal);
+        }
+
+        public void OnTestCompleted()
+        {
+        }
     }
 
     private class StackTraceException : Exception

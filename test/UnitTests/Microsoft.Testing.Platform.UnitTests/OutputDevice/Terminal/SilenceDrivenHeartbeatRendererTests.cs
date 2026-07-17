@@ -303,7 +303,7 @@ public sealed class SilenceDrivenHeartbeatRendererTests
 
         public void EraseProgress() => EraseProgressCalled = true;
 
-        public void RenderProgress(TestProgressState?[] progress) => RenderProgressCalled = true;
+        public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages) => RenderProgressCalled = true;
 
         public void HideCursor()
         {

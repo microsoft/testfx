@@ -89,4 +89,27 @@ public sealed class DotnetTestPassthroughOutputDeviceTests
 
         serviceProvider.Verify(p => p.GetService(It.IsAny<Type>()), Times.Never);
     }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithSessionMessageButNoConnection_IsSwallowedWithoutThrowing()
+    {
+        var serviceProvider = new Mock<IServiceProvider>();
+        serviceProvider.Setup(p => p.GetService(typeof(IPushOnlyProtocol))).Returns(null!);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new SessionMessageOutputDeviceData("Restoring test assets"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(typeof(IPushOnlyProtocol)), Times.Once);
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_WithProgressMessage_IsSwallowedWithoutResolvingTheConnection()
+    {
+        var serviceProvider = new Mock<IServiceProvider>(MockBehavior.Strict);
+        var device = new DotnetTestPassthroughOutputDevice(serviceProvider.Object);
+
+        await device.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring test assets"), CancellationToken.None);
+
+        serviceProvider.Verify(p => p.GetService(It.IsAny<Type>()), Times.Never);
+    }
 }

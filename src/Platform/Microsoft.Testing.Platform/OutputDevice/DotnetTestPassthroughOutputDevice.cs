@@ -63,6 +63,10 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
         // provider, so plain informational output stays as cheap as the no-op device.
         switch (data)
         {
+            case SessionMessageOutputDeviceData sessionMessageData:
+                await ForwardDisplayMessageAsync(DisplayMessageLevels.Information, sessionMessageData.Message, cancellationToken).ConfigureAwait(false);
+                break;
+
             case AzureDevOpsCommandOutputDeviceData commandData:
                 await ForwardAzureDevOpsAsync(commandData, cancellationToken).ConfigureAwait(false);
                 break;

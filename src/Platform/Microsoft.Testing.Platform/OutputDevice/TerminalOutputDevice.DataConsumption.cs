@@ -49,6 +49,21 @@ internal sealed partial class TerminalOutputDevice
         {
             switch (data)
             {
+                case SessionMessageOutputDeviceData sessionMessageData:
+                    await LogDebugAsync(sessionMessageData.Message).ConfigureAwait(false);
+                    _terminalTestReporter.WriteMessage(sessionMessageData.Message);
+                    break;
+
+                case ProgressMessageOutputDeviceData progressMessageData:
+                    await LogDebugAsync(progressMessageData.Message ?? string.Empty).ConfigureAwait(false);
+                    _terminalTestReporter.UpdateProgressMessage(
+                        InProcessExecutionId,
+                        InProcessExecutionId,
+                        producer.Uid,
+                        progressMessageData.Key,
+                        progressMessageData.Message);
+                    break;
+
                 case FormattedTextOutputDeviceData formattedTextData:
                     await LogDebugAsync(formattedTextData.Text).ConfigureAwait(false);
                     _terminalTestReporter.WriteMessage(formattedTextData.Text, formattedTextData.ForegroundColor as SystemConsoleColor, formattedTextData.Padding);

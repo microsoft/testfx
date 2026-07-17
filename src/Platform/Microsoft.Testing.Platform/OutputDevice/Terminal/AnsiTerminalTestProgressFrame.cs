@@ -224,6 +224,13 @@ internal sealed class AnsiTerminalTestProgressFrame
         terminal.Append(durationString);
     }
 
+    private void AppendProgressMessage(TerminalProgressMessageState message, RenderedProgressItem currentLine, AnsiTerminal terminal)
+    {
+        currentLine.RenderedDurationLength = 0;
+        int charsTaken = 0;
+        AppendToWidth(terminal, message.Text, Width, ref charsTaken);
+    }
+
     private static void AppendToWidth(AnsiTerminal terminal, string text, int width, ref int charsTaken)
     {
         if (charsTaken + text.Length < width)
@@ -248,7 +255,11 @@ internal sealed class AnsiTerminalTestProgressFrame
     /// <summary>
     /// Render VT100 string to update from current to next frame.
     /// </summary>
-    public void Render(AnsiTerminalTestProgressFrame previousFrame, TestProgressState?[] progress, AnsiTerminal terminal)
+    public void Render(
+        AnsiTerminalTestProgressFrame previousFrame,
+        TestProgressState?[] progress,
+        TerminalProgressMessageState[] messages,
+        AnsiTerminal terminal)
     {
         // Clear everything if Terminal width or height have changed.
         if (Width != previousFrame.Width || Height != previousFrame.Height)
@@ -274,13 +285,13 @@ internal sealed class AnsiTerminalTestProgressFrame
 
         // When there is nothing to render, don't write empty lines, e.g. when we start the test run, and then we kick off build
         // in dotnet test, there is a long pause where we have no assemblies and no test results (yet).
-        if (progress.Length > 0)
+        if (progress.Length > 0 || messages.Length > 0)
         {
             terminal.AppendLine();
         }
 
         int i;
-        List<object> progresses = GenerateLinesToRender(progress);
+        List<object> progresses = GenerateLinesToRender(progress, messages);
 
         for (i = 0; i < progresses.Count; i++)
         {
@@ -325,8 +336,7 @@ internal sealed class AnsiTerminalTestProgressFrame
                         AppendTestWorkerProgress(progressItem, currentLine, terminal);
                     }
                 }
-
-                if (item is TestDetailState detailItem)
+                else if (item is TestDetailState detailItem)
                 {
                     RenderedProgressItem currentLine = GetOrAllocateNextSlot();
                     currentLine.Reset(detailItem.Id, detailItem.Version);
@@ -363,6 +373,19 @@ internal sealed class AnsiTerminalTestProgressFrame
                         AppendTestWorkerDetail(detailItem, currentLine, terminal);
                     }
                 }
+                else if (item is TerminalProgressMessageState messageItem)
+                {
+                    RenderedProgressItem messageLine = GetOrAllocateNextSlot();
+                    messageLine.Reset(messageItem.Id, messageItem.Version);
+
+                    RenderedProgressItem previousMessageLine = previousFrame._renderedLines[i];
+                    if (previousMessageLine.ProgressId != messageItem.Id
+                        || previousMessageLine.ProgressVersion != messageItem.Version)
+                    {
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
+                        AppendProgressMessage(messageItem, messageLine, terminal);
+                    }
+                }
             }
             else
             {
@@ -373,12 +396,17 @@ internal sealed class AnsiTerminalTestProgressFrame
                     currentLine.Reset(progressItem.Id, progressItem.Version);
                     AppendTestWorkerProgress(progressItem, currentLine, terminal);
                 }
-
-                if (item is TestDetailState detailItem)
+                else if (item is TestDetailState detailItem)
                 {
                     RenderedProgressItem currentLine = GetOrAllocateNextSlot();
                     currentLine.Reset(detailItem.Id, detailItem.Version);
                     AppendTestWorkerDetail(detailItem, currentLine, terminal);
+                }
+                else if (item is TerminalProgressMessageState messageItem)
+                {
+                    RenderedProgressItem messageLine = GetOrAllocateNextSlot();
+                    messageLine.Reset(messageItem.Id, messageItem.Version);
+                    AppendProgressMessage(messageItem, messageLine, terminal);
                 }
             }
 
@@ -395,7 +423,7 @@ internal sealed class AnsiTerminalTestProgressFrame
         }
     }
 
-    private List<object> GenerateLinesToRender(TestProgressState?[] progress)
+    private List<object> GenerateLinesToRender(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
     {
         // Note: We want to render the list of active tests, but this can easily fill up the full screen.
         // As such, we should balance the number of active tests shown per project.
@@ -428,7 +456,7 @@ internal sealed class AnsiTerminalTestProgressFrame
             }
         }
 
-        int linesToDistribute = (int)(Height * 0.7) - 1 - itemCount;
+        int linesToDistribute = (int)(Height * 0.7) - 1 - itemCount - messages.Length;
 
         // Sort indices by detail count ascending to distribute lines fairly,
         // without LINQ Enumerable.Range + OrderBy allocation.
@@ -453,6 +481,8 @@ internal sealed class AnsiTerminalTestProgressFrame
                 _detailItemsBuffer[sortedItemIndex] = _progressItemsBuffer[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(linesPerItem);
             }
         }
+
+        _linesToRenderBuffer.AddRange(messages);
 
         for (int progressI = 0; progressI < itemCount; progressI++)
         {
