@@ -111,7 +111,9 @@ public sealed class TaskExtensionsTests
             }
         }).WithCancellationAsync(token);
 
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
         cancellationTokenSource.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
         OperationCanceledException ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await task);
         Assert.AreEqual(token, ex.CancellationToken);
         Assert.IsTrue(
