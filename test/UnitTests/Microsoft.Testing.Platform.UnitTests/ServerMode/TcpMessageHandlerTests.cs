@@ -20,7 +20,7 @@ public sealed class TcpMessageHandlerTests
     public async Task ReadAsync_ConnectionReset_LogsFullExceptionAndReturnsNullWhenLoggerFails()
     {
         SocketException connectionReset = new((int)SocketError.ConnectionReset);
-        var logAttempted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var logAttempted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         Mock<ILogger> logger = new();
         logger
             .Setup(x => x.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
@@ -29,7 +29,7 @@ public sealed class TcpMessageHandlerTests
                 {
                     Assert.Contains(nameof(SocketException), message);
                     Assert.Contains(connectionReset.Message, message);
-                    logAttempted.TrySetResult();
+                    logAttempted.TrySetResult(true);
                 })
             .ThrowsAsync(new IOException("Logging failed."));
 
@@ -44,7 +44,9 @@ public sealed class TcpMessageHandlerTests
         RpcMessage? message = await handler.ReadAsync(CancellationToken.None);
 
         Assert.IsNull(message);
-        await logAttempted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(5), TestContext.CancellationToken);
+        Task completedTask = await Task.WhenAny(logAttempted.Task, timeoutTask);
+        Assert.AreSame(logAttempted.Task, completedTask, "Expected the queued reset diagnostic to be attempted.");
         logger.Verify(
             x => x.LogAsync(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter),
             Times.Once);
@@ -57,7 +59,9 @@ public sealed class TcpMessageHandlerTests
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => Task.FromException<int>(exception);
 
+#if NETCOREAPP
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
             => ValueTask.FromException<int>(exception);
+#endif
     }
 }
