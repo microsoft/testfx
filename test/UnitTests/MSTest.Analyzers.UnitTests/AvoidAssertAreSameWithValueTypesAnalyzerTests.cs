@@ -386,4 +386,92 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
 
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
+
+    [TestMethod]
+    public async Task WhenBothArgsAreNullLiterals_NoDiagnostic()
+    {
+        // null cast to a reference type has IsValueType == false after WalkDownConversion().
+        // Neither arg is a value type, so no diagnostic should fire.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod()
+                {
+                    Assert.AreSame((object)null, (object)null);
+                    Assert.AreNotSame((object)null, (object)null);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenGenericTypeParameterConstrainedToStruct_Diagnostic()
+    {
+        // A generic type parameter constrained to 'struct' has IsValueType == true,
+        // so the analyzer should report a diagnostic and the fixer should replace the method name.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod<T>() where T : struct
+                {
+                    T a = default;
+                    T b = default;
+                    [|Assert.AreSame(a, b)|];
+                    [|Assert.AreNotSame(a, b)|];
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod<T>() where T : struct
+                {
+                    T a = default;
+                    T b = default;
+                    Assert.AreEqual(a, b);
+                    Assert.AreNotEqual(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
+    }
+
+    [TestMethod]
+    public async Task WhenGenericTypeParameterWithNoConstraint_NoDiagnostic()
+    {
+        // An unconstrained generic type parameter is not a value type (IsValueType == false),
+        // so the analyzer should not report a diagnostic.
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod<T>(T a, T b)
+                {
+                    Assert.AreSame(a, b);
+                    Assert.AreNotSame(a, b);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
