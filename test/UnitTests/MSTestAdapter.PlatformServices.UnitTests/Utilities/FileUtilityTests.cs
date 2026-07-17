@@ -42,16 +42,17 @@ public class FileUtilityTests : TestContainer
 
         // Determine the actual HResult that File.Copy raises for a missing source file on the current
         // runtime/OS, so the assertion below isn't tied to a hardcoded platform-specific value.
-        int expectedHResult;
+        Exception? expectedException = null;
         try
         {
             File.Copy(nonExistentSource, destination, true);
-            throw new InvalidOperationException("Expected File.Copy to fail because the source file does not exist.");
         }
         catch (Exception ex)
         {
-            expectedHResult = ex.HResult;
+            expectedException = ex;
         }
+
+        expectedException.Should().NotBeNull("File.Copy should fail because the source file does not exist.");
 
         // Act.
         string result = fileUtility.CopyFileOverwrite(nonExistentSource, destination, out string? warning);
@@ -63,7 +64,9 @@ public class FileUtilityTests : TestContainer
         warning.Should().NotBeNull();
         warning.Should().Contain(nonExistentSource);
         warning.Should().Contain(destination);
-        warning.Should().Contain($"0x{expectedHResult:X8}");
+        warning.Should().Contain(expectedException!.GetType().ToString());
+        warning.Should().Contain(expectedException.Message);
+        warning.Should().Contain($"0x{expectedException.HResult:X8}");
     }
 
     #region AddFilesFromDirectory tests
