@@ -38,7 +38,7 @@ internal sealed partial class TestHostBuilder
         }
 
 #pragma warning disable CA1416 // Preserve existing browser behavior while splitting the method.
-        DotnetTestConnection pushOnlyProtocol = new(context.CommandLineHandler, _environment, _testApplicationModuleInfo, context.TestApplicationCancellationTokenSource);
+        DotnetTestConnection pushOnlyProtocol = new(context.CommandLineHandler, _environment, _testApplicationModuleInfo, context.TestApplicationCancellationTokenSource, context.LoggerFactory.CreateLogger<DotnetTestConnection>());
         await pushOnlyProtocol.AfterCommonServiceSetupAsync().ConfigureAwait(false);
         if (pushOnlyProtocol.IsServerMode)
         {

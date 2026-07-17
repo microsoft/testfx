@@ -1,12 +1,15 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.Diagnostics.Resources;
 using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Extensions.Diagnostics;
@@ -18,7 +21,7 @@ namespace Microsoft.Testing.Extensions.Diagnostics;
 /// the per-test journaling that <c>--hangdump</c> performs over IPC (which is unavailable for
 /// crashes because the testhost is dead).
 /// </summary>
-internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifetimeHandler,
+internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifetimeHandler, IOutputDeviceDataProducer,
 #if NETCOREAPP
     IAsyncDisposable,
 #endif
@@ -39,6 +42,7 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
     private readonly IEnvironment _environment;
     private readonly IClock _clock;
     private readonly ILogger<CrashDumpSequenceLogger> _logger;
+    private readonly IOutputDevice _outputDevice;
 
     // SemaphoreSlim instead of a plain `lock` so we can `await` the write/flush calls inside the
     // critical section without blocking a thread on synchronous I/O.
@@ -51,11 +55,13 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
     public CrashDumpSequenceLogger(
         IEnvironment environment,
         IClock clock,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        IOutputDevice outputDevice)
     {
         _environment = environment;
         _clock = clock;
         _logger = loggerFactory.CreateLogger<CrashDumpSequenceLogger>();
+        _outputDevice = outputDevice;
     }
 
     public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
@@ -103,21 +109,49 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             await _writer.WriteLineAsync(FileHeader).ConfigureAwait(false);
             await _writer.FlushAsync().ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException or PathTooLongException or DirectoryNotFoundException or System.Security.SecurityException)
+        catch (Exception ex) when (IsExpectedFileException(ex))
         {
             // The sequence file is a best-effort diagnostic. If we cannot open it (e.g. the disk is
             // full, ACLs deny write, the path is invalid, or any other filesystem-level error), we
-            // trace the failure and behave as if the feature were disabled — failing the test run
-            // for this would be worse than missing the diagnostic.
-            await _logger.LogWarningAsync($"Failed to open crash sequence file '{_sequenceFilePath}': {ex.Message}").ConfigureAwait(false);
-            if (_writer is not null)
+            // surface the failure to the user via the output device (this is a one-time,
+            // session-startup failure, so it is safe and useful to display it rather than only log
+            // it) and behave as if the feature were disabled — failing the test run for this would
+            // be worse than missing the diagnostic. The full exception (ex.ToString()) is included so
+            // the root cause is not lost.
+            try
             {
-#if NETCOREAPP
-                await _writer.DisposeAsync().ConfigureAwait(false);
-#else
-                _writer.Dispose();
-#endif
+                await _outputDevice.DisplayAsync(
+                    this,
+                    new WarningMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileOpenError, _sequenceFilePath, ex)),
+                    testSessionContext.CancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception outputException)
+            {
+                // Reporting a best-effort diagnostic must not turn its original file failure into a
+                // session-start failure when the output transport is unavailable or being cancelled.
+                await TryLogWarningAsync(
+                    $"Failed to initialize crash sequence file '{_sequenceFilePath}': {ex}{Environment.NewLine}"
+                    + $"Additionally, displaying this warning failed: {outputException}").ConfigureAwait(false);
+            }
+            finally
+            {
+                StreamWriter? writer = _writer;
                 _writer = null;
+                if (writer is not null)
+                {
+                    try
+                    {
+#if NETCOREAPP
+                        await writer.DisposeAsync().ConfigureAwait(false);
+#else
+                        writer.Dispose();
+#endif
+                    }
+                    catch (Exception cleanupException) when (IsExpectedFileException(cleanupException))
+                    {
+                        await TryLogWarningAsync($"Failed to close crash sequence file '{_sequenceFilePath}' after initialization failed: {cleanupException}").ConfigureAwait(false);
+                    }
+                }
             }
         }
     }
@@ -177,8 +211,14 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
             }
             catch (IOException ex)
             {
-                // Best-effort logging only: dropping a single record is better than failing the test run.
-                await _logger.LogWarningAsync($"Failed to write to crash sequence file '{_sequenceFilePath}': {ex.Message}").ConfigureAwait(false);
+                // Best-effort logging only: dropping a single record is better than failing the test
+                // run. We deliberately keep this on the ILogger (rather than IOutputDevice, as we do
+                // for the one-time open failure above) because ConsumeAsync runs once per test state
+                // transition — surfacing every dropped write to the user's console could flood the
+                // output for a long test run hitting a persistent I/O problem (e.g. a full disk). The
+                // full exception (ex.ToString()) is preserved so the root cause is not lost even
+                // though only the log file captures it.
+                await TryLogWarningAsync(string.Format(CultureInfo.InvariantCulture, CrashDumpResources.CrashDumpSequenceFileWriteError, _sequenceFilePath, ex)).ConfigureAwait(false);
             }
         }
         finally
@@ -229,6 +269,27 @@ internal sealed class CrashDumpSequenceLogger : IDataConsumer, ITestSessionLifet
 
     private static string Sanitize(string value)
         => value.Replace('\t', ' ').Replace('\r', ' ').Replace('\n', ' ');
+
+    private static bool IsExpectedFileException(Exception ex)
+        => ex is IOException
+            or UnauthorizedAccessException
+            or ArgumentException
+            or NotSupportedException
+            or PathTooLongException
+            or DirectoryNotFoundException
+            or System.Security.SecurityException;
+
+    private async Task TryLogWarningAsync(string message)
+    {
+        try
+        {
+            await _logger.LogWarningAsync(message).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Fallback diagnostics must not make this best-effort extension fail the test session.
+        }
+    }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()

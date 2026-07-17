@@ -168,6 +168,49 @@ If you are working with Visual Studio, we recommend opening it through the `open
 
 Inside Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.
 
+## Developing MSTest.Sdk
+
+Do not use `IsImplicitlyDefined="true"` on `PackageReference` items in the MSTest.Sdk `.targets` files. The package would be defined twice, which can produce `NU1009` warnings that are commonly treated as errors.
+
+Do not use `VersionOverride` on those `PackageReference` items. Although it can override a version under Central Package Management (CPM), it is forbidden when `CentralPackageVersionOverrideEnabled` is `false` and causes `NU1013`.
+
+Instead, split version specification based on CPM:
+
+- When `ManagePackageVersionsCentrally` is not `true`, set `Version` directly on the `PackageReference`.
+- When `ManagePackageVersionsCentrally` is `true`, leave the `PackageReference` unversioned and add a matching `PackageVersion` item.
+
+This supports both values of `CentralPackageVersionOverrideEnabled` without producing `NU1009`.
+
+### Layering MSTest.Sdk on another base SDK
+
+`MSTest.Sdk` implicitly imports `Microsoft.NET.Sdk`. To combine it with another base SDK, such as `Microsoft.NET.Sdk.Web`, import both SDKs manually and list the other SDK first:
+
+```xml
+<Project>
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk.Web" />
+  <Import Project="Sdk.props" Sdk="MSTest.Sdk" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="Sdk.targets" Sdk="MSTest.Sdk" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk.Web" />
+</Project>
+```
+
+Because an `<Import>` cannot specify the SDK version in the same way as `<Project Sdk="MSTest.Sdk/x.y.z">`, pin it in `global.json`:
+
+```json
+{
+  "msbuild-sdks": {
+    "MSTest.Sdk": "x.y.z"
+  }
+}
+```
+
+`Sdk.props` and `Sdk.targets` guard their `Microsoft.NET.Sdk` imports with `_MSTestSdkImportsMicrosoftNETSdk`. MSTest.Sdk imports the base SDK only when another SDK has not already set `UsingMicrosoftNETSdk`, avoiding `MSB4011` duplicate-import warnings.
+
 ## Visual Studio version requirement
 
 If working with Visual Studio, this repository uses the new, modern, XML-based slnx solution file format (`TestFx.slnx`). This solution file can only be opened or loaded successfully using Visual Studio 2022 17.13 or higher. Opening the TestFx.slnx directly with a different version of Visual Studio installed other than Visual Studio 2022 17.13 or higher will just open the slnx file in a raw solution XML format.

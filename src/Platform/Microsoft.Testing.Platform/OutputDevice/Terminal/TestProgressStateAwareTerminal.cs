@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.CodeAnalysis;
+using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
@@ -27,6 +28,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     private readonly Func<bool?> _showProgress;
     private readonly IProgressRenderer _renderer;
     private readonly Dictionary<ProgressMessageIdentity, TerminalProgressMessageState> _progressMessages = [];
+    private readonly ILogger _logger;
 
     /// <summary>
     /// A cancellation token to signal the rendering thread that it should exit.
@@ -85,13 +87,16 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         }
         catch (ObjectDisposedException)
         {
-            // When we dispose the cancellation token source too early this will throw.
+            // When we dispose the cancellation token source too early this will throw. This is an expected
+            // shutdown race, so it stays silent.
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Swallow so that the unconditional EraseProgress() below still runs.
             // There is no other thread to surface this to; the test run itself should
-            // still be allowed to complete.
+            // still be allowed to complete. This is unexpected (not a known shutdown/disposal race), so
+            // surface it at Debug for diagnosability without being noisy by default.
+            QueueLogDebug($"Unexpected exception while rendering test progress; erasing progress and stopping the refresher thread: {ex}");
         }
 
         try
@@ -99,17 +104,46 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
             _terminal.EraseProgress();
             Interlocked.Exchange(ref _progressErased, 1);
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
         {
-            // Best-effort cleanup; we are already in teardown.
+            // Best-effort cleanup; we are already in teardown. These are expected disposal/shutdown races, so
+            // they stay silent.
+        }
+        catch (Exception ex)
+        {
+            // Unexpected failure while erasing progress during teardown; surface it at Debug for diagnosability.
+            QueueLogDebug($"Unexpected exception while erasing test progress during teardown: {ex}");
         }
     }
 
+    private void QueueLogDebug(string message)
+        => _ = Task.Run(() =>
+        {
+            try
+            {
+                _logger.LogDebug(message);
+            }
+            catch (Exception)
+            {
+                // Refresher-thread diagnostics must not escape as unhandled exceptions.
+            }
+        });
+
     public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, IProgressRenderer renderer)
+        : this(terminal, showProgress, renderer, new NopLogger())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestProgressStateAwareTerminal"/> class with a logger for
+    /// low-noise diagnostics of unexpected progress rendering/erase failures.
+    /// </summary>
+    public TestProgressStateAwareTerminal(ITerminal terminal, Func<bool?> showProgress, IProgressRenderer renderer, ILogger logger)
     {
         _terminal = terminal;
         _showProgress = showProgress;
         _renderer = renderer;
+        _logger = logger;
     }
 
     public int AddWorker(TestProgressState testWorker)

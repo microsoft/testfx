@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -12,6 +15,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TerminalTestReporterTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void ExceptionFlattener_WhenNestedInnerExceptions_ShouldKeepAllMessagesInOrder()
     {
@@ -664,6 +669,31 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressStateAwareTerminal_RenderFailure_LogsAndSuppressesLoggerFailure()
+    {
+        var terminal = new RecordingTerminal();
+        var renderer = new ThrowingProgressRenderer();
+        using var logAttempted = new ManualResetEventSlim();
+        Mock<ILogger> logger = new();
+        logger
+            .Setup(x => x.Log(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>(
+                (_, message, _, _) =>
+                {
+                    Assert.Contains(nameof(InvalidOperationException), message);
+                    logAttempted.Set();
+                })
+            .Throws(new IOException("Logging failed."));
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer, logger.Object);
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+
+        Assert.IsTrue(logAttempted.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken), "Expected the render failure to be logged.");
+        progressAwareTerminal.StopShowingProgress();
+        Assert.Contains("EraseProgress", terminal.Events);
+    }
+
+    [TestMethod]
     public void NonAnsiTerminal_ShowOutputNone_DoesNotShowOutput()
     {
         string targetFramework = "net8.0";
@@ -936,6 +966,29 @@ public sealed class TerminalTestReporterTests
             Messages = messages ?? [];
             write(terminal);
         }
+
+        public void OnTestCompleted()
+        {
+        }
+    }
+
+    private sealed class ThrowingProgressRenderer : IProgressRenderer
+    {
+        public TimeSpan TickInterval => TimeSpan.FromMilliseconds(1);
+
+        public void OnStart()
+        {
+        }
+
+        public void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null)
+            => throw new InvalidOperationException("Rendering failed.");
+
+        public void OnWrite(
+            ITerminal terminal,
+            TestProgressState?[] progressItems,
+            Action<ITerminal> write,
+            TerminalProgressMessageState[]? messages = null)
+            => write(terminal);
 
         public void OnTestCompleted()
         {
