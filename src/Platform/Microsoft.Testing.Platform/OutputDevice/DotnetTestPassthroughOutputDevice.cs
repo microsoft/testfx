@@ -61,10 +61,10 @@ internal sealed class DotnetTestPassthroughOutputDevice : IPlatformOutputDevice
 
     public async Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data, CancellationToken cancellationToken)
     {
-        // Preserve the deliberate pipe-protocol suppression: only Azure DevOps command lines and warning/error
-        // messages are forwarded; everything else (informational text) is swallowed exactly like
+        // Preserve the deliberate pipe-protocol suppression: durable session messages, Azure DevOps command lines,
+        // and warning/error messages are forwarded; regular informational text is swallowed exactly like
         // NopPlatformOutputDevice. The switch returns early for non-forwarded data WITHOUT touching the service
-        // provider, so plain informational output stays as cheap as the no-op device.
+        // provider, so regular informational output stays as cheap as the no-op device.
         switch (data)
         {
             case SessionMessageOutputDeviceData sessionMessageData:
