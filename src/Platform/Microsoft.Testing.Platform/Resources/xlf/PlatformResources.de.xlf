@@ -421,7 +421,7 @@
       </trans-unit>
       <trans-unit id="NamedPipeDirectoryNotWritableErrorMessage">
         <source>The named pipe directory '{0}' does not exist or is not writable: {1}. Set the '{2}' environment variable to an existing writable directory, or unset it to fall back to the default temporary directory.</source>
-        <target state="translated">Das Named Pipe-Verzeichnis „{0}“ ist nicht vorhanden oder kann nicht geschrieben werden: {1}. Legen Sie die Umgebungsvariable „{2}“ auf ein vorhandenes beschreibbares Verzeichnis fest, oder entfernen Sie die Einstellung, um auf das temporäre Standardverzeichnis zurückzugreifen.</target>
+        <target state="translated">Das Named Pipe-Verzeichnis „{0}“ ist nicht vorhanden oder kann nicht geschrieben werden: {1}. Legen Sie die Umgebungsvariable „{2}“ auf ein vorhandenes beschreibbares Verzeichnis fest, oder legen Sie sie für das Fallback auf das temporäre Standardverzeichnis fest.</target>
         <note>{0} is the directory path, {1} is the underlying error message, {2} is the environment variable name. Do not translate the environment variable name.</note>
       </trans-unit>
       <trans-unit id="NamedPipePathTooLongErrorMessage">
