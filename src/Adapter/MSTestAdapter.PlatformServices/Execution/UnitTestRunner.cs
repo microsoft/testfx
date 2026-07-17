@@ -71,12 +71,7 @@ internal sealed partial class UnitTestRunner
 
         Logger.OnLogMessage += message => (TestContext.Current as TestContextImplementation)?.WriteConsoleOut(message);
 
-        if (MSTestSettings.CurrentSettings.CaptureDebugTraces)
-        {
-            Console.SetOut(new ConsoleOutRouter(Console.Out));
-            Console.SetError(new ConsoleErrorRouter(Console.Error));
-            Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter()));
-        }
+        ConfigureOutputRouting(MSTestSettings.CurrentSettings.OutputCaptureMode);
 
         PlatformServiceProvider.Instance.TestRunCancellationToken ??= new TestRunCancellationToken();
         _typeCache = new TypeCache(reflectHelper);
@@ -88,6 +83,37 @@ internal sealed partial class UnitTestRunner
         // needed. Set here so the snapshot lives in the same AppDomain/process that will execute the
         // assembly initialize and the tests themselves.
         TestRun.SetCurrent(TestRunInfo.CreateFrom(testsToRun));
+    }
+
+    // Console.SetOut/SetError replace the process-wide console, and Trace.Listeners is process-wide too.
+    // We install our routing exactly once per process: re-wrapping on every runner would stack routers on
+    // top of each other (and Console.Out returns a synchronized wrapper, not our router, so a type check
+    // cannot reliably detect an already-installed router). The installed routers read the capture mode on
+    // every write (via MSTestSettings.CurrentSettings), so a reused host that changes OutputCaptureMode
+    // between runs is still honored without re-installing.
+    private static int s_outputRoutingInstalled;
+
+    private static void ConfigureOutputRouting(TestOutputCaptureMode mode)
+    {
+        // Nothing to install while the very first run does not capture. Once any run needs capture we install
+        // the routers, and from then on their per-write mode check handles None/Result/Live for every run.
+        if (mode == TestOutputCaptureMode.None)
+        {
+            return;
+        }
+
+        // Install exactly once per process, even if multiple runners are constructed concurrently.
+        if (Interlocked.CompareExchange(ref s_outputRoutingInstalled, 1, 0) != 0)
+        {
+            return;
+        }
+
+        Func<TestOutputCaptureMode> modeProvider = static () => MSTestSettings.CurrentSettings.OutputCaptureMode;
+        TextWriter originalOut = Console.Out;
+        TextWriter originalError = Console.Error;
+        Console.SetOut(new ConsoleOutRouter(originalOut, modeProvider));
+        Console.SetError(new ConsoleErrorRouter(originalError, modeProvider));
+        Trace.Listeners.Add(new TextWriterTraceListener(new TraceTextWriter(originalOut, modeProvider)));
     }
 
 #pragma warning disable CA1822 // Mark members as static

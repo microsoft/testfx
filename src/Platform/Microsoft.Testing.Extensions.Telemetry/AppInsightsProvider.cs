@@ -74,6 +74,7 @@ internal sealed partial class AppInsightsProvider :
         "mstest.custom_test_method_types",
         "mstest.custom_test_class_types",
         "mstest.assertion_usage",
+        "mstest.setting.output_capture_mode",
         "mstest.setting.parallelization_scope",
     ];
 #endif
