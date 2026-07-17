@@ -48,7 +48,11 @@ See `docs/RFCs/011-Soft-Assertions-Nullability-Design.md` for the nullability-an
 
 ### AzureDevOpsReport
 
-An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting.
+An MTP extension (`Microsoft.Testing.Extensions.AzureDevOpsReport`) that formats and reports test results to Azure DevOps pipelines. It generates pipeline-compatible output including TFM and test name details for richer CI reporting. When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsAzureDevOpsReport>true</EnableMicrosoftTestingExtensionsAzureDevOpsReport>`; the extension is enabled automatically by the `AllMicrosoft` profile. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode.
+
+### Aspire testing
+
+The `Aspire.Hosting.Testing` integration for testing .NET Aspire distributed applications. When using [MSTest.Sdk](#mstestsdk), set `<EnableAspireTesting>true</EnableAspireTesting>` to add the package and its implicit using. This feature is supported in the default MSTest runner and VSTest modes, but not when `PublishAot=true`; MSTest.Sdk emits a build error for that combination.
 
 ### AzureFoundry
 
@@ -119,7 +123,7 @@ An MTP extension (`Microsoft.Testing.Extensions.GitHubActionsReport`) that emits
 - **Job summary** (`--report-gh-step-summary`): appends a markdown roll-up (totals, failures, slowest tests) to the file pointed to by `GITHUB_STEP_SUMMARY`, which GitHub renders on the workflow run summary page.
 - **Slow-test notices** (`--report-gh-slow-test-notices`): emits a `::notice` workflow command for any test running past a configured threshold (default 60 seconds; set with `--report-gh-slow-test-threshold`).
 
-When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. Not supported in NativeAOT or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
+When using [MSTest.Sdk](#mstestsdk), opt in with `<EnableMicrosoftTestingExtensionsGitHubActionsReport>true</EnableMicrosoftTestingExtensionsGitHubActionsReport>`; the extension is enabled automatically when `TestingExtensionsProfile` is set to `AllMicrosoft`. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode. Introduced in [PR #9541](https://github.com/microsoft/testfx/pull/9541); skipped-test `::warning` annotations were added in [PR #9641](https://github.com/microsoft/testfx/pull/9641).
 
 ## H
 
@@ -165,7 +169,7 @@ The communication protocol used between a test runner executable (server) and a 
 
 ### JUnitReport
 
-An MTP extension (`Microsoft.Testing.Extensions.JUnitReport`) that emits a JUnit-style XML test report at the end of a test run. The report conforms to the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema and is accepted by Jenkins (`junit` step), GitLab CI (`junit:` artifact reports), Azure DevOps (`PublishTestResults@2` with `testResultsFormat: 'JUnit'`), CircleCI, GitHub Actions test reporters, and most other CI tooling. MTP's hierarchical [TestNode](#testnode) tree is preserved as a `<property name="testpath" value="…"/>` element inside each `<testcase>`, allowing tools to reconstruct hierarchy. Auto-registers via the `TestingPlatformBuilderHook` MSBuild item declared in the package's `buildMultiTargeting` props (imported by the `build` and `buildTransitive` props), so adding a `<PackageReference>` to the package is sufficient — no opt-in property is required at the package level. When using [MSTest.Sdk](#mstestsdk), the package is not added by default (the extension is still experimental); opt in with `<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>` to have MSTest.Sdk add the `<PackageReference>` for you. Currently **experimental** — the API, CLI options, and on-disk format may change without notice. Enable via `--report-junit`; override filename with `--report-junit-filename`.
+An MTP extension (`Microsoft.Testing.Extensions.JUnitReport`) that emits a JUnit-style XML test report at the end of a test run. The report conforms to the Jenkins/Surefire `<testsuites><testsuite><testcase>` schema and is accepted by Jenkins (`junit` step), GitLab CI (`junit:` artifact reports), Azure DevOps (`PublishTestResults@2` with `testResultsFormat: 'JUnit'`), CircleCI, GitHub Actions test reporters, and most other CI tooling. MTP's hierarchical [TestNode](#testnode) tree is preserved as a `<property name="testpath" value="…"/>` element inside each `<testcase>`, allowing tools to reconstruct hierarchy. Auto-registers via the `TestingPlatformBuilderHook` MSBuild item declared in the package's `buildMultiTargeting` props (imported by the `build` and `buildTransitive` props), so adding a `<PackageReference>` to the package is sufficient — no opt-in property is required at the package level. When using [MSTest.Sdk](#mstestsdk), the package is not added by default (the extension is still experimental); opt in with `<EnableMicrosoftTestingExtensionsJUnitReport>true</EnableMicrosoftTestingExtensionsJUnitReport>` to have MSTest.Sdk add the `<PackageReference>` for you. It is not supported in NativeAOT mode (MSTest.Sdk emits a build warning) or VSTest mode. Currently **experimental** — the API, CLI options, and on-disk format may change without notice. Enable via `--report-junit`; override filename with `--report-junit-filename`.
 
 ## L
 
@@ -209,7 +213,85 @@ The self-contained test runner mode for MSTest, built on top of Microsoft.Testin
 
 ### MSTest.Sdk
 
-A meta-package that bundles `MSTest.TestFramework`, `MSTest.TestAdapter`, and `MSTest.Analyzers` with default MSBuild SDK configuration. Simplifies project setup by providing a single package reference.
+An MSBuild project SDK that configures MSTest, its runner, and selected Microsoft.Testing.Platform extensions. A minimal project needs only the SDK and a target framework:
+
+```xml
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+</Project>
+```
+
+Specify the SDK version in the `Sdk` attribute (`MSTest.Sdk/x.y.z`) or through the `msbuild-sdks` section of `global.json`.
+
+#### Runner mode
+
+Runner selection uses the following precedence:
+
+| `UseVSTest` | `PublishAot` | Mode | Result |
+| --- | --- | --- | --- |
+| `true` | Any value | VSTest | Adds `Microsoft.NET.Test.Sdk` and uses `MSTest.TestAdapter`; MTP extension properties are not supported |
+| `false` (default) | `true` | NativeAOT | Builds a self-contained MTP test application using `MSTest.SourceGeneration`; only the NativeAOT-compatible extension subset is available |
+| `false` (default) | Unset or `false` | ClassicEngine (MSTest runner) | Builds an executable MTP test application and supports the full extension configuration |
+
+`IsTestApplication` controls whether the project is an executable test application or a reusable test library. It defaults to `true`, except for .NET Standard targets where it defaults to `false`. Set it to `false` for a project that contains shared test helpers or inherited tests and is referenced by an executable test project:
+
+```xml
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <IsTestApplication>false</IsTestApplication>
+  </PropertyGroup>
+</Project>
+```
+
+In ClassicEngine and VSTest modes, test libraries receive `MSTest.TestFramework` but do not receive the adapter, runner, or testing extensions. Reference the library from an `IsTestApplication=true` project that supplies the executable test host. NativeAOT is intended for executable test applications; its source-generation, platform MSBuild, TrxReport, and CodeCoverage references are added even if `IsTestApplication=false`.
+
+#### Extension profiles
+
+`TestingExtensionsProfile` controls the predefined extension set in ClassicEngine mode:
+
+| Value | Extensions enabled automatically |
+| --- | --- |
+| `Default` (default) | TrxReport and CodeCoverage |
+| `AllMicrosoft` | Everything in `Default`, plus CrashDump, HangDump, HotReload, Retry, AzureDevOpsReport, GitHubActionsReport, HtmlReport, and Fakes |
+| `None` | No extensions |
+
+Set an individual `Enable*` property to `false` to remove an extension supplied by a ClassicEngine profile, or to `true` to opt into an extension independently. CtrfReport, JUnitReport, and OpenTelemetry are experimental opt-ins and are not enabled by any profile. In NativeAOT mode, profiles enable only TrxReport and CodeCoverage.
+
+| Property | `Default` | `AllMicrosoft` | `None` | NativeAOT | VSTest |
+| --- | --- | --- | --- | --- | --- |
+| `EnableMicrosoftTestingExtensionsTrxReport` | On | On | Off | Supported | Build error |
+| `EnableMicrosoftTestingExtensionsCodeCoverage` | On | On | Off | Supported | Build error |
+| `EnableMicrosoftTestingExtensionsCrashDump` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsHangDump` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsHotReload` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsRetry` | Off | On | Off | Not added; emits warning if enabled | Build error |
+| `EnableMicrosoftTestingExtensionsAzureDevOpsReport` | Off | On | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsGitHubActionsReport` | Off | On | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsHtmlReport` | Off | On | Off | Not available | Build error |
+| `EnableMicrosoftTestingExtensionsFakes` | Off | On | Off | Not available | Not added |
+| `EnableMicrosoftTestingExtensionsCtrfReport` | Off | Off | Off | Not available | Build error |
+| `EnableMicrosoftTestingExtensionsJUnitReport` | Off | Off | Off | Not added; emits unsupported warning | Build error |
+| `EnableMicrosoftTestingExtensionsOpenTelemetry` | Off | Off | Off | Not available | Build error |
+| `EnableAspireTesting` | Off | Off | Off | Build error | Supported |
+| `EnablePlaywright` | Off | Off | Off | Build error | Supported |
+
+Individual extension toggles remain unset and disabled when a profile does not enable them. This differs from explicitly setting a toggle to `false`: VSTest rejects any non-empty MTP extension toggle. NativeAOT warnings and errors are reported during the build. Properties marked "Not available" or "Not added" do not add their package in NativeAOT mode.
+
+#### Platform integration and version properties
+
+| Property | Behavior |
+| --- | --- |
+| `TestingPlatformDotnetTestSupport` | Enables the compatibility integration used by `dotnet test` before the .NET SDK introduced native MTP runner selection. For test applications it defaults to `true` with .NET SDK 9 and earlier, and remains unset/disabled with .NET SDK 10 and later. |
+| `EnableMicrosoftTestingPlatform` | Advanced version-alignment escape hatch. When `true` for an `IsTestApplication=true` ClassicEngine or NativeAOT project, adds an explicit `Microsoft.Testing.Platform` package reference using `MicrosoftTestingPlatformVersion`. It is ignored for test libraries and VSTest. It is normally unnecessary and does not select the runner or change `IsTestingPlatformApplication`. |
+| `MSTestVersion` | Overrides the versions of the MSTest framework and adapter supplied by the SDK. |
+| `MSTestSourceGenerationVersion` | Overrides the `MSTest.SourceGeneration` version used for NativeAOT. |
+
+`EnableMSTestRunner` is set by MSTest.Sdk and should not normally be set by projects. Component-specific properties such as `MicrosoftTestingPlatformVersion`, `MicrosoftTestingExtensionsCommonVersion`, and the individual `MicrosoftTestingExtensions*Version` properties are advanced version-alignment controls.
+
+For assembly-level parallelization properties, see [MSTestParallelizeScope / MSTestParallelizeWorkers](#mstestparallelizescope--mstestparallelizeworkers).
 
 ### MSTest.SourceGeneration
 
@@ -276,6 +358,10 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports tes
 An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
 ## P
+
+### Playwright
+
+The `Microsoft.Playwright.MSTest.v4` integration for browser end-to-end tests. When using [MSTest.Sdk](#mstestsdk), set `<EnablePlaywright>true</EnablePlaywright>` to add the package and its implicit using. This feature is supported in the default MSTest runner and VSTest modes, but not when `PublishAot=true`; MSTest.Sdk emits a build error for that combination.
 
 ### PlannedTest
 

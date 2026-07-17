@@ -402,6 +402,91 @@ namespace MSTestSdkTest
     }
 
     [TestMethod]
+    public async Task TestApplicationRunsTestsFromReferencedMSTestSdkTestLibrary()
+    {
+        const string TestApplicationWithReferencedTestLibrary = """
+            #file MSTestSdkTestApplication.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+
+              <PropertyGroup>
+                <EnableMicrosoftTestingPlatform>true</EnableMicrosoftTestingPlatform>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+                <PlatformTarget>x64</PlatformTarget>
+              </PropertyGroup>
+
+              <ItemGroup>
+                <ProjectReference Include="TestLibrary/TestLibrary.csproj" />
+                <Compile Remove="TestLibrary/**" />
+              </ItemGroup>
+
+            </Project>
+
+            #file ReferencedLibraryTests.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            using TestLibrary;
+
+            namespace MSTestSdkTestApplication;
+
+            [TestClass]
+            public sealed class ReferencedLibraryTests : LibraryTests;
+
+            #file TestLibrary/TestLibrary.csproj
+            <Project Sdk="MSTest.Sdk/$MSTestVersion$">
+
+              <PropertyGroup>
+                <IsTestApplication>false</IsTestApplication>
+                <TargetFramework>$TargetFramework$</TargetFramework>
+              </PropertyGroup>
+
+            </Project>
+
+            #file TestLibrary/LibraryTests.cs
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            namespace TestLibrary;
+
+            [TestClass]
+            public abstract class LibraryTests
+            {
+                [TestMethod]
+                public void TestFromReferencedLibrary()
+                {
+                    Assert.AreEqual("TestLibrary", typeof(LibraryTests).Assembly.GetName().Name);
+                }
+            }
+            """;
+
+        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
+            "MSTestSdkTestApplicationWithReferencedTestLibrary",
+            TestApplicationWithReferencedTestLibrary
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$TargetFramework$", TargetFrameworks.NetCurrent));
+
+        DotnetMuxerResult buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Release} {testAsset.TargetAssetPath}",
+            cancellationToken: TestContext.CancellationToken);
+        buildResult.AssertExitCodeIs(0);
+
+        var testHost = TestHost.LocateFrom(
+            testAsset.TargetAssetPath,
+            "MSTestSdkTestApplication",
+            TargetFrameworks.NetCurrent,
+            buildConfiguration: BuildConfiguration.Release);
+        TestHostResult testHostResult = await testHost.ExecuteAsync(cancellationToken: TestContext.CancellationToken);
+        testHostResult.AssertOutputContainsSummary(0, 1, 0);
+
+        string libraryAssets = await File.ReadAllTextAsync(
+            Path.Combine(testAsset.TargetAssetPath, "TestLibrary", "obj", "project.assets.json"),
+            TestContext.CancellationToken);
+        Assert.DoesNotContain("\"MSTest.TestAdapter/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.NET.Test.Sdk/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Platform/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Platform.MSBuild/", libraryAssets);
+        Assert.DoesNotContain("\"Microsoft.Testing.Extensions.", libraryAssets);
+    }
+
+    [TestMethod]
     public async Task MSTestParallelizeScope_ClassLevel_EmitsParallelizeAttribute()
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
