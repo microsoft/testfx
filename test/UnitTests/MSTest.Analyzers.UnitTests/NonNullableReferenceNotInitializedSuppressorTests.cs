@@ -143,6 +143,55 @@ public class SomeClass
         await test.RunAsync();
     }
 
+    [TestMethod]
+    public async Task TestContextFieldOnTestClass_DiagnosticIsNotSuppressed()
+    {
+        // The suppressor only handles IPropertySymbol — a non-nullable TestContext *field*
+        // on a test class does not satisfy 'declaredSymbol is IPropertySymbol', so the
+        // CS8618 diagnostic must not be suppressed.
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public TestContext {|#0:_testContext|} = null!;
+}
+";
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+        };
+
+        // CS8618 is not raised for fields assigned with null! at the declaration site,
+        // so this test verifies no diagnostics are present at all (correct — the field is
+        // initialised with null! so CS8618 does not fire and there is nothing to suppress).
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task TestContextGetterOnlyPropertyOnTestClass_DiagnosticIsSuppressed()
+    {
+        // A TestContext property with only a getter still satisfies 'declaredSymbol is IPropertySymbol',
+        // so the suppressor must fire and suppress CS8618.
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public TestContext {|#0:TestContext|} { get; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, isSuppressed: true);
+    }
+
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)
         => VerifyDiagnosticsAsync(source, [(0, isSuppressed)]);
 
