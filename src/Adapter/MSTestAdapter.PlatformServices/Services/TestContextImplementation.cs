@@ -226,7 +226,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNullChars(message);
         GetTestContextMessagesStringBuilder().Append(msg);
         WriteLive(msg, appendLine: false);
     }
@@ -239,7 +239,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullCharsInFormat(format), args);
         GetTestContextMessagesStringBuilder().Append(message);
         WriteLive(message, appendLine: false);
     }
@@ -251,7 +251,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNullChars(message);
         GetTestContextMessagesStringBuilder().AppendLine(msg);
         WriteLive(msg, appendLine: true);
     }
@@ -264,7 +264,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullCharsInFormat(format), args);
         GetTestContextMessagesStringBuilder().AppendLine(message);
         WriteLive(message, appendLine: true);
     }
@@ -552,6 +552,14 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
         return _testContextMessageStringBuilder;
     }
+
+    // Avoids allocating a new string when the input contains no null characters (the common case).
+    // Null characters must be escaped because they can corrupt downstream XML/log output.
+    private static string? EscapeNullChars(string? value)
+        => value is not null && value.IndexOf('\0') >= 0 ? value.Replace("\0", "\\0") : value;
+
+    private static string EscapeNullCharsInFormat(string format)
+        => format.IndexOf('\0') >= 0 ? format.Replace("\0", "\\0") : format;
 
     private void WriteLive(string? message, bool appendLine)
     {
