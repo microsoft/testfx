@@ -19,11 +19,11 @@ dotnet run --project <proj> -f net9.0 --no-build \
 |------|-------------|
 | 1    | 2026-07-14  |
 | 2    | 2026-07-15  |
-| 3    | 2026-07-15  |
-| 4    | 2026-07-15  |
+| 3    | 2026-07-19  |
+| 4    | 2026-07-19  |
 | 5    | 2026-07-08  |
 | 6    | 2026-07-13  |
-| 7    | 2026-07-15  |
+| 7    | 2026-07-19  |
 
 Next priority: Tasks 5, 6 (oldest: 2026-07-08, 2026-07-13)
 
@@ -31,21 +31,17 @@ Next priority: Tasks 5, 6 (oldest: 2026-07-08, 2026-07-13)
 
 | Date       | Item                                      | Notes                                                    |
 |------------|-------------------------------------------|----------------------------------------------------------|
-| 2026-07-15 | PR submitted: cache-test-method-identifier | Avoid PropertyBag scan in AddTrxResultProperties          |
-| 2026-07-14 | PR submitted: skip-method-id-in-progress-2 | Skip TestMethodIdentifier for in-progress nodes (status unknown) |
-| 2026-07-13 | PR #aw_pr_scenario4 submitted             | Scenario4 class-init overhead benchmark                  |
-| 2026-07-11 | PR skip-method-id-in-progress submitted   | Old branch lost; re-submitted 2026-07-14                 |
+| 2026-07-19 | PR submitted: cache-supported-diagnostics | Cache SupportedDiagnostics in 2 analyzer outliers        |
+| 2026-07-17 | PR #10032 merged (by community)           | Avoid per-test string allocations in TestCaseExtensions  |
+| 2026-07-15 | PR submitted: avoid-propertybag-scan      | Avoid PropertyBag scan in AddTrxResultProperties (#aw_pr_methodid — bundle may be lost) |
+| 2026-07-14 | PR submitted: skip-method-id-in-progress  | Skip TestMethodIdentifier for in-progress nodes          |
 | 2026-07-10 | PR #9800 merged (by Evangelink)           | Cache GetTestId on UnitTestElement                       |
 | 2026-07-08 | PR #9728 merged                           | Scenario2 data-driven + JsonSerializerOptions caching    |
-| 2026-07-08 | PR #9706 merged                           | Native MTP integration (RFC 018)                         |
-| 2026-07-07 | PR #9617 merged                           | All 4 data-driven hot-path optimisations                 |
-| 2026-07-07 | PR #9636 merged                           | TCS fast-path skip                                       |
 
 ## Work In Progress
 
-- Branch `perf-assist/cache-test-method-identifier`: avoid `SingleOrDefault<TestMethodIdentifierProperty>()`
-  bag scan in `AddTrxResultProperties` by threading the property from `CreateBaseTestNode`.
-  PR submitted 2026-07-15.
+- Branch `perf-assist/cache-supported-diagnostics`: Cache SupportedDiagnostics in CollectionAssertToAssertAnalyzer and StringAssertToAssertAnalyzer.
+  PR submitted 2026-07-19 as #aw_pr_cache_diag. Fixes #10055.
 
 ## Monthly Activity Issue
 
@@ -64,11 +60,9 @@ Priority order (highest first):
 
 ## Key Notes
 
-- PR #9726 (open): removes VSTest support, makes MTP the default.
 - GetTestId() caching is in place (PR #9800 merged). `CachedTestNodeUid` on UnitTestElement.
-- `testMethod.DisplayName` is always non-null (constructor: `displayName ?? name`). Safe to use directly.
-- Pre-existing CA1416 build errors in `FileLoggerTests.cs` on Linux prevent full ./build.sh -test.
-  Product code builds fine.
+- 15 of 17 MSTest analyzers already use auto-initialized SupportedDiagnostics. Fixed the 2 outliers in 2026-07-19 run.
+- PR #10032 (merged 2026-07-17): Avoid per-test string allocations in TestCaseExtensions — not from perf-improver but related work.
 - The "efficiency-improver" workflow is ALSO active on this repo, generating `efficiency/*` branches.
 
 ## Previously Closed/Actioned Items (do not re-suggest)
@@ -79,3 +73,4 @@ Priority order (highest first):
 - Issues #9602/#9603 — closed
 - Issues #9713/#9714 — closed by Evangelink 2026-07-08
 - PR #9800 — merged by Evangelink 2026-07-10 (GetTestId caching)
+- PR #10032 — merged 2026-07-17 (string allocs in TestCaseExtensions)
