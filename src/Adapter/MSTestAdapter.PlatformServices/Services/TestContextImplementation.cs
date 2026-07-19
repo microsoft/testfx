@@ -226,7 +226,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNullChars(message);
         GetTestContextMessagesStringBuilder().Append(msg);
         WriteLive(msg, appendLine: false);
     }
@@ -239,7 +239,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullChars(format), args);
         GetTestContextMessagesStringBuilder().Append(message);
         WriteLive(message, appendLine: false);
     }
@@ -251,7 +251,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNullChars(message);
         GetTestContextMessagesStringBuilder().AppendLine(msg);
         WriteLive(msg, appendLine: true);
     }
@@ -264,10 +264,16 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullChars(format), args);
         GetTestContextMessagesStringBuilder().AppendLine(message);
         WriteLive(message, appendLine: true);
     }
+
+    // Replaces embedded null characters (\0) with the two-character escape sequence \\0.
+    // Returns the original string reference when no null characters are present, avoiding
+    // a heap allocation on the common path.
+    private static string? EscapeNullChars(string? value)
+        => value is null || !value.Contains('\0') ? value : value.Replace("\0", "\\0");
 
     /// <summary>
     /// Set the unit-test outcome.
