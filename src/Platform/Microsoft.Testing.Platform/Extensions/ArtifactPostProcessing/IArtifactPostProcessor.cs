@@ -104,7 +104,11 @@ public sealed class ProcessedArtifact
     public ProcessedArtifact(string path, string kind, string displayName, string? description)
     {
         Path = path ?? throw new ArgumentNullException(nameof(path));
-        Kind = kind ?? throw new ArgumentNullException(nameof(kind));
+        Kind = kind is null
+            ? throw new ArgumentNullException(nameof(kind))
+            : RoslynString.IsNullOrWhiteSpace(kind)
+                ? throw new ArgumentException(null, nameof(kind))
+                : kind;
         DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
         Description = description;
     }

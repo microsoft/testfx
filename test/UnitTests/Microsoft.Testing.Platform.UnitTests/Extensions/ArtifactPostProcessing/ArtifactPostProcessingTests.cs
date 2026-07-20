@@ -31,6 +31,12 @@ public sealed class ArtifactPostProcessingTests
     public void HandshakeProperties_WithNoCapabilities_ReturnsNull()
         => Assert.IsNull(ArtifactPostProcessingHandshakeProperties.Create([new StubProcessor("empty", [], [])]));
 
+    [DataRow("")]
+    [DataRow(" ")]
+    [TestMethod]
+    public void ProcessedArtifact_BlankKind_ThrowsArgumentException(string kind)
+        => Assert.ThrowsExactly<ArgumentException>(() => new ProcessedArtifact("artifact.trx", kind, "artifact", null));
+
     [TestMethod]
     public async Task Manager_BuildsOnlyEnabledProcessors()
     {
