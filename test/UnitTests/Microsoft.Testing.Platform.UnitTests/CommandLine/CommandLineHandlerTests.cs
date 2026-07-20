@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -156,6 +157,27 @@ public sealed class CommandLineHandlerTests
             Mock.Of<ICommandLineOptions>());
 
         Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_UnknownJsonOptionForSelectedTool_ReturnsInvalid()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(["tool"], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("normal-option"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            providers,
+            Mock.Of<ICommandLineOptions>(),
+            [new JsonCommandLineOptionEntry("typo", ["value"], isDisabled: false)]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("Unknown option '--typo'", result.ErrorMessage);
     }
 
     [TestMethod]

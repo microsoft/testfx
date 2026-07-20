@@ -48,8 +48,11 @@ internal static class CommandLineOptionsValidator
             return InvalidWithCommandLine(commandLineParseResult, stringBuilder.ToTrimmedString());
         }
 
-        extensionCommandLineOptionsProviders =
-            extensionCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider);
+        extensionCommandLineOptionsProviders = commandLineParseResult.ToolName is string toolName
+            ? extensionCommandLineOptionsProviders
+                .OfType<IToolCommandLineOptionsProvider>()
+                .Where(provider => provider.ToolName == toolName)
+            : extensionCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider);
 
         var extensionOptionsByProvider = extensionCommandLineOptionsProviders.ToDictionary(p => p, p => p.GetCommandLineOptions());
         if (ValidateExtensionOptionsDoNotContainReservedPrefix(extensionOptionsByProvider) is { IsValid: false } result)

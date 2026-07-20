@@ -272,8 +272,7 @@ internal sealed partial class TestHostBuilder
             context.CommandLineHandler,
             jsonCommandLineOptions).ConfigureAwait(false);
 
-        if ((!loggingState.CommandLineParseResult.HasTool || loggingState.CommandLineParseResult.HasError)
-            && !commandLineValidationResult.IsValid)
+        if (!commandLineValidationResult.IsValid)
         {
             await DisplayBannerIfEnabledAsync(context.CommandLineHandler, context.ProxyOutputDevice, context.TestFrameworkCapabilities, context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
             await context.ProxyOutputDevice.DisplayAsync(context.CommandLineHandler, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), context.TestApplicationCancellationTokenSource.CancellationToken).ConfigureAwait(false);
