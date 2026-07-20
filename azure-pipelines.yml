@@ -37,6 +37,11 @@ variables:
     value: False
   - name: _RunAsPublic
     value: True
+  # Required to grant $(System.AccessToken) access to Azure Pipeline Caching.
+  - name: EnablePipelineCache
+    value: true
+  - name: VSO_DEDUP_REDIRECT_TIMEOUT_IN_SEC
+    value: 5
   # OS-agnostic Microsoft.Testing.Platform report/dump arguments shared by the Release unit-test
   # ("--test-modules") commands in the Windows job (below) and the Linux/MacOS jobs
   # (eng/pipelines/steps/test-non-windows.yml). Keeping them in a single variable guarantees every OS
@@ -195,7 +200,25 @@ stages:
             Debug:
               _BuildConfig: Debug
         steps:
+        - checkout: self
+          clean: true
+
         - template: /eng/pipelines/steps/install-windows-prereqs.yml
+
+        # MSBuildCache requires a direct static graph build; Arcade's outer Build.proj discovers its projects too late
+        # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
+        - pwsh: |
+            try {
+              ./eng/build-msbuild-cache.ps1 -Configuration $(_BuildConfig)
+            }
+            catch {
+              Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed; continuing with the regular Arcade build. $($_.Exception.Message)"
+              exit 0
+            }
+          displayName: Build solution graph with MSBuildCache
+          condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
         - task: PowerShell@2
           displayName: 'Enable local dumps'
@@ -213,6 +236,8 @@ stages:
             /p:Publish=false
             /p:Test=false
             /p:FastAcceptanceTest=true
+            /p:MSBuildCachePackageEnabled=true
+            /p:MSBuildCacheEnabled=false
           name: Build
           displayName: Build
 

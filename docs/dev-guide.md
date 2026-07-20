@@ -84,6 +84,18 @@ Another common flag is `-pack` which will produce the NuGet packages of MSTest. 
 
 For more information about all the different options available, supply the argument `-help|-h` when invoking the build script. On Unix-like systems, non-abbreviated arguments can be passed in with a single `-` or double hyphen `--`.
 
+### MSBuildCache
+
+The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache) before the regular Arcade build. The cache-aware build invokes the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. Fork PRs skip this step because Azure Pipeline Caching does not grant them the required token scope.
+
+MSBuildCache currently requires Windows, Visual Studio 17.9 or later, Git on `PATH`, and a clean repository. It does not support incremental developer builds. To validate the local cache from a clean checkout, run:
+
+```powershell
+eng\build-msbuild-cache.ps1 -Configuration Release -Clean
+```
+
+`-Clean` removes prior build outputs but preserves the local cache and logs, allowing a second invocation to validate cache hits. Use `-ProductsToBuild mstest` or `-ProductsToBuild testing-platform` to build a solution filter instead of `TestFx.slnx`. The dedicated binary log is written to `artifacts\log\<Configuration>\MSBuildCache`, with publish-safe plugin logs in its `Plugin` subdirectory. Delete `artifacts\msbuild-cache` to clear the local content cache. Change `MSBuildCacheCacheUniverse` in `Directory.Build.props`, or pass `-CacheUniverse <new-value>` for one invocation, to invalidate cache entries.
+
 ### Build layout
 
 MSTest uses Microsoft common infrastructure called [arcade](https://github.com/dotnet/arcade) as such all outputs follow this structure:
