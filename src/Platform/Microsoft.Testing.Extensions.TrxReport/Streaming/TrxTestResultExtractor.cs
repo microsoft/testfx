@@ -3,7 +3,6 @@
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Messages;
 
 namespace Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
 
@@ -152,7 +151,10 @@ internal static class TrxTestResultExtractor
             SkippedTestNodeStateProperty => TrxTestOutcome.Skipped,
             PassedTestNodeStateProperty => TrxTestOutcome.Passed,
             TimeoutTestNodeStateProperty => TrxTestOutcome.Timeout,
-            _ when Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeTestRunOutcomeFailedProperties, state.GetType()) >= 0 => TrxTestOutcome.Failed,
+            FailedTestNodeStateProperty or ErrorTestNodeStateProperty => TrxTestOutcome.Failed,
+#pragma warning disable CS0618, MTP0001 // CancelledTestNodeStateProperty is obsolete
+            CancelledTestNodeStateProperty => TrxTestOutcome.Failed,
+#pragma warning restore CS0618, MTP0001
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 }
