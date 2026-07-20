@@ -101,5 +101,5 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
                             : throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
 
     private static bool IsJsonString(string? json)
-        => json?.TrimStart().StartsWith("\"", StringComparison.Ordinal) == true;
+        => json?.TrimStart().StartsWith("\"", StringComparison.Ordinal) ?? false;
 }
