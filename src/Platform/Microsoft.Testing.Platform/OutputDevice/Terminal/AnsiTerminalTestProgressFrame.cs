@@ -245,8 +245,19 @@ internal sealed class AnsiTerminalTestProgressFrame
             string originalElement = enumerator.GetTextElement();
             TextElement element = CreateTextElement(originalElement);
             textWasNormalized |= !ReferenceEquals(originalElement, element.Text);
-            elements.Add(element);
-            totalWidth += element.Width;
+            if (IsRegionalIndicator(element.Text)
+                && elements.Count > 0
+                && IsRegionalIndicator(elements[^1].Text))
+            {
+                TextElement previousElement = elements[^1];
+                elements[^1] = new TextElement(previousElement.Text + element.Text, Width: 2);
+                totalWidth += 2 - previousElement.Width;
+            }
+            else
+            {
+                elements.Add(element);
+                totalWidth += element.Width;
+            }
         }
 
         if (totalWidth <= availableWidth)
@@ -363,6 +374,11 @@ internal sealed class AnsiTerminalTestProgressFrame
                 or (>= 0x1F1E6 and <= 0x1F1FF)
                 or (>= 0x1F300 and <= 0x1FAFF)
                 or (>= 0x20000 and <= 0x3FFFD));
+
+    private static bool IsRegionalIndicator(string textElement)
+        => textElement.Length == 2
+            && char.IsSurrogatePair(textElement, 0)
+            && char.ConvertToUtf32(textElement, 0) is >= 0x1F1E6 and <= 0x1F1FF;
 
     private readonly record struct TextElement(string Text, int Width);
 
