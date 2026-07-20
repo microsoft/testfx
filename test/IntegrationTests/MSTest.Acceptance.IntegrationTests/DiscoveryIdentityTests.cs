@@ -16,6 +16,7 @@ using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestClass]
+[DoNotParallelize]
 public sealed class DiscoveryIdentityTests : AcceptanceTestBase<DiscoveryIdentityTests.TestAssetFixture>
 {
     private const string AssetName = "DiscoveryIdentityAsset";

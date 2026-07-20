@@ -22,41 +22,73 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 
 public abstract partial class CLITestBase
 {
+    private static readonly SemaphoreSlim ExecutionLock = new(1, 1);
+
     internal static ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string? testCaseFilter = null)
     {
-        var unitTestDiscoverer = new UnitTestDiscoverer(new TestSourceHandler());
-        var logger = new InternalLogger();
-        var sink = new InternalSink();
+        ExecutionLock.Wait();
+        string currentDirectory = Environment.CurrentDirectory;
+        try
+        {
+            var unitTestDiscoverer = new UnitTestDiscoverer(new TestSourceHandler());
+            var logger = new InternalLogger();
+            var sink = new InternalSink();
 
-        string runSettingsXml = GetRunSettingsXml(string.Empty);
-        var context = new InternalDiscoveryContext(runSettingsXml, testCaseFilter);
+            string runSettingsXml = GetRunSettingsXml(string.Empty);
+            var context = new InternalDiscoveryContext(runSettingsXml, testCaseFilter);
 
-        unitTestDiscoverer.DiscoverTestsInSourceAsync(assemblyPath, logger.ToAdapterMessageLogger(), sink.ToUnitTestElementSink(), runSettingsXml, new TestElementFilterProvider(context), false).GetAwaiter().GetResult();
+            unitTestDiscoverer.DiscoverTestsInSourceAsync(assemblyPath, logger.ToAdapterMessageLogger(), sink.ToUnitTestElementSink(), runSettingsXml, new TestElementFilterProvider(context), false).GetAwaiter().GetResult();
 
-        return sink.DiscoveredTests;
+            return sink.DiscoveredTests;
+        }
+        finally
+        {
+            Environment.CurrentDirectory = currentDirectory;
+            ExecutionLock.Release();
+        }
     }
 
     internal static async Task<ImmutableArray<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases)
     {
-        var testExecutionManager = new TestExecutionManager();
-        var frameworkHandle = new InternalFrameworkHandle();
+        await ExecutionLock.WaitAsync();
+        string currentDirectory = Environment.CurrentDirectory;
+        try
+        {
+            var testExecutionManager = new TestExecutionManager();
+            var frameworkHandle = new InternalFrameworkHandle();
 
-        ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), new DeploymentContext(null, null), frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, filterProvider: null, false);
-        return frameworkHandle.GetFlattenedTestResults();
+            ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
+            await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), new DeploymentContext(null, null), frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, filterProvider: null, false);
+            return frameworkHandle.GetFlattenedTestResults();
+        }
+        finally
+        {
+            Environment.CurrentDirectory = currentDirectory;
+            ExecutionLock.Release();
+        }
     }
 
     internal static async Task<ImmutableArray<TestResult>> RunTestsAsync(IEnumerable<TestCase> testCases, string? testCaseFilter)
     {
-        var testExecutionManager = new TestExecutionManager();
-        var frameworkHandle = new InternalFrameworkHandle();
+        await ExecutionLock.WaitAsync();
+        string currentDirectory = Environment.CurrentDirectory;
+        try
+        {
+            var testExecutionManager = new TestExecutionManager();
+            var frameworkHandle = new InternalFrameworkHandle();
 
-        string runSettingsXml = GetRunSettingsXml(string.Empty);
-        var runContext = new InternalRunContext(runSettingsXml, testCaseFilter);
+            string runSettingsXml = GetRunSettingsXml(string.Empty);
+            var runContext = new InternalRunContext(runSettingsXml, testCaseFilter);
 
-        ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
-        await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), new DeploymentContext(runContext.TestRunDirectory, runContext.RunSettings?.SettingsXml), frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, new TestElementFilterProvider(runContext), false);
-        return frameworkHandle.GetFlattenedTestResults();
+            ITestResultRecorder testResultRecorder = frameworkHandle.ToTestResultRecorder(Environment.MachineName, MSTestSettings.CurrentSettings);
+            await testExecutionManager.ExecuteTestsAsync(ToUnitTestElements(testCases), new DeploymentContext(runContext.TestRunDirectory, runContext.RunSettings?.SettingsXml), frameworkHandle.ToAdapterMessageLogger(), testResultRecorder, new TestElementFilterProvider(runContext), false);
+            return frameworkHandle.GetFlattenedTestResults();
+        }
+        finally
+        {
+            Environment.CurrentDirectory = currentDirectory;
+            ExecutionLock.Release();
+        }
     }
 
     // Mirrors the adapter's execution boundary (see MSTestExecutor): each host test case becomes a neutral

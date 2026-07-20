@@ -62,7 +62,7 @@ public sealed class LegacyTimeoutBehaviorTests : AcceptanceTestBase<LegacyTimeou
             timedResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
             timedResult.AssertOutputContains("UserCancellationWithTimeout");
             timedResult.AssertOutputContains("Test 'UserCancellationWithTimeout' was canceled");
-            Assert.AreEqual("continued after cancellation", File.ReadAllText(timedMarkerPath));
+            Assert.IsFalse(File.Exists(timedMarkerPath), "Execution should not continue after timeout-aware cancellation.");
 
             regularResult.AssertExitCodeIs(ExitCode.AtLeastOneTestFailed);
             regularResult.AssertOutputContainsSummary(failed: 1, passed: 0, skipped: 0);
@@ -178,8 +178,8 @@ public class TimeoutCases
     public void UserCancellationWithTimeout()
     {
         TestContext.CancellationTokenSource.Cancel();
-        File.WriteAllText(Environment.GetEnvironmentVariable("TIMED_CANCEL_MARKER")!, "continued after cancellation");
-        Assert.Fail("A timeout test should have been aborted.");
+        Thread.Sleep(10_000);
+        File.WriteAllText(Environment.GetEnvironmentVariable("TIMED_CANCEL_MARKER")!, "continued unexpectedly");
     }
 
     [TestMethod]

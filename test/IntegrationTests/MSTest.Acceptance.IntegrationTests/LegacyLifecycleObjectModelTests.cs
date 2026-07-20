@@ -24,6 +24,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 //   its three inheritance paths are preserved by MultiLevelBeforeEachDerivedClass_HasExactPerTestMessages;
 //   assembly boundary ordering is already equivalent to LifecycleTests.LifecycleTest.
 [TestClass]
+[DoNotParallelize]
 public sealed class LegacyLifecycleObjectModelTests : AcceptanceTestBase<LegacyLifecycleObjectModelTests.TestAssetFixture>
 {
     private static readonly Lock AssemblyLoadLock = new();

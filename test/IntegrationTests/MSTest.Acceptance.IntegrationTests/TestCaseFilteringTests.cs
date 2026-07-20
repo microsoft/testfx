@@ -19,6 +19,7 @@ namespace MSTest.Acceptance.IntegrationTests;
 /// <c>TestCase</c> to <c>UnitTestElement</c> round trip for the two identity properties most sensitive to it.
 /// </summary>
 [TestClass]
+[DoNotParallelize]
 public sealed class TestCaseFilteringTests : AcceptanceTestBase<TestCaseFilteringTests.TestAssetFixture>
 {
     private const string AssetName = "DiscoverInternalsFiltering";
