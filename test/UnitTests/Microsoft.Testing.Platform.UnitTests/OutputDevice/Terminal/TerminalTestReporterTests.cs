@@ -635,10 +635,16 @@ public sealed class TerminalTestReporterTests
         var terminal = new AnsiTerminal(console);
 
         terminal.RenderProgress([], [new TerminalProgressMessageState(1, 1, "Restoring test assets")]);
+        int replacementStart = console.Output.Length;
         terminal.RenderProgress([], [new TerminalProgressMessageState(1, 2, "Test assets restored")]);
 
         Assert.Contains("Restoring test assets", console.Output);
-        Assert.Contains("Test assets restored", console.Output);
+        string replacementRender = console.Output[replacementStart..];
+        int eraseIndex = replacementRender.IndexOf($"{AnsiCodes.CSI}{AnsiCodes.EraseInLine}", StringComparison.Ordinal);
+        int replacementIndex = replacementRender.IndexOf("Test assets restored", StringComparison.Ordinal);
+        Assert.IsGreaterThanOrEqualTo(0, eraseIndex);
+        Assert.IsGreaterThan(eraseIndex, replacementIndex, "Replacement text should be emitted after erasing the previous line.");
+        Assert.DoesNotContain("Restoring test assets", replacementRender);
     }
 
     [TestMethod]
