@@ -86,15 +86,15 @@ For more information about all the different options available, supply the argum
 
 ### MSBuildCache
 
-The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache) before the regular Arcade build. The cache-aware build invokes the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. Fork PRs skip this step because Azure Pipeline Caching does not grant them the required token scope.
+The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache) before the regular Arcade build. The cache-aware build uses Arcade's `eng/common/msbuild.ps1` launcher to invoke the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. Fork PRs skip this step because Azure Pipeline Caching does not grant them the required token scope.
 
-MSBuildCache currently requires Windows, Visual Studio 17.9 or later, Git on `PATH`, and a clean repository. It does not support incremental developer builds. To validate the local cache from a clean checkout, run:
+MSBuildCache currently requires Windows, the Visual Studio version pinned in `global.json`, Git on `PATH`, and a clean repository. It does not support incremental developer builds. To validate the local cache from a clean checkout, run:
 
 ```powershell
-eng\build-msbuild-cache.ps1 -Configuration Release -Clean
+eng\common\msbuild.ps1 -msbuildEngine vs TestFx.slnx /restore /graph /m /reportfileaccesses /t:Build /p:Configuration=Release /p:MSBuildCachePackageEnabled=true /p:MSBuildCacheEnabled=true /p:MSBuildCacheLogDirectory=artifacts\log\Release\MSBuildCache\Plugin /bl:artifacts\log\Release\MSBuildCache\Build.binlog
 ```
 
-`-Clean` removes prior build outputs but preserves the local cache and logs, allowing a second invocation to validate cache hits. Use `-ProductsToBuild mstest` or `-ProductsToBuild testing-platform` to build a solution filter instead of `TestFx.slnx`. The dedicated binary log is written to `artifacts\log\<Configuration>\MSBuildCache`, with publish-safe plugin logs in its `Plugin` subdirectory. Delete `artifacts\msbuild-cache` to clear the local content cache. Change `MSBuildCacheCacheUniverse` in `Directory.Build.props`, or pass `-CacheUniverse <new-value>` for one invocation, to invalidate cache entries.
+Use `MSTest.slnf` or `Microsoft.Testing.Platform.slnf` in place of `TestFx.slnx` to validate a filtered graph. Delete `artifacts\msbuild-cache` to clear the local content cache. Change `MSBuildCacheCacheUniverse` in `Directory.Build.props`, or pass `/p:MSBuildCacheCacheUniverse=<new-value>` for one invocation, to invalidate cache entries.
 
 ### Build layout
 

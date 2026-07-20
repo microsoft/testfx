@@ -207,18 +207,86 @@ stages:
 
         # MSBuildCache requires a direct static graph build; Arcade's outer Build.proj discovers its projects too late
         # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
-        - pwsh: |
-            try {
-              ./eng/build-msbuild-cache.ps1 -Configuration $(_BuildConfig)
-            }
-            catch {
-              Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed; continuing with the regular Arcade build. $($_.Exception.Message)"
-              exit 0
-            }
+        - pwsh: >
+            ./eng/common/msbuild.ps1
+            -ci
+            ./TestFx.slnx
+            /restore
+            /graph
+            /m
+            /reportfileaccesses
+            /nr:false
+            /t:Build
+            /warnaserror
+            /v:minimal
+            /p:Configuration=$(_BuildConfig)
+            /p:RepoRoot=$(Build.SourcesDirectory)\
+            /p:MSBuildCachePackageEnabled=true
+            /p:MSBuildCacheEnabled=true
+            /p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache
           displayName: Build solution graph with MSBuildCache
           condition: and(succeeded(), ne(variables['System.PullRequest.IsFork'], 'True'))
+          continueOnError: true
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+        # Keep the cache canary independent from the authoritative Arcade build. Publish only the project-level
+        # diagnostics; CacheClient.log and the OAuth-bearing canary environment stay outside published artifacts.
+        - pwsh: |
+            $cacheLogSource = "$(Agent.TempDirectory)\MSBuildCache"
+            $cacheLogDestination = "$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\MSBuildCache"
+
+            try {
+              if (Test-Path $cacheLogSource) {
+                New-Item $cacheLogDestination -ItemType Directory -Force | Out-Null
+                Get-ChildItem $cacheLogSource -Force |
+                  Where-Object Name -NE "CacheClient.log" |
+                  Copy-Item -Destination $cacheLogDestination -Recurse -Force
+              }
+            }
+            catch {
+              Write-Host "##vso[task.logissue type=warning]Failed to preserve MSBuildCache diagnostics. $($_.Exception.Message)"
+            }
+            finally {
+              $cleanupErrors = @()
+
+              $artifactsDirectory = "$(Build.SourcesDirectory)\artifacts"
+              if (Test-Path $artifactsDirectory) {
+                Get-ChildItem $artifactsDirectory -Force |
+                  Where-Object Name -NotIn @("log", "msbuild-cache", "toolset") |
+                  ForEach-Object {
+                    $path = $_.FullName
+                    try {
+                      Remove-Item $path -Recurse -Force -ErrorAction Stop
+                    }
+                    catch {
+                      $cleanupErrors += "${path}: $($_.Exception.Message)"
+                    }
+                  }
+              }
+
+              @(
+                $cacheLogSource,
+                "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Sdk.props",
+                "$(Build.SourcesDirectory)\src\Package\MSTest.Sdk\Sdk\Runner\Runner.targets"
+              ) |
+                Where-Object { Test-Path $_ } |
+                ForEach-Object {
+                  $path = $_
+                  try {
+                    Remove-Item $path -Recurse -Force -ErrorAction Stop
+                  }
+                  catch {
+                    $cleanupErrors += "${path}: $($_.Exception.Message)"
+                  }
+                }
+
+              if ($cleanupErrors) {
+                throw "Failed to clean MSBuildCache canary outputs:`n$($cleanupErrors -join "`n")"
+              }
+            }
+          displayName: Preserve cache diagnostics and clean canary outputs
+          condition: and(always(), ne(variables['System.PullRequest.IsFork'], 'True'))
 
         - task: PowerShell@2
           displayName: 'Enable local dumps'

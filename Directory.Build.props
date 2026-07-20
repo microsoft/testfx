@@ -22,7 +22,7 @@
     <MSBuildCacheLocalCacheRootPath Condition="'$(MSBuildCacheLocalCacheRootPath)' == ''">$(RepoRoot)artifacts\msbuild-cache</MSBuildCacheLocalCacheRootPath>
     <MSBuildCacheLocalCacheSizeInMegabytes Condition="'$(MSBuildCacheLocalCacheSizeInMegabytes)' == ''">20480</MSBuildCacheLocalCacheSizeInMegabytes>
     <!-- Visual Studio telemetry writes outside the repository after the project that launched it has finished. -->
-    <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>$(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);\Windows\**;\**\ApplicationInsights.config;\**\AppData\Local\Microsoft\VSApplicationInsights\**</MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
+    <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>$(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);\Windows\**;\**\ApplicationInsights.config;\**\AppData\Local\Microsoft\VSApplicationInsights\**;\**\AppData\Local\Microsoft\Windows\INetCache\**</MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
   </PropertyGroup>
 
   <!-- Language configuration -->
