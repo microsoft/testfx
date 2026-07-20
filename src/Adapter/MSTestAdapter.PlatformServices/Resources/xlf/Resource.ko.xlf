@@ -103,7 +103,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="DeploymentDependencyLoadFailed">
         <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
-        <target state="new">Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</target>
+        <target state="translated">테스트 실행 배포 문제: 어셈블리 또는 모듈 '{0}'을(를) 로드하지 못했습니다. 이유: {1}</target>
         <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
@@ -123,7 +123,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
-        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
+        <target state="translated">테스트 실행 배포 문제: '{0}' 파일을 '{1}'에 복사하지 못함: {2}: {3} (HResult: 0x{4:X8})</target>
         <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
@@ -235,22 +235,22 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="GlobalTestCleanupTimedOut">
         <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Global test cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 전역 테스트 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
         <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="GlobalTestCleanupWasCancelled">
         <source>Global test cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Global test cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">전역 테스트 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note>{0} is the type name. {1} is the global test cleanup method name.</note>
       </trans-unit>
       <trans-unit id="GlobalTestInitializeTimedOut">
         <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Global test initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">{2}밀리초 후 '{0}.{1}' 전역 테스트 초기화 메서드의 시간이 초과되었습니다.</target>
         <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="GlobalTestInitializeWasCancelled">
         <source>Global test initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Global test initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">전역 테스트 초기화 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note>{0} is the type name. {1} is the global test initialize method name.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
@@ -265,7 +265,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="InvalidSettingsXml">
         <source>MSTestAdapter failed to parse the runsettings XML.</source>
-        <target state="new">MSTestAdapter failed to parse the runsettings XML.</target>
+        <target state="translated">MSTestAdapter가 runsettings XML을 구문 분석하지 못했습니다.</target>
         <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
