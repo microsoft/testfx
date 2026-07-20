@@ -27,7 +27,7 @@ internal sealed class TraceTextWriter : TextWriter
         TestOutputCaptureMode mode = _modeProvider();
         if (mode != TestOutputCaptureMode.None && TestContext.Current as TestContextImplementation is { } testContext)
         {
-            testContext.WriteTrace(value);
+            testContext.TraceBuilder.Append(value);
             if (mode == TestOutputCaptureMode.Live)
             {
                 _console.Write(value);
@@ -40,7 +40,7 @@ internal sealed class TraceTextWriter : TextWriter
         TestOutputCaptureMode mode = _modeProvider();
         if (mode != TestOutputCaptureMode.None && TestContext.Current as TestContextImplementation is { } testContext)
         {
-            testContext.WriteTrace(value);
+            testContext.TraceBuilder.Append(value);
             if (mode == TestOutputCaptureMode.Live)
             {
                 _console.Write(value);

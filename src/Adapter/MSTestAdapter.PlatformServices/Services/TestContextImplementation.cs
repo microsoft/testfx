@@ -227,7 +227,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void Write(string? message)
     {
         string? msg = message?.Replace("\0", "\\0");
-        GetTestContextMessagesStringBuilder().Append(msg);
+        TestContextMessageBuilder.Append(msg);
         WriteLive(msg, appendLine: false);
     }
 
@@ -240,7 +240,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void Write(string format, params object?[] args)
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-        GetTestContextMessagesStringBuilder().Append(message);
+        TestContextMessageBuilder.Append(message);
         WriteLive(message, appendLine: false);
     }
 
@@ -252,7 +252,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void WriteLine(string? message)
     {
         string? msg = message?.Replace("\0", "\\0");
-        GetTestContextMessagesStringBuilder().AppendLine(msg);
+        TestContextMessageBuilder.AppendLine(msg);
         WriteLive(msg, appendLine: true);
     }
 
@@ -265,7 +265,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void WriteLine(string format, params object?[] args)
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-        GetTestContextMessagesStringBuilder().AppendLine(message);
+        TestContextMessageBuilder.AppendLine(message);
         WriteLive(message, appendLine: true);
     }
 
@@ -505,52 +505,23 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     internal static void ConfigureLiveOutputWriter(TextWriter liveOutputWriter)
         => Volatile.Write(ref s_liveOutputWriter, liveOutputWriter);
 
-    internal void WriteConsoleOut(char value)
-        => GetOutStringBuilder().Append(value);
+    internal SynchronizedStringBuilder StandardOutputBuilder
+        => GetOrCreate(ref _stdOutStringBuilder);
 
-    internal void WriteConsoleOut(string? value)
-        => GetOutStringBuilder().Append(value);
+    internal SynchronizedStringBuilder StandardErrorBuilder
+        => GetOrCreate(ref _stdErrStringBuilder);
 
-    internal void WriteConsoleOut(char[] buffer, int index, int count)
-        => GetOutStringBuilder().Append(buffer, index, count);
+    internal SynchronizedStringBuilder TraceBuilder
+        => GetOrCreate(ref _traceStringBuilder);
 
-    internal void WriteConsoleErr(char value)
-        => GetErrStringBuilder().Append(value);
+    private SynchronizedStringBuilder TestContextMessageBuilder
+        => GetOrCreate(ref _testContextMessageStringBuilder);
 
-    internal void WriteConsoleErr(string? value)
-        => GetErrStringBuilder().Append(value);
-
-    internal void WriteConsoleErr(char[] buffer, int index, int count)
-        => GetErrStringBuilder().Append(buffer, index, count);
-
-    internal void WriteTrace(char value)
-        => GetTraceStringBuilder().Append(value);
-
-    internal void WriteTrace(string? value)
-        => GetTraceStringBuilder().Append(value);
-
-    private SynchronizedStringBuilder GetOutStringBuilder()
+    private static SynchronizedStringBuilder GetOrCreate(ref SynchronizedStringBuilder? builder)
     {
-        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _stdOutStringBuilder;
-    }
+        _ = builder ?? Interlocked.CompareExchange(ref builder, new SynchronizedStringBuilder(), null)!;
 
-    private SynchronizedStringBuilder GetErrStringBuilder()
-    {
-        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _stdErrStringBuilder;
-    }
-
-    private SynchronizedStringBuilder GetTraceStringBuilder()
-    {
-        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _traceStringBuilder;
-    }
-
-    private SynchronizedStringBuilder GetTestContextMessagesStringBuilder()
-    {
-        _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _testContextMessageStringBuilder;
+        return builder;
     }
 
     private void WriteLive(string? message, bool appendLine)

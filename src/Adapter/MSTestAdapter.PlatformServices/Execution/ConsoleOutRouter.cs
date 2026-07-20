@@ -13,11 +13,11 @@ internal sealed class ConsoleOutRouter : ConsoleRouter
     }
 
     protected override void WriteToTestContext(TestContextImplementation testContext, char value)
-        => testContext.WriteConsoleOut(value);
+        => testContext.StandardOutputBuilder.Append(value);
 
     protected override void WriteToTestContext(TestContextImplementation testContext, string? value)
-        => testContext.WriteConsoleOut(value);
+        => testContext.StandardOutputBuilder.Append(value);
 
     protected override void WriteToTestContext(TestContextImplementation testContext, char[] buffer, int index, int count)
-        => testContext.WriteConsoleOut(buffer, index, count);
+        => testContext.StandardOutputBuilder.Append(buffer, index, count);
 }
