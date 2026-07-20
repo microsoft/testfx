@@ -22,7 +22,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDeploymentBehaviorTests.TestAssetFixture>
 {
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task TestSourceDependencies_WithCopyToOutputNever_OnlyDeclaredItemsAreDeployed(string tfm)
     {
@@ -38,7 +37,6 @@ public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDep
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DeployTestSourceDependenciesFalse_UsesSourceOutputLocation(string tfm)
     {
@@ -57,7 +55,6 @@ public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDep
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task DirectoryDeployment_AcceptsForwardAndBackSlashes(string tfm)
     {
@@ -75,7 +72,6 @@ public sealed class LegacyDeploymentBehaviorTests : AcceptanceTestBase<LegacyDep
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task FileDeployment_AcceptsForwardAndBackSlashes(string tfm)
     {
