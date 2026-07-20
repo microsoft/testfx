@@ -144,7 +144,7 @@ internal sealed class ToolsHost(
         foreach (IGrouping<string, CommandLineParseOption> optionRecord in _commandLineHandler.ParseResult.Options.GroupBy(x => x.Name))
         {
             string optionName = optionRecord.Key;
-            int arity = optionRecord.Sum(record => record.Arguments.Length);
+            int arity = AggregateArguments(optionRecord).Length;
             ICommandLineOptionsProvider extension = GetCommandLineOptionsProviders(tool)
                 .Single(provider => provider.GetCommandLineOptions().Any(option => option.Name == optionName));
             CommandLineOption option = extension.GetCommandLineOptions().Single(x => x.Name == optionName);
@@ -184,7 +184,7 @@ internal sealed class ToolsHost(
         foreach (IGrouping<string, CommandLineParseOption> optionRecords in _commandLineHandler.ParseResult.Options.GroupBy(record => record.Name))
         {
             string optionName = optionRecords.Key;
-            string[] arguments = [.. optionRecords.SelectMany(record => record.Arguments)];
+            string[] arguments = AggregateArguments(optionRecords);
             ICommandLineOptionsProvider extension = GetCommandLineOptionsProviders(tool)
                 .Single(provider => provider.GetCommandLineOptions().Any(option => option.Name == optionName));
             ValidationResult result = await extension.ValidateOptionArgumentsAsync(
@@ -208,4 +208,7 @@ internal sealed class ToolsHost(
         => _commandLineHandler.ExtensionsCommandLineOptionsProviders
             .OfType<IToolCommandLineOptionsProvider>()
             .Where(provider => provider.ToolName == tool.Name);
+
+    internal static string[] AggregateArguments(IEnumerable<CommandLineParseOption> optionRecords)
+        => [.. optionRecords.SelectMany(record => record.Arguments)];
 }
