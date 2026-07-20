@@ -64,7 +64,7 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
                 break;
 
             case 1:
-                Assert.Contains("Test Run Failed.", commandLine.StandardOutput);
+                Assert.Contains("Microsoft.Playwright.PlaywrightException: Executable doesn't exist", commandLine.StandardOutput);
                 Assert.Contains("Total tests: 1", commandLine.StandardOutput);
                 Assert.Contains("Failed: 1", commandLine.StandardOutput);
                 break;
