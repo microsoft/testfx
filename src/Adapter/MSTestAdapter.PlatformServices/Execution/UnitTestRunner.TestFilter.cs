@@ -143,14 +143,19 @@ internal sealed partial class UnitTestRunner
     /// <summary>
     /// Handles the bookkeeping (class-cleanup countdown, class cleanup, end-of-assembly cleanup) for a
     /// test that was filtered out by a <see cref="ITestFilter"/>. Mirrors the tail of
-    /// <see cref="RunSingleTestAsync"/>. The filtered-out test never loaded its own type, but if a
+    /// normal test execution path. The filtered-out test never loaded its own type, but if a
     /// sibling test of the same class already ran in this worker the class was initialized and still
     /// owes its <c>[ClassCleanup]</c>, so it is executed here when this is the last test of the class.
     /// </summary>
     private async Task<TestResult[]> FinishFilteredOutTestAsync(
         TestMethod testMethod,
+<<<<<<< HEAD
         IDictionary<string, object?> testContextProperties,
         IMessageLogger messageLogger,
+=======
+        IDictionary<string, object?> lifecycleContextProperties,
+        IAdapterMessageLogger messageLogger,
+>>>>>>> Fix test property lifecycle scope
         TestResult[] filterResult,
         ITestContext testContextForTestExecution)
     {
@@ -172,7 +177,7 @@ internal sealed partial class UnitTestRunner
                 TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(lastRunnableTest.TestMethod);
                 if (testMethodInfo is not null)
                 {
-                    ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                    ITestContext testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
                     try
                     {
                         // Flow properties set during AssemblyInitialize and ClassInitialize so the
@@ -212,7 +217,7 @@ internal sealed partial class UnitTestRunner
             ITestContext? testContextForAssemblyCleanup = null;
             try
             {
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, filterResult).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)
