@@ -58,7 +58,7 @@ internal abstract class SimpleTerminal : ITerminal
         // nop
     }
 
-    public void RenderProgress(TestProgressState?[] progress)
+    public void RenderProgress(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
     {
         int count = 0;
         foreach (TestProgressState? p in progress)

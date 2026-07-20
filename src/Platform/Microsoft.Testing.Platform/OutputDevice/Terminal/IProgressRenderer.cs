@@ -39,13 +39,17 @@ internal interface IProgressRenderer
     /// <summary>
     /// Called on every refresh tick of the rendering thread.
     /// </summary>
-    void OnTick(ITerminal terminal, TestProgressState?[] progressItems);
+    void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null);
 
     /// <summary>
     /// Called to write durable output to the terminal, giving the renderer a chance to wrap it
     /// (e.g. erase and re-render in-place progress around it).
     /// </summary>
-    void OnWrite(ITerminal terminal, TestProgressState?[] progressItems, Action<ITerminal> write);
+    void OnWrite(
+        ITerminal terminal,
+        TestProgressState?[] progressItems,
+        Action<ITerminal> write,
+        TerminalProgressMessageState[]? messages = null);
 
     /// <summary>
     /// Notifies the renderer that a test completed. Used by the heartbeat renderer to reset its silence timer.

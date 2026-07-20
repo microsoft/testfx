@@ -1,4 +1,11 @@
 #nullable enable
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.Key.get -> string!
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.Message.get -> string?
+Microsoft.Testing.Platform.OutputDevice.ProgressMessageOutputDeviceData.ProgressMessageOutputDeviceData(string! key, string? message) -> void
+Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData
+Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.Message.get -> string!
+Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.SessionMessageOutputDeviceData(string! message) -> void
 [TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase
 [TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
 [TPINTERNAL]Microsoft.Testing.Platform.CommandLine.CommandLineOptionsProviderBase.CommandLineOptionsProviderBase(string! uid, string! version, string! displayName, string! description, System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>! commandLineOptions) -> void
