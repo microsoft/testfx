@@ -169,7 +169,9 @@ internal sealed class ToolsHost(
         {
             foreach (CommandLineOption option in extension.GetCommandLineOptions())
             {
-                if (_commandLineHandler.ParseResult.Options.Count(x => x.Name == option.Name) < option.Arity.Min)
+                int argumentCount = AggregateArguments(
+                    _commandLineHandler.ParseResult.Options.Where(record => record.Name == option.Name)).Length;
+                if (argumentCount < option.Arity.Min)
                 {
                     stringBuilder.AppendLine(
                         CultureInfo.InvariantCulture,

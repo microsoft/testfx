@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Text.Json;
@@ -69,6 +69,40 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
         finally
         {
             Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public async Task Dispatcher_InvalidOutputDirectory_ReturnsInvalidCommandLine()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(
+                manifestPath,
+                JsonSerializer.Serialize(new
+                {
+                    schemaVersion = 1,
+                    outputDirectory = "invalid\0directory",
+                    inputs = Array.Empty<object>(),
+                }));
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+
+            FakeDotnetTestSdkResult result = await FakeDotnetTestSdk.RunAsync(
+                testHost,
+                extraArguments: $"--manifest \"{manifestPath}\"",
+                supportedProtocolVersions: "1.4.0",
+                toolName: "internal-merge-artifacts",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.TestHostResult.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+        }
+        finally
+        {
+            File.Delete(manifestPath);
         }
     }
 

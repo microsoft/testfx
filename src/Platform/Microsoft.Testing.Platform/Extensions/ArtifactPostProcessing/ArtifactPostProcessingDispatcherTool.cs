@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -59,7 +59,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
             manifest = ArtifactPostProcessingManifest.Load(manifestPaths[0]);
             Directory.CreateDirectory(manifest.OutputDirectory);
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or FormatException or ArgumentException or NotSupportedException)
         {
             await DisplayErrorAsync(
                 string.Format(CultureInfo.CurrentCulture, PlatformResources.ArtifactPostProcessingManifestReadError, ex.Message),

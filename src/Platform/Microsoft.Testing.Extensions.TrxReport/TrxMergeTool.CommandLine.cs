@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Resources;
@@ -31,7 +31,7 @@ internal sealed class TrxMergeToolCommandLine(IExtension extension) : IToolComma
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         =>
         [
-            new(InputOptionName, ExtensionResources.TrxMergeToolInputOptionDescription, ArgumentArity.OneOrMore, false),
+            new(InputOptionName, ExtensionResources.TrxMergeToolInputOptionDescription, new ArgumentArity(2, int.MaxValue), false),
             new(OutputOptionName, ExtensionResources.TrxMergeToolOutputOptionDescription, ArgumentArity.ExactlyOne, false),
         ];
 

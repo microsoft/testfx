@@ -738,7 +738,7 @@ Registered tools:
         Description: Merges multiple TRX files into one from the command line
         Options:
           --input
-            Arity: 1..N
+            Arity: 2..N
             Hidden: False
             Description: Two or more input TRX file paths
           --output-trx
