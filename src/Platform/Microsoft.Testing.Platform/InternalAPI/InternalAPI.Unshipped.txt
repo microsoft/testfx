@@ -75,6 +75,8 @@ Microsoft.Testing.Platform.OutputDevice.ProxyOutputDevice.Dispose() -> void
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress) -> void
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.SilenceDrivenHeartbeatRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems) -> void
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.SilenceDrivenHeartbeatRenderer.OnWrite(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, System.Action<Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal!>! write) -> void
+*REMOVED*Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider
+*REMOVED*Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider.ToolName.get -> string!
 *REMOVED*Microsoft.Testing.Platform.OutputDevice.Terminal.SimpleTerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress) -> void
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER = "TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER" -> string!
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort

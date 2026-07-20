@@ -60,5 +60,7 @@ static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetArtifact
 [TPEXP]Microsoft.Testing.Platform.Tools.ITool.IsHidden.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Tools.ITool.Name.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Tools.ITool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider.ToolName.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager
 [TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager.AddTool(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Tools.ITool!>! toolFactory) -> void

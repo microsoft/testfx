@@ -34,6 +34,7 @@ internal static class FakeDotnetTestSdk
         string supportedProtocolVersions = DefaultSupportedProtocolVersions,
         bool isIde = false,
         bool advertiseServerControlPipe = false,
+        string? toolName = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(testHost);
@@ -67,10 +68,24 @@ internal static class FakeDotnetTestSdk
 
         string pipeArgs = $"--server dotnettestcli --dotnet-test-pipe {osPipeName}";
         string finalArgs = extraArguments is null ? pipeArgs : $"{pipeArgs} {extraArguments}";
-        Task<TestHostResult> hostRun = testHost.ExecuteAsync(finalArgs, environmentVariables, cancellationToken: cancellationToken);
+        Task<TestHostResult> hostRun = testHost.ExecuteAsync(
+            finalArgs,
+            environmentVariables,
+            cancellationToken: cancellationToken,
+            toolName: toolName);
 
-        // Wait for the test app to connect.
-        await stream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+        // Wait for the test app to connect, but surface an early process exit instead of hanging forever.
+        Task connectionTask = stream.WaitForConnectionAsync(cancellationToken);
+        if (await Task.WhenAny(connectionTask, hostRun).ConfigureAwait(false) == hostRun)
+        {
+            TestHostResult earlyExit = await hostRun.ConfigureAwait(false);
+            throw new InvalidOperationException(
+                $"Test host exited with code {earlyExit.ExitCode} before connecting to the dotnet-test pipe.{Environment.NewLine}" +
+                $"Stdout:{Environment.NewLine}{earlyExit.StandardOutput}{Environment.NewLine}" +
+                $"Stderr:{Environment.NewLine}{earlyExit.StandardError}");
+        }
+
+        await connectionTask.ConfigureAwait(false);
 
         // Accept the control connection and push the cancel signal concurrently with the data read loop.
         Task? controlTask = controlStream is null

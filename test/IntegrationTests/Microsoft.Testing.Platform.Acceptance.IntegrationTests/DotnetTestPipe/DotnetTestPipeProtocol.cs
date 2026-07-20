@@ -62,6 +62,8 @@ internal static class DotnetTestPipeProtocol
         public const byte OrchestratorFeature = 11;
         public const byte ServerControlPipeName = 12;
         public const byte AttemptNumber = 13;
+        public const byte SupportedPostProcessorKinds = 14;
+        public const byte SupportedPostProcessorExtensionsLegacy = 15;
     }
 
     public static class ServerControlKinds
@@ -370,6 +372,61 @@ internal static class DotnetTestPipeProtocol
         return (executionId, instanceId, level, text);
     }
 
+    public static IReadOnlyList<FileArtifact> DecodeFileArtifacts(byte[] body)
+    {
+        const ushort fileArtifactMessageListFieldId = 3;
+        const ushort fullPathFieldId = 1;
+        const ushort displayNameFieldId = 2;
+        const ushort kindFieldId = 7;
+
+        List<FileArtifact> artifacts = [];
+        using MemoryStream stream = new(body, writable: false);
+        ushort fieldCount = ReadUShort(stream);
+        for (int i = 0; i < fieldCount; i++)
+        {
+            ushort fieldId = ReadUShort(stream);
+            int fieldSize = ReadInt(stream);
+            if (fieldId != fileArtifactMessageListFieldId)
+            {
+                stream.Seek(fieldSize, SeekOrigin.Current);
+                continue;
+            }
+
+            int messageCount = ReadInt(stream);
+            for (int messageIndex = 0; messageIndex < messageCount; messageIndex++)
+            {
+                string? fullPath = null;
+                string? displayName = null;
+                string? kind = null;
+                ushort messageFieldCount = ReadUShort(stream);
+                for (int messageFieldIndex = 0; messageFieldIndex < messageFieldCount; messageFieldIndex++)
+                {
+                    ushort messageFieldId = ReadUShort(stream);
+                    int messageFieldSize = ReadInt(stream);
+                    switch (messageFieldId)
+                    {
+                        case fullPathFieldId:
+                            fullPath = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case displayNameFieldId:
+                            displayName = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        case kindFieldId:
+                            kind = ReadFixedSizeString(stream, messageFieldSize);
+                            break;
+                        default:
+                            stream.Seek(messageFieldSize, SeekOrigin.Current);
+                            break;
+                    }
+                }
+
+                artifacts.Add(new FileArtifact(fullPath, displayName, kind));
+            }
+        }
+
+        return artifacts;
+    }
+
     /// <summary>
     /// Decodes the tests carried by a <see cref="SerializerIds.DiscoveredTestMessages"/> frame,
     /// including the full discovery details (file path, line number, namespace, type/method name,
@@ -620,6 +677,8 @@ internal static class DotnetTestPipeProtocol
 
 /// <summary>A raw decoded pipe frame (serializer id + body bytes, no further decoding).</summary>
 internal sealed record RawMessage(int SerializerId, byte[] Body);
+
+internal sealed record FileArtifact(string? FullPath, string? DisplayName, string? Kind);
 
 /// <summary>
 /// A fully decoded discovered test message: the complete discovery object the SDK needs to build the

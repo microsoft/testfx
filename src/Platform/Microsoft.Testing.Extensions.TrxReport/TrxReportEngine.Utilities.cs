@@ -21,16 +21,12 @@ internal sealed partial class TrxReportEngine
         => GuidFromString(string.Join("\0", inputPaths.Select(Path.GetFullPath).OrderBy(path => path, StringComparer.Ordinal)));
 
     internal static Guid CreateMergeRunId(IReadOnlyList<string> inputPaths, IReadOnlyList<string?> executionIds)
-    {
-        _ = inputPaths.Count == executionIds.Count
-            ? true
+        => inputPaths.Count == executionIds.Count
+            ? GuidFromString(string.Join(
+                "\0",
+                inputPaths.Select((path, index) => $"{Path.GetFullPath(path)}\0{executionIds[index]}")
+                    .OrderBy(value => value, StringComparer.Ordinal)))
             : throw new ArgumentException("Input paths and execution IDs must have the same count.", nameof(executionIds));
-
-        return GuidFromString(string.Join(
-            "\0",
-            inputPaths.Select((path, index) => $"{Path.GetFullPath(path)}\0{executionIds[index]}")
-                .OrderBy(value => value, StringComparer.Ordinal)));
-    }
 
     // From xml spec (http://www.w3.org/TR/xml/#charsets) valid chars:
     // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
