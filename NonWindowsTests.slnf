@@ -32,6 +32,7 @@
       "src\\Platform\\Microsoft.Testing.Extensions.VideoRecorder\\Microsoft.Testing.Extensions.VideoRecorder.csproj",
       "src\\Platform\\Microsoft.Testing.Platform.AI\\Microsoft.Testing.Platform.AI.csproj",
       "src\\Platform\\Microsoft.Testing.Platform.MSBuild\\Microsoft.Testing.Platform.MSBuild.csproj",
+      "src\\Platform\\Microsoft.Testing.Platform.ServerClient\\Microsoft.Testing.Platform.ServerClient.csproj",
       "src\\Platform\\Microsoft.Testing.Platform\\Microsoft.Testing.Platform.csproj",
       "src\\TestFramework\\TestFramework.Extensions\\TestFramework.Extensions.csproj",
       "src\\TestFramework\\TestFramework.SourceGeneration\\TestFramework.SourceGeneration.csproj",
@@ -42,6 +43,7 @@
       "test\\UnitTests\\Microsoft.Testing.Extensions.UnitTests\\Microsoft.Testing.Extensions.UnitTests.csproj",
       "test\\UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests\\Microsoft.Testing.Extensions.VSTestBridge.UnitTests.csproj",
       "test\\UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests\\Microsoft.Testing.Platform.MSBuild.UnitTests.csproj",
+      "test\\UnitTests\\Microsoft.Testing.Platform.ServerClient.UnitTests\\Microsoft.Testing.Platform.ServerClient.UnitTests.csproj",
       "test\\UnitTests\\Microsoft.Testing.Platform.UnitTests\\Microsoft.Testing.Platform.UnitTests.csproj",
       "test\\Utilities\\Microsoft.Testing.TestInfrastructure\\Microsoft.Testing.TestInfrastructure.csproj"
     ]
