@@ -72,7 +72,7 @@ internal sealed partial class AnsiTerminalTestProgressFrame
 
         terminal.Append(' ');
         charsTaken++;
-        AnsiTerminalTextLayoutHelper.AppendToWidth(terminal, progress.AssemblyName, nonReservedWidth, ref charsTaken);
+        AppendToWidth(terminal, progress.AssemblyName, nonReservedWidth, ref charsTaken);
 
         if (charsTaken < nonReservedWidth && (progress.TargetFramework != null || progress.Architecture != null))
         {
@@ -132,7 +132,7 @@ internal sealed partial class AnsiTerminalTestProgressFrame
         terminal.Append("  ");
         charsTaken += 2;
 
-        AnsiTerminalTextLayoutHelper.AppendToWidth(terminal, detail.Text, nonReservedWidth, ref charsTaken);
+        AppendToWidth(terminal, detail.Text, nonReservedWidth, ref charsTaken);
 
         terminal.SetCursorHorizontal(Width - durationString.Length);
         terminal.Append(durationString);
@@ -144,7 +144,7 @@ internal sealed partial class AnsiTerminalTestProgressFrame
         int availableWidth = Math.Max(0, Width - 1);
         if (availableWidth > 0)
         {
-            AnsiTerminalTextLayoutHelper.AppendProgressMessageToWidth(terminal, message.Text, availableWidth);
+            AppendProgressMessageToWidth(terminal, message.Text, availableWidth);
         }
     }
 }

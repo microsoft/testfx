@@ -1,14 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.CodeAnalysis;
-
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 
-[Embedded]
-internal static class AnsiTerminalTextLayoutHelper
+internal sealed partial class AnsiTerminalTestProgressFrame
 {
-    internal static void AppendProgressMessageToWidth(AnsiTerminal terminal, string text, int availableWidth)
+    private static void AppendProgressMessageToWidth(AnsiTerminal terminal, string text, int availableWidth)
     {
         List<TextElement> elements = [];
         int totalWidth = 0;
@@ -77,7 +74,7 @@ internal static class AnsiTerminalTextLayoutHelper
         }
     }
 
-    internal static void AppendToWidth(AnsiTerminal terminal, string text, int width, ref int charsTaken)
+    private static void AppendToWidth(AnsiTerminal terminal, string text, int width, ref int charsTaken)
     {
         if (charsTaken + text.Length < width)
         {
