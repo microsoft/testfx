@@ -143,6 +143,10 @@ This is a source-only package: it injects (as internal source) a client for the 
     <Compile Include="$(MTPDir)TestHost\SessionUid.cs" Link="Linked\TestHost\SessionUid.cs" />
     <Compile Include="$(MTPDir)Logging\ServerLogMessage.cs" Link="Linked\Logging\ServerLogMessage.cs" />
     <Compile Include="$(MTPDir)Logging\LogLevel.cs" Link="Linked\Logging\LogLevel.cs" />
+    <!-- TcpMessageHandler takes an ILogger for low-noise transport diagnostics and defaults to NopLogger. -->
+    <Compile Include="$(MTPDir)Logging\ILogger.cs" Link="Linked\Logging\ILogger.cs" />
+    <Compile Include="$(MTPDir)Logging\NopLogger.cs" Link="Linked\Logging\NopLogger.cs" />
+    <Compile Include="$(MTPDir)Logging\LoggingExtensions.cs" Link="Linked\Logging\LoggingExtensions.cs" />
   </ItemGroup>
 
   <!-- Minimal Helpers referenced by the linked serialization/data-model files. -->
