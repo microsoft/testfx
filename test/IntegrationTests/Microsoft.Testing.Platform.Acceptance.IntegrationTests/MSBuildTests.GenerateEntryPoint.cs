@@ -180,6 +180,25 @@ module MicrosoftTestingPlatformEntryPoint =
         Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
         AssertTargetSkippedAsUpToDate(binLog, "_GenerateTestingPlatformEntryPoint");
         AssertTargetSkippedAsUpToDate(binLog, "_GenerateSelfRegisteredExtensions");
+
+        Directory.Delete(Path.Combine(testAsset.TargetAssetPath, "obj"), recursive: true);
+        string selfRegistrationOnlyProperties = $"{taskFolderProperty} -p:GenerateTestingPlatformEntryPoint=false -p:OutputType=Library";
+        await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {selfRegistrationOnlyProperties} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+
+        await using (FileStream stream = new(copiedTaskAssembly, FileMode.Append, FileAccess.Write, FileShare.None))
+        {
+            stream.WriteByte(0);
+        }
+
+        buildResult = await DotnetCli.RunAsync(
+            $"build -c {BuildConfiguration.Debug} {selfRegistrationOnlyProperties} {testAsset.TargetAssetPath} -v:n -nr:false",
+            cancellationToken: TestContext.CancellationToken);
+        binLog = SL.Serialization.Read(buildResult.BinlogPath!);
+
+        Assert.IsEmpty(binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformEntryPointTask"));
+        Assert.HasCount(1, binLog.FindChildrenRecursive<SL.Task>().Where(t => t.Name == "TestingPlatformSelfRegisteredExtensions"));
     }
 
     private static void AssertTargetSkippedAsUpToDate(SL.Build binLog, string targetName)

@@ -111,10 +111,18 @@
   <UsingTask TaskName="Microsoft.Testing.Platform.MSBuild.TestingPlatformEntryPointTask"
          AssemblyFile="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"/>
 
-  <Target Name="_GetTestingPlatformMSBuildTaskFileHash"
-          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_CalculateGenerateSelfRegisteredExtensions"
-          Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' Or '$(GenerateSelfRegisteredExtensions)' == 'true' ">
-    <GetFileHash Files="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll">
+  <Target Name="_GetTestingPlatformMSBuildTaskFileHashForEntryPoint"
+          DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint">
+    <GetFileHash Files="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"
+                 Condition=" '$(GenerateTestingPlatformEntryPoint)' == 'true' And '@(_TestingPlatformMSBuildTaskFileWithHash)' == '' ">
+      <Output TaskParameter="Items" ItemName="_TestingPlatformMSBuildTaskFileWithHash" />
+    </GetFileHash>
+  </Target>
+
+  <Target Name="_GetTestingPlatformMSBuildTaskFileHashForSelfRegisteredExtensions"
+          DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions">
+    <GetFileHash Files="$(MicrosoftTestingPlatformMSBuildTaskFolder)Microsoft.Testing.Platform.MSBuild.dll"
+                 Condition=" '$(GenerateSelfRegisteredExtensions)' == 'true' And '@(_TestingPlatformMSBuildTaskFileWithHash)' == '' ">
       <Output TaskParameter="Items" ItemName="_TestingPlatformMSBuildTaskFileWithHash" />
     </GetFileHash>
   </Target>
@@ -128,7 +136,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GetTestingPlatformMSBuildTaskFileHash">
+  <Target Name="_GenerateTestingPlatformEntryPointFileInputCache" DependsOnTargets="_CalculateGenerateTestingPlatformEntryPoint;_GetTestingPlatformMSBuildTaskFileHashForEntryPoint">
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateTestingPlatformEntryPointInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).gentestingplatformentrypointinputcache.cache</_GenerateTestingPlatformEntryPointInputsCachFilePath>
@@ -222,7 +230,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_GenerateSelfRegisteredExtensionsFileInputCache" DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GetTestingPlatformMSBuildTaskFileHash">
+  <Target Name="_GenerateSelfRegisteredExtensionsFileInputCache" DependsOnTargets="_CalculateGenerateSelfRegisteredExtensions;_GetTestingPlatformMSBuildTaskFileHashForSelfRegisteredExtensions">
     <PropertyGroup>
       <!-- Cache file to check -->
       <_GenerateSelfRegisteredExtensionsInputsCachFilePath>$(IntermediateOutputPath)$(MSBuildProjectName).genautoregisteredextensionsinputcache.cache</_GenerateSelfRegisteredExtensionsInputsCachFilePath>
