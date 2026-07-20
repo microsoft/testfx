@@ -106,6 +106,22 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeTool_UnexpectedPositionalArgument_ReturnsInvalidCommandLine()
+    {
+        var testHost = TestInfrastructure.TestHost.LocateFrom(
+            AssetFixture.TargetAssetPath,
+            AssetName,
+            TargetFrameworks.NetCurrent);
+
+        TestHostResult result = await testHost.ExecuteAsync(
+            "unexpected",
+            toolName: "merge-trx",
+            cancellationToken: TestContext.CancellationToken);
+
+        result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
+    }
+
     private static void WriteMinimalReport(string path, string name)
     {
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";

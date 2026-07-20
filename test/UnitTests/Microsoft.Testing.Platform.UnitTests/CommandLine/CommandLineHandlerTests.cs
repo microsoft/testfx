@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Tools;
 
 using Moq;
 
@@ -136,6 +137,25 @@ public sealed class CommandLineHandlerTests
         // Assert
         Assert.IsFalse(result.IsValid);
         Assert.Contains("Option '--userOption' is declared by multiple providers: 'Microsoft Testing Platform command line provider', 'Microsoft Testing Platform command line provider'", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public async Task ParseAndValidateAsync_ToolOptionDoesNotConflictWithNormalExtension()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse([], new SystemEnvironment());
+        ICommandLineOptionsProvider[] providers =
+        [
+            new ExtensionCommandLineProviderMockValidConfiguration("input"),
+            new ToolCommandLineProviderMock("input"),
+        ];
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            providers,
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsTrue(result.IsValid);
     }
 
     [TestMethod]
@@ -542,6 +562,54 @@ public sealed class CommandLineHandlerTests
         public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
         public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
+    }
+
+#pragma warning disable TPEXP // Tool command-line providers are experimental.
+    private sealed class ToolCommandLineProviderMock(string optionName) : IToolCommandLineOptionsProvider
+    {
+        public string ToolName => "tool";
+
+        public string Uid => nameof(ToolCommandLineProviderMock);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
+            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden: false)];
+
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
+
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => ValidationResult.ValidTask;
+    }
+#pragma warning restore TPEXP
+
+    private sealed class ExtensionCommandLineProviderMockValidConfiguration(string optionName) : ICommandLineOptionsProvider
+    {
+        public string Uid => nameof(ExtensionCommandLineProviderMockValidConfiguration);
+
+        public string Version => "1.0.0";
+
+        public string DisplayName => Uid;
+
+        public string Description => Uid;
+
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
+            => [new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden: false)];
+
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
+
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider

@@ -22,9 +22,10 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
     {
         using FileStream stream = File.OpenRead(path);
         Dictionary<string, string?> values;
+        Dictionary<string, string?> propertiesWithChildren;
         try
         {
-            (values, _) = JsonConfigurationFileParser.Parse(stream);
+            (values, propertiesWithChildren) = JsonConfigurationFileParser.Parse(stream);
         }
         catch (JsonException ex)
         {
@@ -41,6 +42,13 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
             || RoslynString.IsNullOrWhiteSpace(outputDirectory))
         {
             throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
+        }
+
+        if (!propertiesWithChildren.TryGetValue("inputs", out string? inputsJson)
+            || inputsJson is null
+            || !inputsJson.TrimStart().StartsWith("[", StringComparison.Ordinal))
+        {
+            throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInputsMustBeArray);
         }
 
         int[] inputIndices = [.. values.Keys

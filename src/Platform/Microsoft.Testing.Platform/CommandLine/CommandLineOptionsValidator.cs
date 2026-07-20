@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
@@ -46,6 +47,9 @@ internal static class CommandLineOptionsValidator
 
             return InvalidWithCommandLine(commandLineParseResult, stringBuilder.ToTrimmedString());
         }
+
+        extensionCommandLineOptionsProviders =
+            extensionCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider);
 
         var extensionOptionsByProvider = extensionCommandLineOptionsProviders.ToDictionary(p => p, p => p.GetCommandLineOptions());
         if (ValidateExtensionOptionsDoNotContainReservedPrefix(extensionOptionsByProvider) is { IsValid: false } result)

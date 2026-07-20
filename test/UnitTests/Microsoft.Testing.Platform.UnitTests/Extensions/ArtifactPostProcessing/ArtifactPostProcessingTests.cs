@@ -186,6 +186,25 @@ public sealed class ArtifactPostProcessingTests
         }
     }
 
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out" }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": "bad" }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": {} }""")]
+    [TestMethod]
+    public void Manifest_WithInputsThatIsNotArray_ThrowsFormatException(string json)
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, json);
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
     private sealed class StubProcessor(
         string uid,
         IReadOnlyList<string> supportedKinds,

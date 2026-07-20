@@ -62,6 +62,11 @@
         <target state="new">Artifact post-processing manifest input {0} does not have a path.</target>
         <note>{0} is the zero-based input index.</note>
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessingManifestInputsMustBeArray">
+        <source>The artifact post-processing manifest inputs property must be an array.</source>
+        <target state="new">The artifact post-processing manifest inputs property must be an array.</target>
+        <note>Do not localize property name {Locked="inputs"}.</note>
+      </trans-unit>
       <trans-unit id="ArtifactPostProcessingManifestInvalid">
         <source>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</source>
         <target state="new">The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</target>
