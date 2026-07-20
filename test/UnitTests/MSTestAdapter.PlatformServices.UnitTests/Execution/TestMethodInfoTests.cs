@@ -1920,6 +1920,8 @@ public class TestMethodInfoTests : TestContainer
 
         result1.DebugTrace.Should().Be("trace_output");
         result2.DebugTrace.Should().Be("trace_output");
+        result1.LogError.Should().BeNull();
+        result2.LogError.Should().BeNull();
     }
 
     public void Ctor_WhenMethodHasMultipleRetryBaseAttributes_ThrowsTypeInspectionException()
