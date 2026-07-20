@@ -61,20 +61,18 @@ public sealed class AvoidOutRefTestMethodParametersFixer : CodeFixProvider
         DocumentEditor editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         foreach (ParameterSyntax parameter in methodDeclaration.ParameterList.Parameters)
         {
-            int indexToRemove = parameter.Modifiers.IndexOf(SyntaxKind.OutKeyword);
-            if (indexToRemove < 0)
+            if (!parameter.Modifiers.Any(modifier => modifier.IsKind(SyntaxKind.OutKeyword) || modifier.IsKind(SyntaxKind.RefKeyword)))
             {
-                indexToRemove = parameter.Modifiers.IndexOf(SyntaxKind.RefKeyword);
+                continue;
             }
 
-            if (indexToRemove >= 0)
-            {
-                editor.ReplaceNode(parameter, (node, _) =>
-                {
-                    var parameter = (ParameterSyntax)node;
-                    return parameter.WithModifiers(parameter.Modifiers.RemoveAt(indexToRemove)).WithLeadingTrivia(parameter.GetLeadingTrivia());
-                });
-            }
+            SyntaxTokenList filteredModifiers = SyntaxFactory.TokenList(
+                parameter.Modifiers.Where(modifier =>
+                    !modifier.IsKind(SyntaxKind.OutKeyword)
+                    && !modifier.IsKind(SyntaxKind.RefKeyword)
+                    && !modifier.IsKind(SyntaxKind.ReadOnlyKeyword)));
+
+            editor.ReplaceNode(parameter, parameter.WithModifiers(filteredModifiers).WithLeadingTrivia(parameter.GetLeadingTrivia()));
         }
 
         return editor.GetChangedDocument();

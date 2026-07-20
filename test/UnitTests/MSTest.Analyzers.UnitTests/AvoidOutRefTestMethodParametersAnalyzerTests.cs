@@ -327,10 +327,8 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
 
 #if NET
     [TestMethod]
-    public async Task WhenTestMethodHasRefReadonlyParameter_NoDiagnostic()
+    public async Task WhenTestMethodHasRefReadonlyParameter_Diagnostic()
     {
-        // 'ref readonly' parameters have RefKind.RefReadOnlyParameter, which is neither
-        // RefKind.Out nor RefKind.Ref, so the analyzer must not report a diagnostic.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -338,13 +336,26 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
             public class MyTestClass
             {
                 [TestMethod]
-                public void TestMethod1(ref readonly int value)
+                public void [|TestMethod1|](ref readonly int value)
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyCodeFixAsync(code, code);
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1(int value)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 #endif
 }

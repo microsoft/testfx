@@ -640,9 +640,8 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
     [TestMethod]
     public async Task WhenAssertThrowsReceivesNonLambdaDelegate_CSharp_NoDiagnostic()
     {
-        // When a delegate variable (not an inline lambda) is passed to Assert.Throws, the
-        // delegate creation wraps an IMethodReferenceOperation, not IAnonymousFunctionOperation,
-        // so the analyzer's early-return guard fires and no diagnostic is emitted.
+        // An existing delegate local is an ILocalReferenceOperation, not an
+        // IDelegateCreationOperation, so the analyzer's early-return guard fires.
         string code = """
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
