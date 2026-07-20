@@ -71,7 +71,6 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
         List<InputArtifact> unmatchedInputs = [.. manifest.Inputs];
         List<ProcessedArtifact> outputs = [];
-        bool failed = false;
         foreach (IArtifactPostProcessor processor in _processors)
         {
             InputArtifact[] matchingInputs = [.. unmatchedInputs.Where(input => Matches(processor, input))];
@@ -94,8 +93,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
             }
             catch (Exception ex)
             {
-                failed = true;
-                await DisplayErrorAsync(
+                await DisplayWarningAsync(
                     string.Format(CultureInfo.CurrentCulture, PlatformResources.ArtifactPostProcessingDispatcherProcessorFailed, processor.Uid, ex.Message),
                     cancellationToken).ConfigureAwait(false);
             }
@@ -117,7 +115,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
                 messages)).ConfigureAwait(false);
         }
 
-        return failed ? (int)ExitCode.GenericFailure : (int)ExitCode.Success;
+        return (int)ExitCode.Success;
     }
 
     internal static ProcessedArtifact ValidateProcessedArtifact(
@@ -147,6 +145,9 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
     private Task DisplayErrorAsync(string message, CancellationToken cancellationToken)
         => _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(message), cancellationToken);
+
+    private Task DisplayWarningAsync(string message, CancellationToken cancellationToken)
+        => _outputDevice.DisplayAsync(this, new WarningMessageOutputDeviceData(message), cancellationToken);
 
     private async Task WarnAboutProcessorConflictsAsync(CancellationToken cancellationToken)
     {
