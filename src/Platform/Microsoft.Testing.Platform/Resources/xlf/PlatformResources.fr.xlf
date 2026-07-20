@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../PlatformResources.resx">
     <body>
@@ -125,7 +125,6 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">La lecture du fichier de réponse « {0} » a échoué. {1}.</target>
-        <target state="needs-review-translation">La lecture du fichier de réponse « {0} » a échoué. {1}.</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
@@ -171,13 +170,11 @@
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
         <target state="translated">Nous n’avons pas pu créer l’instance de l’extension composite « {0} ». Consultez l’exception interne pour obtenir plus d’informations.</target>
-        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
         <target state="translated">La fabrique de l’extension composite « {0} » a renvoyé une instance nulle.</target>
-        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -931,7 +928,6 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
         <target state="translated">Nous n’avons pas pu vider les journaux dans le fichier journal « {0} » avant le délai d’expiration de « {1} » secondes. Le fichier journal peut être incomplet.</target>
-        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -992,7 +988,6 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="translated">Une exception inattendue s’est produite dans la boucle d’écriture« FileLogger » du fichier journal « {0} ». Le fichier journal peut être incomplet.
         <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>

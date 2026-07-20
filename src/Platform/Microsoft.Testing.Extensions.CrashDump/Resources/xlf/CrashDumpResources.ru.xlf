@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../CrashDumpResources.resx">
     <body>
@@ -86,7 +86,6 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileOpenError">
         <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
-        <target state="translated">Не удалось инициализировать файл последовательности сбоя "{0}": {1}. Сведения о последовательности тестирования будет недоступна в случае сбоя тестового узла.</target>
         <target state="new">Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</target>
         <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
       </trans-unit>
@@ -98,7 +97,6 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       <trans-unit id="CrashDumpSequenceFileWriteError">
         <source>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</source>
         <target state="translated">Не удалось записать файл последовательности сбоя "{0}": {1}. Файл последовательности сбоя может быть неполным.</target>
-        <target state="new">Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</target>
         <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">

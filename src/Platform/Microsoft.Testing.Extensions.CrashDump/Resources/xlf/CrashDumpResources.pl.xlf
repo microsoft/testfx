@@ -87,7 +87,6 @@ Obsługuje następujące symbole zastępcze: {pname} (nazwa pliku wykonywalnego 
       <trans-unit id="CrashDumpSequenceFileOpenError">
         <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
         <target state="translated">Nie można zainicjować pliku sekwencji awarii „{0}”: {1}. Informacje o sekwencji testów nie będą dostępne w przypadku awarii hosta testowego.</target>
-        <target state="new">Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</target>
         <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
@@ -98,7 +97,6 @@ Obsługuje następujące symbole zastępcze: {pname} (nazwa pliku wykonywalnego 
       <trans-unit id="CrashDumpSequenceFileWriteError">
         <source>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</source>
         <target state="translated">Nie można zapisać w pliku sekwencji awarii „{0}”: {1}. Plik sekwencji awarii może być niekompletny.</target>
-        <target state="new">Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</target>
         <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">
