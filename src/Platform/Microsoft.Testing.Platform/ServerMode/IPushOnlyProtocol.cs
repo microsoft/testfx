@@ -1,11 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.IPC;
+
 namespace Microsoft.Testing.Platform.ServerMode;
 
 internal interface IPushOnlyProtocol : IDisposable
 {
     bool IsServerMode { get; }
+
+    string InstanceId { get; }
 
     // True once the SDK advertised a reverse "server control" pipe during the handshake, meaning it can push
     // server-initiated signals (e.g. session cancellation) to the test host. Only meaningful after a successful
@@ -23,6 +27,8 @@ internal interface IPushOnlyProtocol : IDisposable
     Task StartServerControlChannelAsync(Func<CancellationToken, Task> onCancelSessionRequestedAsync);
 
     Task<IPushOnlyProtocolConsumer> GetDataConsumerAsync();
+
+    Task SendMessageAsync(IRequest message);
 
     Task OnExitAsync();
 }

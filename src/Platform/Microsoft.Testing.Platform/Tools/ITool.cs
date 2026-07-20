@@ -5,9 +5,26 @@ using Microsoft.Testing.Platform.Extensions;
 
 namespace Microsoft.Testing.Platform.Tools;
 
-internal interface ITool : IExtension
+/// <summary>
+/// Represents a non-test command that can be invoked through <c>--tool</c>.
+/// </summary>
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+public interface ITool : IExtension
 {
+    /// <summary>
+    /// Gets the command-line name of the tool.
+    /// </summary>
     string Name { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the tool is omitted from informational output.
+    /// </summary>
+    bool IsHidden { get; }
+
+    /// <summary>
+    /// Runs the tool.
+    /// </summary>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>The process exit code.</returns>
     Task<int> RunAsync(CancellationToken cancellationToken);
 }

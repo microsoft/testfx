@@ -4,6 +4,51 @@ const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.TrxArt
 const Microsoft.Testing.Platform.IPC.FileArtifactMessageFieldsId.Kind = 7 -> ushort
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.Merge(System.Collections.Generic.IReadOnlyList<System.Xml.Linq.XDocument!>! inputReports, System.Guid runId, string! runName) -> System.Xml.Linq.XDocument!
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.MergeToFileAsync(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath, System.Guid runId, string! runName, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.CreateCommandLine() -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.CreateTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.ToolTrxMergeFactory() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.ToolTrxMergeFactory.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.TrxArtifactPostProcessor() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxArtifactPostProcessor.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.IsHidden.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Name.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.TrxMergeTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Version.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.IsHidden.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.Description.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.ToolName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.TrxMergeToolCommandLine(Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.Version.get -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.ToolName = "merge-trx" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.InputOptionName = "input" -> string!
+const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.OutputOptionName = "output-trx" -> string!
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.CreateMergeRunId(System.Collections.Generic.IReadOnlyList<string!>! inputPaths) -> System.Guid
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
 Microsoft.Testing.Platform.Helpers.DisposeHelper
 static Microsoft.Testing.Platform.Helpers.DisposeHelper.DisposeAsync(object? obj) -> System.Threading.Tasks.Task!

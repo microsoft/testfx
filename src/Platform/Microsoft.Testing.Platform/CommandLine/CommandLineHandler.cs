@@ -200,14 +200,15 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         async Task DisplayRegisteredToolsInfoAsync(IOutputDevice outputDevice, IReadOnlyList<ITool>? availableTools, List<IToolCommandLineOptionsProvider> toolExtensions, CancellationToken cancellationToken)
         {
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered tools:"), cancellationToken).ConfigureAwait(false);
-            if (availableTools is null || availableTools.Count == 0)
+            ITool[] visibleTools = availableTools is null ? [] : [.. availableTools.Where(tool => !tool.IsHidden)];
+            if (visibleTools.Length == 0)
             {
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered tools."), cancellationToken).ConfigureAwait(false);
             }
             else
             {
                 var groupedToolExtensions = toolExtensions.GroupBy(x => x.ToolName).ToDictionary(x => x.Key, x => x.ToList());
-                foreach (ITool tool in availableTools.OrderBy(x => x.Uid))
+                foreach (ITool tool in visibleTools.OrderBy(x => x.Uid))
                 {
                     await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"  {tool.Uid}"), cancellationToken).ConfigureAwait(false);
                     await outputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Command: {tool.Name}"), cancellationToken).ConfigureAwait(false);

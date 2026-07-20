@@ -33,3 +33,31 @@ Microsoft.Testing.Platform.OutputDevice.SessionMessageOutputDeviceData.SessionMe
 Microsoft.Testing.Platform.Services.IArtifactNamingService
 Microsoft.Testing.Platform.Services.IArtifactNamingService.ResolveFileName(string! template) -> string!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetArtifactNamingService(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Services.IArtifactNamingService!
+[TPEXP]Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+[TPEXP]Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.Tools.get -> Microsoft.Testing.Platform.Tools.IToolsManager!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager.AddArtifactPostProcessor(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! factory) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.ProcessAsync(System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs, string! outputDirectory, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact?>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedFileExtensionsFallback.get -> System.Collections.Generic.IReadOnlyList<string!>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor.SupportedKinds.get -> System.Collections.Generic.IReadOnlyList<string!>!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Architecture.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.ExecutionId.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.InputArtifact(string! path, string? kind, string? producingTestModule, string? targetFramework, string? architecture, string? executionId) -> void
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Kind.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.Path.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.ProducingTestModule.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact.TargetFramework.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Description.get -> string?
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.DisplayName.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Kind.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Path.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.ProcessedArtifact(string! path, string! kind, string! displayName, string? description) -> void
+[TPEXP]Microsoft.Testing.Platform.Tools.ITool
+[TPEXP]Microsoft.Testing.Platform.Tools.ITool.IsHidden.get -> bool
+[TPEXP]Microsoft.Testing.Platform.Tools.ITool.Name.get -> string!
+[TPEXP]Microsoft.Testing.Platform.Tools.ITool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager
+[TPEXP]Microsoft.Testing.Platform.Tools.IToolsManager.AddTool(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Tools.ITool!>! toolFactory) -> void

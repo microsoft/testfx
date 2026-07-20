@@ -6,6 +6,7 @@ using Microsoft.Testing.Platform.AI;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
@@ -70,7 +71,11 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
     internal ITelemetryManager Telemetry => _testHostBuilder.Telemetry;
 
-    internal IToolsManager Tools => _testHostBuilder.Tools;
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public IArtifactPostProcessingManager ArtifactPostProcessing => _testHostBuilder.ArtifactPostProcessing;
+
+    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
+    public IToolsManager Tools => _testHostBuilder.Tools;
 
     public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,

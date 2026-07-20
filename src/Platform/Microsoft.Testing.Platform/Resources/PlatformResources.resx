@@ -121,6 +121,46 @@
     <value>Browser platform is only supported on .NET 7.0 or greater.</value>
     <comment>{Locked=".NET 7.0"}</comment>
   </data>
+  <data name="ArtifactPostProcessingDispatcherCommandLineDescription" xml:space="preserve">
+    <value>Internal command line for artifact post-processing.</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherDescription" xml:space="preserve">
+    <value>Dispatches artifact post-processing jobs selected by dotnet test.</value>
+    <comment>Do not localize command name {Locked="dotnet test"}.</comment>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherDisplayName" xml:space="preserve">
+    <value>Artifact post-processing dispatcher</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherManifestOptionDescription" xml:space="preserve">
+    <value>Path to the artifact post-processing manifest.</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherManifestNotFound" xml:space="preserve">
+    <value>The artifact post-processing manifest does not exist.</value>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherProcessorConflict" xml:space="preserve">
+    <value>Multiple artifact post-processors match '{0}'. The first registered processor, '{1}', will be used.</value>
+    <comment>{0} is an artifact kind or file extension. {1} is an extension UID.</comment>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherProcessorFailed" xml:space="preserve">
+    <value>Artifact post-processor '{0}' failed: {1}</value>
+    <comment>{0} is the processor UID. {1} is the exception message.</comment>
+  </data>
+  <data name="ArtifactPostProcessingDispatcherRequiresPipe" xml:space="preserve">
+    <value>The artifact post-processing dispatcher requires a dotnet test pipe.</value>
+    <comment>Do not localize command name {Locked="dotnet test"}.</comment>
+  </data>
+  <data name="ArtifactPostProcessingManifestInputMissingPath" xml:space="preserve">
+    <value>Artifact post-processing manifest input {0} does not have a path.</value>
+    <comment>{0} is the zero-based input index.</comment>
+  </data>
+  <data name="ArtifactPostProcessingManifestInvalid" xml:space="preserve">
+    <value>The artifact post-processing manifest must have schemaVersion 1 and an outputDirectory.</value>
+    <comment>Do not localize property names {Locked="schemaVersion"}{Locked="outputDirectory"}.</comment>
+  </data>
+  <data name="ArtifactPostProcessingManifestReadError" xml:space="preserve">
+    <value>Cannot read the artifact post-processing manifest: {0}</value>
+    <comment>{0} is the exception message.</comment>
+  </data>
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
   </data>

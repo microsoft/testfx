@@ -17,6 +17,9 @@ internal sealed partial class TrxReportEngine
         return new Guid(hash);
     }
 
+    internal static Guid CreateMergeRunId(IReadOnlyList<string> inputPaths)
+        => GuidFromString(string.Join("\0", inputPaths.Select(Path.GetFullPath).OrderBy(path => path, StringComparer.Ordinal)));
+
     // From xml spec (http://www.w3.org/TR/xml/#charsets) valid chars:
     // #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
     // surrogate pairs represent the [#x10000-#x10FFFF] range and are valid.

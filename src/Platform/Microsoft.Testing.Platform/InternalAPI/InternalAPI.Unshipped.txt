@@ -1,4 +1,48 @@
 #nullable enable
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingHandshakeProperties
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.AddArtifactPostProcessor(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! factory) -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.ArtifactPostProcessingManager() -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.BuildAsync(System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>!>!
+Microsoft.Testing.Platform.Hosts.ITestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+[TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+[TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.Tools.get -> Microsoft.Testing.Platform.Tools.IToolsManager!
+Microsoft.Testing.Platform.Hosts.TestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorExtensionsLegacy = 15 -> byte
+const Microsoft.Testing.Platform.IPC.HandshakeMessagePropertyNames.SupportedPostProcessorKinds = 14 -> byte
+static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingHandshakeProperties.Create(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors) -> System.Collections.Generic.IReadOnlyDictionary<byte, string!>?
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ArtifactPostProcessingDispatcherTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors, Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol? protocol, Microsoft.Testing.Platform.Helpers.IEnvironment! environment, Microsoft.Testing.Platform.OutputDevice.IOutputDevice! outputDevice) -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.IsHidden.get -> bool
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Name.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Uid.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Version.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ArtifactPostProcessingDispatcherToolCommandLine() -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.Description.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.DisplayName.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ToolName.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.Uid.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.Version.get -> string!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.ArtifactPostProcessingManifest(string! outputDirectory, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> void
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.Inputs.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>!
+Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.OutputDirectory.get -> string!
+static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest.Load(string! path) -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManifest!
+const Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ToolName = "internal-merge-artifacts" -> string!
+const Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ManifestOptionName = "manifest" -> string!
+const Microsoft.Testing.Platform.IPC.HandshakeMessageExecutionModes.Tool = "tool" -> string!
+const Microsoft.Testing.Platform.IPC.HandshakeMessageHostTypes.ArtifactPostProcessor = "ArtifactPostProcessor" -> string!
+Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol.InstanceId.get -> string!
+Microsoft.Testing.Platform.ServerMode.IPushOnlyProtocol.SendMessageAsync(Microsoft.Testing.Platform.IPC.IRequest! message) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal.RenderProgress(Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]! messages) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame.Render(Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminalTestProgressFrame! previousFrame, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progress, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]! messages, Microsoft.Testing.Platform.OutputDevice.Terminal.AnsiTerminal! terminal) -> void
 Microsoft.Testing.Platform.OutputDevice.Terminal.CursorProgressRenderer.OnTick(Microsoft.Testing.Platform.OutputDevice.Terminal.ITerminal! terminal, Microsoft.Testing.Platform.OutputDevice.Terminal.TestProgressState?[]! progressItems, Microsoft.Testing.Platform.OutputDevice.Terminal.TerminalProgressMessageState![]? messages = null) -> void

@@ -117,9 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
-    <value>TRX report generator only works with builders of type 'Microsoft.Testing.Platform.Builder.TestApplicationBuilder'</value>
-    <comment>Do not localize {Locked="Microsoft.Testing.Platform.Builder.TestApplicationBuilder"}.</comment>
+  <data name="TrxArtifactPostProcessorDescription" xml:space="preserve">
+    <value>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</value>
+    <comment>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</comment>
+  </data>
+  <data name="TrxArtifactPostProcessorDisplayName" xml:space="preserve">
+    <value>TRX report merger</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxComparerToolBaselineFileOptionDescription" xml:space="preserve">
     <value>The baseline TRX file</value>
@@ -148,6 +152,42 @@
   <data name="TrxFileExistsAndWillBeOverwritten" xml:space="preserve">
     <value>Warning: Trx file '{0}' already exists and will be overwritten.</value>
     <comment>{0} is the {Locked="TRX"} report file path.</comment>
+  </data>
+  <data name="TrxMergeToolDescription" xml:space="preserve">
+    <value>Merges multiple TRX files into one from the command line</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolDisplayName" xml:space="preserve">
+    <value>TRX report merge tool</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolInputOptionDescription" xml:space="preserve">
+    <value>Two or more input TRX file paths</value>
+    <comment>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolInvalidInputs" xml:space="preserve">
+    <value>'--input' expects two or more existing TRX file paths</value>
+    <comment>Do not localize option name {Locked="--input"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolInvalidOutput" xml:space="preserve">
+    <value>'--output-trx' expects one TRX file path</value>
+    <comment>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergeToolOutputOptionDescription" xml:space="preserve">
+    <value>The output TRX file path</value>
+    <comment>Do not localize option name {Locked="--output-trx"} or format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergedArtifactDescription" xml:space="preserve">
+    <value>{0} TRX files merged</value>
+    <comment>{0} is the number of merged files. Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergedArtifactDisplayName" xml:space="preserve">
+    <value>TRX report (merged)</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
+  <data name="TrxMergedRunName" xml:space="preserve">
+    <value>Merged TRX report</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
   </data>
   <data name="TrxReportArtifactDescription" xml:space="preserve">
     <value>Test session</value>
