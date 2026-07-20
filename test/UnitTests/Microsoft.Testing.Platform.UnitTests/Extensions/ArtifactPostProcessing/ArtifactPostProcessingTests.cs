@@ -188,6 +188,7 @@ public sealed class ArtifactPostProcessingTests
 
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out" }""")]
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": "bad" }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": "[]" }""")]
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": {} }""")]
     [TestMethod]
     public void Manifest_WithInputsThatIsNotArray_ThrowsFormatException(string json)
