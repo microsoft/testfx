@@ -101,6 +101,23 @@ internal static class CommandLineOptionsValidator
         return await ValidateConfigurationAsync(extensionOptionsByProvider.Keys, systemOptionsByProvider.Keys, commandLineOptions).ConfigureAwait(false);
     }
 
+    internal static ValidationResult ValidateToolProviders(
+        IEnumerable<IToolCommandLineOptionsProvider> toolProviders,
+        IEnumerable<ICommandLineOptionsProvider> systemProviders)
+    {
+        var toolOptionsByProvider =
+            toolProviders.ToDictionary(provider => (ICommandLineOptionsProvider)provider, provider => provider.GetCommandLineOptions());
+        var systemOptionsByProvider =
+            systemProviders.ToDictionary(provider => provider, provider => provider.GetCommandLineOptions());
+
+        ValidationResult reservedPrefixResult = ValidateExtensionOptionsDoNotContainReservedPrefix(toolOptionsByProvider);
+        return !reservedPrefixResult.IsValid
+            ? reservedPrefixResult
+            : ValidateExtensionOptionsDoNotContainReservedOptions(toolOptionsByProvider, systemOptionsByProvider) is { IsValid: false } reservedOptionResult
+                ? reservedOptionResult
+                : ValidateOptionsAreNotDuplicated(toolOptionsByProvider, systemOptionsByProvider);
+    }
+
     private static ValidationResult ValidateExtensionOptionsDoNotContainReservedPrefix(
         Dictionary<ICommandLineOptionsProvider, IReadOnlyCollection<CommandLineOption>> extensionOptionsByProvider)
     {

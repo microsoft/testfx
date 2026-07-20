@@ -69,6 +69,15 @@ internal sealed class ToolsHost(
             {
                 if (tool.Name == toolNameToRun)
                 {
+                    ValidationResult providerValidationResult = CommandLineOptionsValidator.ValidateToolProviders(
+                        GetToolCommandLineOptionsProviders(tool),
+                        _commandLineHandler.SystemCommandLineOptionsProviders);
+                    if (!providerValidationResult.IsValid)
+                    {
+                        await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(providerValidationResult.ErrorMessage), cancellationToken).ConfigureAwait(false);
+                        return (int)ExitCode.InvalidCommandLine;
+                    }
+
                     if (UnknownOptions(out string? unknownOptionsError, tool))
                     {
                         await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(unknownOptionsError), cancellationToken).ConfigureAwait(false);

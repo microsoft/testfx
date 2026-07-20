@@ -42,4 +42,40 @@ public sealed class ToolsHostTests
         Assert.IsFalse(result.IsValid);
         Assert.AreEqual("invalid combination", result.ErrorMessage);
     }
+
+    [TestMethod]
+    public void ValidateToolProviders_DuplicateToolOption_ReturnsInvalid()
+    {
+        IToolCommandLineOptionsProvider first = CreateToolProvider("input");
+        IToolCommandLineOptionsProvider second = CreateToolProvider("input");
+
+        ValidationResult result = CommandLineOptionsValidator.ValidateToolProviders([first, second], []);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("declared by multiple providers", result.ErrorMessage);
+    }
+
+    [TestMethod]
+    public void ValidateToolProviders_SystemOptionCollision_ReturnsInvalid()
+    {
+        IToolCommandLineOptionsProvider toolProvider = CreateToolProvider("system-option");
+        var systemProvider = new Mock<ICommandLineOptionsProvider>();
+        systemProvider.Setup(provider => provider.GetCommandLineOptions())
+            .Returns([new("system-option", "system", ArgumentArity.Zero, isHidden: false)]);
+        systemProvider.SetupGet(provider => provider.DisplayName).Returns("system");
+
+        ValidationResult result = CommandLineOptionsValidator.ValidateToolProviders([toolProvider], [systemProvider.Object]);
+
+        Assert.IsFalse(result.IsValid);
+        Assert.Contains("reserved", result.ErrorMessage);
+    }
+
+    private static IToolCommandLineOptionsProvider CreateToolProvider(string optionName)
+    {
+        var provider = new Mock<IToolCommandLineOptionsProvider>();
+        provider.Setup(candidate => candidate.GetCommandLineOptions())
+            .Returns([new(optionName, optionName, ArgumentArity.ExactlyOne, isHidden: false)]);
+        provider.SetupGet(candidate => candidate.DisplayName).Returns(Guid.NewGuid().ToString());
+        return provider.Object;
+    }
 }
