@@ -358,4 +358,27 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzerTests
         await VerifyCS.VerifyCodeFixAsync(code, fixedCode);
     }
 #endif
+
+    [TestMethod]
+    public async Task WhenParameterTypeAndNameAreEscapedKeywords_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public sealed class @ref
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void TestMethod1(@ref @readonly)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

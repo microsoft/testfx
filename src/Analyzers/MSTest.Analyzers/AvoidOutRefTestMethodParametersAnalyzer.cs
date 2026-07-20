@@ -72,7 +72,7 @@ public sealed class AvoidOutRefTestMethodParametersAnalyzer : DiagnosticAnalyzer
         || parameter.DeclaringSyntaxReferences.Any(reference =>
         {
             SyntaxNode parameterSyntax = reference.GetSyntax(cancellationToken);
-            return parameterSyntax.ChildTokens().Any(token => token.ValueText is "ref")
-                && parameterSyntax.ChildTokens().Any(token => token.ValueText is "readonly");
+            return parameterSyntax.ChildTokens().Any(token => token.Text is "ref")
+                && parameterSyntax.ChildTokens().Any(token => token.Text is "readonly");
         });
 }
