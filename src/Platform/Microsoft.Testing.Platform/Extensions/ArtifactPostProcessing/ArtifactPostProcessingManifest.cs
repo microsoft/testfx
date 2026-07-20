@@ -30,6 +30,10 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
         {
             throw new FormatException(ex.Message, ex);
         }
+        catch (InvalidCastException ex)
+        {
+            throw new FormatException(ex.Message, ex);
+        }
 
         if (!values.TryGetValue("schemaVersion", out string? schemaVersion)
             || schemaVersion != "1"
@@ -42,7 +46,7 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
         int[] inputIndices = [.. values.Keys
             .Where(key => key.StartsWith("inputs:", StringComparison.Ordinal))
             .Select(key => key.Split(':'))
-            .Where(parts => parts.Length >= 3 && int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out _))
+            .Where(parts => parts.Length >= 2 && int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out _))
             .Select(parts => int.Parse(parts[1], CultureInfo.InvariantCulture))
             .Distinct()
             .OrderBy(index => index)];

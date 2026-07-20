@@ -35,8 +35,14 @@ internal sealed class TrxArtifactPostProcessor : IArtifactPostProcessor
             return null;
         }
 
-        string[] inputPaths = [.. inputs.Select(input => input.Path)];
-        Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. inputs.Select(input => input.ExecutionId)]);
+        InputArtifact[] orderedInputs =
+        [
+            .. inputs
+                .OrderBy(input => Path.GetFullPath(input.Path), StringComparer.Ordinal)
+                .ThenBy(input => input.ExecutionId, StringComparer.Ordinal),
+        ];
+        string[] inputPaths = [.. orderedInputs.Select(input => input.Path)];
+        Guid runId = TrxReportEngine.CreateMergeRunId(inputPaths, [.. orderedInputs.Select(input => input.ExecutionId)]);
         string outputPath = Path.Combine(outputDirectory, $"merged-{runId:N}.trx");
         await TrxReportEngine.MergeToFileAsync(
             inputPaths,

@@ -44,8 +44,8 @@ public sealed class TrxArtifactPostProcessorTests
 
             ProcessedArtifact? output = await processor.ProcessAsync(
                 [
-                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, null),
-                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, null),
+                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-1"),
+                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
                 ],
                 directory,
                 CancellationToken.None);
@@ -55,6 +55,18 @@ public sealed class TrxArtifactPostProcessorTests
             Assert.MatchesRegex(new Regex("^merged-[0-9a-f]{32}\\.trx$", RegexOptions.CultureInvariant), Path.GetFileName(output.Path));
             Assert.IsTrue(File.Exists(output.Path));
             Assert.AreEqual("TestRun", XDocument.Load(output.Path).Root!.Name.LocalName);
+
+            byte[] firstMerge = File.ReadAllBytes(output.Path);
+            ProcessedArtifact? retriedOutput = await processor.ProcessAsync(
+                [
+                    new InputArtifact(secondPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-2"),
+                    new InputArtifact(firstPath, TrxReportEngine.TrxArtifactKind, null, null, null, "execution-1"),
+                ],
+                directory,
+                CancellationToken.None);
+
+            Assert.IsNotNull(retriedOutput);
+            Assert.AreSequenceEqual(firstMerge, File.ReadAllBytes(retriedOutput.Path));
         }
         finally
         {
