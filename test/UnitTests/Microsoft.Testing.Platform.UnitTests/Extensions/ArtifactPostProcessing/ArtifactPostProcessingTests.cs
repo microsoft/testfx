@@ -160,6 +160,26 @@ public sealed class ArtifactPostProcessingTests
         }
     }
 
+    [DataRow("""{ "schemaVersion": "1", "outputDirectory": "out", "inputs": [] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": 123, "inputs": [] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": 123 }] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "kind": 123 }] }""")]
+    [TestMethod]
+    public void Manifest_WithInvalidValueType_ThrowsFormatException(string json)
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, json);
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
     [TestMethod]
     public void Manifest_WithMalformedJson_ThrowsFormatException()
     {

@@ -36,9 +36,11 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
             throw new FormatException(ex.Message, ex);
         }
 
-        if (!values.TryGetValue("schemaVersion", out string? schemaVersion)
-            || schemaVersion != "1"
+        if (!propertiesWithChildren.TryGetValue("schemaVersion", out string? schemaVersionJson)
+            || schemaVersionJson?.Trim() != "1"
             || !values.TryGetValue("outputDirectory", out string? outputDirectory)
+            || !propertiesWithChildren.TryGetValue("outputDirectory", out string? outputDirectoryJson)
+            || !IsJsonString(outputDirectoryJson)
             || RoslynString.IsNullOrWhiteSpace(outputDirectory))
         {
             throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
@@ -63,27 +65,38 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
         foreach (int index in inputIndices)
         {
             string prefix = $"inputs:{index}:";
-            if (!values.TryGetValue(prefix + "path", out string? inputPath) || RoslynString.IsNullOrWhiteSpace(inputPath))
+            if (!values.TryGetValue(prefix + "path", out string? inputPath)
+                || !propertiesWithChildren.TryGetValue(prefix + "path", out string? inputPathJson)
+                || !IsJsonString(inputPathJson)
+                || RoslynString.IsNullOrWhiteSpace(inputPath))
             {
                 throw new FormatException(string.Format(CultureInfo.CurrentCulture, PlatformResources.ArtifactPostProcessingManifestInputMissingPath, index));
             }
 
             inputs.Add(new InputArtifact(
                 inputPath,
-                GetValue(values, prefix + "kind"),
-                GetValue(values, prefix + "producingTestModule"),
-                GetValue(values, prefix + "targetFramework"),
-                GetValue(values, prefix + "architecture"),
-                GetValue(values, prefix + "executionId")));
+                GetValue(values, propertiesWithChildren, prefix + "kind"),
+                GetValue(values, propertiesWithChildren, prefix + "producingTestModule"),
+                GetValue(values, propertiesWithChildren, prefix + "targetFramework"),
+                GetValue(values, propertiesWithChildren, prefix + "architecture"),
+                GetValue(values, propertiesWithChildren, prefix + "executionId")));
         }
 
         return new ArtifactPostProcessingManifest(outputDirectory, inputs);
     }
 
-    private static string? GetValue(Dictionary<string, string?> values, string key)
-        => values.TryGetValue(key, out string? value)
-            && !RoslynString.IsNullOrEmpty(value)
-            && value != "null"
-                ? value
-                : null;
+    private static string? GetValue(
+        Dictionary<string, string?> values,
+        Dictionary<string, string?> propertiesWithChildren,
+        string key)
+        => !values.TryGetValue(key, out string? value)
+            || RoslynString.IsNullOrEmpty(value)
+            || value == "null"
+                ? null
+                : propertiesWithChildren.TryGetValue(key, out string? valueJson) && IsJsonString(valueJson)
+                    ? value
+                    : throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
+
+    private static bool IsJsonString(string? json)
+        => json?.TrimStart().StartsWith("\"", StringComparison.Ordinal) == true;
 }
