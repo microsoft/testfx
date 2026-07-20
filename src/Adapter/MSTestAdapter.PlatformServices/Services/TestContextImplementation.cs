@@ -226,7 +226,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNullCharacters(message);
         TestContextMessageBuilder.Append(msg);
         WriteLive(msg, appendLine: false);
     }
@@ -239,7 +239,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullCharacters(format), args);
         TestContextMessageBuilder.Append(message);
         WriteLive(message, appendLine: false);
     }
@@ -251,7 +251,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        string? msg = message?.Replace("\0", "\\0");
+        string? msg = EscapeNullCharacters(message);
         TestContextMessageBuilder.AppendLine(msg);
         WriteLive(msg, appendLine: true);
     }
@@ -264,7 +264,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
+        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullCharacters(format), args);
         TestContextMessageBuilder.AppendLine(message);
         WriteLive(message, appendLine: true);
     }
@@ -519,6 +519,10 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     private static SynchronizedStringBuilder GetOrCreate(ref SynchronizedStringBuilder? builder)
         => LazyInitializer.EnsureInitialized(ref builder, static () => new())!;
+
+    [return: NotNullIfNotNull(nameof(value))]
+    private static string? EscapeNullCharacters(string? value)
+        => value is not null && value.IndexOf('\0') >= 0 ? value.Replace("\0", "\\0") : value;
 
     private void WriteLive(string? message, bool appendLine)
     {
