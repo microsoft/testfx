@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="fr" original="../ExtensionResources.resx">
     <body>
@@ -29,12 +29,12 @@
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
+        <target state="translated">Impossible d’activer l’application Windows empaquetée « {0} » (trouvée « {1} ») : son manifeste ne déclare aucun &lt;Application&gt;, il n’y a donc aucun ID de modèle utilisateur d’application à activer.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
-        <target state="new">Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</target>
+        <target state="translated">Échec de l’inscription de la disposition de l’application Windows empaquetée « {0} ». L’inscription d’une disposition de sortie de build non signée nécessite que le mode Développeur (ou le chargement indépendant) soit activé. Erreur : {1}</target>
         <note />
       </trans-unit>
     </body>

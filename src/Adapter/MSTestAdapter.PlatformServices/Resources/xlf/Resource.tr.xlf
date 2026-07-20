@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="tr">
     <body>
@@ -103,7 +103,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="DeploymentDependencyLoadFailed">
         <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
-        <target state="new">Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</target>
+        <target state="translated">Test Çalıştırması dağıtım sorunu: Derleme veya modül '{0}' yüklenemedi. Neden: {1}</target>
         <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
@@ -235,22 +235,22 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="GlobalTestCleanupTimedOut">
         <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Global test cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">'{0}.{1}' genel test temizleme yöntemi {2} ms sonra zaman aşımına uğradı</target>
         <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="GlobalTestCleanupWasCancelled">
         <source>Global test cleanup method '{0}.{1}' was canceled</source>
-        <target state="new">Global test cleanup method '{0}.{1}' was canceled</target>
+        <target state="translated">'{0}.{1}' genel test temizleme yöntemi iptal edildi</target>
         <note>{0} is the type name. {1} is the global test cleanup method name.</note>
       </trans-unit>
       <trans-unit id="GlobalTestInitializeTimedOut">
         <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Global test initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">'{0}.{1}' genel test başlatma yöntemi {2} ms sonra zaman aşımına uğradı</target>
         <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="GlobalTestInitializeWasCancelled">
         <source>Global test initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Global test initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">'{0}.{1}' genel test başlatma yöntemi iptal edildi</target>
         <note>{0} is the type name. {1} is the global test initialize method name.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
@@ -265,7 +265,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       </trans-unit>
       <trans-unit id="InvalidSettingsXml">
         <source>MSTestAdapter failed to parse the runsettings XML.</source>
-        <target state="new">MSTestAdapter failed to parse the runsettings XML.</target>
+        <target state="translated">MSTestAdapter, runsettings XML'ini ayrıştıramadı.</target>
         <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
