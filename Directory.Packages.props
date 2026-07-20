@@ -105,7 +105,7 @@
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
-    <PackageVersion Include="AwesomeAssertions" Version="9.4.0" />
+    <PackageVersion Include="AwesomeAssertions" Version="9.5.0" />
     <PackageVersion Include="FSharp.Core" Version="11.0.100" />
     <PackageVersion Include="NUnit" Version="4.6.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
