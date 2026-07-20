@@ -87,6 +87,7 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       <trans-unit id="CrashDumpSequenceFileOpenError">
         <source>Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</source>
         <target state="translated">無法初始化損毀序列檔案 '{0}': {1}。如果測試主機當機，測試序列資訊將無法使用。</target>
+        <target state="new">Failed to initialize crash sequence file '{0}': {1}. Test sequence information will not be available if the test host crashes.</target>
         <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString) from opening or writing the initial header.</note>
       </trans-unit>
       <trans-unit id="CrashDumpSequenceFileReadError">
@@ -97,6 +98,7 @@ Supports the following placeholders: {pname} (process executable name, deferred 
       <trans-unit id="CrashDumpSequenceFileWriteError">
         <source>Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</source>
         <target state="translated">無法寫入損毀序列檔案 '{0}': {1}。損毀序列檔案可能不完整。</target>
+        <target state="new">Failed to write to crash sequence file '{0}': {1}. The crash sequence file may be incomplete.</target>
         <note>{0} is the crash sequence file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CrashDumpTestsRunningAtCrash">

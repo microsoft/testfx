@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
@@ -13,8 +14,7 @@ internal sealed partial class ServerModeManager
     {
         ICommandLineOptions commandLineService = serviceProvider.GetCommandLineOptions();
 
-        int? clientPort;
-        clientPort = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientPortOptionKey, out string[]? clientPortArgs)
+        int clientPort = commandLineService.TryGetOptionArgumentList(PlatformCommandLineProvider.ClientPortOptionKey, out string[]? clientPortArgs)
             ? int.Parse(clientPortArgs[0], CultureInfo.InvariantCulture)
             : throw new InvalidOperationException(PlatformResources.MissingClientPortFoJsonRpc);
 
@@ -22,6 +22,7 @@ internal sealed partial class ServerModeManager
             ? clientHostArgs[0]
             : "localhost";
 
-        return new MessageHandlerFactory(clientHostName, clientPort.Value, serviceProvider.GetOutputDevice());
+        ILogger logger = serviceProvider.GetLoggerFactory().CreateLogger<TcpMessageHandler>();
+        return new MessageHandlerFactory(clientHostName, clientPort, serviceProvider.GetOutputDevice(), logger);
     }
 }

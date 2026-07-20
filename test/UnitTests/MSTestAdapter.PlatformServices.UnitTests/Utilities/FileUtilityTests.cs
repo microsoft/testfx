@@ -33,6 +33,42 @@ public class FileUtilityTests : TestContainer
         FileUtility.ReplaceInvalidFileNameCharacters(fileName).Should().Be("galaxy__far_far_away");
     }
 
+    public void CopyFileOverwriteShouldIncludeHResultAndExceptionDetailsInWarningWhenCopyFails()
+    {
+        // Arrange.
+        var fileUtility = new FileUtility();
+        string nonExistentSource = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".missing");
+        string destination = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".copy");
+
+        // Determine the actual HResult that File.Copy raises for a missing source file on the current
+        // runtime/OS, so the assertion below isn't tied to a hardcoded platform-specific value.
+        Exception? expectedException = null;
+        try
+        {
+            File.Copy(nonExistentSource, destination, true);
+        }
+        catch (Exception ex)
+        {
+            expectedException = ex;
+        }
+
+        expectedException.Should().NotBeNull("File.Copy should fail because the source file does not exist.");
+
+        // Act.
+        string result = fileUtility.CopyFileOverwrite(nonExistentSource, destination, out string? warning);
+
+        // Assert.
+        // The warning must retain the HResult (as hex, matching the Resource.resx format) together with
+        // the exception type/message and both paths, so the underlying OS-level failure reason is not lost.
+        result.Should().BeEmpty();
+        warning.Should().NotBeNull();
+        warning.Should().Contain(nonExistentSource);
+        warning.Should().Contain(destination);
+        warning.Should().Contain(expectedException!.GetType().ToString());
+        warning.Should().Contain(expectedException.Message);
+        warning.Should().Contain($"0x{expectedException.HResult:X8}");
+    }
+
     #region AddFilesFromDirectory tests
 
     public void AddFilesInADirectoryShouldReturnAllTopLevelFilesInADirectory()

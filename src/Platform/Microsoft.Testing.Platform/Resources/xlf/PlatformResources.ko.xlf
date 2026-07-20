@@ -125,6 +125,7 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">응답 파일 '{0}'을(를) 읽지 못했습니다. {1}.</target>
+        <target state="needs-review-translation">응답 파일 '{0}'을(를) 읽지 못했습니다. {1}.</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
@@ -170,11 +171,13 @@
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
         <target state="translated">복합 확장 '{0}'의 인스턴스를 만들지 못했습니다. 자세한 내용은 내부 예외를 참조하세요.</target>
+        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
         <target state="translated">복합 확장 '{0}'의 팩터리에서 null 인스턴스를 반환했습니다.</target>
+        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -928,6 +931,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
         <target state="translated">'{0}'초의 시간 제한이 지나기 전에 로그를 로그 파일 '{1}'에 플러시하지 못했습니다. 로그 파일이 완전하지 않을 수 있습니다.</target>
+        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -989,6 +993,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
         <target state="translated">로그 파일 '{0}'에 대한 'FileLogger' 쓰기 루프에서 예기치 않은 예외가 발생했습니다. 로그 파일이 완전하지 않을 수 있습니다.
+        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

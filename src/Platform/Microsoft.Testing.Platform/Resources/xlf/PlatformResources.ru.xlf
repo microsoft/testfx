@@ -125,6 +125,7 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">Не удалось прочитать файл ответа "{0}". {1}.</target>
+        <target state="needs-review-translation">Не удалось прочитать файл ответа "{0}". {1}.</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
@@ -170,11 +171,13 @@
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
         <target state="translated">Не удалось создать экземпляр составного расширения "{0}". См. подробные сведения во внутреннем исключении.</target>
+        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
         <target state="translated">Фабрика для составного расширения "{0}" вернула экземпляр null.</target>
+        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -928,6 +931,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
         <target state="translated">Не удалось записать журналы в файл журнала "{0}" до истечения времени ожидания в "{1}" сек. Файл журнала может быть неполным.</target>
+        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -989,6 +993,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
         <target state="translated">В цикле записи файла журнала 'FileLogger' произошла непредвиденная ошибка "{0}". Файл журнала может быть неполным.
+        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

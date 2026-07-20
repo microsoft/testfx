@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
@@ -77,7 +77,13 @@ internal sealed partial class TerminalOutputDevice
 
     public async Task DisplayBeforeSessionStartAsync(CancellationToken cancellationToken)
     {
-        if (_isServerMode || _isListTestsJson)
+        if (_isServerMode)
+        {
+            _terminalTestReporter?.ClearProgressMessages();
+            return;
+        }
+
+        if (_isListTestsJson)
         {
             return;
         }
@@ -106,6 +112,11 @@ internal sealed partial class TerminalOutputDevice
             // cycle would produce multiple growing JSON documents on stdout, which would break
             // any consumer that pipes the output (the accumulated _discoveredTestsForJson buffer
             // would also re-include earlier tests every cycle).
+            using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
+            {
+                ClearJsonProgressMessages();
+            }
+
             return;
         }
 
@@ -120,6 +131,7 @@ internal sealed partial class TerminalOutputDevice
         // document by combining the discovered tests from every test app into a single output.
         if (_isServerMode)
         {
+            _terminalTestReporter?.ClearProgressMessages();
             return;
         }
 
@@ -145,6 +157,8 @@ internal sealed partial class TerminalOutputDevice
                 {
                     _console.WriteLine(DiscoveredTestsJsonSerializer.Serialize(_discoveredTestsForJson));
                 }
+
+                ClearJsonProgressMessages();
             }
 
             return;

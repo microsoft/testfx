@@ -125,6 +125,7 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">'{0}' yanıt dosyası okunamadı. {1}.</target>
+        <target state="needs-review-translation">'{0}' yanıt dosyası okunamadı. {1}.</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
@@ -170,11 +171,13 @@
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
         <target state="translated">'{0}' bileşik uzantısının bir örneği oluşturulamadı. Ayrıntılar için özel iç duruma bakın.</target>
+        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
         <target state="translated">'{0}' bileşik uzantısı için kullanılan fabrika null bir örnek döndürdü.</target>
+        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -928,6 +931,7 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
         <target state="translated">'{1}' saniyelik zaman aşımı dolmadan önce günlükler '{0}' günlük dosyasına aktarılamadı. Günlük dosyası eksik olabilir.</target>
+        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -989,6 +993,7 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
         <target state="translated">'FileLogger' yazma döngüsünde '{0}' günlük dosyası için beklenmeyen bir özel durum oluştu. Günlük dosyası eksik olabilir.
+        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

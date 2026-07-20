@@ -125,6 +125,7 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">応答ファイル '{0}' を読み取れませんでした。{1}。</target>
+        <target state="needs-review-translation">応答ファイル '{0}' を読み取れませんでした。{1}。</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
@@ -170,11 +171,13 @@
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
         <target state="translated">複合拡張機能 '{0}' のインスタンスを作成できませんでした。詳細については内部例外を参照してください。</target>
+        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
         <target state="translated">複合拡張機能 '{0}' のファクトリが null インスタンスを返しました。</target>
+        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -929,6 +932,7 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
         <target state="translated">'{1}' 秒のタイムアウト前にログをログ ファイル '{0}' にフラッシュできませんでした。ログ ファイルが不完全である可能性があります。</target>
+        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -990,6 +994,7 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
         <target state="translated">ログ ファイル '{0}' の 'FileLogger' 書き込みループで予期しない例外が発生しました。ログ ファイルが不完全である可能性があります。
+        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

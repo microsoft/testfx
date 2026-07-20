@@ -555,7 +555,7 @@ Request:
 interface RunTestsParams {
     // The set of tests selected by the user to run.
     // If not specified all tests will run.
-    testCases?: TestNode[],
+    tests?: TestNode[],
 
     // Token which should be specified for all update notifications.
     // This way the client can under which the update notifications should be reported.

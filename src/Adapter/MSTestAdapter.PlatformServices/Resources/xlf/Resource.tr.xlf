@@ -104,6 +104,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       <trans-unit id="DeploymentDependencyLoadFailed">
         <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
         <target state="translated">Test Çalıştırması dağıtım sorunu: Derleme veya modül '{0}' yüklenemedi. Neden: {1}</target>
+        <target state="new">Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</target>
         <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
@@ -124,6 +125,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
         <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
         <target state="translated">Test Çalıştırması dağıtım sorunu: '{0}' dosyası '{1}' hedefine kopyalanamadı: {2}: {3} (HResult: 0x{4:X8})</target>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
         <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
@@ -266,6 +268,7 @@ ancak, '{5}' türünde {4} bağımsız değişken aldı.</target>
       <trans-unit id="InvalidSettingsXml">
         <source>MSTestAdapter failed to parse the runsettings XML.</source>
         <target state="translated">MSTestAdapter, runsettings XML'ini ayrıştıramadı.</target>
+        <target state="new">MSTestAdapter failed to parse the runsettings XML.</target>
         <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">

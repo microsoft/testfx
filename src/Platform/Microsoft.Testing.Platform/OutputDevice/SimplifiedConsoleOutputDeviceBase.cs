@@ -28,6 +28,7 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
     private readonly IPlatformInformation _platformInformation;
     private readonly IStopPoliciesService _policiesService;
     private readonly string? _longArchitecture;
+    private readonly Dictionary<ProgressMessageIdentity, string> _progressMessages = [];
 
     // The effective runtime that is executing the application e.g. .NET 9, when .NET 8 application is running with --roll-forward latest.
     private readonly string? _runtimeFramework;
@@ -204,7 +205,13 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         }
     }
 
-    public Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext) => Task.CompletedTask;
+    public async Task OnTestSessionFinishingAsync(ITestSessionContext testSessionContext)
+    {
+        using (await _asyncMonitor.LockAsync(TimeoutHelper.DefaultHangTimeSpanTimeout).ConfigureAwait(false))
+        {
+            _progressMessages.Clear();
+        }
+    }
 
     public Task OnTestSessionStartingAsync(ITestSessionContext testSessionContext)
     {
@@ -234,6 +241,25 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
         {
             switch (data)
             {
+                case SessionMessageOutputDeviceData sessionMessageData:
+                    ConsoleLog(sessionMessageData.Message);
+                    break;
+
+                case ProgressMessageOutputDeviceData progressMessageData:
+                    var identity = new ProgressMessageIdentity(producer.Uid, progressMessageData.Key);
+                    if (progressMessageData.Message is null)
+                    {
+                        _progressMessages.Remove(identity);
+                    }
+                    else if (!_progressMessages.TryGetValue(identity, out string? existingMessage)
+                        || existingMessage != progressMessageData.Message)
+                    {
+                        ConsoleLog(progressMessageData.Message);
+                        _progressMessages[identity] = progressMessageData.Message;
+                    }
+
+                    break;
+
                 case FormattedTextOutputDeviceData formattedTextData:
                     ConsoleLog(formattedTextData.Text);
                     break;
@@ -256,6 +282,8 @@ internal abstract class SimplifiedConsoleOutputDeviceBase : IPlatformOutputDevic
             }
         }
     }
+
+    private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
 
     private void OnFailedTest(TestNodeUpdateMessage testNodeStateChanged, TestNodeStateProperty state, Exception? exception, TimeSpan? duration)
     {
