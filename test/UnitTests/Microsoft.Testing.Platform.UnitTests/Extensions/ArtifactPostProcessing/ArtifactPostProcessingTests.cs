@@ -237,6 +237,8 @@ public sealed class ArtifactPostProcessingTests
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": 123, "inputs": [] }""")]
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": 123 }] }""")]
     [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "kind": 123 }] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "kind": {} }] }""")]
+    [DataRow("""{ "schemaVersion": 1, "outputDirectory": "out", "inputs": [{ "path": "a.trx", "executionId": [] }] }""")]
     [TestMethod]
     public void Manifest_WithInvalidValueType_ThrowsFormatException(string json)
     {

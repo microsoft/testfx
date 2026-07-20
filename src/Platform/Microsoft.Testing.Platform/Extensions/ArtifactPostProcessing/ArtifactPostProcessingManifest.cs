@@ -89,16 +89,15 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
         Dictionary<string, string?> values,
         Dictionary<string, string?> propertiesWithChildren,
         string key)
-        => !values.TryGetValue(key, out string? value)
-            || RoslynString.IsNullOrEmpty(value)
+        => !propertiesWithChildren.TryGetValue(key, out string? valueJson)
+            ? null
+            : valueJson is null || valueJson.Trim() == "null"
                 ? null
-                : !propertiesWithChildren.TryGetValue(key, out string? valueJson)
+                : !IsJsonString(valueJson)
                     ? throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid)
-                    : valueJson is null || valueJson.Trim() == "null"
-                        ? null
-                        : IsJsonString(valueJson)
-                            ? value
-                            : throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
+                    : values.TryGetValue(key, out string? value)
+                        ? value
+                        : throw new FormatException(PlatformResources.ArtifactPostProcessingManifestInvalid);
 
     private static bool IsJsonString(string? json)
         => json?.TrimStart().StartsWith("\"", StringComparison.Ordinal) ?? false;
