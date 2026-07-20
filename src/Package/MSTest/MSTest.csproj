@@ -19,7 +19,7 @@
     <IsTestProject>false</IsTestProject>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest</PackageId>
-    <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework TestAdapter VisualStudio MSTestV2</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 

@@ -407,7 +407,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldClearStdOutAfterReporting()
     {
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output1");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardOutputBuilder.Append("output1");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -420,7 +420,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result1 = await method.InvokeAsync(null);
         result1.LogOutput.Should().Contain("output1");
 
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleOut("output2");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardOutputBuilder.Append("output2");
         TestResult result2 = await method.InvokeAsync(null);
 
         result2.LogOutput.Should().Contain("output2");
@@ -429,7 +429,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldClearStdErrAfterReporting()
     {
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error1");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardErrorBuilder.Append("error1");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -442,7 +442,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result1 = await method.InvokeAsync(null);
         result1.LogError.Should().Contain("error1");
 
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteConsoleErr("error2");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.StandardErrorBuilder.Append("error2");
         TestResult result2 = await method.InvokeAsync(null);
 
         result2.LogError.Should().Contain("error2");
@@ -451,7 +451,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task TestMethodInfoInvokeShouldClearDebugTraceAfterReporting()
     {
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace1");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.TraceBuilder.Append("trace1");
 
         var method = new TestMethodInfo(
             _methodInfo,
@@ -464,7 +464,7 @@ public class TestMethodInfoTests : TestContainer
         TestResult result1 = await method.InvokeAsync(null);
         result1.DebugTrace.Should().Contain("trace1");
 
-        DummyTestClass.TestMethodBody = o => _testContextImplementation.WriteTrace("trace2");
+        DummyTestClass.TestMethodBody = o => _testContextImplementation.TraceBuilder.Append("trace2");
         TestResult result2 = await method.InvokeAsync(null);
 
         result2.DebugTrace.Should().Contain("trace2");
@@ -693,6 +693,19 @@ public class TestMethodInfoTests : TestContainer
             "System.NotImplementedException: dummyExceptionMessage");
         exception.Should().NotBeNull();
         exception?.Message.Should().Be(errorMessage);
+    }
+
+    public async Task TestMethodInfoInvokeShouldSetInnerExceptionToRealExceptionIfSetTestContextThrows()
+    {
+        var thrownException = new NotImplementedException("dummyExceptionMessage");
+        DummyTestClass.TestContextSetterBody = value => throw thrownException;
+
+        TestFailedException exception = (await _testMethodInfo.InvokeAsync(null)).TestFailureException as TestFailedException
+            ?? throw new InvalidOperationException("Expected a TestFailedException when setting TestContext throws.");
+
+        // The real user exception must be preserved as the inner exception so that callers/loggers
+        // relying on the exception chain (e.g. IDEs, TRX viewers) can still get to the original cause.
+        exception.InnerException.Should().BeSameAs(thrownException);
     }
 
     public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows()
@@ -1878,7 +1891,7 @@ public class TestMethodInfoTests : TestContainer
     // TestContextImplementationTests.GetAndClear{Output,Error,Trace}_ShouldReturnContentThenClearBuffer.
     public async Task InvokeAsync_ShouldNotAccumulateLogOutputAcrossMultipleInvocations()
     {
-        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleOut("invocation_output");
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.StandardOutputBuilder.Append("invocation_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
         TestResult result2 = await _testMethodInfo.InvokeAsync(null);
@@ -1889,7 +1902,7 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task InvokeAsync_ShouldNotAccumulateLogErrorAcrossMultipleInvocations()
     {
-        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteConsoleErr("error_output");
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.StandardErrorBuilder.Append("error_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
         TestResult result2 = await _testMethodInfo.InvokeAsync(null);
@@ -1900,13 +1913,15 @@ public class TestMethodInfoTests : TestContainer
 
     public async Task InvokeAsync_ShouldNotAccumulateDebugTraceAcrossMultipleInvocations()
     {
-        DummyTestClass.TestMethodBody = _ => _testContextImplementation.WriteTrace("trace_output");
+        DummyTestClass.TestMethodBody = _ => _testContextImplementation.TraceBuilder.Append("trace_output");
 
         TestResult result1 = await _testMethodInfo.InvokeAsync(null);
         TestResult result2 = await _testMethodInfo.InvokeAsync(null);
 
         result1.DebugTrace.Should().Be("trace_output");
         result2.DebugTrace.Should().Be("trace_output");
+        result1.LogError.Should().BeNull();
+        result2.LogError.Should().BeNull();
     }
 
     public void Ctor_WhenMethodHasMultipleRetryBaseAttributes_ThrowsTypeInspectionException()

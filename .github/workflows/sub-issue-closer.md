@@ -35,7 +35,7 @@ safe-outputs:
   add-comment:
     target: "*"
     max: 20
-timeout-minutes: 15
+timeout-minutes: 30
 ---
 
 # Sub-Issue Closer 🔒

@@ -51,6 +51,9 @@ It is a *different* protocol from the [JSON-RPC server-mode protocol](./001-prot
   identifier: a single `dotnet test` command that launches several test applications (e.g. a
   multi-project run) gives each root test application its **own** Execution ID by default.
 - **Instance ID** — a GUID (`"N"` format) identifying one specific connecting process/`DotnetTestConnection`.
+- **Attempt number** — a 1-based retry generation within one Execution ID. Attempt `1` is the initial run.
+  Multiple test-host instances (for example, shards) can belong to the same attempt; a new Instance ID does
+  not by itself imply a retry.
 - **Session UID** — the MTP test session identifier for a run.
 
 ---
@@ -79,6 +82,7 @@ Rules and behavior:
 | Variable | Set by | Purpose |
 | --- | --- | --- |
 | `TESTINGPLATFORM_DOTNETTEST_EXECUTIONID` | The root test application on first connect (if not already set) | The Execution ID. Each root test-app process generates its own value in `AfterCommonServiceSetupAsync` (if unset) and propagates it via the environment **only to its child process tree** (its test host controller, orchestrator). So all handshakes *within one test-application execution* share it, but separate test applications launched by one multi-project `dotnet test` command normally get **different** IDs. If already present it is **not** overwritten. |
+| `TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER` | Retry orchestrator | The positive, 1-based retry attempt assigned to a child test host. A normal test host reports attempt `1` when the variable is absent. Invalid values fail before the handshake instead of being silently reinterpreted. |
 | `TESTINGPLATFORM_PIPE_DIRECTORY` | User (optional) | On Unix, overrides the directory used to place the domain-socket file, **for pipes created by testfx's `NamedPipeServer`** (see §3). It does **not** relocate a pipe created by the other side: the current `dotnet/sdk` data-pipe server still resolves Unix names as `Path.Combine("/tmp", name)` and does not honor this variable/`TMPDIR` (nor the 103-byte precheck). Since the SDK creates the data pipe, this variable effectively only affects pipes testfx itself creates (e.g. the sibling controller pipe). |
 
 ---
@@ -338,6 +342,7 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 10 | `ExecutionMode` | yes | `run`, `help`, or `discover` — lets the SDK detect mismatches (e.g. `--help` leaking into a run). |
 | 11 | `OrchestratorFeature` | orchestrator only | The orchestrator extension Uid (e.g. retry). |
 | 12 | `ServerControlPipeName` | **reply-only** | OS name of the reverse control pipe (see §12). |
+| 13 | `AttemptNumber` | test host only | Positive, 1-based retry attempt. Multiple Instance IDs may share one attempt. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 
@@ -365,7 +370,7 @@ The SDK picks the **highest version present in both sets** and returns that sing
 sequenceDiagram
     participant H as Test host
     participant S as dotnet test SDK
-    H->>S: HandshakeMessage(PID, OS, SupportedProtocolVersions="1.0.0;...;1.4.0", HostType, ExecutionId, InstanceId, ExecutionMode, ...)
+    H->>S: HandshakeMessage(PID, OS, SupportedProtocolVersions="1.0.0;...;1.4.0", HostType, ExecutionId, InstanceId, ExecutionMode, [AttemptNumber], ...)
     S->>S: pick highest mutually-supported version
     S-->>H: HandshakeMessage(SupportedProtocolVersions=<negotiated>, [IsIDE], [ServerControlPipeName])
     H->>H: validate compatibility; set IsIDE / forwarding / control-channel flags
@@ -642,8 +647,10 @@ handshake on the **same** Execution ID:
   cancel maps to cancelling its application token, which propagates to the orchestrated hosts.
 
 These are the root test-app process and its child process tree. Each advertises its own `InstanceId`;
-the shared `ExecutionId` lets the SDK correlate the processes **of that one execution**. A multi-project
-`dotnet test` command launches several such trees, each with its own Execution ID (see §1/§2).
+the shared `ExecutionId` lets the SDK correlate the processes **of that one execution**. Test hosts also
+advertise `AttemptNumber`: retry creates a later attempt, while sharding can create several Instance IDs
+within the same attempt. A multi-project `dotnet test` command launches several such trees, each with its
+own Execution ID (see §1/§2).
 
 ---
 

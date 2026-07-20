@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
@@ -62,6 +62,7 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     // by the platform before DisplayAfterSessionEndRunInternalAsync runs, so no extra locking is
     // required. The list stays empty (and effectively unused) outside JSON mode.
     private readonly List<TestNode> _discoveredTestsForJson = [];
+    private readonly Dictionary<ProgressMessageIdentity, string> _jsonProgressMessages = [];
 
     private TerminalTestReporter? _terminalTestReporter;
     private bool _bannerDisplayed;
@@ -71,6 +72,11 @@ internal sealed partial class TerminalOutputDevice : IHotReloadPlatformOutputDev
     private bool _isAzureDevOpsEnvironment;
     private ILogger? _logger;
     private TestProcessRole? _processRole;
+
+    private readonly record struct ProgressMessageIdentity(string ProducerUid, string Key);
+
+    private void ClearJsonProgressMessages()
+        => _jsonProgressMessages.Clear();
 
     public TerminalOutputDevice(
         IConsole console,

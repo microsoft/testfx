@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">Das App-Paketmanifest deklariert mehrere Anwendungen, und keine davon stimmt eindeutig mit der ausführbaren Datei „{0}“ überein. Benutzermodell-IDs der Kandidatenanwendungen: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">Das App-Paketmanifest deklariert kein gültiges &lt;Identity Name="..." Publisher="..." /&gt; Element.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Stellt einen nicht gepackten Windows-Testhost (loses Layout) (z. B. entpackte WinUI) in einem isolierten Verzeichnis bereit und startet ihn von dort aus. Im Windows-Build wird ein gepackter, voll vertrauenswürdiger MSIX-Desktoptesthost registriert und anhand der Anwendungsbenutzermodell-ID aktiviert. Echte UWP-/AppContainer-Hosts werden nicht unterstützt. Siehe https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,7 +24,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">Die gepackte Windows-App '{0}' kann nicht gestartet werden ('{1}' gefunden). Zum Registrieren und Aktivieren einer verpackten (MSIX)-App ist der Windows-Build dieser Erweiterung erforderlich, die für net8.0-windows10.0.19041.0 und höher ausgeliefert wird. Ziel "net8.0-windows10.0.19041.0" (oder höher net*-windows Target Framework Moniker bei Plattformversion 10.0.19041.0 oder höher), sodass NuGet dieses Asset auswählt. Der aktuelle Build startet nur nicht gepackte Testhosts (loses Layout). Siehe https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
@@ -34,7 +34,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
-        <target state="new">Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</target>
+        <target state="translated">Fehler beim Registrieren des gepackten Windows-App-Layouts "{0}". Zum Registrieren eines nicht signierten Buildausgabelayouts muss der Entwicklermodus (oder Querladen) aktiviert sein. Fehler: {1}</target>
         <note />
       </trans-unit>
     </body>

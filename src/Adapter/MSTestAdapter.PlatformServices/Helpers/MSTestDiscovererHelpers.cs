@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -36,8 +37,22 @@ internal static class MSTestDiscovererHelpers
         }
         catch (AdapterSettingsException ex)
         {
-            messageLogger.SendMessage(MessageLevel.Error, ex.Message);
+            messageLogger.SendMessage(MessageLevel.Error, GetSettingsExceptionMessage(ex));
             return false;
         }
     }
+
+    /// <summary>
+    /// Builds the diagnostic message reported for an <see cref="AdapterSettingsException"/>. When the
+    /// exception carries an inner exception (e.g. a lower-level parsing/config failure that was wrapped
+    /// while validating the runsettings), the full exception chain (type and message for every level) is
+    /// included so the underlying cause is not silently lost. Otherwise, the plain message is reported
+    /// unchanged to keep existing, well-understood diagnostics stable.
+    /// </summary>
+    /// <param name="ex">The settings exception to format.</param>
+    /// <returns>The message to report to the test host.</returns>
+    internal static string GetSettingsExceptionMessage(AdapterSettingsException ex)
+        => ex.InnerException is null
+            ? ex.Message
+            : ex.GetFormattedExceptionMessage();
 }

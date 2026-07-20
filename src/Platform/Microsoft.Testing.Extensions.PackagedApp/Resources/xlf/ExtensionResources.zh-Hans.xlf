@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">打包应用部件清单声明了多个应用程序，而没有一个与可执行文件 '{0}' 唯一匹配。候选应用程序用户模型 ID: {1}。</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">打包应用部件清单未声明有效的 &lt;Identity Name="..." Publisher="..." /&gt; 元素。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">将非打包(松散布局)的 Windows 测试主机(例如，未打包的 WinUI)部署到隔离目录，并从该目录启动它；在 Windows 构建中，还会注册一个打包、完全信任的 MSIX 桌面测试主机，并通过应用程序用户模型 ID 激活它。不支持真正的 UWP/AppContainer 主机。请参阅 https://github.com/microsoft/testfx/issues/9933。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,17 +24,17 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">无法启动打包的 Windows 应用“{0}”(找到了“{1}”)。注册和激活打包(MSIX)应用需要此扩展的 Windows 版本，该版本随 net8.0-windows10.0.19041.0 及更高版本提供。目标为 "net8.0-windows10.0.19041.0"(或在平台版本 10.0.19041.0 或更高版本上，为更高 net*-windows 目标框架名字对象)，以便 NuGet 选择该资产。当前版本仅启动非打包(松散布局)测试主机。请参阅 https://github.com/microsoft/testfx/issues/9933。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
+        <target state="translated">无法激活打包的 Windows 应用“{0}”(找到了“{1}”)：其清单未声明 &lt;Application&gt;，因此没有要激活的应用程序用户模型 ID。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
-        <target state="new">Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</target>
+        <target state="translated">注册打包的 Windows 应用布局“{0}”失败。要注册未签名的生成输出布局，需要启用开发人员模式(或旁加载)。错误: {1}</target>
         <note />
       </trans-unit>
     </body>

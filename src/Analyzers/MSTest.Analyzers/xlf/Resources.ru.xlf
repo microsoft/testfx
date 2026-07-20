@@ -51,17 +51,17 @@ The type declaring these methods should also respect the following rules:
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotDescription">
         <source>'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</source>
-        <target state="new">'[AssemblyFixtureProvider]' discovery relies on walking the runtime assembly reference graph, which is not supported when the runtime cannot generate dynamic code (for example under Native AOT or Blazor WebAssembly AOT). The attribute is ignored in such builds, so the provided assembly initialize and cleanup methods will not run. Declare the '[AssemblyInitialize]' and '[AssemblyCleanup]' methods directly in the test assembly instead.</target>
+        <target state="translated">Обнаружение "[AssemblyFixtureProvider]" основано на обходе графа ссылок сборки среды выполнения, что не поддерживается, если среда выполнения не может генерировать динамический код (например, в Native AOT или Blazor WebAssembly AOT). В таких сборках этот атрибут игнорируется, поэтому указанные методы инициализации и очистки сборки выполняться не будут. Вместо этого объявите методы "[AssemblyInitialize]" и "[AssemblyCleanup]" непосредственно в тестовой сборке.</target>
         <note>{Locked="[AssemblyFixtureProvider]"}{Locked="[AssemblyInitialize]"}{Locked="[AssemblyCleanup]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotMessageFormat">
         <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</source>
-        <target state="new">'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation (such as Native AOT or Blazor WebAssembly AOT) and will be ignored at run time</target>
+        <target state="translated">"[AssemblyFixtureProvider]" не поддерживается при предварительной компиляции (например, Native AOT или Blazor WebAssembly AOT) и будет проигнорировано во время выполнения</target>
         <note>{Locked="[AssemblyFixtureProvider]"}{Locked="Native AOT"}{Locked="Blazor WebAssembly AOT"}</note>
       </trans-unit>
       <trans-unit id="AssemblyFixtureProviderNotSupportedWithNativeAotTitle">
         <source>'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</source>
-        <target state="new">'[AssemblyFixtureProvider]' is not supported with ahead-of-time compilation</target>
+        <target state="translated">"[AssemblyFixtureProvider]" не поддерживается при предварительной компиляции</target>
         <note>{Locked="[AssemblyFixtureProvider]"}</note>
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">

@@ -23,6 +23,18 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 internal sealed class TestContextImplementation : TestContext, ITestContext, IDisposable
 {
+    private sealed class LiveOutputScope(TestContext? testContext)
+    {
+        private int _isActive = 1;
+
+        internal TestContext? TestContext { get; } = testContext;
+
+        internal bool IsActive => Volatile.Read(ref _isActive) == 1;
+
+        internal void Deactivate()
+            => Volatile.Write(ref _isActive, 0);
+    }
+
     internal sealed class SynchronizedStringBuilder
     {
         private readonly StringBuilder _builder = new();
@@ -72,6 +84,11 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 #endif
     private readonly IAdapterMessageLogger? _messageLogger;
     private readonly TestRunCancellationToken? _testRunCancellationToken;
+    private readonly TextWriter? _liveOutputWriter;
+    private readonly Func<TestOutputCaptureMode> _outputCaptureModeProvider;
+
+    private static readonly AsyncLocal<LiveOutputScope?> CurrentLiveOutputScope = new();
+    private static TextWriter? s_liveOutputWriter;
 
     private CancellationTokenRegistration? _cancellationTokenRegistration;
 
@@ -113,6 +130,25 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="messageLogger">The message logger to use.</param>
     /// <param name="testRunCancellationToken">The global test run cancellation token.</param>
     internal TestContextImplementation(ITestMethod? testMethod, string? testClassFullName, IDictionary<string, object?> properties, IAdapterMessageLogger? messageLogger, TestRunCancellationToken? testRunCancellationToken)
+        : this(
+            testMethod,
+            testClassFullName,
+            properties,
+            messageLogger,
+            testRunCancellationToken,
+            Volatile.Read(ref s_liveOutputWriter),
+            static () => MSTestSettings.CurrentSettings.OutputCaptureMode)
+    {
+    }
+
+    private TestContextImplementation(
+        ITestMethod? testMethod,
+        string? testClassFullName,
+        IDictionary<string, object?> properties,
+        IAdapterMessageLogger? messageLogger,
+        TestRunCancellationToken? testRunCancellationToken,
+        TextWriter? liveOutputWriter,
+        Func<TestOutputCaptureMode> outputCaptureModeProvider)
     {
         // testMethod can be null when running ForceCleanup (done when reaching --maximum-failed-tests.
         DebugEx.Assert(properties != null, "properties is not null");
@@ -146,6 +182,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
         _messageLogger = messageLogger;
         _testRunCancellationToken = testRunCancellationToken;
+        _liveOutputWriter = liveOutputWriter;
+        _outputCaptureModeProvider = outputCaptureModeProvider;
         _cancellationTokenRegistration = testRunCancellationToken?.Register(CancelDelegate, this);
     }
 
@@ -189,7 +227,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void Write(string? message)
     {
         string? msg = message?.Replace("\0", "\\0");
-        GetTestContextMessagesStringBuilder().Append(msg);
+        TestContextMessageBuilder.Append(msg);
+        WriteLive(msg, appendLine: false);
     }
 
     /// <summary>
@@ -201,7 +240,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void Write(string format, params object?[] args)
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-        GetTestContextMessagesStringBuilder().Append(message);
+        TestContextMessageBuilder.Append(message);
+        WriteLive(message, appendLine: false);
     }
 
     /// <summary>
@@ -212,7 +252,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void WriteLine(string? message)
     {
         string? msg = message?.Replace("\0", "\\0");
-        GetTestContextMessagesStringBuilder().AppendLine(msg);
+        TestContextMessageBuilder.AppendLine(msg);
+        WriteLive(msg, appendLine: true);
     }
 
     /// <summary>
@@ -224,7 +265,8 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     public override void WriteLine(string format, params object?[] args)
     {
         string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-        GetTestContextMessagesStringBuilder().AppendLine(message);
+        TestContextMessageBuilder.AppendLine(message);
+        WriteLive(message, appendLine: true);
     }
 
     /// <summary>
@@ -439,62 +481,67 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     internal readonly struct ScopedTestContextSetter : IDisposable
     {
+        private readonly LiveOutputScope _liveOutputScope;
+
         internal ScopedTestContextSetter(TestContext? testContext)
-            => TestContext.Current = testContext;
+        {
+            TestContext.Current = testContext;
+            _liveOutputScope = new(testContext);
+            CurrentLiveOutputScope.Value = _liveOutputScope;
+        }
 
         public void Dispose()
-            => TestContext.Current = null;
+        {
+            _liveOutputScope.Deactivate();
+            TestContext.Current = null;
+            CurrentLiveOutputScope.Value = null;
+        }
     }
 
     internal static ScopedTestContextSetter SetCurrentTestContext(TestContext? testContext)
         => new(testContext);
 
-    internal void WriteConsoleOut(char value)
-        => GetOutStringBuilder().Append(value);
+    // This writer is captured together with the process-wide Console routers and shares their install-once lifetime.
+    internal static void ConfigureLiveOutputWriter(TextWriter liveOutputWriter)
+        => Volatile.Write(ref s_liveOutputWriter, liveOutputWriter);
 
-    internal void WriteConsoleOut(string? value)
-        => GetOutStringBuilder().Append(value);
+    internal SynchronizedStringBuilder StandardOutputBuilder
+        => GetOrCreate(ref _stdOutStringBuilder);
 
-    internal void WriteConsoleOut(char[] buffer, int index, int count)
-        => GetOutStringBuilder().Append(buffer, index, count);
+    internal SynchronizedStringBuilder StandardErrorBuilder
+        => GetOrCreate(ref _stdErrStringBuilder);
 
-    internal void WriteConsoleErr(char value)
-        => GetErrStringBuilder().Append(value);
+    internal SynchronizedStringBuilder TraceBuilder
+        => GetOrCreate(ref _traceStringBuilder);
 
-    internal void WriteConsoleErr(string? value)
-        => GetErrStringBuilder().Append(value);
+    private SynchronizedStringBuilder TestContextMessageBuilder
+        => GetOrCreate(ref _testContextMessageStringBuilder);
 
-    internal void WriteConsoleErr(char[] buffer, int index, int count)
-        => GetErrStringBuilder().Append(buffer, index, count);
-
-    internal void WriteTrace(char value)
-        => GetTraceStringBuilder().Append(value);
-
-    internal void WriteTrace(string? value)
-        => GetTraceStringBuilder().Append(value);
-
-    private SynchronizedStringBuilder GetOutStringBuilder()
+    private static SynchronizedStringBuilder GetOrCreate(ref SynchronizedStringBuilder? builder)
     {
-        _ = _stdOutStringBuilder ?? Interlocked.CompareExchange(ref _stdOutStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _stdOutStringBuilder;
+        _ = builder ?? Interlocked.CompareExchange(ref builder, new SynchronizedStringBuilder(), null)!;
+
+        return builder;
     }
 
-    private SynchronizedStringBuilder GetErrStringBuilder()
+    private void WriteLive(string? message, bool appendLine)
     {
-        _ = _stdErrStringBuilder ?? Interlocked.CompareExchange(ref _stdErrStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _stdErrStringBuilder;
-    }
+        if (_liveOutputWriter is null
+            || _outputCaptureModeProvider() != TestOutputCaptureMode.Live
+            || CurrentLiveOutputScope.Value is not { IsActive: true } liveOutputScope
+            || !ReferenceEquals(liveOutputScope.TestContext, this))
+        {
+            return;
+        }
 
-    private SynchronizedStringBuilder GetTraceStringBuilder()
-    {
-        _ = _traceStringBuilder ?? Interlocked.CompareExchange(ref _traceStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _traceStringBuilder;
-    }
-
-    private SynchronizedStringBuilder GetTestContextMessagesStringBuilder()
-    {
-        _ = _testContextMessageStringBuilder ?? Interlocked.CompareExchange(ref _testContextMessageStringBuilder, new SynchronizedStringBuilder(), null)!;
-        return _testContextMessageStringBuilder;
+        if (appendLine)
+        {
+            _liveOutputWriter.WriteLine(message);
+        }
+        else
+        {
+            _liveOutputWriter.Write(message);
+        }
     }
 
     internal string? GetAndClearOutput()

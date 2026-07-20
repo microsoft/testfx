@@ -602,4 +602,68 @@ public sealed class AssertThrowsShouldContainSingleStatementAnalyzerTests
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsReceivesMethodGroup_CSharp_NoDiagnostic()
+    {
+        // When a method group (not a lambda) is passed to Assert.Throws, the delegate creation
+        // target is an IMethodReferenceOperation, not IAnonymousFunctionOperation.
+        // The analyzer's early-return guard ('delegateCreation.Target is not IAnonymousFunctionOperation')
+        // fires, so no diagnostic is reported regardless of how many statements the method contains.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    // Method group passed as Action — not a lambda, so the analyzer cannot inspect
+                    // the body and must not fire.
+                    Assert.Throws<Exception>(DoSomethingMultiple);
+                    Assert.ThrowsExactly<Exception>(DoSomethingMultiple);
+                }
+
+                private static void DoSomethingMultiple()
+                {
+                    Console.WriteLine("one");
+                    throw new Exception("two");
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    [TestMethod]
+    public async Task WhenAssertThrowsReceivesNonLambdaDelegate_CSharp_NoDiagnostic()
+    {
+        // An existing delegate local is an ILocalReferenceOperation, not an
+        // IDelegateCreationOperation, so the analyzer's early-return guard fires.
+        string code = """
+            using System;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                    Action multiStep = () =>
+                    {
+                        Console.WriteLine("one");
+                        throw new Exception("two");
+                    };
+
+                    // The delegate is referenced by name, not created inline — no diagnostic expected.
+                    Assert.Throws<Exception>(multiStep);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

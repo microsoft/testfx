@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="de">
     <body>
@@ -101,6 +101,11 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <target state="translated">Debugablaufverfolgung:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="translated">Bereitstellungsproblem beim Testlauf: Die Assembly oder das Modul „{0}“ konnte nicht geladen werden. Grund: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">Problem bei der Testlaufbereitstellung: Ungültiges Bereitstellungselement: "{0}". Das Ausgabeverzeichnis "{1}" gibt das unzulässige Element an, das außerhalb des Bereitstellungsstammverzeichnisses bereitgestellt werden soll.</target>
@@ -117,9 +122,9 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">Problem bei der Testlaufbereitstellung: Fehler beim Kopieren der Datei "{0}" nach "{1}": {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -230,7 +235,7 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="GlobalTestCleanupTimedOut">
         <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Global test cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Timeout der globalen Testbereinigungsmethode „{0}.{1}“ nach {2} ms</target>
         <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="GlobalTestCleanupWasCancelled">
@@ -240,12 +245,12 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
       </trans-unit>
       <trans-unit id="GlobalTestInitializeTimedOut">
         <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Global test initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Timeout der globalen Testinitialisierungsmethode „{0}.{1}“ nach {2} ms</target>
         <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
       </trans-unit>
       <trans-unit id="GlobalTestInitializeWasCancelled">
         <source>Global test initialize method '{0}.{1}' was canceled</source>
-        <target state="new">Global test initialize method '{0}.{1}' was canceled</target>
+        <target state="translated">Die globale Testinitialisierungsmethode „{0}.{1}“ wurde abgebrochen</target>
         <note>{0} is the type name. {1} is the global test initialize method name.</note>
       </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
@@ -257,6 +262,11 @@ aber empfing {4} Argument(e) mit den Typen „{5}“.</target>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">Ungültiger Wert "{0}" für "Workers" angegeben. Der Wert muss eine nicht negative Ganzzahl sein.</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="translated">MSTestAdapter konnte das runsettings-XML nicht analysieren.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
@@ -20,6 +21,7 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     private readonly IEnvironment _environment;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly ITestApplicationCancellationTokenSource _cancellationTokenSource;
+    private readonly ILogger _logger;
 
     private NamedPipeClient? _dotnetTestPipeClient;
 
@@ -32,11 +34,21 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
     public static string InstanceId { get; } = Guid.NewGuid().ToString("N");
 
     public DotnetTestConnection(CommandLineHandler commandLineHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource)
+        : this(commandLineHandler, environment, testApplicationModuleInfo, cancellationTokenSource, new NopLogger())
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DotnetTestConnection"/> class with a logger for low-noise
+    /// diagnostics of the control-pipe connect/listen/cancel/exit paths.
+    /// </summary>
+    public DotnetTestConnection(CommandLineHandler commandLineHandler, IEnvironment environment, ITestApplicationModuleInfo testApplicationModuleInfo, ITestApplicationCancellationTokenSource cancellationTokenSource, ILogger logger)
     {
         _commandLineHandler = commandLineHandler;
         _environment = environment;
         _testApplicationModuleInfo = testApplicationModuleInfo;
         _cancellationTokenSource = cancellationTokenSource;
+        _logger = logger;
     }
 
     public bool IsServerMode => _dotnetTestPipeClient?.IsConnected == true;
@@ -128,6 +140,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             { HandshakeMessagePropertyNames.ExecutionMode, GetExecutionMode() },
         };
 
+        if (hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost)
+        {
+            properties.Add(HandshakeMessagePropertyNames.AttemptNumber, GetAttemptNumber());
+        }
+
         if (additionalHandshakeProperties is not null)
         {
             foreach (KeyValuePair<byte, string> property in additionalHandshakeProperties)
@@ -169,6 +186,16 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             : _commandLineHandler.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
                 ? HandshakeMessageExecutionModes.Discover
                 : HandshakeMessageExecutionModes.Run;
+
+    private string GetAttemptNumber()
+    {
+        string? value = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER);
+        return RoslynString.IsNullOrEmpty(value)
+            ? "1"
+            : int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int attemptNumber) && attemptNumber >= 1
+                ? attemptNumber.ToString(CultureInfo.InvariantCulture)
+                : throw new InvalidOperationException($"Environment variable '{EnvironmentVariableConstants.TESTINGPLATFORM_DOTNETTEST_ATTEMPTNUMBER}' must contain a positive integer.");
+    }
 
     public static bool IsVersionCompatible(string protocolVersion, string supportedProtocolVersions) => supportedProtocolVersions.Split(';').Contains(protocolVersion);
 
@@ -257,12 +284,15 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             connectCts.CancelAfter(TimeSpan.FromSeconds(30));
             await controlClient.ConnectAsync(connectCts.Token).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Best-effort: failing to establish the control channel degrades to "no server-initiated cancel"
             // rather than affecting the test run.
+            await TryLogAsync(LogLevel.Debug, $"Failed to connect to the server control pipe '{_serverControlPipeName}'; the server-initiated cancel feature will stay disabled for this run: {ex}").ConfigureAwait(false);
             return;
         }
+
+        await TryLogAsync(LogLevel.Debug, $"Connected to the server control pipe '{_serverControlPipeName}'.").ConfigureAwait(false);
 
         await ListenForServerControlAsync(controlClient, onCancelSessionRequestedAsync, cancellationToken).ConfigureAwait(false);
     }
@@ -287,19 +317,24 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         }
         catch (OperationCanceledException)
         {
-            // We are shutting down (dispose or app cancellation) - nothing to do.
+            // We are shutting down (dispose or app cancellation) - nothing to do. Expected shutdown, so this stays
+            // at Trace to avoid noise.
+            await TryLogAsync(LogLevel.Trace, $"Server control pipe '{_serverControlPipeName}' listener stopped: shutdown requested.").ConfigureAwait(false);
         }
-        catch (Exception) when (!cancellationToken.IsCancellationRequested)
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             // The control pipe dropped while the session was still live => the host went away. Treat it as a
             // cooperative cancel so we still try to wind down and report whatever completed. NOTE: this makes it a
             // protocol requirement that the SDK keep the control pipe open until the data session ends - an early
             // close for any reason is interpreted here as a cancel.
             await RequestCancelOnceAsync(onCancelSessionRequestedAsync).ConfigureAwait(false);
+            await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener failed while the session was live; ensuring cooperative cancellation: {ex}").ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Cancellation raced with a pipe error (e.g. the stream was disposed during teardown); ignore.
+            // Cancellation raced with a pipe error (e.g. the stream was disposed during teardown); ignore. This is
+            // an expected shutdown race, so it stays at Trace.
+            await TryLogAsync(LogLevel.Trace, $"Server control pipe '{_serverControlPipeName}' listener observed a race between shutdown and a pipe error during teardown: {ex}").ConfigureAwait(false);
         }
     }
 
@@ -335,7 +370,11 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
         if (_serverControlListenerTask is { } listenerTask)
         {
             // Bounded wait so a stuck listener can never hang the exit path on any target framework.
-            await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
+            Task completed = await Task.WhenAny(listenerTask, Task.Delay(TimeSpan.FromSeconds(5))).ConfigureAwait(false);
+            if (completed != listenerTask)
+            {
+                await TryLogAsync(LogLevel.Debug, $"Server control pipe '{_serverControlPipeName}' listener did not finish within the 5s bounded wait during exit; continuing without waiting further.").ConfigureAwait(false);
+            }
         }
     }
 
@@ -355,11 +394,30 @@ internal sealed class DotnetTestConnection : IPushOnlyProtocol, IDisposable
             }
             catch (Exception)
             {
-                // Best-effort shutdown.
+                // Best-effort shutdown. Logging providers have already been disposed by this phase; diagnostics
+                // belong in OnExitAsync, which runs while logging is still available.
             }
         }
 
         _serverControlListenerCts?.Dispose();
         _dotnetTestPipeClient?.Dispose();
+    }
+
+    private async Task TryLogAsync(LogLevel logLevel, string message)
+    {
+        var loggingTask = Task.Run(async () =>
+        {
+            try
+            {
+                await _logger.LogAsync(logLevel, message, null, LoggingExtensions.Formatter).ConfigureAwait(false);
+            }
+            catch (Exception)
+            {
+                // Control-channel diagnostics must never alter connection, cancellation, or shutdown behavior.
+            }
+        });
+
+        // Isolate synchronous provider work and bound providers that return a task which never completes.
+        await Task.WhenAny(loggingTask, Task.Delay(TimeSpan.FromSeconds(1))).ConfigureAwait(false);
     }
 }

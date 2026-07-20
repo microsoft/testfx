@@ -223,6 +223,69 @@ public sealed class AppInsightsProviderTests
     }
 
     [TestMethod]
+    [DataRow("None")]
+    [DataRow("Result")]
+    [DataRow("Live")]
+    public async Task LogEvent_WithOutputCaptureMode_TracksWellKnownEnumValue(string mode)
+    {
+        Mock<IEnvironment> environment = new();
+        Mock<IClock> clock = new();
+        Mock<IConfiguration> config = new();
+        Mock<ITelemetryInformation> telemetryInformation = new();
+
+        Mock<ILoggerFactory> loggerFactory = new();
+        loggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
+
+        Dictionary<string, string> capturedProperties = [];
+        using ManualResetEventSlim trackEventCalled = new(initialState: false);
+        Mock<ITelemetryClient> testTelemetryClient = new();
+        testTelemetryClient.Setup(x => x.TrackEvent(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<Dictionary<string, double>>()))
+            .Callback((string _, Dictionary<string, string> properties, Dictionary<string, double> _) =>
+            {
+                foreach (KeyValuePair<string, string> pair in properties)
+                {
+                    capturedProperties[pair.Key] = pair.Value;
+                }
+
+                trackEventCalled.Set();
+            });
+
+        Mock<ITelemetryClientFactory> telemetryClientFactory = new();
+        telemetryClientFactory.Setup(x => x.Create(It.IsAny<string?>(), It.IsAny<string>())).Returns(testTelemetryClient.Object);
+
+        CancellationTokenSource cancellationTokenSource = new();
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
+        testApplicationCancellationTokenSource.Setup(x => x.CancellationToken).Returns(cancellationTokenSource.Token);
+
+        AppInsightsProvider appInsightsProvider = new(
+            environment.Object,
+            testApplicationCancellationTokenSource.Object,
+            new SystemTask(),
+            loggerFactory.Object,
+            clock.Object,
+            config.Object,
+            telemetryInformation.Object,
+            telemetryClientFactory.Object,
+            "sessionId");
+
+        await appInsightsProvider.LogEventAsync(
+            "Sample",
+            new Dictionary<string, object> { ["mstest.setting.output_capture_mode"] = mode },
+            CancellationToken.None);
+
+        Assert.IsTrue(trackEventCalled.Wait(TimeSpan.FromSeconds(30), TestContext.CancellationToken), "Telemetry consumer did not invoke TrackEvent within the timeout.");
+
+#if NETCOREAPP
+        await appInsightsProvider.DisposeAsync();
+#else
+        appInsightsProvider.Dispose();
+#endif
+
+        Assert.IsTrue(capturedProperties.TryGetValue("mstest.setting.output_capture_mode", out string? value), "Expected output capture mode property in tracked event.");
+        Assert.AreEqual(mode, value);
+    }
+
+    [TestMethod]
     public async Task Dispose_FlushesTelemetryClientOnceAfterAllTrackedEvents()
     {
         // Regression: previously AppInsightTelemetryClient.TrackEvent called Flush() per event,

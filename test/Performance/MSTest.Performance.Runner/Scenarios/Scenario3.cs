@@ -177,6 +177,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: Parallelize(Workers = $Workers$, Scope = ExecutionScope.$ExecutionScope$)]
 
+#pragma warning disable CS0414 // Lifecycle state is intentionally mutated without affecting test execution.
 $Tests$
+#pragma warning restore CS0414
 """;
 }

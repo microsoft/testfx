@@ -277,7 +277,7 @@ internal sealed class FileLogger : IDisposable
         }
         catch (Exception ex)
         {
-            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
+            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, FileName, ex));
         }
     }
 #else
@@ -302,7 +302,7 @@ internal sealed class FileLogger : IDisposable
         }
         catch (Exception ex)
         {
-            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
+            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, FileName, ex));
         }
     }
 #endif
@@ -336,7 +336,7 @@ internal sealed class FileLogger : IDisposable
             // return instead of throwing. See https://github.com/dotnet/sdk/issues/55215.
             if (!_logLoop.Wait(_flushTimeout))
             {
-                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, _flushTimeout.TotalSeconds));
+                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, FileName, _flushTimeout.TotalSeconds));
 
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the
@@ -381,7 +381,7 @@ internal sealed class FileLogger : IDisposable
             }
             catch (TimeoutException)
             {
-                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, _flushTimeout.TotalSeconds));
+                _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, FileName, _flushTimeout.TotalSeconds));
 
                 // The consumer loop is still running and owns _writer/_fileStream. Disposing them here would race
                 // with the loop (StreamWriter and its stream are not thread-safe), which could throw or truncate the

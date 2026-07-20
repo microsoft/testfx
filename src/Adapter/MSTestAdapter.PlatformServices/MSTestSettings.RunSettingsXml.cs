@@ -16,7 +16,6 @@ internal sealed partial class MSTestSettings
     {
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
-        CurrentSettings.CaptureDebugTraces = settings.CaptureDebugTraces;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
@@ -25,6 +24,7 @@ internal sealed partial class MSTestSettings
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.OrderTestsByNameInClass = settings.OrderTestsByNameInClass;
+        CurrentSettings.OutputCaptureMode = settings.OutputCaptureMode;
         CurrentSettings.RandomizeTestOrder = settings.RandomizeTestOrder;
         CurrentSettings.RandomTestOrderSeed = settings.RandomTestOrderSeed;
         CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
@@ -103,7 +103,7 @@ internal sealed partial class MSTestSettings
                 switch (elementName)
                 {
                     case "CAPTURETRACEOUTPUT":
-                        ParseBoolSetting(reader.ReadInnerXml(), "CaptureTraceOutput", logger, v => settings.CaptureDebugTraces = v);
+                        ParseCaptureTraceOutputSetting(reader.ReadInnerXml(), "CaptureTraceOutput", logger, v => settings.OutputCaptureMode = v);
                         break;
                     case "MAPINCONCLUSIVETOFAILED":
                         ParseBoolSetting(reader.ReadInnerXml(), "MapInconclusiveToFailed", logger, v => settings.MapInconclusiveToFailed = v);
@@ -202,6 +202,38 @@ internal sealed partial class MSTestSettings
         {
             logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, rawValue, settingName));
         }
+    }
+
+    private static void ParseCaptureTraceOutputSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<TestOutputCaptureMode> setSetting)
+    {
+        // Accept the legacy boolean spelling (true -> Result, false -> None) as well as the
+        // TestOutputCaptureMode enum names (None/Result/Live) so existing runsettings keep working.
+        if (bool.TryParse(rawValue, out bool boolResult))
+        {
+            setSetting(boolResult ? TestOutputCaptureMode.Result : TestOutputCaptureMode.None);
+        }
+        else if (TryParseCaptureMode(rawValue, out TestOutputCaptureMode mode))
+        {
+            setSetting(mode);
+        }
+        else
+        {
+            logger?.SendMessage(MessageLevel.Warning, string.Format(CultureInfo.CurrentCulture, Resource.InvalidValue, rawValue, settingName));
+        }
+    }
+
+    private static bool TryParseCaptureMode(string value, out TestOutputCaptureMode mode)
+    {
+        // Enum.TryParse (used by TryParseEnum) also accepts numeric strings such as "2", which would
+        // silently enable an unexpected mode. Reject purely numeric input so only the documented values
+        // (the legacy booleans and the TestOutputCaptureMode names) are honored.
+        if (long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out _))
+        {
+            mode = default;
+            return false;
+        }
+
+        return TryParseEnum(value, out mode);
     }
 
     private static void ParseTimeoutSetting(string rawValue, string settingName, IAdapterMessageLogger? logger, Action<int> setSetting)

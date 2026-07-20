@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../PlatformResources.resx">
     <body>
@@ -125,7 +125,7 @@
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
         <target state="translated">응답 파일 '{0}'을(를) 읽지 못했습니다. {1}.</target>
-        <note>{0} is the response file path. {1} is the exception message.</note>
+        <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
         <source>The response file '{0}' was not found</source>
@@ -166,6 +166,16 @@
         <source>Command line: {0}</source>
         <target state="translated">명령줄: {0}</target>
         <note>{0} is the command line used to run the application.</note>
+      </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
+        <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
+        <target state="translated">복합 확장 '{0}'의 인스턴스를 만들지 못했습니다. 자세한 내용은 내부 예외를 참조하세요.</target>
+        <note>{0} is the extension type name.</note>
+      </trans-unit>
+      <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
+        <source>The factory for composite extension '{0}' returned a null instance.</source>
+        <target state="translated">복합 확장 '{0}'의 팩터리에서 null 인스턴스를 반환했습니다.</target>
+        <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensionFactory' is already registered</source>
@@ -916,9 +926,9 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <note>{0} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
-        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="translated">'{0}'초의 시간 제한 전에 로그를 플러시하지 못했습니다.</target>
-        <note>{0} is the timeout in seconds.</note>
+        <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
+        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
+        <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
@@ -976,11 +986,11 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
-        <source>An unexpected exception occurred in the 'FileLogger' write loop.
-{0}</source>
-        <target state="translated">'FileLogger' 쓰기 루프에서 예기치 않은 예외가 발생했습니다.
-{0}</target>
-        <note>{0} is the exception ToString output. {Locked="FileLogger"}</note>
+        <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+{1}</source>
+        <target state="translated">로그 파일 '{0}'에 대한 'FileLogger' 쓰기 루프에서 예기치 않은 예외가 발생했습니다. 로그 파일이 완전하지 않을 수 있습니다.
+{1}</target>
+        <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
       <trans-unit id="UnobservedTaskExceptionWarningMessage">
         <source>[ServerTestHost.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {0}</source>
