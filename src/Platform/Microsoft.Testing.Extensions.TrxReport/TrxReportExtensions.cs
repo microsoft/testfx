@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions;
+using Microsoft.Testing.Extensions.TrxReport.Resources;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
@@ -27,6 +28,11 @@ public static class TrxReportExtensions
     /// <param name="builder">The test application builder.</param>
     public static void AddTrxReportProvider(this ITestApplicationBuilder builder)
     {
+        if (builder is not IArtifactPostProcessingApplicationBuilder artifactPostProcessingBuilder)
+        {
+            throw new InvalidOperationException(ExtensionResources.InvalidTestApplicationBuilderType);
+        }
+
         var commandLine = new TrxReportGeneratorCommandLine();
 
         var compositeTestSessionTrxService =
@@ -61,16 +67,16 @@ public static class TrxReportExtensions
         TrxCompareToolCommandLine createTrxCompareToolCommandLine = toolTrxCompareFactory.CreateTrxCompareToolCommandLine();
         builder.CommandLine.AddProvider(() => createTrxCompareToolCommandLine);
 
-        builder.Tools.AddTool(serviceProvider => toolTrxCompareFactory.CreateTrxCompareTool(
+        artifactPostProcessingBuilder.Tools.AddTool(serviceProvider => toolTrxCompareFactory.CreateTrxCompareTool(
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetOutputDevice(),
             serviceProvider.GetRequiredService<ITask>()));
 
-        builder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new TrxArtifactPostProcessor());
+        artifactPostProcessingBuilder.ArtifactPostProcessing.AddArtifactPostProcessor(_ => new TrxArtifactPostProcessor());
 
         ToolTrxMergeFactory toolTrxMergeFactory = new();
         builder.CommandLine.AddProvider(toolTrxMergeFactory.CreateCommandLine);
-        builder.Tools.AddTool(serviceProvider => toolTrxMergeFactory.CreateTool(serviceProvider.GetCommandLineOptions()));
+        artifactPostProcessingBuilder.Tools.AddTool(serviceProvider => toolTrxMergeFactory.CreateTool(serviceProvider.GetCommandLineOptions()));
     }
 
     [UnsupportedOSPlatform("browser")]

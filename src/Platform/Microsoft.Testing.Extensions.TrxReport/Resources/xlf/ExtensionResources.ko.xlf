@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ko" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="InvalidTestApplicationBuilderType">
+        <source>TRX report generation and merge tools require a test application builder that supports artifact post-processing</source>
+        <target state="new">TRX report generation and merge tools require a test application builder that supports artifact post-processing</target>
+        <note>Do not localize format name {Locked="TRX"}.</note>
+      </trans-unit>
       <trans-unit id="TrxArtifactPostProcessorDescription">
         <source>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</source>
         <target state="new">Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</target>

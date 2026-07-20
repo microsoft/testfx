@@ -4,6 +4,12 @@
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Resources;
 
+#if NETCOREAPP
+using System.Text.Json;
+#else
+using Jsonite;
+#endif
+
 namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
 internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IReadOnlyList<InputArtifact> inputs)
@@ -15,7 +21,15 @@ internal sealed class ArtifactPostProcessingManifest(string outputDirectory, IRe
     public static ArtifactPostProcessingManifest Load(string path)
     {
         using FileStream stream = File.OpenRead(path);
-        (Dictionary<string, string?> values, _) = JsonConfigurationFileParser.Parse(stream);
+        Dictionary<string, string?> values;
+        try
+        {
+            (values, _) = JsonConfigurationFileParser.Parse(stream);
+        }
+        catch (JsonException ex)
+        {
+            throw new FormatException(ex.Message, ex);
+        }
 
         if (!values.TryGetValue("schemaVersion", out string? schemaVersion)
             || schemaVersion != "1"

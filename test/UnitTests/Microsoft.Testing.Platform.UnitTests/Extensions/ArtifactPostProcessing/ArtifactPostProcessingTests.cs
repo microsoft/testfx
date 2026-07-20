@@ -108,6 +108,22 @@ public sealed class ArtifactPostProcessingTests
     }
 
     [TestMethod]
+    public void Manifest_WithMalformedJson_ThrowsFormatException()
+    {
+        string manifestPath = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(manifestPath, """{ "schemaVersion": 1, """);
+
+            Assert.ThrowsExactly<FormatException>(() => ArtifactPostProcessingManifest.Load(manifestPath));
+        }
+        finally
+        {
+            File.Delete(manifestPath);
+        }
+    }
+
+    [TestMethod]
     public void Manifest_WithInputMissingPath_ThrowsFormatException()
     {
         string manifestPath = Path.GetTempFileName();

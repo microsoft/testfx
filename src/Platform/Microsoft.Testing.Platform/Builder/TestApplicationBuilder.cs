@@ -24,7 +24,7 @@ namespace Microsoft.Testing.Platform.Builder;
 /// <summary>
 /// A builder for test applications and services.
 /// </summary>
-internal sealed class TestApplicationBuilder : ITestApplicationBuilder
+internal sealed class TestApplicationBuilder : IArtifactPostProcessingApplicationBuilder
 {
     private readonly DateTimeOffset _createBuilderStart;
     private readonly ApplicationLoggingState _loggingState;

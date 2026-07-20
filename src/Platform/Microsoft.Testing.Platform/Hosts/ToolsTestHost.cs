@@ -144,7 +144,7 @@ internal sealed class ToolsHost(
         foreach (IGrouping<string, CommandLineParseOption> optionRecord in _commandLineHandler.ParseResult.Options.GroupBy(x => x.Name))
         {
             string optionName = optionRecord.Key;
-            int arity = optionRecord.Count();
+            int arity = optionRecord.Sum(record => record.Arguments.Length);
             ICommandLineOptionsProvider extension = GetCommandLineOptionsProviders(tool)
                 .Single(provider => provider.GetCommandLineOptions().Any(option => option.Name == optionName));
             CommandLineOption option = extension.GetCommandLineOptions().Single(x => x.Name == optionName);
@@ -181,14 +181,18 @@ internal sealed class ToolsHost(
     private async Task<ValidationResult> ValidateOptionsArgumentsAsync(ITool tool)
     {
         StringBuilder stringBuilder = new();
-        foreach (CommandLineParseOption optionRecord in _commandLineHandler.ParseResult.Options)
+        foreach (IGrouping<string, CommandLineParseOption> optionRecords in _commandLineHandler.ParseResult.Options.GroupBy(record => record.Name))
         {
+            string optionName = optionRecords.Key;
+            string[] arguments = [.. optionRecords.SelectMany(record => record.Arguments)];
             ICommandLineOptionsProvider extension = GetCommandLineOptionsProviders(tool)
-                .Single(provider => provider.GetCommandLineOptions().Any(option => option.Name == optionRecord.Name));
-            ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Name), optionRecord.Arguments).ConfigureAwait(false);
+                .Single(provider => provider.GetCommandLineOptions().Any(option => option.Name == optionName));
+            ValidationResult result = await extension.ValidateOptionArgumentsAsync(
+                extension.GetCommandLineOptions().Single(option => option.Name == optionName),
+                arguments).ConfigureAwait(false);
             if (!result.IsValid)
             {
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Name}': {result.ErrorMessage}, tool {tool.DisplayName}");
+                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionName}': {result.ErrorMessage}, tool {tool.DisplayName}");
             }
         }
 

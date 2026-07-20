@@ -121,6 +121,10 @@
     <value>Merges TRX reports produced by Microsoft.Testing.Extensions.TrxReport</value>
     <comment>Do not localize format name {Locked="TRX"} or assembly name {Locked="Microsoft.Testing.Extensions.TrxReport"}.</comment>
   </data>
+  <data name="InvalidTestApplicationBuilderType" xml:space="preserve">
+    <value>TRX report generation and merge tools require a test application builder that supports artifact post-processing</value>
+    <comment>Do not localize format name {Locked="TRX"}.</comment>
+  </data>
   <data name="TrxArtifactPostProcessorDisplayName" xml:space="preserve">
     <value>TRX report merger</value>
     <comment>Do not localize format name {Locked="TRX"}.</comment>

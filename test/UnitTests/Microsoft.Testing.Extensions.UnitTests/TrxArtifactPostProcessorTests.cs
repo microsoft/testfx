@@ -73,6 +73,16 @@ public sealed class TrxArtifactPostProcessorTests
             TrxReportEngine.CreateMergeRunId([second, first]));
     }
 
+    [TestMethod]
+    public void CreateMergeRunId_WithDifferentExecutionId_ProducesDifferentId()
+    {
+        string path = Path.Combine(Path.GetTempPath(), "a.trx");
+
+        Assert.AreNotEqual(
+            TrxReportEngine.CreateMergeRunId([path], ["execution-1"]),
+            TrxReportEngine.CreateMergeRunId([path], ["execution-2"]));
+    }
+
     private static void WriteMinimalReport(string path, string name)
     {
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";

@@ -49,6 +49,7 @@ const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.ToolName 
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.InputOptionName = "input" -> string!
 const Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.OutputOptionName = "output-trx" -> string!
 static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.CreateMergeRunId(System.Collections.Generic.IReadOnlyList<string!>! inputPaths) -> System.Guid
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxReportEngine.CreateMergeRunId(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, System.Collections.Generic.IReadOnlyList<string?>! executionIds) -> System.Guid
 const Microsoft.Testing.Platform.Helpers.EnvironmentVariableConstants.TESTINGPLATFORM_PIPE_DIRECTORY = "TESTINGPLATFORM_PIPE_DIRECTORY" -> string!
 Microsoft.Testing.Platform.Helpers.DisposeHelper
 static Microsoft.Testing.Platform.Helpers.DisposeHelper.DisposeAsync(object? obj) -> System.Threading.Tasks.Task!

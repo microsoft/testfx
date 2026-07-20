@@ -15,9 +15,9 @@ internal sealed class ArtifactPostProcessingManager : IArtifactPostProcessingMan
     public async Task<IReadOnlyList<IArtifactPostProcessor>> BuildAsync(IServiceProvider serviceProvider)
     {
         List<IArtifactPostProcessor> processors = [];
-        foreach (Func<IServiceProvider, IArtifactPostProcessor> factory in _factories)
+        for (int i = 0; i < _factories.Count; i++)
         {
-            IArtifactPostProcessor processor = factory(serviceProvider);
+            IArtifactPostProcessor processor = _factories[i](serviceProvider);
             if (!await processor.IsEnabledAsync().ConfigureAwait(false))
             {
                 continue;

@@ -4,13 +4,11 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
-using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
 using Microsoft.Testing.Platform.TestHostOrchestrator;
-using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Builder;
 
@@ -51,18 +49,6 @@ public interface ITestApplicationBuilder
     /// </summary>
     [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
     ILoggingManager Logging { get; }
-
-    /// <summary>
-    /// Gets the artifact post-processing manager.
-    /// </summary>
-    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-    IArtifactPostProcessingManager ArtifactPostProcessing { get; }
-
-    /// <summary>
-    /// Gets the tools manager.
-    /// </summary>
-    [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
-    IToolsManager Tools { get; }
 
     /// <summary>
     /// Registers a test framework with the application builder.
