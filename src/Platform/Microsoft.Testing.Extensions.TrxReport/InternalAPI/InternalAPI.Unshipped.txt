@@ -24,3 +24,107 @@ Microsoft.Testing.Extensions.MergeOutputFileHelper
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.BuildCaseFoldedProbePath(string! directory, string! probeFileName) -> string!
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.EnsureOutputDoesNotAliasInput(System.Collections.Generic.IReadOnlyList<string!>! inputPaths, string! outputPath) -> void
 static Microsoft.Testing.Extensions.MergeOutputFileHelper.WriteViaTemporarySiblingAsync(string! outputPath, System.Func<string!, System.Threading.Tasks.Task!>! writeToTempAsync) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile.Flush() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile.Length.get -> long
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile.Position.get -> long
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile.Read(byte[]! buffer, int offset, int count) -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile.Seek(long offset, System.IO.SeekOrigin origin) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile.SetLength(long length) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile.Write(byte[]! buffer, int offset, int count) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations.CreateTemporarySiblingPath(string! destinationPath) -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations.Delete(string! path) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations.Exists(string! path) -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations.Open(string! path, System.IO.FileMode mode, System.IO.FileAccess access, System.IO.FileShare share) -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations.ReplaceTemporarySibling(string! temporaryPath, string! destinationPath) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations.SupportsAtomicReplace.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations.CreateTemporarySiblingPath(string! destinationPath) -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations.Delete(string! path) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations.Exists(string! path) -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations.Open(string! path, System.IO.FileMode mode, System.IO.FileAccess access, System.IO.FileShare share) -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations.ReplaceTemporarySibling(string! temporaryPath, string! destinationPath) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations.SupportsAtomicReplace.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeFileOperations.TrxPrototypeFileOperations() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype.AppendCompleted(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! result, System.Guid executionId, int? runningSlot = null) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype.ClaimRunning(string! uid, string! displayName, System.Guid executionId, System.DateTimeOffset startTime) -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype.Compact(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion! completion) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype.Complete(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion! completion) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype.Initialize() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype.TrxIncrementalWriterPrototype(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations! operations, string! path, System.Guid runId, string! runName, string! machineName, string! testModule, string! frameworkUid, string! frameworkVersion, System.DateTimeOffset startTime, int definitionPadBytes = 65536, int entryPadBytes = 32768, int summaryPadBytes = 32768, int counterWidth = 10, int runningSlotCount = 4, int runningSlotByteCapacity = 512, Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxSnapshotPublisherPrototype? snapshotPublisher = null) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxIncrementalWriterPrototype.UpdateFinishTime(System.DateTimeOffset finishTime) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.AttachmentWarnings.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.AttachmentWarnings.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.CollectorAttachmentHrefs.get -> System.Collections.Generic.IReadOnlyList<string!>!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.CollectorAttachmentHrefs.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.CrashText.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.CrashText.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.ExitCode.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.ExitCode.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.FinishTime.get -> System.DateTimeOffset
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.FinishTime.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.IsTestHostCrashed.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.IsTestHostCrashed.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion.TrxPrototypeCompletion() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.RenderCompact(System.Guid runId, string! runName, System.DateTimeOffset startTime, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult!>! results, System.Collections.Generic.IReadOnlyList<System.Guid>! executionIds, Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion! completion) -> byte[]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.RenderCompletedResult(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! testResult, System.Guid executionId, System.DateTimeOffset fallbackTime) -> byte[]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.RenderDefinition(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! testResult, System.Guid executionId) -> byte[]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.RenderRunningSlot(string! uid, string! displayName, System.Guid executionId, System.DateTimeOffset startTime, int byteCapacity) -> byte[]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.RenderSummaryAdditions(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion! completion) -> byte[]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.TrxPrototypeXmlRenderer(string! machineName, string! testModule, string! frameworkUid, string! frameworkVersion) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.WriteJournalReplayedRecord(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile! destination, Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! result, System.Guid executionId, System.DateTimeOffset fallbackTime) -> void
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.GetTestId(string! uid) -> string!
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.RenderEntry(string! uid, System.Guid executionId) -> byte[]!
+static Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeXmlRenderer.RenderInitial(System.Guid runId, string! runName, System.DateTimeOffset startTime, int definitionPadBytes, int entryPadBytes, int summaryPadBytes, int counterWidth, int runningSlotCount, int runningSlotByteCapacity) -> byte[]!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxSnapshotPublisherPrototype
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxSnapshotPublisherPrototype.Publish(string! destinationPath, System.Action<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFile!>! writeCompleteDocument) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxSnapshotPublisherPrototype.TrxSnapshotPublisherPrototype(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations! operations) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.DisplayName.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.DisplayName.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.ExecutionId.get -> System.Guid
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.ExecutionId.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.StartTime.get -> System.DateTimeOffset
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.StartTime.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.TrxPrototypeRunningTest() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.Uid.get -> string!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest.Uid.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.AppendedRecordCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.AppendedRecordCount.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.CurrentDefinitionIdCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.CurrentDefinitionIdCount.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.CurrentRecordBufferBytes.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.CurrentRecordBufferBytes.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.CurrentReplayRecordCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.CurrentReplayRecordCount.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.MaxEncodedRecordBytes.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.MaxEncodedRecordBytes.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.MaxRenderedFragmentBytes.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.MaxRenderedFragmentBytes.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakDefinitionIdCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakDefinitionIdCount.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakLogicalBufferBytes.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakLogicalBufferBytes.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakRecordBufferBytes.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakRecordBufferBytes.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakReplayRecordCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PeakReplayRecordCount.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PublishedDefinitionCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PublishedDefinitionCount.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PublishedRecordCount.get -> int
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.PublishedRecordCount.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.RetainsResultCollection.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.RetainsResultCollection.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.RetainsXDocument.get -> bool
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.RetainsXDocument.init -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics.TrxJournalSnapshotDiagnostics() -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotPrototype
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotPrototype.Append(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxTestResult! result, System.Guid executionId) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotPrototype.Diagnostics.get -> Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotDiagnostics!
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotPrototype.PublishSnapshot(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeCompletion! completion, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxPrototypeRunningTest!>? runningTests = null) -> void
+Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.TrxJournalSnapshotPrototype.TrxJournalSnapshotPrototype(Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming.ITrxPrototypeFileOperations! operations, string! journalPath, string! destinationPath, System.Guid runId, string! runName, string! machineName, string! testModule, string! frameworkUid, string! frameworkVersion, System.DateTimeOffset startTime) -> void
