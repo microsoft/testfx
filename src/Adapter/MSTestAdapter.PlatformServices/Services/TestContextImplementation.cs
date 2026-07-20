@@ -518,11 +518,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
         => GetOrCreate(ref _testContextMessageStringBuilder);
 
     private static SynchronizedStringBuilder GetOrCreate(ref SynchronizedStringBuilder? builder)
-    {
-        _ = builder ?? Interlocked.CompareExchange(ref builder, new SynchronizedStringBuilder(), null)!;
-
-        return builder;
-    }
+        => LazyInitializer.EnsureInitialized(ref builder, static () => new())!;
 
     private void WriteLive(string? message, bool appendLine)
     {
