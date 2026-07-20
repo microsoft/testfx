@@ -161,7 +161,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LegacyDeploymentBehavior;
 
-[DeploymentItem(@"..\..\..\NeverDeclared.txt")]
+[DeploymentItem("../../../NeverDeclared.txt")]
 [TestClass]
 public class SourceDependencyTests
 {
