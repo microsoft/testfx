@@ -118,7 +118,7 @@ public sealed class ArtifactPostProcessingTests
                       "producingTestModule": "A.dll",
                       "targetFramework": "net10.0",
                       "architecture": "x64",
-                      "executionId": "execution"
+                      "executionId": "null"
                     },
                     {
                       "path": "legacy.trx",
@@ -134,6 +134,7 @@ public sealed class ArtifactPostProcessingTests
             Assert.HasCount(2, manifest.Inputs);
             Assert.AreEqual("microsoft.testing.trx", manifest.Inputs[0].Kind);
             Assert.AreEqual("A.dll", manifest.Inputs[0].ProducingTestModule);
+            Assert.AreEqual("null", manifest.Inputs[0].ExecutionId);
             Assert.IsNull(manifest.Inputs[1].Kind);
         }
         finally

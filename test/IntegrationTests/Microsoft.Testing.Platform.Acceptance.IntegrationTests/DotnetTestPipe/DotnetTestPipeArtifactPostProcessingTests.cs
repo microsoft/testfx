@@ -122,6 +122,38 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
         result.AssertExitCodeIs(ExitCode.InvalidCommandLine);
     }
 
+    [TestMethod]
+    public async Task MergeTool_RepeatedInputs_WritesOutputTrx()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"merge-trx-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.trx");
+            string secondPath = Path.Combine(directory, "second.trx");
+            string outputPath = Path.Combine(directory, "merged.trx");
+            WriteMinimalReport(firstPath, "first");
+            WriteMinimalReport(secondPath, "second");
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+
+            TestHostResult result = await testHost.ExecuteAsync(
+                $"--input \"{firstPath}\" --input \"{secondPath}\" --output-trx \"{outputPath}\"",
+                toolName: "merge-trx",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.AssertExitCodeIs(ExitCode.Success);
+            Assert.IsTrue(File.Exists(outputPath));
+            Assert.AreEqual("TestRun", XDocument.Load(outputPath).Root?.Name.LocalName);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static void WriteMinimalReport(string path, string name)
     {
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
