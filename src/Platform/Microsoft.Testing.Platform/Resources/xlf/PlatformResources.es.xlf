@@ -72,6 +72,11 @@
         <target state="new">Cannot read the artifact post-processing manifest: {0}</target>
         <note>{0} is the exception message.</note>
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
+        <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
+        <target state="new">Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
+      </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Canceling the test session...</source>
         <target state="translated">Cancelando la sesión de prueba...</target>

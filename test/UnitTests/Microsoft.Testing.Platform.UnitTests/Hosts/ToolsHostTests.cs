@@ -2,7 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.Tools;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests.Hosts;
 
@@ -21,5 +26,20 @@ public sealed class ToolsHostTests
         ];
 
         Assert.AreSequenceEqual(["a.trx", "b.trx"], ToolsHost.AggregateArguments(occurrences));
+    }
+
+    [TestMethod]
+    public async Task ValidateCommandLineOptionsAsync_ReturnsProviderFailure()
+    {
+        var provider = new Mock<IToolCommandLineOptionsProvider>();
+        provider.Setup(candidate => candidate.ValidateCommandLineOptionsAsync(It.IsAny<ICommandLineOptions>()))
+            .ReturnsAsync(ValidationResult.Invalid("invalid combination"));
+
+        ValidationResult result = await ToolsHost.ValidateCommandLineOptionsAsync(
+            [provider.Object],
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsFalse(result.IsValid);
+        Assert.AreEqual("invalid combination", result.ErrorMessage);
     }
 }

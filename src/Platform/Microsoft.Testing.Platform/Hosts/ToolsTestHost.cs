@@ -89,6 +89,15 @@ internal sealed class ToolsHost(
                         return (int)ExitCode.InvalidCommandLine;
                     }
 
+                    ValidationResult commandLineValidationResult = await ValidateCommandLineOptionsAsync(
+                        GetToolCommandLineOptionsProviders(tool),
+                        _commandLineHandler).ConfigureAwait(false);
+                    if (!commandLineValidationResult.IsValid)
+                    {
+                        await _outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(commandLineValidationResult.ErrorMessage), cancellationToken).ConfigureAwait(false);
+                        return (int)ExitCode.InvalidCommandLine;
+                    }
+
                     return await tool.RunAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
@@ -211,4 +220,20 @@ internal sealed class ToolsHost(
 
     internal static string[] AggregateArguments(IEnumerable<CommandLineParseOption> optionRecords)
         => [.. optionRecords.SelectMany(record => record.Arguments)];
+
+    internal static async Task<ValidationResult> ValidateCommandLineOptionsAsync(
+        IEnumerable<IToolCommandLineOptionsProvider> providers,
+        ICommandLineOptions commandLineOptions)
+    {
+        foreach (IToolCommandLineOptionsProvider provider in providers)
+        {
+            ValidationResult result = await provider.ValidateCommandLineOptionsAsync(commandLineOptions).ConfigureAwait(false);
+            if (!result.IsValid)
+            {
+                return result;
+            }
+        }
+
+        return ValidationResult.Valid();
+    }
 }

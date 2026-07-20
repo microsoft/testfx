@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 
@@ -23,11 +24,27 @@ internal sealed class ArtifactPostProcessingManager : IArtifactPostProcessingMan
                 continue;
             }
 
+            ValidateCapabilities(processor);
             processors.ValidateUniqueExtension(processor);
             await processor.TryInitializeAsync().ConfigureAwait(false);
             processors.Add(processor);
         }
 
         return processors;
+    }
+
+    private static void ValidateCapabilities(IArtifactPostProcessor processor)
+    {
+        foreach (string capability in processor.SupportedKinds.Concat(processor.SupportedFileExtensionsFallback))
+        {
+            if (capability.Contains(';'))
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    PlatformResources.ArtifactPostProcessorCapabilityContainsSeparator,
+                    processor.Uid,
+                    capability));
+            }
+        }
     }
 }

@@ -44,6 +44,17 @@ public sealed class ArtifactPostProcessingTests
         Assert.AreEqual("enabled", processors[0].Uid);
     }
 
+    [DataRow("kind;other", ".ext")]
+    [DataRow("kind", ".ext;.other")]
+    [TestMethod]
+    public async Task Manager_CapabilityContainingSeparator_ThrowsInvalidOperationException(string kind, string extension)
+    {
+        ArtifactPostProcessingManager manager = new();
+        manager.AddArtifactPostProcessor(_ => new StubProcessor("processor", [kind], [extension]));
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(new ServiceProvider()));
+    }
+
     [TestMethod]
     public void Manifest_LoadsVersionedAttributedInputs()
     {

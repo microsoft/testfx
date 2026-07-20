@@ -124,6 +124,10 @@
   <data name="ArtifactPostProcessingDispatcherCommandLineDescription" xml:space="preserve">
     <value>Internal command line for artifact post-processing.</value>
   </data>
+  <data name="ArtifactPostProcessorCapabilityContainsSeparator" xml:space="preserve">
+    <value>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</value>
+    <comment>{0} is the processor UID. {1} is an artifact kind or file extension.</comment>
+  </data>
   <data name="ArtifactPostProcessingDispatcherDescription" xml:space="preserve">
     <value>Dispatches artifact post-processing jobs selected by dotnet test.</value>
     <comment>Do not localize command name {Locked="dotnet test"}.</comment>

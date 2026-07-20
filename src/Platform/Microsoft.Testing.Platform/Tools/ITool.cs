@@ -6,7 +6,8 @@ using Microsoft.Testing.Platform.Extensions;
 namespace Microsoft.Testing.Platform.Tools;
 
 /// <summary>
-/// Represents a non-test command that can be invoked through <c>--tool</c>.
+/// Represents a non-test command that can be invoked by passing its <see cref="Name"/>
+/// as the first positional command-line argument.
 /// </summary>
 [Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface ITool : IExtension
