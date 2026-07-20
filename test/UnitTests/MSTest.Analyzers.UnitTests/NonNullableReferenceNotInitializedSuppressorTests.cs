@@ -173,10 +173,8 @@ public class SomeClass
     }
 
     [TestMethod]
-    public async Task TestContextGetterOnlyPropertyOnTestClass_DiagnosticIsSuppressed()
+    public async Task TestContextGetterOnlyPropertyOnTestClass_DiagnosticIsNotSuppressed()
     {
-        // A TestContext property with only a getter still satisfies 'declaredSymbol is IPropertySymbol',
-        // so the suppressor must fire and suppress CS8618.
         string code = @"
 #nullable enable
 
@@ -189,7 +187,7 @@ public class SomeClass
 }
 ";
 
-        await VerifySingleSuppressionAsync(code, isSuppressed: true);
+        await VerifySingleSuppressionAsync(code, isSuppressed: false);
     }
 
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)

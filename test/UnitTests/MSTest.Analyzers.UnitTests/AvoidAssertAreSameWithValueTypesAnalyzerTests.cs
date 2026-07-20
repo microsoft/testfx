@@ -390,8 +390,8 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
     [TestMethod]
     public async Task WhenBothArgsAreNullLiterals_NoDiagnostic()
     {
-        // null cast to a reference type has IsValueType == false after WalkDownConversion().
-        // Neither arg is a value type, so no diagnostic should fire.
+        // WalkDownConversion() removes the object conversion, leaving an untyped null literal.
+        // The null-propagating IsValueType check therefore does not report a diagnostic.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -455,8 +455,8 @@ public sealed class AvoidAssertAreSameWithValueTypesAnalyzerTests
     [TestMethod]
     public async Task WhenGenericTypeParameterWithNoConstraint_NoDiagnostic()
     {
-        // An unconstrained generic type parameter is not a value type (IsValueType == false),
-        // so the analyzer should not report a diagnostic.
+        // An unconstrained generic type parameter is not known to be a value type at analysis time,
+        // so the analyzer should not report a diagnostic even though T can be instantiated with one.
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
