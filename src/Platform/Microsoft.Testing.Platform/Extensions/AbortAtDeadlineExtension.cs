@@ -48,7 +48,7 @@ internal sealed class AbortAtDeadlineExtension : IDataConsumer, IOutputDeviceDat
 
         if (DeadlineHelper.TryGetDeadline(environment, out DateTimeOffset deadline) && capability is not null)
         {
-            DateTimeOffset stopAt = deadline - DeadlineHelper.GetStopMargin(environment);
+            DateTimeOffset stopAt = DeadlineHelper.SubtractSaturating(deadline, DeadlineHelper.GetStopMargin(environment));
             _stopAt = stopAt;
 
             // The deadline is absolute wall-clock time, so we can arm a one-shot timer now. If the

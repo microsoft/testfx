@@ -22,3 +22,4 @@ Microsoft.Testing.Platform.Helpers.DeadlineHelper
 static Microsoft.Testing.Platform.Helpers.DeadlineHelper.TryGetDeadline(Microsoft.Testing.Platform.Helpers.IEnvironment! environment, out System.DateTimeOffset deadlineUtc) -> bool
 static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetStopMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
 static Microsoft.Testing.Platform.Helpers.DeadlineHelper.GetDumpMargin(Microsoft.Testing.Platform.Helpers.IEnvironment! environment) -> System.TimeSpan
+static Microsoft.Testing.Platform.Helpers.DeadlineHelper.SubtractSaturating(System.DateTimeOffset instant, System.TimeSpan margin) -> System.DateTimeOffset

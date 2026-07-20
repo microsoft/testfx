@@ -57,6 +57,18 @@ internal static class DeadlineHelper
     public static TimeSpan GetDumpMargin(IEnvironment environment)
         => GetMargin(environment, EnvironmentVariableConstants.TESTINGPLATFORM_DEADLINE_DUMP_MARGIN, DefaultDumpMargin);
 
+    /// <summary>
+    /// Subtracts <paramref name="margin"/> from <paramref name="instant"/>, clamping the result at
+    /// <see cref="DateTimeOffset.MinValue"/> instead of throwing when the subtraction would underflow.
+    /// A very old (but valid) deadline, or a large margin, could otherwise overflow while computing
+    /// the stop/dump instant. Saturating means "this instant is already in the past", which for both
+    /// callers translates to "act immediately".
+    /// </summary>
+    public static DateTimeOffset SubtractSaturating(DateTimeOffset instant, TimeSpan margin)
+        => margin > instant - DateTimeOffset.MinValue
+            ? DateTimeOffset.MinValue
+            : instant - margin;
+
     private static TimeSpan GetMargin(IEnvironment environment, string variableName, TimeSpan defaultValue)
     {
         string? raw = environment.GetEnvironmentVariable(variableName);
