@@ -69,6 +69,8 @@ internal partial class TestExecutionManager
             ? new RemotingMessageLogger(adapterMessageLogger)
             : adapterMessageLogger;
 
+        Dictionary<string, object?> lifecycleContextProperties = [with(sourceLevelParameters!)];
+
         foreach (UnitTestElement currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
@@ -104,12 +106,12 @@ internal partial class TestExecutionManager
                 // Alternatively, if we want to use RunSingleTestAsync for the case of STA, we should have:
                 // 1. A custom single threaded synchronization context that keeps us in STA.
                 // 2. Use ConfigureAwait(true).
-                unitTestResult = testRunner.RunSingleTest(unitTestElement, testContextProperties, remotingMessageLogger);
+                unitTestResult = testRunner.RunSingleTest(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger);
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
             }
             else
             {
-                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, remotingMessageLogger).ConfigureAwait(false);
+                unitTestResult = await testRunner.RunSingleTestAsync(unitTestElement, testContextProperties, lifecycleContextProperties, remotingMessageLogger).ConfigureAwait(false);
             }
 
             if (PlatformServiceProvider.Instance.AdapterTraceLogger.IsInfoEnabled)
