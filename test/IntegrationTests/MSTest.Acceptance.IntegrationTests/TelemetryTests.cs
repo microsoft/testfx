@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -126,26 +127,24 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     #region VSTest mode - Run
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_RunTests_Succeeds(string tfm)
     {
-        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
-
-        // Pre-build the VSTest project for this TFM exactly once, then run `dotnet test`
-        // with `--no-build --no-restore` so the build/restore targets that write to
-        // `bin/<tfm>/TelemetryVSTestProject.runtimeconfig.json` do not run per-test.
-        // This removes the GenerateRuntimeConfigurationFiles race that was still flaking
-        // intermittently even with [DoNotParallelize] on the class.
         await AssetFixture.EnsureVSTestProjectBuiltAsync(tfm, TestContext.CancellationToken);
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --no-build --no-restore",
+        var testHost = TestHost.LocateFrom(AssetFixture.VSTestProjectPath, "TelemetryVSTestProject", tfm);
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+        using var commandLine = new CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\"",
             workingDirectory: AssetFixture.VSTestProjectPath,
-            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(0, testResult.ExitCode, $"dotnet test failed:\n{testResult.StandardOutput}\n{testResult.StandardError}");
-        testResult.AssertOutputContains("Passed!");
+        Assert.AreEqual(0, exitCode, $"Packaged VSTest run failed:\n{commandLine.StandardOutput}\n{commandLine.ErrorOutput}");
+        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
+        Assert.Contains("Total tests: 4", commandLine.StandardOutput);
+        Assert.Contains("Passed: 4", commandLine.StandardOutput);
     }
 
     #endregion
@@ -153,23 +152,24 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     #region VSTest mode - Discovery only
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_DiscoverTests_Succeeds(string tfm)
     {
-        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
-
         await AssetFixture.EnsureVSTestProjectBuiltAsync(tfm, TestContext.CancellationToken);
 
-        DotnetMuxerResult testResult = await DotnetCli.RunAsync(
-            $"test -c Release {AssetFixture.VSTestProjectPath} --framework {tfm} --list-tests --no-build --no-restore",
+        var testHost = TestHost.LocateFrom(AssetFixture.VSTestProjectPath, "TelemetryVSTestProject", tfm);
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+        using var commandLine = new CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\" /ListTests",
             workingDirectory: AssetFixture.VSTestProjectPath,
-            failIfReturnValueIsNotZero: false,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(0, testResult.ExitCode, $"dotnet test --list-tests failed:\n{testResult.StandardOutput}\n{testResult.StandardError}");
-        testResult.AssertOutputContains("PassingTest");
-        testResult.AssertOutputContains("DataDrivenTest");
-        testResult.AssertOutputContains("TestWithTimeout");
+        Assert.AreEqual(0, exitCode, $"Packaged VSTest discovery failed:\n{commandLine.StandardOutput}\n{commandLine.ErrorOutput}");
+        Assert.Contains("PassingTest", commandLine.StandardOutput);
+        Assert.Contains("DataDrivenTest", commandLine.StandardOutput);
+        Assert.Contains("TestWithTimeout", commandLine.StandardOutput);
     }
 
     #endregion
@@ -219,10 +219,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion));
 
-        // Pre-builds the VSTest project for the given TFM exactly once per TFM. Callers can
-        // then invoke `dotnet test ... --no-build --no-restore` to avoid having every test
-        // method redo the build, which is what produces the
-        // `GenerateRuntimeConfigurationFiles` file-in-use races on shared build outputs.
+        // Pre-builds the VSTest project for the given TFM exactly once per TFM.
         public async Task EnsureVSTestProjectBuiltAsync(string targetFramework, CancellationToken cancellationToken)
         {
             await _vstestBuildLock.WaitAsync(cancellationToken);
@@ -309,6 +306,7 @@ public class UnitTest1
 
   <PropertyGroup>
     <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <OutputType>Exe</OutputType>
     <LangVersion>Preview</LangVersion>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -318,6 +316,7 @@ public class UnitTest1
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$MicrosoftNETTestSdkVersion$]" />
   </ItemGroup>
 
 </Project>

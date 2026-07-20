@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -30,6 +31,10 @@ public sealed class SdkTests : AcceptanceTestBase<NopAssetFixture>
     <NoWarn>$(NoWarn);NU1507</NoWarn>
     $ExtraProperties$
   </PropertyGroup>
+
+  <ItemGroup Condition="'$(TestWithPackagedVSTest)' == 'true'">
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
+  </ItemGroup>
 
 </Project>
 
@@ -62,30 +67,36 @@ namespace MSTestSdkTest
     public TestContext TestContext { get; set; }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
+    public async Task RunTests_With_PackagedVSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
-        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
-
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
             AssetName,
-            SingleTestSourceCodeVSTest
+            SingleTestSourceCode
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$TargetFramework$", multiTfm)
-            .PatchCodeWithReplace("$ExtraProperties$", "<UseVSTest>true</UseVSTest>"));
+            .PatchCodeWithReplace("$ExtraProperties$", "<TestWithPackagedVSTest>true</TestWithPackagedVSTest>"));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {testAsset.TargetAssetPath}", workingDirectory: testAsset.TargetAssetPath, cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertExitCodeIs(0);
 
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net10\.0\)");
-#if !SKIP_INTERMEDIATE_TARGET_FRAMEWORKS
-        compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net8\.0\)");
-#endif
+        string sources = string.Join(
+            " ",
+            multiTfm.Split(';').Select(tfm =>
+            {
+                var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+                return $"\"{GetTestApplicationSourcePath(testHost)}\"";
+            }));
+        using var commandLine = new CommandLine();
+        await commandLine.RunAsync(
+            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" {sources}",
+            cancellationToken: TestContext.CancellationToken);
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            compilationResult.AssertOutputMatchesRegex(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* [m]?s - MSTestSdk.dll \(net462\)");
-        }
+        Assert.Contains("VSTest version", commandLine.StandardOutput);
+        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
+        Assert.Contains($"Total tests: {multiTfm.Split(';').Length}", commandLine.StandardOutput);
+        Assert.Contains($"Passed: {multiTfm.Split(';').Length}", commandLine.StandardOutput);
     }
 
     [TestMethod]

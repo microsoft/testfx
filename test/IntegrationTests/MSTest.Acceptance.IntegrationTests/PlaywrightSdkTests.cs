@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -37,34 +38,35 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
-        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
-
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        string exeOrDllName = GetTestExecutablePath(testHost);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {exeOrDllName}",
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+
+        using var commandLine = new CommandLine();
+        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
+            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\"",
             workingDirectory: AssetFixture.PlaywrightProjectPath,
-            failIfReturnValueIsNotZero: false,
-            warnAsError: false,
-            suppressPreviewDotNetMessage: false,
             cancellationToken: TestContext.CancellationToken);
 
-        // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("VSTest version");
+        Assert.Contains("VSTest version", commandLine.StandardOutput);
 
         // Depending on the machine, the test might fail due to the browser not being installed.
         // To avoid slowing down the tests, we will not run the installation so depending on machines we have different results.
-        switch (dotnetTestResult.ExitCode)
+        switch (exitCode)
         {
             case 0:
-                dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+                Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
+                Assert.Contains("Total tests: 1", commandLine.StandardOutput);
+                Assert.Contains("Passed: 1", commandLine.StandardOutput);
                 break;
 
             case 1:
-                dotnetTestResult.AssertOutputContains("Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1");
+                Assert.Contains("Test Run Failed.", commandLine.StandardOutput);
+                Assert.Contains("Total tests: 1", commandLine.StandardOutput);
+                Assert.Contains("Failed: 1", commandLine.StandardOutput);
                 break;
 
             default:
@@ -94,6 +96,7 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     <Using Include="System.Text.RegularExpressions" />
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
   </ItemGroup>
 </Project>
 

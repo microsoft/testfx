@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -25,11 +26,10 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
         string exePath = GetTestExePath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
         Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
 
-        string settingsArgument = GetRunSettingsArgument(disableAppDomain);
-
+        using RunSettingsFile runSettings = CreateRunSettingsFile(disableAppDomain);
         using var commandLine = new CommandLine();
         await commandLine.RunAsync(
-            $"\"{exePath}\"{settingsArgument}",
+            $"\"{exePath}\"{runSettings.MTPArgument}",
             cancellationToken: TestContext.CancellationToken);
     }
 
@@ -42,22 +42,57 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
         string exePath = GetTestExePath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
         Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
 
-        string settingsArgument = GetRunSettingsArgument(disableAppDomain);
-
+        using RunSettingsFile runSettings = CreateRunSettingsFile(disableAppDomain);
         using var commandLine = new CommandLine();
         await commandLine.RunAsync(
-            $"\"{exePath}\" --list-tests{settingsArgument}",
+            $"\"{exePath}\" --list-tests{runSettings.MTPArgument}",
             cancellationToken: TestContext.CancellationToken);
     }
 
-    // Produces a '--settings <file>' argument for the Microsoft.Testing.Platform host, writing a temp
-    // .runsettings that toggles DisableAppDomain. When the value is null we don't pass any settings so
-    // MSTest uses its default (AppDomain isolation enabled on .NET Framework).
-    private static string GetRunSettingsArgument(bool? disableAppDomain)
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataRow(null)]
+    public async Task RunTests_With_PackagedVSTest(bool? disableAppDomain)
+    {
+        string exePath = GetTestExePath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
+        Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
+
+        using RunSettingsFile runSettings = CreateRunSettingsFile(disableAppDomain);
+        using var commandLine = new CommandLine();
+        await commandLine.RunAsync(
+            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{exePath}\"{runSettings.VSTestArgument}",
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
+        Assert.Contains("Total tests: 2", commandLine.StandardOutput);
+        Assert.Contains("Passed: 2", commandLine.StandardOutput);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    [DataRow(null)]
+    public async Task DiscoverTests_With_PackagedVSTest(bool? disableAppDomain)
+    {
+        string exePath = GetTestExePath(AssetFixture.TargetAssetPath, TargetFrameworks.NetFramework[0]);
+        Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
+
+        using RunSettingsFile runSettings = CreateRunSettingsFile(disableAppDomain);
+        using var commandLine = new CommandLine();
+        await commandLine.RunAsync(
+            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{exePath}\" /ListTests{runSettings.VSTestArgument}",
+            cancellationToken: TestContext.CancellationToken);
+
+        Assert.Contains("TestMethod1", commandLine.StandardOutput);
+        Assert.Contains("TestMethod2", commandLine.StandardOutput);
+    }
+
+    private static RunSettingsFile CreateRunSettingsFile(bool? disableAppDomain)
     {
         if (disableAppDomain is not bool value)
         {
-            return string.Empty;
+            return new(null);
         }
 
         string runSettingsPath = Path.Combine(Path.GetTempPath(), $"AppDomainTests-{Guid.NewGuid():N}.runsettings");
@@ -72,11 +107,26 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
             </RunSettings>
             """);
 
-        return $" --settings \"{runSettingsPath}\"";
+        return new(runSettingsPath);
     }
 
     private static string GetTestExePath(string assetPath, string targetFramework) =>
         Path.Combine(assetPath, "bin", "Release", targetFramework, $"{AssetName}.exe");
+
+    private sealed class RunSettingsFile(string? path) : IDisposable
+    {
+        public string MTPArgument => path is null ? string.Empty : $" --settings \"{path}\"";
+
+        public string VSTestArgument => path is null ? string.Empty : $" /Settings:\"{path}\"";
+
+        public void Dispose()
+        {
+            if (path is not null)
+            {
+                File.Delete(path);
+            }
+        }
+    }
 
     public TestContext TestContext { get; set; }
 
@@ -101,6 +151,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$MicrosoftNETTestSdkVersion$" />
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$MicrosoftNETTestSdkVersion$]" />
   </ItemGroup>
 
 </Project>

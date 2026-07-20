@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -20,22 +21,21 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
     }
 
     [TestMethod]
+    [OSCondition(OperatingSystems.Windows)]
     public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
-        SkipIfVSTestRunnerIsUnsupportedByCurrentSdk();
-
         var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
-        string exeOrDllName = GetTestExecutablePath(testHost);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {exeOrDllName}",
-            workingDirectory: AssetFixture.AspireProjectPath,
-            warnAsError: false,
-            suppressPreviewDotNetMessage: false,
+        string testApplicationSource = GetTestApplicationSourcePath(testHost);
+
+        using var commandLine = new CommandLine();
+        await commandLine.RunAsync(
+            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\"",
             cancellationToken: TestContext.CancellationToken);
-        dotnetTestResult.AssertExitCodeIs(0);
-        // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("VSTest version");
-        dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+
+        Assert.Contains("VSTest version", commandLine.StandardOutput);
+        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
+        Assert.Contains("Total tests: 1", commandLine.StandardOutput);
+        Assert.Contains("Passed: 1", commandLine.StandardOutput);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -58,6 +58,7 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
   <ItemGroup>
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
   </ItemGroup>
 </Project>
 

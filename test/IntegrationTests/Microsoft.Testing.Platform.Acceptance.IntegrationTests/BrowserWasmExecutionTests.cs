@@ -91,7 +91,8 @@ public sealed class BrowserWasmExecutionTests : AcceptanceTestBase<NopAssetFixtu
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
@@ -180,7 +181,8 @@ process.exitCode = exitCode;
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
   </ItemGroup>
 
 </Project>
