@@ -191,6 +191,24 @@ public class SomeClass
         await VerifySingleSuppressionAsync(code, isSuppressed: false);
     }
 
+    [TestMethod]
+    public async Task PrivateTestContextPropertyOnTestClass_DiagnosticIsNotSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    private TestContext {|#0:TestContext|} { get; set; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, isSuppressed: false);
+    }
+
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)
         => VerifyDiagnosticsAsync(source, [(0, isSuppressed)]);
 

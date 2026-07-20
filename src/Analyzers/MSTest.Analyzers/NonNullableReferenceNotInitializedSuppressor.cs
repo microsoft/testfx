@@ -65,6 +65,7 @@ public sealed class NonNullableReferenceNotInitializedSuppressor : DiagnosticSup
             if (declaredSymbol is IPropertySymbol property
                 && string.Equals(property.Name, "TestContext", StringComparison.Ordinal)
                 && SymbolEqualityComparer.Default.Equals(testContextSymbol, property.GetMethod?.ReturnType)
+                && property.DeclaredAccessibility == Accessibility.Public
                 && property.SetMethod is not null
                 && property.ContainingType.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testClassAttributeSymbol)))
             {
