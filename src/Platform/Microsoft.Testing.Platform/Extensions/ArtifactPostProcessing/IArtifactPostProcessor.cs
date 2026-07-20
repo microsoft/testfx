@@ -27,6 +27,9 @@ public interface IArtifactPostProcessor : IExtension
     /// <param name="outputDirectory">The directory under which the processed artifact must be written.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>The processed artifact, or <see langword="null"/> when no processing is needed.</returns>
+    /// <remarks>
+    /// Implementations must be deterministic and idempotent because orchestrators may retry transient failures.
+    /// </remarks>
     Task<ProcessedArtifact?> ProcessAsync(
         IReadOnlyList<InputArtifact> inputs,
         string outputDirectory,
