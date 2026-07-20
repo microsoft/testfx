@@ -9,8 +9,15 @@
     compiles from ..\Microsoft.Testing.Platform\, guaranteeing wire compatibility by construction
     (single source of truth). On top of that it adds the client-only transport + API.
 
-    STAGE A (current): a plain multi-target library that validates the carved-out server subset
-    compiles standalone. Source-only NuGet packaging (contentFiles) is added in a later stage.
+    PACKAGING: this ships as a source-only NuGet package (Microsoft.Testing.Platform.ServerClient.Source).
+    Consumers compile the linked client + server-protocol source directly into their own assembly (as
+    internal types); no DLL and no runtime dependency ship. The pack target at the bottom projects the
+    final @(Compile) set into contentFiles/cs/<tfm>/**, so "packed == compiled" holds by construction and
+    the per-TFM System.Text.Json removal below automatically keeps the STJ engine out of the
+    netstandard2.0 contentFiles (net462 / netstandard consumers only ever get the Jsonite path).
+
+    In-repo this project is still compiled normally so we can validate the carved-out subset and run the
+    unit + acceptance tests against the produced assembly.
   -->
 
   <PropertyGroup>
@@ -24,13 +31,38 @@
 
     <!-- Match the platform: several linked files (e.g. ObjectPool.cs namespace switch) key off this. -->
     <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>
+    <!-- Guard analogous to vstest's Filter.Source IS_VSTEST_REPO: defined while testfx compiles the
+         client in-repo, absent when a consumer compiles the injected source. Lets shared source gate
+         repo-only bits if ever needed. -->
+    <DefineConstants>$(DefineConstants);IS_MTP_CLIENT_REPO</DefineConstants>
 
-    <!-- Stage A: validation library only. Not packed yet. -->
-    <IsPackable>false</IsPackable>
+    <!-- Source-only package (contentFiles), no shipped DLL, no runtime dependency. -->
+    <IsPackable>true</IsPackable>
+    <!-- Source build produces reference/runtime assemblies; a source-only contentFiles package has no
+         build output, so it is not produced there. -->
+    <IsPackable Condition="'$(DotNetBuildSourceOnly)' == 'true'">false</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeSymbols>false</IncludeSymbols>
+    <!-- contentFiles-only package: no lib/ref, no dependency group. -->
+    <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
 
     <!-- Source-only package: the linked types are compiled (as internal) into each consumer, so this
          validation assembly does not track a public API surface. Suppress the public-API analyzer rules. -->
     <NoWarn>$(NoWarn);RS0016;RS0017;RS0022;RS0024;RS0025;RS0026;RS0027;RS0036;RS0037;RS0041</NoWarn>
+  </PropertyGroup>
+
+  <!-- NuGet metadata. -->
+  <PropertyGroup>
+    <!-- The .Source suffix marks a source-only (contentFiles) package, matching vstest's
+         Microsoft.TestPlatform.Filter.Source convention. The assembly stays ...ServerClient. -->
+    <PackageId>Microsoft.Testing.Platform.ServerClient.Source</PackageId>
+    <PackageDescription>
+      <![CDATA[Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+This is a source-only package: it injects (as internal source) a client for the Microsoft Testing Platform (MTP) server-mode JSON-RPC protocol, sharing the exact protocol and serialization source the platform server compiles. It has no runtime dependency and is native-AOT friendly (Jsonite on .NET Framework / netstandard2.0, in-box System.Text.Json on .NET).]]>
+    </PackageDescription>
   </PropertyGroup>
 
   <!-- Root of the platform (server) project whose source files we link. -->
@@ -38,9 +70,11 @@
     <MTPDir>$(MSBuildThisFileDirectory)..\Microsoft.Testing.Platform\</MTPDir>
   </PropertyGroup>
 
-  <!-- Polyfills (same set the platform uses) so the linked files compile on netstandard2.0/net462. -->
+  <!-- Polyfills (same set the platform uses) so the linked files compile on netstandard2.0/net462.
+       NOT shipped in the package: consumers (vstest, VSU, vs-green) already provide their own polyfills,
+       so shipping ours would collide. Tagged MtpClientDoNotPack so the pack target skips them. -->
   <ItemGroup>
-    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" MtpClientDoNotPack="true" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Polyfills" />
@@ -129,5 +163,43 @@
          this project via a non-global `serverclient` extern alias to avoid TestNode name clashes. -->
     <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
   </ItemGroup>
+
+  <!--
+    Source-only packaging.
+    ======================
+    Project the final compiled source set into contentFiles/cs/<tfm>/** so the package ships EXACTLY
+    what this project compiles (anti-drift: packed == compiled). Because it reads the resolved @(Compile)
+    set, the per-TFM System.Text.Json removal above also removes those files from the netstandard2.0
+    contentFiles, so net462 / netstandard consumers only ever get the Jsonite path.
+
+    Skipped:
+      - Polyfills (MtpClientDoNotPack=true): consumers already provide their own.
+      - Anything generated into the intermediate obj dir (GlobalUsings.g.cs, *.AssemblyInfo.cs,
+        *.AssemblyAttributes.cs, …): each consumer generates its own.
+  -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_MtpClientAddSourceToContentFiles</TargetsForTfmSpecificContentInPackage>
+    <_MtpClientIntermediateFullPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_MtpClientIntermediateFullPath>
+  </PropertyGroup>
+
+  <Target Name="_MtpClientAddSourceToContentFiles">
+    <ItemGroup>
+      <_MtpClientPackSource Include="@(Compile)"
+                            Condition="'%(Compile.MtpClientDoNotPack)' != 'true' and
+                                       !$([System.String]::new('%(Compile.FullPath)').StartsWith('$(_MtpClientIntermediateFullPath)', System.StringComparison.OrdinalIgnoreCase))" />
+    </ItemGroup>
+    <ItemGroup>
+      <!-- Linked server/platform files: keep the Link-relative folder layout. -->
+      <TfmSpecificPackageFile Include="@(_MtpClientPackSource)" Condition="'%(_MtpClientPackSource.Link)' != ''">
+        <PackagePath>contentFiles/cs/$(TargetFramework)/%(_MtpClientPackSource.Link)</PackagePath>
+        <BuildAction>Compile</BuildAction>
+      </TfmSpecificPackageFile>
+      <!-- The client's own files: project-relative identity (e.g. Client\MtpServerClient.cs). -->
+      <TfmSpecificPackageFile Include="@(_MtpClientPackSource)" Condition="'%(_MtpClientPackSource.Link)' == ''">
+        <PackagePath>contentFiles/cs/$(TargetFramework)/%(_MtpClientPackSource.Identity)</PackagePath>
+        <BuildAction>Compile</BuildAction>
+      </TfmSpecificPackageFile>
+    </ItemGroup>
+  </Target>
 
 </Project>
