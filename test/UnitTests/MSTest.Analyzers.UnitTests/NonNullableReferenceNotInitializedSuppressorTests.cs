@@ -175,6 +175,7 @@ public class SomeClass
     [TestMethod]
     public async Task TestContextGetterOnlyPropertyOnTestClass_DiagnosticIsNotSuppressed()
     {
+        // MSTest cannot assign a getter-only property, so CS8618 must remain visible.
         string code = @"
 #nullable enable
 
