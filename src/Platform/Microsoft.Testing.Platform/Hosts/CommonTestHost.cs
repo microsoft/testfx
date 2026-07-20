@@ -61,7 +61,7 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
                 RoslynDebug.Assert(PushOnlyProtocol is not null);
 
                 IReadOnlyDictionary<byte, string>? additionalHandshakeProperties =
-                    hostType is HandshakeMessageHostTypes.TestHost or HandshakeMessageHostTypes.ServerTestHost
+                    SupportsArtifactPostProcessing(hostType)
                         ? ArtifactPostProcessingHandshakeProperties.Create(ServiceProvider.GetServicesInternal<IArtifactPostProcessor>())
                         : null;
                 bool isValidProtocol = await PushOnlyProtocol.IsCompatibleProtocolAsync(hostType, additionalHandshakeProperties).ConfigureAwait(false);
@@ -121,6 +121,11 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
 
         return exitCode;
     }
+
+    internal static bool SupportsArtifactPostProcessing(string hostType)
+        => hostType is HandshakeMessageHostTypes.TestHost
+            or HandshakeMessageHostTypes.ServerTestHost
+            or HandshakeMessageHostTypes.TestHostController;
 
     protected virtual string HostType
         => this switch

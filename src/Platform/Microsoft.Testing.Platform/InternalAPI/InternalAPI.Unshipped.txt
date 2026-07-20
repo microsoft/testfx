@@ -5,6 +5,7 @@ Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcess
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.ArtifactPostProcessingManager() -> void
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingManager.BuildAsync(System.IServiceProvider! serviceProvider) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>!>!
 Microsoft.Testing.Platform.Hosts.ITestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
+static Microsoft.Testing.Platform.Hosts.CommonHost.SupportsArtifactPostProcessing(string! hostType) -> bool
 [TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!
 [TPEXP]Microsoft.Testing.Platform.Builder.TestApplicationBuilder.Tools.get -> Microsoft.Testing.Platform.Tools.IToolsManager!
 Microsoft.Testing.Platform.Hosts.TestHostBuilder.ArtifactPostProcessing.get -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessingManager!

@@ -343,8 +343,8 @@ Property IDs (`HandshakeMessagePropertyNames`):
 | 11 | `OrchestratorFeature` | orchestrator only | The orchestrator extension Uid (e.g. retry). |
 | 12 | `ServerControlPipeName` | **reply-only** | OS name of the reverse control pipe (see §12). |
 | 13 | `AttemptNumber` | test host only | Positive, 1-based retry attempt. Multiple Instance IDs may share one attempt. |
-| 14 | `SupportedPostProcessorKinds` | test host or artifact post-processor | Semicolon-separated reverse-DNS artifact kinds supported by registered post-processors. |
-| 15 | `SupportedPostProcessorExtensionsLegacy` | test host or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
+| 14 | `SupportedPostProcessorKinds` | test host, test host controller, or artifact post-processor | Semicolon-separated reverse-DNS artifact kinds supported by registered post-processors. |
+| 15 | `SupportedPostProcessorExtensionsLegacy` | test host, test host controller, or artifact post-processor | Semicolon-separated lowercase file extensions used as a fallback for untagged artifacts. |
 
 ### 8.2 SDK → host: `HandshakeMessage` (reply)
 

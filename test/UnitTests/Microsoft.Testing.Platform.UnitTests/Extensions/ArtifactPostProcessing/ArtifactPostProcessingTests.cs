@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
+using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.Services;
 
@@ -30,6 +31,14 @@ public sealed class ArtifactPostProcessingTests
     [TestMethod]
     public void HandshakeProperties_WithNoCapabilities_ReturnsNull()
         => Assert.IsNull(ArtifactPostProcessingHandshakeProperties.Create([new StubProcessor("empty", [], [])]));
+
+    [DataRow(HandshakeMessageHostTypes.TestHost, true)]
+    [DataRow(HandshakeMessageHostTypes.ServerTestHost, true)]
+    [DataRow(HandshakeMessageHostTypes.TestHostController, true)]
+    [DataRow(HandshakeMessageHostTypes.TestHostOrchestrator, false)]
+    [TestMethod]
+    public void SupportsArtifactPostProcessing_ReturnsExpectedValue(string hostType, bool expected)
+        => Assert.AreEqual(expected, CommonHost.SupportsArtifactPostProcessing(hostType));
 
     [DataRow("")]
     [DataRow(" ")]
