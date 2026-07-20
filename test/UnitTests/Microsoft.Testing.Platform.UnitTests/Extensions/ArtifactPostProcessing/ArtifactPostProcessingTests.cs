@@ -83,6 +83,21 @@ public sealed class ArtifactPostProcessingTests
     }
 
     [TestMethod]
+    public void FindProcessorConflicts_KindMatchingAnotherProcessorExtension_ReturnsEmpty()
+    {
+        IArtifactPostProcessor[] processors =
+        [
+            new StubProcessor("kind-processor", [".trx"], []),
+            new StubProcessor("extension-processor", [], [".trx"]),
+        ];
+
+        IReadOnlyDictionary<string, string> conflicts =
+            ArtifactPostProcessingDispatcherTool.FindProcessorConflicts(processors);
+
+        Assert.IsEmpty(conflicts);
+    }
+
+    [TestMethod]
     public void Manifest_LoadsVersionedAttributedInputs()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"artifact-manifest-{Guid.NewGuid():N}");

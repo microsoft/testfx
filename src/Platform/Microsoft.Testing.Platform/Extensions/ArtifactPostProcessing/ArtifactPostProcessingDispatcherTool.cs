@@ -145,25 +145,38 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
     internal static IReadOnlyDictionary<string, string> FindProcessorConflicts(IEnumerable<IArtifactPostProcessor> processors)
     {
-        Dictionary<string, string> firstProcessorByCapability = [with(StringComparer.Ordinal)];
+        Dictionary<string, string> firstProcessorByKind = [with(StringComparer.Ordinal)];
+        Dictionary<string, string> firstProcessorByExtension = [with(StringComparer.Ordinal)];
         Dictionary<string, string> conflicts = [with(StringComparer.Ordinal)];
         foreach (IArtifactPostProcessor processor in processors)
         {
-            HashSet<string> capabilities = new(processor.SupportedKinds, StringComparer.Ordinal);
-            capabilities.UnionWith(processor.SupportedFileExtensionsFallback.Select(extension => extension.ToLowerInvariant()));
+            AddConflicts(new HashSet<string>(processor.SupportedKinds, StringComparer.Ordinal), firstProcessorByKind, processor.Uid);
+            AddConflicts(
+                new HashSet<string>(
+                    processor.SupportedFileExtensionsFallback.Select(extension => extension.ToLowerInvariant()),
+                    StringComparer.Ordinal),
+                firstProcessorByExtension,
+                processor.Uid);
+        }
+
+        return conflicts;
+
+        void AddConflicts(
+            IEnumerable<string> capabilities,
+            Dictionary<string, string> firstProcessorByCapability,
+            string processorUid)
+        {
             foreach (string capability in capabilities)
             {
                 if (!firstProcessorByCapability.TryGetValue(capability, out string? firstProcessorUid))
                 {
-                    firstProcessorByCapability.Add(capability, processor.Uid);
+                    firstProcessorByCapability.Add(capability, processorUid);
                 }
-                else if (firstProcessorUid != processor.Uid && !conflicts.ContainsKey(capability))
+                else if (firstProcessorUid != processorUid && !conflicts.ContainsKey(capability))
                 {
                     conflicts.Add(capability, firstProcessorUid);
                 }
             }
         }
-
-        return conflicts;
     }
 }
