@@ -522,7 +522,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
 
     [return: NotNullIfNotNull(nameof(value))]
     private static string? EscapeNullCharacters(string? value)
-        => value is not null && value.IndexOf('\0') >= 0 ? value.Replace("\0", "\\0") : value;
+        => value?.Replace("\0", "\\0");
 
     private void WriteLive(string? message, bool appendLine)
     {
