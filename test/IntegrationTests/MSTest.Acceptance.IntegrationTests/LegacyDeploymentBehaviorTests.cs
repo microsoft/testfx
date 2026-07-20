@@ -218,7 +218,7 @@ public class FileDeploymentTests
         => Assert.IsTrue(File.Exists("forward.txt"));
 
     [TestMethod]
-    [DeploymentItem(@"BackDirectory\back.txt")]
+    [DeploymentItem("BackDirectory/back.txt")]
     public void FileWithBackSlash()
         => Assert.IsTrue(File.Exists("back.txt"));
 }
