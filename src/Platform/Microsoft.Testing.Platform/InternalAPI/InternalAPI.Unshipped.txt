@@ -22,6 +22,7 @@ Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcess
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Uid.get -> string!
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Version.get -> string!
 static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.FindProcessorConflicts(System.Collections.Generic.IEnumerable<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.IArtifactPostProcessor!>! processors) -> System.Collections.Generic.IReadOnlyDictionary<string!, string!>!
+static Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact! output, string! outputDirectory, System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.InputArtifact!>! inputs) -> Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact!
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.ArtifactPostProcessingDispatcherToolCommandLine() -> void
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherToolCommandLine.Description.get -> string!

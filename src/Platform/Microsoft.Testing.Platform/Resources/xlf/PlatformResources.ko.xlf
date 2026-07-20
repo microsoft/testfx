@@ -32,6 +32,11 @@
         <target state="new">Artifact post-processing dispatcher</target>
         <note />
       </trans-unit>
+      <trans-unit id="ArtifactPostProcessingDispatcherInvalidProcessorOutput">
+        <source>The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</source>
+        <target state="new">The processed artifact must be an existing file under the output directory and cannot overwrite an input artifact.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ArtifactPostProcessingDispatcherManifestNotFound">
         <source>The artifact post-processing manifest does not exist.</source>
         <target state="new">The artifact post-processing manifest does not exist.</target>
@@ -80,6 +85,11 @@
       <trans-unit id="ArtifactPostProcessorCapabilityContainsSeparator">
         <source>Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</source>
         <target state="new">Artifact post-processor '{0}' declares capability '{1}', which cannot contain the semicolon separator.</target>
+        <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
+      </trans-unit>
+      <trans-unit id="ArtifactPostProcessorCapabilityInvalid">
+        <source>Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</source>
+        <target state="new">Artifact post-processor '{0}' declares invalid capability '{1}'. Kinds cannot be blank, and fallback extensions must be lowercase and start with a dot.</target>
         <note>{0} is the processor UID. {1} is an artifact kind or file extension.</note>
       </trans-unit>
       <trans-unit id="CancellingTestSession">

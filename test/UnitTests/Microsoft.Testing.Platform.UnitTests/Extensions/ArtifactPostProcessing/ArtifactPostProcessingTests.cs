@@ -55,6 +55,21 @@ public sealed class ArtifactPostProcessingTests
         await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(new ServiceProvider()));
     }
 
+    [DataRow("", ".ext")]
+    [DataRow(" ", ".ext")]
+    [DataRow("kind", "")]
+    [DataRow("kind", " ")]
+    [DataRow("kind", "trx")]
+    [DataRow("kind", ".TRX")]
+    [TestMethod]
+    public async Task Manager_InvalidCapability_ThrowsInvalidOperationException(string kind, string extension)
+    {
+        ArtifactPostProcessingManager manager = new();
+        manager.AddArtifactPostProcessor(_ => new StubProcessor("processor", [kind], [extension]));
+
+        await Assert.ThrowsExactlyAsync<InvalidOperationException>(() => manager.BuildAsync(new ServiceProvider()));
+    }
+
     [TestMethod]
     public void FindProcessorConflicts_DuplicateCapabilitiesWithinOneProcessor_ReturnsEmpty()
     {
@@ -95,6 +110,48 @@ public sealed class ArtifactPostProcessingTests
             ArtifactPostProcessingDispatcherTool.FindProcessorConflicts(processors);
 
         Assert.IsEmpty(conflicts);
+    }
+
+    [TestMethod]
+    public void ValidateProcessedArtifact_RejectsInvalidPaths()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"processor-output-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string inputPath = Path.Combine(directory, "input.trx");
+            string validOutputPath = Path.Combine(directory, "output.trx");
+            string outsidePath = Path.Combine(Path.GetTempPath(), $"outside-{Guid.NewGuid():N}.trx");
+            File.WriteAllText(inputPath, "input");
+            File.WriteAllText(validOutputPath, "output");
+            File.WriteAllText(outsidePath, "outside");
+            var input = new InputArtifact(inputPath, "kind", null, null, null, null);
+
+            ProcessedArtifact validated = ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(validOutputPath, "kind", "output", null),
+                directory,
+                [input]);
+
+            Assert.AreEqual(Path.GetFullPath(validOutputPath), validated.Path);
+            Assert.ThrowsExactly<InvalidOperationException>(() => ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(Path.Combine(directory, "missing.trx"), "kind", "missing", null),
+                directory,
+                [input]));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(outsidePath, "kind", "outside", null),
+                directory,
+                [input]));
+            Assert.ThrowsExactly<InvalidOperationException>(() => ArtifactPostProcessingDispatcherTool.ValidateProcessedArtifact(
+                new ProcessedArtifact(inputPath, "kind", "input", null),
+                directory,
+                [input]));
+
+            File.Delete(outsidePath);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [TestMethod]

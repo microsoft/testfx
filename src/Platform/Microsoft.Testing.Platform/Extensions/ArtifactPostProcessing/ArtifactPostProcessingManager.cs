@@ -35,16 +35,44 @@ internal sealed class ArtifactPostProcessingManager : IArtifactPostProcessingMan
 
     private static void ValidateCapabilities(IArtifactPostProcessor processor)
     {
-        foreach (string capability in processor.SupportedKinds.Concat(processor.SupportedFileExtensionsFallback))
+        foreach (string kind in processor.SupportedKinds)
         {
-            if (capability.Contains(';'))
+            ValidateCapability(processor, kind);
+            if (RoslynString.IsNullOrWhiteSpace(kind))
             {
                 throw new InvalidOperationException(string.Format(
                     CultureInfo.CurrentCulture,
-                    PlatformResources.ArtifactPostProcessorCapabilityContainsSeparator,
+                    PlatformResources.ArtifactPostProcessorCapabilityInvalid,
                     processor.Uid,
-                    capability));
+                    kind));
             }
+        }
+
+        foreach (string extension in processor.SupportedFileExtensionsFallback)
+        {
+            ValidateCapability(processor, extension);
+            if (RoslynString.IsNullOrWhiteSpace(extension)
+                || !extension.StartsWith(".", StringComparison.Ordinal)
+                || extension != extension.ToLowerInvariant())
+            {
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.CurrentCulture,
+                    PlatformResources.ArtifactPostProcessorCapabilityInvalid,
+                    processor.Uid,
+                    extension));
+            }
+        }
+    }
+
+    private static void ValidateCapability(IArtifactPostProcessor processor, string capability)
+    {
+        if (capability.Contains(';'))
+        {
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.CurrentCulture,
+                PlatformResources.ArtifactPostProcessorCapabilityContainsSeparator,
+                processor.Uid,
+                capability));
         }
     }
 }

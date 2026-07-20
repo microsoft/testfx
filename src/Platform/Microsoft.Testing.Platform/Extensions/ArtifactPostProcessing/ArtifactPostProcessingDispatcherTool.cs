@@ -85,7 +85,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
             {
                 if (await processor.ProcessAsync(matchingInputs, manifest.OutputDirectory, cancellationToken).ConfigureAwait(false) is { } output)
                 {
-                    outputs.Add(output);
+                    outputs.Add(ValidateProcessedArtifact(output, manifest.OutputDirectory, matchingInputs));
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -118,6 +118,26 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
         }
 
         return failed ? (int)ExitCode.GenericFailure : (int)ExitCode.Success;
+    }
+
+    internal static ProcessedArtifact ValidateProcessedArtifact(
+        ProcessedArtifact output,
+        string outputDirectory,
+        IReadOnlyList<InputArtifact> inputs)
+    {
+        string outputPath = Path.GetFullPath(output.Path);
+        string outputDirectoryPrefix = Path.GetFullPath(outputDirectory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            + Path.DirectorySeparatorChar;
+        StringComparison pathComparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+
+        return outputPath.StartsWith(outputDirectoryPrefix, pathComparison)
+            && File.Exists(outputPath)
+            && !inputs.Any(input => string.Equals(Path.GetFullPath(input.Path), outputPath, pathComparison))
+                ? new ProcessedArtifact(outputPath, output.Kind, output.DisplayName, output.Description)
+                : throw new InvalidOperationException(PlatformResources.ArtifactPostProcessingDispatcherInvalidProcessorOutput);
     }
 
     private static bool Matches(IArtifactPostProcessor processor, InputArtifact input)
