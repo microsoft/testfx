@@ -13,6 +13,8 @@ namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
 [Embedded]
 internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 {
+    internal const int MaximumVisibleProgressMessages = 5;
+
     /// <summary>
     /// Protects access to state shared between the logger callbacks and the rendering thread.
     /// </summary>
@@ -25,6 +27,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     private readonly ITerminal _terminal;
     private readonly Func<bool?> _showProgress;
     private readonly IProgressRenderer _renderer;
+    private readonly Dictionary<ProgressMessageIdentity, TerminalProgressMessageState> _progressMessages = [];
     private readonly ILogger _logger;
 
     /// <summary>
@@ -32,8 +35,11 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     /// </summary>
     private CancellationTokenSource? _cts;
     private TestProgressState?[] _progressItems = [];
+    private TerminalProgressMessageState[] _visibleProgressMessages = [];
     private bool? _showProgressCached;
     private int _progressErased;
+    private long _messageId;
+    private long _messageVersion;
 
     /// <summary>
     /// The thread that performs periodic refresh of the console output.
@@ -68,7 +74,8 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                     _terminal.StartUpdate();
                     try
                     {
-                        _renderer.OnTick(_terminal, _progressItems);
+                        UpdateVisibleProgressMessagesUnderLock();
+                        _renderer.OnTick(_terminal, _progressItems, _visibleProgressMessages);
                     }
                     finally
                     {
@@ -143,16 +150,19 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         if (GetShowProgress())
         {
-            for (int i = 0; i < _progressItems.Length; i++)
+            lock (_lock)
             {
-                if (_progressItems[i] == null)
+                for (int i = 0; i < _progressItems.Length; i++)
                 {
-                    _progressItems[i] = testWorker;
-                    return i;
+                    if (_progressItems[i] == null)
+                    {
+                        _progressItems[i] = testWorker;
+                        return i;
+                    }
                 }
-            }
 
-            throw new InvalidOperationException("No empty slot found");
+                throw new InvalidOperationException("No empty slot found");
+            }
         }
 
         return 0;
@@ -160,6 +170,7 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     public void StartShowingProgress(int workerCount)
     {
+        Interlocked.Exchange(ref _stopped, 0);
         if (!GetShowProgress())
         {
             return;
@@ -167,7 +178,6 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
         _progressItems = new TestProgressState[workerCount];
         Interlocked.Exchange(ref _progressErased, 0);
-        Interlocked.Exchange(ref _stopped, 0);
 
         var cancellationTokenSource = new CancellationTokenSource();
         _cts = cancellationTokenSource;
@@ -181,8 +191,14 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
     internal void StopShowingProgress()
     {
-        if (Interlocked.CompareExchange(ref _stopped, 1, 0) != 0 || !GetShowProgress())
+        if (Interlocked.CompareExchange(ref _stopped, 1, 0) != 0)
         {
+            return;
+        }
+
+        if (!GetShowProgress())
+        {
+            ClearProgressMessages();
             return;
         }
 
@@ -195,18 +211,23 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
         refresher?.Join();
         cancellationTokenSource?.Dispose();
 
-        try
+        lock (_lock)
         {
-            if (Interlocked.CompareExchange(ref _progressErased, 1, 0) == 0)
+            try
             {
-                _terminal.EraseProgress();
+                if (Interlocked.CompareExchange(ref _progressErased, 1, 0) == 0)
+                {
+                    _terminal.EraseProgress();
+                }
+
+                _terminal.StopBusyIndicator();
+            }
+            catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
+            {
+                // Best-effort cleanup; we are already in teardown.
             }
 
-            _terminal.StopBusyIndicator();
-        }
-        catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException or System.IO.IOException)
-        {
-            // Best-effort cleanup; we are already in teardown.
+            ClearProgressMessagesUnderLock();
         }
     }
 
@@ -233,7 +254,8 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
                 try
                 {
                     _terminal.StartUpdate();
-                    _renderer.OnWrite(_terminal, _progressItems, write);
+                    UpdateVisibleProgressMessagesUnderLock();
+                    _renderer.OnWrite(_terminal, _progressItems, write, _visibleProgressMessages);
                 }
                 finally
                 {
@@ -262,21 +284,118 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
     {
         if (GetShowProgress())
         {
-            _progressItems[slotIndex] = null;
+            lock (_lock)
+            {
+                _progressItems[slotIndex] = null;
+            }
         }
+    }
+
+    internal void UpdateProgressMessage(
+        string executionId,
+        string instanceId,
+        string producerUid,
+        string key,
+        string? message)
+    {
+        var identity = new ProgressMessageIdentity(executionId, instanceId, producerUid, key);
+        lock (_lock)
+        {
+            if (!GetShowProgress() || _renderer is SilenceDrivenHeartbeatRenderer)
+            {
+                if (message is null)
+                {
+                    _progressMessages.Remove(identity);
+                }
+                else
+                {
+                    bool hasExisting = _progressMessages.TryGetValue(identity, out TerminalProgressMessageState? existing);
+                    if (!hasExisting || existing is null || existing.Text != message)
+                    {
+                        try
+                        {
+                            _terminal.StartUpdate();
+                            _terminal.AppendLine(message);
+                        }
+                        finally
+                        {
+                            _terminal.StopUpdate();
+                        }
+
+                        long version = ++_messageVersion;
+                        _progressMessages[identity] = existing is null
+                            ? new TerminalProgressMessageState(--_messageId, version, message)
+                            : new TerminalProgressMessageState(existing.Id, version, message);
+                    }
+                }
+
+                return;
+            }
+
+            if (message is null)
+            {
+                _progressMessages.Remove(identity);
+            }
+            else if (_progressMessages.TryGetValue(identity, out TerminalProgressMessageState? existing))
+            {
+                _progressMessages[identity] = new TerminalProgressMessageState(existing.Id, ++_messageVersion, message);
+            }
+            else
+            {
+                _progressMessages.Add(identity, new TerminalProgressMessageState(--_messageId, ++_messageVersion, message));
+            }
+
+            UpdateVisibleProgressMessagesUnderLock();
+        }
+    }
+
+    private void UpdateVisibleProgressMessagesUnderLock()
+    {
+        if (_progressMessages.Count == 0)
+        {
+            _visibleProgressMessages = [];
+            return;
+        }
+
+        int activeWorkerCount = _progressItems.Count(static progress => progress is not null);
+        int visibleCount = Math.Min(
+            MaximumVisibleProgressMessages,
+            Math.Max(0, _terminal.Height - 2 - activeWorkerCount));
+        _visibleProgressMessages = _progressMessages.Values
+            .OrderByDescending(static state => state.Version)
+            .Take(visibleCount)
+            .OrderBy(static state => state.Version)
+            .ToArray();
+    }
+
+    internal void ClearProgressMessages()
+    {
+        lock (_lock)
+        {
+            ClearProgressMessagesUnderLock();
+        }
+    }
+
+    private void ClearProgressMessagesUnderLock()
+    {
+        _progressMessages.Clear();
+        _visibleProgressMessages = [];
     }
 
     internal void UpdateWorker(int slotIndex)
     {
         if (GetShowProgress())
         {
-            // We increase the counter to say that this version of data is newer than what we had before and
-            // it should be completely re-rendered. Another approach would be to use timestamps, or to replace the
-            // instance and compare that, but that means more objects floating around.
-            _counter++;
+            lock (_lock)
+            {
+                // We increase the counter to say that this version of data is newer than what we had before and
+                // it should be completely re-rendered. Another approach would be to use timestamps, or to replace the
+                // instance and compare that, but that means more objects floating around.
+                _counter++;
 
-            TestProgressState? progress = _progressItems[slotIndex];
-            progress?.Version = _counter;
+                TestProgressState? progress = _progressItems[slotIndex];
+                progress?.Version = _counter;
+            }
         }
     }
 
@@ -304,4 +423,10 @@ internal sealed partial class TestProgressStateAwareTerminal : IDisposable
 
         return showProgress == true;
     }
+
+    private readonly record struct ProgressMessageIdentity(
+        string ExecutionId,
+        string InstanceId,
+        string ProducerUid,
+        string Key);
 }

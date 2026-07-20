@@ -357,6 +357,18 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports tes
 
 An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
+### OutputCaptureMode
+
+An internal MSTest output-capture mode selected through the RunSettings setting `<MSTestV2><CaptureTraceOutput>...</CaptureTraceOutput></MSTestV2>`. It controls how Console/Trace output produced while a test runs is handled and whether `TestContext.Write` and `TestContext.WriteLine` output is echoed live. Backed by the internal `TestOutputCaptureMode` enum with three values:
+
+| Value | Behavior |
+| --- | --- |
+| `None` | Output is not captured; Console/Trace writes flow to their normal destination. Equivalent to the legacy `CaptureTraceOutput=false`. |
+| `Result` (default) | Output is captured and attached to the test result, then surfaced once the test completes. Equivalent to the legacy `CaptureTraceOutput=true`. |
+| `Live` | Console/Trace output is captured and attached to the test result **and** additionally echoed live to the original console as the test runs. `TestContext.Write` and `TestContext.WriteLine` output remains buffered in the completed result and is also echoed live, similar to xUnit's `showLiveOutput` option. |
+
+The `CaptureTraceOutput` setting accepts the mode names as well as the legacy boolean form, with `true` mapped to `Result` and `false` mapped to `None`. The modes were introduced in [PR #10013](https://github.com/microsoft/testfx/pull/10013), and live streaming for `TestContext.Write` and `TestContext.WriteLine` was added in [PR #10040](https://github.com/microsoft/testfx/pull/10040).
+
 ## P
 
 ### Playwright

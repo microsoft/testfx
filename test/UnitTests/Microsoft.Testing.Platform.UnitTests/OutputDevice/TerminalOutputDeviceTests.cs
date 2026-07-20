@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -23,6 +23,8 @@ namespace Microsoft.Testing.Platform.UnitTests.OutputDevice;
 public sealed class TerminalOutputDeviceTests
 {
     private static readonly SemaphoreSlim ConsoleErrorSemaphore = new(1, 1);
+    private static readonly IOutputDeviceDataProducer Producer = Mock.Of<IOutputDeviceDataProducer>(
+        producer => producer.Uid == "producer");
 
     [TestMethod]
     public async Task DisplayAsync_ListTestsJsonInAzureDevOps_WritesPlainErrorOnlyToStandardError()
@@ -36,7 +38,66 @@ public sealed class TerminalOutputDeviceTests
         await AssertListTestsJsonStandardErrorAsync(new ExceptionOutputDeviceData(exception), exception.Message);
     }
 
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_WritesSessionMessageToStandardError()
+        => await AssertListTestsJsonStandardErrorAsync(new SessionMessageOutputDeviceData("Restoring assets"), "Restoring assets");
+
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_WritesOnlyChangedProgressMessagesToStandardError()
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(async outputDevice =>
+        {
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restored"), CancellationToken.None);
+        });
+
+        Assert.AreEqual(1, CountOccurrences(standardError, "Restoring"));
+        Assert.AreEqual(1, CountOccurrences(standardError, "Restored"));
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_ProgressMessageAfterRemovalWritesSameValueAgain()
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(async outputDevice =>
+        {
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", null), CancellationToken.None);
+            await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+        });
+
+        Assert.AreEqual(2, CountOccurrences(standardError, "Restoring"));
+    }
+
+    [TestMethod]
+    public async Task DisplayAsync_ListTestsJson_HotReloadCycleResetsProgressMessageDeduplication()
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(
+            async outputDevice =>
+            {
+                await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+                await outputDevice.DisplayAfterHotReloadSessionEndAsync(CancellationToken.None);
+                await outputDevice.DisplayAsync(Producer, new ProgressMessageOutputDeviceData("restore", "Restoring"), CancellationToken.None);
+            },
+            isHotReloadEnabled: true);
+
+        Assert.AreEqual(2, CountOccurrences(standardError, "Restoring"));
+    }
+
     private static async Task AssertListTestsJsonStandardErrorAsync(IOutputDeviceData data, string expectedMessage)
+    {
+        string standardError = await CaptureListTestsJsonStandardErrorAsync(
+            outputDevice => outputDevice.DisplayAsync(Producer, data, CancellationToken.None));
+
+        Assert.Contains(expectedMessage, standardError);
+        // Replace "##" so the assertion failure (if it fires) does not itself contain a literal
+        // ##vso command that an Azure DevOps agent watching the test output could mistakenly act on.
+        Assert.IsFalse(standardError.Contains("##vso[task.logissue", StringComparison.Ordinal), standardError.Replace("##", "[hash][hash]"));
+    }
+
+    private static async Task<string> CaptureListTestsJsonStandardErrorAsync(
+        Func<TerminalOutputDevice, Task> action,
+        bool isHotReloadEnabled = false)
     {
         await ConsoleErrorSemaphore.WaitAsync();
         TextWriter originalError = Console.Error;
@@ -45,16 +106,12 @@ public sealed class TerminalOutputDeviceTests
 
         try
         {
-            using TerminalOutputDevice outputDevice = CreateListTestsJsonAzureDevOpsOutputDevice();
+            using TerminalOutputDevice outputDevice = CreateListTestsJsonAzureDevOpsOutputDevice(isHotReloadEnabled);
             await outputDevice.InitializeAsync();
 
-            await outputDevice.DisplayAsync(Mock.Of<IOutputDeviceDataProducer>(), data, CancellationToken.None);
+            await action(outputDevice);
 
-            string standardError = errorWriter.ToString();
-            Assert.Contains(expectedMessage, standardError);
-            // Replace "##" so the assertion failure (if it fires) does not itself contain a literal
-            // ##vso command that an Azure DevOps agent watching the test output could mistakenly act on.
-            Assert.IsFalse(standardError.Contains("##vso[task.logissue", StringComparison.Ordinal), standardError.Replace("##", "[hash][hash]"));
+            return errorWriter.ToString();
         }
         finally
         {
@@ -62,6 +119,9 @@ public sealed class TerminalOutputDeviceTests
             ConsoleErrorSemaphore.Release();
         }
     }
+
+    private static int CountOccurrences(string text, string value)
+        => (text.Length - text.Replace(value, string.Empty).Length) / value.Length;
 
     [TestMethod]
     public async Task InitializeAsync_NoProgressLegacyFlag_WritesDeprecationWarningToStandardError()
@@ -173,7 +233,7 @@ public sealed class TerminalOutputDeviceTests
             testApplicationCancellationTokenSource.Object);
     }
 
-    private static TerminalOutputDevice CreateListTestsJsonAzureDevOpsOutputDevice()
+    private static TerminalOutputDevice CreateListTestsJsonAzureDevOpsOutputDevice(bool isHotReloadEnabled = false)
     {
         var testApplicationModuleInfo = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfo.Setup(x => x.GetDisplayName()).Returns("testhost");
@@ -189,12 +249,20 @@ public sealed class TerminalOutputDeviceTests
         var testApplicationCancellationTokenSource = new Mock<ITestApplicationCancellationTokenSource>();
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(CancellationToken.None);
 
+        var runtimeFeature = new Mock<IRuntimeFeature>();
+        runtimeFeature.SetupGet(x => x.IsHotReloadEnabled).Returns(isHotReloadEnabled);
+
+        var asyncMonitor = new Mock<IAsyncMonitor>();
+        asyncMonitor
+            .Setup(x => x.LockAsync(It.IsAny<TimeSpan>()))
+            .ReturnsAsync(Mock.Of<IDisposable>());
+
         return new TerminalOutputDevice(
             Mock.Of<IConsole>(),
             testApplicationModuleInfo.Object,
             Mock.Of<ITestHostControllerInfo>(),
-            Mock.Of<IAsyncMonitor>(),
-            Mock.Of<IRuntimeFeature>(),
+            asyncMonitor.Object,
+            runtimeFeature.Object,
             environment.Object,
             Mock.Of<IPlatformInformation>(),
             new TestCommandLineOptions(new Dictionary<string, string[]>

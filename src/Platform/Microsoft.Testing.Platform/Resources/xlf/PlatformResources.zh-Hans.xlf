@@ -124,7 +124,7 @@
       </trans-unit>
       <trans-unit id="CommandLineParserFailedToReadResponseFile">
         <source>Failed to read response file '{0}'. {1}.</source>
-        <target state="needs-review-translation">无法读取响应文件“{0}”。{1}</target>
+        <target state="translated">无法读取响应文件“{0}”。{1}</target>
         <note>{0} is the response file path. {1} is the full exception detail (ToString), not just the exception message.</note>
       </trans-unit>
       <trans-unit id="CommandLineParserResponseFileNotFound">
@@ -169,12 +169,12 @@
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
-        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
+        <target state="translated">未能创建复合扩展 "{0}" 的实例。请参见内部异常了解详细信息。</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
-        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
+        <target state="translated">复合扩展 "{0}" 的工厂返回了一个 null 实例。</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -927,7 +927,7 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
-        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
+        <target state="translated">未能在 {1} 秒(超时)内为日志文件 "{0}" 刷新日志。日志文件可能不完整。</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -988,7 +988,7 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+        <target state="translated">日志文件 "{0}" 的 "FileLogger" 写入循环中出现意外异常。日志文件可能不完整。
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

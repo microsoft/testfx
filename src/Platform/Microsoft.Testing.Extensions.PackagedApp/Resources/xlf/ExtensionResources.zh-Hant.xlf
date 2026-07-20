@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
         <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">將未封裝 (鬆散配置) 的 Windows 測試主機 (例如未封裝的 WinUI) 部署到隔離目錄，並從該處啟動它，然後在 Windows 組建中註冊封裝、完全信任的 MSIX 桌面測試主機，並透過應用程式使用者模型識別碼來啟用它。不支援真正的 UWP/AppContainer 主機。請參閱 https://github.com/microsoft/testfx/issues/9933。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -24,17 +24,17 @@
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
         <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</target>
+        <target state="translated">無法啟動已封裝的 Windows 應用程式 '{0}' (找到 '{1}')。若要註冊並啟用已封裝的 (MSIX) 應用程式，需要使用此延伸模組的 Windows 組建，此組建隨 net8.0-windows10.0.19041.0 及更新版本提供。目標為 'net8.0-windows10.0.19041.0' (或平台版本 10.0.19041.0 以上的較新 net*-windows 目標 Framework Moniker)，讓 NuGet 選取該資產。目前的組建只會啟動未封裝 (鬆散配置) 的測試主機。請參閱 https://github.com/microsoft/testfx/issues/9933。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppNoApplicationToActivate">
         <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
-        <target state="new">Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</target>
+        <target state="translated">無法啟動已封裝的 Windows 應用程式 '{0}' (找到 '{1}'): 其資訊清單未宣告任何 &lt;Application&gt;，因此沒有可啟用的應用程式使用者模型識別碼。</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppRegistrationFailed">
         <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
-        <target state="new">Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</target>
+        <target state="translated">無法註冊已封裝的 Windows 應用程式配置 '{0}'。註冊未簽署的建置輸出配置需要啟用 [開發人員模式] (或側載)。錯誤: {1}</target>
         <note />
       </trans-unit>
     </body>
