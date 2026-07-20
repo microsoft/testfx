@@ -69,7 +69,7 @@ internal sealed partial class UnitTestRunner
         // Bridge the adapter setting to the TestFramework for assertion failure behavior.
         AssertionFailureSettings.LaunchDebuggerOnAssertionFailure = MSTestSettings.CurrentSettings.LaunchDebuggerOnAssertionFailure;
 
-        Logger.OnLogMessage += message => (TestContext.Current as TestContextImplementation)?.WriteConsoleOut(message);
+        Logger.OnLogMessage += message => (TestContext.Current as TestContextImplementation)?.StandardOutputBuilder.Append(message);
 
         ConfigureOutputRouting(MSTestSettings.CurrentSettings.OutputCaptureMode);
 

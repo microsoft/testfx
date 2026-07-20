@@ -3,6 +3,14 @@
 *REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut) -> void
 *REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole) -> void
 *REMOVED*Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TraceTextWriter.TraceTextWriter() -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleErr(char value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleErr(char[]! buffer, int index, int count) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleErr(string? value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleOut(char value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleOut(char[]! buffer, int index, int count) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteConsoleOut(string? value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteTrace(char value) -> void
+*REMOVED*Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteTrace(string? value) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleErrorRouter.ConsoleErrorRouter(System.IO.TextWriter! originalConsoleErr, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleOutRouter.ConsoleOutRouter(System.IO.TextWriter! originalConsoleOut, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.ConsoleRouter.ConsoleRouter(System.IO.TextWriter! originalConsole, System.Func<Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode>! modeProvider) -> void
@@ -19,6 +27,9 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Live = 2 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.None = 0 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode.Result = 1 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestOutputCaptureMode
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardErrorBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.StandardOutputBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TraceBuilder.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SynchronizedStringBuilder!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ParameterMetadataScanCount.get -> int
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.ResetParameterMetadataCacheForTesting() -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.SetParameterMetadataScanCallbackForTesting(System.Action? callback) -> void
