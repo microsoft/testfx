@@ -32,7 +32,7 @@ on:
 
 if: needs.pre_activation.outputs.check_result == 'success'
 
-timeout-minutes: 15
+timeout-minutes: 60
 
 permissions:
   actions: read
