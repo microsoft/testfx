@@ -71,6 +71,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
         List<InputArtifact> unmatchedInputs = [.. manifest.Inputs];
         List<ProcessedArtifact> outputs = [];
+        bool failed = false;
         foreach (IArtifactPostProcessor processor in _processors)
         {
             InputArtifact[] matchingInputs = [.. unmatchedInputs.Where(input => Matches(processor, input))];
@@ -93,6 +94,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
             }
             catch (Exception ex)
             {
+                failed = true;
                 await DisplayWarningAsync(
                     string.Format(CultureInfo.CurrentCulture, PlatformResources.ArtifactPostProcessingDispatcherProcessorFailed, processor.Uid, ex.Message),
                     cancellationToken).ConfigureAwait(false);
@@ -115,7 +117,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
                 messages)).ConfigureAwait(false);
         }
 
-        return (int)ExitCode.Success;
+        return failed ? (int)ExitCode.GenericFailure : (int)ExitCode.Success;
     }
 
     internal static ProcessedArtifact ValidateProcessedArtifact(
