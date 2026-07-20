@@ -357,6 +357,18 @@ An MTP extension (`Microsoft.Testing.Extensions.OpenTelemetry`) that exports tes
 
 An MSTest attribute (`[OSConditionAttribute]`) in `Microsoft.VisualStudio.TestTools.UnitTesting` that conditionally controls whether a test class or test method runs based on the current operating system. Accepts a [ConditionMode](#conditionmode) argument and an `OperatingSystems` flags enum value (combinable values: `Linux`, `OSX`, `Windows`, `FreeBSD`). The single-argument overload defaults to `ConditionMode.Include`. The attribute is not inherited — applying it to a base class does not affect derived classes. Inherits from [ConditionBaseAttribute](#conditionbaseattribute).
 
+### OutputCaptureMode
+
+An MSTest RunSettings setting (`<MSTestV2><OutputCaptureMode>...</OutputCaptureMode></MSTestV2>`, formerly exposed as `CaptureTraceOutput`) that controls how Console/Trace output produced while a test runs is handled. Backed by the internal `TestOutputCaptureMode` enum with three values:
+
+| Value | Behavior |
+| --- | --- |
+| `None` | Output is not captured; Console/Trace writes flow to their normal destination. Equivalent to the legacy `CaptureTraceOutput=false`. |
+| `Result` (default) | Output is captured and attached to the test result, then surfaced once the test completes. Equivalent to the legacy `CaptureTraceOutput=true`. |
+| `Live` | Output is captured and attached to the test result **and** additionally echoed live to the original console as the test runs, similar to xUnit's `showLiveOutput` option. |
+
+The legacy boolean form (`CaptureTraceOutput=true/false`) is still accepted and mapped to `Result`/`None` respectively. Introduced in [PR #10040](https://github.com/microsoft/testfx/pull/10040).
+
 ## P
 
 ### Playwright
