@@ -364,7 +364,7 @@ public class TestContextImplementationTests : TestContainer
     public void GetAndClearOutput_ShouldReturnContentThenClearBuffer()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteConsoleOut("hello");
+        _testContextImplementation.StandardOutputBuilder.Append("hello");
 
         string? first = _testContextImplementation.GetAndClearOutput();
         string? second = _testContextImplementation.GetAndClearOutput();
@@ -376,7 +376,7 @@ public class TestContextImplementationTests : TestContainer
     public void GetAndClearError_ShouldReturnContentThenClearBuffer()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteConsoleErr("hello");
+        _testContextImplementation.StandardErrorBuilder.Append("hello");
 
         string? first = _testContextImplementation.GetAndClearError();
         string? second = _testContextImplementation.GetAndClearError();
@@ -388,7 +388,7 @@ public class TestContextImplementationTests : TestContainer
     public void GetAndClearTrace_ShouldReturnContentThenClearBuffer()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteTrace("hello");
+        _testContextImplementation.TraceBuilder.Append("hello");
 
         string? first = _testContextImplementation.GetAndClearTrace();
         string? second = _testContextImplementation.GetAndClearTrace();
@@ -404,8 +404,8 @@ public class TestContextImplementationTests : TestContainer
         {
             for (int i = 0; i < 100; i++)
             {
-                testContextImplementation.WriteConsoleOut(new string('a', 1000000));
-                testContextImplementation.WriteConsoleErr(new string('b', 1000000));
+                testContextImplementation.StandardOutputBuilder.Append(new string('a', 1000000));
+                testContextImplementation.StandardErrorBuilder.Append(new string('b', 1000000));
             }
         });
 
@@ -631,9 +631,9 @@ public class TestContextImplementationTests : TestContainer
     public void CloneForDataDrivenIterationShouldStartWithNoAccumulatedOutput()
     {
         _testContextImplementation = CreateTestContextImplementation();
-        _testContextImplementation.WriteConsoleOut("orig-out");
-        _testContextImplementation.WriteConsoleErr("orig-err");
-        _testContextImplementation.WriteTrace("orig-trace");
+        _testContextImplementation.StandardOutputBuilder.Append("orig-out");
+        _testContextImplementation.StandardErrorBuilder.Append("orig-err");
+        _testContextImplementation.TraceBuilder.Append("orig-trace");
         _testContextImplementation.WriteLine("orig-diag");
 
         TestContextImplementation clone = _testContextImplementation.CloneForDataDrivenIteration();
@@ -646,7 +646,7 @@ public class TestContextImplementationTests : TestContainer
 
         // The clone's output buffers are independent: writing to the clone does not flow back
         // to the original.
-        clone.WriteConsoleOut("clone-only");
+        clone.StandardOutputBuilder.Append("clone-only");
         _testContextImplementation.GetAndClearOutput().Should().Be("orig-out");
         clone.GetAndClearOutput().Should().Be("clone-only");
     }

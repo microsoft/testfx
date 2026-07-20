@@ -8,6 +8,10 @@ The communication is based on JSON-RPC and describes the RPC messages sent in or
 > [!TIP]
 > Here is the summary of [differences compared to vstest](./002-protocol-vstest.md).
 
+This document describes the JSON-RPC server-mode protocol. The separate, binary
+[`dotnet test` named-pipe protocol](./004-protocol-dotnet-test-pipe.md) (`--server dotnettestcli`)
+is specified in its own document.
+
 ## API overview
 
 Here's the current list of APIs that supported by the client.
@@ -551,7 +555,7 @@ Request:
 interface RunTestsParams {
     // The set of tests selected by the user to run.
     // If not specified all tests will run.
-    testCases?: TestNode[],
+    tests?: TestNode[],
 
     // Token which should be specified for all update notifications.
     // This way the client can under which the update notifications should be reported.

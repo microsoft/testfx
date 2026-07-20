@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">Manifest spakowanej aplikacji deklaruje wiele aplikacji i żaden z nich nie jest jednoznacznie zgodny z plikiem wykonywalnym „{0}”. Identyfikatory modelu użytkownika aplikacji (Application User Model ID): {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">Manifest spakowanej aplikacji nie deklaruje prawidłowego &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</target>
+        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -23,8 +23,18 @@
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
-        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</target>
+        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">Nie można uruchomić spakowanej aplikacji systemu Windows „{0}” (znaleziono „{1}”). Zarejestrowanie i aktywowanie spakowanej aplikacji (MSIX) wymaga kompilacji systemu Windows tego rozszerzenia, która jest dostarczana dla systemu net8.0-windows10.0.19041.0 lub nowszego. Docelowy element "net8.0-windows10.0.19041.0" (lub nowszy moniker platformy docelowej net*-windows w wersji platformy 10.0.19041.0 lub nowszej), więc narzędzie NuGet wybiera ten zasób. Bieżąca kompilacja uruchamia tylko niespakowane hosty testowe (z luźnym układem). Zobacz stronę https://github.com/microsoft/testfx/issues/9933.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppNoApplicationToActivate">
+        <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
+        <target state="translated">Nie można aktywować spakowanej aplikacji systemu Windows „{0}” (znaleziono „{1}”): jej manifest deklaruje brak &lt;Application&gt;, więc nie ma identyfikatora modelu użytkownika aplikacji do aktywowania.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationFailed">
+        <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
+        <target state="translated">Nie można zarejestrować układu spakowanej aplikacji systemu Windows „{0}”. Zarejestrowanie niepodpisanego układu kompilacji wyjściowej wymaga włączenia trybu dewelopera (lub pobierania lokalnego). Błąd: {1}</target>
         <note />
       </trans-unit>
     </body>

@@ -76,6 +76,8 @@ jobs:
         if: steps.bump.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v7
         with:
+          token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
+          push-to-fork: nohwnd-bot/testfx
           commit-message: "Update bundled Playwright for .NET to ${{ steps.bump.outputs.new_version }}"
           title: "Update bundled Playwright for .NET to ${{ steps.bump.outputs.new_version }}"
           body: |

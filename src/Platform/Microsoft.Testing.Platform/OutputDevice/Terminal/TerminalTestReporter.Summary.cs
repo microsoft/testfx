@@ -237,7 +237,7 @@ internal sealed partial class TerminalTestReporter
             throw ApplicationStateGuard.Unreachable();
         }
 
-        asm.DiscoveredTests++;
+        asm.ReportDiscoveredTest(displayName: null);
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
 
@@ -250,9 +250,7 @@ internal sealed partial class TerminalTestReporter
 
         // In discovery mode TotalTests is computed from DiscoveredTests; in execution mode it is computed from the
         // passed/skipped/failed tally as tests complete. So we only need to bump the discovered count here.
-        asm.DiscoveredTests++;
-
-        asm.DiscoveredTestDisplayNames.Add(MakeControlCharactersVisible(displayName, true));
+        asm.ReportDiscoveredTest(MakeControlCharactersVisible(displayName, true));
 
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }

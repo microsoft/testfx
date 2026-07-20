@@ -92,45 +92,21 @@
   <Folder Name="/test/IntegrationTests/">
     <Project Path="test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
-    <Project Path="test/IntegrationTests/MSTest.IntegrationTests/MSTest.IntegrationTests.csproj" />
-    <Project Path="test/IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests/MSTest.VstestConsoleWrapper.IntegrationTests.csproj" />
     <Project Path="test/IntegrationTests/PlatformServices.Desktop.IntegrationTests/PlatformServices.Desktop.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/test/IntegrationTests/TestAssets/">
     <File Path="test/IntegrationTests/TestAssets/Directory.Build.targets" />
-    <Project Path="test/IntegrationTests/TestAssets/ClsTestProject/ClsTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DataRowTestProject/DataRowTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DataSourceTestProject/DataSourceTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DeploymentTestProject.Never/DeploymentTestProject.Never.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DeploymentTestProject.PreserveNewest/DeploymentTestProject.PreserveNewest.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx64Debug/DesktopTestProjectx64Debug.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx64Release/DesktopTestProjectx64Release.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx86Debug/DesktopTestProjectx86Debug.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DesktopTestProjectx86Release/DesktopTestProjectx86Release.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DiscoverInternalsProject/DiscoverInternalsProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DoNotParallelizeTestProject/DoNotParallelizeTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/DynamicDataTestProject/DynamicDataTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/FixturesTestProject/FixturesTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/FSharpTestProject/FSharpTestProject.fsproj" />
-    <Project Path="test/IntegrationTests/TestAssets/FxExtensibilityTestProject/FxExtensibilityTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/HierarchyProject/HierarchyProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/LibProjectReferencedByDataSourceTest/LibProjectReferencedByDataSourceTest.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/OutputTestProject/OutputTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/ParallelTestClass/ParallelClassesTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/ParallelTestMethods/ParallelMethodsTestProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/SampleFrameworkExtensions/SampleFrameworkExtensions.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/SampleProjectForAssemblyResolution/SampleProjectForAssemblyResolution.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/SuiteLifeCycleTestProject/SuiteLifeCycleTestProject.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TestCategoriesFromTestDataRowProject/TestCategoriesFromTestDataRowProject.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestIdProject.DefaultStrategy/TestIdProject.DefaultStrategy.csproj" />
     <Project Path="test/IntegrationTests/TestAssets/TestProject/TestProjectForDiscovery.csproj" />
-    <Project Path="test/IntegrationTests/TestAssets/TimeoutTestProject/TimeoutTestProject.csproj" />
   </Folder>
   <Folder Name="/test/Performance/">
     <Project Path="test/Performance/MSTest.Performance.Runner/MSTest.Performance.Runner.csproj" />
   </Folder>
   <Folder Name="/test/TestUtilities/">
-    <Project Path="test/Utilities/Automation.CLI/Automation.CLI.csproj" />
     <Project Path="test/Utilities/Microsoft.Testing.TestInfrastructure/Microsoft.Testing.TestInfrastructure.csproj" />
     <Project Path="test/Utilities/TestFramework.ForTestingMSTest/TestFramework.ForTestingMSTest.csproj" />
   </Folder>

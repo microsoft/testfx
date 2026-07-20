@@ -62,11 +62,15 @@ internal sealed class SilenceDrivenHeartbeatRenderer : IProgressRenderer
     public void OnTestCompleted()
         => Interlocked.Exchange(ref _lastActivityTicks, NowTicks);
 
-    public void OnWrite(ITerminal terminal, TestProgressState?[] progressItems, Action<ITerminal> write)
+    public void OnWrite(
+        ITerminal terminal,
+        TestProgressState?[] progressItems,
+        Action<ITerminal> write,
+        TerminalProgressMessageState[]? messages = null)
         // Heartbeat lines are durable scrollback; a user write does not need to erase or re-render any progress.
         => write(terminal);
 
-    public void OnTick(ITerminal terminal, TestProgressState?[] progressItems)
+    public void OnTick(ITerminal terminal, TestProgressState?[] progressItems, TerminalProgressMessageState[]? messages = null)
     {
         EmitSilenceHeartbeat(terminal, progressItems);
         EmitSlowTests(terminal, progressItems);

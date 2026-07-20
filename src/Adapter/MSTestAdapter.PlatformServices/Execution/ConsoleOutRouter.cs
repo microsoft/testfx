@@ -7,17 +7,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal sealed class ConsoleOutRouter : ConsoleRouter
 {
-    public ConsoleOutRouter(TextWriter originalConsoleOut)
-        : base(originalConsoleOut)
+    public ConsoleOutRouter(TextWriter originalConsoleOut, Func<TestOutputCaptureMode> modeProvider)
+        : base(originalConsoleOut, modeProvider)
     {
     }
 
     protected override void WriteToTestContext(TestContextImplementation testContext, char value)
-        => testContext.WriteConsoleOut(value);
+        => testContext.StandardOutputBuilder.Append(value);
 
     protected override void WriteToTestContext(TestContextImplementation testContext, string? value)
-        => testContext.WriteConsoleOut(value);
+        => testContext.StandardOutputBuilder.Append(value);
 
     protected override void WriteToTestContext(TestContextImplementation testContext, char[] buffer, int index, int count)
-        => testContext.WriteConsoleOut(buffer, index, count);
+        => testContext.StandardOutputBuilder.Append(buffer, index, count);
 }

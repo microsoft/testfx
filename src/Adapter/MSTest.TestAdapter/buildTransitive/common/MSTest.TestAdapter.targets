@@ -35,6 +35,11 @@
 
   <ItemGroup>
     <CompilerVisibleProperty Include="IsMSTestTestAdapterReferenced" />
+    <!-- Surfaced so analyzers can warn about features that are unsupported under ahead-of-time
+         compilation (e.g. MSTEST0072 for [AssemblyFixtureProvider]): PublishAot (Native AOT) and
+         RunAOTCompilation (Blazor WebAssembly AOT). -->
+    <CompilerVisibleProperty Include="PublishAot" />
+    <CompilerVisibleProperty Include="RunAOTCompilation" />
     <!-- Selects which MSTest source-generation strategy emits when a source generator is referenced:
          'ReflectionFree' (default) materializes attributes and emits delegate-based invokers so the
          adapter runs without runtime reflection (best for trimming/Native AOT); 'Rooting' only

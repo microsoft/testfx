@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AmbiguousAppxManifestApplication">
         <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
-        <target state="new">The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</target>
+        <target state="translated">Il manifesto dell'app in pacchetto dichiara più applicazioni e nessuna corrisponde in modo univoco all'eseguibile '{0}'. ID modello utente applicazione candidata: {1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidAppxManifestMissingIdentity">
         <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
-        <target state="new">The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</target>
+        <target state="translated">Il manifesto dell'app in pacchetto non dichiara un elemento &lt;Identity Name="..." Publisher="..." /&gt; valido.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</source>
-        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).</target>
+        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">Distribuisce un host di test di Windows non in pacchetto, o a layout libero (ad esempio, WinUI non in pacchetto), in una directory isolata, da cui lo avvia, e nella build di Windows registra un host di test desktop MSIX in pacchetto con attendibilità totale e lo attiva in base all'ID modello utente applicazione. Gli host UWP/AppContainer effettivi non sono supportati. Vedere https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
@@ -23,8 +23,18 @@
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppLaunchNotSupported">
-        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</source>
-        <target state="new">Cannot launch the packaged Windows app '{0}' (found '{1}'). Launching a packaged (MSIX) app requires registering the layout with the PackageManager and activating it by Application User Model ID, which this extension does not implement yet (see https://github.com/microsoft/testfx/issues/9933). Only non-packaged (loose-layout) test hosts can be launched today.</target>
+        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">Non è possibile avviare l'app di Windows in pacchetto '{0}' (trovato '{1}'). La registrazione e l'attivazione di un'app in pacchetto (MSIX) richiede la build Windows di questa estensione, disponibile per net8.0-windows10.0.19041.0 e versioni successive. Specificare come destinazione 'net8.0-windows10.0.19041.0' (o un moniker framework di destinazione net*-windows successivo nella piattaforma versione 10.0.19041.0 o successiva) in modo che NuGet selezioni questa risorsa. La build corrente avvia solo host di test non in pacchetto (a layout libero). Vedere https://github.com/microsoft/testfx/issues/9933.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppNoApplicationToActivate">
+        <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
+        <target state="translated">Non è possibile attivare l'app di Windows in pacchetto '{0}' (trovato '{1}'): il manifesto non dichiara alcuna &lt;Application&gt;, quindi non esiste alcun ID modello utente applicazione da attivare.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationFailed">
+        <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
+        <target state="translated">Non è possibile registrare il layout dell'app di Windows in pacchetto '{0}'. Per registrare un layout di output di una build non firmata è necessario che sia abilitata la modalità sviluppatore (o il sideload). Errore: {1}</target>
         <note />
       </trans-unit>
     </body>

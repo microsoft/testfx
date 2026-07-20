@@ -3,8 +3,15 @@
   <PropertyGroup>
     <RootNamespace>Microsoft.Testing.Extensions.PackagedApp</RootNamespace>
     <!-- The packaged-app launcher uses modern Process APIs (ArgumentList, WaitForExitAsync,
-         Kill(entireProcessTree)) and targets runtime hosts, so it ships only for .NET. -->
-    <TargetFrameworks>$(SupportedNetFrameworks)</TargetFrameworks>
+         Kill(entireProcessTree)) and targets runtime hosts, so it ships only for .NET. The
+         net*-windows10.0.19041.0 flavors additionally light up the packaged (MSIX) register-and-
+         activate path via the PackageManager WinRT projection; the plain flavors keep the loose-layout
+         deployment and fail fast for a packaged layout. NuGet serves the Windows asset to a consumer
+         that targets a matching Windows TFM and the plain asset to everyone else. -->
+    <TargetFrameworks>$(SupportedNetFrameworks);net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <!-- Allow the Windows TFMs to build (restore the Windows targeting packs) on non-Windows CI legs;
+         the produced Windows assets are just compiled there, not run. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <GenerateBuildInfo>true</GenerateBuildInfo>
     <BuildInfoTemplateFile>$(RepoRoot)src\Platform\SharedExtensionHelpers\BuildInfo.cs.template</BuildInfoTemplateFile>
     <!-- This extension consumes the experimental ITestHostLauncher extension point. -->
@@ -15,12 +22,18 @@
     <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
 
+  <!-- The register-and-activate path (PackageManager + IApplicationActivationManager) only compiles for
+       the Windows TFMs where the WinRT projection is available. -->
+  <PropertyGroup Condition="$(TargetFramework.Contains('-windows'))">
+    <DefineConstants>$(DefineConstants);PACKAGEDAPP_WINRT</DefineConstants>
+  </PropertyGroup>
+
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>
       <![CDATA[This package provides extensions to Microsoft Testing Platform intended to extend base functionalities.
 
-This package extends Microsoft Testing Platform to deploy and launch a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) from an isolated directory instead of starting it in place. Launching a genuinely packaged (MSIX) app — UWP or packaged WinUI — by registering its layout with the PackageManager and activating it by Application User Model ID is not implemented yet (see https://github.com/microsoft/testfx/issues/9933).]]>
+This package extends Microsoft Testing Platform to deploy and launch Windows test hosts. It deploys and launches a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) from an isolated directory instead of starting it in place, and — in its Windows build (net*-windows) — registers a packaged, full-trust MSIX desktop app layout with the PackageManager and activates it by Application User Model ID (see https://github.com/microsoft/testfx/issues/9933). True UWP/AppContainer hosts are not supported.]]>
     </PackageDescription>
   </PropertyGroup>
 
@@ -30,10 +43,15 @@ This package extends Microsoft Testing Platform to deploy and launch a non-packa
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
     <AdditionalFiles Include="InternalAPI/InternalAPI.Shipped.txt" />
     <AdditionalFiles Include="InternalAPI/InternalAPI.Unshipped.txt" />
+    <!-- Internal API surface that only exists in the Windows build (register-and-activate path). -->
+    <AdditionalFiles Include="InternalAPI/Windows/InternalAPI.Unshipped.txt" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src/Polyfills/**/*.cs" Link="Polyfills\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Reuse the platform's Windows command-line quoting so the activation-argument round-trip cannot
+         diverge from the rest of the product (same helper the Retry extension source-links). -->
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\PasteArguments.cs" Link="Helpers\PasteArguments.cs" />
   </ItemGroup>
 
   <!-- NuGet package layout -->

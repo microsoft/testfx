@@ -12,4 +12,6 @@ internal enum FixtureKind
     ClassCleanup,
     TestInitialize,
     TestCleanup,
+    GlobalTestInitialize,
+    GlobalTestCleanup,
 }

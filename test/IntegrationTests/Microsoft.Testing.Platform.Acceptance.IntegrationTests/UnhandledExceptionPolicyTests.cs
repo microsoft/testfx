@@ -35,8 +35,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
         using TempDirectory clone = new();
-        await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-        testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
+        testHost = await CloneTestHostAsync(testHost, clone, "UnhandledExceptionPolicyTests");
         string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
         string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationToken);
 
@@ -98,8 +97,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase<UnhandledExcepti
     {
         var testHost = TestInfrastructure.TestHost.LocateFrom(AssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
         using TempDirectory clone = new();
-        await clone.CopyDirectoryAsync(testHost.DirectoryName, clone.Path, retainAttributes: !RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-        testHost = TestInfrastructure.TestHost.LocateFrom(clone.Path, "UnhandledExceptionPolicyTests");
+        testHost = await CloneTestHostAsync(testHost, clone, "UnhandledExceptionPolicyTests");
         string configFileName = Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json");
         string contentFile = await File.ReadAllTextAsync(Path.Combine(testHost.DirectoryName, "UnhandledExceptionPolicyTests.testconfig.json"), TestContext.CancellationToken);
 

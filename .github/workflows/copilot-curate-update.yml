@@ -53,6 +53,8 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v7
         with:
+          token: ${{ secrets.BACKPORT_MACHINE_USER_PAT }}
+          push-to-fork: nohwnd-bot/testfx
           commit-message: "chore: update curated Copilot skills/agents"
           title: "chore: update curated Copilot skills/agents"
           body: |
