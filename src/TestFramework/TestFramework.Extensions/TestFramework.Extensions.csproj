@@ -18,7 +18,7 @@
     -->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>MSTest.TestFramework</PackageId>
-    <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
+    <PackageTags>$(CommonPackageTags) MSTest TestFramework MSTestV2 Framework</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
 

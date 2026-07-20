@@ -56,6 +56,35 @@ function Confirm-NugetPackages {
     foreach ($unzipNugetPackageDir in $unzipNugetPackageDirs) {
         try {
             $packageName = (Get-Item $unzipNugetPackageDir).BaseName
+            $nuspecFiles = @(Get-ChildItem -Path $unzipNugetPackageDir -Filter "*.nuspec" -File)
+            if ($nuspecFiles.Count -ne 1) {
+                $errors += "Expected exactly one nuspec in '$packageName', actual: $($nuspecFiles.Count)"
+            }
+            else {
+                $nuspec = [xml](Get-Content -Raw $nuspecFiles[0].FullName)
+                $metadata = $nuspec.package.metadata
+
+                if ([string]::IsNullOrWhiteSpace([string]$metadata.tags)) {
+                    $errors += "Package '$packageName' does not define tags"
+                }
+
+                $readme = [string]$metadata.readme
+                if ([string]::IsNullOrWhiteSpace($readme)) {
+                    $errors += "Package '$packageName' does not define a readme"
+                }
+                elseif (!(Test-Path -Path (Join-Path $unzipNugetPackageDir $readme) -PathType Leaf)) {
+                    $errors += "Package '$packageName' readme '$readme' is not included in the package"
+                }
+
+                $icon = [string]$metadata.icon
+                if ([string]::IsNullOrWhiteSpace($icon)) {
+                    $errors += "Package '$packageName' does not define an icon"
+                }
+                elseif (!(Test-Path -Path (Join-Path $unzipNugetPackageDir $icon) -PathType Leaf)) {
+                    $errors += "Package '$packageName' icon '$icon' is not included in the package"
+                }
+            }
+
             $versionIndex = $packageName.LastIndexOf($version)
             if ($versionIndex -lt 0) {
                 continue
@@ -79,7 +108,7 @@ function Confirm-NugetPackages {
     if ($errors) {
         Write-Error "Validation of NuGet packages failed with $($errors.Count) errors:`n$($errors -join "`n")"
     } else {
-        Write-Host "Successfully validated content of NuGet packages"
+        Write-Host "Successfully validated content and metadata of NuGet packages"
     }
 }
 
