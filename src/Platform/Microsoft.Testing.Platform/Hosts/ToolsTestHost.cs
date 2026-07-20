@@ -159,28 +159,32 @@ internal sealed class ToolsHost(
         error = null;
 
         StringBuilder stringBuilder = new();
-        foreach (IGrouping<string, CommandLineParseOption> optionRecord in _commandLineHandler.ParseResult.Options.GroupBy(x => x.Name))
-        {
-            string optionName = optionRecord.Key;
-            int arity = AggregateArguments(optionRecord).Length;
-            ICommandLineOptionsProvider extension = GetCommandLineOptionsProviders(tool)
-                .Single(provider => provider.GetCommandLineOptions().Any(option => option.Name == optionName));
-            CommandLineOption option = extension.GetCommandLineOptions().Single(x => x.Name == optionName);
-            if (arity < option.Arity.Min || arity > option.Arity.Max)
-            {
-                stringBuilder.AppendLine(
-                    CultureInfo.InvariantCulture,
-                    $"The option '--{optionName}' can be specified between {option.Arity.Min} and {option.Arity.Max} times for tool '{tool.DisplayName}'.");
-            }
-        }
-
-        foreach (ICommandLineOptionsProvider extension in GetToolCommandLineOptionsProviders(tool))
+        foreach (ICommandLineOptionsProvider extension in GetCommandLineOptionsProviders(tool))
         {
             foreach (CommandLineOption option in extension.GetCommandLineOptions())
             {
-                int argumentCount = AggregateArguments(
-                    _commandLineHandler.ParseResult.Options.Where(record => record.Name == option.Name)).Length;
-                if (argumentCount < option.Arity.Min)
+                if (!_commandLineHandler.IsOptionSet(option.Name))
+                {
+                    continue;
+                }
+
+                int argumentCount = _commandLineHandler.TryGetOptionArgumentList(option.Name, out string[]? arguments)
+                    ? arguments.Length
+                    : 0;
+                if (argumentCount < option.Arity.Min || argumentCount > option.Arity.Max)
+                {
+                    stringBuilder.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $"The option '--{option.Name}' can be specified between {option.Arity.Min} and {option.Arity.Max} times for tool '{tool.DisplayName}'.");
+                }
+            }
+        }
+
+        foreach (IToolCommandLineOptionsProvider extension in GetToolCommandLineOptionsProviders(tool))
+        {
+            foreach (CommandLineOption option in extension.GetCommandLineOptions())
+            {
+                if (!_commandLineHandler.IsOptionSet(option.Name) && option.Arity.Min > 0)
                 {
                     stringBuilder.AppendLine(
                         CultureInfo.InvariantCulture,
@@ -201,18 +205,21 @@ internal sealed class ToolsHost(
     private async Task<ValidationResult> ValidateOptionsArgumentsAsync(ITool tool)
     {
         StringBuilder stringBuilder = new();
-        foreach (IGrouping<string, CommandLineParseOption> optionRecords in _commandLineHandler.ParseResult.Options.GroupBy(record => record.Name))
+        foreach (ICommandLineOptionsProvider extension in GetCommandLineOptionsProviders(tool))
         {
-            string optionName = optionRecords.Key;
-            string[] arguments = AggregateArguments(optionRecords);
-            ICommandLineOptionsProvider extension = GetCommandLineOptionsProviders(tool)
-                .Single(provider => provider.GetCommandLineOptions().Any(option => option.Name == optionName));
-            ValidationResult result = await extension.ValidateOptionArgumentsAsync(
-                extension.GetCommandLineOptions().Single(option => option.Name == optionName),
-                arguments).ConfigureAwait(false);
-            if (!result.IsValid)
+            foreach (CommandLineOption option in extension.GetCommandLineOptions())
             {
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionName}': {result.ErrorMessage}, tool {tool.DisplayName}");
+                if (!_commandLineHandler.IsOptionSet(option.Name))
+                {
+                    continue;
+                }
+
+                _commandLineHandler.TryGetOptionArgumentList(option.Name, out string[]? arguments);
+                ValidationResult result = await extension.ValidateOptionArgumentsAsync(option, arguments ?? []).ConfigureAwait(false);
+                if (!result.IsValid)
+                {
+                    stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{option.Name}': {result.ErrorMessage}, tool {tool.DisplayName}");
+                }
             }
         }
 

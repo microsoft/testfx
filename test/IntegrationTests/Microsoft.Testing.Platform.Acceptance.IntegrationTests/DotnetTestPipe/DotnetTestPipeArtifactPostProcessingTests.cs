@@ -154,6 +154,48 @@ public sealed class DotnetTestPipeArtifactPostProcessingTests
         }
     }
 
+    [TestMethod]
+    public async Task MergeTool_OptionsFromTestConfig_WritesOutputTrx()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"merge-trx-config-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        try
+        {
+            string firstPath = Path.Combine(directory, "first.trx");
+            string secondPath = Path.Combine(directory, "second.trx");
+            string outputPath = Path.Combine(directory, "merged.trx");
+            string configPath = Path.Combine(directory, "testconfig.json");
+            WriteMinimalReport(firstPath, "first");
+            WriteMinimalReport(secondPath, "second");
+            File.WriteAllText(
+                configPath,
+                JsonSerializer.Serialize(new
+                {
+                    commandLineOptions = new Dictionary<string, object>
+                    {
+                        ["input"] = new[] { firstPath, secondPath },
+                        ["output-trx"] = outputPath,
+                    },
+                }));
+            var testHost = TestInfrastructure.TestHost.LocateFrom(
+                AssetFixture.TargetAssetPath,
+                AssetName,
+                TargetFrameworks.NetCurrent);
+
+            TestHostResult result = await testHost.ExecuteAsync(
+                $"--config-file \"{configPath}\"",
+                toolName: "merge-trx",
+                cancellationToken: TestContext.CancellationToken);
+
+            result.AssertExitCodeIs(ExitCode.Success);
+            Assert.IsTrue(File.Exists(outputPath));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
     private static void WriteMinimalReport(string path, string name)
     {
         XNamespace ns = "http://microsoft.com/schemas/VisualStudio/TeamTest/2010";
