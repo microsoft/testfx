@@ -130,13 +130,7 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
     private async Task WarnAboutProcessorConflictsAsync(CancellationToken cancellationToken)
     {
-        IEnumerable<IGrouping<string, (string Key, IArtifactPostProcessor Processor)>> conflicts =
-            _processors.SelectMany(processor => processor.SupportedKinds.Select(key => (Key: key, Processor: processor)))
-                .Concat(_processors.SelectMany(processor => processor.SupportedFileExtensionsFallback.Select(key => (Key: key.ToLowerInvariant(), Processor: processor))))
-                .GroupBy(item => item.Key, StringComparer.Ordinal)
-                .Where(group => group.Skip(1).Any());
-
-        foreach (IGrouping<string, (string Key, IArtifactPostProcessor Processor)> conflict in conflicts)
+        foreach (KeyValuePair<string, string> conflict in FindProcessorConflicts(_processors))
         {
             await _outputDevice.DisplayAsync(
                 this,
@@ -144,8 +138,32 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
                     CultureInfo.CurrentCulture,
                     PlatformResources.ArtifactPostProcessingDispatcherProcessorConflict,
                     conflict.Key,
-                    conflict.First().Processor.Uid)),
+                    conflict.Value)),
                 cancellationToken).ConfigureAwait(false);
         }
+    }
+
+    internal static IReadOnlyDictionary<string, string> FindProcessorConflicts(IEnumerable<IArtifactPostProcessor> processors)
+    {
+        Dictionary<string, string> firstProcessorByCapability = [with(StringComparer.Ordinal)];
+        Dictionary<string, string> conflicts = [with(StringComparer.Ordinal)];
+        foreach (IArtifactPostProcessor processor in processors)
+        {
+            HashSet<string> capabilities = new(processor.SupportedKinds, StringComparer.Ordinal);
+            capabilities.UnionWith(processor.SupportedFileExtensionsFallback.Select(extension => extension.ToLowerInvariant()));
+            foreach (string capability in capabilities)
+            {
+                if (!firstProcessorByCapability.TryGetValue(capability, out string? firstProcessorUid))
+                {
+                    firstProcessorByCapability.Add(capability, processor.Uid);
+                }
+                else if (firstProcessorUid != processor.Uid && !conflicts.ContainsKey(capability))
+                {
+                    conflicts.Add(capability, firstProcessorUid);
+                }
+            }
+        }
+
+        return conflicts;
     }
 }

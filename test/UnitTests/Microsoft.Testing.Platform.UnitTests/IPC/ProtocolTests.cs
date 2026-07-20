@@ -295,11 +295,12 @@ public sealed class ProtocolTests
     {
         // Indirect the comparisons through a collection so the MSTest analyzer
         // does not flag string compile-time equalities as "always true".
-        string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover];
+        string[] modes = [HandshakeMessageExecutionModes.Run, HandshakeMessageExecutionModes.Help, HandshakeMessageExecutionModes.Discover, HandshakeMessageExecutionModes.Tool];
 
         Assert.AreEqual("run", modes[0]);
         Assert.AreEqual("help", modes[1]);
         Assert.AreEqual("discover", modes[2]);
+        Assert.AreEqual("tool", modes[3]);
     }
 
     [TestMethod]

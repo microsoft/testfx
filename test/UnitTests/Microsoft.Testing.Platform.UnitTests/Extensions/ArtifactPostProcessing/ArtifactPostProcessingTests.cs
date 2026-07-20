@@ -56,6 +56,33 @@ public sealed class ArtifactPostProcessingTests
     }
 
     [TestMethod]
+    public void FindProcessorConflicts_DuplicateCapabilitiesWithinOneProcessor_ReturnsEmpty()
+    {
+        var processor = new StubProcessor("processor", ["kind", "kind"], [".TRX", ".trx"]);
+
+        IReadOnlyDictionary<string, string> conflicts =
+            ArtifactPostProcessingDispatcherTool.FindProcessorConflicts([processor]);
+
+        Assert.IsEmpty(conflicts);
+    }
+
+    [TestMethod]
+    public void FindProcessorConflicts_SameCapabilityAcrossProcessors_ReturnsFirstProcessor()
+    {
+        IArtifactPostProcessor[] processors =
+        [
+            new StubProcessor("first", ["kind"], []),
+            new StubProcessor("second", ["kind"], []),
+        ];
+
+        IReadOnlyDictionary<string, string> conflicts =
+            ArtifactPostProcessingDispatcherTool.FindProcessorConflicts(processors);
+
+        Assert.HasCount(1, conflicts);
+        Assert.AreEqual("first", conflicts["kind"]);
+    }
+
+    [TestMethod]
     public void Manifest_LoadsVersionedAttributedInputs()
     {
         string directory = Path.Combine(Path.GetTempPath(), $"artifact-manifest-{Guid.NewGuid():N}");
