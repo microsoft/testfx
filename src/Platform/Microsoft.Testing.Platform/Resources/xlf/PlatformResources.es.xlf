@@ -169,12 +169,12 @@
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
-        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
+        <target state="translated">No se pudo crear una instancia de la extensión compuesta "{0}". Consulte la excepción interna para obtener más información.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
-        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
+        <target state="translated">El generador de la extensión compuesta "{0}" devolvió una instancia nula.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -927,7 +927,7 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
-        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
+        <target state="translated">No se pudieron vaciar los registros en el archivo de registro "{0}" antes del tiempo de espera de "{1}" segundos. El archivo de registro puede estar incompleto.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -988,7 +988,7 @@ Más información sobre la telemetría de la Plataforma de pruebas de Microsoft:
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+        <target state="translated">Se produjo una excepción inesperada en el bucle de escritura de "FileLogger" para el archivo de registro "{0}". El archivo de registro puede estar incompleto.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>

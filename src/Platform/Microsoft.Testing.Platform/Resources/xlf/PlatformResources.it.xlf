@@ -169,12 +169,12 @@
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryInstantiationFailedErrorMessage">
         <source>Failed to create an instance of composite extension '{0}'. See the inner exception for details.</source>
-        <target state="new">Failed to create an instance of composite extension '{0}'. See the inner exception for details.</target>
+        <target state="translated">Creazione di un'istanza dell'estensione composita '{0}' non riuscita. Per informazioni dettagliate, vedere l'eccezione interna.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeExtensionFactoryReturnedNullInstanceErrorMessage">
         <source>The factory for composite extension '{0}' returned a null instance.</source>
-        <target state="new">The factory for composite extension '{0}' returned a null instance.</target>
+        <target state="translated">La factory per l'estensione composita '{0}' ha restituito un'istanza null.</target>
         <note>{0} is the extension type name.</note>
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -927,7 +927,7 @@ Altre informazioni sulla telemetria della piattaforma di test Microsoft: https:/
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</source>
-        <target state="new">Failed to flush logs to log file '{0}' before the timeout of '{1}' seconds. The log file may be incomplete.</target>
+        <target state="translated">Non è possibile scaricare il file di log '{0}' prima del timeout di '{1}' secondi. Il file di log potrebbe essere incompleto.</target>
         <note>{0} is the log file path. {1} is the timeout in seconds.</note>
       </trans-unit>
       <trans-unit id="Total">
@@ -988,7 +988,7 @@ Altre informazioni sulla telemetria della piattaforma di test Microsoft: https:/
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
 {1}</source>
-        <target state="new">An unexpected exception occurred in the 'FileLogger' write loop for log file '{0}'. The log file may be incomplete.
+        <target state="translated">Si è verificata un'eccezione imprevista nel ciclo di scrittura di 'FileLogger' per il file di log '{0}'. Il file di log potrebbe essere incompleto.
 {1}</target>
         <note>{0} is the log file path. {1} is the exception ToString output. {Locked="FileLogger"}</note>
       </trans-unit>
