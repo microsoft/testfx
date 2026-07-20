@@ -101,6 +101,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">调试跟踪:</target>
         <note />
       </trans-unit>
+      <trans-unit id="DeploymentDependencyLoadFailed">
+        <source>Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</source>
+        <target state="new">Test Run deployment issue: Failed to load the assembly or module '{0}'. Reason: {1}</target>
+        <note>{0} is the assembly or module path or assembly identity. {1} is the reason the assembly or module could not be loaded.</note>
+      </trans-unit>
       <trans-unit id="DeploymentErrorBadDeploymentItem">
         <source>Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.</source>
         <target state="translated">测试运行部署问题: 错误的部署项:“{0}”: 输出目录“{1}”指定将该项部署到部署根目录的外部，这是不允许的。</target>
@@ -117,9 +122,9 @@ but received {4} argument(s), with types '{5}'.</source>
         <note>{0} is the file path. {1} is the exception type. {2} is the exception message.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToCopyWithOverwrite">
-        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}</source>
-        <target state="translated">测试运行部署问题: 未能将文件“{0}”复制到“{1}”: {2}: {3}</target>
-        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message.</note>
+        <source>Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</source>
+        <target state="new">Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3} (HResult: 0x{4:X8})</target>
+        <note>{0} is the source file path. {1} is the destination file path. {2} is the exception type. {3} is the exception message. {4} is the exception HResult.</note>
       </trans-unit>
       <trans-unit id="DeploymentErrorFailedToDeployDependencies">
         <source>Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}</source>
@@ -228,6 +233,26 @@ but received {4} argument(s), with types '{5}'.</source>
         <target state="translated">发现泛型参数“{0}”有两种冲突类型。冲突类型为“{1}”和“{2}”。</target>
         <note>{0} is the generic parameter name. {1} is the first conflicting type. {2} is the second conflicting type.</note>
       </trans-unit>
+      <trans-unit id="GlobalTestCleanupTimedOut">
+        <source>Global test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Global test cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestCleanupWasCancelled">
+        <source>Global test cleanup method '{0}.{1}' was canceled</source>
+        <target state="new">Global test cleanup method '{0}.{1}' was canceled</target>
+        <note>{0} is the type name. {1} is the global test cleanup method name.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeTimedOut">
+        <source>Global test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Global test initialize method '{0}.{1}' timed out after {2}ms</target>
+        <note>{0} is the type name. {1} is the global test initialize method name. {2} is the timeout in milliseconds.</note>
+      </trans-unit>
+      <trans-unit id="GlobalTestInitializeWasCancelled">
+        <source>Global test initialize method '{0}.{1}' was canceled</source>
+        <target state="new">Global test initialize method '{0}.{1}' was canceled</target>
+        <note>{0} is the type name. {1} is the global test initialize method name.</note>
+      </trans-unit>
       <trans-unit id="InvalidParallelScopeValue">
         <source>Invalid value '{0}' specified for 'Scope'. Supported scopes are {1}.</source>
         <target state="translated">为 ‘Scope’ 指定的值 ‘{0}’ 无效。受支持的范围为 {1}。</target>
@@ -237,6 +262,11 @@ but received {4} argument(s), with types '{5}'.</source>
         <source>Invalid value '{0}' specified for 'Workers'. The value should be a non-negative integer.</source>
         <target state="translated">为 ‘Workers’ 指定的值 ‘{0}’ 无效。该值应为非负整数。</target>
         <note>{0} is the invalid worker count. {Locked="Workers"}</note>
+      </trans-unit>
+      <trans-unit id="InvalidSettingsXml">
+        <source>MSTestAdapter failed to parse the runsettings XML.</source>
+        <target state="new">MSTestAdapter failed to parse the runsettings XML.</target>
+        <note>{Locked="MSTestAdapter"}{Locked="runsettings"}</note>
       </trans-unit>
       <trans-unit id="InvalidSettingsXmlAttribute">
         <source>Invalid settings '{0}'. Unexpected XmlAttribute: '{1}'.</source>

@@ -385,6 +385,8 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.class_cleanup_timeout"] = (double)settings.ClassCleanupTimeout;
         metrics["mstest.setting.test_initialize_timeout"] = (double)settings.TestInitializeTimeout;
         metrics["mstest.setting.test_cleanup_timeout"] = (double)settings.TestCleanupTimeout;
+        metrics["mstest.setting.global_test_initialize_timeout"] = (double)settings.GlobalTestInitializeTimeout;
+        metrics["mstest.setting.global_test_cleanup_timeout"] = (double)settings.GlobalTestCleanupTimeout;
         metrics["mstest.setting.cooperative_cancellation"] = AsTelemetryBool(settings.CooperativeCancellationTimeout);
 
         // Behavior
@@ -396,6 +398,7 @@ internal sealed class MSTestTelemetryDataCollector
         metrics["mstest.setting.randomize_test_order"] = AsTelemetryBool(settings.RandomizeTestOrder);
         metrics["mstest.setting.random_test_order_seed_provided"] = AsTelemetryBool(settings.RandomTestOrderSeed.HasValue);
         metrics["mstest.setting.capture_debug_traces"] = AsTelemetryBool(settings.CaptureDebugTraces);
+        metrics["mstest.setting.output_capture_mode"] = settings.OutputCaptureMode.ToString();
     }
 
     // MTP's telemetry providers (e.g. AppInsightsProvider) reject raw boolean values and assert

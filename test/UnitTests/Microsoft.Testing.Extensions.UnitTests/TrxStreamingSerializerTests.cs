@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Extensions.TrxReport.Abstractions.Streaming;
@@ -58,7 +58,7 @@ public class TrxStreamingSerializerTests
         Assert.AreEqual(TrxStreamMessageKind.DebugOrTrace, round.Messages[2].Kind);
         Assert.IsNull(round.Messages[2].Message);
         Assert.IsNotNull(round.Categories);
-        Assert.AreSequenceEqual(new[] { "cat-a", "cat-b" }, round.Categories.ToArray());
+        Assert.AreSequenceEqual(["cat-a", "cat-b"], round.Categories.ToArray());
         Assert.IsNotNull(round.Metadata);
         Assert.AreEqual("k", round.Metadata[0].Key);
         Assert.AreEqual("v", round.Metadata[0].Value);

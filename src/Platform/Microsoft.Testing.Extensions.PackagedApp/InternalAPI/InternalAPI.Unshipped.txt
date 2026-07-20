@@ -1,1 +1,30 @@
 #nullable enable
+Microsoft.Testing.Platform.Helpers.PasteArguments
+static Microsoft.Testing.Platform.Helpers.PasteArguments.AppendArgument(System.Text.StringBuilder! stringBuilder, string! argument) -> void
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppUserModelId.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.AppxApplicationInfo(string! id, string? executable, string! appUserModelId) -> void
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.Executable.get -> string?
+Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo.Id.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Applications.get -> System.Collections.Generic.IReadOnlyList<Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo!>!
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageFamilyName.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.PackageName.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.Publisher.get -> string!
+Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ResolveApplication(string? executableFileName) -> Microsoft.Testing.Extensions.PackagedApp.AppxApplicationInfo?
+const Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.AppxManifestFileName = "AppxManifest.xml" -> string!
+static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ComputePublisherId(string! publisher) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.FindManifestPath(string! startDirectory) -> string?
+static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.GetManifestPath(string! layoutDirectory) -> string?
+static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifest(System.IO.Stream! manifestStream) -> Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!
+static Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo.ReadFromManifest(string! manifestPath) -> Microsoft.Testing.Extensions.PackagedApp.AppxManifestInfo!
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake
+Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeDirectory(string! packageFamilyName) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFileName(string! testHostControllerPid) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.GetHandshakeFilePath(string! packageFamilyName, string! testHostControllerPid) -> string!
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.ReadAndDelete(string! filePath) -> System.Collections.Generic.IReadOnlyDictionary<string!, string?>?
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryDelete(string! filePath) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.TryGetTestHostControllerPid(System.Collections.Generic.IReadOnlyList<string!>! arguments) -> string?
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackHandshake.Write(string! filePath, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string!, string?>>! entries) -> void
+static Microsoft.Testing.Extensions.PackagedApp.PackagedAppConnectBackReader.TryApplyConnectBackEnvironment(System.Collections.Generic.IReadOnlyList<string!>! commandLineArguments) -> void

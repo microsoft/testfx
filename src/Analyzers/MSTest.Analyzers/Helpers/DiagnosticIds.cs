@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 namespace MSTest.Analyzers.Helpers;
@@ -76,4 +76,5 @@ internal static class DiagnosticIds
     // public const string InheritedTestClassAttributeWithSourceGeneratorRuleId = "MSTEST0069"; - // Reserved. Owned by MSTest.SourceGeneration analyzer; don't reuse this ID.
     public const string MemberConditionShouldBeValidRuleId = "MSTEST0070";
     public const string RedundantTestMethodDisplayNameRuleId = "MSTEST0071";
+    public const string AssemblyFixtureProviderNotSupportedWithNativeAotRuleId = "MSTEST0072";
 }

@@ -16,6 +16,12 @@ namespace Microsoft.Testing.Extensions.TrxReport.Abstractions;
 
 internal sealed partial class TrxReportEngine
 {
+    /// <summary>
+    /// The producer-asserted, reverse-DNS identifier of the TRX artifact format, used by
+    /// post-processing to group TRX reports for consolidation.
+    /// </summary>
+    internal const string TrxArtifactKind = "microsoft.testing.trx";
+
     private const string UnitTestTypeGuid = "13CDC9D9-DDB5-4fa4-A97D-D965CCFC6D4B";
     private const string UncategorizedTestListId = "8C84FA94-04C1-424b-9868-57A2D4851A1D";
 

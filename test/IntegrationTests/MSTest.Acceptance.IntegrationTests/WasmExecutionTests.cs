@@ -100,10 +100,19 @@ public sealed class WasmExecutionTests : AcceptanceTestBase<NopAssetFixture>
 #file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+// A derived TestMethod attribute forces the MSTest adapter's telemetry to anonymize the custom
+// attribute's type name with SHA256. SHA256 is unsupported on wasi-wasm
+// (https://github.com/dotnet/runtime/issues/99126), so with telemetry enabled (the default here)
+// this used to throw a PlatformNotSupportedException during discovery. Keeping it in the asset
+// guards the wasi telemetry skip.
+public sealed class CustomTestMethodAttribute : TestMethodAttribute
+{
+}
+
 [TestClass]
 public sealed class UnitTest1
 {
-    [TestMethod]
+    [CustomTestMethod]
     public void PassingTest()
         => Assert.AreEqual(4, 2 + 2);
 

@@ -25,7 +25,10 @@ internal static class ResponseFileHelper
         }
         catch (FormatException e)
         {
-            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.Message));
+            // Use the full exception detail (not just Message) for consistency with the IOException
+            // branch above; the response file content that triggered a parsing failure (e.g. an
+            // unclosed quote) is easier to diagnose with the complete exception information.
+            errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserFailedToReadResponseFile, rspFilePath, e.ToString()));
         }
 
         newArguments = null;

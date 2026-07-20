@@ -264,6 +264,7 @@ public sealed class ProtocolTests
             { HandshakeMessagePropertyNames.ExecutionMode, nameof(HandshakeMessagePropertyNames.ExecutionMode) },
             { HandshakeMessagePropertyNames.OrchestratorFeature, nameof(HandshakeMessagePropertyNames.OrchestratorFeature) },
             { HandshakeMessagePropertyNames.ServerControlPipeName, nameof(HandshakeMessagePropertyNames.ServerControlPipeName) },
+            { HandshakeMessagePropertyNames.AttemptNumber, nameof(HandshakeMessagePropertyNames.AttemptNumber) },
         };
 
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.PID), properties[0]);
@@ -279,6 +280,7 @@ public sealed class ProtocolTests
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ExecutionMode), properties[10]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.OrchestratorFeature), properties[11]);
         Assert.AreEqual(nameof(HandshakeMessagePropertyNames.ServerControlPipeName), properties[12]);
+        Assert.AreEqual(nameof(HandshakeMessagePropertyNames.AttemptNumber), properties[13]);
     }
 
     // The HandshakeMessageExecutionModes string values flow over IPC to
@@ -383,8 +385,8 @@ public sealed class ProtocolTests
             "MyExecId",
             "MyInstId",
             [
-                new FileArtifactMessage("/full/path/artifact1.txt", "artifact1", "description1", "uid-1", "Test 1", "session-1"),
-                new FileArtifactMessage("/full/path/artifact2.coverage", "artifact2", null, null, null, null),
+                new FileArtifactMessage("/full/path/artifact1.txt", "artifact1", "description1", "uid-1", "Test 1", "session-1", "microsoft.testing.trx"),
+                new FileArtifactMessage("/full/path/artifact2.coverage", "artifact2", null, null, null, null, null),
             ]);
 
         var stream = new MemoryStream();
@@ -405,6 +407,7 @@ public sealed class ProtocolTests
             Assert.AreEqual(expected.TestUid, actualArtifact.TestUid);
             Assert.AreEqual(expected.TestDisplayName, actualArtifact.TestDisplayName);
             Assert.AreEqual(expected.SessionUid, actualArtifact.SessionUid);
+            Assert.AreEqual(expected.Kind, actualArtifact.Kind);
         }
     }
 

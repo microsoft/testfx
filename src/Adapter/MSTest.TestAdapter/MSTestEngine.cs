@@ -182,6 +182,17 @@ internal sealed class MSTestEngine
     private static void EnsureTelemetryInitialized()
     {
 #if !WINDOWS_UWP && !WIN_UI
+#if NETCOREAPP
+        // Telemetry anonymizes custom test-attribute type names with SHA256, which is not supported
+        // on wasi-wasm (https://github.com/dotnet/runtime/issues/99126). Skip telemetry collection
+        // there so discovery does not throw a PlatformNotSupportedException; the platform side
+        // already skips its own SHA256-based telemetry on wasi for the same reason.
+        if (OperatingSystem.IsWasi())
+        {
+            return;
+        }
+#endif
+
         // Initialize telemetry collection if not already set (e.g. first call in the session).
         if (!MSTestTelemetryDataCollector.IsTelemetryOptedOut())
         {

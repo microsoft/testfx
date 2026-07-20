@@ -7,6 +7,11 @@
         <target state="translated">Nieprawidłowy plik .runsettings, brak atrybutu „&lt;RunSettings&gt;”</target>
         <note>Do not localize file extension {Locked=".runsettings"} or element {Locked="&lt;RunSettings&gt;"}.</note>
       </trans-unit>
+      <trans-unit id="RunSettingsEnvironmentVariablesNotSupportedOnBrowser">
+        <source>The runsettings 'EnvironmentVariables' section is not supported on browser/WebAssembly platforms, because applying it requires restarting the test host process. Remove the section to run on browser-wasm.</source>
+        <target state="translated">Sekcja runsettings „EnvironmentVariables” nie jest obsługiwana na platformach przeglądarki/zestawu WebAssembly, ponieważ jej zastosowanie wymaga ponownego uruchomienia procesu hosta testowego. Usuń sekcję do uruchomienia w module browser-wasm.</target>
+        <note>{Locked="runsettings"}{Locked="EnvironmentVariables"}{Locked="browser-wasm"}</note>
+      </trans-unit>
       <trans-unit id="RunSettingsOptionDescription">
         <source>The path, relative or absolute, to the .runsettings file. For more information and examples on how to configure test run, see https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</source>
         <target state="translated">Ścieżka względna lub bezwzględna pliku .runsettings. Aby uzyskać więcej informacji i przykładów dotyczących konfigurowania przebiegu testu, zobacz: https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file</target>

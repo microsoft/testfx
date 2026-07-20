@@ -103,7 +103,8 @@ When you add, rename, or remove a configuration key in any of those, update
 ### `timeout:*` keys must be strictly positive
 
 The `mstest:timeout:*` keys (`test`, `assemblyInitialize`, `assemblyCleanup`, `classInitialize`,
-`classCleanup`, `testInitialize`, `testCleanup`) are timeouts expressed in **milliseconds** and must
+`classCleanup`, `testInitialize`, `testCleanup`, `globalTestInitialize`, `globalTestCleanup`) are
+timeouts expressed in **milliseconds** and must
 be a **strictly positive integer** (`>= 1`). This is enforced identically by both the
 `testconfig.json`/JSON parser (`ParseTimeoutSetting`) and the legacy `.runsettings` XML parser, so
 behavior is the same across formats and matches the schema's `"minimum": 1`.
@@ -127,3 +128,12 @@ To run without a timeout, **omit the key** rather than setting it to `0`; absenc
 means "no timeout" (the internal default). Because an explicit `0` would be redundant with omitting
 the key, it is treated as invalid input to surface likely mistakes (for example, a templated value
 that resolved to `0`).
+
+### Global test fixture timeouts fall back to the per-test keys
+
+`[GlobalTestInitialize]` and `[GlobalTestCleanup]` methods honor their own dedicated
+`timeout:globalTestInitialize` / `timeout:globalTestCleanup` keys (RunSettings XML:
+`GlobalTestInitializeTimeout` / `GlobalTestCleanupTimeout`). When a dedicated key is **not** set,
+they fall back to the corresponding per-test `timeout:testInitialize` / `timeout:testCleanup` key so
+existing configurations keep applying. As always, a method-level `[Timeout(...)]` attribute takes
+precedence over any config value.

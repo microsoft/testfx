@@ -171,6 +171,37 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
+        // Scenario4: class-initialization overhead (100 classes × 100 methods = 10 000 executions).
+        // Each class has a [ClassInitialize] and [ClassCleanup]; one dedicated class carries
+        // [AssemblyInitialize] and [AssemblyCleanup]. Running Scenario4 alongside Scenario1 and
+        // Scenario3 isolates the per-class cost of class-lifecycle dispatch compared to the
+        // per-test (TestInitialize/TestCleanup) cost measured by Scenario3.
+        pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new PlainProcess("Scenario4_ClassInit_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        // Class-level parallelism variant of the class-init scenario.
+        pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_ClassLevel_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.ClassLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new PlainProcess("Scenario4_ClassInit_ClassLevel_PlainProcess.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
+        // dotnet-test path for the class-init scenario.
+        pipelineRunner.AddPipeline("Default", "Scenario4_ClassInit_DotnetTest_PlainProcess", [OSPlatform.Windows, OSPlatform.Linux, OSPlatform.OSX], parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario4(numberOfClass: 100, methodsPerClass: 100, tfm: "net9.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetTestProcess("Scenario4_ClassInit_DotnetTest_PlainProcess.zip", BuildConfiguration.Debug))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
         return pipelineRunner.Run(pipelineNameFilter);
     }
 }

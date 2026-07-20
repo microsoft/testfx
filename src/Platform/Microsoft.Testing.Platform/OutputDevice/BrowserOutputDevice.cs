@@ -33,7 +33,7 @@ internal sealed partial class BrowserOutputDevice : SimplifiedConsoleOutputDevic
     /// <inheritdoc />
     public override string Description => "Test Platform browser console service using JavaScript interop";
 
-    [JSImport("globalThis.console.warn", "main.js")]
+    [JSImport("globalThis.console.warn")]
     private static partial void JSConsoleWarn(string? message);
 
     [JSImport("globalThis.console.error")]

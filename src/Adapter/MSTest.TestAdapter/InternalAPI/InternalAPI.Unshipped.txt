@@ -1,4 +1,5 @@
 #nullable enable
+abstract Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.DisplayName.get -> string!
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.ReadRunSettings(Microsoft.Testing.Platform.CommandLine.CommandLineParseResult! commandLineParseResult) -> string?
 abstract Microsoft.Testing.Extensions.RunSettingsConfigurationProviderBase.Uid.get -> string!
@@ -24,6 +25,13 @@ Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.UpdateAs
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 Microsoft.Testing.Extensions.RunSettingsEnvironmentVariableProviderBase.Version.get -> string!
 Microsoft.Testing.Extensions.RunSettingsProviderHelper
+const Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterOptionName = "filter" -> string!
+Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase
+Microsoft.Testing.Extensions.TestCaseFilterCommandLineOptionsProviderBase.TestCaseFilterCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, string! optionDescription) -> void
+const Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.TestRunParameterOptionName = "test-parameter" -> string!
+Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase
+Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.TestRunParametersCommandLineOptionsProviderBase(Microsoft.Testing.Platform.Extensions.IExtension! extension, string! optionDescription, string! argumentIsNotParameterErrorFormat) -> void
+override sealed Microsoft.Testing.Extensions.TestRunParametersCommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IUnitTestElementFilterExpression
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.IUnitTestElementFilterExpression.MatchTestElement(System.Func<string!, object?>! propertyValueProvider) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MtpTestElementFilterProvider
@@ -32,9 +40,11 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.Mt
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.PlatformServicesConfigurationAdapter(Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.PlatformServicesConfigurationAdapter.this[string! key].get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsCommandLineOptionsProvider.EnvironmentVariablesNotSupportedOnBrowserError.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.DisplayName.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.Uid.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestingPlatformAdapter.MSTestRunSettingsConfigurationProvider.Version.get -> string!
+override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 override sealed Microsoft.Testing.Extensions.RunSettingsCommandLineOptionsProviderBase.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.ApplyEnvironmentVariables(System.Xml.Linq.XDocument! runSettings, Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> void
 static Microsoft.Testing.Extensions.RunSettingsProviderHelper.CanReadFile(Microsoft.Testing.Platform.Helpers.IFileSystem! fileSystem, string! filePath) -> bool

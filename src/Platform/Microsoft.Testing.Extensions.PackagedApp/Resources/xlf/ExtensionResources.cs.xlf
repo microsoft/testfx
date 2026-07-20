@@ -2,14 +2,39 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../ExtensionResources.resx">
     <body>
+      <trans-unit id="AmbiguousAppxManifestApplication">
+        <source>The packaged app manifest declares multiple applications and none uniquely matches the executable '{0}'. Candidate Application User Model IDs: {1}.</source>
+        <target state="translated">Manifest zabalené aplikace deklaruje více aplikací a žádná jednoznačně neodpovídá spustitelnému souboru '{0}'. Kandidátní ID modelu uživatele aplikace: {1}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidAppxManifestMissingIdentity">
+        <source>The packaged app manifest does not declare a valid &lt;Identity Name="..." Publisher="..." /&gt; element.</source>
+        <target state="translated">Manifest zabalené aplikace nedeklaruje platný prvek &lt;Identity Name="..." Publisher="..." /&gt;.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PackagedAppExtensionDescription">
-        <source>Deploys a packaged Windows (UWP/WinUI) test host to an isolated directory and launches it from there.</source>
-        <target state="translated">Nasadí zabaleného hostitele testů Windows (UWP/WinUI) do izolovaného adresáře a spustí ho odtamtud.</target>
+        <source>Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="new">Deploys a non-packaged (loose-layout) Windows test host (for example, unpackaged WinUI) to an isolated directory and launches it from there, and — in the Windows build — registers a packaged, full-trust MSIX desktop test host and activates it by Application User Model ID. True UWP/AppContainer hosts are not supported. See https://github.com/microsoft/testfx/issues/9933.</target>
         <note />
       </trans-unit>
       <trans-unit id="PackagedAppExtensionDisplayName">
         <source>Packaged app test host launcher</source>
         <target state="translated">Spouštěč hostitele testu zabalené aplikace</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppLaunchNotSupported">
+        <source>Cannot launch the packaged Windows app '{0}' (found '{1}'). Registering and activating a packaged (MSIX) app requires the Windows build of this extension, which ships for net8.0-windows10.0.19041.0 and later. Target 'net8.0-windows10.0.19041.0' (or a later net*-windows Target Framework Moniker at platform version 10.0.19041.0 or higher) so NuGet selects that asset. The current build only launches non-packaged (loose-layout) test hosts. See https://github.com/microsoft/testfx/issues/9933.</source>
+        <target state="translated">Zabalenou aplikaci pro Windows „{0}“ nelze spustit (nalezeno: {1}). Registrace a aktivace zabalené aplikace (MSIX) vyžaduje sestavení tohoto rozšíření pro Windows, který se dodává pro net8.0-windows10.0.19041.0 a novější. Nastavte cíl na net8.0-windows10.0.19041.0 (nebo na novější moniker cílové architektury net*-windows s verzí platformy 10.0.19041.0 nebo vyšší), aby NuGet vybral tento prostředek. Aktuální sestavení spouští pouze nezabalené hostitele testů s volným rozložením souborů. Viz https://github.com/microsoft/testfx/issues/9933.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppNoApplicationToActivate">
+        <source>Cannot activate the packaged Windows app '{0}' (found '{1}'): its manifest declares no &lt;Application&gt;, so there is no Application User Model ID to activate.</source>
+        <target state="translated">Nelze aktivovat zabalenou aplikaci pro Windows „{0}“ (nalezeno: {1}), protože její manifest nedeklaruje žádné &lt;Application&gt;, takže není k aktivaci k dispozici žádné ID modelu uživatele aplikace.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PackagedAppRegistrationFailed">
+        <source>Failed to register the packaged Windows app layout '{0}'. Registering an unsigned build-output layout requires Developer Mode (or sideloading) to be enabled. Error: {1}</source>
+        <target state="translated">Nepodařilo se zaregistrovat rozložení zabalené aplikace pro Windows „{0}“. Registrace nepodepsaného rozložení výstupu sestavení vyžaduje, aby byl povolen Režim vývojáře (nebo zkušební načtení). Chyba: {1}</target>
         <note />
       </trans-unit>
     </body>

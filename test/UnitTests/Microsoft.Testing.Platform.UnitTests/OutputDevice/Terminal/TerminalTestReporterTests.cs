@@ -2,9 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+
+using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -12,6 +15,8 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [UnsupportedOSPlatform("browser")]
 public sealed class TerminalTestReporterTests
 {
+    public TestContext TestContext { get; set; } = null!;
+
     [TestMethod]
     public void ExceptionFlattener_WhenNestedInnerExceptions_ShouldKeepAllMessagesInOrder()
     {
@@ -531,6 +536,31 @@ public sealed class TerminalTestReporterTests
     }
 
     [TestMethod]
+    public void TestProgressStateAwareTerminal_RenderFailure_LogsAndSuppressesLoggerFailure()
+    {
+        var terminal = new RecordingTerminal();
+        var renderer = new ThrowingProgressRenderer();
+        using var logAttempted = new ManualResetEventSlim();
+        Mock<ILogger> logger = new();
+        logger
+            .Setup(x => x.Log(LogLevel.Debug, It.IsAny<string>(), null, LoggingExtensions.Formatter))
+            .Callback<LogLevel, string, Exception?, Func<string, Exception?, string>>(
+                (_, message, _, _) =>
+                {
+                    Assert.Contains(nameof(InvalidOperationException), message);
+                    logAttempted.Set();
+                })
+            .Throws(new IOException("Logging failed."));
+        using var progressAwareTerminal = new TestProgressStateAwareTerminal(terminal, () => true, renderer, logger.Object);
+
+        progressAwareTerminal.StartShowingProgress(workerCount: 1);
+
+        Assert.IsTrue(logAttempted.Wait(TimeSpan.FromSeconds(5), TestContext.CancellationToken), "Expected the render failure to be logged.");
+        progressAwareTerminal.StopShowingProgress();
+        Assert.Contains("EraseProgress", terminal.Events);
+    }
+
+    [TestMethod]
     public void NonAnsiTerminal_ShowOutputNone_DoesNotShowOutput()
     {
         string targetFramework = "net8.0";
@@ -779,6 +809,25 @@ public sealed class TerminalTestReporterTests
         public void StopBusyIndicator() => Events.Add("StopBusyIndicator");
 
         public void StopUpdate() => Events.Add("StopUpdate");
+    }
+
+    private sealed class ThrowingProgressRenderer : IProgressRenderer
+    {
+        public TimeSpan TickInterval => TimeSpan.FromMilliseconds(1);
+
+        public void OnStart()
+        {
+        }
+
+        public void OnTick(ITerminal terminal, TestProgressState?[] progressItems)
+            => throw new InvalidOperationException("Rendering failed.");
+
+        public void OnWrite(ITerminal terminal, TestProgressState?[] progressItems, Action<ITerminal> write)
+            => write(terminal);
+
+        public void OnTestCompleted()
+        {
+        }
     }
 
     private class StackTraceException : Exception
@@ -1380,7 +1429,7 @@ public sealed class TerminalTestReporterTests
 
         string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\MyTests.dll" : "/repo/MyTests.dll";
         const string executionId = "exec-1";
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
 
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "t-pass-1", TestOutcome.Passed);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "t-pass-2", TestOutcome.Passed);
@@ -1530,8 +1579,7 @@ public sealed class TerminalTestReporterTests
 
     // Ported from the dotnet/sdk TerminalTestReporterTests: when an assembly's tests were retried, the per-assembly
     // summary appends a "/r{N}" segment so the user can tell the final counts came from retries. Attempt 1 fails the
-    // test; attempt 2 (a new instance id under the same execution id) passes it, so the final tally is 1 passed with
-    // 1 retried.
+    // test; attempt 2 passes it, so the final tally is 1 passed with 1 retried.
     [TestMethod]
     public void AssemblyRunCompleted_WhenTestsWereRetried_ShowsRetriedCount()
     {
@@ -1550,11 +1598,11 @@ public sealed class TerminalTestReporterTests
         const string executionId = "exec-flaky";
 
         // Attempt 1: register the first instance and report a failure.
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
 
-        // Attempt 2: a new instance id triggers a retry; the failing test now passes.
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        // Attempt 2: the explicit attempt number identifies the retry; the failing test now passes.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
 
         terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
@@ -1587,11 +1635,11 @@ public sealed class TerminalTestReporterTests
         const string executionId = "exec-flaky";
 
         // Attempt 1 fails the test...
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1");
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-1", attemptNumber: 1);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-1", testUid: "flaky-1", TestOutcome.Fail);
 
-        // ...attempt 2 (new instance id) retries and passes it.
-        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2");
+        // ...attempt 2 retries and passes it.
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, instanceId: "inst-2", attemptNumber: 2);
         ReportOrchestratorTest(terminalReporter, assembly, executionId, instanceId: "inst-2", testUid: "flaky-1", TestOutcome.Passed);
 
         terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
@@ -1832,6 +1880,38 @@ public sealed class TerminalTestReporterTests
         // RetriedFailedTests - tests that failed then passed on retry - which is 0 here, not the attempt count.)
         string assemblyLine = GetAssemblySummaryLine(stringBuilderConsole.Output, assembly);
         Assert.Contains(ExpectedCounts(1, 0, 0), assemblyLine);
+    }
+
+    [TestMethod]
+    public void AssemblyRunStarted_WithMultipleInstancesInOneAttempt_DoesNotTreatShardsAsRetries()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateOrchestratorReporter(stringBuilderConsole);
+        terminalReporter.TestExecutionStarted(DateTimeOffset.MinValue, workerCount: 1, isDiscovery: false, isHelp: false, isRetry: true);
+
+        string assembly = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? @"C:\repo\ShardedFlaky.dll" : "/repo/ShardedFlaky.dll";
+        const string executionId = "exec-sharded";
+
+        Parallel.Invoke(
+            () =>
+            {
+                terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-1", attemptNumber: 1);
+                ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-1", "flaky", TestOutcome.Fail);
+            },
+            () =>
+            {
+                terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-1-shard-2", attemptNumber: 1);
+                ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-1-shard-2", "passing", TestOutcome.Passed);
+            });
+
+        terminalReporter.AssemblyRunStarted(assembly, "net9.0", "x64", executionId, "attempt-2-shard-1", attemptNumber: 2);
+        ReportOrchestratorTest(terminalReporter, assembly, executionId, "attempt-2-shard-1", "flaky", TestOutcome.Passed);
+        terminalReporter.AssemblyRunCompleted(executionId, exitCode: 0, outputData: null, errorData: null);
+
+        string output = stringBuilderConsole.Output;
+        Assert.Contains(ExpectedCounts(2, 0, 0, retried: 1), GetAssemblySummaryLine(output, assembly));
+        Assert.Contains($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 2)})", output);
+        Assert.DoesNotContain($"({string.Format(CultureInfo.CurrentCulture, TerminalResources.Try, 3)})", output);
     }
 
     [TestMethod]
