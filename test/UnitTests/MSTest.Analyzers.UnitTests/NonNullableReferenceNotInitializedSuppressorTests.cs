@@ -143,6 +143,55 @@ public class SomeClass
         await test.RunAsync();
     }
 
+    [TestMethod]
+    public async Task TestContextFieldOnTestClass_DiagnosticIsNotSuppressed()
+    {
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public TestContext {|#0:_testContext|};
+}
+";
+
+        var test = new VerifyCS.Test
+        {
+            TestCode = code,
+        };
+
+        test.ExpectedDiagnostics.Add(DiagnosticResult.CompilerError("CS8618")
+            .WithLocation(0)
+            .WithOptions(DiagnosticOptions.IgnoreAdditionalLocations)
+            .WithArguments("field", "_testContext")
+            .WithIsSuppressed(false));
+
+        await test.RunAsync();
+    }
+
+    [TestMethod]
+    public async Task TestContextGetterOnlyPropertyOnTestClass_DiagnosticIsSuppressed()
+    {
+        // A TestContext property with only a getter still satisfies 'declaredSymbol is IPropertySymbol',
+        // so the suppressor must fire and suppress CS8618.
+        string code = @"
+#nullable enable
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class SomeClass
+{
+    public TestContext {|#0:TestContext|} { get; }
+}
+";
+
+        await VerifySingleSuppressionAsync(code, isSuppressed: true);
+    }
+
     private Task VerifySingleSuppressionAsync(string source, bool isSuppressed)
         => VerifyDiagnosticsAsync(source, [(0, isSuppressed)]);
 
