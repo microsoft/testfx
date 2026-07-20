@@ -470,8 +470,9 @@ currently running (rendered by non-IDE consumers as a "currently running tests" 
 
 Reports produced files (per-test artifacts, session artifacts, and standalone `FileArtifact`s). Each
 `FileArtifactMessage`: `FullPath`(1), `DisplayName`(2), `Description`(3), `TestUid`(4),
-`TestDisplayName`(5), `SessionUid`(6). Test-scoped artifacts fill `TestUid`/`TestDisplayName`; session
-and standalone artifacts leave them empty.
+`TestDisplayName`(5), `SessionUid`(6), `Kind`(7). `Kind` carries the producer-asserted artifact kind
+used for post-processor routing. Test-scoped artifacts fill `TestUid`/`TestDisplayName`; session and
+standalone artifacts leave them empty.
 
 ### 9.6 `CommandLineOptionMessages` (ID 3)
 
