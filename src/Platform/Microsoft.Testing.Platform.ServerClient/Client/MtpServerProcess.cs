@@ -185,17 +185,28 @@ internal sealed class MtpServerProcess : IDisposable
         string workingDirectory = Path.GetDirectoryName(source) ?? Directory.GetCurrentDirectory();
         string extension = Path.GetExtension(source);
 
-        if (extension.Equals(".exe", StringComparison.OrdinalIgnoreCase))
+        // A managed .NET assembly must be launched through its apphost (preferred) or `dotnet <dll>`.
+        if (extension.Equals(".dll", StringComparison.OrdinalIgnoreCase))
         {
-            return (source, serverArgs, workingDirectory);
+            string apphost = GetAppHostPath(source);
+            return File.Exists(apphost)
+                ? (apphost, serverArgs, workingDirectory)
+                : ("dotnet", $"\"{source}\" {serverArgs}", workingDirectory);
         }
 
-        // A .NET MTP app is typically shipped as a dll with a sibling apphost .exe. Prefer the apphost
-        // when present, otherwise fall back to `dotnet <dll>`.
-        string apphost = Path.ChangeExtension(source, ".exe");
-        return File.Exists(apphost)
-            ? (apphost, serverArgs, workingDirectory)
-            : ("dotnet", $"\"{source}\" {serverArgs}", workingDirectory);
+        // Otherwise `source` is already a native executable: a Windows `.exe` apphost or an
+        // extensionless native apphost on Linux/macOS. Run it directly.
+        return (source, serverArgs, workingDirectory);
+    }
+
+    private static string GetAppHostPath(string managedAssembly)
+    {
+        string directory = Path.GetDirectoryName(managedAssembly) ?? string.Empty;
+        string nameWithoutExtension = Path.GetFileNameWithoutExtension(managedAssembly);
+        string appHostFileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? nameWithoutExtension + ".exe"
+            : nameWithoutExtension;
+        return Path.Combine(directory, appHostFileName);
     }
 
     private static void SafeStop(TcpListener listener)
