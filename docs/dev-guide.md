@@ -86,7 +86,7 @@ For more information about all the different options available, supply the argum
 
 ### MSBuildCache
 
-The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache) before the regular Arcade build. The cache-aware build uses Arcade's `eng/common/msbuild.ps1` launcher to invoke the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. PR builds consume the immutable Azure Pipeline cache read-only, and fork PRs skip this step because they do not receive the required token scope.
+The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache) before the regular Arcade build. The cache-aware build uses Arcade's `eng/common/msbuild.ps1` launcher to invoke the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. PR builds consume the immutable Azure Pipeline cache read-only, and fork PRs skip this step because they do not receive the required token scope. Trusted manual or scheduled runs of this pipeline on `main` seed updated remote entries.
 
 MSBuildCache currently requires Windows, the Visual Studio version pinned in `global.json`, Git on `PATH`, and a clean repository. It does not support incremental developer builds. To validate the local cache from a clean checkout, run:
 

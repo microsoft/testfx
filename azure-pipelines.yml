@@ -209,33 +209,39 @@ stages:
         # for the project-cache plugin. Keep the regular Arcade build below as the correctness fallback during rollout.
         - pwsh: |
             $pwsh = Join-Path $PSHOME "pwsh.exe"
-            # Azure Pipeline cache entries are immutable. PR merge refs consume entries read-only to avoid
-            # PipelineCacheItemAlreadyExistsException when an existing fingerprint is outside their read scope.
-            & $pwsh -NoLogo -NoProfile -File ./eng/common/msbuild.ps1 `
-              -ci `
-              ./TestFx.slnx `
-              /restore `
-              /graph `
-              /m `
-              /reportfileaccesses `
-              /nr:false `
-              /t:Build `
-              /warnaserror `
-              /v:minimal `
-              /p:Configuration=$(_BuildConfig) `
-              /p:RepoRoot=$(Build.SourcesDirectory)\ `
-              /p:MSBuildCachePackageEnabled=true `
-              /p:MSBuildCacheEnabled=true `
-              /p:MSBuildCacheRemoteCacheIsReadOnly=true `
-              /p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache
+            # Azure Pipeline cache entries are immutable. PR merge refs consume entries read-only; trusted main
+            # branch manual/scheduled builds seed entries for subsequent PRs.
+            $remoteCacheIsReadOnly = if ("$(Build.Reason)" -eq "PullRequest") { "true" } else { "false" }
+            $arguments = @(
+              "-NoLogo",
+              "-NoProfile",
+              "-File", "./eng/common/msbuild.ps1",
+              "-ci",
+              "./TestFx.slnx",
+              "/restore",
+              "/graph",
+              "/m",
+              "/reportfileaccesses",
+              "/nr:false",
+              "/t:Build",
+              "/warnaserror",
+              "/v:minimal",
+              "/p:Configuration=$(_BuildConfig)",
+              "/p:RepoRoot=$(Build.SourcesDirectory)\",
+              "/p:MSBuildCachePackageEnabled=true",
+              "/p:MSBuildCacheEnabled=true",
+              "/p:MSBuildCacheRemoteCacheIsReadOnly=$remoteCacheIsReadOnly",
+              "/p:MSBuildCacheLogDirectory=$(Agent.TempDirectory)\MSBuildCache"
+            )
 
-            if ($LASTEXITCODE -ne 0) {
-              Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed with exit code $LASTEXITCODE; continuing with the regular Arcade build."
+            $process = Start-Process $pwsh -ArgumentList $arguments -Wait -PassThru -NoNewWindow
+            if ($process.ExitCode -ne 0) {
+              Write-Host "##vso[task.logissue type=warning]MSBuildCache canary failed with exit code $($process.ExitCode); continuing with the regular Arcade build."
             }
 
             exit 0
           displayName: Build solution graph with MSBuildCache
-          condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True'))
+          condition: and(succeeded(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
@@ -295,7 +301,7 @@ stages:
               }
             }
           displayName: Preserve cache diagnostics and clean canary outputs
-          condition: and(always(), eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True'))
+          condition: and(always(), or(and(eq(variables['Build.Reason'], 'PullRequest'), ne(variables['System.PullRequest.IsFork'], 'True')), and(ne(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))))
 
         - task: PowerShell@2
           displayName: 'Enable local dumps'
