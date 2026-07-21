@@ -244,6 +244,50 @@ public sealed class DotnetTestWebSocketClientTests
         }
     }
 
+    [TestMethod]
+    [Timeout(30_000, CooperativeCancellation = true)]
+    public async Task ReadAsync_WhenServerSendsEmptyBinaryMessageBeforeReply_IgnoresItInsteadOfTreatingAsEof()
+    {
+        // Regression test for a real bug found and fixed in ClientWebSocketDuplexStream.ReadAsync: a zero-length,
+        // non-Close binary WebSocket message (a legitimate occurrence - e.g. an empty keep-alive, or here, a
+        // deliberately injected empty frame) was briefly misreported as end-of-stream/peer-disconnected, because
+        // the retry loop only re-read for a non-final *fragment*, not for a complete zero-byte message. If that
+        // bug were reintroduced, this test would fail: RequestReplyAsync would observe an EOF where the server's
+        // real reply should be and throw IOException (via HandleMissingResponseAsync) instead of returning it.
+        using CancellationTokenSource cts = new(TimeSpan.FromSeconds(25));
+        TcpListener listener = new(IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            int port = ((IPEndPoint)listener.LocalEndpoint).Port;
+
+            Task serverTask = AcceptReadSendEmptyMessageThenReplyAsync(listener, new Dictionary<byte, string> { [9] = "ok" }, cts.Token);
+
+            IEnvironment environment = new Mock<IEnvironment>().Object;
+            DotnetTestWebSocketClient client = new(new Uri($"ws://127.0.0.1:{port}/dotnettest"), "s3cr3t-token", environment, exitProcessOnConnectionLoss: false);
+            RegisterSerializerViaReflection(client, new HandshakeMessageSerializer(), typeof(HandshakeMessage));
+
+            try
+            {
+                await client.ConnectAsync(cts.Token);
+
+                HandshakeMessage sent = new(new Dictionary<byte, string> { [0] = "1234" });
+                HandshakeMessage response = await client.RequestReplyAsync<HandshakeMessage, HandshakeMessage>(sent, cts.Token);
+                Assert.AreEqual("ok", response.Properties?[9]);
+
+                await serverTask;
+            }
+            finally
+            {
+                client.Dispose();
+            }
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
     private static Task<(HandshakeMessage Result, string RequestLine)> AcceptReadAndReplyAsync(TcpListener listener, Dictionary<byte, string> replyProperties, CancellationToken cancellationToken)
         => AcceptAndHandleAsync(
             listener,
@@ -271,10 +315,36 @@ public sealed class DotnetTestWebSocketClientTests
             (_, _, _) => Task.FromResult<object?>(null),
             cancellationToken);
 
+    private static Task AcceptReadSendEmptyMessageThenReplyAsync(TcpListener listener, Dictionary<byte, string> replyProperties, CancellationToken cancellationToken)
+        => AcceptAndHandleAsync<object?>(
+            listener,
+            async (stream, requestPayload, cancellationToken) =>
+            {
+                using MemoryStream requestBody = new(requestPayload, 4, requestPayload.Length - 4);
+                HandshakeMessageSerializer serializer = new();
+                ProtocolSerializerTestHelper.Deserialize(serializer, requestBody);
+
+                // Send a genuine zero-length, non-Close binary WebSocket message before the real reply. Writing
+                // a 0-byte buffer through the Stream still issues one WebSocket.SendAsync(..., endOfMessage:
+                // true, ...) call underneath (see ClientWebSocketDuplexStream.WriteAsync), producing exactly the
+                // scenario the regression test above guards against: a conforming reader must skip this and
+                // keep reading rather than reporting a false EOF.
+                await stream.WriteAsync([], 0, 0, cancellationToken);
+
+                HandshakeMessage reply = new(replyProperties);
+                using MemoryStream replyBody = new();
+                ProtocolSerializerTestHelper.Serialize(serializer, reply, replyBody);
+                await WriteFrameAsync(stream, HandshakeMessageFieldsId.MessagesSerializerId, replyBody.ToArray(), cancellationToken);
+
+                return null;
+            },
+            cancellationToken);
+
     // Shared plumbing for the server-side half of a loopback test: accepts one connection, completes the RFC
     // 6455 handshake, reads exactly one request frame, hands it to <paramref name="handleRequestAsync"/> (which
-    // may reply, or not - see the two callers above), then closes the connection. Factored out so each scenario
-    // only needs to express what differs about the server's reaction to the request.
+    // may reply, or not, or reply with an extra empty message first - see the callers above), then closes the
+    // connection. Factored out so each scenario only needs to express what differs about the server's reaction
+    // to the request.
     private static async Task<(T Result, string RequestLine)> AcceptAndHandleAsync<T>(TcpListener listener, Func<Stream, byte[], CancellationToken, Task<T>> handleRequestAsync, CancellationToken cancellationToken)
     {
         using TcpClient tcpClient = await listener.AcceptTcpClientAsync(cancellationToken);
