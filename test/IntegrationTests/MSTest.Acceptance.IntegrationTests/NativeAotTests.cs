@@ -87,18 +87,9 @@ public class UnitTest1
             .PatchCodeWithReplace("$MSTestSourceGenerationVersion$", MSTestSourceGenerationVersion),
             addPublicFeeds: true);
 
-        // Do NOT pass warnAsError: true here. Even in reflection-free source-gen mode, MSTest.TestAdapter
-        // (required for the source-generator runtime hook host MSTestAdapter.PlatformServices.dll) drives
-        // the native MTP path (TestingPlatformAdapter\MSTestTestNodeConverter, MSTestFilterContext), which
-        // uses the vstest Microsoft.TestPlatform.ObjectModel TestCase/TestProperty types directly. That
-        // submodule (plus System.Private.DataContractSerialization) emits trim/AOT warnings (IL20xx/IL30xx)
-        // outside this repo's control, and the source-gen mode does not change that reachability. Promoting
-        // them to errors would fail publish with NETSDK1144 before we can inspect the warning list. Enabling
-        // warnAsError here is blocked until that ObjectModel reachability is removed (see #9769). Instead, we
-        // assert below that MSTest-owned source files do not appear in publish output.
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync(
             $"publish {generator.TargetAssetPath} -r {RID} -f {tfm}",
-            warnAsError: false,
+            warnAsError: true,
             cancellationToken: TestContext.CancellationToken);
         compilationResult.AssertOutputContains("Generating native code");
 

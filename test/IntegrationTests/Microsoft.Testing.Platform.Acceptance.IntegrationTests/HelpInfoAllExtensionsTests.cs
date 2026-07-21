@@ -726,6 +726,25 @@ Registered command line providers:
         Hidden: False
         Description: What to capture: 'screen' (default, the full screen) or 'window' (only the current process window; Windows only, falls back to full screen elsewhere). Requires --capture-video.
 Registered tools:
+  Microsoft.Testing.Extensions.TrxReport.MergeTool
+    Command: merge-trx
+    Name: TRX report merge tool
+    Version: *
+    Description: Merges multiple TRX files into one from the command line
+    Tool command line providers:
+      Microsoft.Testing.Extensions.TrxReport.MergeTool
+        Name: TRX report merge tool
+        Version: *
+        Description: Merges multiple TRX files into one from the command line
+        Options:
+          --input
+            Arity: 2..N
+            Hidden: False
+            Description: Two or more input TRX file paths
+          --output-trx
+            Arity: 1
+            Hidden: False
+            Description: The output TRX file path
   TrxCompareTool
     Command: ms-trxcompare
     Name: TRX comparer tool
