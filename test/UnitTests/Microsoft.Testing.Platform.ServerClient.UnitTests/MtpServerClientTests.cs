@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.ServerMode;
@@ -63,7 +63,13 @@ public sealed class MtpServerClientTests
 
         await WithTimeoutAsync(client.DiscoverTestsAsync(["uid-1", "uid-2"], TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.Contains(JsonRpcMethods.TestingDiscoverTests, server.ReceivedRequestMethods);
+        DiscoverRequestArgs args = GetSingleRequestParams<DiscoverRequestArgs>(server, JsonRpcMethods.TestingDiscoverTests);
+        Assert.IsNotNull(args.TestNodes, "Expected the discover request to carry the requested UID list.");
+        Assert.AreSequenceEqual(
+            ["uid-1", "uid-2"],
+            args.TestNodes.Select(node => node.Uid.Value),
+            "Expected the exact requested UIDs to reach the wire, in order.");
+        Assert.IsNull(args.GraphFilter, "A UID-based discover must not send a graph filter.");
     }
 
     [TestMethod]
@@ -74,7 +80,9 @@ public sealed class MtpServerClientTests
 
         await WithTimeoutAsync(client.DiscoverTestsWithFilterAsync("/*/*/*/MyTestClass/*", TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.Contains(JsonRpcMethods.TestingDiscoverTests, server.ReceivedRequestMethods);
+        DiscoverRequestArgs args = GetSingleRequestParams<DiscoverRequestArgs>(server, JsonRpcMethods.TestingDiscoverTests);
+        Assert.AreEqual("/*/*/*/MyTestClass/*", args.GraphFilter, "Expected the graph filter to reach the wire.");
+        Assert.IsNull(args.TestNodes, "A filter-based discover must not send an explicit UID list.");
     }
 
     [TestMethod]
@@ -97,7 +105,13 @@ public sealed class MtpServerClientTests
 
         await WithTimeoutAsync(client.RunTestsAsync(["uid-1"], TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.Contains(JsonRpcMethods.TestingRunTests, server.ReceivedRequestMethods);
+        RunRequestArgs args = GetSingleRequestParams<RunRequestArgs>(server, JsonRpcMethods.TestingRunTests);
+        Assert.IsNotNull(args.TestNodes, "Expected the run request to carry the requested UID list.");
+        Assert.AreSequenceEqual(
+            ["uid-1"],
+            args.TestNodes.Select(node => node.Uid.Value),
+            "Expected the exact requested UID to reach the wire.");
+        Assert.IsNull(args.GraphFilter, "A UID-based run must not send a graph filter.");
     }
 
     [TestMethod]
@@ -108,7 +122,9 @@ public sealed class MtpServerClientTests
 
         await WithTimeoutAsync(client.RunTestsWithFilterAsync("/*/*/*/MyTestClass/*", TestContext.CancellationToken)).ConfigureAwait(false);
 
-        Assert.Contains(JsonRpcMethods.TestingRunTests, server.ReceivedRequestMethods);
+        RunRequestArgs args = GetSingleRequestParams<RunRequestArgs>(server, JsonRpcMethods.TestingRunTests);
+        Assert.AreEqual("/*/*/*/MyTestClass/*", args.GraphFilter, "Expected the graph filter to reach the wire.");
+        Assert.IsNull(args.TestNodes, "A filter-based run must not send an explicit UID list.");
     }
 
     [TestMethod]
@@ -401,6 +417,36 @@ public sealed class MtpServerClientTests
         Assert.AreEqual(ClientAttachDebuggerMethod, observedMethod);
     }
 
+    [TestMethod]
+    public async Task ServerInitiatedRequest_WithNonNullDictionaryResult_RoundTripsResultOverTheWire()
+    {
+        using FakeMtpServer server = new();
+        using MtpServerClient client = await ConnectAndInitializeAsync(server).ConfigureAwait(false);
+
+        // The protocol's attach-debugger response is a small object (e.g. { success: bool }). Returning a
+        // non-null Dictionary<string, object?> exercises the client-only response-dictionary pass-through
+        // serializer on BOTH formatter paths (Jsonite on net462, System.Text.Json on net8). Without it the
+        // response write throws and the server waits forever, so a regression surfaces here as a timeout.
+        client.ServerRequestHandler = (method, parameters, cancellationToken) =>
+        {
+            _ = method;
+            _ = parameters;
+            _ = cancellationToken;
+            return Task.FromResult<object?>(new Dictionary<string, object?>
+            {
+                ["success"] = true,
+                ["detail"] = "attached",
+            });
+        };
+
+        ResponseMessage response = await WithTimeoutAsync(server.SendServerRequestAsync(ClientAttachDebuggerMethod)).ConfigureAwait(false);
+
+        Assert.IsInstanceOfType(response.Result, typeof(IDictionary<string, object?>));
+        var result = (IDictionary<string, object?>)response.Result!;
+        Assert.IsTrue((bool)result["success"]!, "Expected the boolean payload to survive the round trip.");
+        Assert.AreEqual("attached", result["detail"], "Expected the string payload to survive the round trip.");
+    }
+
     private static async Task<MtpServerClient> ConnectAndInitializeAsync(FakeMtpServer server)
     {
         MtpServerClient client = server.ConnectClient();
@@ -448,5 +494,28 @@ public sealed class MtpServerClientTests
 
         Assert.Fail($"Expected an exception of type {typeof(TException).Name}, but none was thrown.");
         throw new InvalidOperationException("Unreachable.");
+    }
+
+    private static T GetSingleRequestParams<T>(FakeMtpServer server, string method)
+        where T : class
+    {
+        RequestMessage request = server.ReceivedRequests.Single(received => received.Method == method);
+        Assert.IsNotNull(request.Params, $"Expected the '{method}' request to carry deserialized params.");
+
+        // The System.Text.Json decoder strong-types incoming request params, so Params is already T. The
+        // client package's Jsonite RpcMessage decoder instead keeps them as a raw property bag (the real
+        // client never receives discover/run requests, so it decodes per method itself). Normalize both
+        // formatter paths to the typed args via the registered deserializer so the wire-payload assertions
+        // hold identically on the net8 (STJ) and net462 (Jsonite) legs.
+        if (request.Params is T typed)
+        {
+            return typed;
+        }
+
+        Assert.IsInstanceOfType(
+            request.Params,
+            typeof(IDictionary<string, object?>),
+            $"Expected the '{method}' request params to be {typeof(T).Name} or a raw property bag.");
+        return SerializerUtilities.Deserialize<T>((IDictionary<string, object?>)request.Params);
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO.Compression;
@@ -162,13 +162,9 @@ public sealed class MtpServerClientSourcePackageTests
         List<string> missing = [];
         foreach (string tfm in Package.TargetFrameworks)
         {
-            foreach (string api in ClientApiFiles)
-            {
-                if (!Package.PackedCsByTfm[tfm].Contains(api))
-                {
-                    missing.Add($"{tfm}: {api}");
-                }
-            }
+            missing.AddRange(ClientApiFiles
+                .Where(api => !Package.PackedCsByTfm[tfm].Contains(api))
+                .Select(api => $"{tfm}: {api}"));
         }
 
         Assert.IsEmpty(
@@ -543,17 +539,21 @@ public sealed class MtpServerClientSourcePackageTests
         private static string FindPackage()
         {
             string folder = Constants.ArtifactsPackagesShipping;
-            string? nupkg = Directory.Exists(folder)
+            string[] matches = Directory.Exists(folder)
                 ? Directory.EnumerateFiles(folder, PackageId + ".*.nupkg", SearchOption.TopDirectoryOnly)
                     .Where(f => !f.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
-                    .OrderBy(f => f, StringComparer.Ordinal)
-                    .LastOrDefault()
-                : null;
+                    .ToArray()
+                : [];
 
-            Assert.IsNotNull(
-                nupkg,
-                $"Could not find '{PackageId}.*.nupkg' in '{folder}'. Build with '-pack' before running this test.");
-            return nupkg;
+            // Require exactly one match: picking the lexicographically last (or first) nupkg when several
+            // builds linger in the shipping folder can inspect a stale artifact (e.g. '2.9' sorts after
+            // '2.10'), silently validating the wrong package. A fresh '-pack' produces exactly one.
+            Assert.HasCount(
+                1,
+                matches,
+                $"Expected exactly one '{PackageId}.*.nupkg' in '{folder}', but found {matches.Length}. " +
+                "Build with '-pack' before running this test and clear any stale builds from the shipping folder.");
+            return matches[0];
         }
     }
 }

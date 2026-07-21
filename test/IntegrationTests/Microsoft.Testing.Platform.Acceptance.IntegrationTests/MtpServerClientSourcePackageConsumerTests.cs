@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
@@ -165,17 +165,25 @@ public sealed class MtpServerClientSourcePackageConsumerTests : AcceptanceTestBa
         const string prefix = PackageId + ".";
         const string extension = ".nupkg";
 
-        string? match = Directory
+        // Require exactly one match: FirstOrDefault() over several lingering builds could compile against
+        // an arbitrary stale version and defeat this compile oracle even with an isolated NuGet cache.
+        string[] matches = Directory
             .GetFiles(Constants.ArtifactsPackagesShipping, prefix + "*" + extension, SearchOption.TopDirectoryOnly)
+            .Where(path => !path.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
             .Select(path => (path, name: Path.GetFileName(path)))
             // The prefix is unique to this package, but keep the digit check to be robust to future siblings.
             .Where(tuple => tuple.name.Length > prefix.Length && char.IsDigit(tuple.name[prefix.Length]))
             .Select(tuple => tuple.path)
-            .FirstOrDefault()
-            ?? throw new InvalidOperationException(
-                $"Could not find the packed '{PackageId}' package in '{Constants.ArtifactsPackagesShipping}'. Build with -pack first.");
+            .ToArray();
 
-        string fileName = Path.GetFileName(match);
+        if (matches.Length != 1)
+        {
+            throw new InvalidOperationException(
+                $"Expected exactly one packed '{PackageId}' package in '{Constants.ArtifactsPackagesShipping}', " +
+                $"but found {matches.Length}. Build with -pack first and clear any stale builds from the shipping folder.");
+        }
+
+        string fileName = Path.GetFileName(matches[0]);
         return fileName.Substring(prefix.Length, fileName.Length - prefix.Length - extension.Length);
     }
 }

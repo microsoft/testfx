@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 extern alias serverclient;
@@ -115,20 +115,47 @@ internal sealed class FakeMtpServer : IDisposable
     }
 
     /// <summary>
+    /// Gets a snapshot of every request the client has sent to the server, including the deserialized
+    /// <see cref="RequestMessage.Params"/>. Tests use this to assert the exact payload (UID list, graph
+    /// filter, ...) reached the wire, not merely that the method name was invoked.
+    /// </summary>
+    public IReadOnlyList<RequestMessage> ReceivedRequests
+    {
+        get
+        {
+            lock (_receivedRequestsLock)
+            {
+                return _receivedRequests.ToArray();
+            }
+        }
+    }
+
+    /// <summary>
     /// Connects a fresh <see cref="MtpServerClient"/> to this server over loopback TCP. The client's
     /// constructor starts its read loop, so the returned client is immediately live.
     /// </summary>
     public MtpServerClient ConnectClient(MtpServerClientOptions? options = null)
     {
         var tcp = new TcpClient();
-        tcp.Connect(IPAddress.Loopback, Port);
-        tcp.NoDelay = true;
-        NetworkStream stream = tcp.GetStream();
+        try
+        {
+            tcp.Connect(IPAddress.Loopback, Port);
+            tcp.NoDelay = true;
+            NetworkStream stream = tcp.GetStream();
 
-        // A NetworkStream is duplex, so the same stream is used for both the read and write directions.
-        var handler = new TcpMessageHandler(tcp, stream, stream, FormatterUtilities.CreateFormatter());
-        var connection = new MtpJsonRpcConnection(handler);
-        return new MtpServerClient(connection, options);
+            // A NetworkStream is duplex, so the same stream is used for both the read and write directions.
+            var handler = new TcpMessageHandler(tcp, stream, stream, FormatterUtilities.CreateFormatter());
+            var connection = new MtpJsonRpcConnection(handler);
+
+            // Ownership of the socket transfers to the returned client (its Dispose closes it). Only if
+            // construction throws before we hand it over do we dispose it here.
+            return new MtpServerClient(connection, options);
+        }
+        catch
+        {
+            tcp.Dispose();
+            throw;
+        }
     }
 
     /// <summary>Pushes a <c>testing/testUpdates/tests</c> notification carrying a discovered node.</summary>
