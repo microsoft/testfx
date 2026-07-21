@@ -70,6 +70,12 @@ internal sealed class TerminalTestReporterCommandLineOptionsProvider : CommandLi
             _ => throw ApplicationStateGuard.Unreachable(),
         };
 
+    internal static bool IsProgressEnabled(ICommandLineOptions commandLineOptions)
+        => commandLineOptions.TryGetOptionArgumentList(ProgressOption, out string[]? arguments)
+            && arguments is { Length: > 0 }
+                ? !CommandLineOptionArgumentValidator.IsOffValue(arguments[0])
+                : !commandLineOptions.IsOptionSet(NoProgressOption);
+
     private static bool IsValidShowOutputArgument(string argument)
         => ShowOutputAllArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
             || ShowOutputFailedArgument.Equals(argument, StringComparison.OrdinalIgnoreCase)
