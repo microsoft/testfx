@@ -204,21 +204,8 @@ public sealed class TestCoverageMessage : DataWithSessionUid
         string? customMetricName = null)
         : base("Test coverage", "Reports a code coverage measurement for a scope.", sessionUid)
     {
-        if (coverableCount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(coverableCount));
-        }
-
-        if (coveredCount < 0 || coveredCount > coverableCount)
-        {
-            throw new ArgumentOutOfRangeException(nameof(coveredCount));
-        }
-
-        if (RoslynString.IsNullOrEmpty(producerId))
-        {
-            throw new ArgumentException("A stable, non-empty producer id is required.", nameof(producerId));
-        }
-
+        CoverageMetricHelper.ValidateCounts(coveredCount, coverableCount);
+        CoverageMetricHelper.ValidateProducerId(producerId);
         CoverageMetricHelper.ValidateCustomMetricName(metric, customMetricName);
 
         Scope = scope;
@@ -305,11 +292,7 @@ public sealed class TestCoverageThresholdMessage : DataWithSessionUid
             actualPercentage = 0d;
         }
 
-        if (RoslynString.IsNullOrEmpty(producerId))
-        {
-            throw new ArgumentException("A stable, non-empty producer id is required.", nameof(producerId));
-        }
-
+        CoverageMetricHelper.ValidateProducerId(producerId);
         CoverageMetricHelper.ValidateCustomMetricName(metric, customMetricName);
 
         // An aggregate must name the population it aggregated over; a non-aggregate must not.
@@ -436,26 +419,9 @@ public sealed class TestCoverageReportMessage : DataWithSessionUid
         string? customFormatName = null)
         : base("Test coverage report", "References a coverage report artifact.", sessionUid)
     {
-        ReportPath = RoslynString.IsNullOrEmpty(reportPath)
-            ? throw new ArgumentException("A report path is required.", nameof(reportPath))
-            : reportPath;
+        CoverageReportHelper.Validate(reportPath, nameof(reportPath), format, producerId, customFormatName);
 
-        if (RoslynString.IsNullOrEmpty(producerId))
-        {
-            throw new ArgumentException("A stable, non-empty producer id is required.", nameof(producerId));
-        }
-
-        // Discriminated pair: a custom format requires a name; a standard format forbids one.
-        if (format == CoverageReportFormat.Custom && RoslynString.IsNullOrWhiteSpace(customFormatName))
-        {
-            throw new ArgumentException("A custom format name is required when format is Custom.", nameof(customFormatName));
-        }
-
-        if (format != CoverageReportFormat.Custom && customFormatName is not null)
-        {
-            throw new ArgumentException("A custom format name is only valid when format is Custom.", nameof(customFormatName));
-        }
-
+        ReportPath = reportPath;
         Format = format;
         ProducerId = producerId;
         CustomFormatName = customFormatName;
@@ -477,6 +443,27 @@ public sealed class TestCoverageReportMessage : DataWithSessionUid
 /// <summary>Shared validation for the custom-metric escape hatch.</summary>
 internal static class CoverageMetricHelper
 {
+    public static void ValidateCounts(long coveredCount, long coverableCount)
+    {
+        if (coverableCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(coverableCount));
+        }
+
+        if (coveredCount < 0 || coveredCount > coverableCount)
+        {
+            throw new ArgumentOutOfRangeException(nameof(coveredCount));
+        }
+    }
+
+    public static void ValidateProducerId(string producerId)
+    {
+        if (RoslynString.IsNullOrEmpty(producerId))
+        {
+            throw new ArgumentException("A stable, non-empty producer id is required.", nameof(producerId));
+        }
+    }
+
     public static void ValidateCustomMetricName(CoverageMetric metric, string? customMetricName)
     {
         if (metric == CoverageMetric.Custom && RoslynString.IsNullOrWhiteSpace(customMetricName))
@@ -487,6 +474,34 @@ internal static class CoverageMetricHelper
         if (metric != CoverageMetric.Custom && customMetricName is not null)
         {
             throw new ArgumentException("A custom metric name is only valid when metric is Custom.", nameof(customMetricName));
+        }
+    }
+}
+
+internal static class CoverageReportHelper
+{
+    public static void Validate(
+        string path,
+        string pathParameterName,
+        CoverageReportFormat format,
+        string producerId,
+        string? customFormatName)
+    {
+        if (RoslynString.IsNullOrEmpty(path))
+        {
+            throw new ArgumentException("A report path is required.", pathParameterName);
+        }
+
+        CoverageMetricHelper.ValidateProducerId(producerId);
+
+        if (format == CoverageReportFormat.Custom && RoslynString.IsNullOrWhiteSpace(customFormatName))
+        {
+            throw new ArgumentException("A custom format name is required when format is Custom.", nameof(customFormatName));
+        }
+
+        if (format != CoverageReportFormat.Custom && customFormatName is not null)
+        {
+            throw new ArgumentException("A custom format name is only valid when format is Custom.", nameof(customFormatName));
         }
     }
 }

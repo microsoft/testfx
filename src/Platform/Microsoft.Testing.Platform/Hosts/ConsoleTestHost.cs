@@ -94,7 +94,7 @@ internal sealed class ConsoleTestHost(
             // Get the exit code service to be able to set the exit code
             ITestApplicationProcessExitCode testApplicationResult = ServiceProvider.GetTestApplicationProcessExitCode();
             statistics = testApplicationResult.GetStatistics();
-            exitCode = testApplicationResult.GetProcessExitCode();
+            exitCode = CoverageThresholdExitCodePolicy.Apply(testApplicationResult.GetProcessExitCode(), ServiceProvider);
 
             await _logger.LogInformationAsync($"Test session '{ServiceProvider.GetTestSessionContext().SessionUid}' ended with exit code '{exitCode}' in {consoleRunStarted.Elapsed}").ConfigureAwait(false);
 

@@ -15,8 +15,8 @@ internal static class CoverageThresholdExitCodePolicy
     /// </summary>
     /// <remarks>
     /// Shared by <c>ConsoleTestHost</c> (in-process) and <c>TestHostControllersTestHost</c> (out-of-process)
-    /// so the two exit-code paths can't drift apart. Both call this only after their own exit code has been
-    /// finalized (and, for the controller, after the child's ignore-exit-code policy has been applied).
+    /// so the two exit-code paths cannot drift apart. Both call this only after their own exit code has been
+    /// finalized and all coverage messages have been consumed.
     /// </remarks>
     public static int Apply(int exitCode, IServiceProvider serviceProvider)
     {

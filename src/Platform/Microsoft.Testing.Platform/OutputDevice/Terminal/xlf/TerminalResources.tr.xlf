@@ -47,6 +47,11 @@
         <target state="new">Minimum</target>
         <note>Label for the minimum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
       </trans-unit>
+      <trans-unit id="CoverageAggregationOver">
+        <source>{0} over {1}</source>
+        <target state="new">{0} over {1}</target>
+        <note>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</note>
+      </trans-unit>
       <trans-unit id="CoverageAggregationTotal">
         <source>Total</source>
         <target state="new">Total</target>
@@ -112,15 +117,50 @@
         <target state="new">N/A</target>
         <note>Placeholder shown instead of a percentage when a coverage metric has no coverable data.</note>
       </trans-unit>
+      <trans-unit id="CoverageScopeAssembly">
+        <source>Assembly</source>
+        <target state="new">Assembly</target>
+        <note>Label for the assembly scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeFile">
+        <source>File</source>
+        <target state="new">File</target>
+        <note>Label for the file scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeModule">
+        <source>Module</source>
+        <target state="new">Module</target>
+        <note>Label for the module scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
+      <trans-unit id="CoverageScopeNamespace">
+        <source>Namespace</source>
+        <target state="new">Namespace</target>
+        <note>Label for the namespace scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
       <trans-unit id="CoverageScopeOverall">
         <source>Total</source>
         <target state="new">Total</target>
         <note>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</note>
       </trans-unit>
+      <trans-unit id="CoverageScopeType">
+        <source>Type</source>
+        <target state="new">Type</target>
+        <note>Label for the type scope level in coverage threshold aggregation descriptions.</note>
+      </trans-unit>
       <trans-unit id="CoverageThresholdFailed">
         <source>{0}% &lt; {1}% threshold</source>
         <target state="new">{0}% &lt; {1}% threshold</target>
         <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataFailed">
+        <source>No coverable data (failed by policy)</source>
+        <target state="new">No coverable data (failed by policy)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdNoDataPassed">
+        <source>No coverable data (passed by policy)</source>
+        <target state="new">No coverable data (passed by policy)</target>
+        <note>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</note>
       </trans-unit>
       <trans-unit id="CoverageThresholdPassed">
         <source>{0}% &gt;= {1}% threshold</source>

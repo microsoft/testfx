@@ -31,6 +31,8 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.CoverageThresholdFailed);
+        testHostResult.AssertOutputContains("Coverage Threshold Results:");
+        testHostResult.AssertOutputContains("Total - Line (Minimum over Module): 70.0% < 80.0% threshold");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -46,6 +48,8 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
             cancellationToken: TestContext.CancellationToken);
 
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Coverage Threshold Results:");
+        testHostResult.AssertOutputContains("Total - Line (Minimum over Module): 90.0% >= 80.0% threshold");
     }
 
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
@@ -63,6 +67,8 @@ public sealed class CoverageThresholdControllerExitCodeTests : AcceptanceTestBas
 
         // The controller-side coverage-threshold verdict must also honor '--ignore-exit-code 14'.
         testHostResult.AssertExitCodeIs(ExitCode.Success);
+        testHostResult.AssertOutputContains("Coverage Threshold Results:");
+        testHostResult.AssertOutputContains("Total - Line (Minimum over Module): 70.0% < 80.0% threshold");
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()

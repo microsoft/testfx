@@ -351,9 +351,37 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <value>{0}% &lt; {1}% threshold</value>
     <comment>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</comment>
   </data>
+  <data name="CoverageThresholdNoDataFailed" xml:space="preserve">
+    <value>No coverable data (failed by policy)</value>
+    <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a failure.</comment>
+  </data>
+  <data name="CoverageThresholdNoDataPassed" xml:space="preserve">
+    <value>No coverable data (passed by policy)</value>
+    <comment>Coverage threshold result shown when a scope has no coverable data and the configured policy treats that as a pass.</comment>
+  </data>
   <data name="CoverageScopeOverall" xml:space="preserve">
     <value>Total</value>
     <comment>Label for the whole-run (overall) scope in the coverage summary (e.g. 'Total - Line: 95.0%').</comment>
+  </data>
+  <data name="CoverageScopeModule" xml:space="preserve">
+    <value>Module</value>
+    <comment>Label for the module scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeAssembly" xml:space="preserve">
+    <value>Assembly</value>
+    <comment>Label for the assembly scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeNamespace" xml:space="preserve">
+    <value>Namespace</value>
+    <comment>Label for the namespace scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeType" xml:space="preserve">
+    <value>Type</value>
+    <comment>Label for the type scope level in coverage threshold aggregation descriptions.</comment>
+  </data>
+  <data name="CoverageScopeFile" xml:space="preserve">
+    <value>File</value>
+    <comment>Label for the file scope level in coverage threshold aggregation descriptions.</comment>
   </data>
   <data name="CoverageNoData" xml:space="preserve">
     <value>N/A</value>
@@ -418,5 +446,9 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
   <data name="CoverageAggregationMaximum" xml:space="preserve">
     <value>Maximum</value>
     <comment>Label for the maximum-across-scopes statistic used in a coverage threshold comparison (e.g. 'Line (Maximum): ...').</comment>
+  </data>
+  <data name="CoverageAggregationOver" xml:space="preserve">
+    <value>{0} over {1}</value>
+    <comment>Coverage threshold aggregation description. {0} is the aggregation label and {1} is the population scope level.</comment>
   </data>
 </root>

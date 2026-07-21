@@ -26,6 +26,10 @@ public sealed class CoverageMetricResult
         string producerId,
         string? customMetricName = null)
     {
+        CoverageMetricHelper.ValidateCounts(coveredCount, coverableCount);
+        CoverageMetricHelper.ValidateProducerId(producerId);
+        CoverageMetricHelper.ValidateCustomMetricName(metric, customMetricName);
+
         Metric = metric;
         CoveredCount = coveredCount;
         CoverableCount = coverableCount;

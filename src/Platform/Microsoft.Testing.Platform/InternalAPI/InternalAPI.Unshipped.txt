@@ -112,7 +112,11 @@ Microsoft.Testing.Platform.OutputDevice.TerminalOutputDevice.TerminalOutputDevic
 Microsoft.Testing.Platform.Services.ExitCodeIgnorePolicy
 Microsoft.Testing.Platform.Services.CoverageThresholdExitCodePolicy
 Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper
+Microsoft.Testing.Platform.Extensions.Messages.CoverageReportHelper
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateCounts(long coveredCount, long coverableCount) -> void
 static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateCustomMetricName(Microsoft.Testing.Platform.Extensions.Messages.CoverageMetric metric, string? customMetricName) -> void
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageMetricHelper.ValidateProducerId(string! producerId) -> void
+static Microsoft.Testing.Platform.Extensions.Messages.CoverageReportHelper.Validate(string! path, string! pathParameterName, Microsoft.Testing.Platform.Extensions.Messages.CoverageReportFormat format, string! producerId, string? customFormatName) -> void
 Microsoft.Testing.Platform.Services.TestCoverageResult
 Microsoft.Testing.Platform.Services.TestCoverageResult.ConsumeAsync(Microsoft.Testing.Platform.Extensions.Messages.IDataProducer! dataProducer, Microsoft.Testing.Platform.Extensions.Messages.IData! value, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Services.TestCoverageResult.DataTypesConsumed.get -> System.Type![]!

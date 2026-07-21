@@ -45,11 +45,25 @@ internal static partial class TerminalResources
 
     internal static string @CoverageThresholdFailed => GetResourceString("CoverageThresholdFailed");
 
+    internal static string @CoverageThresholdNoDataFailed => GetResourceString("CoverageThresholdNoDataFailed");
+
+    internal static string @CoverageThresholdNoDataPassed => GetResourceString("CoverageThresholdNoDataPassed");
+
     internal static string @CoverageThresholdPassed => GetResourceString("CoverageThresholdPassed");
 
     internal static string @CoverageThresholdResults => GetResourceString("CoverageThresholdResults");
 
     internal static string @CoverageScopeOverall => GetResourceString("CoverageScopeOverall");
+
+    internal static string @CoverageScopeModule => GetResourceString("CoverageScopeModule");
+
+    internal static string @CoverageScopeAssembly => GetResourceString("CoverageScopeAssembly");
+
+    internal static string @CoverageScopeNamespace => GetResourceString("CoverageScopeNamespace");
+
+    internal static string @CoverageScopeType => GetResourceString("CoverageScopeType");
+
+    internal static string @CoverageScopeFile => GetResourceString("CoverageScopeFile");
 
     internal static string @CoverageNoData => GetResourceString("CoverageNoData");
 
@@ -82,6 +96,8 @@ internal static partial class TerminalResources
     internal static string @CoverageAggregationAverage => GetResourceString("CoverageAggregationAverage");
 
     internal static string @CoverageAggregationMaximum => GetResourceString("CoverageAggregationMaximum");
+
+    internal static string @CoverageAggregationOver => GetResourceString("CoverageAggregationOver");
 
     internal static string @DiscoveredTestsInAssembly => GetResourceString("DiscoveredTestsInAssembly");
 

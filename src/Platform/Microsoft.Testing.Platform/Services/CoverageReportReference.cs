@@ -25,6 +25,8 @@ public sealed class CoverageReportReference
         string producerId,
         string? customFormatName = null)
     {
+        CoverageReportHelper.Validate(path, nameof(path), format, producerId, customFormatName);
+
         Path = path;
         Format = format;
         ProducerId = producerId;

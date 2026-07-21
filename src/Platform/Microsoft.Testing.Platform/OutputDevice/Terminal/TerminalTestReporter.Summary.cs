@@ -239,7 +239,7 @@ internal sealed partial class TerminalTestReporter
             throw ApplicationStateGuard.Unreachable();
         }
 
-        asm.DiscoveredTests++;
+        asm.ReportDiscoveredTest(displayName: null);
         _terminalWithProgress.UpdateWorker(asm.SlotIndex);
     }
 
@@ -432,10 +432,10 @@ internal sealed partial class TerminalTestReporter
                 foreach (CoverageMetricResult metric in scope.Metrics)
                 {
                     terminal.Append(DoubleIndentation);
-                    string percentage = metric.HasCoverableData
-                        ? metric.Percentage.ToString("F1", CultureInfo.InvariantCulture)
+                    string coverageValue = metric.HasCoverableData
+                        ? $"{metric.Percentage.ToString("F1", CultureInfo.CurrentCulture)}%"
                         : TerminalResources.CoverageNoData;
-                    terminal.AppendLine($"{scopeLabel} - {GetCoverageMetricLabel(metric.Metric, metric.CustomMetricName)}: {percentage}%");
+                    terminal.AppendLine($"{scopeLabel} - {GetCoverageMetricLabel(metric.Metric, metric.CustomMetricName)}: {coverageValue}");
                 }
             }
         }
@@ -456,15 +456,43 @@ internal sealed partial class TerminalTestReporter
                 bool passed = threshold.Passed;
                 terminal.SetColor(passed ? TerminalColor.DarkGreen : TerminalColor.DarkRed);
                 terminal.Append(DoubleIndentation);
-                string comparison = string.Format(
-                    CultureInfo.InvariantCulture,
-                    passed ? TerminalResources.CoverageThresholdPassed : TerminalResources.CoverageThresholdFailed,
-                    threshold.ActualPercentage.ToString("F1", CultureInfo.InvariantCulture),
-                    threshold.RequiredPercentage.ToString("F1", CultureInfo.InvariantCulture));
-                terminal.AppendLine($"{GetCoverageMetricLabel(threshold.Metric, threshold.CustomMetricName)}{GetCoverageAggregationSuffix(threshold.Aggregation)}: {comparison}");
+                string comparison;
+                if (threshold.HasCoverableData)
+                {
+                    (string actual, string required) = FormatThresholdPercentages(threshold);
+                    comparison = string.Format(
+                        CultureInfo.CurrentCulture,
+                        passed ? TerminalResources.CoverageThresholdPassed : TerminalResources.CoverageThresholdFailed,
+                        actual,
+                        required);
+                }
+                else
+                {
+                    comparison = passed
+                        ? TerminalResources.CoverageThresholdNoDataPassed
+                        : TerminalResources.CoverageThresholdNoDataFailed;
+                }
+
+                terminal.AppendLine($"{GetCoverageThresholdLabel(threshold)}: {comparison}");
                 terminal.ResetColor();
             }
         }
+    }
+
+    private static (string Actual, string Required) FormatThresholdPercentages(TestCoverageThresholdMessage threshold)
+    {
+        string actual = threshold.ActualPercentage.ToString("F1", CultureInfo.CurrentCulture);
+        string required = threshold.RequiredPercentage.ToString("F1", CultureInfo.CurrentCulture);
+
+        // Rounding a failed near-boundary result to one decimal can make both operands look equal.
+        // Increase precision only for that ambiguous case so the rendered comparison remains truthful.
+        if (!threshold.Passed && string.Equals(actual, required, StringComparison.Ordinal))
+        {
+            actual = threshold.ActualPercentage.ToString("G17", CultureInfo.CurrentCulture);
+            required = threshold.RequiredPercentage.ToString("G17", CultureInfo.CurrentCulture);
+        }
+
+        return (actual, required);
     }
 
     // Renders the scope identity used in the coverage summary; the whole-run (Overall) scope is shown
@@ -472,7 +500,7 @@ internal sealed partial class TerminalTestReporter
     private static string GetCoverageScopeLabel(CoverageScope scope)
         => scope.Level == CoverageScopeLevel.Overall
             ? TerminalResources.CoverageScopeOverall
-            : scope.Name ?? scope.Level.ToString();
+            : MakeControlCharactersVisible(scope.Name ?? GetCoverageScopeLevelLabel(scope.Level), true);
 
     // Maps the CoverageMetric enum to a localized label so localized runs don't render the English enum
     // identifier; falls back to the identifier (or custom name) for any member without a resource.
@@ -490,20 +518,49 @@ internal sealed partial class TerminalTestReporter
             CoverageMetric.Class => TerminalResources.CoverageMetricClass,
             CoverageMetric.Condition => TerminalResources.CoverageMetricCondition,
             CoverageMetric.Complexity => TerminalResources.CoverageMetricComplexity,
-            CoverageMetric.Custom => customMetricName ?? nameof(CoverageMetric.Custom),
+            CoverageMetric.Custom => MakeControlCharactersVisible(customMetricName ?? nameof(CoverageMetric.Custom), true),
             _ => metric.ToString(),
         };
 
-    // Renders the aggregation qualifier shown in parentheses after the metric in a threshold line, e.g.
-    // "Line (Total)". A non-aggregate (None) evaluation renders no qualifier.
-    private static string GetCoverageAggregationSuffix(CoverageAggregation aggregation)
+    private static string GetCoverageThresholdLabel(TestCoverageThresholdMessage threshold)
+    {
+        string scope = GetCoverageScopeLabel(threshold.Scope);
+        string metric = GetCoverageMetricLabel(threshold.Metric, threshold.CustomMetricName);
+        if (threshold.Aggregation == CoverageAggregation.None)
+        {
+            return $"{scope} - {metric}";
+        }
+
+        string aggregation = GetCoverageAggregationLabel(threshold.Aggregation);
+        string aggregatedOver = GetCoverageScopeLevelLabel(threshold.AggregatedOver.GetValueOrDefault());
+        string aggregationLabel = string.Format(
+            CultureInfo.CurrentCulture,
+            TerminalResources.CoverageAggregationOver,
+            aggregation,
+            aggregatedOver);
+
+        return $"{scope} - {metric} ({aggregationLabel})";
+    }
+
+    private static string GetCoverageAggregationLabel(CoverageAggregation aggregation)
         => aggregation switch
         {
-            CoverageAggregation.None => string.Empty,
-            CoverageAggregation.Total => $" ({TerminalResources.CoverageAggregationTotal})",
-            CoverageAggregation.Minimum => $" ({TerminalResources.CoverageAggregationMinimum})",
-            CoverageAggregation.Average => $" ({TerminalResources.CoverageAggregationAverage})",
-            CoverageAggregation.Maximum => $" ({TerminalResources.CoverageAggregationMaximum})",
-            _ => $" ({aggregation})",
+            CoverageAggregation.Total => TerminalResources.CoverageAggregationTotal,
+            CoverageAggregation.Minimum => TerminalResources.CoverageAggregationMinimum,
+            CoverageAggregation.Average => TerminalResources.CoverageAggregationAverage,
+            CoverageAggregation.Maximum => TerminalResources.CoverageAggregationMaximum,
+            _ => aggregation.ToString(),
+        };
+
+    private static string GetCoverageScopeLevelLabel(CoverageScopeLevel level)
+        => level switch
+        {
+            CoverageScopeLevel.Overall => TerminalResources.CoverageScopeOverall,
+            CoverageScopeLevel.Module => TerminalResources.CoverageScopeModule,
+            CoverageScopeLevel.Assembly => TerminalResources.CoverageScopeAssembly,
+            CoverageScopeLevel.Namespace => TerminalResources.CoverageScopeNamespace,
+            CoverageScopeLevel.Type => TerminalResources.CoverageScopeType,
+            CoverageScopeLevel.File => TerminalResources.CoverageScopeFile,
+            _ => level.ToString(),
         };
 }
