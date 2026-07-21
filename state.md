@@ -19,11 +19,11 @@ dotnet run --project <proj> -f net9.0 --no-build \
 |------|-------------|
 | 1    | 2026-07-14  |
 | 2    | 2026-07-15  |
-| 3    | 2026-07-19  |
+| 3    | 2026-07-21  |
 | 4    | 2026-07-19  |
 | 5    | 2026-07-08  |
 | 6    | 2026-07-13  |
-| 7    | 2026-07-19  |
+| 7    | 2026-07-21  |
 
 Next priority: Tasks 5, 6 (oldest: 2026-07-08, 2026-07-13)
 
@@ -31,9 +31,10 @@ Next priority: Tasks 5, 6 (oldest: 2026-07-08, 2026-07-13)
 
 | Date       | Item                                      | Notes                                                    |
 |------------|-------------------------------------------|----------------------------------------------------------|
+| 2026-07-21 | PR submitted: ipc-serializer-stackalloc  | stackalloc + BinaryPrimitives for BaseSerializer primitives (~7 allocs/msg eliminated) |
 | 2026-07-19 | PR submitted: cache-supported-diagnostics | Cache SupportedDiagnostics in 2 analyzer outliers        |
 | 2026-07-17 | PR #10032 merged (by community)           | Avoid per-test string allocations in TestCaseExtensions  |
-| 2026-07-15 | PR submitted: avoid-propertybag-scan      | Avoid PropertyBag scan in AddTrxResultProperties (#aw_pr_methodid — bundle may be lost) |
+| 2026-07-15 | PR submitted: avoid-propertybag-scan      | Avoid PropertyBag scan in AddTrxResultProperties         |
 | 2026-07-14 | PR submitted: skip-method-id-in-progress  | Skip TestMethodIdentifier for in-progress nodes          |
 | 2026-07-10 | PR #9800 merged (by Evangelink)           | Cache GetTestId on UnitTestElement                       |
 | 2026-07-08 | PR #9728 merged                           | Scenario2 data-driven + JsonSerializerOptions caching    |
@@ -42,6 +43,8 @@ Next priority: Tasks 5, 6 (oldest: 2026-07-08, 2026-07-13)
 
 - Branch `perf-assist/cache-supported-diagnostics`: Cache SupportedDiagnostics in CollectionAssertToAssertAnalyzer and StringAssertToAssertAnalyzer.
   PR submitted 2026-07-19 as #aw_pr_cache_diag. Fixes #10055.
+- Branch `perf-assist/ipc-serializer-stackalloc`: stackalloc + BinaryPrimitives for BaseSerializer primitives.
+  PR submitted 2026-07-21 as #aw_ipc_stackalloc.
 
 ## Monthly Activity Issue
 
