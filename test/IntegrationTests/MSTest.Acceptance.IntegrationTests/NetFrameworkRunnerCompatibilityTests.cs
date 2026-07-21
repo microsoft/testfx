@@ -9,14 +9,12 @@ using Microsoft.Testing.TestInfrastructure;
 namespace MSTest.Acceptance.IntegrationTests;
 
 /// <summary>
-/// Acceptance-style rewrite of the former CLITestBase-based desktop tests. Instead of referencing
-/// pre-built desktop test-asset projects, the test asset is generated inline and built for every
-/// (platform, configuration) combination, then executed out-of-process through the MSTest runner
-/// (Microsoft.Testing.Platform) host.
+/// Verifies that the standalone MSTest runner can discover and execute .NET Framework tests for
+/// every supported architecture and build configuration.
 /// </summary>
 [TestClass]
 [OSCondition(OperatingSystems.Windows)]
-public sealed class DesktopCSharpCLITests : AcceptanceTestBase<DesktopCSharpCLITests.TestAssetFixture>
+public sealed class NetFrameworkRunnerCompatibilityTests : AcceptanceTestBase<NetFrameworkRunnerCompatibilityTests.TestAssetFixture>
 {
     private static readonly string[] Platforms = ["x86", "x64"];
 
