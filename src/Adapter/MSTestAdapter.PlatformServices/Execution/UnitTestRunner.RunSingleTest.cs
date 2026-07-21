@@ -17,6 +17,15 @@ internal sealed partial class UnitTestRunner
     internal TestResult[] RunSingleTest(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
         => RunSingleTestAsync(unitTestElement, testContextProperties, messageLogger).GetAwaiter().GetResult();
 
+    // Task cannot cross app domains.
+    // For now, TestExecutionManager will call this sync method which is hacky.
+    internal TestResult[] RunSingleTest(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IMessageLogger messageLogger)
+        => RunSingleTestAsync(unitTestElement, testContextProperties, lifecycleContextProperties, messageLogger).GetAwaiter().GetResult();
+
     /// <summary>
     /// Runs a single test.
     /// </summary>
@@ -25,6 +34,21 @@ internal sealed partial class UnitTestRunner
     /// <param name="messageLogger"> The message logger. </param>
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
+        => await RunSingleTestAsync(unitTestElement, testContextProperties, testContextProperties, messageLogger).ConfigureAwait(false);
+
+    /// <summary>
+    /// Runs a single test.
+    /// </summary>
+    /// <param name="unitTestElement">The test method.</param>
+    /// <param name="testContextProperties">Properties scoped to this test.</param>
+    /// <param name="lifecycleContextProperties">Properties scoped to assembly and class lifecycle methods.</param>
+    /// <param name="messageLogger">The message logger.</param>
+    /// <returns>The <see cref="TestResult"/>.</returns>
+    internal async Task<TestResult[]> RunSingleTestAsync(
+        UnitTestElement unitTestElement,
+        IDictionary<string, object?> testContextProperties,
+        IDictionary<string, object?> lifecycleContextProperties,
+        IMessageLogger messageLogger)
     {
         if (unitTestElement is null)
         {
@@ -34,6 +58,11 @@ internal sealed partial class UnitTestRunner
         if (testContextProperties is null)
         {
             throw new ArgumentNullException(nameof(testContextProperties));
+        }
+
+        if (lifecycleContextProperties is null)
+        {
+            throw new ArgumentNullException(nameof(lifecycleContextProperties));
         }
 
         TestMethod testMethod = unitTestElement.TestMethod;
@@ -56,7 +85,7 @@ internal sealed partial class UnitTestRunner
             {
                 return await FinishFilteredOutTestAsync(
                     testMethod,
-                    testContextProperties,
+                    lifecycleContextProperties,
                     messageLogger,
                     filterResult,
                     testContextForTestExecution).ConfigureAwait(false);
@@ -84,7 +113,7 @@ internal sealed partial class UnitTestRunner
                 }
                 else
                 {
-                    testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                    testContextForAssemblyInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
                     assemblyInitializeResult = await RunAssemblyInitializeIfNeededAsync(testMethodInfo, testContextForAssemblyInit).ConfigureAwait(false);
                 }
 
@@ -116,7 +145,7 @@ internal sealed partial class UnitTestRunner
                     }
                     else
                     {
-                        testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, UnitTestOutcome.InProgress);
+                        testContextForClassInit = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, lifecycleContextProperties, messageLogger, UnitTestOutcome.InProgress);
 
                         // Flow properties set during AssemblyInitialize into the class-init context so the
                         // ClassInitialize method observes them.
@@ -170,7 +199,7 @@ internal sealed partial class UnitTestRunner
             {
                 // Defer TestContextImplementation allocation to only the last test in each class,
                 // saving one dict-copy + CancellationTokenRegistration per non-last test.
-                testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, testContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
+                testContextForClassCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, testMethod.FullClassName, lifecycleContextProperties, messageLogger, testContextForTestExecution.Context.CurrentTestOutcome);
 
                 if (testMethodInfo is not null)
                 {
@@ -208,7 +237,7 @@ internal sealed partial class UnitTestRunner
                 // testContextForClassCleanup is guaranteed non-null here: ShouldRunEndOfAssemblyCleanup
                 // becomes true only after MarkClassComplete, which is called exclusively inside the
                 // isLastTestInClass block above — where testContextForClassCleanup is allocated.
-                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, testContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
+                testContextForAssemblyCleanup = PlatformServiceProvider.Instance.GetTestContext(testMethod: null, null, lifecycleContextProperties, messageLogger, testContextForClassCleanup.Context.CurrentTestOutcome);
 
                 TestResult? assemblyCleanupResult = await RunAssemblyCleanupAsync(testContextForAssemblyCleanup, _typeCache, result).ConfigureAwait(false);
                 if (assemblyCleanupResult is not null)

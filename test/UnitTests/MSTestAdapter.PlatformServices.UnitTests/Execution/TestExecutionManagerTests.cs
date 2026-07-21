@@ -319,6 +319,36 @@ public class TestExecutionManagerTests : TestContainer
         VerifyTcmProperties(DummyTestClass.TestContextProperties, testCase);
     }
 
+    public async Task RunTestsShouldKeepTcmPropertiesOutOfClassLifecycleAndSiblingTestContexts()
+    {
+        TestCase testWithTcmProperty = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.TestWithTcmProperty));
+        testWithTcmProperty.SetPropertyValue(EngineConstants.TestCaseIdProperty, 1401);
+        TestCase siblingTest = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.SiblingTest));
+
+        TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
+        testablePlatformService.MockSettingsProvider
+            .Setup(sp => sp.GetProperties(It.IsAny<string>()))
+            .Returns(new Dictionary<string, object> { ["SourceProperty"] = "SourceValue" });
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
+
+        await _testExecutionManager.RunTestsAsync(
+            [testWithTcmProperty, siblingTest],
+            _runContext,
+            _frameworkHandle,
+            new TestRunCancellationToken());
+
+        _frameworkHandle.TestCaseEndList.Should().Equal(
+            $"{nameof(DummyTestClassWithScopedTcmProperties.TestWithTcmProperty)}:Passed",
+            $"{nameof(DummyTestClassWithScopedTcmProperties.SiblingTest)}:Passed");
+    }
+
     public async Task RunTestsForTestShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
@@ -982,6 +1012,64 @@ public class TestExecutionManagerTests : TestContainer
         [TestMethod]
         [Ignore]
         public void IgnoredTest() => Assert.Fail();
+    }
+
+    [DummyTestClass]
+    [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is a MSTest sample class so it's expected to use MSTest assertions")]
+    private sealed class DummyTestClassWithScopedTcmProperties : IDisposable
+    {
+        private readonly TestContext _testContext;
+
+        public DummyTestClassWithScopedTcmProperties(TestContext testContext)
+        {
+            _testContext = testContext;
+            AssertExpectedTestProperties(testContext);
+        }
+
+        [ClassInitialize]
+        public static void ClassInitialize(TestContext context)
+        {
+            AssertSourceProperty(context);
+            Assert.IsFalse(context.Properties.ContainsKey(EngineConstants.TestCaseIdProperty.Id));
+        }
+
+        [TestInitialize]
+        public void TestInitialize() => AssertExpectedTestProperties(_testContext);
+
+        [TestMethod]
+        public void TestWithTcmProperty() => AssertExpectedTestProperties(_testContext);
+
+        [TestMethod]
+        public void SiblingTest() => AssertExpectedTestProperties(_testContext);
+
+        [TestCleanup]
+        public void TestCleanup() => AssertExpectedTestProperties(_testContext);
+
+        public void Dispose() => AssertExpectedTestProperties(_testContext);
+
+        [ClassCleanup]
+        public static void ClassCleanup(TestContext context)
+        {
+            AssertSourceProperty(context);
+            Assert.IsFalse(context.Properties.ContainsKey(EngineConstants.TestCaseIdProperty.Id));
+        }
+
+        private static void AssertSourceProperty(TestContext context)
+            => Assert.AreEqual("SourceValue", context.Properties["SourceProperty"]);
+
+        private static void AssertExpectedTestProperties(TestContext context)
+        {
+            AssertSourceProperty(context);
+            if (context.TestName == nameof(TestWithTcmProperty))
+            {
+                Assert.AreEqual(1401, context.Properties[EngineConstants.TestCaseIdProperty.Id]);
+            }
+            else
+            {
+                Assert.AreEqual(nameof(SiblingTest), context.TestName);
+                Assert.IsFalse(context.Properties.ContainsKey(EngineConstants.TestCaseIdProperty.Id));
+            }
+        }
     }
 
     [DummyTestClass]
