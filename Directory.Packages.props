@@ -11,6 +11,15 @@
     <!-- It also needs to be added to nuspec manually (for projects that use nuspec) so that the new version flows to consumers -->
     <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(MSBuildCachePackageEnabled)' == 'true'" Label="Build dependencies">
+    <MSBuildCachePackageName Condition="'$(TF_BUILD)' != ''">Microsoft.MSBuildCache.AzurePipelines</MSBuildCachePackageName>
+    <MSBuildCachePackageName Condition="'$(MSBuildCachePackageName)' == ''">Microsoft.MSBuildCache.Local</MSBuildCachePackageName>
+    <MSBuildCachePackageVersion>0.1.328-preview</MSBuildCachePackageVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MSBuildCachePackageEnabled)' == 'true'" Label="Build dependencies">
+    <GlobalPackageReference Include="$(MSBuildCachePackageName)" Version="$(MSBuildCachePackageVersion)" />
+    <GlobalPackageReference Include="Microsoft.MSBuildCache.SharedCompilation" Version="$(MSBuildCachePackageVersion)" />
+  </ItemGroup>
   <PropertyGroup Label="Product dependencies">
     <!-- AspireHostingTestingVersion is consumed by the build and baked into the shipped MSTest.Sdk
          template. It MUST be kept in sync with the literal Aspire.Hosting.Testing PackageVersion
