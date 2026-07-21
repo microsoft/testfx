@@ -56,15 +56,12 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
         switch (result.ExitCode)
         {
             case 0:
-                Assert.Contains("Test Run Successful.", result.StandardOutput);
-                Assert.Contains("Total tests: 1", result.StandardOutput);
-                Assert.Contains("Passed: 1", result.StandardOutput);
+                result.AssertTestRunSummary(0, 1, 0, 1);
                 break;
 
             case 1:
                 Assert.Contains("Microsoft.Playwright.PlaywrightException: Executable doesn't exist", result.StandardOutput);
-                Assert.Contains("Total tests: 1", result.StandardOutput);
-                Assert.Contains("Failed: 1", result.StandardOutput);
+                result.AssertTestRunSummary(1, 0, 0, 1);
                 break;
 
             default:

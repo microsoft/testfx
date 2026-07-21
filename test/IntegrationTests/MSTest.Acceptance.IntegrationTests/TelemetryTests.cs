@@ -140,9 +140,7 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
             cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
-        Assert.Contains("Test Run Successful.", result.StandardOutput);
-        Assert.Contains("Total tests: 4", result.StandardOutput);
-        Assert.Contains("Passed: 4", result.StandardOutput);
+        result.AssertTestRunSummary(0, 4, 0, 4);
     }
 
     #endregion

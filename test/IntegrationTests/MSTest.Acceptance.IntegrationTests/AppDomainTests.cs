@@ -64,9 +64,7 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
             cancellationToken: TestContext.CancellationToken);
 
         Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
-        Assert.Contains("Test Run Successful.", result.StandardOutput);
-        Assert.Contains("Total tests: 2", result.StandardOutput);
-        Assert.Contains("Passed: 2", result.StandardOutput);
+        result.AssertTestRunSummary(0, 2, 0, 2);
     }
 
     [TestMethod]

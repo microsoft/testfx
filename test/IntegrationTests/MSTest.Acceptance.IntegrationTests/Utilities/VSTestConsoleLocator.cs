@@ -127,4 +127,29 @@ public sealed class VSTestConsoleResult(int exitCode, string standardOutput, str
     public string StandardOutput { get; } = standardOutput;
 
     public string StandardError { get; } = standardError;
+
+    public void AssertTestRunSummary(int failed, int passed, int skipped, int total)
+    {
+        AssertCount(@"(?:Total tests|Total)", total);
+
+        if (failed > 0)
+        {
+            AssertCount("Failed", failed);
+        }
+
+        if (passed > 0)
+        {
+            AssertCount("Passed", passed);
+        }
+
+        if (skipped > 0)
+        {
+            AssertCount("Skipped", skipped);
+        }
+    }
+
+    private void AssertCount(string labelPattern, int expected)
+        => Assert.IsTrue(
+            Regex.IsMatch(StandardOutput, $@"{labelPattern}:\s*{expected}(?:\D|$)"),
+            $"Expected '{labelPattern}' count {expected} in packaged VSTest output:{Environment.NewLine}{StandardOutput}");
 }

@@ -32,9 +32,7 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
 
         Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
         Assert.Contains("VSTest version", result.StandardOutput);
-        Assert.Contains("Test Run Successful.", result.StandardOutput);
-        Assert.Contains("Total tests: 1", result.StandardOutput);
-        Assert.Contains("Passed: 1", result.StandardOutput);
+        result.AssertTestRunSummary(0, 1, 0, 1);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
