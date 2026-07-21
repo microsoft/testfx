@@ -38,35 +38,33 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(AssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
         string testApplicationSource = GetTestApplicationSourcePath(testHost);
 
-        using var commandLine = new CommandLine();
-        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\"",
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\"",
             workingDirectory: AssetFixture.PlaywrightProjectPath,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.Contains("VSTest version", commandLine.StandardOutput);
+        Assert.Contains("VSTest version", result.StandardOutput);
 
         // Depending on the machine, the test might fail due to the browser not being installed.
         // To avoid slowing down the tests, we will not run the installation so depending on machines we have different results.
-        switch (exitCode)
+        switch (result.ExitCode)
         {
             case 0:
-                Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
-                Assert.Contains("Total tests: 1", commandLine.StandardOutput);
-                Assert.Contains("Passed: 1", commandLine.StandardOutput);
+                Assert.Contains("Test Run Successful.", result.StandardOutput);
+                Assert.Contains("Total tests: 1", result.StandardOutput);
+                Assert.Contains("Passed: 1", result.StandardOutput);
                 break;
 
             case 1:
-                Assert.Contains("Microsoft.Playwright.PlaywrightException: Executable doesn't exist", commandLine.StandardOutput);
-                Assert.Contains("Total tests: 1", commandLine.StandardOutput);
-                Assert.Contains("Failed: 1", commandLine.StandardOutput);
+                Assert.Contains("Microsoft.Playwright.PlaywrightException: Executable doesn't exist", result.StandardOutput);
+                Assert.Contains("Total tests: 1", result.StandardOutput);
+                Assert.Contains("Failed: 1", result.StandardOutput);
                 break;
 
             default:
@@ -97,6 +95,7 @@ public sealed class PlaywrightSdkTests : AcceptanceTestBase<PlaywrightSdkTests.T
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$(MicrosoftNETTestSdkVersion)]" />
   </ItemGroup>
 </Project>
 

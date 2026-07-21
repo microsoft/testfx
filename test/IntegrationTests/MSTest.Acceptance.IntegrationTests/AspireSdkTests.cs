@@ -21,21 +21,20 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
     }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(AssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent);
         string testApplicationSource = GetTestApplicationSourcePath(testHost);
 
-        using var commandLine = new CommandLine();
-        await commandLine.RunAsync(
-            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\"",
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\"",
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.Contains("VSTest version", commandLine.StandardOutput);
-        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
-        Assert.Contains("Total tests: 1", commandLine.StandardOutput);
-        Assert.Contains("Passed: 1", commandLine.StandardOutput);
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("VSTest version", result.StandardOutput);
+        Assert.Contains("Test Run Successful.", result.StandardOutput);
+        Assert.Contains("Total tests: 1", result.StandardOutput);
+        Assert.Contains("Passed: 1", result.StandardOutput);
     }
 
     public sealed class TestAssetFixture() : TestAssetFixtureBase()
@@ -59,6 +58,7 @@ public sealed class AspireSdkTests : AcceptanceTestBase<AspireSdkTests.TestAsset
     <Using Include="System.Threading.Tasks" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$(MicrosoftNETTestSdkVersion)]" />
   </ItemGroup>
 </Project>
 

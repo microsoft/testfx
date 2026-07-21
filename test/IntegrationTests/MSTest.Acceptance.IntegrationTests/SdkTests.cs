@@ -34,6 +34,7 @@ public sealed class SdkTests : AcceptanceTestBase<NopAssetFixture>
 
   <ItemGroup Condition="'$(TestWithPackagedVSTest)' == 'true'">
     <PackageDownload Include="Microsoft.TestPlatform" Version="[$(MicrosoftNETTestSdkVersion)]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$(MicrosoftNETTestSdkVersion)]" />
   </ItemGroup>
 
 </Project>
@@ -54,6 +55,16 @@ namespace MSTestSdkTest
 }
 """;
 
+    private const string SingleTestSourceCodeMTP = SingleTestSourceCode + """
+
+        #file global.json
+        {
+          "test": {
+            "runner": "Microsoft.Testing.Platform"
+          }
+        }
+        """;
+
     private const string SingleTestSourceCodeVSTest = SingleTestSourceCode + """
 
         #file global.json
@@ -67,7 +78,6 @@ namespace MSTestSdkTest
     public TestContext TestContext { get; set; }
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
     public async Task RunTests_With_PackagedVSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
@@ -88,24 +98,24 @@ namespace MSTestSdkTest
                 var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
                 return $"\"{GetTestApplicationSourcePath(testHost)}\"";
             }));
-        using var commandLine = new CommandLine();
-        await commandLine.RunAsync(
-            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" {sources}",
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            sources,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.Contains("VSTest version", commandLine.StandardOutput);
-        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
-        Assert.Contains($"Total tests: {multiTfm.Split(';').Length}", commandLine.StandardOutput);
-        Assert.Contains($"Passed: {multiTfm.Split(';').Length}", commandLine.StandardOutput);
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("VSTest version", result.StandardOutput);
+        Assert.Contains("Test Run Successful.", result.StandardOutput);
+        Assert.Contains($"Total tests: {multiTfm.Split(';').Length}", result.StandardOutput);
+        Assert.Contains($"Passed: {multiTfm.Split(';').Length}", result.StandardOutput);
     }
 
     [TestMethod]
     [DynamicData(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration), typeof(AcceptanceTestBase<NopAssetFixture>))]
-    public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
+    public async Task RunTests_With_DotnetTest_UsesMTP(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SingleTestSourceCode
+               SingleTestSourceCodeMTP
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$TargetFramework$", multiTfm)
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty));

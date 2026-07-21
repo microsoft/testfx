@@ -59,14 +59,14 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
         Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
 
         using RunSettingsFile runSettings = CreateRunSettingsFile(disableAppDomain);
-        using var commandLine = new CommandLine();
-        await commandLine.RunAsync(
-            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{exePath}\"{runSettings.VSTestArgument}",
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{exePath}\"{runSettings.VSTestArgument}",
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
-        Assert.Contains("Total tests: 2", commandLine.StandardOutput);
-        Assert.Contains("Passed: 2", commandLine.StandardOutput);
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("Test Run Successful.", result.StandardOutput);
+        Assert.Contains("Total tests: 2", result.StandardOutput);
+        Assert.Contains("Passed: 2", result.StandardOutput);
     }
 
     [TestMethod]
@@ -79,13 +79,13 @@ public sealed class AppDomainTests : AcceptanceTestBase<AppDomainTests.TestAsset
         Assert.IsTrue(File.Exists(exePath), $"Test exe not found at {exePath}");
 
         using RunSettingsFile runSettings = CreateRunSettingsFile(disableAppDomain);
-        using var commandLine = new CommandLine();
-        await commandLine.RunAsync(
-            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{exePath}\" /ListTests{runSettings.VSTestArgument}",
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{exePath}\" /ListTests{runSettings.VSTestArgument}",
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.Contains("TestMethod1", commandLine.StandardOutput);
-        Assert.Contains("TestMethod2", commandLine.StandardOutput);
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest discovery failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("TestMethod1", result.StandardOutput);
+        Assert.Contains("TestMethod2", result.StandardOutput);
     }
 
     private static RunSettingsFile CreateRunSettingsFile(bool? disableAppDomain)

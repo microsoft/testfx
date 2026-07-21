@@ -127,7 +127,6 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     #region VSTest mode - Run
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_RunTests_Succeeds(string tfm)
     {
@@ -135,16 +134,15 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
 
         var testHost = TestHost.LocateFrom(AssetFixture.VSTestProjectPath, "TelemetryVSTestProject", tfm);
         string testApplicationSource = GetTestApplicationSourcePath(testHost);
-        using var commandLine = new CommandLine();
-        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\"",
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\"",
             workingDirectory: AssetFixture.VSTestProjectPath,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(0, exitCode, $"Packaged VSTest run failed:\n{commandLine.StandardOutput}\n{commandLine.ErrorOutput}");
-        Assert.Contains("Test Run Successful.", commandLine.StandardOutput);
-        Assert.Contains("Total tests: 4", commandLine.StandardOutput);
-        Assert.Contains("Passed: 4", commandLine.StandardOutput);
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest run failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("Test Run Successful.", result.StandardOutput);
+        Assert.Contains("Total tests: 4", result.StandardOutput);
+        Assert.Contains("Passed: 4", result.StandardOutput);
     }
 
     #endregion
@@ -152,7 +150,6 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
     #region VSTest mode - Discovery only
 
     [TestMethod]
-    [OSCondition(OperatingSystems.Windows)]
     [DynamicData(nameof(TargetFrameworks.AllForDynamicData), typeof(TargetFrameworks))]
     public async Task VSTest_DiscoverTests_Succeeds(string tfm)
     {
@@ -160,16 +157,15 @@ public sealed class TelemetryTests : AcceptanceTestBase<TelemetryTests.TestAsset
 
         var testHost = TestHost.LocateFrom(AssetFixture.VSTestProjectPath, "TelemetryVSTestProject", tfm);
         string testApplicationSource = GetTestApplicationSourcePath(testHost);
-        using var commandLine = new CommandLine();
-        int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
-            $"\"{VSTestConsoleLocator.GetConsoleRunnerPath()}\" \"{testApplicationSource}\" /ListTests",
+        VSTestConsoleResult result = await VSTestConsoleLocator.RunAsync(
+            $"\"{testApplicationSource}\" /ListTests",
             workingDirectory: AssetFixture.VSTestProjectPath,
             cancellationToken: TestContext.CancellationToken);
 
-        Assert.AreEqual(0, exitCode, $"Packaged VSTest discovery failed:\n{commandLine.StandardOutput}\n{commandLine.ErrorOutput}");
-        Assert.Contains("PassingTest", commandLine.StandardOutput);
-        Assert.Contains("DataDrivenTest", commandLine.StandardOutput);
-        Assert.Contains("TestWithTimeout", commandLine.StandardOutput);
+        Assert.AreEqual(0, result.ExitCode, $"Packaged VSTest discovery failed:{Environment.NewLine}{result.StandardOutput}{Environment.NewLine}{result.StandardError}");
+        Assert.Contains("PassingTest", result.StandardOutput);
+        Assert.Contains("DataDrivenTest", result.StandardOutput);
+        Assert.Contains("TestWithTimeout", result.StandardOutput);
     }
 
     #endregion
@@ -317,6 +313,7 @@ public class UnitTest1
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
     <PackageDownload Include="Microsoft.TestPlatform" Version="[$MicrosoftNETTestSdkVersion$]" />
+    <PackageDownload Include="Microsoft.TestPlatform.CLI" Version="[$MicrosoftNETTestSdkVersion$]" />
   </ItemGroup>
 
 </Project>
