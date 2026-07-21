@@ -1,0 +1,256 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
+
+internal sealed partial class AnsiTerminalTestProgressFrame
+{
+    /// <summary>
+    /// Render VT100 string to update from current to next frame.
+    /// </summary>
+    public void Render(
+        AnsiTerminalTestProgressFrame previousFrame,
+        TestProgressState?[] progress,
+        TerminalProgressMessageState[] messages,
+        AnsiTerminal terminal)
+    {
+        // Clear everything if Terminal width or height have changed.
+        if (Width != previousFrame.Width || Height != previousFrame.Height)
+        {
+            terminal.EraseProgress();
+        }
+
+        // At the end of the terminal we're going to print the live progress.
+        // We re-render this progress by moving the cursor to the beginning of the previous progress
+        // and then overwriting the lines that have changed.
+        // The assumption we do here is that:
+        // - Each rendered line is a single line, i.e. a single detail cannot span multiple lines.
+        // - Each rendered detail can be tracked via a unique ID and version, so that we can
+        //   quickly determine if the detail has changed since the last render.
+
+        // Don't go up if we did not render any lines in previous frame or we already cleared them.
+        if (previousFrame.RenderedLinesCount > 0)
+        {
+            // Move cursor back to 1st line of progress.
+            // + 2 because we output and empty line right below.
+            terminal.MoveCursorUp(previousFrame.RenderedLinesCount + 2);
+        }
+
+        // When there is nothing to render, don't write empty lines, e.g. when we start the test run, and then we kick off build
+        // in dotnet test, there is a long pause where we have no assemblies and no test results (yet).
+        if (progress.Length > 0 || messages.Length > 0)
+        {
+            terminal.AppendLine();
+        }
+
+        int i;
+        List<object> progresses = GenerateLinesToRender(progress, messages);
+
+        for (i = 0; i < progresses.Count; i++)
+        {
+            object item = progresses[i];
+
+            if (previousFrame.RenderedLinesCount > i)
+            {
+                if (item is TestProgressState progressItem)
+                {
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(progressItem.Id, progressItem.Version);
+
+                    // We have a line that was rendered previously, compare it and decide how to render.
+                    RenderedProgressItem previouslyRenderedLine = previousFrame._renderedLines[i];
+                    if (previouslyRenderedLine.ProgressId == progressItem.Id && previouslyRenderedLine.ProgressVersion == progressItem.Version)
+                    {
+                        // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
+                        string durationString = HumanReadableDurationFormatter.Render(progressItem.Stopwatch.Elapsed);
+
+                        if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
+                        {
+                            // Duration is the same length: rewrite just the duration cell.
+                            // Use pre-computed escape sequences to avoid per-tick string allocations.
+                            int durLen = durationString.Length;
+                            terminal.Append(SetCursorHorizontalMaxColumn);
+                            terminal.Append(durLen < MoveCursorBackwardCache.Length ? MoveCursorBackwardCache[durLen] : AnsiCodes.MoveCursorBackward(durLen));
+                            terminal.Append(durationString);
+                            currentLine.RenderedDurationLength = durLen;
+                        }
+                        else
+                        {
+                            // Duration is not the same length (it is longer because time moves only forward), we need to re-render the whole line
+                            // to avoid writing the duration over the last portion of text: my.dll (1s) -> my.d (1m 1s)
+                            terminal.Append(AnsiCodes.CsiEraseInLine);
+                            AppendTestWorkerProgress(progressItem, currentLine, terminal);
+                        }
+                    }
+                    else
+                    {
+                        // These lines are different or the line was updated. Render the whole line.
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
+                        AppendTestWorkerProgress(progressItem, currentLine, terminal);
+                    }
+                }
+                else if (item is TestDetailState detailItem)
+                {
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(detailItem.Id, detailItem.Version);
+
+                    // We have a line that was rendered previously, compare it and decide how to render.
+                    RenderedProgressItem previouslyRenderedLine = previousFrame._renderedLines[i];
+                    if (previouslyRenderedLine.ProgressId == detailItem.Id && previouslyRenderedLine.ProgressVersion == detailItem.Version)
+                    {
+                        // This is the same progress item and it was not updated since we rendered it, only update the timestamp if possible to avoid flicker.
+                        string durationString = HumanReadableDurationFormatter.Render(detailItem.Stopwatch?.Elapsed);
+
+                        if (previouslyRenderedLine.RenderedDurationLength == durationString.Length)
+                        {
+                            // Duration is the same length: rewrite just the duration cell.
+                            // Use pre-computed escape sequences to avoid per-tick string allocations.
+                            int durLen = durationString.Length;
+                            terminal.Append(SetCursorHorizontalMaxColumn);
+                            terminal.Append(durLen < MoveCursorBackwardCache.Length ? MoveCursorBackwardCache[durLen] : AnsiCodes.MoveCursorBackward(durLen));
+                            terminal.Append(durationString);
+                            currentLine.RenderedDurationLength = durLen;
+                        }
+                        else
+                        {
+                            // Duration is not the same length (it is longer because time moves only forward), we need to re-render the whole line
+                            // to avoid writing the duration over the last portion of text: my.dll (1s) -> my.d (1m 1s)
+                            terminal.Append(AnsiCodes.CsiEraseInLine);
+                            AppendTestWorkerDetail(detailItem, currentLine, terminal);
+                        }
+                    }
+                    else
+                    {
+                        // These lines are different or the line was updated. Render the whole line.
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
+                        AppendTestWorkerDetail(detailItem, currentLine, terminal);
+                    }
+                }
+                else if (item is TerminalProgressMessageState messageItem)
+                {
+                    RenderedProgressItem messageLine = GetOrAllocateNextSlot();
+                    messageLine.Reset(messageItem.Id, messageItem.Version);
+
+                    RenderedProgressItem previousMessageLine = previousFrame._renderedLines[i];
+                    if (previousMessageLine.ProgressId != messageItem.Id
+                        || previousMessageLine.ProgressVersion != messageItem.Version)
+                    {
+                        terminal.Append(AnsiCodes.CsiEraseInLine);
+                        AppendProgressMessage(messageItem, messageLine, terminal);
+                    }
+                }
+            }
+            else
+            {
+                // We are rendering more lines than we rendered in previous frame
+                if (item is TestProgressState progressItem)
+                {
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(progressItem.Id, progressItem.Version);
+                    AppendTestWorkerProgress(progressItem, currentLine, terminal);
+                }
+                else if (item is TestDetailState detailItem)
+                {
+                    RenderedProgressItem currentLine = GetOrAllocateNextSlot();
+                    currentLine.Reset(detailItem.Id, detailItem.Version);
+                    AppendTestWorkerDetail(detailItem, currentLine, terminal);
+                }
+                else if (item is TerminalProgressMessageState messageItem)
+                {
+                    RenderedProgressItem messageLine = GetOrAllocateNextSlot();
+                    messageLine.Reset(messageItem.Id, messageItem.Version);
+                    AppendProgressMessage(messageItem, messageLine, terminal);
+                }
+            }
+
+            // This makes the progress not stick to the last line on the command line, which is
+            // not what I would prefer. But also if someone writes to console, the message will
+            // start at the beginning of the new line. Not after the progress bar that is kept on screen.
+            terminal.AppendLine();
+        }
+
+        // We rendered more lines in previous frame. Clear them.
+        if (i < previousFrame.RenderedLinesCount)
+        {
+            terminal.Append(AnsiCodes.CsiEraseInDisplay);
+        }
+    }
+
+    private List<object> GenerateLinesToRender(TestProgressState?[] progress, TerminalProgressMessageState[] messages)
+    {
+        // Note: We want to render the list of active tests, but this can easily fill up the full screen.
+        // As such, we should balance the number of active tests shown per project.
+        // We do this by distributing the remaining lines for each projects.
+
+        // Collect non-null progress items without LINQ OfType allocation.
+        int itemCount = 0;
+        for (int j = 0; j < progress.Length; j++)
+        {
+            if (progress[j] is not null)
+            {
+                itemCount++;
+            }
+        }
+
+        // Grow cached working buffers when more capacity is needed; never shrink to avoid churn.
+        if (_progressItemsBuffer.Length < itemCount)
+        {
+            _progressItemsBuffer = new TestProgressState[itemCount];
+            _sortedIndicesBuffer = new int[itemCount];
+            _detailItemsBuffer = new List<TestDetailState>?[itemCount];
+        }
+
+        int idx = 0;
+        for (int j = 0; j < progress.Length; j++)
+        {
+            if (progress[j] is not null)
+            {
+                _progressItemsBuffer[idx++] = progress[j]!;
+            }
+        }
+
+        int linesToDistribute = (int)(Height * 0.7) - 1 - itemCount - messages.Length;
+
+        // Sort indices by detail count ascending to distribute lines fairly,
+        // without LINQ Enumerable.Range + OrderBy allocation.
+        for (int j = 0; j < itemCount; j++)
+        {
+            _sortedIndicesBuffer[j] = j;
+        }
+
+        // _progressCountComparer is a cached instance — no per-tick allocation.
+        _progressCountComparer.Buffer = _progressItemsBuffer;
+        Array.Sort(_sortedIndicesBuffer, 0, itemCount, _progressCountComparer);
+
+        // Only populate detail buffers when there is a positive line budget per item.
+        // GetRunningTasks(0) would compute itemsToTake = -1 and throw inside RemoveRange,
+        // and there's no point asking for details we cannot display anyway.
+        int linesPerItem = itemCount > 0 ? linesToDistribute / itemCount : 0;
+        if (linesPerItem > 0)
+        {
+            for (int j = 0; j < itemCount; j++)
+            {
+                int sortedItemIndex = _sortedIndicesBuffer[j];
+                _detailItemsBuffer[sortedItemIndex] = _progressItemsBuffer[sortedItemIndex].TestNodeResultsState?.GetRunningTasks(linesPerItem);
+            }
+        }
+
+        _linesToRenderBuffer.AddRange(messages);
+
+        for (int progressI = 0; progressI < itemCount; progressI++)
+        {
+            _linesToRenderBuffer.Add(_progressItemsBuffer[progressI]);
+            if (_detailItemsBuffer[progressI] is { } details)
+            {
+                _linesToRenderBuffer.AddRange(details);
+                _detailItemsBuffer[progressI] = null; // release to avoid holding stale GC roots
+            }
+
+            // Release the progress item reference too so completed workers can be collected
+            // even when this frame instance is kept alive across ticks.
+            _progressItemsBuffer[progressI] = null!;
+        }
+
+        return _linesToRenderBuffer;
+    }
+}
