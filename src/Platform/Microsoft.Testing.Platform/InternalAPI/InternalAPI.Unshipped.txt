@@ -17,7 +17,6 @@ Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcess
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Description.get -> string!
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.DisplayName.get -> string!
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.IsHidden.get -> bool
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Name.get -> string!
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
 Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ArtifactPostProcessingDispatcherTool.Uid.get -> string!

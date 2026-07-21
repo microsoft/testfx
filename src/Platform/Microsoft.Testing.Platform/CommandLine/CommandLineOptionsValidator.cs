@@ -415,14 +415,17 @@ internal static class CommandLineOptionsValidator
         ApplicationStateGuard.Ensure(parseResult is not null);
 
         StringBuilder? stringBuilder = null;
-        foreach (CommandLineParseOption optionRecord in parseResult.Options)
+        foreach (IGrouping<string, CommandLineParseOption> optionRecords in parseResult.Options.GroupBy(
+            record => record.Name,
+            StringComparer.OrdinalIgnoreCase))
         {
-            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecord.Name];
-            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, optionRecord.Arguments).ConfigureAwait(false);
+            (ICommandLineOptionsProvider provider, CommandLineOption option) = providerAndOptionByOptionName[optionRecords.Key];
+            string[] arguments = [.. optionRecords.SelectMany(record => record.Arguments)];
+            ValidationResult result = await provider.ValidateOptionArgumentsAsync(option, arguments).ConfigureAwait(false);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Name, result.ErrorMessage));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecords.Key, result.ErrorMessage));
             }
         }
 

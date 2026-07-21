@@ -18,11 +18,6 @@ public interface ITool : IExtension
     string Name { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the tool is omitted from informational output.
-    /// </summary>
-    bool IsHidden { get; }
-
-    /// <summary>
     /// Runs the tool.
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>

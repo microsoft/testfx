@@ -181,6 +181,37 @@ public sealed class CommandLineHandlerTests
     }
 
     [TestMethod]
+    public async Task ParseAndValidateAsync_RepeatedToolOption_ValidatesAggregatedArguments()
+    {
+        CommandLineParseResult parseResult = CommandLineParser.Parse(
+            ["tool", "--input", "first.trx", "--input", "second.trx"],
+            new SystemEnvironment());
+        var provider = new Mock<IToolCommandLineOptionsProvider>();
+        provider.SetupGet(candidate => candidate.ToolName).Returns("tool");
+        provider.SetupGet(candidate => candidate.DisplayName).Returns("tool");
+        provider.SetupGet(candidate => candidate.Uid).Returns("tool");
+        provider.Setup(candidate => candidate.GetCommandLineOptions())
+            .Returns([new("input", "input", new ArgumentArity(2, int.MaxValue), isHidden: false)]);
+        provider.Setup(candidate => candidate.ValidateOptionArgumentsAsync(
+                It.IsAny<CommandLineOption>(),
+                It.IsAny<string[]>()))
+            .Returns<CommandLineOption, string[]>((_, arguments) =>
+                arguments.Length == 2
+                    ? ValidationResult.ValidTask
+                    : ValidationResult.InvalidTask("expected aggregated arguments"));
+        provider.Setup(candidate => candidate.ValidateCommandLineOptionsAsync(It.IsAny<ICommandLineOptions>()))
+            .Returns(ValidationResult.ValidTask);
+
+        ValidationResult result = await CommandLineOptionsValidator.ValidateAsync(
+            parseResult,
+            _systemCommandLineOptionsProviders,
+            [provider.Object],
+            Mock.Of<ICommandLineOptions>());
+
+        Assert.IsTrue(result.IsValid);
+    }
+
+    [TestMethod]
     public async Task ParseAndValidateAsync_InvalidOption_ReturnsFalse()
     {
         // Arrange

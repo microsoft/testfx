@@ -57,7 +57,6 @@ static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetArtifact
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.Path.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing.ProcessedArtifact.ProcessedArtifact(string! path, string! kind, string! displayName, string? description) -> void
 [TPEXP]Microsoft.Testing.Platform.Tools.ITool
-[TPEXP]Microsoft.Testing.Platform.Tools.ITool.IsHidden.get -> bool
 [TPEXP]Microsoft.Testing.Platform.Tools.ITool.Name.get -> string!
 [TPEXP]Microsoft.Testing.Platform.Tools.ITool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
 [TPEXP]Microsoft.Testing.Platform.Tools.IToolCommandLineOptionsProvider

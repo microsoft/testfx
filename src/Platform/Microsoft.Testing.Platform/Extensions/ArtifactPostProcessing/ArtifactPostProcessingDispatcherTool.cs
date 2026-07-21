@@ -29,8 +29,6 @@ internal sealed class ArtifactPostProcessingDispatcherTool(
 
     public string Name => ToolName;
 
-    public bool IsHidden => true;
-
     public string Uid => "Microsoft.Testing.Platform.ArtifactPostProcessing.Dispatcher";
 
     public string Version => PlatformVersion.Version;

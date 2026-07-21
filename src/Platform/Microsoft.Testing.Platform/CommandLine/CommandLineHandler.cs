@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Configurations;
+using Microsoft.Testing.Platform.Extensions.ArtifactPostProcessing;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -200,7 +201,9 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         async Task DisplayRegisteredToolsInfoAsync(IOutputDevice outputDevice, IReadOnlyList<ITool>? availableTools, List<IToolCommandLineOptionsProvider> toolExtensions, CancellationToken cancellationToken)
         {
             await outputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered tools:"), cancellationToken).ConfigureAwait(false);
-            ITool[] visibleTools = availableTools is null ? [] : [.. availableTools.Where(tool => !tool.IsHidden)];
+            ITool[] visibleTools = availableTools is null
+                ? []
+                : [.. availableTools.Where(tool => tool.Name != ArtifactPostProcessingDispatcherTool.ToolName)];
             if (visibleTools.Length == 0)
             {
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered tools."), cancellationToken).ConfigureAwait(false);

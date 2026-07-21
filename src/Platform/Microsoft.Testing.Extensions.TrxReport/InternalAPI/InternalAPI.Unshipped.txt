@@ -27,13 +27,11 @@ Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Description.get -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.DisplayName.get -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.IsEnabledAsync() -> System.Threading.Tasks.Task<bool>!
-Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.IsHidden.get -> bool
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Name.get -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.RunAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<int>!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.TrxMergeTool(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, Microsoft.Testing.Platform.Extensions.IExtension! extension) -> void
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Uid.get -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeTool.Version.get -> string!
-Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxCompareTool.IsHidden.get -> bool
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.Description.get -> string!
 Microsoft.Testing.Extensions.TrxReport.Abstractions.TrxMergeToolCommandLine.DisplayName.get -> string!

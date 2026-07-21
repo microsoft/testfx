@@ -17,8 +17,6 @@ internal sealed class TrxMergeTool(ICommandLineOptions commandLineOptions, IExte
 
     public string Name => ToolName;
 
-    public bool IsHidden => false;
-
     public string Uid => _extension.Uid;
 
     public string Version => _extension.Version;
