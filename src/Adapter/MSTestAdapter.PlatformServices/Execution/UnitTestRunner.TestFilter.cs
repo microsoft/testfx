@@ -149,13 +149,8 @@ internal sealed partial class UnitTestRunner
     /// </summary>
     private async Task<TestResult[]> FinishFilteredOutTestAsync(
         TestMethod testMethod,
-<<<<<<< HEAD
-        IDictionary<string, object?> testContextProperties,
-        IMessageLogger messageLogger,
-=======
         IDictionary<string, object?> lifecycleContextProperties,
-        IAdapterMessageLogger messageLogger,
->>>>>>> Fix test property lifecycle scope
+        IMessageLogger messageLogger,
         TestResult[] filterResult,
         ITestContext testContextForTestExecution)
     {

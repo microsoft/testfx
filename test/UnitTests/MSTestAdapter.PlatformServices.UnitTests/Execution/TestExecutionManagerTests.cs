@@ -322,7 +322,7 @@ public class TestExecutionManagerTests : TestContainer
     public async Task RunTestsShouldKeepTcmPropertiesOutOfClassLifecycleAndSiblingTestContexts()
     {
         TestCase testWithTcmProperty = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.TestWithTcmProperty));
-        testWithTcmProperty.SetPropertyValue(AdapterTestProperties.TestCaseIdProperty, 1401);
+        testWithTcmProperty.SetPropertyValue(EngineConstants.TestCaseIdProperty, 1401);
         TestCase siblingTest = GetTestCase(typeof(DummyTestClassWithScopedTcmProperties), nameof(DummyTestClassWithScopedTcmProperties.SiblingTest));
 
         TestablePlatformServiceProvider testablePlatformService = SetupTestablePlatformService();
@@ -339,11 +339,9 @@ public class TestExecutionManagerTests : TestContainer
             """);
 
         await _testExecutionManager.RunTestsAsync(
-            ToUnitTestElements(testWithTcmProperty, siblingTest),
-            CurrentDeploymentContext,
-            _frameworkHandle.ToAdapterMessageLogger(),
-            TestResultRecorder,
-            new TestElementFilterProvider(_runContext),
+            [testWithTcmProperty, siblingTest],
+            _runContext,
+            _frameworkHandle,
             new TestRunCancellationToken());
 
         _frameworkHandle.TestCaseEndList.Should().Equal(
@@ -1032,7 +1030,7 @@ public class TestExecutionManagerTests : TestContainer
         public static void ClassInitialize(TestContext context)
         {
             AssertSourceProperty(context);
-            Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+            Assert.IsFalse(context.Properties.ContainsKey(EngineConstants.TestCaseIdProperty.Id));
         }
 
         [TestInitialize]
@@ -1053,7 +1051,7 @@ public class TestExecutionManagerTests : TestContainer
         public static void ClassCleanup(TestContext context)
         {
             AssertSourceProperty(context);
-            Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+            Assert.IsFalse(context.Properties.ContainsKey(EngineConstants.TestCaseIdProperty.Id));
         }
 
         private static void AssertSourceProperty(TestContext context)
@@ -1064,12 +1062,12 @@ public class TestExecutionManagerTests : TestContainer
             AssertSourceProperty(context);
             if (context.TestName == nameof(TestWithTcmProperty))
             {
-                Assert.AreEqual(1401, context.Properties[AdapterTestProperties.TestCaseIdProperty.Id]);
+                Assert.AreEqual(1401, context.Properties[EngineConstants.TestCaseIdProperty.Id]);
             }
             else
             {
                 Assert.AreEqual(nameof(SiblingTest), context.TestName);
-                Assert.IsFalse(context.Properties.ContainsKey(AdapterTestProperties.TestCaseIdProperty.Id));
+                Assert.IsFalse(context.Properties.ContainsKey(EngineConstants.TestCaseIdProperty.Id));
             }
         }
     }

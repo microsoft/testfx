@@ -23,7 +23,7 @@ internal sealed partial class UnitTestRunner
         UnitTestElement unitTestElement,
         IDictionary<string, object?> testContextProperties,
         IDictionary<string, object?> lifecycleContextProperties,
-        IAdapterMessageLogger messageLogger)
+        IMessageLogger messageLogger)
         => RunSingleTestAsync(unitTestElement, testContextProperties, lifecycleContextProperties, messageLogger).GetAwaiter().GetResult();
 
     /// <summary>
@@ -33,10 +33,7 @@ internal sealed partial class UnitTestRunner
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <param name="messageLogger"> The message logger. </param>
     /// <returns> The <see cref="TestResult"/>. </returns>
-<<<<<<< HEAD
     internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IMessageLogger messageLogger)
-=======
-    internal async Task<TestResult[]> RunSingleTestAsync(UnitTestElement unitTestElement, IDictionary<string, object?> testContextProperties, IAdapterMessageLogger messageLogger)
         => await RunSingleTestAsync(unitTestElement, testContextProperties, testContextProperties, messageLogger).ConfigureAwait(false);
 
     /// <summary>
@@ -51,8 +48,7 @@ internal sealed partial class UnitTestRunner
         UnitTestElement unitTestElement,
         IDictionary<string, object?> testContextProperties,
         IDictionary<string, object?> lifecycleContextProperties,
-        IAdapterMessageLogger messageLogger)
->>>>>>> Fix test property lifecycle scope
+        IMessageLogger messageLogger)
     {
         if (unitTestElement is null)
         {

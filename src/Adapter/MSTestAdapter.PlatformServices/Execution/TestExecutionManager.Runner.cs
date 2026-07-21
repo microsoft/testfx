@@ -95,13 +95,9 @@ internal partial class TestExecutionManager
             ? new RemotingMessageLogger(testExecutionRecorder)
             : testExecutionRecorder;
 
-<<<<<<< HEAD
-        foreach (TestCase currentTest in orderedTests)
-=======
         Dictionary<string, object?> lifecycleContextProperties = [with(sourceLevelParameters!)];
 
-        foreach (UnitTestElement currentTest in orderedTests)
->>>>>>> Fix test property lifecycle scope
+        foreach (TestCase currentTest in orderedTests)
         {
             _testRunCancellationToken?.ThrowIfCancellationRequested();
             if (PlatformServiceProvider.Instance.IsGracefulStopRequested)
