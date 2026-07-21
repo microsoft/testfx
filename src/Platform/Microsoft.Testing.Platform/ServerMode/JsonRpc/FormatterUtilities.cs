@@ -5,6 +5,8 @@
 //       As such, we have two separate implementations for the serialization code.
 #if NETCOREAPP
 using Microsoft.Testing.Platform.ServerMode.Json;
+#else
+using JsoniteJson = Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite;
 #endif
 
 namespace Microsoft.Testing.Platform.ServerMode;
@@ -24,10 +26,10 @@ internal sealed class FormatterUtilities
         public string Id => "Jsonite";
 
         public T Deserialize<T>(string serializedUtf8Content)
-            => SerializerUtilities.Deserialize<T>((Jsonite.JsonObject)Jsonite.Json.Deserialize(serializedUtf8Content));
+            => SerializerUtilities.Deserialize<T>((JsoniteJson.JsonObject)JsoniteJson.Json.Deserialize(serializedUtf8Content));
 
         public Task<string> SerializeAsync(object obj)
-            => Task.FromResult(Jsonite.Json.Serialize(SerializerUtilities.Serialize(obj.GetType(), obj)));
+            => Task.FromResult(JsoniteJson.Json.Serialize(SerializerUtilities.Serialize(obj.GetType(), obj)));
     }
 #else
     internal static IMessageFormatter CreateFormatter() => new MessageFormatter();

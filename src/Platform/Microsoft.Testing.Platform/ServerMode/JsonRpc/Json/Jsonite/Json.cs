@@ -39,7 +39,7 @@ using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
 
-namespace Jsonite
+namespace Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite
 {
     /// <summary>
     /// A JSON parser and reflector to Dictionary/List.

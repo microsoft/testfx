@@ -3,10 +3,10 @@
 
 // Note: System.Text.Json is only available in .NET 6.0 and above.
 //       As such, we have two separate implementations for the serialization code.
-#if !NETCOREAPP
-using Jsonite;
-#endif
 using Microsoft.Testing.Platform.Extensions.Messages;
+#if !NETCOREAPP
+using Microsoft.Testing.Platform.ServerMode.JsonRpc.Json.Jsonite;
+#endif
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
