@@ -95,7 +95,10 @@ internal sealed class MtpServerProcess : IDisposable
         listener.Start();
         int port = ((IPEndPoint)listener.LocalEndpoint).Port;
 
-        (string fileName, string arguments, string workingDirectory) = BuildLaunch(source, port);
+        LaunchCommand launch = BuildLaunch(source, port);
+        string fileName = launch.FileName;
+        string arguments = launch.Arguments;
+        string workingDirectory = launch.WorkingDirectory;
         logger.Log(MtpClientLogLevel.Debug, $"Launching MTP server '{fileName} {arguments}' (cwd '{workingDirectory}') listening on port {port}.");
 
         var startInfo = new ProcessStartInfo
@@ -179,7 +182,7 @@ internal sealed class MtpServerProcess : IDisposable
         }
     }
 
-    private static (string FileName, string Arguments, string WorkingDirectory) BuildLaunch(string source, int port)
+    private static LaunchCommand BuildLaunch(string source, int port)
     {
         string serverArgs = $"{ServerArgument} {ClientPortArgument} {port} {NoBannerArgument}";
         string workingDirectory = Path.GetDirectoryName(source) ?? Directory.GetCurrentDirectory();
@@ -190,20 +193,47 @@ internal sealed class MtpServerProcess : IDisposable
         {
             string apphost = GetAppHostPath(source);
             return File.Exists(apphost)
-                ? (apphost, serverArgs, workingDirectory)
-                : ("dotnet", $"\"{source}\" {serverArgs}", workingDirectory);
+                ? new LaunchCommand(apphost, serverArgs, workingDirectory)
+                : new LaunchCommand("dotnet", $"\"{source}\" {serverArgs}", workingDirectory);
         }
 
         // Otherwise `source` is already a native executable: a Windows `.exe` apphost or an
         // extensionless native apphost on Linux/macOS. Run it directly.
-        return (source, serverArgs, workingDirectory);
+        return new LaunchCommand(source, serverArgs, workingDirectory);
+    }
+
+    // A named launch descriptor rather than a value tuple: System.ValueTuple is not in the .NET
+    // Framework before 4.7, and this source is compiled into consumers that may target net462 without
+    // referencing the System.ValueTuple package. A tiny class keeps the package dependency-free.
+    private sealed class LaunchCommand
+    {
+        public LaunchCommand(string fileName, string arguments, string workingDirectory)
+        {
+            FileName = fileName;
+            Arguments = arguments;
+            WorkingDirectory = workingDirectory;
+        }
+
+        public string FileName { get; }
+
+        public string Arguments { get; }
+
+        public string WorkingDirectory { get; }
     }
 
     private static string GetAppHostPath(string managedAssembly)
     {
         string directory = Path.GetDirectoryName(managedAssembly) ?? string.Empty;
         string nameWithoutExtension = Path.GetFileNameWithoutExtension(managedAssembly);
-        string appHostFileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+#if NETFRAMEWORK
+        // System.Runtime.InteropServices.RuntimeInformation is not available on .NET Framework before
+        // 4.7.1, and this source is compiled into consumers that may target net462. .NET Framework only
+        // runs on Windows (and, rarely, Unix via Mono), so PlatformID.Win32NT is a reliable Windows check.
+        bool isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+#else
+        bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
+        string appHostFileName = isWindows
             ? nameWithoutExtension + ".exe"
             : nameWithoutExtension;
         return Path.Combine(directory, appHostFileName);

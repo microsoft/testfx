@@ -1,0 +1,55 @@
+<Project>
+
+  <!--
+    Microsoft.Testing.Platform.ServerClient.Source - consumer build customization
+    =============================================================================
+    This source-only package injects (as internal source) the MTP server-mode JSON-RPC client. The
+    injected files are the exact protocol + serialization source the platform (server) compiles, so
+    they expect the same compilation context the platform gives them. This targets file supplies that
+    context to the consuming project.
+
+    Imported for the DIRECT consumer only (every consumer compiles the source into its own assembly).
+    It is a .targets (imported after the consumer's own PropertyGroups) so the values below always
+    append, even if the consumer sets DefineConstants / NoWarn without $(DefineConstants) / $(NoWarn).
+  -->
+  <PropertyGroup>
+    <!--
+      Several linked platform files switch on IS_CORE_MTP (e.g. Helpers/ObjectPool.cs selects the
+      Microsoft.Testing.Platform.Helpers namespace under IS_CORE_MTP, which Json.cs imports). The
+      platform defines it while compiling; the injected source needs the same branch, so define it here.
+      It is a platform-internal switch name that consuming code does not otherwise use.
+    -->
+    <DefineConstants>$(DefineConstants);IS_CORE_MTP</DefineConstants>
+
+    <!--
+      On net462 / netstandard2.0 the package injects down-level polyfills of compiler/BCL attributes
+      (nullable annotations in System.Diagnostics.CodeAnalysis, Microsoft.CodeAnalysis.EmbeddedAttribute,
+      etc.). A consumer that already provides the same types (for example through a referenced assembly)
+      will get the benign CS0436 "the type in source conflicts with the imported type; using the one in
+      source": the copies are marker attributes and behaviorally identical, so the source copy winning is
+      safe. Suppress that specific benign collision so the injected source compiles under
+      TreatWarningsAsErrors. (On .NET the polyfills compile to nothing, so no collision occurs there.)
+
+      To instead DROP a specific polyfill family the consumer already ships, define the matching opt-out
+      constant in your project rather than relying on this suppression, e.g.:
+        <DefineConstants>$(DefineConstants);EXCLUDE_OS_POLYFILL;EXCLUDE_RANGE_INDEX_POLYFILL</DefineConstants>
+    -->
+    <NoWarn>$(NoWarn);CS0436</NoWarn>
+  </PropertyGroup>
+
+  <!--
+    Note on .NET Framework (net462+) consumers:
+    The injected source is authored for netstandard2.0, which includes some surface that is not in the
+    in-box .NET Framework reference assemblies before 4.7.1 - notably
+    System.Runtime.InteropServices.RuntimeInformation / OSPlatform. When a consumer REFERENCES a compiled
+    netstandard2.0 DLL those types are satisfied by the netstandard facade + runtime shims; but a
+    source-only package compiles its .cs directly into the consumer, and the net462 targeting pack has NO
+    facade that forwards RuntimeInformation / OSPlatform (they simply do not exist on net462). Adding a
+    <Reference Include="netstandard" /> does NOT help - a facade can only forward types the target
+    framework actually has. So the two source sites that used those APIs are guarded with #if NETFRAMEWORK
+    and fall back to net462-safe equivalents (Environment.OSVersion.Platform for the Windows check; constant
+    false for the never-on-.NET-Framework OperatingSystem.IsWasi/IsAndroid/IsIOS/IsTvOS/IsBrowser checks).
+    That keeps the package dependency-free and lets it compile clean on net462 with no extra references.
+  -->
+
+</Project>
