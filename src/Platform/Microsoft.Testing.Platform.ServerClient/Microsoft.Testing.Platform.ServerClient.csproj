@@ -235,7 +235,12 @@ This is a source-only package: it injects (as internal source) a client for the 
   <PropertyGroup>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_MtpClientAddSourceToContentFiles</TargetsForTfmSpecificContentInPackage>
     <_MtpClientIntermediateFullPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_MtpClientIntermediateFullPath>
-    <!-- Where the pack-time transformed copies of the shipped source are written (under obj, per TFM). -->
+    <!-- Base dir under obj where the pack-time transformed copies of the shipped source are written. The
+         actual write dir appends the TFM (see _MtpClientTransformDirTfm in the target below): NuGet runs
+         the TargetsForTfmSpecificContentInPackage pass once per TFM and dispatches those passes in
+         PARALLEL, and the transform output is TFM-independent (same bytes for every TFM), so without a
+         per-TFM segment both passes race to write the same files (IOException "used by another process"
+         on parallel Windows CI builds). -->
     <_MtpClientTransformDir>$(IntermediateOutputPath)mtpclientsrc\</_MtpClientTransformDir>
   </PropertyGroup>
 
@@ -316,6 +321,12 @@ This is a source-only package: it injects (as internal source) a client for the 
   </UsingTask>
 
   <Target Name="_MtpClientAddSourceToContentFiles">
+    <!-- Compute the per-TFM transform output dir HERE (not in a global PropertyGroup) so $(TargetFramework)
+         is the current per-TFM value even when NuGet drives the TfmSpecific passes from the outer build.
+         Distinct dirs per TFM => the parallel passes never write the same file. -->
+    <PropertyGroup>
+      <_MtpClientTransformDirTfm>$(_MtpClientTransformDir)$(TargetFramework)\</_MtpClientTransformDirTfm>
+    </PropertyGroup>
     <ItemGroup>
       <!-- Every shipped .cs (linked server/platform files, the client's own files, and the polyfills)
            goes through the transform. Exclude only files generated into obj (GlobalUsings.g.cs,
@@ -329,9 +340,9 @@ This is a source-only package: it injects (as internal source) a client for the 
         <SourceFullPath>%(Compile.FullPath)</SourceFullPath>
       </_MtpClientToTransform>
 
-      <!-- Transformed copies live under obj, keyed by their logical (package-relative) path. The item
-           transform carries Logical + SourceFullPath metadata across to the new item identity. -->
-      <_MtpClientTransformed Include="@(_MtpClientToTransform->'$(_MtpClientTransformDir)%(Logical)')" />
+      <!-- Transformed copies live under obj (per TFM), keyed by their logical (package-relative) path. The
+           item transform carries Logical + SourceFullPath metadata across to the new item identity. -->
+      <_MtpClientTransformed Include="@(_MtpClientToTransform->'$(_MtpClientTransformDirTfm)%(Logical)')" />
     </ItemGroup>
 
     <!-- Write the transformed copies to obj. -->
