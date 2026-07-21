@@ -11,6 +11,20 @@
     <ExtrasEnableEmbeddedResourceCodeGenerator>false</ExtrasEnableEmbeddedResourceCodeGenerator>
   </PropertyGroup>
 
+  <!-- MSBuildCache only supports clean, Windows graph builds. Keep it opt-in so regular and incremental builds are unchanged. -->
+  <PropertyGroup>
+    <MSBuildCacheEnabled Condition="'$(MSBuildCacheEnabled)' == ''">false</MSBuildCacheEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildCacheEnabled)' == 'true'">
+    <!-- Change this value to invalidate all existing testfx cache entries. -->
+    <MSBuildCacheCacheUniverse Condition="'$(MSBuildCacheCacheUniverse)' == ''">testfx-v1</MSBuildCacheCacheUniverse>
+    <MSBuildCacheLocalCacheRootPath Condition="'$(MSBuildCacheLocalCacheRootPath)' == ''">$(RepoRoot)artifacts\msbuild-cache</MSBuildCacheLocalCacheRootPath>
+    <MSBuildCacheLocalCacheSizeInMegabytes Condition="'$(MSBuildCacheLocalCacheSizeInMegabytes)' == ''">20480</MSBuildCacheLocalCacheSizeInMegabytes>
+    <!-- Visual Studio telemetry writes outside the repository after the project that launched it has finished. -->
+    <MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>$(MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns);\Windows\**;\**\ApplicationInsights.config;\**\AppData\Local\Microsoft\VSApplicationInsights\**;\**\AppData\Local\Microsoft\Windows\INetCache\**</MSBuildCacheAllowFileAccessAfterProjectFinishFilePatterns>
+  </PropertyGroup>
+
   <!-- Language configuration -->
   <PropertyGroup>
     <!-- default to allowing all language features -->

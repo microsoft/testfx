@@ -84,6 +84,18 @@ Another common flag is `-pack` which will produce the NuGet packages of MSTest. 
 
 For more information about all the different options available, supply the argument `-help|-h` when invoking the build script. On Unix-like systems, non-abbreviated arguments can be passed in with a single `-` or double hyphen `--`.
 
+### MSBuildCache
+
+The Windows PR pipeline experimentally runs [MSBuildCache](https://github.com/microsoft/MSBuildCache) before the regular Arcade build. The cache-aware build uses Arcade's `eng/common/msbuild.ps1` launcher to invoke the solution directly because Arcade's outer `Build.proj` discovers projects dynamically and cannot expose the repository's static project graph to the cache plugin. PR builds consume the immutable Azure Pipeline cache read-only, and fork PRs skip this step because they do not receive the required token scope. Trusted manual or scheduled runs of this pipeline on `main` seed updated remote entries.
+
+MSBuildCache currently requires Windows, the Visual Studio version pinned in `global.json`, Git on `PATH`, and a clean repository. It does not support incremental developer builds. To validate the local cache from a clean checkout, run:
+
+```powershell
+eng\common\msbuild.ps1 -msbuildEngine vs TestFx.slnx /restore /graph /m /reportfileaccesses /t:Build /p:Configuration=Release /p:MSBuildCachePackageEnabled=true /p:MSBuildCacheEnabled=true /p:MSBuildCacheLogDirectory=artifacts\log\Release\MSBuildCache\Plugin /bl:artifacts\log\Release\MSBuildCache\Build.binlog
+```
+
+Use `MSTest.slnf` or `Microsoft.Testing.Platform.slnf` in place of `TestFx.slnx` to validate a filtered graph. Delete `artifacts\msbuild-cache` to clear the local content cache. Change `MSBuildCacheCacheUniverse` in `Directory.Build.props`, or pass `/p:MSBuildCacheCacheUniverse=<new-value>` for one invocation, to invalidate cache entries.
+
 ### Build layout
 
 MSTest uses Microsoft common infrastructure called [arcade](https://github.com/dotnet/arcade) as such all outputs follow this structure:
