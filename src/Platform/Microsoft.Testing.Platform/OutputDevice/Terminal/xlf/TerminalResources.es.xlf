@@ -22,10 +22,60 @@
         <target state="translated">Cancelando la sesión de prueba...</target>
         <note />
       </trans-unit>
+      <trans-unit id="CodeCoverageSummary">
+        <source>Code Coverage Summary:</source>
+        <target state="new">Code Coverage Summary:</target>
+        <note>Heading printed before the per-module code coverage percentages in the run summary.</note>
+      </trans-unit>
       <trans-unit id="ConsoleIsAlreadyInBatchingMode">
         <source>Console is already in batching mode.</source>
         <target state="translated">La consola ya está en modo de procesamiento por lotes.</target>
         <note>Exception that is thrown when console is already collecting input into a batch (into a string builder), and code asks to enable batching mode again.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdFailed">
+        <source>{0}% &lt; {1}% threshold</source>
+        <target state="new">{0}% &lt; {1}% threshold</target>
+        <note>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdPassed">
+        <source>{0}% &gt;= {1}% threshold</source>
+        <target state="new">{0}% &gt;= {1}% threshold</target>
+        <note>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdResults">
+        <source>Coverage Threshold Results:</source>
+        <target state="new">Coverage Threshold Results:</target>
+        <note>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdStatisticAverage">
+        <source>Average</source>
+        <target state="new">Average</target>
+        <note>Label for the average-across-modules statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdStatisticMinimum">
+        <source>Minimum</source>
+        <target state="new">Minimum</target>
+        <note>Label for the minimum-across-modules statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageThresholdStatisticTotal">
+        <source>Total</source>
+        <target state="new">Total</target>
+        <note>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</note>
+      </trans-unit>
+      <trans-unit id="CoverageTypeBranch">
+        <source>Branch</source>
+        <target state="new">Branch</target>
+        <note>Label for branch code coverage in the coverage summary (e.g. 'MyModule.dll - Branch: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageTypeLine">
+        <source>Line</source>
+        <target state="new">Line</target>
+        <note>Label for line code coverage in the coverage summary (e.g. 'MyModule.dll - Line: 95.0%').</note>
+      </trans-unit>
+      <trans-unit id="CoverageTypeMethod">
+        <source>Method</source>
+        <target state="new">Method</target>
+        <note>Label for method code coverage in the coverage summary (e.g. 'MyModule.dll - Method: 95.0%').</note>
       </trans-unit>
       <trans-unit id="DiscoveredTestsInAssembly">
         <source>Discovered {0} tests in assembly</source>

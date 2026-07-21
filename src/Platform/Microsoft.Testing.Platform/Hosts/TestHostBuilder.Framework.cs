@@ -90,6 +90,9 @@ internal sealed partial class TestHostBuilder
         ITestApplicationProcessExitCode testApplicationResult = serviceProvider.GetRequiredService<ITestApplicationProcessExitCode>();
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
 
+        ITestCoverageResult testCoverageResult = serviceProvider.GetRequiredService<ITestCoverageResult>();
+        await RegisterAsServiceOrConsumerOrBothAsync(testCoverageResult, serviceProvider, dataConsumersBuilder).ConfigureAwait(false);
+
         if (pushOnlyProtocolDataConsumer is not null)
         {
             dataConsumersBuilder.Add(pushOnlyProtocolDataConsumer);

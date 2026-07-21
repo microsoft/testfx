@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -874,6 +875,133 @@ public sealed class TerminalTestReporterTests
         Assert.Contains("failed-stdout", output);
         Assert.Contains("failed-stderr", output);
     }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenNoEntries_WritesNothing()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateCoverageReporter(stringBuilderConsole, AnsiMode.NoAnsi);
+
+        terminalReporter.AppendCoverageSummary([], []);
+
+        Assert.AreEqual(string.Empty, stringBuilderConsole.Output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdPasses_RendersPassedResultWithGreaterOrEqual()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateCoverageReporter(stringBuilderConsole, AnsiMode.NoAnsi);
+
+        var passing = new TestCoverageThresholdMessage(85.5, 80.0, CoverageMetric.Line, CoverageThresholdStatistic.Minimum);
+
+        terminalReporter.AppendCoverageSummary([], [passing]);
+
+        string output = stringBuilderConsole.Output;
+        Assert.Contains("Coverage Threshold Results:", output);
+        Assert.Contains("Line (Minimum):", output);
+        Assert.Contains(">=", output);
+        Assert.Contains("threshold", output);
+
+        // Passing thresholds must not be rendered as failures, and the old failure-only header is gone.
+        Assert.DoesNotContain("Coverage Threshold Failures:", output);
+        Assert.DoesNotContain("<", output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdFails_RendersFailedResultWithLessThan()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateCoverageReporter(stringBuilderConsole, AnsiMode.NoAnsi);
+
+        var failing = new TestCoverageThresholdMessage(75.0, 80.0, CoverageMetric.Branch, CoverageThresholdStatistic.Total);
+
+        terminalReporter.AppendCoverageSummary([], [failing]);
+
+        string output = stringBuilderConsole.Output;
+        Assert.Contains("Coverage Threshold Results:", output);
+        Assert.Contains("Branch (Total):", output);
+        Assert.Contains("<", output);
+        Assert.Contains("threshold", output);
+        Assert.DoesNotContain(">=", output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenThresholdOnly_DoesNotEmitDoubleBlankLineBeforeHeading()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateCoverageReporter(stringBuilderConsole, AnsiMode.NoAnsi);
+
+        var failing = new TestCoverageThresholdMessage(75.0, 80.0, CoverageMetric.Branch, CoverageThresholdStatistic.Total);
+
+        // No coverage entries, only threshold entries: the leading blank line must not be doubled.
+        terminalReporter.AppendCoverageSummary([], [failing]);
+
+        // With a single block there is no legitimate blank-line separator, so a doubled newline (an extra
+        // blank line) would only come from the spacing bug.
+        string output = stringBuilderConsole.Output.Replace("\r\n", "\n");
+        Assert.Contains("Coverage Threshold Results:", output);
+        Assert.DoesNotContain("\n\n", output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenMixedThresholds_RendersBothPassAndFail()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateCoverageReporter(stringBuilderConsole, AnsiMode.NoAnsi);
+
+        var passing = new TestCoverageThresholdMessage(90.0, 80.0, CoverageMetric.Line, CoverageThresholdStatistic.Minimum);
+        var failing = new TestCoverageThresholdMessage(70.0, 80.0, CoverageMetric.Method, CoverageThresholdStatistic.Average);
+
+        terminalReporter.AppendCoverageSummary([], [passing, failing]);
+
+        string output = stringBuilderConsole.Output;
+        Assert.Contains("Line (Minimum):", output);
+        Assert.Contains(">=", output);
+        Assert.Contains("Method (Average):", output);
+        Assert.Contains("<", output);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WithForceAnsi_ColorsPassedGreenAndFailedRed()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateCoverageReporter(stringBuilderConsole, AnsiMode.ForceAnsi);
+
+        var passing = new TestCoverageThresholdMessage(90.0, 80.0, CoverageMetric.Line, CoverageThresholdStatistic.Minimum);
+        var failing = new TestCoverageThresholdMessage(70.0, 80.0, CoverageMetric.Branch, CoverageThresholdStatistic.Total);
+
+        terminalReporter.AppendCoverageSummary([], [passing, failing]);
+
+        string escaped = ShowEscape(stringBuilderConsole.Output)!;
+
+        // Passing threshold rendered in green (\x1b[32m), failing threshold rendered in red (\x1b[31m).
+        Assert.Contains("\x241b[32m    Line (Minimum):", escaped);
+        Assert.Contains("\x241b[31m    Branch (Total):", escaped);
+    }
+
+    [TestMethod]
+    public void AppendCoverageSummary_WhenCoverageEntriesPresent_RendersCoverageSummary()
+    {
+        var stringBuilderConsole = new StringBuilderConsole();
+        TerminalTestReporter terminalReporter = CreateCoverageReporter(stringBuilderConsole, AnsiMode.NoAnsi);
+
+        var entry = new TestCoverageMessage("MyModule.dll", 85.5, CoverageMetric.Line);
+
+        terminalReporter.AppendCoverageSummary([entry], []);
+
+        string output = stringBuilderConsole.Output;
+        Assert.Contains("Code Coverage Summary:", output);
+        Assert.Contains("MyModule.dll - Line:", output);
+    }
+
+    private static TerminalTestReporter CreateCoverageReporter(StringBuilderConsole console, AnsiMode ansiMode)
+        => new(console, static () => false, new TerminalTestReporterOptions
+        {
+            ShowPassedTests = () => true,
+            AnsiMode = ansiMode,
+            ShowProgress = () => false,
+        });
 
     private static string? ShowEscape(string? text)
     {

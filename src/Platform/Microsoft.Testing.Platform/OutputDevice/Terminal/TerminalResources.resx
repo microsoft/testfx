@@ -335,4 +335,44 @@ Valid values are 'All', 'Failed', 'None'. Default is 'All' (or 'Failed' when an 
     <value>Discovered {0} tests in {1} assemblies.</value>
     <comment>dotnet test orchestrator discovery total across multiple assemblies. {0} is the discovered test count, {1} the assembly count.</comment>
   </data>
+  <data name="CodeCoverageSummary" xml:space="preserve">
+    <value>Code Coverage Summary:</value>
+    <comment>Heading printed before the per-module code coverage percentages in the run summary.</comment>
+  </data>
+  <data name="CoverageThresholdResults" xml:space="preserve">
+    <value>Coverage Threshold Results:</value>
+    <comment>Heading printed before the coverage threshold pass/fail comparisons in the run summary.</comment>
+  </data>
+  <data name="CoverageThresholdPassed" xml:space="preserve">
+    <value>{0}% &gt;= {1}% threshold</value>
+    <comment>Coverage threshold comparison shown when the threshold is met. {0} is the actual coverage percentage, {1} is the threshold percentage.</comment>
+  </data>
+  <data name="CoverageThresholdFailed" xml:space="preserve">
+    <value>{0}% &lt; {1}% threshold</value>
+    <comment>Coverage threshold comparison shown when the threshold is not met. {0} is the actual coverage percentage, {1} is the threshold percentage.</comment>
+  </data>
+  <data name="CoverageTypeLine" xml:space="preserve">
+    <value>Line</value>
+    <comment>Label for line code coverage in the coverage summary (e.g. 'MyModule.dll - Line: 95.0%').</comment>
+  </data>
+  <data name="CoverageTypeBranch" xml:space="preserve">
+    <value>Branch</value>
+    <comment>Label for branch code coverage in the coverage summary (e.g. 'MyModule.dll - Branch: 95.0%').</comment>
+  </data>
+  <data name="CoverageTypeMethod" xml:space="preserve">
+    <value>Method</value>
+    <comment>Label for method code coverage in the coverage summary (e.g. 'MyModule.dll - Method: 95.0%').</comment>
+  </data>
+  <data name="CoverageThresholdStatisticMinimum" xml:space="preserve">
+    <value>Minimum</value>
+    <comment>Label for the minimum-across-modules statistic used in a coverage threshold comparison (e.g. 'Line (Minimum): ...').</comment>
+  </data>
+  <data name="CoverageThresholdStatisticTotal" xml:space="preserve">
+    <value>Total</value>
+    <comment>Label for the total (aggregate) statistic used in a coverage threshold comparison (e.g. 'Line (Total): ...').</comment>
+  </data>
+  <data name="CoverageThresholdStatisticAverage" xml:space="preserve">
+    <value>Average</value>
+    <comment>Label for the average-across-modules statistic used in a coverage threshold comparison (e.g. 'Line (Average): ...').</comment>
+  </data>
 </root>

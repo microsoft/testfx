@@ -143,6 +143,14 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
 
             List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
 
+            // Register the coverage result consumer so that coverage messages published by
+            // ITestHostProcessLifetimeHandler extensions in this (controller) process are tracked.
+            // This is the same instance later read by the coverage threshold exit code check.
+            if (ServiceProvider.GetService<ITestCoverageResult>() is { } testCoverageResult)
+            {
+                dataConsumersBuilder.Add(testCoverageResult);
+            }
+
             // We add the IPlatformOutputDevice after all users extensions.
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
             if (display is IDataConsumer dataConsumerDisplay)
@@ -406,6 +414,12 @@ internal sealed class TestHostControllersTestHost : CommonHost, IHost, IDisposab
                 await outputDevice.DisplayAsync(this, new ErrorMessageOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, testHostProcess.ExitCode)), cancellationToken).ConfigureAwait(false);
                 exitCode = (int)ExitCode.TestHostProcessExitedNonGracefully;
             }
+
+            // Check coverage threshold failures after test execution completes. The child test host has
+            // already applied its own ignore-exit-code policy to its exit code; the shared helper applies the
+            // parent-side coverage verdict and routes it through the same policy so `--ignore-exit-code 14`
+            // can ignore a controller-published threshold failure consistently.
+            exitCode = CoverageThresholdExitCodePolicy.Apply(exitCode, ServiceProvider);
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess.ExitCode}') in '{consoleRunStarted.Elapsed}'").ConfigureAwait(false);
             await DisposeHelper.DisposeAsync(testHostControllerIpc).ConfigureAwait(false);

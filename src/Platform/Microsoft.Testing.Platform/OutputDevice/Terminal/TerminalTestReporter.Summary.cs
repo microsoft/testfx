@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.OutputDevice.Terminal;
@@ -407,4 +408,76 @@ internal sealed partial class TerminalTestReporter
         terminal.Append(MakeControlCharactersVisible(displayName, true));
         terminal.AppendLine();
     }
+
+    internal void AppendCoverageSummary(IReadOnlyList<TestCoverageMessage> coverageEntries, IReadOnlyList<TestCoverageThresholdMessage> thresholdEntries)
+        => _terminalWithProgress.WriteToTerminal(terminal => AppendCoverageSummary(terminal, coverageEntries, thresholdEntries));
+
+    private static void AppendCoverageSummary(ITerminal terminal, IReadOnlyList<TestCoverageMessage> coverageEntries, IReadOnlyList<TestCoverageThresholdMessage> thresholdEntries)
+    {
+        if (coverageEntries.Count == 0 && thresholdEntries.Count == 0)
+        {
+            return;
+        }
+
+        terminal.AppendLine();
+
+        if (coverageEntries.Count > 0)
+        {
+            terminal.AppendLine($"{SingleIndentation}{TerminalResources.CodeCoverageSummary}");
+
+            foreach (TestCoverageMessage entry in coverageEntries)
+            {
+                terminal.Append(DoubleIndentation);
+                terminal.AppendLine($"{MakeControlCharactersVisible(entry.ModuleName, true)} - {GetCoverageMetricLabel(entry.Metric)}: {entry.CoveragePercentage.ToString("F1", CultureInfo.CurrentCulture)}%");
+            }
+        }
+
+        if (thresholdEntries.Count > 0)
+        {
+            // Only separate from the coverage block above when it was actually rendered; otherwise the
+            // unconditional blank line at the top of the method already provides the single leading blank.
+            if (coverageEntries.Count > 0)
+            {
+                terminal.AppendLine();
+            }
+
+            terminal.AppendLine($"{SingleIndentation}{TerminalResources.CoverageThresholdResults}");
+
+            foreach (TestCoverageThresholdMessage entry in thresholdEntries)
+            {
+                bool passed = entry.Passed;
+                terminal.SetColor(passed ? TerminalColor.DarkGreen : TerminalColor.DarkRed);
+                terminal.Append(DoubleIndentation);
+                string comparison = string.Format(
+                    CultureInfo.CurrentCulture,
+                    passed ? TerminalResources.CoverageThresholdPassed : TerminalResources.CoverageThresholdFailed,
+                    entry.CoveragePercentage.ToString("F1", CultureInfo.CurrentCulture),
+                    entry.ThresholdPercentage.ToString("F1", CultureInfo.CurrentCulture));
+                terminal.AppendLine($"{GetCoverageMetricLabel(entry.Metric)} ({GetCoverageStatisticLabel(entry.Statistic)}): {comparison}");
+                terminal.ResetColor();
+            }
+        }
+    }
+
+    // Maps the CoverageMetric enum to a localized label so localized runs don't render the English enum
+    // identifier; falls back to the identifier for any future enum member without a resource.
+    private static string GetCoverageMetricLabel(CoverageMetric metric)
+        => metric switch
+        {
+            CoverageMetric.Line => TerminalResources.CoverageTypeLine,
+            CoverageMetric.Branch => TerminalResources.CoverageTypeBranch,
+            CoverageMetric.Method => TerminalResources.CoverageTypeMethod,
+            _ => metric.ToString(),
+        };
+
+    // Maps the CoverageThresholdStatistic enum to a localized label so localized runs don't render the
+    // English enum identifier; falls back to the identifier for any future enum member without a resource.
+    private static string GetCoverageStatisticLabel(CoverageThresholdStatistic statistic)
+        => statistic switch
+        {
+            CoverageThresholdStatistic.Minimum => TerminalResources.CoverageThresholdStatisticMinimum,
+            CoverageThresholdStatistic.Total => TerminalResources.CoverageThresholdStatisticTotal,
+            CoverageThresholdStatistic.Average => TerminalResources.CoverageThresholdStatisticAverage,
+            _ => statistic.ToString(),
+        };
 }

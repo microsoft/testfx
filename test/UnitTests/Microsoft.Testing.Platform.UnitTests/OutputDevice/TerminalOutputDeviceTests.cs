@@ -230,7 +230,8 @@ public sealed class TerminalOutputDeviceTests
             Mock.Of<ILoggerFactory>(),
             Mock.Of<IClock>(),
             stopPoliciesService.Object,
-            testApplicationCancellationTokenSource.Object);
+            testApplicationCancellationTokenSource.Object,
+            new TestCoverageResult());
     }
 
     private static TerminalOutputDevice CreateListTestsJsonAzureDevOpsOutputDevice(bool isHotReloadEnabled = false)
@@ -273,6 +274,7 @@ public sealed class TerminalOutputDeviceTests
             Mock.Of<ILoggerFactory>(),
             Mock.Of<IClock>(),
             stopPoliciesService.Object,
-            testApplicationCancellationTokenSource.Object);
+            testApplicationCancellationTokenSource.Object,
+            new TestCoverageResult());
     }
 }

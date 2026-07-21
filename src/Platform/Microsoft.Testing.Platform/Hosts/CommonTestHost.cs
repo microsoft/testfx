@@ -207,6 +207,12 @@ internal abstract class CommonHost(ServiceProvider serviceProvider) : IHost
     protected static async Task ExecuteRequestAsync(ProxyOutputDevice outputDevice, ITestSessionContext testSessionInfo,
         ServiceProvider serviceProvider, BaseMessageBus baseMessageBus, ITestFramework testFramework, TestHost.ClientInfo client)
     {
+        // Reset the shared, application-scoped coverage accumulator at the start of every request here, in the
+        // common host/request lifecycle, so it happens for all output modes (terminal, pipe, server, custom)
+        // rather than only when the terminal device renders. Without this a prior session's coverage rows and
+        // thresholds would be reprinted and its threshold-failure verdict could poison a later session.
+        serviceProvider.GetRequiredService<ITestCoverageResult>().Reset();
+
         await DisplayBeforeSessionStartAsync(outputDevice, testSessionInfo).ConfigureAwait(false);
         CancellationToken cancellationToken = testSessionInfo.CancellationToken;
         try
