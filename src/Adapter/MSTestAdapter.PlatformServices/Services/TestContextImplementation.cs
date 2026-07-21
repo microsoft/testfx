@@ -226,7 +226,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void Write(string? message)
     {
-        string? msg = EscapeNullChars(message);
+        string? msg = message?.Replace("\0", "\\0");
         TestContextMessageBuilder.Append(msg);
         WriteLive(msg, appendLine: false);
     }
@@ -239,7 +239,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void Write(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullChars(format), args);
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         TestContextMessageBuilder.Append(message);
         WriteLive(message, appendLine: false);
     }
@@ -251,7 +251,7 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="message">The formatted string that contains the trace message.</param>
     public override void WriteLine(string? message)
     {
-        string? msg = EscapeNullChars(message);
+        string? msg = message?.Replace("\0", "\\0");
         TestContextMessageBuilder.AppendLine(msg);
         WriteLive(msg, appendLine: true);
     }
@@ -264,14 +264,10 @@ internal sealed class TestContextImplementation : TestContext, ITestContext, IDi
     /// <param name="args">Arguments to add to the trace message.</param>
     public override void WriteLine(string format, params object?[] args)
     {
-        string message = string.Format(CultureInfo.CurrentCulture, EscapeNullChars(format), args);
+        string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
         TestContextMessageBuilder.AppendLine(message);
         WriteLive(message, appendLine: true);
     }
-
-    [return: NotNullIfNotNull(nameof(value))]
-    private static string? EscapeNullChars(string? value)
-        => value is not null && value.Contains('\0') ? value.Replace("\0", "\\0") : value;
 
     /// <summary>
     /// Set the unit-test outcome.
